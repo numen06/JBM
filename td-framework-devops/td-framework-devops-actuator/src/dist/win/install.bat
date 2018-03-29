@@ -1,0 +1,1 @@
+nssm.exe install td-framework-devops-actuator %CD%\start.bat

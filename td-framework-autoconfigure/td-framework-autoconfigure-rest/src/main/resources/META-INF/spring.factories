@@ -1,0 +1,3 @@
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+td.framework.boot.autoconfigure.rest.RestAutoConfiguration

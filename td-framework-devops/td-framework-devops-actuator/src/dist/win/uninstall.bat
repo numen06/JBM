@@ -1,0 +1,1 @@
+nssm.exe remove td-framework-devops-actuator

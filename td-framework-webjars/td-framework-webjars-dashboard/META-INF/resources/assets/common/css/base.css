@@ -1,0 +1,205 @@
+﻿.auto-layout {
+	position: relative;
+	width: 100%;
+}
+
+.data-header {
+	width: 100%;
+	/*margin: 5px 1% 0 0;*/
+	border: 1px solid #ddd;
+	border-bottom: 0;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	border-right: 0;
+}
+
+.data-header th {
+	text-align: center;
+	height: 34px;
+	border: 1px solid #ddd;
+	border-left: none;
+	border-top: none;
+    cursor: pointer;
+}
+
+.data-list {
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	width: 100%;
+	margin: 0 0 0 0;
+	border-top: 0;
+}
+
+.data-list tr td {
+	/*border: 1px solid #ddd;*/
+}
+
+.data-list th,
+.data-list td {
+	border: 1px solid #ddd;
+	border-left: none;
+	border-top: none;
+}
+
+.data-list thead {
+	background: white;
+	color: black;
+}
+
+.data-list tr.tr-even {
+	background: white;
+}
+
+.data-list tr.tr-hover {
+	background: rgb(232, 234, 236);
+}
+
+.data-list th,
+.data-list td {
+	text-align: center;
+	height: 34px;
+}
+
+.data-list tr td ul {
+	padding-left: 10px;
+}
+
+.data-list tr td ul li {
+	float: left;
+	padding: 2px 5px;
+}
+
+.data-list tr td label {
+	word-break: break-all;
+}
+/*body:before {
+	background: #fff !important;
+}*/
+
+.error-input {
+	border: 1px dashed red !important;
+	color: red;
+}
+
+.pagination {
+	text-align: center;
+	margin-top: 15px !important;
+	display: block !important;
+}
+
+/*.widget {
+	margin: 0px !important;
+}*/
+
+.require {
+	color: red;
+}
+
+.data-list .dpen-icon {
+	float: left;
+	padding: 6px;
+	display: inline-block;
+	cursor: pointer;
+	width: 24px;
+	height: 24px;
+	text-align: center;
+	vertical-align: middle;
+	-webkit-border-radius: 6px;
+	-webkit-background-clip: padding-box;
+	-moz-border-radius: 6px;
+	-moz-background-clip: padding;
+	border-radius: 6px;
+	background-clip: padding-box;
+	color: #444444;
+}
+
+.data-list .icon .typcn:before {
+	font-size: 16px;
+}
+
+.data-list .icon:hover {
+	background-color: #ffce55;
+	line-height: 24px;
+	color: #ffffff;
+}
+
+.data-list .icon:hover .typcn:before {
+	font-size: 24px;
+}
+
+.data-list ul {
+	list-style: none;
+}
+
+form .form-group .select {
+	width: 100%
+}
+.ngSortButtonDown {
+    /*position: absolute;*/
+    margin-top: -25px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    border-color: gray transparent;
+    border-style: solid;
+    border-width: 0 5px 5px 5px;
+    height: 0;
+    width: 0;
+}
+
+.ngNoSort {
+    cursor: default;
+}
+
+.ngHeaderButton {
+    /*position: absolute;*/
+    right: 2px;
+    top: 8px;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    z-index: 1;
+    background-color: #9fbbb4;
+    cursor: pointer;
+}
+
+.ngSortButtonUp {
+    /*position: absolute;*/
+    margin-top: -25px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    border-color: gray transparent;
+    border-style: solid;
+    border-width: 5px 5px 0 5px;
+    height: 0;
+    width: 0;
+}
+.widget-buttons span:before
+{
+    font-size: 25px;!important
+}
+.widget-buttons span
+{
+    margin-right: 10px;
+    cursor: pointer;
+}
+.tabelButtonDiv
+{
+    padding: 0px 0px 10px 0px!important;
+}
+.tabelButton
+{
+    text-align: left!important;
+    border-bottom: 2px solid #11a9cc ;
+
+}
+.treeDiv
+{
+	height: 300px; 
+    overflow: auto; 
+}

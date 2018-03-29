@@ -1,0 +1,5 @@
+org.springframework.context.ApplicationListener=\
+td.framework.boot.autoconfigure.mqtt.event.ApplicationEnvironmentDefaultEvent
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+td.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration

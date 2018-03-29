@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationListener=\
+td.framework.boot.autoconfigure.freemark.event.ApplicationEnvironmentDefaultEvent

@@ -1,0 +1,83 @@
+<iv class="row" ng-controller="RecoveryListCtrl"> <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+<div class="col-lg-12 col-sm-12 col-xs-12">
+	<div class="well with-header">
+		<div class="header bordered-palegreen">回收站查询</div>
+		<form id="searchForm">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label class="control-label">文件名称</label> <input type="text" class="form-control" ng-model="model.filename" name="filename" placeholder="请输入文件名称" />
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label class="control-label">文件分组</label> <select class="select" ng-model="model.type">
+							<option value="">全部</option>
+							<option value="process">进程</option>
+							<option value="source">资源包</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<button class="btn btn-primary" ng-click="search()">
+						<i class="fa fa-search"></i>查询
+					</button>
+				</div>
+				<div class="col-md-6"></div>
+			</div>
+		</form>
+	</div>
+</div>
+<div class="col-lg-12 col-sm-12 col-xs-12">
+	<div class="widget">
+		<div class="widget-header bordered-bottom bordered-blue">
+			<span class="widget-caption">回收列表</span>
+		</div>
+		<div class="widget-body">
+			<div>
+				<table id="table" class="data-list fix-header" cellspacing=0 cellpadding=0 width="100%">
+					<thead>
+						<tr>
+							<th width="5%">序号</th>
+							<th width="10%" column="mianFile">文件名称</th>
+							<th width="20%" column="folder">源目录</th>
+							<th width="10%" column="startTime">删除时间</th>
+							<th width="10%" column="type">类型</th>
+							<th width="10%">操作</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</iv>
+
+<script type="tpl" id="program_list_tpl">
+         {@each list as item,index}
+         <tr>
+             <td><label>&{parseInt(index)+1}</label></td>
+             <td><label>&{item.sourceName == null ? '' : item.sourceName}</label></td>
+             <td><label>&{item.sourcePath == null ? '' : item.sourcePath}</label></td>
+             <td><label>&{item.createTime == null ? '' : new Date(item.createTime).format()}</label></td>
+ 			 <td><label>&{item.type == null ? '' : item.type}</label></td>
+			 <td>
+				<ul>
+					<li ng-click="reduction('&{item.folder}','&{item.sourcePath}','false','&{item.type}')" class="btn btn-default btn-xs black">
+						<i class="fa fa-retweet"></i>还原</a>
+					</li>
+					<li ng-click="release('&{item.folder}','&{item.sourceInfoFile}')" class="btn btn-default btn-xs black">
+						<i class="fa fa-recycle"></i>覆盖还原</a>
+					</li>
+					<li ng-click="remove('&{item.folder}','&{item.sourcePath}','false','&{item.type}')" class="btn btn-default btn-xs black">
+						<i class="fa fa-remove"></i>彻底删除</a>
+					</li>
+				</ul>
+			 </td>
+         </tr>
+         {@/each}
+</script>

@@ -1,0 +1,5 @@
+org.springframework.context.ApplicationListener=\
+td.framework.boot.autoconfigure.mongo.event.ApplicationEnvironmentDefaultEvent
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+td.framework.boot.autoconfigure.mongo.MongoAutoConfiguration

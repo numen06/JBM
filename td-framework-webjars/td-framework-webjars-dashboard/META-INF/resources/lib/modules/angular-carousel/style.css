@@ -1,0 +1,24 @@
+/*reset*/
+body{font-family: "microsoft yahei","微软雅黑";}
+body,ul,li,ol,img{margin: 0;padding: 0;}
+li{list-style: none;}
+
+body{width: 800px;height: auto;margin: 0 auto;}
+body>h5{margin-left: 20px;}
+body>div{margin-left: 20px;}
+
+/*example*/
+.example{}
+.example ol{position:relative;width: 80px;height: 20px;top:-30px;left:60px;}
+.example ol li{float:left;width: 10px;height: 10px;margin: 5px;background: #fff;}
+.example ol li.seleted{background: #1AA4CA;}
+
+.example1{}
+.example1 ol{position:relative;width: 80px;height: 20px;top:-30px;left:60px;}
+.example1 ol li{float:left;width: 10px;height: 10px;margin: 5px;background: #fff;}
+.example1 ol li.seleted{background: #1AA4CA;}
+
+.example2{}
+.example2 ol{position:relative;width: 80px;height: 20px;top:-30px;left:60px;}
+.example2 ol li{float:left;width: 10px;height: 10px;margin: 5px;background: #fff;}
+.example2 ol li.seleted{background: #1AA4CA;}

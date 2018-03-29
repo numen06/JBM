@@ -1,0 +1,15 @@
+<configuration>
+	<property name="LEVEL" value="INFO"/>
+	<property name="PATTERN-A" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+	<property name="PATTERN-B" value="[%-5p][%thread][%d{yyy-MM-dd HH:mm:ss}][%C %M] ==> : %m%n"/>
+	<appender name="ROOT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${PATTERN-A}</pattern>
+			<charset>UTF-8</charset>
+		</encoder>
+		<target>System.out</target>
+	</appender>
+	<root level="${LEVEL}">
+		<appender-ref ref="ROOT"/>
+	</root>
+</configuration>

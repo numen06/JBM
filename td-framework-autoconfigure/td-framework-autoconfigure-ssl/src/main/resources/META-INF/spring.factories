@@ -1,0 +1,6 @@
+org.springframework.context.ApplicationListener=\
+td.framework.boot.autoconfigure.ssl.event.ApplicationEnvironmentDefaultEvent
+
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+td.framework.boot.autoconfigure.ssl.HttpAutoConfiguration

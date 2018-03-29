@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.tdenergys</groupId>
+		<artifactId>td-framework</artifactId>
+		<version>4.1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>td-framework-micro</artifactId>
+	<packaging>pom</packaging>
+	<developers>
+		<developer>
+			<id>wesley</id>
+			<name>wesley zhang</name>
+			<email>wesley.zhang@tdenergys.com</email>
+			<organization>Tdenergys</organization>
+			<organizationUrl>http://www.tdenergys.com</organizationUrl>
+			<roles>
+				<role>Project lead</role>
+			</roles>
+		</developer>
+	</developers>
+	<modules>
+		<module>td-framework-micro-service</module>
+		<module>td-framework-micro-core</module>
+		<module>td-framework-micro-web</module>
+		<module>td-framework-micro-fastservice</module>
+		<module>td-framework-micro-rest</module>
+	</modules>
+</project>

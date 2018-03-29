@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.td.ev.program.mapper.EnenergysMapper">
+	<select id="findEnergyTypes" resultType="map" parameterType="map">
+		select energy_type.* from energy_type,energy_type_ref_info
+		<where>
+			energy_type_ref_info.energy_type_id = energy_type.id
+			<if test="refValue != null">
+				and energy_type_ref_info.ref_value = #{refValue}
+			</if>
+			<if test="refType != null">
+				and energy_type_ref_info.ref_type = #{refType}
+			</if>
+			<if test="projectId != null">
+				and energy_type_ref_info.project_id = #{projectId}
+			</if>
+		</where>
+	</select>
+
+	<select id="findBaseEnergyTypes" resultType="map" parameterType="map">
+		select max(cumulative_energy) from data
+		<where>
+			<![CDATA[time > '2017-05-02 00:00:00']]>
+			<foreach collection="psns" index="index" item="psn" open="and (" separator=" or " close=")">
+				psn = #{psn}
+			</foreach>
+		</where>
+		group by time(1d)
+	</select>
+</mapper>

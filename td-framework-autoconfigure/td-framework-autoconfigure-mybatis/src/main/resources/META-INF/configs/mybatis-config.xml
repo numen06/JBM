@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- <typeAliases> -->
+	<!-- <package name="sample.mybatis.domain" /> -->
+	<!-- </typeAliases> -->
+	<!-- <mappers> -->
+	<!-- <mapper resource="com.td.masterdata.mapper.xml/DevcieMapper.xml" /> -->
+	<!-- </mappers> -->
+	<settings>
+		<setting name="defaultScriptingLanguage" value="com.baomidou.mybatisplus.MybatisXMLLanguageDriver" />
+		<setting name="logImpl" value="STDOUT_LOGGING" />
+	</settings>
+	<plugins>
+		<!-- 配置方式一、使用 MybatisPlus 提供方言实现类 -->
+		<plugin interceptor="com.baomidou.mybatisplus.plugins.PaginationInterceptor">
+			<property name="dialectType" value="mysql" />
+			<property name="optimizeType" value="aliDruid" />
+		</plugin>
+		<!-- SQL 执行分析拦截器 stopProceed 发现全表执行 delete update 是否停止运行 -->
+		<plugin interceptor="com.baomidou.mybatisplus.plugins.SqlExplainInterceptor">
+			<property name="stopProceed" value="false" />
+		</plugin>
+	</plugins>
+</configuration>

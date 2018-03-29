@@ -1,0 +1,8 @@
+package ${basePackage}.service;
+
+import com.td.framework.service.IBaseSqlService;
+import ${entityClass.name};
+
+public interface ${entityClass.simpleName}Service extends IBaseSqlService<${entityClass.simpleName}> {
+
+}

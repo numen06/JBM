@@ -1,0 +1,33 @@
+server:
+  port: 8888
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    metadata-map:
+      user.name: ${security.user.name}
+      user.password: ${security.user.password}
+  client:
+    service-url:
+      defaultZone: http://user:${REGISTRY_SERVER_PASSWORD:password}@registry:8761/eureka/
+spring:
+  profiles:
+    active: native
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true
+      username: user
+      password: ${CONFIG_SERVER_PASSWORD:password}
+      server:
+        native:
+          searchLocations: classpath:/configs,/configs
+  rabbitmq:
+    host: 192.168.1.6
+    port: 5672
+    username: admin
+    password: secret
+security:
+  user:
+    name: user
+    password: ${CONFIG_SERVER_PASSWORD:password}

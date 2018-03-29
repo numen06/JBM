@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationListener=\
+td.framework.boot.autoconfigure.h2.event.ApplicationEnvironmentDefaultEvent

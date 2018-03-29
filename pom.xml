@@ -1,0 +1,187 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>td-framework</artifactId>
+	<version>4.1.0-SNAPSHOT</version>
+	<groupId>com.tdenergys</groupId>
+	<packaging>pom</packaging>
+	<developers>
+		<developer>
+			<id>wesley</id>
+			<name>wesley zhang</name>
+			<email>wesley.zhang@tdenergys.com</email>
+			<organization>Tdenergys</organization>
+			<organizationUrl>http://www.tdenergys.com</organizationUrl>
+			<roles>
+				<role>Project lead</role>
+			</roles>
+		</developer>
+	</developers>
+	<modules>
+		<module>td-util</module>
+		<module>td-framework-core</module>
+		<module>td-framework-service</module>
+		<module>td-framework-tools</module>
+		<module>td-framework-web</module>
+		<!-- <module>td-framework-sample</module> -->
+		<module>td-framework-autoconfigure</module>
+		<module>td-framework-webjars</module>
+		<module>td-framework-micro</module>
+		<!-- <module>td-framework-devops</module> -->
+		<module>td-framework-data</module>
+		<module>td-framework-module</module>
+		<module>td-framework-cloud</module>
+	</modules>
+	<distributionManagement>
+		<repository>
+			<id>deployment</id>
+			<name>Team Nexus Release Repository</name>
+			<url>http://www.tdenergys.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>deployment</id>
+			<name>Team Nexus Snapshot Repository</name>
+			<url>http://www.tdenergys.com/nexus/content/repositories/snapshots/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-framework-dependencies</artifactId>
+				<version>${project.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-framework-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-framework-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-framework-tools</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-handler</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-sb-service</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-sb-web</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-sb-webs</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-sb-manager-web</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-util</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-strom</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.tdenergys</groupId>
+				<artifactId>td-micro-admin-client</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<scm>
+		<connection>scm:svn:http://101.231.241.28:7080/svn/seoc-4.0/java/</connection>
+		<url>http://101.231.241.28:7080/svn/seoc-4.0/java/</url>
+	</scm>
+
+	<repositories>
+		<repository>
+			<id>deployment</id>
+			<name>Team Nexus Release Repository</name>
+			<url>http://www.tdenergys.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<repository>
+			<id>deployment Snapshot</id>
+			<name>Team Nexus Snapshot Repository</name>
+			<url>http://www.tdenergys.com/nexus/content/repositories/snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>interval:5</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
+
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+					<skipTests>true</skipTests>
+					<testFailureIgnore>true</testFailureIgnore>
+					<argLine>-Dfile.encoding=UTF-8</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<showWarnings>true</showWarnings>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
