@@ -11,11 +11,7 @@ settings.gradle
 
 #java files ignore
 *.class
-# Package Files #
-*.jar
-*.war
-*.ear
-hs_err_pid*
+
 
 #maven ignore
 target/
