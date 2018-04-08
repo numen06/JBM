@@ -1,0 +1,3 @@
+org.springframework.context.ApplicationListener=\
+jbm.framework.boot.autoconfigure.camel.event.ApplicationEnvironmentDefaultEvent
+ 

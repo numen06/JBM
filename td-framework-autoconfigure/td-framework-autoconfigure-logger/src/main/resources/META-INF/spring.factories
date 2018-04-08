@@ -1,3 +1,0 @@
-org.springframework.context.ApplicationListener=\
-td.framework.boot.autoconfigure.logger.LoggingChangeInitializer
-

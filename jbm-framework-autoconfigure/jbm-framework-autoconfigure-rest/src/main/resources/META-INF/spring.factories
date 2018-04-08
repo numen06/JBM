@@ -1,0 +1,3 @@
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+jbm.framework.boot.autoconfigure.rest.RestAutoConfiguration

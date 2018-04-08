@@ -1,0 +1,5 @@
+org.springframework.context.ApplicationListener=\
+jbm.framework.boot.autoconfigure.schedule.event.ApplicationEnvironmentDefaultEvent
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+jbm.framework.boot.autoconfigure.schedule.ScheduleAutoConfiguration

@@ -1,3 +1,0 @@
-org.springframework.context.ApplicationListener=\
-td.framework.boot.autoconfigure.base.listener.ApplicationPidListener,\
-td.framework.boot.autoconfigure.base.listener.ApplicationServerPortListener

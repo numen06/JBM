@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+jbm.framework.boot.autoconfigure.mvc.WebResourcesConfigurer
+
+
+org.springframework.context.ApplicationListener=\
+jbm.framework.boot.autoconfigure.mvc.event.ApplicationEnvironmentDefaultEvent

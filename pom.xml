@@ -1,35 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>td-framework</artifactId>
+	<artifactId>jbm-framework</artifactId>
 	<version>4.1.0-SNAPSHOT</version>
-	<groupId>com.tdenergys</groupId>
+	<groupId>com.jbm</groupId>
 	<packaging>pom</packaging>
 	<developers>
 		<developer>
 			<id>wesley</id>
 			<name>wesley zhang</name>
 			<email>wesley.zhang@tdenergys.com</email>
-			<organization>Tdenergys</organization>
-			<organizationUrl>http://www.tdenergys.com</organizationUrl>
 			<roles>
 				<role>Project lead</role>
 			</roles>
 		</developer>
 	</developers>
 	<modules>
-		<module>td-util</module>
-		<module>td-framework-core</module>
-		<module>td-framework-service</module>
-		<module>td-framework-tools</module>
-		<module>td-framework-web</module>
-		<!-- <module>td-framework-sample</module> -->
-		<module>td-framework-autoconfigure</module>
-		<module>td-framework-webjars</module>
-		<module>td-framework-micro</module>
-		<!-- <module>td-framework-devops</module> -->
-		<module>td-framework-data</module>
-		<module>td-framework-module</module>
-		<module>td-framework-cloud</module>
+		<module>jbm-util</module>
+		<module>jbm-framework-core</module>
+		<module>jbm-framework-service</module>
+		<module>jbm-framework-tools</module>
+		<module>jbm-framework-web</module>
+		<!-- <module>jbm-framework-sample</module> -->
+		<module>jbm-framework-autoconfigure</module>
+		<module>jbm-framework-webjars</module>
+		<module>jbm-framework-micro</module>
+		<!-- <module>jbm-framework-devops</module> -->
+		<module>jbm-framework-data</module>
+		<module>jbm-framework-module</module>
+		<module>jbm-framework-cloud</module>
 	</modules>
 	<distributionManagement>
 		<repository>
@@ -48,75 +46,75 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-framework-dependencies</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-framework-dependencies</artifactId>
 				<version>${project.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-framework-core</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-framework-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-framework-service</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-framework-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-framework-tools</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-framework-tools</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-handler</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-handler</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-service</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-sb-service</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-sb-service</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-sb-web</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-sb-web</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-sb-webs</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-sb-webs</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-sb-manager-web</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-sb-manager-web</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-core</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-util</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-util</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-strom</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-strom</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.tdenergys</groupId>
-				<artifactId>td-micro-admin-client</artifactId>
+				<groupId>com.jbm</groupId>
+				<artifactId>jbm-micro-admin-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

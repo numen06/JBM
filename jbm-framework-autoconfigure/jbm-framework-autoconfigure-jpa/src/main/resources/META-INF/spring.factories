@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationListener=\
+jbm.framework.boot.autoconfigure.mysql.event.ApplicationEnvironmentDefaultEvent
