@@ -37,7 +37,8 @@ public class JsonServerStarter {
 	 */
 	public static void main(String[] args) throws IOException {
 		serverGroupContext.setHeartbeatTimeout(Const.TIMEOUT);
-
+		int size = new Long(Runtime.getRuntime().totalMemory() / 1024).intValue();
+		serverGroupContext.setReadBufferSize(size);
 		aioServer.start(serverIp, serverPort);
 	}
 }

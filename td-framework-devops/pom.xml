@@ -14,6 +14,7 @@
 		<module>td-framework-devops-env</module>
 		<module>td-framework-devops-upgrade</module>
 		<module>td-framework-devops-test</module>
+		<module>td-framework-devops-center</module>
 	</modules>
 	<properties>
 		<docker.plugin.version>0.4.13</docker.plugin.version>

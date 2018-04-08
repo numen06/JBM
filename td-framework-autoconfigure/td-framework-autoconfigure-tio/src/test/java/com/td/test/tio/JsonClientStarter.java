@@ -1,7 +1,6 @@
 package com.td.test.tio;
 
 import java.util.TimerTask;
-import java.util.UUID;
 
 import org.tio.client.AioClient;
 import org.tio.client.ClientChannelContext;
@@ -14,6 +13,7 @@ import org.tio.core.Node;
 
 import com.td.util.ScheduleUtils;
 
+import jodd.io.FileUtil;
 import td.framework.boot.autoconfigure.tio.handler.JsonClientAioHandler;
 import td.framework.boot.autoconfigure.tio.packet.JsonPacket;
 
@@ -49,14 +49,20 @@ public class JsonClientStarter {
 			public void run() {
 				send();
 			}
-		}, 0, 3000);
+		}, 0, 30000000);
 
 	}
 
 	private static void send() {
-		JsonPacket packet = new JsonPacket();
-		packet.pack("hello world," + UUID.randomUUID());
-		// packet.setJsonBody("hello world," + UUID.randomUUID());
-		Aio.send(clientChannelContext, packet);
+		try {
+			JsonPacket packet = new JsonPacket();
+			// packet.pack("hello world," + UUID.randomUUID());
+			packet.pack(FileUtil.readBytes("D:/maven_workspaces/td-framework/td-framework-autoconfigure/td-framework-autoconfigure-tio/src/test/resources/td-dpen-tdccp.log"));
+			// packet.setJsonBody("hello world," + UUID.randomUUID());
+//			clientChannelContext.setPacketNeededLength(Integer.MAX_VALUE);
+			Aio.send(clientChannelContext, packet);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

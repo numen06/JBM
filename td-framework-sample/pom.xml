@@ -33,6 +33,7 @@
 		<module>td-framework-sample-jstorm</module>
 		<module>td-framework-sample-disruptor</module>
 		<module>td-framework-sample-fastdfs</module>
+		<module>td-framework-sample-aio</module>
 	</modules>
 	<dependencies>
 		<dependency>

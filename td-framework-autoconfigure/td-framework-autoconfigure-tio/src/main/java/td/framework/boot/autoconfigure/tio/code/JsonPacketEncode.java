@@ -6,7 +6,6 @@ import org.tio.core.GroupContext;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson.util.IOUtils;
 
 import td.framework.boot.autoconfigure.tio.packet.JsonPacket;
 
@@ -23,8 +22,7 @@ public class JsonPacketEncode implements PacketEncode<JsonPacket> {
 		// }
 
 		if (packet.getJsonForcer() != null) {
-			String str = JSON.toJSONString(packet.getJsonForcer(), SerializerFeature.DisableCircularReferenceDetect);
-			body = str.getBytes(IOUtils.UTF8);
+			body = JSON.toJSONBytes(packet.getJsonForcer(), SerializerFeature.DisableCircularReferenceDetect);
 			bodyLen = body.length;
 		}
 

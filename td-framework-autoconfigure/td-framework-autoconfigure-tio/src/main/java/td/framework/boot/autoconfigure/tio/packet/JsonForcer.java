@@ -3,6 +3,8 @@ package td.framework.boot.autoconfigure.tio.packet;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.alibaba.fastjson.JSON;
+
 /**
  * @author wesley.zhang
  * @date 2017年11月7日
@@ -16,9 +18,9 @@ public class JsonForcer implements Serializable {
 	 */
 	private static final long serialVersionUID = -448644988609245848L;
 
-	private Class<?> clazz;
+	private Class<?> targetClass;
 
-	private Object target;
+	private String targetSource;
 
 	/**
 	 * 0:心跳包，1:正常消息
@@ -27,12 +29,12 @@ public class JsonForcer implements Serializable {
 
 	private Date createTime = new Date();
 
-	public Class<?> getClazz() {
-		return clazz;
+	public Class<?> getTargetClass() {
+		return targetClass;
 	}
 
-	public void setClazz(Class<?> clazz) {
-		this.clazz = clazz;
+	public void setTargetClass(Class<?> targetClass) {
+		this.targetClass = targetClass;
 	}
 
 	public Integer getType() {
@@ -51,12 +53,17 @@ public class JsonForcer implements Serializable {
 		this.createTime = createTime;
 	}
 
-	public Object getTarget() {
-		return target;
+	public String getTargetSource() {
+		return targetSource;
 	}
 
-	public void setTarget(Object target) {
-		this.target = target;
+	public void setTargetSource(String targetSource) {
+		this.targetSource = targetSource;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getTarget() {
+		return (T) JSON.parseObject(this.targetSource, targetClass);
 	}
 
 	public JsonForcer() {
@@ -65,18 +72,21 @@ public class JsonForcer implements Serializable {
 
 	public JsonForcer(Object target) {
 		super();
-		this.target = target;
+		this.targetSource = JSON.toJSONString(target);
+		if (target != null)
+			this.targetClass = target.getClass();
 	}
 
 	public JsonForcer(Object target, Integer type) {
 		super();
-		this.target = target;
+		this.targetSource = JSON.toJSONString(target);
 		this.type = type;
+		if (target != null)
+			this.targetClass = target.getClass();
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> T toJavaBean() {
-		return (T) this.target;
-	}
+	// public T toJavaBean(Class clazz) {
+	// return JSON.parseObject(target, clazz);
+	// }
 
 }

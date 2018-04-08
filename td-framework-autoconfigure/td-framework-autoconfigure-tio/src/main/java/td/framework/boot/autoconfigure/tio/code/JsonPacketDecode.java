@@ -4,8 +4,6 @@ import java.nio.ByteBuffer;
 
 import org.tio.core.exception.AioDecodeException;
 
-import com.td.test.tio.HelloPacket;
-
 import td.framework.boot.autoconfigure.tio.packet.JsonPacket;
 
 public class JsonPacketDecode implements PacketDecode<JsonPacket> {
@@ -14,7 +12,7 @@ public class JsonPacketDecode implements PacketDecode<JsonPacket> {
 	public JsonPacket decode(ByteBuffer buffer) throws AioDecodeException {
 		int readableLength = buffer.limit() - buffer.position();
 		// 收到的数据组不了业务包，则返回null以告诉框架数据不够
-		if (readableLength < HelloPacket.HEADER_LENGHT) {
+		if (readableLength < JsonPacket.HEADER_LENGHT) {
 			return null;
 		}
 

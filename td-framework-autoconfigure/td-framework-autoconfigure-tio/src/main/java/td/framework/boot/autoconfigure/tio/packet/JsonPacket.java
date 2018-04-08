@@ -16,7 +16,7 @@ import com.alibaba.fastjson.util.IOUtils;
  */
 public class JsonPacket extends Packet {
 	private static final long serialVersionUID = 1L;
-	public static final int HEADER_LENGHT = 0;// 消息头的长度
+	public static final int HEADER_LENGHT = 4;// 消息头的长度
 
 	protected JsonForcer jsonForcer = new JsonForcer(null);
 
