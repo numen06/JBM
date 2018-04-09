@@ -14,6 +14,7 @@
 - 安全框架：Spring Security
 - 任务调度：Spring + Quartz + Zookeeper
 - 持久层框架：MyBatis + MyBatis-Plus + JPA + Spring Data
+- 文档性架构：MongoDB + FastDFS
 - 数据库连接池：Alibaba Druid
 - 缓存框架：Redis + Guava
 - 会话管理：Spring Session + Redis
