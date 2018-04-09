@@ -14,14 +14,14 @@
 		<developer>
 			<id>wesley</id>
 			<name>wesley zhang</name>
-			<email>wesley.zhang@tdenergys.com</email>
+			<email>numen06@qq.com</email>
 			<roles>
 				<role>Project lead</role>
 			</roles>
 		</developer>
 	</developers>
 	<properties>
-		<td.framework.version>4.1.0-SNAPSHOT</td.framework.version>
+		<jbm.framework.version>4.1.0-SNAPSHOT</jbm.framework.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<jdk.version>1.8</jdk.version>
@@ -58,18 +58,6 @@
 		</repository>
 	</repositories>
 
-	<distributionManagement>
-		<repository>
-			<id>deployment</id>
-			<name>Team Nexus Release Repository</name>
-			<url>http://www.tdenergys.com/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>deployment</id>
-			<name>Team Nexus Snapshot Repository</name>
-			<url>http://www.tdenergys.com/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
@@ -148,175 +136,175 @@
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-util</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-core</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-service</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-web</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-tools</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<!-- micro -->
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-micro-core</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-micro-fastservice</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-micro-service</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-micro-web</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-micro-rest</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<!-- autoconfigure -->
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-actuator</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-ftp</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-druid</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-camel</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-dubbo</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-freemark</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-jpa</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-mongo</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-redis</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-swagger</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-logger</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-jpa-h2</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-activiti</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-ssl</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-beetl</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-schedule</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-rest</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-excel</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-leveldb</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-dictionary</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-autoconfigure-mvc</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<!-- webjars -->
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-webjars</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.jbm</groupId>
 				<artifactId>jbm-framework-webjars-manager</artifactId>
-				<version>${td.framework.version}</version>
+				<version>${jbm.framework.version}</version>
 			</dependency>
 			<!-- mqtt -->
 			<dependency>

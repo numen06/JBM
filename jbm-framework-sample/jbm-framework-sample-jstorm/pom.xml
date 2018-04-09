@@ -10,22 +10,6 @@
 	<modules>
 		<module>jbm-framework-sample-jstorm-kafkaspout</module>
 	</modules>
-	<repositories>
-		<repository>
-			<id>deployment</id>
-			<name>Team Nexus Release Repository</name>
-			<url>http://www.tdenergys.com/nexus/content/repositories/releases/</url>
-		</repository>
-		<repository>
-			<id>deployment Snapshot</id>
-			<name>Team Nexus Snapshot Repository</name>
-			<url>http://www.tdenergys.com/nexus/content/repositories/snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>interval:5</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>com.alibaba.jstorm</groupId>
