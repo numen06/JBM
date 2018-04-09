@@ -12,6 +12,11 @@ import org.tio.core.Aio;
 import org.tio.core.Node;
 import org.tio.core.intf.Packet;
 
+/**
+ * 
+ * @author numen
+ *
+ */
 public class AioClientTemplate {
 
 	// 一组连接共用的上下文对象
