@@ -13,7 +13,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 @SpringBootApplication
 @EnableOAuth2Sso
 @EnableZuulProxy
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class MUiApplication extends WebSecurityConfigurerAdapter {
 
 	public static void main(String[] args) {

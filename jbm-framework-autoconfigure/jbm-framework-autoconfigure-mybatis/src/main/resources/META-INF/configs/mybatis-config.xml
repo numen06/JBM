@@ -5,7 +5,7 @@
 	<!-- <package name="sample.mybatis.domain" /> -->
 	<!-- </typeAliases> -->
 	<!-- <mappers> -->
-	<!-- <mapper resource="com.td.masterdata.mapper.xml/DevcieMapper.xml" /> -->
+	<!-- <mapper resource="com.jbm.masterdata.mapper.xml/DevcieMapper.xml" /> -->
 	<!-- </mappers> -->
 	<settings>
 		<setting name="defaultScriptingLanguage" value="com.baomidou.mybatisplus.MybatisXMLLanguageDriver" />

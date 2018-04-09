@@ -2,7 +2,7 @@ package ${basePackage}.service.impl;
 
 import org.springframework.stereotype.Service;
 
-import com.td.framework.service.mybatis.BaseSqlDaoImpl;
+import com.jbm.framework.service.mybatis.BaseSqlDaoImpl;
 import ${entityClass.name};
 import ${basePackage}.service.${entityClass.simpleName}Service;
 

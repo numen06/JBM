@@ -44,7 +44,7 @@
           </filter>  
 	</appender>  
 	
-    <logger name="com.td">
+    <logger name="com.jbm">
         <level value="WARN"/>
     </logger>
     

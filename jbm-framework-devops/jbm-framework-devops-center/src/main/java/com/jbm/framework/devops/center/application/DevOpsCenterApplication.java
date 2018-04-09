@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @EnableAdminServer
  */
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 @EnableTransactionManagement
 @EnableScheduling
 public class DevOpsCenterApplication {

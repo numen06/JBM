@@ -11,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import com.jbm.framework.devops.client.bean.ConfigOption;
 
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class DevOpsClientApplication {
 	private final static Logger logger = LoggerFactory.getLogger(DevOpsClientApplication.class);
 

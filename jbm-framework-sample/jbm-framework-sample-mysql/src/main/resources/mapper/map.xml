@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.td.ev.program.mapper.DataMapper">
-	<select id="getAggregateDataBetweenTime" resultType="com.td.sample.entity.AggregateData" parameterType="map">
+<mapper namespace="com.jbm.ev.program.mapper.DataMapper">
+	<select id="getAggregateDataBetweenTime" resultType="com.jbm.sample.entity.AggregateData" parameterType="map">
 		SELECT id,
 		code,
 		data,

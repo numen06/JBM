@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @IntegrationComponentScan
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class MqttAppStart {
 	public static void main(String[] args) {
 		SpringApplication.run(MqttAppStart.class, args);

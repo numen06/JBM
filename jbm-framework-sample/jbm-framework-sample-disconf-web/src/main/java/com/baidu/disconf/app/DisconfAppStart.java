@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EntityScan("com.baidu")
 @EnableJpaRepositories("com.baidu")
-@ComponentScan({ "com.baidu", "com.td" })
+@ComponentScan({ "com.baidu", "com.jbm" })
 public class DisconfAppStart {
 	public static void main(String[] args) {
 		SpringApplication.run(DisconfAppStart.class, args);

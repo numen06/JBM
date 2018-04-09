@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 import com.jbm.framework.devops.env.bean.ConfigOption;
 
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class DevOpsEnvApplication {
 	// private final static Logger logger =
 	// LoggerFactory.getLogger(DevOpsEnvApplication.class);

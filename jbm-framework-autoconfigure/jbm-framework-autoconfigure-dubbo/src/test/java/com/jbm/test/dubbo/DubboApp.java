@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class DubboApp {
 	public static void main(String[] args) throws InterruptedException {
 		SpringApplication.run(DubboApp.class, args);

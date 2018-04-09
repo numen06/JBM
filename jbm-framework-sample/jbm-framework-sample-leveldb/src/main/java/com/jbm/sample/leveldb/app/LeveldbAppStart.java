@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class LeveldbAppStart {
 
 	public static void main(String[] args) {

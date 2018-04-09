@@ -16,7 +16,7 @@ import com.jbm.framework.devops.actuator.common.ActuatorConfig;
  * @EnableAdminServer
  */
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 @EntityScan("com.jbm.framework.devops.actuator.masterdata")
 @EnableJpaRepositories("com.jbm.framework.devops.actuator.masterdata")
 @EnableTransactionManagement

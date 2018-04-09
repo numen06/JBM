@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
  *
  */
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class WebAppStart {
 
 	/**

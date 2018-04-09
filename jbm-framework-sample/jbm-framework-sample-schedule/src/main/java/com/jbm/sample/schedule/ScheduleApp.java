@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public class ScheduleApp {
 	public static void main(String[] args) {
 		SpringApplication.run(ScheduleApp.class, args);

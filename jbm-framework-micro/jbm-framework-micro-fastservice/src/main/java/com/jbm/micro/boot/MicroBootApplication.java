@@ -17,7 +17,7 @@ import org.springframework.context.annotation.ComponentScan;
 @Inherited
 @EnableCaching
 @SpringBootApplication
-@ComponentScan("com.td")
+@ComponentScan("com.jbm")
 public @interface MicroBootApplication {
 
 }

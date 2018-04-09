@@ -67,7 +67,7 @@ import com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean;
 @ConditionalOnBean(DataSource.class)
 @EnableConfigurationProperties(MybatisPlusProperties.class)
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
-@MapperScan(annotationClass = Mapper.class, markerInterface = BaseMapper.class, basePackages = "com.td")
+@MapperScan(annotationClass = Mapper.class, markerInterface = BaseMapper.class, basePackages = "com.jbm")
 public class MybatisPlusAutoConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(MybatisPlusAutoConfiguration.class);

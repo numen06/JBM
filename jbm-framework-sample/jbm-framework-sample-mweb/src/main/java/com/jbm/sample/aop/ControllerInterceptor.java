@@ -25,7 +25,7 @@ public class ControllerInterceptor {
 	private static final Logger logger = LoggerFactory.getLogger(ControllerInterceptor.class);
 
 	/**
-	 * 定义拦截规则：拦截com.td包下面的所有类中，有@RequestMapping注解的方法。
+	 * 定义拦截规则：拦截com.jbm包下面的所有类中，有@RequestMapping注解的方法。
 	 */
 	@Pointcut("execution(* com.jbm..*(..)) and @annotation(org.springframework.web.bind.annotation.RequestMapping)")
 	public void controllerMethodPointcut() {

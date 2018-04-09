@@ -39,7 +39,7 @@ public class DubboAutoConfiguration extends AnnotationBean implements Environmen
 	private static final String APPLICATION_NAME = "dubbo-" + UUID.randomUUID().toString();
 	private static final String NAME_PATTERN = "${spring.application.name:${vcap.application.name:${spring.config.name:" + APPLICATION_NAME + "}}}";
 
-	private static final String ANNOTATION_PACKAGE = "com.td";
+	private static final String ANNOTATION_PACKAGE = "com.jbm";
 
 	public DubboAutoConfiguration() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
 		super();
