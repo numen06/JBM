@@ -7,7 +7,7 @@ public class DictionaryProperties {
 
 	public static final String PREFIX = "dictionary";
 
-	public final static String DEF_CENTER = "http://dpen.tdenergys.com/td-dpen-center-web/data/dictionary/dictionaryList";
+	public final static String DEF_CENTER = "http://dpen.51jbm.com/td-dpen-center-web/data/dictionary/dictionaryList";
 
 	public final static String DEF_NAMESPACES = "system";
 	/**

@@ -89,7 +89,7 @@ function uploadImg() {
     var data= new FormData();
     data.append('file', $("#filePic")[0].files[0]);
     $.ajax({
-        url : "https://doc.tdenergys.com/api/upload",
+        url : "https://doc.51jbm.com/api/upload",
         data : data,
         myType:"assembly",
         type : "POST",
@@ -100,7 +100,7 @@ function uploadImg() {
             if(resp.status==1){
                 var editorElement = CKEDITOR.document.getById( 'editor' );
                 var htmlData=CKEDITOR.instances.editor.getData();
-                var appEndData="<img src='https://doc.tdenergys.com/img/"+resp.result[0].id+".png'></img>";
+                var appEndData="<img src='https://doc.51jbm.com/img/"+resp.result[0].id+".png'></img>";
                 var theData=htmlData+appEndData;
                 CKEDITOR.instances.editor.setData(theData);
             }else{

@@ -44,7 +44,7 @@
     $.ajax({
         type: "GET",
 //            dataType: "json",
-        url: "https://www.tdenergys.com/mwechat/api/getAccessToken",
+        url: "https://www.51jbm.com/mwechat/api/getAccessToken",
         contentType: "application/json",
         data:{code:request.code},
         error : function(){
@@ -68,7 +68,7 @@
             fee_type: 'CNY',
             total_fee: 1,
             spbill_create_ip: '192.168.14.209',
-            notify_url: 'http://www.tdenergys.com/mwechat/api/pay',
+            notify_url: 'http://www.51jbm.com/mwechat/api/pay',
             trade_type: 'JSAPI',
             detail:"test",
             attach:"1231",
@@ -77,7 +77,7 @@
         $.ajax({
             type: "POST",
 //            dataType: "json",
-            url: "https://www.tdenergys.com/mwechat/api/unifiedOrder",
+            url: "https://www.51jbm.com/mwechat/api/unifiedOrder",
             contentType: "application/json",
             data: JSON.stringify(param),
             error: function () {
@@ -101,7 +101,7 @@
         $.ajax({
             type: "GET",
 //            dataType: "json",
-            url: "https://www.tdenergys.com/mwechat/api/payAuth",
+            url: "https://www.51jbm.com/mwechat/api/payAuth",
             contentType: "application/json",
             data: param,
             error: function () {
@@ -125,7 +125,7 @@
 //        $.ajax({
 //            type: "GET",
 ////            dataType: "json",
-//            url: "https://www.tdenergys.com/mwechat/api/payAuth",
+//            url: "https://www.51jbm.com/mwechat/api/payAuth",
 //            contentType: "application/json",
 //            data: param,
 //            error: function () {

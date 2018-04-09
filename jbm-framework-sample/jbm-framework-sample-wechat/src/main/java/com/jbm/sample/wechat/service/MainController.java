@@ -20,7 +20,7 @@ public class MainController {
 
 	@PostConstruct
 	public void init() {
-		jsApiParam = JsApiManager.signature("http://www.tdenergys.com/mwechat/views");
+		jsApiParam = JsApiManager.signature("http://www.51jbm.com/mwechat/views");
 
 	}
 

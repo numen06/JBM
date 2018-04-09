@@ -215,7 +215,7 @@ public class SourceService {
 	}
 
 	public File loadSource(String url) throws IOException, InterruptedException {
-		url = "http://doc.tdenergys.com/doc/587fa6929c46b58bdc628278.jar";
+		url = "http://doc.51jbm.com/doc/587fa6929c46b58bdc628278.jar";
 		HttpHeaders headers = new HttpHeaders();
 		// headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 		ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<byte[]>(headers), byte[].class);

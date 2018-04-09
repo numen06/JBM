@@ -6,7 +6,7 @@ public class TicketServer extends JsApiTicketServer {
 
 	@Override
 	public String ticket() {
-		return "http://www.tdenergys.com/mwechat";
+		return "http://www.51jbm.com/mwechat";
 	}
 
 }

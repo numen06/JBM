@@ -48,10 +48,10 @@ public class MyWechat extends WechatSupport {
 			// responseNews(items);
 		} else if (content.equals("3")) {
 			responseText(
-				"请授权!<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxede7e55af69cac3b&redirect_uri=http://www.tdenergys.com/wechat/auth2&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect\">点击授权</a>");
+				"请授权!<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxede7e55af69cac3b&redirect_uri=http://www.51jbm.com/wechat/auth2&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect\">点击授权</a>");
 		} else if (content.equals("4")) {
 			responseText(
-				"请授权!<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxede7e55af69cac3b&redirect_uri=http://www.tdenergys.com/wechat/auth2&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect\">点击授权</a>");
+				"请授权!<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxede7e55af69cac3b&redirect_uri=http://www.51jbm.com/wechat/auth2&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect\">点击授权</a>");
 		} else {
 			StringBuilder sb = new StringBuilder();
 			sb.append("你好，你的输入为:").append(content).append("\n");
