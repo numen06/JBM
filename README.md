@@ -10,6 +10,7 @@
 
 
 ### 技术选型
+-JDK:JDK1.8+
 - 核心框架：Spring Boot
 - 安全框架：Spring Security
 - 任务调度：Spring + Quartz + Zookeeper
