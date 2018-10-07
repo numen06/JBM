@@ -56,7 +56,8 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 
 	protected final static Logger privateLogger = LoggerFactory.getLogger(BaseSqlDaoImpl.class);
 
-	private final static String MAPPER_TEMP = "package {0};public interface {1} extends com.baomidou.mybatisplus.mapper.BaseMapper<{2}> '{" + "'}";
+	private final static String MAPPER_TEMP = "package {0};public interface {1} extends com.baomidou.mybatisplus.mapper.BaseMapper<{2}> '{"
+			+ "'}";
 
 	protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -69,8 +70,10 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 		try {
 			this.baseMapper = baseMapper;
 			if (baseMapper == null) {
-				final Class<?> clazz = JavaStringCompilerUtils.compilerMapper(this.entityDaoWarp.getEntityClass(), MAPPER_TEMP);
-				MybatisMapperAnnotationBuilder parser = new MybatisMapperAnnotationBuilder(sqlSessionTemplate.getConfiguration(), clazz);
+				final Class<?> clazz = JavaStringCompilerUtils.compilerMapper(this.entityDaoWarp.getEntityClass(),
+						MAPPER_TEMP);
+				MybatisMapperAnnotationBuilder parser = new MybatisMapperAnnotationBuilder(
+						sqlSessionTemplate.getConfiguration(), clazz);
 				parser.parse();
 			}
 		} catch (Exception e) {
@@ -159,24 +162,31 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	@Override
 	public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) throws DataServiceException {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(entity, pageForm);
-		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams, selectMapperParams.getPagination());
-		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(), pageForm.pageable());
+		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
 		return dataPaging;
 	}
 
 	@Override
 	public <K, V> DataPaging<Entity> selectEntitys(Map<K, V> params, PageForm pageForm) throws DataServiceException {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(params, pageForm);
-		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams, selectMapperParams.getPagination());
-		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(), pageForm.pageable());
+		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
 		return dataPaging;
 	}
 
 	@Override
-	public DataPaging<Entity> selectEntitys(Entity entity, Map<String, Object> expand, PageForm pageForm) throws DataServiceException {
+	public DataPaging<Entity> selectEntitys(Entity entity, Map<String, Object> expand, PageForm pageForm)
+			throws DataServiceException {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(entity, pageForm);
-		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams, selectMapperParams.getPagination());
-		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(), pageForm.pageable());
+		List<Entity> list = sqlSessionTemplate.selectList(sqlStatement("selectPage"), selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
 		return dataPaging;
 	}
 
@@ -306,7 +316,8 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	}
 
 	@Override
-	public <K, V> Map<K, V> selectMapperMap(final String statement, String mapKey, final Object... args) throws DataServiceException {
+	public <K, V> Map<K, V> selectMapperMap(final String statement, String mapKey, final Object... args)
+			throws DataServiceException {
 		final Map<String, Object> map = Maps.newLinkedHashMap();
 		// final RowBounds rowBounds;
 		Object parameter = map;
@@ -366,8 +377,7 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	 * 注意！！ 该方法为 Integer 判断，不可传入 int 基本类型
 	 * </p>
 	 *
-	 * @param result
-	 *            数据库操作返回影响条数
+	 * @param result 数据库操作返回影响条数
 	 * @return boolean
 	 */
 	protected static boolean retBool(Integer result) {
@@ -450,8 +460,7 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	 * TableId 注解存在更新记录，否插入一条记录
 	 * </p>
 	 *
-	 * @param entity
-	 *            实体对象
+	 * @param entity 实体对象
 	 * @return boolean
 	 */
 	@Transactional(rollbackFor = Exception.class)
@@ -527,12 +536,9 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	/**
 	 * 批量插入修改
 	 *
-	 * @param entityList
-	 *            实体对象列表
-	 * @param batchSize
-	 *            批量刷新个数
-	 * @param selective
-	 *            是否滤掉空字段
+	 * @param entityList 实体对象列表
+	 * @param batchSize  批量刷新个数
+	 * @param selective  是否滤掉空字段
 	 * @return boolean
 	 */
 	private boolean insertOrUpdateBatch(List<Entity> entityList, int batchSize, boolean selective) {
@@ -635,12 +641,9 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	/**
 	 * 根据主键ID进行批量修改
 	 *
-	 * @param entityList
-	 *            实体对象列表
-	 * @param batchSize
-	 *            批量刷新个数
-	 * @param selective
-	 *            是否滤掉空字段
+	 * @param entityList 实体对象列表
+	 * @param batchSize  批量刷新个数
+	 * @param selective  是否滤掉空字段
 	 * @return boolean
 	 */
 	private boolean updateBatchById(List<Entity> entityList, int batchSize, boolean selective) {
@@ -686,25 +689,29 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	@Override
 	public Entity selectOne(Wrapper<Entity> wrapper) {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(wrapper);
-		return SqlHelper.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_ONE), selectMapperParams));
+		return SqlHelper
+				.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_ONE), selectMapperParams));
 	}
 
 	@Override
 	public Map<String, Object> selectMap(Wrapper<Entity> wrapper) {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(wrapper);
-		return SqlHelper.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_BY_MAP), selectMapperParams));
+		return SqlHelper
+				.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_BY_MAP), selectMapperParams));
 	}
 
 	@Override
 	public Object selectObj(Wrapper<Entity> wrapper) {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(wrapper);
-		return SqlHelper.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_OBJS), selectMapperParams));
+		return SqlHelper
+				.getObject(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_OBJS), selectMapperParams));
 	}
 
 	@Override
 	public int selectCount(Wrapper<Entity> wrapper) {
 		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(wrapper);
-		return SqlHelper.retCount(sqlSessionTemplate.selectOne(sqlStatement(SqlMethod.SELECT_COUNT), selectMapperParams));
+		return SqlHelper
+				.retCount(sqlSessionTemplate.selectOne(sqlStatement(SqlMethod.SELECT_COUNT), selectMapperParams));
 	}
 
 	@Override
@@ -748,5 +755,15 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 		page.setRecords(sqlSessionTemplate.selectList(sqlStatement(SqlMethod.SELECT_PAGE), selectMapperParams));
 		// page.setRecords(baseMapper.selectPage(page, wrapper));
 		return page;
+	}
+
+	/**
+	 * 保存修改之间检查实体，一般为默认字段处理提供接口
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	public Entity checkEntity(Entity entity) {
+		return entity;
 	}
 }

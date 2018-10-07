@@ -15,6 +15,7 @@ import com.jbm.framework.metadata.usage.bean.AdvEntity;
  * @param <Entity>
  * @param <PK>
  */
-public class AdvSqlDaoImpl<Mapper extends BaseMapper<Entity>, Entity extends AdvEntity<CODE>, CODE extends Serializable> extends BaseSqlDaoImpl<Entity, Long> {
+public class AdvSqlDaoImpl<Mapper extends BaseMapper<Entity>, Entity extends AdvEntity<CODE>, CODE extends Serializable>
+		extends BaseSqlDaoImpl<Entity, Long> {
 
 }
