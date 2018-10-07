@@ -19,4 +19,7 @@
 - 缓存框架：Redis + Guava
 - 会话管理：Spring Session + Redis
 - 日志管理：SLF4J、Log4j2
-- 前端框架：Angular JS + Bootstrap + Jquery  
+- 前端框架：Angular JS + Bootstrap + Jquery
+ 
+☆jbm-framework-dependencies为maven基础，标示框架内所有jar的版本，本框架已经消除大部分兼容性问题，为一次集成打下结实基础。
+为了目录简单放在根文件下，如需编译需要先引入。
