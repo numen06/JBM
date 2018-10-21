@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>jbm-framework</artifactId>
 	<version>4.1.0-SNAPSHOT</version>
@@ -14,6 +16,18 @@
 			</roles>
 		</developer>
 	</developers>
+	<distributionManagement>
+		<repository>
+			<id>jbm-releases</id>
+			<name>jbm-releases</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-release-NxvguQ/</url>
+		</repository>
+		<snapshotRepository>
+			<id>jbm-snapshots</id>
+			<name>jbm-snapshots</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-snapshot-j7ghlW/</url>
+		</snapshotRepository>
+	</distributionManagement>
 	<modules>
 		<module>jbm-util</module>
 		<module>jbm-framework-core</module>

@@ -9,7 +9,8 @@ import com.jbm.framework.metadata.exceptions.DataServiceException;
 import com.jbm.framework.metadata.usage.page.DataPaging;
 import com.jbm.framework.metadata.usage.page.PageForm;
 
-public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializable> extends IBaseDao<Entity, PK>, IService<Entity> {
+public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializable>
+		extends IBaseDao<Entity, PK>, IService<Entity> {
 	/**
 	 * 查询一个实体
 	 * 
@@ -44,14 +45,10 @@ public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializabl
 	 * 
 	 * 分页查询
 	 * 
-	 * @param statement
-	 *            需要查询的mapper方法
-	 * @param parameter
-	 *            查询参数
-	 * @param offset
-	 *            数据开始节点
-	 * @param limit
-	 *            每页数据量
+	 * @param statement 需要查询的mapper方法
+	 * @param parameter 查询参数
+	 * @param offset    数据开始节点
+	 * @param limit     每页数据量
 	 * @return 分页实体
 	 * 
 	 * @deprecated 推荐使用{@link PageForm}
@@ -63,14 +60,10 @@ public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializabl
 	 * 
 	 * 分页查询
 	 * 
-	 * @param statement
-	 *            需要查询的mapper方法
-	 * @param parameter
-	 *            查询参数
-	 * @param offset
-	 *            数据开始节点
-	 * @param limit
-	 *            每页数据量
+	 * @param statement 需要查询的mapper方法
+	 * @param parameter 查询参数
+	 * @param offset    数据开始节点
+	 * @param limit     每页数据量
 	 * @return 分页实体
 	 * 
 	 * @deprecated 推荐使用{@link PageForm}
@@ -305,23 +298,19 @@ public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializabl
 	/**
 	 * 通过实体查询分页，并且加入扩展字段
 	 * 
-	 * @param entity
-	 *            实体
-	 * @param expand
-	 *            扩展字段
-	 * @param pageForm
-	 *            分页信息
+	 * @param entity   实体
+	 * @param expand   扩展字段
+	 * @param pageForm 分页信息
 	 * @return
 	 */
-	DataPaging<Entity> selectEntitys(Entity entity, Map<String, Object> expand, PageForm pageForm) throws DataServiceException;
+	DataPaging<Entity> selectEntitys(Entity entity, Map<String, Object> expand, PageForm pageForm)
+			throws DataServiceException;
 
 	/**
 	 * 通过实体查询列表，并且加入扩展
 	 * 
-	 * @param entity
-	 *            实体
-	 * @param expand
-	 *            扩展
+	 * @param entity 实体
+	 * @param expand 扩展
 	 * @return
 	 */
 	List<Entity> selectEntitys(Entity entity, Map<String, Object> expand) throws DataServiceException;
@@ -353,5 +342,11 @@ public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializabl
 	<K, V> DataPaging<Entity> selectEntitys(Map<K, V> params, PageForm pageForm) throws DataServiceException;
 
 	boolean update(Entity entity, Entity updateEntity) throws DataServiceException;
+
+	<K, V> DataPaging<Entity> selectMapperPaging(String statement, Map<K, V> params, PageForm pageForm)
+			throws DataServiceException;
+
+	DataPaging<Entity> selectMapperEntitys(String statement, Entity entity, PageForm pageForm)
+			throws DataServiceException;
 
 }

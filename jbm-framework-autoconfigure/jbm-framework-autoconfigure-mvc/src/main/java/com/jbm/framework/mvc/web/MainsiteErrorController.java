@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Created with IntelliJ IDEA. User: Joe Xie Date: 2016/3/15 Time: 11:48
+ * Created with IntelliJ IDEA. User: wesley.zhang Date: 2016/3/15 Time: 11:48
  */
 @Controller
 public class MainsiteErrorController implements ErrorController {

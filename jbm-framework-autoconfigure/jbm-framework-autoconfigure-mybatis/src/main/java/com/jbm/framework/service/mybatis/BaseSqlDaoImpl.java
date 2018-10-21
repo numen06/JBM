@@ -191,6 +191,28 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 	}
 
 	@Override
+	public DataPaging<Entity> selectMapperEntitys(String statement, Entity entity, PageForm pageForm)
+			throws DataServiceException {
+		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(entity, pageForm);
+		List<Entity> list = sqlSessionTemplate.selectList(statement, selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
+		return dataPaging;
+	}
+
+	@Override
+	public <K, V> DataPaging<Entity> selectMapperPaging(String statement, Map<K, V> params, PageForm pageForm)
+			throws DataServiceException {
+		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(params, pageForm);
+		List<Entity> list = sqlSessionTemplate.selectList(statement, selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Entity> dataPaging = new DataPaging<Entity>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
+		return dataPaging;
+	}
+
+	@Override
 	public boolean delete(Entity entity) throws DataServiceException {
 		return this.delete(new EntityWrapper<>(entity));
 	}

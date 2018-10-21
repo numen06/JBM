@@ -23,7 +23,28 @@ public interface ILevelSqlService<Entity extends MasterLevelEntity<CODE>, CODE e
 	 * @return
 	 * @throws DataServiceException
 	 */
-	List<Entity> selectRootList(Entity entity) throws DataServiceException;
+	List<Entity> selectRootCodeList(Entity entity) throws DataServiceException;
+	
+	List<Entity> selectRootIdList(Entity entity) throws DataServiceException;
+	
+
+	/**
+	 * 通过父节点获取所有下面的子节点（递归慎用）
+	 * 
+	 * @param entity
+	 * @return
+	 * @throws DataServiceException
+	 */
+	List<Entity> selectTreeByParentId(Entity entity) throws DataServiceException;
+
+	/**
+	 * 通过父节点获取所有下面的子节点（递归慎用）
+	 * 
+	 * @param entity
+	 * @return
+	 * @throws DataServiceException
+	 */
+	List<Entity> selectListByParentId(Long id) throws DataServiceException;
 
 	/**
 	 * 通过父节点获取所有下面的子节点（递归慎用）

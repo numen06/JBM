@@ -6,7 +6,7 @@ import com.jbm.framework.metadata.bean.ClsInfo;
 import com.jbm.framework.metadata.bean.Sequence;
 
 /**
- * Created with IntelliJ IDEA. User: Joe Xie Date: 14-7-31 Time: 上午9:16
+ * Created with IntelliJ IDEA. User: wesley.zhang Date: 14-7-31 Time: 上午9:16
  */
 public interface SequenceService {
 

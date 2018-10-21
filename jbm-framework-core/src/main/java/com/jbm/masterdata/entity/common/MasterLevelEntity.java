@@ -28,6 +28,16 @@ public class MasterLevelEntity<CODE extends Serializable> extends MasterEntity<C
 	@Column
 	private Integer level;
 
+	private Long parentId;
+
+	public Long getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(Long parentId) {
+		this.parentId = parentId;
+	}
+
 	public CODE getParentCode() {
 		return parentCode;
 	}

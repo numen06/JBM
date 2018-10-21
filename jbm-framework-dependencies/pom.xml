@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.jbm</groupId>
 	<version>4.1.0-SNAPSHOT</version>
@@ -10,6 +12,8 @@
 		<artifactId>spring-boot-dependencies</artifactId>
 		<version>1.5.7.RELEASE</version>
 	</parent>
+
+
 	<developers>
 		<developer>
 			<id>wesley</id>
@@ -20,6 +24,18 @@
 			</roles>
 		</developer>
 	</developers>
+	<distributionManagement>
+		<repository>
+			<id>jbm-releases</id>
+			<name>jbm-releases</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-release-NxvguQ/</url>
+		</repository>
+		<snapshotRepository>
+			<id>jbm-snapshots</id>
+			<name>jbm-snapshots</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-snapshot-j7ghlW/</url>
+		</snapshotRepository>
+	</distributionManagement>
 	<properties>
 		<jbm.framework.version>4.1.0-SNAPSHOT</jbm.framework.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -1020,7 +1036,8 @@
 							<contextPath>/</contextPath>
 						</webApp>
 						<connectors>
-							<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+							<connector
+								implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
 								<port>8080</port>
 							</connector>
 						</connectors>

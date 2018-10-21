@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created with IntelliJ IDEA.
  *
- * User: Joe Xie
+ * User: wesley.zhang
  * Date: 14-7-30
  * Time: 下午5:20
  */

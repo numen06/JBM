@@ -1,7 +1,7 @@
 package com.jbm.framework.metadata.bean;
 
 /**
- * Created with IntelliJ IDEA. User: Joe Xie Date: 14-9-3 Time: 下午6:34
+ * Created with IntelliJ IDEA. User: wesley.zhang Date: 14-9-3 Time: 下午6:34
  */
 public class ClsInfo {
 	private String tableName;

@@ -7,7 +7,7 @@ import org.apache.commons.collections.FastHashMap;
 import com.jbm.util.ClassUtils;
 
 /**
- * Created with IntelliJ IDEA. User: Joe Xie Date: 14-9-3 Time: 下午4:46
+ * Created with IntelliJ IDEA. User: wesley.zhang Date: 14-9-3 Time: 下午4:46
  * 
  * @author Wesley
  * 
