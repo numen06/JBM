@@ -1,6 +1,11 @@
 package com.jbm.framework.dao.mybatis;
 
 import java.io.Serializable;
+import java.util.Map;
+
+import com.jbm.framework.metadata.exceptions.DataServiceException;
+import com.jbm.framework.metadata.usage.page.DataPaging;
+import com.jbm.framework.metadata.usage.page.PageForm;
 
 /**
  * 
@@ -12,5 +17,6 @@ import java.io.Serializable;
  * @param <PK>
  */
 public interface IBaseDao<Entity extends Serializable, PK extends Serializable> {
+
 
 }

@@ -349,4 +349,6 @@ public interface IBaseSqlDao<Entity extends Serializable, PK extends Serializabl
 	DataPaging<Entity> selectMapperEntitys(String statement, Entity entity, PageForm pageForm)
 			throws DataServiceException;
 
+	<K, V>  DataPaging<Map<String, Object>> selectMapperSqlPaging(String statement, Map<K, V> params, PageForm pageForm)
+			throws DataServiceException;
 }

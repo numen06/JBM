@@ -211,6 +211,18 @@ public class BaseSqlDaoImpl<Entity extends PrimaryKey<PK>, PK extends Serializab
 				pageForm.pageable());
 		return dataPaging;
 	}
+	
+	@Override
+	public <K, V> DataPaging<Map<String,Object>> selectMapperSqlPaging(String statement, Map<K, V> params, PageForm pageForm)
+			throws DataServiceException {
+		SelectMapperParams<Entity> selectMapperParams = new SelectMapperParams<Entity>(params, pageForm);
+		List<Map<String,Object>> list = sqlSessionTemplate.selectList(statement, selectMapperParams,
+				selectMapperParams.getPagination());
+		DataPaging<Map<String,Object>> dataPaging = new DataPaging<Map<String,Object>>(list, selectMapperParams.getPagination().getTotal(),
+				pageForm.pageable());
+		return dataPaging;
+	}
+
 
 	@Override
 	public boolean delete(Entity entity) throws DataServiceException {
