@@ -231,7 +231,7 @@ public class MybatisPlusAutoConfiguration {
 	 */
 	@org.springframework.context.annotation.Configuration
 	@Import({ AutoConfiguredMapperScannerRegistrar.class })
-	@ConditionalOnMissingBean(MapperFactoryBean.class)
+//	@ConditionalOnMissingBean(MapperFactoryBean.class)
 	public static class MapperScannerRegistrarNotFoundConfiguration {
 
 		@PostConstruct
