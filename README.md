@@ -1,6 +1,7 @@
 # JBM 
 [![输开源协议](https://img.shields.io/badge/License-Apache--2.0-brightgreen.svg "Apache")](https://www.apache.org/licenses/LICENSE-2.0)
- 
+- 由于框架诞生之初是初期期spring boot 1.0时代，所以有很多兼容性问题，在spring boot 2.0走红之后，JBM5.0会做一次全面升级融合个大主流中间件的starter
+- 4.x以前版本主要基于dubbo分布式体系，5.0将重心转移到spring cloud
 - 基于java spring boot 模块化企业级框架
 - 主要由util;autoconfig;webjars等模块组成
 - 基于Spring Boot原则轻量级封装，目前版本还在迭代，追求的是稳定性可靠性
