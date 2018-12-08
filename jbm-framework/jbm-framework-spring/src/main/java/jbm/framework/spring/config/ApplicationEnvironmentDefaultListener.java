@@ -39,7 +39,6 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 
     @Override
     public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
-        logger.info("start load prop");
         this.event = event;
         this.resourceLoader = event.getSpringApplication().getResourceLoader();
         try {
@@ -49,7 +48,6 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.info("end load prop");
     }
 
     protected void importProperties(ApplicationEnvironmentPreparedEvent event, ResourceLoader resourceLoader) throws IOException {
@@ -61,6 +59,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
             if (!StringUtils.contains("classpath:configs/")) {
                 path = "classpath:configs/" + ss;
             }
+            logger.info("jbm load properties{}",path);
             Properties defaultProperties = new Properties();
             Resource resource = resourceLoader.getResource(path);
             defaultProperties.load(resource.getInputStream());
