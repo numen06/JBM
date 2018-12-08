@@ -30,7 +30,6 @@
 		<module>jbm-framework-micro</module>
 		<!-- <module>jbm-framework-devops</module> -->
 		<module>jbm-framework-data</module>
-		<module>jbm-framework-module</module>
 		<module>jbm-framework-spring</module>
 		<!-- <module>jbm-framework-cloud</module> -->
 	</modules>
