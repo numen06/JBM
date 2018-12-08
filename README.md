@@ -25,7 +25,7 @@
 - 日志管理：SLF4J+Log4j2+LogBack 日志收集
 - 前端框架：Vue;Angular JS;Bootstrap;Jquery
  
-[☆jbm-framework-dependencies](https://gitee.com/numen06/JBM/tree/master/jbm-framework-dependencies)为maven基础，标示框架内所有jar的版本，本框架已经消除大部分兼容性问题，为一次集成打下结实基础。
+[☆jbm-framework-dependencies](https://github.com/numen06/JBM/tree/master/jbm-framework-dependencies)为maven基础，标示框架内所有jar的版本，本框架已经消除大部分兼容性问题，为一次集成打下结实基础。
 集成到项目的时候统一继承，即可实现JBM统一版本技术体系管理功能。
 
 ```
@@ -37,7 +37,7 @@
 ```
 
 
-[JBM操作MySql案例](https://gitee.com/numen06/JBM/tree/master/jbm-framework/jbm-framework-sample/jbm-framework-sample-mysql)
+[JBM操作MySql案例](https://github.com/numen06/jbm-framework-sample/tree/master/jbm-framework-sample-mysql)
 通过集成
 
 ```
