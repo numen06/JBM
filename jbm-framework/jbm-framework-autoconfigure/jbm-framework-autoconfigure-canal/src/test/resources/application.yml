@@ -1,0 +1,6 @@
+canal:
+  host: 192.168.20.223
+  port: 11111
+  destination: example
+  username: null
+  password: null

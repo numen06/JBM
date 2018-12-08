@@ -1,0 +1,30 @@
+server:
+  port: 8060
+
+management:
+  security:
+    enabled: false
+#spring:
+#  security:
+#    basic:
+#      enabled: false
+
+zuul:
+  strip-prefix: true
+  add-host-header: true
+  ignoredServices: '*'
+  host:
+    connect-timeout-millis: 60000
+    socket-timeout-millis: 60000
+  routes:
+    auth-service:
+      path: /uaa/**
+      strip-prefix: false
+      sensitiveHeaders:
+    svca-service:
+      path: /svca/**
+#      serviceId: svca-service
+      sensitiveHeaders:
+    svcb-service:
+      path: /svcb/**
+      sensitiveHeaders:

@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>jbm</artifactId>
+	<version>5.0.0-SNAPSHOT</version>
+	<groupId>com.jbm</groupId>
+	<packaging>pom</packaging>
+	<developers>
+		<developer>
+			<id>wesley</id>
+			<name>wesley zhang</name>
+			<email>numen06@qq.com</email>
+			<roles>
+				<role>Project lead</role>
+			</roles>
+		</developer>
+	</developers>
+	<modules>
+		<module>jbm-framework-dependencies</module>
+		<module>jbm-framework</module>
+		<module>jbm-util</module>
+	</modules>
+	<distributionManagement>
+		<repository>
+			<id>jbm-releases</id>
+			<name>jbm-releases</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-release-NxvguQ/</url>
+		</repository>
+		<snapshotRepository>
+			<id>jbm-snapshots</id>
+			<name>jbm-snapshots</name>
+			<url>https://repo.rdc.aliyun.com/repository/35340-snapshot-j7ghlW/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+					<skipTests>true</skipTests>
+					<testFailureIgnore>true</testFailureIgnore>
+					<argLine>-Dfile.encoding=UTF-8</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<showWarnings>true</showWarnings>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

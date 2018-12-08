@@ -1,0 +1,91 @@
+<div ng-controller="DashboardCtrl">
+	<div class="row">
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+			<div class="row">
+				<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+					<div class="databox bg-white radius-bordered">
+						<div class="databox-left bg-themesecondary">
+							<div class="databox-piechart">
+								<div class="easyPieChart block-center" ui-jq="easyPieChart"
+									ui-options="{ percent: 50, lineWidth: 3, barColor:'#fff', trackColor: 'rgba(255,255,255,0.1)' , scaleColor:false, size: 47, lineCap: 'butt', animate: 500 }">
+									<span class="white font-90">50%</span>
+								</div>
+							</div>
+						</div>
+						<div class="databox-right">
+							<span class="databox-number themesecondary">28</span>
+							<div class="databox-text darkgray">NEW TASKS</div>
+							<div class="databox-stat themesecondary radius-bordered">
+								<i class="stat-icon icon-lg fa fa-tasks"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+					<div class="databox bg-white radius-bordered">
+						<div class="databox-left bg-themethirdcolor">
+							<div class="databox-piechart">
+								<div class="easyPieChart block-center" ui-jq="easyPieChart"
+									ui-options="{ percent: 15, lineWidth: 3, barColor:'#fff', trackColor: 'rgba(255,255,255,0.1)' , scaleColor:false, size: 47, lineCap: 'butt', animate: 500 }">
+									<span class="white font-90">15%</span>
+								</div>
+							</div>
+						</div>
+						<div class="databox-right">
+							<span class="databox-number themethirdcolor">5</span>
+							<div class="databox-text darkgray">NEW MESSAGE</div>
+							<div class="databox-stat themethirdcolor radius-bordered">
+								<i class="stat-icon  icon-lg fa fa-envelope-o"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+					<div class="databox bg-white radius-bordered">
+						<div class="databox-left bg-themeprimary">
+							<div class="databox-piechart">
+								<div id="memRatio_char" class="easyPieChart block-center" ui-jq="easyPieChart"
+									ui-options="{ percent: 0, lineWidth: 3, barColor:'#fff', trackColor: 'rgba(255,255,255,0.1)' , scaleColor:false, size: 47, lineCap: 'butt', animate: 500 }">
+									<span class="white font-90">{{monitorModel.memRatio| number:0}}%</span>
+								</div>
+							</div>
+						</div>
+						<div class="databox-right">
+							<span class="databox-number themeprimary">{{monitorModel.totalMemory /1024/1024| number:0}} GB</span>
+							<div class="databox-text darkgray">MEM TOTAL</div>
+							<div class="databox-state bg-themeprimary">
+								<i class="fa fa-check"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+					<div class="databox bg-white radius-bordered">
+						<div class="databox-left no-padding">
+							<img src="assets/img/avatars/John-Smith.jpg" style="height: 65px; width: 65px;">
+						</div>
+						<div class="databox-right padding-top-20">
+							<div class="databox-stat palegreen">
+								<i class="stat-icon icon-xlg fa fa-phone"></i>
+							</div>
+							<div class="databox-text darkgray">JOHN SMITH</div>
+							<div class="databox-text darkgray">TOP RESELLER</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+			<div class="row">
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div id="main" class="databox bg-white radius-bordered" style="height: 400px;"></div>
+				</div>
+				<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+					<div id="main2" class="databox bg-white radius-bordered" style="height: 400px;"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

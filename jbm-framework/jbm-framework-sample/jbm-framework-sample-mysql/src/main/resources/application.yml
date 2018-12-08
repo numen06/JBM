@@ -1,0 +1,26 @@
+server:
+ port: 8080
+spring:
+  application:
+   name:  jbm-framework-sample-mysql
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.20.160/test?characterEncoding=utf-8
+#    url: jdbc:mysql://127.0.0.1/test?characterEncoding=utf-8
+    username: root
+    password: abc123
+    continue-on-error: true
+#mybatis-plus:
+#  mapper-locations: classpath:/mapper/*.xml
+#  global-config:
+#    db-config:
+#      column-underline: true
+#      #capital-mode: true
+#      logic-delete-value: 0
+#      logic-not-delete-value: 1
+#    refresh: true
+#  configuration:
+#    map-underscore-to-camel-case: true
+#    cache-enabled: false
+
+ 

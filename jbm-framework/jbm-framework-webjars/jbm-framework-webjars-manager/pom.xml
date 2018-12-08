@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.jbm</groupId>
+		<artifactId>jbm-framework-webjars</artifactId>
+		<version>5.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>jbm-framework-webjars-manager</artifactId>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.jbm</groupId>
+			<artifactId>jbm-framework-autoconfigure-freemark</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.jbm</groupId>
+			<artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.jbm</groupId> -->
+<!-- 			<artifactId>jbm-micro-sb-webs</artifactId> -->
+<!-- 			<exclusions> -->
+<!-- 				<exclusion> -->
+<!-- 					<artifactId>jta</artifactId> -->
+<!-- 					<groupId>javax.transaction</groupId> -->
+<!-- 				</exclusion> -->
+<!-- 			</exclusions> -->
+<!-- 			<optional>true</optional> -->
+<!-- 		</dependency> -->
+		<dependency>
+			<groupId>com.jbm</groupId>
+			<artifactId>jbm-framework-core</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>spring-data-mongodb</artifactId>
+					<groupId>org.springframework.data</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- websocket -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>${basedir}/src/main/resources</directory>
+			</resource>
+			<resource>
+				<targetPath>META-INF/</targetPath>
+				<filtering>false</filtering>
+				<directory>${basedir}/META-INF</directory>
+			</resource>
+		</resources>
+	</build>
+</project>

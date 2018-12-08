@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<!--
+BeyondAdmin - Responsive Admin Dashboard Template build with Twitter Bootstrap 3.3.6
+Version: 1.6.0
+Purchase: https://wrapbootstrap.com/theme/beyondadmin-adminapp-angularjs-mvc-WB06R48S4
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="app" ng-controller="AppCtrl">
+
+<!-- Head -->
+<head>
+<meta charset="utf-8" />
+<title page-title></title>
+<#assign base=request.contextPath />
+<base id="base" href="${base}">
+<meta name="description" content="blank page" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" href="${base}/assets/img/favicon.png" type="image/x-icon">
+
+<!--Basic Styles-->
+<link href="${base}/assets/css/bootstrap.min.css" rel="stylesheet" />
+<link ng-href="${base}assets/css/bootstrap-rtl.min.css" ng-if="settings.rtl" rel="stylesheet" />
+
+<!--Beyond styles-->
+<link ng-if="!settings.rtl" href="${base}/assets/css/beyond.css" rel="stylesheet" />
+<link ng-if="settings.rtl" href="${base}/assets/css/beyond-rtl.min.css" rel="stylesheet" />
+<!-- base -->
+<link href="${base}/assets/common/css/base.css" rel="stylesheet" type="text/css" />
+
+<body>
+
+<div class="error-header"> </div>
+<div class="container ">
+    <section class="error-container text-center">
+        <h1>500</h1>
+        <div class="error-divider">
+            <h2>ooops!!</h2>
+            <p class="description">SOMETHING WENT WRONG.</p>
+        </div>
+        <a href="index.html" class="return-btn"><i class="fa fa-home"></i>Home</a>
+    </section>
+</div>
+
+</body>

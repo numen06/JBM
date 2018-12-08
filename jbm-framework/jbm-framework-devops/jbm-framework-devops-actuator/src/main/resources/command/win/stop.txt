@@ -1,0 +1,5 @@
+@echo off
+for /f "tokens=2 " %%i in ('TASKLIST /V ^|findstr $title') do (
+    set pid=%%i
+)
+TASKKILL /F /T /PID %pid%

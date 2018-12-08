@@ -1,0 +1,25 @@
+/*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ luara
+ version 0.1  2014-8-21
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
+.example{}
+.example ol{position:relative;height: 20px;top:-50px;}
+.example ol li{float:left;width: 10px;height: 10px;margin: 5px;background: #fff;list-style: none;}
+.example ol li.seleted{background: #1AA4CA;}
+.xubox_main
+{
+    background: rgba(0,0,0,0)!important;
+}
+.xubox_title
+{
+    background: rgba(0,0,0,0)!important;
+    border: 0px !important;
+}
+
+
+
+
+
+
+
+

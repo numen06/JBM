@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+	<route id="ftp-to-file">
+		<from uri="file://input/?recursive=true&amp;delete=false" />
+		<to uri="ftp://uftp@192.168.13.212/?password=ubuntu&amp;binary=true" />
+		<process ref="fileToUdp" />
+		<!-- <to uri="file://output/" /> -->
+		<to uri="netty4:udp://192.168.13.212:15000?sync=true&amp;encoding=utf-8&amp;textline=true" />
+		<!-- <to uri="netty4:udp://127.0.0.1:15000?sync=true&amp;encoding=utf-8&amp;textline=true" /> -->
+		<process ref="udpToString" />
+		<to uri="log:foo" />
+	</route>
+	<!-- <route id="ftp-to-file2"> -->
+	<!-- <from uri="netty4:udp://127.0.0.1:15000?sync=true" /> -->
+	<!-- <process ref="fileToUdp" /> -->
+	<!-- <to uri="log:foo" /> -->
+	<!-- </route> -->
+</routes>
