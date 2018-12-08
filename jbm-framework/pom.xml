@@ -23,7 +23,6 @@
     <modules>
         <module>jbm-framework-core</module>
         <module>jbm-framework-web</module>
-       <!-- <module>jbm-framework-sample</module>-->
         <module>jbm-framework-autoconfigure</module>
         <module>jbm-framework-webjars</module>
         <module>jbm-framework-micro</module>
