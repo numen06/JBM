@@ -59,7 +59,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
             if (!StringUtils.contains("classpath:configs/")) {
                 path = "classpath:configs/" + ss;
             }
-            logger.info("jbm load properties{}",path);
+            logger.info("jbm load properties:{}",path);
             Properties defaultProperties = new Properties();
             Resource resource = resourceLoader.getResource(path);
             defaultProperties.load(resource.getInputStream());
