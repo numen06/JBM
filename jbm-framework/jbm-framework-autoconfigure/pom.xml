@@ -20,7 +20,6 @@
 		<module>jbm-framework-autoconfigure-logger</module>
 		<module>jbm-framework-autoconfigure-activiti</module>
 		<module>jbm-framework-autoconfigure-jpa-h2</module>
-		<module>jbm-framework-autoconfigure-ssl</module>
 		<module>jbm-framework-autoconfigure-swagger</module>
 		<module>jbm-framework-autoconfigure-freemark</module>
 		<module>jbm-framework-autoconfigure-schedule</module>
