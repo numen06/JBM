@@ -13,14 +13,12 @@
         <module>jbm-framework-sample-logger</module>
         <module>jbm-framework-sample-micro-service</module>
         <module>jbm-framework-sample-wechat</module>
-        <module>jbm-framework-sample-authserver</module>
         <module>jbm-framework-sample-restapi</module>
         <module>jbm-framework-sample-ui</module>
         <module>jbm-framework-sample-pr</module>
         <module>jbm-framework-sample-swagger</module>
         <module>jbm-framework-sample-mui</module>
         <module>jbm-framework-sample-schedule</module>
-        <module>jbm-framework-sample-disconf-web</module>
         <module>jbm-framework-sample-mqtt</module>
         <module>jbm-framework-sample-thrift</module>
         <module>jbm-framework-sample-shop</module>
