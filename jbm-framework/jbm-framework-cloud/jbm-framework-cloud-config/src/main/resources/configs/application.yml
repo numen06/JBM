@@ -4,7 +4,7 @@ eureka:
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://user:${REGISTRY_SERVER_PASSWORD:password}@localhost:8761/eureka/
+      defaultZone: http://user:${REGISTRY_SERVER_PASSWORD:password}@${eureka.instance.hostname}:8761/eureka/
 hystrix:
   command:
     default:
@@ -19,12 +19,13 @@ authserver:
   hostname: localhost
   port: 5000
   contextPath: /uaa
-security:
-  oauth2:
-    resource:
-      user-info-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/user
-      prefer-token-info: false
-    client:
-      access-token-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/oauth/token
-      user-authorization-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/oauth/authorize
-      client-id: clinet_2
+spring:
+  security:
+    oauth2:
+      resource:
+        user-info-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/user
+        prefer-token-info: false
+      client:
+        access-token-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/oauth/token
+        user-authorization-uri: http://${authserver.hostname}:${authserver.port}${authserver.contextPath}/oauth/authorize
+        client-id: clinet_2

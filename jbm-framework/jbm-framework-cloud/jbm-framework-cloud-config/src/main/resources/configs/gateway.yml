@@ -1,14 +1,5 @@
 server:
   port: 8060
-
-management:
-  security:
-    enabled: false
-#spring:
-#  security:
-#    basic:
-#      enabled: false
-
 zuul:
   strip-prefix: true
   add-host-header: true

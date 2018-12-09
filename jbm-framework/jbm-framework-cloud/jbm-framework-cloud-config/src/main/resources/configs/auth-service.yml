@@ -2,20 +2,8 @@ server:
   servlet:
     context-path: /uaa
   port: 5000
-management:
-  security:
-    enabled: false
-  context-path: /mgmt
 spring:
   security:
     oauth2:
       resource:
         filter-order: 3
-  datasource:
-    schema: classpath:schema.sql
-    url: jdbc:mysql://192.168.20.160:3306/test?useUnicode=true&amp;characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true
-    username: root
-    password: abc123
-    driver-class-name: com.mysql.jdbc.Driver
-  jpa:
-    show-sql: true
