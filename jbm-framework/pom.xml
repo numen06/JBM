@@ -24,7 +24,8 @@
         <module>jbm-framework-core</module>
         <module>jbm-framework-web</module>
         <module>jbm-framework-autoconfigure</module>
-        <module>jbm-framework-webjars</module>
+		<!--独立成库 -->
+        <!--<module>jbm-framework-webjars</module> -->
         <module>jbm-framework-micro</module>
         <!-- <module>jbm-framework-devops</module> -->
         <module>jbm-framework-data</module>
