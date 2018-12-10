@@ -22,7 +22,6 @@
     </developers>
     <modules>
         <module>jbm-framework-core</module>
-        <module>jbm-framework-web</module>
         <module>jbm-framework-autoconfigure</module>
 		<!--独立成库 -->
         <!--<module>jbm-framework-webjars</module> -->
