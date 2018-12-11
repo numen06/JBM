@@ -31,7 +31,7 @@
 		<module>jbm-framework-autoconfigure-influxdb</module>
 		<module>jbm-framework-autoconfigure-kafka</module>
 		<module>jbm-framework-autoconfigure-jsondb</module>
-		<module>jbm-framework-autoconfigure-beelt</module>
+		<module>jbm-framework-autoconfigure-beetl</module>
 		<module>jbm-framework-autoconfigure-excel</module>
 		<module>jbm-framework-autoconfigure-ftp</module>
 		<module>jbm-framework-autoconfigure-rocketmq</module>

@@ -1,11 +1,10 @@
 package jbm.framework.boot.autoconfigure.i18n;
 
-import java.util.Locale;
-
-import javax.annotation.Resource;
-
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+
+import javax.annotation.Resource;
+import java.util.Locale;
 
 public class MessageSourceTamplate {
 	@Resource
