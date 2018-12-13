@@ -8,10 +8,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 @EnableDiscoveryClient
 @EnableConfigServer
 @SpringBootApplication
-public class ConfigApplication {
+public abstract class JbmConfigApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ConfigApplication.class, args);
-	}
 
 }

@@ -1,4 +1,4 @@
-package com.jbm.framework.cloud.config;
+package com.jbm.framework.cloud.config.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
