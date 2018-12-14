@@ -9,7 +9,7 @@
     <parent>
         <!-- Import dependency management from Spring Boot -->
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
+        <artifactId>spring-boot-parent</artifactId>
         <version>2.0.6.RELEASE</version>
     </parent>
     <distributionManagement>
@@ -35,6 +35,7 @@
         </developer>
     </developers>
     <properties>
+        <spring.boot.version>2.0.6.RELEASE</spring.boot.version>
         <jbm.framework.version>5.0.0-SNAPSHOT</jbm.framework.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
@@ -93,41 +94,34 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>-->
-            <dependency>
+            <!--<dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-bom</artifactId>
                 <version>${spring-security.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
-                <artifactId>jackson-bom</artifactId>
-                <version>${jackson.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
+            </dependency>-->
+            <!--<dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
                 <version>${spring.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
+            </dependency>-->
             <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-releasetrain</artifactId>
-                <version>${spring-data-releasetrain.version}</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-bom</artifactId>
                 <version>${log4j2.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
+            </dependency>-->
             <!-- spring admin -->
             <dependency>
                 <groupId>de.codecentric</groupId>
@@ -894,49 +888,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.springframework</groupId>
-                            <artifactId>springloaded</artifactId>
-                            <version>1.2.6.RELEASE</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <showWarnings>true</showWarnings>
-                        <encoding>UTF-8</encoding>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-maven-plugin</artifactId>
-                    <version>8.1.12.v20130726</version>
-                    <configuration>
-                        <webApp>
-                            <contextPath>/</contextPath>
-                        </webApp>
-                        <connectors>
-                            <connector
-                                    implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                                <port>8080</port>
-                            </connector>
-                        </connectors>
-                        <stopKey>stop</stopKey>
-                        <stopPort>9090</stopPort>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
+
+
 
 </project>
