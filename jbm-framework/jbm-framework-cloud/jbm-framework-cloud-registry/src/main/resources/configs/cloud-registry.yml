@@ -3,18 +3,12 @@ server:
 spring:
   application:
     name: jbm-registry
-#  security:
-#    user:
-#      name: registry
-#      password: password
 eureka:
   server:
     enable-self-preservation: false
   instance:
-#    hostname: localhost
+    #    hostname: localhost
     prefer-ip-address: true
   client:
-    registerWithEureka: false
-    fetchRegistry: false
-#    service-url:
-#      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+    register-with-eureka: false
+    fetch-registry: false

@@ -2,13 +2,16 @@ package jbm.framework.spring.config;
 
 import com.jbm.util.MapUtils;
 import com.jbm.util.StringUtils;
+import jodd.io.FileNameUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
+import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.util.ClassUtils;
@@ -46,7 +49,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
         this.event = event;
         this.resourceLoader = event.getSpringApplication().getResourceLoader();
         try {
-            ResourceLoader resourceLoader = this.resourceLoader != null ? this.resourceLoader : new DefaultResourceLoader(getClassLoader());
+            this.resourceLoader = this.resourceLoader != null ? this.resourceLoader : new DefaultResourceLoader(getClassLoader());
             this.importProperties(event, resourceLoader);
             this.importProperties(event);
         } catch (IOException e) {
@@ -67,11 +70,33 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 //            Resource resource = resourceLoader.getResource(path);
 //            defaultProperties.load(resource.getInputStream());
 //            PropertiesPropertySource propertySource = new PropertiesPropertySource(resource.getFilename(), defaultProperties);
-            ResourcePropertySource resourcePropertySource = new ResourcePropertySource(path);
+            if ("yml".equalsIgnoreCase(FileNameUtil.getExtension(path))) {
+                this.loadYaml(path);
+            } else {
+                ResourcePropertySource resourcePropertySource = new ResourcePropertySource(path);
 //            resourcePropertySource.getSource();
-            this.addLast(resourcePropertySource);
+                this.addLast(resourcePropertySource);
+            }
         }
     }
+
+    private void loadYaml(String path) throws IOException {
+        Resource resource = resourceLoader.getResource(path);
+        YamlPropertySourceLoader yamlloader = new YamlPropertySourceLoader();
+        List<PropertySource<?>> pss = yamlloader.load(getNameForResource(resource), resource);
+        for (PropertySource propertySource : pss) {
+            this.addLast(propertySource);
+        }
+    }
+
+    private String getNameForResource(Resource resource) {
+        String name = resource.getDescription();
+        if (!org.springframework.util.StringUtils.hasText(name)) {
+            name = resource.getClass().getSimpleName() + "@" + System.identityHashCode(resource);
+        }
+        return name;
+    }
+
 
     private synchronized void addLast(PropertySource propertySource) {
         if (configsMap.contains(propertySource.getName()))
