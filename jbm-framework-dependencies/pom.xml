@@ -310,6 +310,32 @@
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
+            <!--    cloud-->
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-cloud-auth</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-cloud-config</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-cloud-geteway</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-cloud-node</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-cloud-registry</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
             <!-- webjars -->
             <dependency>
                 <groupId>com.jbm</groupId>

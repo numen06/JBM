@@ -1,14 +1,13 @@
 package com.jbm.framework.cloud.config;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.config.server.EnableConfigServer;
 
-@EnableDiscoveryClient
+/**
+ * @author: create by wesley
+ * @date:2018/12/15
+ */
 @EnableConfigServer
 @SpringBootApplication
-public abstract class JbmConfigApplication {
-
-
+public @interface JbmConfigServer {
 }

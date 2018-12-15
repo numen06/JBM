@@ -22,5 +22,5 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-security</artifactId>
 		</dependency>
-	</dependencies>
+    </dependencies>
 </project>
