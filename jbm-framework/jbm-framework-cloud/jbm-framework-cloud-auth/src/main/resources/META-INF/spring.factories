@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.jbm.framework.cloud.auth.config.AuthorizationServerConfig,\
+com.jbm.framework.cloud.auth.config.ResourceServerConfiguration,\
+com.jbm.framework.cloud.auth.config.WebSecurityConfig

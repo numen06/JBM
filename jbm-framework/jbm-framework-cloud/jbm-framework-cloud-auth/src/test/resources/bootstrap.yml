@@ -3,10 +3,10 @@ spring:
     name: auth-service
   cloud:
     config:
-      uri: http://localhost:8888
+      uri: http://192.168.20.222:8888
       fail-fast: true
-      username: user
-      password: ${CONFIG_SERVER_PASSWORD:password}
+      username: hubao
+      password: Hubao@20170604
       retry:
         initial-interval: 2000
         max-interval: 10000

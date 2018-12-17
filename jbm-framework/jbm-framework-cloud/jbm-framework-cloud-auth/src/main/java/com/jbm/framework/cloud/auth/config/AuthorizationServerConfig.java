@@ -1,5 +1,6 @@
 package com.jbm.framework.cloud.auth.config;
 
+import com.jbm.framework.cloud.auth.controller.UserController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,35 +19,35 @@ import org.springframework.security.oauth2.provider.token.store.InMemoryTokenSto
 @EnableAuthorizationServer
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
-	@Autowired
-	private AuthenticationManager authenticationManager;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-	@Bean
-	public TokenStore tokenStore() {
+    @Bean
+    public TokenStore tokenStore() {
 //		return new JdbcTokenStore(dataSource);
-		return new InMemoryTokenStore();
-	}
+        return new InMemoryTokenStore();
+    }
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-	@Override
-	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
 //		security.passwordEncoder(passwordEncoder);
-		security.tokenKeyAccess("permitAll()");
-		security.checkTokenAccess("isAuthenticated()");
-		security.allowFormAuthenticationForClients();
-	}
+        security.tokenKeyAccess("permitAll()");
+        security.checkTokenAccess("isAuthenticated()");
+        security.allowFormAuthenticationForClients();
+    }
 
-	@Override
-	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-		endpoints.authenticationManager(authenticationManager).tokenStore(tokenStore());
-	}
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints.authenticationManager(authenticationManager).tokenStore(tokenStore());
+    }
 
-	@Override
-	public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 //		clients.jdbc(dataSource).passwordEncoder(passwordEncoder).withClient("client").secret("secret")
 //				.authorizedGrantTypes("password", "refresh_token").scopes("read", "write")
 //				.accessTokenValiditySeconds(3600) // 1 hour
@@ -61,13 +62,13 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 //				.authorizedGrantTypes("password", "authorization_code", "refresh_token").and().withClient("webapp")
 //				.scopes("xx").authorizedGrantTypes("implicit");
 //}
-		// 配置两个客户端,一个用于password认证一个用于client认证
-		clients.inMemory().withClient("client_1")
-				.authorizedGrantTypes("client_credentials", "refresh_token").scopes("select").authorities("client")
-				.secret(passwordEncoder().encode("123456")).and().withClient("client_2")
-				.authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
-				.secret(passwordEncoder().encode("123456"));
-	}
+        // 配置两个客户端,一个用于password认证一个用于client认证
+        clients.inMemory().withClient("client")
+                .authorizedGrantTypes("client_credentials", "refresh_token").scopes("select").authorities("client")
+                .secret(passwordEncoder().encode("123456")).and().withClient("platform_server")
+                .authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
+                .secret(passwordEncoder().encode("123456"));
+    }
 
 //	@Primary
 //	@Bean
