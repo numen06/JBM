@@ -121,10 +121,5 @@
 		<!-- <groupId>org.springframework.boot</groupId> -->
 		<!-- <artifactId>spring-boot-starter-security</artifactId> -->
 		<!-- </dependency> -->
-		<dependency>
-			<groupId>com.jbm</groupId>
-			<artifactId>jbm-framework-autoconfigure-ssl</artifactId>
-			<optional>true</optional>
-		</dependency>
 	</dependencies>
 </project>
