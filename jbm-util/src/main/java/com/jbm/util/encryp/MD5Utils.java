@@ -1,10 +1,13 @@
 package com.jbm.util.encryp;
 
+import com.jbm.util.ScriptEngineUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.apache.log4j.Logger;
 
 /**
  * MD5加密工具类
@@ -14,7 +17,7 @@ import org.apache.log4j.Logger;
  */
 public class MD5Utils  {
 
-	private final static Logger logger = Logger.getLogger(MD5Utils.class);
+	private static final Logger logger = LoggerFactory.getLogger(MD5Utils.class);
 
 	protected static char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	protected static MessageDigest messagedigest = null;

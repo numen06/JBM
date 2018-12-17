@@ -21,7 +21,8 @@ import javax.script.ScriptException;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 对JS脚本进行封装的工具类
@@ -31,7 +32,7 @@ import org.apache.log4j.Logger;
  */
 public class ScriptEngineUtils {
 
-	private static final Logger logger = Logger.getLogger(ScriptEngineUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(ScriptEngineUtils.class);
 
 	/**
 	 * 执行资源文件下面的脚本
