@@ -1,17 +1,15 @@
 package com.jbm.framework.cloud.auth.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/")
 public class UserController {
 
-    @GetMapping(value = "/user")
-    public Principal getUser(Principal principal) {
-        return principal;
+    @RequestMapping(value = "/user")
+    public Object getUser(Authentication authentication) {
+        return authentication.getPrincipal();
     }
 }

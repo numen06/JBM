@@ -1,9 +1,10 @@
 package com.jbm.framework.cloud.auth.config;
 
-import com.jbm.framework.cloud.auth.controller.UserController;
+import com.jbm.framework.cloud.auth.constant.JbmSecurityConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 @Configuration
 @EnableAuthorizationServer
@@ -22,11 +24,21 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
     @Bean
     public TokenStore tokenStore() {
 //		return new JdbcTokenStore(dataSource);
-        return new InMemoryTokenStore();
+//        return new InMemoryTokenStore();
+
+        if (redisConnectionFactory == null) {
+            return new InMemoryTokenStore();
+        }
+        RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
+        return tokenStore;
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -66,6 +78,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         clients.inMemory().withClient("client")
                 .authorizedGrantTypes("client_credentials", "refresh_token").scopes("select").authorities("client")
                 .secret(passwordEncoder().encode("123456")).and().withClient("platform_server")
+                .authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
+                .secret(passwordEncoder().encode("123456")).and().withClient("client_2")
                 .authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
                 .secret(passwordEncoder().encode("123456"));
     }
