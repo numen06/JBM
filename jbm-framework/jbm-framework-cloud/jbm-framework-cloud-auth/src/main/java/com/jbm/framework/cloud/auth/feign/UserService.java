@@ -37,7 +37,7 @@ public interface UserService {
      * @param username 用户名
      * @return UserVo
      */
-    @PostMapping("/authUser/findUserByUsername")
+    @PostMapping("/account/findUserByUsername")
     JbmAuthUser findUserByUsername(@RequestParam("username") String username);
 
     /**
@@ -46,7 +46,7 @@ public interface UserService {
      * @param mobile 手机号
      * @return UserVo
      */
-    @PostMapping("/authUser/findUserByMobile")
+    @PostMapping("/account/findUserByMobile")
     JbmAuthUser findUserByMobile(@RequestParam("mobile") String mobile);
 
     /**
@@ -55,6 +55,6 @@ public interface UserService {
      * @param openId openId
      * @return UserVo
      */
-    @PostMapping("/authUser/findUserByOpenId")
+    @PostMapping("/account/findUserByOpenId")
     JbmAuthUser findUserByOpenId(@RequestParam("openId") String openId);
 }
