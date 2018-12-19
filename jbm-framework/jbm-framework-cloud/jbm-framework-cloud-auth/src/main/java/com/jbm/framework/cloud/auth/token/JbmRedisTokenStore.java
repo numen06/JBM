@@ -25,6 +25,14 @@ public class JbmRedisTokenStore implements TokenStore {
     private static final String CLIENT_ID_TO_ACCESS = "client_id_to_access:";
     private static final String UNAME_TO_ACCESS = "uname_to_access:";
 
+    public JbmRedisTokenStore() {
+        super();
+    }
+
+    public JbmRedisTokenStore(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
     private RedisTemplate<String, Object> redisTemplate;
 
     public RedisTemplate<String, Object> getRedisTemplate() {

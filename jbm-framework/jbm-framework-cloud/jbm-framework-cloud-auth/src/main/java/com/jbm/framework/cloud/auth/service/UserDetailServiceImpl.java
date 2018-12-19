@@ -19,7 +19,9 @@ package com.jbm.framework.cloud.auth.service;
 
 import com.jbm.framework.cloud.auth.feign.UserService;
 import com.jbm.framework.cloud.auth.model.JbmAuthUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,17 +34,16 @@ import org.springframework.stereotype.Service;
  * <p>
  */
 @Service("userDetailService")
+@Slf4j
 public class UserDetailServiceImpl implements UserDetailsService {
     @Autowired
     private UserService userService;
     @Autowired
     private DiscoveryClient discoveryClient;
 
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         JbmAuthUser userDetails = userService.findUserByUsername(username);
-
         if (userDetails == null) {
             throw new UsernameNotFoundException("用户名不存在或者密码错误");
         }
