@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author wesley
  * @date 2017/10/31
  */
-@FeignClient(name = "hubao-platform-system", fallback = UserServiceFallbackImpl.class)
+@FeignClient(name = "${authserver:service-name:auth-service}", fallback = UserServiceFallbackImpl.class)
 public interface UserService {
 
     /**
@@ -37,7 +37,7 @@ public interface UserService {
      * @param username 用户名
      * @return UserVo
      */
-    @PostMapping("/hubao-platform-system/authUser/findUserByUsername")
+    @PostMapping("/authUser/findUserByUsername")
     JbmAuthUser findUserByUsername(@RequestParam("username") String username);
 
     /**
@@ -46,7 +46,7 @@ public interface UserService {
      * @param mobile 手机号
      * @return UserVo
      */
-    @PostMapping("/hubao-platform-system/authUser/findUserByMobile")
+    @PostMapping("/authUser/findUserByMobile")
     JbmAuthUser findUserByMobile(@RequestParam("mobile") String mobile);
 
     /**
@@ -55,6 +55,6 @@ public interface UserService {
      * @param openId openId
      * @return UserVo
      */
-    @PostMapping("/hubao-platform-system/authUser/findUserByOpenId")
+    @PostMapping("/authUser/findUserByOpenId")
     JbmAuthUser findUserByOpenId(@RequestParam("openId") String openId);
 }

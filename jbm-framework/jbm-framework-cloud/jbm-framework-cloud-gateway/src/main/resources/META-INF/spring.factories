@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.cloud.gateway.SecurityConfig
+#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+#jbm.framework.cloud.gateway.SecurityConfig
