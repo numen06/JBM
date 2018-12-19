@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.cloud.node.CloudNodeConfiguration,\
-jbm.framework.cloud.node.NodeConfiguration
+jbm.framework.cloud.node.CloudNodeConfiguration
