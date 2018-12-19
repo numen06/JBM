@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidClientException;
 import org.springframework.security.oauth2.common.exceptions.UnapprovedClientAuthenticationException;
@@ -54,6 +55,9 @@ public class MobileLoginSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private AuthorizationServerTokenServices authorizationServerTokenServices;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     /**
      * Called when a user has been successfully authenticated.
      * 调用spring security oauth API 生成 oAuth2AccessToken
@@ -76,9 +80,8 @@ public class MobileLoginSuccessHandler implements AuthenticationSuccessHandler {
             String clientId = tokens[0];
 
             ClientDetails clientDetails = clientDetailsService.loadClientByClientId(clientId);
-
             //校验secret
-            if (!clientDetails.getClientSecret().equals(tokens[1])) {
+            if (!passwordEncoder.matches(tokens[1], clientDetails.getClientSecret())) {
                 throw new InvalidClientException("Given client ID does not match authenticated client");
             }
 

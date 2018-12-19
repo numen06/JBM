@@ -1,4 +1,4 @@
-package jbm.framework.cloud.service.config;
+package jbm.framework.cloud.node.service.config;
 
 import javax.servlet.http.HttpServletResponse;
 

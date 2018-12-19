@@ -34,17 +34,31 @@ public class MobileAuthenticationToken extends AbstractAuthenticationToken {
 
     private final Object principal;
 
-    public MobileAuthenticationToken(String mobile) {
+    private String code;
+
+    public MobileAuthenticationToken(String mobile, String code) {
         super(null);
         this.principal = mobile;
+        this.code = code;
         setAuthenticated(false);
     }
 
-    public MobileAuthenticationToken(Object principal,
-                                     Collection<? extends GrantedAuthority> authorities) {
+    public MobileAuthenticationToken(Object principal, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.principal = principal;
         super.setAuthenticated(true);
+    }
+
+    public MobileAuthenticationToken(Object principal, String code,
+                                     Collection<? extends GrantedAuthority> authorities) {
+        super(authorities);
+        this.principal = principal;
+        this.code = code;
+        super.setAuthenticated(true);
+    }
+
+    public String getCode() {
+        return code;
     }
 
     @Override

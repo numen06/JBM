@@ -35,7 +35,7 @@ public interface JbmCommonConstant {
     /**
      * jwt签名
      */
-    String SIGN_KEY = "PIG";
+    String SIGN_KEY = "JBM";
     /**
      * 删除
      */

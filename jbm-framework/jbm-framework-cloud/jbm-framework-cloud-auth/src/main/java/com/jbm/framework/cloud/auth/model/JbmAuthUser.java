@@ -36,6 +36,7 @@ import java.util.List;
  */
 public class JbmAuthUser implements UserDetails {
     private static final long serialVersionUID = 1L;
+    private Long userId;
     private String username;
     private String password;
     private List<String> roleList;
@@ -122,5 +123,13 @@ public class JbmAuthUser implements UserDetails {
 
     public void setRoleList(List<String> roleList) {
         this.roleList = roleList;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

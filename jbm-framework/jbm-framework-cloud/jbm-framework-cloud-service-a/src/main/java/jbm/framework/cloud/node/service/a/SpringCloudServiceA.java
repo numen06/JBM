@@ -1,4 +1,4 @@
-package jbm.framework.cloud.service.a;
+package jbm.framework.cloud.node.service.a;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: auth-service
+    name: hubao-platform-cloud-auth
   cloud:
     config:
       uri: http://192.168.20.222:8888

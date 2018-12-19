@@ -1,4 +1,4 @@
-package jbm.framework.cloud;
+package jbm.framework.cloud.node;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

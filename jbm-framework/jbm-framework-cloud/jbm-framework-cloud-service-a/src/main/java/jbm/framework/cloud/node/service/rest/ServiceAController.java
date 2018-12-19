@@ -1,4 +1,4 @@
-package jbm.framework.cloud.service.rest;
+package jbm.framework.cloud.node.service.rest;
 
 import java.security.Principal;
 

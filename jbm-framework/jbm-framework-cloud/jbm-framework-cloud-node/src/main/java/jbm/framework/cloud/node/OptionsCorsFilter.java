@@ -1,4 +1,4 @@
-package jbm.framework.cloud.gateway;
+package jbm.framework.cloud.node;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

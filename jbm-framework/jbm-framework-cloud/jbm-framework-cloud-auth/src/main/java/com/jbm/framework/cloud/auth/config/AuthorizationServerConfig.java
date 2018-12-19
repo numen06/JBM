@@ -1,24 +1,32 @@
 package com.jbm.framework.cloud.auth.config;
 
+import com.jbm.framework.cloud.auth.constant.JbmCommonConstant;
 import com.jbm.framework.cloud.auth.constant.JbmSecurityConstants;
-import com.jbm.framework.cloud.auth.feign.UserService;
+import com.jbm.framework.cloud.auth.model.JbmAuthUser;
 import com.jbm.framework.cloud.auth.token.JbmRedisTokenStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableAuthorizationServer
@@ -30,16 +38,23 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
     @Bean
-    public TokenStore tokenStore() {
-//		return new JdbcTokenStore(dataSource);
-//        return new InMemoryTokenStore();
-        if (redisTemplate == null) {
-            return new InMemoryTokenStore();
-        }
+    public TokenStore redisTokenStore() {
         JbmRedisTokenStore tokenStore = new JbmRedisTokenStore(redisTemplate);
         return tokenStore;
+//        return new InMemoryTokenStore();
     }
+
+
+//    @Bean
+//    public JwtAccessTokenConverter jwtAccessTokenConverter() {
+//        JbmJwtAccessTokenConverter jwtAccessTokenConverter = new JbmJwtAccessTokenConverter();
+//        jwtAccessTokenConverter.setSigningKey(JbmCommonConstant.SIGN_KEY);
+//        return jwtAccessTokenConverter;
+//    }
 
 
     @Bean
@@ -57,25 +72,37 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.authenticationManager(authenticationManager).tokenStore(tokenStore());
+        //普通token
+        endpoints.authenticationManager(authenticationManager).tokenStore(redisTokenStore());
+//        //jwt token增强配置
+//        TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+//        tokenEnhancerChain.setTokenEnhancers(
+//                Arrays.asList(tokenEnhancer(), jwtAccessTokenConverter()));
+//
+//        endpoints
+//                .tokenStore(redisTokenStore())
+//                .tokenEnhancer(tokenEnhancerChain)
+//                .authenticationManager(authenticationManager)
+//                .reuseRefreshTokens(false)
+//                .userDetailsService(userDetailsService);
     }
+
+//    @Bean
+//    public TokenEnhancer tokenEnhancer() {
+//        return (accessToken, authentication) -> {
+//            final Map<String, Object> additionalInfo = new HashMap<>(2);
+//            additionalInfo.put("license", JbmSecurityConstants.LICENSE);
+//            JbmAuthUser user = (JbmAuthUser) authentication.getUserAuthentication().getPrincipal();
+//            if (user != null) {
+//                additionalInfo.put("userId", user.getUserId());
+//            }
+//            ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInfo);
+//            return accessToken;
+//        };
+//    }
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-//		clients.jdbc(dataSource).passwordEncoder(passwordEncoder).withClient("client").secret("secret")
-//				.authorizedGrantTypes("password", "refresh_token").scopes("read", "write")
-//				.accessTokenValiditySeconds(3600) // 1 hour
-//				.refreshTokenValiditySeconds(2592000) // 30 days
-//				.and().withClient("svca-service").secret("password")
-//				.authorizedGrantTypes("client_credentials", "refresh_token").scopes("server").and()
-//				.withClient("svcb-service").secret("password")
-//				.authorizedGrantTypes("client_credentials", "refresh_token").scopes("server");
-//		clients.withClientDetails(clientDetails());
-//		clients.inMemory().withClient("android").scopes("xx") // 此处的scopes是无用的，可以随意设置
-//				.secret(passwordEncoder().encode("android"))
-//				.authorizedGrantTypes("password", "authorization_code", "refresh_token").and().withClient("webapp")
-//				.scopes("xx").authorizedGrantTypes("implicit");
-//}
         // 配置两个客户端,一个用于password认证一个用于client认证
         clients.inMemory().withClient("client")
                 .authorizedGrantTypes("client_credentials", "refresh_token").scopes("select").authorities("client")

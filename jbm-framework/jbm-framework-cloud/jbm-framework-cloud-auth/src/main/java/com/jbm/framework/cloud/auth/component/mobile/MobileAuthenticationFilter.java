@@ -37,6 +37,8 @@ public class MobileAuthenticationFilter extends AbstractAuthenticationProcessing
     public static final String SPRING_SECURITY_FORM_MOBILE_KEY = "mobile";
 
     private String mobileParameter = SPRING_SECURITY_FORM_MOBILE_KEY;
+
+    private String mobileCode = "code";
     private boolean postOnly = true;
 
     public MobileAuthenticationFilter() {
@@ -50,25 +52,29 @@ public class MobileAuthenticationFilter extends AbstractAuthenticationProcessing
             throw new AuthenticationServiceException(
                     "Authentication method not supported: " + request.getMethod());
         }
-
         String mobile = obtainMobile(request);
-
         if (mobile == null) {
             mobile = "";
         }
-
         mobile = mobile.trim();
-
-        MobileAuthenticationToken mobileAuthenticationToken = new MobileAuthenticationToken(mobile);
-
+        String code = obtainCode(request);
+        if (code == null) {
+            code = "";
+        }
+        code = code.trim();
+        MobileAuthenticationToken mobileAuthenticationToken = new MobileAuthenticationToken(mobile, code);
         setDetails(request, mobileAuthenticationToken);
-
         return this.getAuthenticationManager().authenticate(mobileAuthenticationToken);
     }
 
     protected String obtainMobile(HttpServletRequest request) {
         return request.getParameter(mobileParameter);
     }
+
+    protected String obtainCode(HttpServletRequest request) {
+        return request.getParameter(mobileCode);
+    }
+
 
     protected void setDetails(HttpServletRequest request,
                               MobileAuthenticationToken authRequest) {
