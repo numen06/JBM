@@ -1,4 +1,4 @@
-package com.jbm.framework.cloud.gateway;
+package com.jbm.framework.cloud.test.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

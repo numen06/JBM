@@ -21,6 +21,7 @@ import com.jbm.framework.cloud.auth.feign.UserService;
 import com.jbm.framework.cloud.auth.model.JbmAuthUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
 
     @Override
-    public JbmAuthUser loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         JbmAuthUser userDetails = userService.findUserByUsername(username);
 
         if (userDetails == null) {
