@@ -7,6 +7,7 @@ import com.jbm.framework.cloud.auth.token.JbmRedisTokenStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,9 +19,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.TokenEnhancer;
-import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.*;
 import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
@@ -70,10 +69,25 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         security.allowFormAuthenticationForClients();
     }
 
+
+    @Primary
+    @Bean
+    public AuthorizationServerTokenServices tokenServices() {
+        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+        defaultTokenServices.setAccessTokenValiditySeconds(-1);
+        defaultTokenServices.setRefreshTokenValiditySeconds(-1);
+        defaultTokenServices.setSupportRefreshToken(true);
+        defaultTokenServices.setReuseRefreshToken(false);
+        defaultTokenServices.setTokenStore(redisTokenStore());
+        return defaultTokenServices;
+    }
+
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         //普通token
-        endpoints.authenticationManager(authenticationManager).tokenStore(redisTokenStore());
+//        endpoints.authenticationManager(authenticationManager).tokenStore(redisTokenStore());
+        //设置永不过期token
+        endpoints.authenticationManager(authenticationManager).tokenServices(tokenServices());
 //        //jwt token增强配置
 //        TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
 //        tokenEnhancerChain.setTokenEnhancers(
