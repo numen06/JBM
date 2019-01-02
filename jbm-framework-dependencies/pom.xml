@@ -66,6 +66,7 @@
         <hutool.version>4.2.1</hutool.version>
         <beetl.version>2.9.6</beetl.version>
         <spring-boot-admin.version>2.1.1</spring-boot-admin.version>
+        <lombok.version>1.18.4</lombok.version>
     </properties>
     <repositories>
         <repository>
