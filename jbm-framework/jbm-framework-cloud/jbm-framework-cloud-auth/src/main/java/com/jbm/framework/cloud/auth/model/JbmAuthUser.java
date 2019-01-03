@@ -40,6 +40,7 @@ public class JbmAuthUser implements UserDetails {
     private String username;
     private String password;
     private List<String> roleList;
+    private String identifyCode;
 
     private boolean accountNonExpired;
 
@@ -131,5 +132,13 @@ public class JbmAuthUser implements UserDetails {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getIdentifyCode() {
+        return identifyCode;
+    }
+
+    public void setIdentifyCode(String identifyCode) {
+        this.identifyCode = identifyCode;
     }
 }
