@@ -58,7 +58,7 @@ public interface UserService {
     @PostMapping("/account/findUserByOpenId")
     JbmAuthUser findUserByOpenId(@RequestParam("openId") String openId);
     /**
-     * 根据OpenId查询用户信息
+     * 根据mobile identifyCode查询用户信息
      *
      * @param mobile 手机号
      * @param identifyCode 验证码
