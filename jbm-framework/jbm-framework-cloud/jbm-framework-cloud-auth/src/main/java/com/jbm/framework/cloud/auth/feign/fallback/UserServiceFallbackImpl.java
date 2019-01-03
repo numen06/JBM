@@ -62,4 +62,10 @@ public class UserServiceFallbackImpl implements UserService {
         logger.error("调用{}异常:{}", "通过OpenId查询用户", openId);
         return null;
     }
+
+    @Override
+    public JbmAuthUser findUserByMobileAndCode(String mobile, String identifyCode) {
+        logger.error("调用{}异常:{}", "通过mobile和identifyCode查询用户", mobile+" : "+identifyCode);
+        return null;
+    }
 }
