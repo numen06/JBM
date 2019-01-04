@@ -36,15 +36,17 @@ public class MobileAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         MobileAuthenticationToken mobileAuthenticationToken = (MobileAuthenticationToken) authentication;
 //        JbmUserEntity userVo = userService.findUserByMobile((String) mobileAuthenticationToken.getPrincipal());
-        JbmAuthUser userDetails = userService.findUserByMobile((String) mobileAuthenticationToken.getPrincipal());
-        if (userDetails == null) {
-            throw new UsernameNotFoundException("手机号不存在:" + mobileAuthenticationToken.getPrincipal());
-        }
 
+    //    JbmAuthUser userDetails = userService.findUserByMobile((String) mobileAuthenticationToken.getPrincipal());
+        JbmAuthUser userDetails = userService.findUserByMobileAndCode((String) mobileAuthenticationToken.getPrincipal(),mobileAuthenticationToken.getCode());
+        if (userDetails == null) {
+            throw new UsernameNotFoundException("手机号或验证码错误!手机号:" + mobileAuthenticationToken.getPrincipal()+"验证码:"+mobileAuthenticationToken.getCode());
+        }
+        //验证验证码是否正确
 //        UserDetailsImpl userDetails = buildUserDeatils(userVo);
 
         MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(userDetails, userDetails.getAuthorities());
-        authenticationToken.setDetails(mobileAuthenticationToken.getDetails());
+       // authenticationToken.setDetails(mobileAuthenticationToken.getDetails()); zpf
         return authenticationToken;
     }
 

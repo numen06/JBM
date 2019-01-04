@@ -61,9 +61,9 @@ public interface UserService {
      * 根据mobile identifyCode查询用户信息
      *
      * @param mobile 手机号
-     * @param identifyCode 验证码
+     * @param code 验证码
      * @return UserVo
      */
     @PostMapping("/account/findUserByMobileAndCode")
-    JbmAuthUser findUserByMobileAndCode(@RequestParam("mobile") String mobile,@RequestParam("identifyCode") String identifyCode);
+    JbmAuthUser findUserByMobileAndCode(@RequestParam("mobile") String mobile,@RequestParam("code") String code);
 }
