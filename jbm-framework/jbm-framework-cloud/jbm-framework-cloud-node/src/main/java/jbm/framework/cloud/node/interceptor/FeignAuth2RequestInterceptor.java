@@ -16,7 +16,8 @@ public class FeignAuth2RequestInterceptor implements RequestInterceptor {
         Authentication authentication=securityContext.getAuthentication();
         if(authentication!=null&&authentication.getDetails() instanceof OAuth2AuthenticationDetails ){
             OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails)authentication.getDetails();
-            requestTemplate.header("Authorization",String.format("%s %s","bearer",details.getTokenValue()));
+            String token=String.format("%s %s","bearer",details.getTokenValue());
+            requestTemplate.header("Authorization",token);
 
         }
     }
