@@ -29,7 +29,6 @@
 		<module>jbm-framework-autoconfigure-actuator</module>
 		<module>jbm-framework-autoconfigure-leveldb</module>
 		<module>jbm-framework-autoconfigure-influxdb</module>
-		<module>jbm-framework-autoconfigure-kafka</module>
 		<module>jbm-framework-autoconfigure-jsondb</module>
 		<module>jbm-framework-autoconfigure-beetl</module>
 		<module>jbm-framework-autoconfigure-excel</module>
