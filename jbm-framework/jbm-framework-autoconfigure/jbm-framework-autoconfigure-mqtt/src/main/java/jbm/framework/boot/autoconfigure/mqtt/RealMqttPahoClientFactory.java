@@ -31,12 +31,13 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 			@Override
 			public SimpleMqttPahoMessageHandler load(String key) throws Exception {
 				KeySerialization keySerialization = JSON.parseObject(key, KeySerialization.class);
-				MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(keySerialization.getClientId(), mqttPahoClientFactory());
+				SimpleMqttPahoMessageHandler messageHandler = new SimpleMqttPahoMessageHandler(keySerialization.getClientId(), mqttPahoClientFactory());
 				messageHandler.setAsync(false);
 				messageHandler.setDefaultTopic(keySerialization.getDefaultTopic());
 				messageHandler.setDefaultQos(0);
 				messageHandler.setConverter(new DefaultPahoMessageConverter());
-				return  new SimpleMqttPahoMessageHandler(messageHandler);
+//				return  new SimpleMqttPahoMessageHandler(messageHandler);
+				return messageHandler;
 			}
 		});
 
@@ -53,12 +54,12 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 
 	@Override
 	public MqttConnectOptions getConnectionOptions() {
-		this.setServerURIs(StringUtils.split(mqttConnectProperties.getUrl(), ","));
-		this.setUserName(mqttConnectProperties.getUsername());
-		this.setPassword(mqttConnectProperties.getPassword());
-		this.setConnectionTimeout(mqttConnectProperties.getConnectionTimeout());
-		this.setKeepAliveInterval(mqttConnectProperties.getKeepAliveInterval());
 		MqttConnectOptions mqttConnectOptions = super.getConnectionOptions();
+		mqttConnectOptions.setServerURIs(StringUtils.split(mqttConnectProperties.getUrl(), ","));
+		mqttConnectOptions.setUserName(mqttConnectProperties.getUsername());
+		mqttConnectOptions.setPassword(mqttConnectProperties.getPassword().toCharArray());
+		mqttConnectOptions.setConnectionTimeout(mqttConnectProperties.getConnectionTimeout());
+		mqttConnectOptions.setKeepAliveInterval(mqttConnectProperties.getKeepAliveInterval());
 		return mqttConnectOptions;
 	}
 

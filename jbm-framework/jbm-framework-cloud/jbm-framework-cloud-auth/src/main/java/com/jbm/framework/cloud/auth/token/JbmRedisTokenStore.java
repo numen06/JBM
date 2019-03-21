@@ -1,6 +1,10 @@
 package com.jbm.framework.cloud.auth.token;
 
+import com.jbm.framework.cloud.auth.feign.UserService;
+import com.jbm.framework.cloud.auth.model.JbmAuthUser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
@@ -24,6 +28,9 @@ public class JbmRedisTokenStore implements TokenStore {
     private static final String REFRESH_TO_ACCESS = "refresh_to_access:";
     private static final String CLIENT_ID_TO_ACCESS = "client_id_to_access:";
     private static final String UNAME_TO_ACCESS = "uname_to_access:";
+
+    @Autowired
+    UserService userService;
 
     public JbmRedisTokenStore() {
         super();
@@ -81,7 +88,18 @@ public class JbmRedisTokenStore implements TokenStore {
 
     @Override
     public void storeAccessToken(OAuth2AccessToken token, OAuth2Authentication authentication) {
-
+        //更新权限
+        JbmAuthUser user = userService.findUserByUsername(((JbmAuthUser) authentication.getUserAuthentication().getPrincipal()).getUsername());
+//        String auth=JSONObject.toJSONString(authentication);
+//        JSONObject object= JSONObject.parseObject(auth);
+//        object.put("authorities",user.getAuthorities());
+//        authentication=JSONObject.toJavaObject(object,OAuth2Authentication.class);
+        try {
+            PropertyUtils.setProperty(authentication, "authorities", user.getAuthorities());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //-更新权限
         this.redisTemplate.opsForValue().set(ACCESS + token.getValue(), token);
         this.redisTemplate.opsForValue().set(AUTH + token.getValue(), authentication);
         this.redisTemplate.opsForValue().set(AUTH_TO_ACCESS + authenticationKeyGenerator.extractKey(authentication), token);
@@ -104,6 +122,8 @@ public class JbmRedisTokenStore implements TokenStore {
         if (token.getRefreshToken() != null && token.getRefreshToken().getValue() != null) {
             this.redisTemplate.opsForValue().set(REFRESH_TO_ACCESS + token.getRefreshToken().getValue(), token.getValue());
             this.redisTemplate.opsForValue().set(ACCESS_TO_REFRESH + token.getValue(), token.getRefreshToken().getValue());
+            //zpf
+            this.redisTemplate.opsForValue().set(REFRESH_AUTH + token.getRefreshToken().getValue(), authentication);
         }
     }
 
