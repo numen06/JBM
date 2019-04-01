@@ -1,9 +1,9 @@
 package com.jbm.framework.cloud.auth.token;
 
+import com.jbm.framework.cloud.auth.component.mobile.MobileAuthenticationToken;
 import com.jbm.framework.cloud.auth.feign.UserService;
 import com.jbm.framework.cloud.auth.model.JbmAuthUser;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.provider.token.AuthenticationKeyGener
 import org.springframework.security.oauth2.provider.token.DefaultAuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -89,13 +91,17 @@ public class JbmRedisTokenStore implements TokenStore {
     @Override
     public void storeAccessToken(OAuth2AccessToken token, OAuth2Authentication authentication) {
         //更新权限
-        JbmAuthUser user = userService.findUserByUsername(((JbmAuthUser) authentication.getUserAuthentication().getPrincipal()).getUsername());
-//        String auth=JSONObject.toJSONString(authentication);
+        JbmAuthUser user= userService.findUserByUsername( ((JbmAuthUser)authentication.getUserAuthentication().getPrincipal()).getUsername());
+//        String auth=JSONObject.toJSONString(authentication);98
 //        JSONObject object= JSONObject.parseObject(auth);
 //        object.put("authorities",user.getAuthorities());
 //        authentication=JSONObject.toJavaObject(object,OAuth2Authentication.class);
         try {
-            PropertyUtils.setProperty(authentication, "authorities", user.getAuthorities());
+            FieldValueUitls fieldValueUitls=new FieldValueUitls();
+            fieldValueUitls.modify(authentication,"authorities",user.getAuthorities());
+            MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(user, user.getAuthorities());
+            fieldValueUitls.modify(authentication,"userAuthentication",authenticationToken);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -236,4 +242,37 @@ public class JbmRedisTokenStore implements TokenStore {
 
         return Collections.unmodifiableCollection(accessTokens);
     }
+
+
+     class FieldValueUitls {
+        public  void modify(Object object, String fieldName, Object newFieldValue) throws Exception {
+            try {
+                Field field = object.getClass().getDeclaredField(fieldName);
+
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true); //Field 的 modifiers 是私有的
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+
+                field.set(object, newFieldValue);
+            }catch (Exception e){
+                Class<?> clazz=object.getClass().getSuperclass();
+                Field field = clazz.getDeclaredField(fieldName);
+
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true); //Field 的 modifiers 是私有的
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+
+                field.set(object, newFieldValue);
+            }
+        }
+    }
+
 }
