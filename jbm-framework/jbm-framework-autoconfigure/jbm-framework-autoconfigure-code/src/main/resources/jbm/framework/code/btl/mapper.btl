@@ -1,0 +1,13 @@
+package ${basePackage}.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.annotation.MapperRepository;
+import ${entityClass.name};
+
+/**
+ * @Author: auto generate by jbm
+ * @Create: ${time}
+ */
+@MapperRepository
+public interface ${entityClass.simpleName}Mapper extends BaseMapper<${entityClass.simpleName}> {
+}

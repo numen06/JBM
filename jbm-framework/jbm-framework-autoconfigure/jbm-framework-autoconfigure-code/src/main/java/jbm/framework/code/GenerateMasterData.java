@@ -34,7 +34,7 @@ public class GenerateMasterData {
 
     public GenerateMasterData() {
         try {
-            ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader();
+            ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader("/jbm/framework/code/btl");
             Configuration cfg = Configuration.defaultConfiguration();
             gt = new GroupTemplate(resourceLoader, cfg);
         } catch (IOException e) {
@@ -143,8 +143,5 @@ public class GenerateMasterData {
     }
 
 
-//    public static void main(String[] args) {
-//        GenerateMasterData generateMasterData = new GenerateMasterData(GenerateMasterData.class);
-//        generateMasterData.generateAll();
-//    }
+
 }

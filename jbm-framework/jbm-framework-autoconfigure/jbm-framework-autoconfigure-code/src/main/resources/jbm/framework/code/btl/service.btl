@@ -1,0 +1,11 @@
+package ${basePackage}.service;
+
+import ${entityClass.name};
+import com.jbm.framework.masterdata.service.IMasterDataService;
+
+/**
+ * @Author: auto generate by jbm
+ * @Create: ${time}
+ */
+public interface ${entityClass.simpleName}Service extends IMasterDataService<${entityClass.simpleName}> {
+}

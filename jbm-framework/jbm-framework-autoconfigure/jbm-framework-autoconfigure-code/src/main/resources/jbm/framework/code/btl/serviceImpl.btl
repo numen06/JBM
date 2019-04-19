@@ -1,0 +1,16 @@
+package ${basePackage}.service.impl;
+
+import ${entityClass.name};
+import ${basePackage}.service.${entityClass.simpleName}Service;
+import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import org.springframework.stereotype.Service;
+
+/**
+ * @Author: auto generate by jbm
+ * @Create: ${time}
+ */
+@Service
+public class ${entityClass.simpleName}ServiceImpl extends MasterDataServiceImpl<${entityClass.simpleName}> implements ${entityClass.simpleName}Service {
+
+
+}
