@@ -148,6 +148,7 @@ public class GenerateMasterData {
 
     public static void scanGnerate(String entityPackage, String targetPackage) {
         try {
+            logger.info("自动扫描生成代码:{},目标包名:{}", entityPackage, targetPackage);
             Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
             for (Class clazz : entitys) {
                 try {

@@ -4,8 +4,6 @@ import jbm.framework.code.EnableCodeAutoGeneate;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author: create by wesley
  * @date:2019/4/28
