@@ -1,3 +1,5 @@
+package jbm.framework.code.test;
+
 import jbm.framework.code.GenerateMasterData;
 import junit.framework.TestCase;
 

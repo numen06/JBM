@@ -27,6 +27,7 @@ public class GenerateMasterData {
     private String basePackage;
     private Class<?> entityClass;
     private Boolean skip;
+    private Boolean ignore;
 
     public void setSkip(Boolean skip) {
         this.skip = skip;
@@ -45,6 +46,7 @@ public class GenerateMasterData {
     public GenerateMasterData(Class<?> entityClass) {
         this();
         this.entityClass = entityClass;
+        this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
         this.basePackage = ClassUtil.getPackage(entityClass);
     }
 
@@ -108,13 +110,18 @@ public class GenerateMasterData {
 
 
     public void generate(CodeType codeType) {
+//        if (!ArrayUtil.contains(this.entityClass.getInterfaces(), ClassUtil.loadClass("com.jbm.framework.masterdata.usage.bean.MasterDataEntity"))) {
+//            return;
+//        }
+        if (this.ignore) {
+            return;
+        }
         Template t = buildData(codeType);
         File file = this.getWriteFile(codeType);
         if (file == null)
             return;
         t.renderTo(FileUtil.getOutputStream(file));
     }
-
 
 
     public void generateAll() {
@@ -133,15 +140,23 @@ public class GenerateMasterData {
         }
     }
 
-    public static void scanGnerate(Class<?> entityClass, String basePackage) {
+    public static void scanGnerate(Class<?> entityClass, String targetPackage) {
         Set<Class<?>> entitys = ClassUtil.scanPackage(ClassUtil.getPackage(entityClass));
         for (Class clazz : entitys) {
-            GenerateMasterData generateMasterData = new GenerateMasterData(clazz, basePackage);
+            GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
             generateMasterData.setSkip(true);
             generateMasterData.generateAll();
         }
     }
 
+    public static void scanGnerate(String entityPackage, String targetPackage) {
+        Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
+        for (Class clazz : entitys) {
+            GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
+            generateMasterData.setSkip(true);
+            generateMasterData.generateAll();
+        }
+    }
 
 
 }
