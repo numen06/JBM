@@ -7,6 +7,8 @@ import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.ClasspathResourceLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +23,8 @@ import java.util.Set;
  * @date:2019/4/18
  */
 public class GenerateMasterData {
+
+    private final static Logger logger = LoggerFactory.getLogger(GenerateMasterData.class);
 
 
     private GroupTemplate gt;
@@ -132,29 +136,30 @@ public class GenerateMasterData {
     }
 
     public static void scanGnerate(Class<?> entityClass) {
-        Set<Class<?>> entitys = ClassUtil.scanPackage(ClassUtil.getPackage(entityClass));
-        for (Class clazz : entitys) {
-            GenerateMasterData generateMasterData = new GenerateMasterData(clazz);
-            generateMasterData.setSkip(true);
-            generateMasterData.generateAll();
-        }
+        String entityPackage = ClassUtil.getPackage(entityClass);
+        String targetPackage = ClassUtil.getPackage(entityClass);
+        scanGnerate(entityPackage, targetPackage);
     }
 
     public static void scanGnerate(Class<?> entityClass, String targetPackage) {
-        Set<Class<?>> entitys = ClassUtil.scanPackage(ClassUtil.getPackage(entityClass));
-        for (Class clazz : entitys) {
-            GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
-            generateMasterData.setSkip(true);
-            generateMasterData.generateAll();
-        }
+        String entityPackage = ClassUtil.getPackage(entityClass);
+        scanGnerate(entityPackage, targetPackage);
     }
 
     public static void scanGnerate(String entityPackage, String targetPackage) {
-        Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
-        for (Class clazz : entitys) {
-            GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
-            generateMasterData.setSkip(true);
-            generateMasterData.generateAll();
+        try {
+            Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
+            for (Class clazz : entitys) {
+                try {
+                    GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
+                    generateMasterData.setSkip(true);
+                    generateMasterData.generateAll();
+                } catch (Exception e) {
+                    logger.error("生成代码错误Class:{}", clazz, e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("生成代码错误", e);
         }
     }
 
