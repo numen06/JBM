@@ -15,7 +15,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 /**
  * 定时任务执行器
  *
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2018/2/28
  */
 public class ScheduledMethodInvoker {

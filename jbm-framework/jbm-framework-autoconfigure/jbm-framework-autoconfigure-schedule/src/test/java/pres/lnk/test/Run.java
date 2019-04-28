@@ -7,7 +7,7 @@ import pres.lnk.springframework.annotation.EnableClusterScheduling;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2019/3/26
  */
 @SpringBootApplication

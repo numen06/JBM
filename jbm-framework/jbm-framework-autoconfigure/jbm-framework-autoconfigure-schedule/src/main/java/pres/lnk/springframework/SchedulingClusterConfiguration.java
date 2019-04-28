@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProc
 import org.springframework.scheduling.config.TaskManagementConfigUtils;
 
 /**
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2019/3/26
  */
 @Configuration

@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 /**
  * 集群定时任务控制
  *
- * @author lnk
+ * @Author wesley.zhang
  * @see EnableScheduling
  * @see ScheduledAnnotationBeanPostProcessor
  * @see ScheduledClusterAnnotationBeanPostProcessor

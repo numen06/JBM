@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
  * 集群任务调度器
  * 用来控制集群服务器中，相同的任务每次只有一个任务在执行
  *
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2018/2/28
  */
 public abstract class AbstractScheduler {

@@ -18,7 +18,7 @@ import java.lang.reflect.Method;
  * 定时任务处理器
  * 对定时任务添加了集群系统下的执行控制
  *
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2018/2/28
  */
 public class ScheduledClusterAnnotationBeanPostProcessor extends ScheduledAnnotationBeanPostProcessor implements SchedulingConfigurer {

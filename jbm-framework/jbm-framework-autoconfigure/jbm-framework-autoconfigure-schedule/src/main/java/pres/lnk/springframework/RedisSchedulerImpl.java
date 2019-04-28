@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2018/2/28
  */
 public class RedisSchedulerImpl extends AbstractScheduler {

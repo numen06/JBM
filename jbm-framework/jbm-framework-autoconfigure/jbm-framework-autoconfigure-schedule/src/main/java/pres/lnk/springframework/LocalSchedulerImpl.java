@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 本地调试器，只能在单服务器下使用，不能用在集群服务中
  *
- * @Author lnk
+ * @Author wesley.zhang
  * @Date 2018/2/28
  */
 public class LocalSchedulerImpl extends AbstractScheduler {
