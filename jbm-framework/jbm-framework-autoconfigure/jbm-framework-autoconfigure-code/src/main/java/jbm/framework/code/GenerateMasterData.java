@@ -104,7 +104,7 @@ public class GenerateMasterData {
             if (FileUtil.exist(file) && this.skip) {
                 return null;
             }
-            System.out.println(file);
+            logger.info("自动生成代码: {}", file);
             return file;
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -148,8 +148,8 @@ public class GenerateMasterData {
 
     public static void scanGnerate(String entityPackage, String targetPackage) {
         try {
-            logger.info("自动扫描生成代码:{},目标包名:{}", entityPackage, targetPackage);
             Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
+            logger.info("自动扫描生成代码:{},目标包名:{},发现{}个实体", entityPackage, targetPackage, entitys.size());
             for (Class clazz : entitys) {
                 try {
                     GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
