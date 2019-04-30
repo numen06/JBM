@@ -64,6 +64,29 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     @Override
+    public DataPaging<Entity> selectEntitysByWapper(QueryWrapper queryWrapper, PageForm pageForm) throws DataServiceException {
+        final Page<Entity> page = buildPage(pageForm);
+        final IPage<Entity> data = this.baseMapper.selectPage(page, queryWrapper);
+        DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
+        return dataPaging;
+    }
+
+    @Override
+    public List<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException {
+        return super.list(queryWrapper);
+    }
+
+    @Override
+    public Entity selectEntityByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException {
+        return super.getOne(queryWrapper);
+    }
+
+    @Override
+    public boolean deleteByWapper(QueryWrapper queryWrapper) throws DataServiceException {
+        return super.remove(queryWrapper);
+    }
+
+    @Override
     public Entity selectEntity(Entity entity) throws DataServiceException {
         return CollectionUtils.firstResult(this.selectEntitys(entity), null);
     }
