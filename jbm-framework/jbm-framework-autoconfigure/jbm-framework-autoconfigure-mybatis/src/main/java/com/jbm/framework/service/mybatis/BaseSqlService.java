@@ -72,7 +72,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     @Override
-    public List<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException {
+    public List<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException {
         return super.list(queryWrapper);
     }
 
@@ -178,10 +178,14 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public Entity saveEntity(Entity entity) throws DataServiceException {
         Long id = entity.getId();
+        boolean ret;
         if (id == null) {
-            this.insert(entity);
+            ret = this.insert(entity);
         } else {
-            this.update(entity);
+            ret = this.update(entity);
+        }
+        if (!ret) {
+            throw new DataServiceException("保存失败");
         }
         return this.selectById(entity.getId());
     }
