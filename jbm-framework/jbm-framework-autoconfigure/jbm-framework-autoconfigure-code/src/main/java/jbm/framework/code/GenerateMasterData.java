@@ -3,6 +3,10 @@ package jbm.framework.code;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ClassUtil;
+import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
+import com.jbm.util.StringUtils;
+import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
@@ -18,6 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
+import static jbm.framework.code.CodeType.*;
+
 /**
  * @author: create by wesley
  * @date:2019/4/18
@@ -32,6 +38,7 @@ public class GenerateMasterData {
     private Class<?> entityClass;
     private Boolean skip;
     private Boolean ignore;
+    private Class superclass;
 
     public void setSkip(Boolean skip) {
         this.skip = skip;
@@ -52,6 +59,7 @@ public class GenerateMasterData {
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
         this.basePackage = ClassUtil.getPackage(entityClass);
+        this.superclass = entityClass.getSuperclass();
     }
 
     public GenerateMasterData(Class<?> entityClass, String basePackage) {
@@ -81,6 +89,33 @@ public class GenerateMasterData {
         t.binding("mapping", toLowerCaseFirstOne(entityClass.getSimpleName()));
         t.binding("basePackage", basePackage);
         t.binding("time", DateUtil.now());
+        String extClass = null;
+        switch (codeType) {
+            case mapper:
+                extClass = "com.baomidou.mybatisplus.core.mapper.BaseMapper";
+                break;
+            case service:
+                if (superclass.equals(MasterDataEntity.class)) {
+                    extClass = "com.jbm.framework.masterdata.service.IMasterDataService";
+                }
+                if (superclass.equals(MasterDataTreeEntity.class)) {
+                    extClass = "com.jbm.framework.masterdata.service.IMasterDataTreeService";
+                }
+                break;
+            case serviceImpl:
+                if (superclass.equals(MasterDataEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
+                }
+                if (superclass.equals(MasterDataTreeEntity.class)) {
+                    extClass = "com.jbm.framework.masterdata.service.MasterDataTreeServiceImpl";
+                }
+                break;
+            case controller:
+                extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+                break;
+        }
+        t.binding("extClass", extClass);
+        t.binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
         return t;
     }
 
@@ -92,7 +127,7 @@ public class GenerateMasterData {
             Path wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("java").resolve(temp);
             switch (codeType) {
                 case serviceImpl:
-                    wp = wp.resolve(CodeType.service.name()).resolve("impl");
+                    wp = wp.resolve(service.name()).resolve("impl");
                     break;
                 default:
                     wp = wp.resolve(codeType.name());
@@ -129,10 +164,10 @@ public class GenerateMasterData {
 
 
     public void generateAll() {
-        generate(CodeType.mapper);
-        generate(CodeType.service);
-        generate(CodeType.serviceImpl);
-        generate(CodeType.controller);
+        generate(mapper);
+        generate(service);
+        generate(serviceImpl);
+        generate(controller);
     }
 
     public static void scanGnerate(Class<?> entityClass) {

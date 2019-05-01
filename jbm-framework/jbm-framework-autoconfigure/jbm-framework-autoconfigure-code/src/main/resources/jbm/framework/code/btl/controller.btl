@@ -2,7 +2,7 @@ package ${basePackage}.controller;
 
 import ${entityClass.name};
 import ${basePackage}.service.${entityClass.simpleName}Service;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import ${extClass};
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/${mapping}")
-public class ${entityClass.simpleName}Controller extends MasterDataCollection<${entityClass.simpleName}, ${entityClass.simpleName}Service> {
+public class ${entityClass.simpleName}Controller extends ${extClassName}<${entityClass.simpleName}, ${entityClass.simpleName}Service> {
 }

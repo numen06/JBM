@@ -1,6 +1,6 @@
 package ${basePackage}.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import ${extClass};
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import ${entityClass.name};
 
@@ -9,5 +9,5 @@ import ${entityClass.name};
  * @Create: ${time}
  */
 @MapperRepository
-public interface ${entityClass.simpleName}Mapper extends BaseMapper<${entityClass.simpleName}> {
+public interface ${entityClass.simpleName}Mapper extends ${extClassName}<${entityClass.simpleName}> {
 }
