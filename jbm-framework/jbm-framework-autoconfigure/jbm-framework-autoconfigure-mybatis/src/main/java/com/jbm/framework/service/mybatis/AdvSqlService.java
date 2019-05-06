@@ -27,7 +27,7 @@ import com.jbm.framework.masterdata.usage.bean.AdvEntity;
 import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 
-public class AdvSqlService<Entity extends AdvEntity<String>> extends BaseSqlService<Entity>
+public class AdvSqlService<Entity extends AdvEntity> extends BaseSqlService<Entity>
 		implements IAdvSqlService<Entity> {
 
 	public AdvSqlService() {

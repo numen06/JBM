@@ -1,13 +1,14 @@
 package com.jbm.framework.mvc.web;
 
+import com.github.jsonzou.jmockdata.JMockData;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
 import com.jbm.framework.metadata.bean.ResultForm;
+import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.util.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -25,6 +26,25 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         super();
     }
 
+
+    protected void validator(JsonRequestBody jsonRequestBody) throws Exception {
+        if (ObjectUtils.isNull(jsonRequestBody)) {
+            throw new ServiceException("参数错误");
+        }
+
+    }
+
+    protected Entity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
+        Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
+        if (valNull) {
+            if (ObjectUtils.isNull(entity)) {
+                throw new ServiceException("参数错误");
+            }
+        }
+        return entity;
+    }
+
+
     /**
      * 列表查询
      *
@@ -35,10 +55,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object pageList(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
-            if (ObjectUtils.isNull(jsonRequestBody)) {
-                throw new ServiceException("参数错误");
-            }
-            Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
+            validator(jsonRequestBody);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
             PageForm pageForm = jsonRequestBody.getPageForm();
             DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
             return ResultForm.success(dataPaging, "查询分页列表成功");
@@ -57,13 +75,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object model(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
-            if (ObjectUtils.isNull(jsonRequestBody)) {
-                throw new ServiceException("参数错误");
-            }
-            Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
-            if (ObjectUtils.isNull(entity)) {
-                throw new ServiceException("参数错误");
-            }
+            validator(jsonRequestBody);
+            Entity entity = validatorMasterData(jsonRequestBody, true);
             entity = service.selectEntity(entity);
             return ResultForm.success(entity, "查询对象成功");
         } catch (Exception e) {
@@ -81,13 +94,25 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object save(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
-            if (ObjectUtils.isNull(jsonRequestBody)) {
-                throw new ServiceException("参数错误");
-            }
-            Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
-            if (ObjectUtils.isNull(entity)) {
-                throw new ServiceException("参数错误");
-            }
+            validator(jsonRequestBody);
+            Entity entity = validatorMasterData(jsonRequestBody, true);
+            entity = service.saveEntity(entity);
+            return ResultForm.success(entity, "保存对象成功");
+        } catch (Exception e) {
+            return ResultForm.error(null, "保存对象失败");
+        }
+    }
+
+    /**
+     * 模拟数据保存
+     *
+     * @return
+     */
+    @RequestMapping("/mock")
+    @Override
+    public Object mock() {
+        try {
+            Entity entity = JMockData.mock(service.getEntityClass());
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
         } catch (Exception e) {
@@ -105,13 +130,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object remove(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
-            if (ObjectUtils.isNull(jsonRequestBody)) {
-                throw new ServiceException("参数错误");
-            }
-            final Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
-            if (ObjectUtils.isNull(entity)) {
-                throw new ServiceException("参数错误");
-            }
+            validator(jsonRequestBody);
+            Entity entity = validatorMasterData(jsonRequestBody, true);
             service.delete(entity);
             // smsConfService.delete(smsConf);
             return ResultForm.success(entity, "删除对象成功");
