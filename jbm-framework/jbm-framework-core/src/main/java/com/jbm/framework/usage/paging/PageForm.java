@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.usage.paging;
+package com.jbm.framework.usage.paging;
 
 import com.jbm.framework.metadata.usage.bean.IBaseForm;
 

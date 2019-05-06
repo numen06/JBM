@@ -8,8 +8,8 @@ import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
-import com.jbm.framework.masterdata.usage.paging.DataPaging;
-import com.jbm.framework.masterdata.usage.paging.PageForm;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 public interface IBaseSqlService<Entity extends BaseEntity> {
 

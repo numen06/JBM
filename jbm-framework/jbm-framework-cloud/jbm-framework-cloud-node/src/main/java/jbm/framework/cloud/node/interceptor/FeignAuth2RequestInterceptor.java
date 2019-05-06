@@ -1,24 +1,13 @@
 package jbm.framework.cloud.node.interceptor;
 
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.cloud.security.oauth2.client.feign.OAuth2FeignRequestInterceptor;
+import org.springframework.security.oauth2.client.OAuth2ClientContext;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 
 
-public class FeignAuth2RequestInterceptor implements RequestInterceptor {
+public class FeignAuth2RequestInterceptor extends OAuth2FeignRequestInterceptor {
 
-    @Override
-    public void apply(RequestTemplate requestTemplate) {
-        SecurityContext securityContext= SecurityContextHolder.getContext();
-        Authentication authentication=securityContext.getAuthentication();
-        if(authentication!=null&&authentication.getDetails() instanceof OAuth2AuthenticationDetails ){
-            OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails)authentication.getDetails();
-            String token=String.format("%s %s","bearer",details.getTokenValue());
-            requestTemplate.header("Authorization",token);
-
-        }
+    public FeignAuth2RequestInterceptor(OAuth2ClientContext oAuth2ClientContext, OAuth2ProtectedResourceDetails resource) {
+        super(oAuth2ClientContext, resource);
     }
 }

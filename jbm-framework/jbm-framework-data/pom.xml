@@ -12,6 +12,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>jbm-framework-data-masterdata</module>
-	</modules>
+        <module>jbm-framework-data-metadata</module>
+    </modules>
 
 </project>

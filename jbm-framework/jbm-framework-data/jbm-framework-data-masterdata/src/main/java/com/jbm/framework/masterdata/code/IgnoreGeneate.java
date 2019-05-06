@@ -1,4 +1,4 @@
-package jbm.framework.code;
+package com.jbm.framework.masterdata.code;
 
 import java.lang.annotation.*;
 

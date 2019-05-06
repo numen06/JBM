@@ -119,6 +119,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .secret(passwordEncoder().encode("123456"));
     }
 
+
 //	@Primary
 //	@Bean
 //	public DefaultTokenServices defaultTokenServices(ClientDetailsServiceConfigurer clients) throws Exception {

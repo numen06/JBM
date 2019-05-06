@@ -39,7 +39,6 @@
 		<module>jbm-framework-autoconfigure-i18n</module>
 		<module>jbm-framework-autoconfigure-fastdfs</module>
 		<module>jbm-framework-autoconfigure-canal</module>
-        <module>jbm-framework-autoconfigure-code</module>
     </modules>
 	<dependencies>
 		<dependency>

@@ -1,14 +1,12 @@
-package com.jbm.framework.mvc.form;
+package com.jbm.framework.usage.form;
 
 import com.alibaba.fastjson.JSON;
-import com.jbm.framework.masterdata.usage.paging.PageForm;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import com.jbm.util.json.JSONBean;
 
 import java.util.List;
 import java.util.Map;
-
-//import com.jbm.framework.metadata.usage.page.PageForm;
 
 /**
  * 前端请求封装类

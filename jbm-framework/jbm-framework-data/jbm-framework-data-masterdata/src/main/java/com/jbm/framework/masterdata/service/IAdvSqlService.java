@@ -4,10 +4,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.bean.AdvEntity;
-import com.jbm.framework.masterdata.usage.paging.PageForm;
+import com.jbm.framework.usage.paging.PageForm;
 
 public interface IAdvSqlService<Entity extends AdvEntity<String>> extends IBaseSqlService<Entity> {
 

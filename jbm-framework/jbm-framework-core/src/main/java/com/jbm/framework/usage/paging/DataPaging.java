@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.usage.paging;
+package com.jbm.framework.usage.paging;
 
 import java.io.Serializable;
 import java.util.ArrayList;

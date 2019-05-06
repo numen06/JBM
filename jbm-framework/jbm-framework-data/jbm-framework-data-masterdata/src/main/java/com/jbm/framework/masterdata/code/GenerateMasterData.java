@@ -1,12 +1,15 @@
-package jbm.framework.code;
+package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.ClassUtil;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
 import com.jbm.util.StringUtils;
-import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
@@ -22,7 +25,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
-import static jbm.framework.code.CodeType.*;
+import static com.jbm.framework.masterdata.code.CodeType.*;
+
 
 /**
  * @author: create by wesley
@@ -46,7 +50,7 @@ public class GenerateMasterData {
 
     public GenerateMasterData() {
         try {
-            ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader("/jbm/framework/code/btl");
+            ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader("/com/jbm/framework/masterdata/code/btl");
             Configuration cfg = Configuration.defaultConfiguration();
             gt = new GroupTemplate(resourceLoader, cfg);
         } catch (IOException e) {
@@ -92,14 +96,14 @@ public class GenerateMasterData {
         String extClass = null;
         switch (codeType) {
             case mapper:
-                extClass = "com.baomidou.mybatisplus.core.mapper.BaseMapper";
+                extClass = BaseMapper.class.getName();
                 break;
             case service:
                 if (superclass.equals(MasterDataEntity.class)) {
-                    extClass = "com.jbm.framework.masterdata.service.IMasterDataService";
+                    extClass = IMasterDataService.class.getName();
                 }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
-                    extClass = "com.jbm.framework.masterdata.service.IMasterDataTreeService";
+                    extClass = IMasterDataTreeService.class.getName();
                 }
                 break;
             case serviceImpl:
@@ -111,7 +115,12 @@ public class GenerateMasterData {
                 }
                 break;
             case controller:
-                extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+                if (superclass.equals(MasterDataEntity.class)) {
+                    extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+                }
+                if (superclass.equals(MasterDataTreeEntity.class)) {
+                    extClass = "com.jbm.framework.mvc.web.MasterDataTreeCollection";
+                }
                 break;
         }
         t.binding("extClass", extClass);

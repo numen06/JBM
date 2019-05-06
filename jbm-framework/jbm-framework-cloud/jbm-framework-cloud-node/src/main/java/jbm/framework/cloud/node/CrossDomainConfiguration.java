@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CloudNodeConfiguration {
+public class CrossDomainConfiguration {
 	@Bean
 	public OptionsCorsFilter optionsCorsFilter() {
 		return new OptionsCorsFilter();

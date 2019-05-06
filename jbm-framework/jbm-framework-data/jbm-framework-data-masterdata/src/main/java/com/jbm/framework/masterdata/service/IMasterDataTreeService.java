@@ -2,16 +2,14 @@ package com.jbm.framework.masterdata.service;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
-import com.jbm.framework.masterdata.usage.paging.PageForm;
+import com.jbm.framework.usage.paging.PageForm;
 
 /**
  * 带有树形结构的数据库访问类
  *
  * @param <Entity>
- * @param <PK>
  * @author wesley
  */
 public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> extends IMasterDataService<Entity> {

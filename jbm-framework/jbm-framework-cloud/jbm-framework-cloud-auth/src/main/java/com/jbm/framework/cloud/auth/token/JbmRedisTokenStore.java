@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.AuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.DefaultAuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.util.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -90,21 +91,17 @@ public class JbmRedisTokenStore implements TokenStore {
 
     @Override
     public void storeAccessToken(OAuth2AccessToken token, OAuth2Authentication authentication) {
-        //更新权限
-        JbmAuthUser user= userService.findUserByUsername( ((JbmAuthUser)authentication.getUserAuthentication().getPrincipal()).getUsername());
-//        String auth=JSONObject.toJSONString(authentication);98
-//        JSONObject object= JSONObject.parseObject(auth);
-//        object.put("authorities",user.getAuthorities());
-//        authentication=JSONObject.toJavaObject(object,OAuth2Authentication.class);
         try {
-            FieldValueUitls fieldValueUitls=new FieldValueUitls();
-            fieldValueUitls.modify(authentication,"authorities",user.getAuthorities());
-            MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(user, user.getAuthorities());
-            fieldValueUitls.modify(authentication,"userAuthentication",authenticationToken);
-
+            if (authentication.getUserAuthentication() != null) {
+                JbmAuthUser user = userService.findUserByUsername(((JbmAuthUser) authentication.getUserAuthentication().getPrincipal()).getUsername());
+                FieldUtils.setProtectedFieldValue("authorities", user.getAuthorities(), authentication);
+                MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(user, user.getAuthorities());
+                FieldUtils.setProtectedFieldValue("userAuthentication", authenticationToken, authentication);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //更新权限
         //-更新权限
         this.redisTemplate.opsForValue().set(ACCESS + token.getValue(), token);
         this.redisTemplate.opsForValue().set(AUTH + token.getValue(), authentication);
@@ -244,8 +241,8 @@ public class JbmRedisTokenStore implements TokenStore {
     }
 
 
-     class FieldValueUitls {
-        public  void modify(Object object, String fieldName, Object newFieldValue) throws Exception {
+    class FieldValueUitls {
+        public void modify(Object object, String fieldName, Object newFieldValue) throws Exception {
             try {
                 Field field = object.getClass().getDeclaredField(fieldName);
 
@@ -258,8 +255,8 @@ public class JbmRedisTokenStore implements TokenStore {
                 }
 
                 field.set(object, newFieldValue);
-            }catch (Exception e){
-                Class<?> clazz=object.getClass().getSuperclass();
+            } catch (Exception e) {
+                Class<?> clazz = object.getClass().getSuperclass();
                 Field field = clazz.getDeclaredField(fieldName);
 
                 Field modifiersField = Field.class.getDeclaredField("modifiers");
