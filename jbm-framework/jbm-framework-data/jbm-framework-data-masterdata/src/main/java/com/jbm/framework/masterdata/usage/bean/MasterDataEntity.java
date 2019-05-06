@@ -4,17 +4,15 @@ import javax.persistence.MappedSuperclass;
 
 /**
  * 基础类模型
- * 
- * @author wesley
  *
- * @param <CODE>
+ * @author wesley
  */
 @MappedSuperclass
-public class MasterDataEntity extends AdvEntity<String> {
+public class MasterDataEntity extends AdvEntity {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
 }

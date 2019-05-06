@@ -11,25 +11,24 @@ import javax.persistence.MappedSuperclass;
  * 
  * @author wesley
  *
- * @param <CODE>
  */
 @MappedSuperclass
-public class AdvEntity<CODE extends Serializable> extends BaseEntity implements CodePrimaryKey<Long, CODE> {
+public class AdvEntity extends BaseEntity implements CodePrimaryKey<Long, String> {
 	/**
 	 * 	
 	 */
 	private static final long serialVersionUID = 4915439801688748572L;
 
 	@Column
-	private CODE code;
+	private String code;
 
 	@Override
-	public CODE getCode() {
+	public String getCode() {
 		return code;
 	}
 
 	@Override
-	public void setCode(CODE code) {
+	public void setCode(String code) {
 		this.code = code;
 	}
 
@@ -37,12 +36,12 @@ public class AdvEntity<CODE extends Serializable> extends BaseEntity implements 
 		super();
 	}
 
-	public AdvEntity(CODE code) {
+	public AdvEntity(String code) {
 		super();
 		this.code = code;
 	}
 
-	public AdvEntity(Long id, CODE code) {
+	public AdvEntity(Long id, String code) {
 		super(id);
 		this.code = code;
 	}
