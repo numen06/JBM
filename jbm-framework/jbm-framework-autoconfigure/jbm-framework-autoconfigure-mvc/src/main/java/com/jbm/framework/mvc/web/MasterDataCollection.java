@@ -1,6 +1,7 @@
 package com.jbm.framework.mvc.web;
 
 import com.github.jsonzou.jmockdata.JMockData;
+import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
@@ -21,6 +22,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     protected Service service;
     @Autowired
     protected MessageSource messageSource;
+
+    protected MockConfig mockConfig = MockConfig.newInstance().setEnabledCircle(true).excludes("id").globalConfig();
 
     public MasterDataCollection() {
         super();
@@ -112,7 +115,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object mock() {
         try {
-            Entity entity = JMockData.mock(service.getEntityClass());
+            Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
         } catch (Exception e) {

@@ -2,14 +2,15 @@ package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.ClassUtil;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
+import com.jbm.framework.masterdata.usage.bean.BaseEntity;
 import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
 import com.jbm.util.StringUtils;
+import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
@@ -63,7 +64,8 @@ public class GenerateMasterData {
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
         this.basePackage = ClassUtil.getPackage(entityClass);
-        this.superclass = entityClass.getSuperclass();
+        if (entityClass.isAssignableFrom(BaseEntity.class))
+            this.superclass = entityClass.getSuperclass();
     }
 
     public GenerateMasterData(Class<?> entityClass, String basePackage) {
@@ -87,7 +89,7 @@ public class GenerateMasterData {
             return (new StringBuilder()).append(Character.toUpperCase(s.charAt(0))).append(s.substring(1)).toString();
     }
 
-    private Template buildData(CodeType codeType) {
+    private Template buildData(CodeType codeType) throws Exception {
         Template t = gt.getTemplate(codeType.name() + ".btl");
         t.binding("entityClass", entityClass);
         t.binding("mapping", toLowerCaseFirstOne(entityClass.getSimpleName()));
@@ -123,6 +125,8 @@ public class GenerateMasterData {
                 }
                 break;
         }
+        if (StringUtil.isBlank(extClass))
+            throw new ClassNotFoundException("未发现父类");
         t.binding("extClass", extClass);
         t.binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
         return t;
@@ -161,14 +165,23 @@ public class GenerateMasterData {
 //        if (!ArrayUtil.contains(this.entityClass.getInterfaces(), ClassUtil.loadClass("com.jbm.framework.masterdata.usage.bean.MasterDataEntity"))) {
 //            return;
 //        }
-        if (this.ignore) {
-            return;
+        try {
+            if (superclass == null) {
+                return;
+            }
+            if (this.ignore) {
+                return;
+            }
+            Template t = buildData(codeType);
+            if (t == null)
+                return;
+            File file = this.getWriteFile(codeType);
+            if (file == null)
+                return;
+            t.renderTo(FileUtil.getOutputStream(file));
+        } catch (Exception e) {
+            logger.error("自动生成错误", e);
         }
-        Template t = buildData(codeType);
-        File file = this.getWriteFile(codeType);
-        if (file == null)
-            return;
-        t.renderTo(FileUtil.getOutputStream(file));
     }
 
 
