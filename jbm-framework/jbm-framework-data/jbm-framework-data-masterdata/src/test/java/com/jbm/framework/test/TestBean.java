@@ -1,6 +1,7 @@
 package com.jbm.framework.test;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.test.bean.AXB;
@@ -24,8 +25,11 @@ public class TestBean {
     @Test
     public void testBasic() {
         MockConfig mockConfig = MockConfig.newInstance().globalConfig().setEnabledCircle(true);
-        BasicBean basicBean = JMockData.mock(BasicBean.class, mockConfig);
-        System.out.println(JSON.toJSONString(basicBean));
+        BasicBean basicBean1 = JMockData.mock(BasicBean.class, mockConfig);
+        System.out.println(JSON.toJSONString(basicBean1, SerializerFeature.DisableCircularReferenceDetect));
+        MockConfig mockConfig2 = MockConfig.newInstance().globalConfig().setEnabledCircle(true);
+        BasicBean basicBean2 = JMockData.mock(BasicBean.class, mockConfig2);
+        System.out.println(JSON.toJSONString(basicBean2, SerializerFeature.DisableCircularReferenceDetect));
     }
 
     @Test

@@ -23,8 +23,6 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Autowired
     protected MessageSource messageSource;
 
-    protected MockConfig mockConfig = MockConfig.newInstance().setEnabledCircle(true).excludes("id").globalConfig();
-
     public MasterDataCollection() {
         super();
     }
@@ -115,6 +113,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @Override
     public Object mock() {
         try {
+            MockConfig mockConfig = MockConfig.newInstance().setEnabledCircle(true).excludes("id").globalConfig();
             Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
