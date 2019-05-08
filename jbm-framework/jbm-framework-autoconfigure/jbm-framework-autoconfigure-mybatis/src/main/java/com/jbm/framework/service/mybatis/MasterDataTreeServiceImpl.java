@@ -21,12 +21,11 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
     }
 
     public List<Entity> selectTreeByParentCode(Entity entity) throws DataServiceException {
-        String parentCode = entity.getParentCode();
         List<Entity> subEntitys = new ArrayList<Entity>();
-        if (parentCode == null) {
+        if (entity.getParentCode() == null) {
             subEntitys = this.selectRootListByCode(entity);
         } else {
-            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentCode", entity.getParentCode()));
+            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentCode", entity.getCode()));
         }
         return this.selectTreeByParentCode(subEntitys);
     }
@@ -49,18 +48,17 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
     @Override
     public List<Entity> selectRootListById(Entity entity) throws DataServiceException {
         QueryWrapper<Entity> entityWrapper = new QueryWrapper<>(entity);
-        entityWrapper.isNull("id");
+        entityWrapper.isNull("parent_id");
         return super.list(entityWrapper);
     }
 
     @Override
     public List<Entity> selectTreeByParentId(Entity entity) throws DataServiceException {
-        Long parentId = entity.getParentId();
         List<Entity> subEntitys = new ArrayList<Entity>();
-        if (parentId == null) {
+        if (entity.getId() == null) {
             subEntitys = this.selectRootListById(entity);
         } else {
-            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentId", entity.getParentCode()));
+            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentId", entity.getId()));
         }
         return this.selectTreeByParentCode(subEntitys);
     }
