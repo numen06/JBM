@@ -7,25 +7,21 @@ import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
 import com.jbm.framework.metadata.bean.ResultForm;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.util.ObjectUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import sun.reflect.generics.tree.Tree;
 
 import java.util.List;
 
-public abstract class MasterDataTreeCollection<TreeEntity extends MasterDataTreeEntity, TreeService extends IMasterDataTreeService<TreeEntity>>
-        extends MasterDataCollection implements IMasterDataTreeController<TreeEntity, TreeService> {
-    @Autowired
-    protected TreeService treeService;
+public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
+        extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity, Service> {
 
     public MasterDataTreeCollection() {
         super();
     }
 
     @Override
-    protected TreeEntity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        TreeEntity entity = jsonRequestBody.tryGet(treeService.getEntityClass());
+    protected Entity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
+        Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -46,8 +42,8 @@ public abstract class MasterDataTreeCollection<TreeEntity extends MasterDataTree
     public Object root(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
             validator(jsonRequestBody);
-            TreeEntity entity = validatorMasterData(jsonRequestBody, false);
-            List<TreeEntity> list = treeService.selectRootListById(entity);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
+            List<Entity> list = service.selectRootListById(entity);
             return ResultForm.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
             return ResultForm.error(null, "查询树根节点列表成功", e);
@@ -59,8 +55,8 @@ public abstract class MasterDataTreeCollection<TreeEntity extends MasterDataTree
     public Object rootByCode(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
             validator(jsonRequestBody);
-            TreeEntity entity = validatorMasterData(jsonRequestBody, false);
-            List<TreeEntity> list = treeService.selectRootListByCode(entity);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
+            List<Entity> list = service.selectRootListByCode(entity);
             return ResultForm.success(list, "通过Code查询树根节点列表成功");
         } catch (Exception e) {
             return ResultForm.error(null, "通过Code查询树根节点列表成功", e);
@@ -68,14 +64,13 @@ public abstract class MasterDataTreeCollection<TreeEntity extends MasterDataTree
     }
 
 
-
     @RequestMapping("/tree")
     @Override
     public Object tree(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
             validator(jsonRequestBody);
-            TreeEntity entity = validatorMasterData(jsonRequestBody, false);
-            List<TreeEntity> list = treeService.selectTreeByParentId(entity);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
+            List<Entity> list = service.selectTreeByParentId(entity);
             return ResultForm.success(list, "查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "查询树结构成功", e);
@@ -87,8 +82,8 @@ public abstract class MasterDataTreeCollection<TreeEntity extends MasterDataTree
     public Object treeByCode(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
         try {
             validator(jsonRequestBody);
-            TreeEntity entity = validatorMasterData(jsonRequestBody, false);
-            List<TreeEntity> list = treeService.selectTreeByParentCode(entity);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
+            List<Entity> list = service.selectTreeByParentCode(entity);
             return ResultForm.success(list, "通过Code查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "通过Code查询树结构成功", e);
