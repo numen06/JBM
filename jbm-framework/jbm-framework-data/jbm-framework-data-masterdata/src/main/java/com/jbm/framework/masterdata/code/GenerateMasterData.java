@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class GenerateMasterData {
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
         this.basePackage = ClassUtil.getPackage(entityClass);
-        if (entityClass.isAssignableFrom(BaseEntity.class))
+        if (BaseEntity.class.isAssignableFrom(entityClass))
             this.superclass = entityClass.getSuperclass();
     }
 
@@ -161,7 +162,7 @@ public class GenerateMasterData {
     }
 
 
-    public void generate(CodeType codeType) {
+    public void generate(CodeType codeType) throws Exception {
 //        if (!ArrayUtil.contains(this.entityClass.getInterfaces(), ClassUtil.loadClass("com.jbm.framework.masterdata.usage.bean.MasterDataEntity"))) {
 //            return;
 //        }
@@ -180,12 +181,12 @@ public class GenerateMasterData {
                 return;
             t.renderTo(FileUtil.getOutputStream(file));
         } catch (Exception e) {
-            logger.error("自动生成错误", e);
+            throw e;
         }
     }
 
 
-    public void generateAll() {
+    public void generateAll() throws Exception {
         generate(mapper);
         generate(service);
         generate(serviceImpl);
@@ -212,6 +213,9 @@ public class GenerateMasterData {
                     GenerateMasterData generateMasterData = new GenerateMasterData(clazz, targetPackage);
                     generateMasterData.setSkip(true);
                     generateMasterData.generateAll();
+                } catch (FileSystemNotFoundException e) {
+                    //没找到文件就说明没有在开发环境
+                    break;
                 } catch (Exception e) {
                     logger.error("生成代码错误Class:{}", clazz, e);
                 }

@@ -46,7 +46,7 @@
         <spring.boot.version>2.0.2.RELEASE</spring.boot.version>
         <druid.version>1.1.12</druid.version>
         <dubbo.version>2.6.4</dubbo.version>
-        <fastjson.version>1.2.51</fastjson.version>
+        <fastjson.version>1.2.58</fastjson.version>
         <okhttp.version>2.7.5</okhttp.version>
         <jpush.version>3.2.7</jpush.version>
         <activiti.version>5.19.0.2</activiti.version>

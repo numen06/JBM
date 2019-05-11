@@ -16,11 +16,11 @@ package com.jbm.util.bean;
  * limitations under the License.
  */
 
+import cn.hutool.core.lang.Assert;
+import com.jbm.util.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import com.jbm.util.Assert;
-import com.jbm.util.StringUtils;
 
 /**
  * Value object to represent a Version consisting of major, minor and bugfix
@@ -69,7 +69,7 @@ public class Version implements Comparable<Version> {
 	 */
 	public static Version parse(String version) {
 
-		Assert.hasText(version);
+		Assert.notEmpty(version);
 
 		String[] parts = version.trim().split("\\.");
 		int[] intParts = new int[parts.length];
