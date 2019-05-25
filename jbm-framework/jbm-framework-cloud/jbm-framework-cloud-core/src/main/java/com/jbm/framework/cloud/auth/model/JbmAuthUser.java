@@ -1,17 +1,21 @@
 package com.jbm.framework.cloud.auth.model;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import lombok.Data;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author: create by wesley
  * @date:2019/5/19
  */
 @Data
-public class JbmAuthUser {
+public class JbmAuthUser extends User {
 
     private static final long serialVersionUID = 1L;
     private Long userId;
@@ -29,7 +33,7 @@ public class JbmAuthUser {
     private boolean enabled;
 
     public JbmAuthUser() {
-        super();
+        super(UUID.randomUUID().toString(), UUID.randomUUID().toString(), Lists.newArrayList());
     }
 
     public static JbmAuthUser getInstances(OAuth2Authentication principal) {

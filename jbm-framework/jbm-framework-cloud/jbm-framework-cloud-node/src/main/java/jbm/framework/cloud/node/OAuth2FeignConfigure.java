@@ -7,6 +7,7 @@ import feign.codec.ErrorDecoder;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.security.oauth2.OAuth2ClientProperties;
@@ -23,13 +24,14 @@ import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.test.OAuth2ContextConfiguration;
+import org.springframework.security.oauth2.client.token.AccessTokenRequest;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
-import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.config.annotation.web.configuration.OAuth2ClientConfiguration;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -45,17 +47,19 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @EnableConfigurationProperties(OAuth2ClientProperties.class)
 public class OAuth2FeignConfigure {
     // feign的OAuth2ClientContext
-//    @Resource
-    @Autowired
-    private OAuth2ClientProperties credentials;
+    private OAuth2ClientContext feignOAuth2ClientContext = new DefaultOAuth2ClientContext();
+
+
+//    @Autowired
+//    private OAuth2ClientProperties credentials;
 
     @Autowired
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Bean
     public OAuth2RestOperations restOperations(
-            ClientCredentialsResourceDetails resource, OAuth2ClientContext context) {
-        return new OAuth2RestTemplate(resource, context);
+            ClientCredentialsResourceDetails resource) {
+        return new OAuth2RestTemplate(resource, feignOAuth2ClientContext);
     }
 
     @Bean
@@ -67,9 +71,8 @@ public class OAuth2FeignConfigure {
 
 
     @Bean
-    public RequestInterceptor oauth2FeignRequestInterceptor(ClientCredentialsResourceDetails resource, OAuth2RestOperations oAuth2RestOperations) {
-        DefaultOAuth2ClientContext context = new DefaultOAuth2ClientContext(oAuth2RestOperations.getAccessToken());
-        return new OAuth2FeignRequestInterceptor(context, resource);
+    public RequestInterceptor oauth2FeignRequestInterceptor(ClientCredentialsResourceDetails resource) {
+        return new OAuth2FeignRequestInterceptor(feignOAuth2ClientContext, resource);
     }
 
     @Bean
@@ -78,17 +81,17 @@ public class OAuth2FeignConfigure {
     }
 
 
-    @Bean
-    public Retryer retry() {
-        // default Retryer will retry 5 times waiting waiting
-        // 100 ms per retry with a 1.5* back off multiplier
-        return new Retryer.Default(100, SECONDS.toMillis(1), 3);
-    }
+//    @Bean
+//    public Retryer retry() {
+//        // default Retryer will retry 5 times waiting waiting
+//        // 100 ms per retry with a 1.5* back off multiplier
+//        return new Retryer.Default(, SECONDS.toMillis(1), 3);
+//    }
 
 
     @Bean
-    public Decoder feignDecoder(OAuth2ClientContext context) {
-        return new CustomResponseEntityDecoder(new SpringDecoder(this.messageConverters), context);
+    public Decoder feignDecoder() {
+        return new CustomResponseEntityDecoder(new SpringDecoder(this.messageConverters), feignOAuth2ClientContext);
     }
 
 
@@ -121,12 +124,14 @@ public class OAuth2FeignConfigure {
                 return createResponse(decodedObject, response);
             } else if (isHttpEntity(type)) {
                 return createResponse(null, response);
-            } else {
-                // custom ResponseEntityDecoder if token is valid then go to errorDecoder
+            } else if (response.status() != 200) {
                 String body = Util.toString(response.body().asReader());
                 if (body.contains(OAuth2Exception.INVALID_TOKEN)) {
                     clearTokenAndRetry(response, body);
                 }
+                return createResponse(null, response);
+            } else {
+                // custom ResponseEntityDecoder if token is valid then go to errorDecoder
                 return decoder.decode(response, type);
             }
         }
@@ -173,8 +178,8 @@ public class OAuth2FeignConfigure {
 
 
     @Bean
-    public ErrorDecoder errorDecoder(OAuth2ClientContext context) {
-        return new RestClientErrorDecoder(context);
+    public ErrorDecoder errorDecoder() {
+        return new RestClientErrorDecoder(feignOAuth2ClientContext);
     }
 
     /**
