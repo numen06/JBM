@@ -21,7 +21,7 @@ public class UserController {
         }
         JbmAuthUser user = new JbmAuthUser();
         user.setUsername(authentication.getPrincipal().toString());
-        user.setPassword(new BCryptPasswordEncoder().encode(UUID.randomUUID().toString()));
+        user.setPassword(UUID.randomUUID().toString());
         user.setEnabled(true);
         user.setUserId(0l);
         user.setAccountNonExpired(true);
