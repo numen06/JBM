@@ -34,6 +34,11 @@
             <artifactId>jersey-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-cloud-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>

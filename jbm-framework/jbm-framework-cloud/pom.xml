@@ -18,6 +18,7 @@
         <module>jbm-framework-cloud-node</module>
         <!--测试程序不需要集成-->
         <module>jbm-framework-cloud-service-a</module>
+        <module>jbm-framework-cloud-core</module>
     </modules>
     <dependencies>
         <dependency>
