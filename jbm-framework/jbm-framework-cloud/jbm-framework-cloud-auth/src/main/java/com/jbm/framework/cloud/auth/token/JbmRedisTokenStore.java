@@ -93,12 +93,10 @@ public class JbmRedisTokenStore implements TokenStore {
     public void storeAccessToken(OAuth2AccessToken token, OAuth2Authentication authentication) {
         try {
             if (authentication.getUserAuthentication() != null) {
-                if (authentication.getUserAuthentication().getPrincipal() instanceof JbmAuthUser) {
-                    JbmAuthUser user = userService.findUserByUsername(((JbmAuthUser) authentication.getUserAuthentication().getPrincipal()).getUsername());
-                    FieldUtils.setProtectedFieldValue("authorities", user.getAuthorities(), authentication);
-                    MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(user, user.getAuthorities());
-                    FieldUtils.setProtectedFieldValue("userAuthentication", authenticationToken, authentication);
-                }
+                JbmAuthUser user = userService.findUserByUsername(((JbmAuthUser) authentication.getUserAuthentication().getPrincipal()).getUsername());
+                FieldUtils.setProtectedFieldValue("authorities", user, authentication.getAuthorities());
+                MobileAuthenticationToken authenticationToken = new MobileAuthenticationToken(user, user.getAuthorities());
+                FieldUtils.setProtectedFieldValue("userAuthentication", authenticationToken, authentication);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -11,14 +11,13 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author: create by wesley
  * @date:2019/5/19
  */
 @Data
-public class JbmAuthUser implements UserDetails {
+public class JbmAuthUser extends User {
 
     private static final long serialVersionUID = 1L;
     private Long userId;
@@ -35,14 +34,30 @@ public class JbmAuthUser implements UserDetails {
 
     private boolean enabled;
 
-    private Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
 
     public JbmAuthUser() {
-        super();
+        super("jbm", "jbm", Lists.newArrayList());
     }
+
+//    public User toUserDetail() {
+//        List<GrantedAuthority> authorities = new ArrayList<>();
+//        for (String role : roleList) {
+//            GrantedAuthority grantedAuthority = new GrantedAuthority() {
+//                @Override
+//                public String getAuthority() {
+//                    return role;
+//                }
+//            };
+//            authorities.add(grantedAuthority);
+//        }
+//        User user = new User(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+//        return user;
+//    }
+
 
     public static JbmAuthUser getInstances(OAuth2Authentication principal) {
         return JSON.parseObject(JSON.toJSONString(principal.getUserAuthentication().getDetails()), JbmAuthUser.class);
     }
+
 
 }
