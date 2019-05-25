@@ -6,6 +6,7 @@ spring:
 eureka:
   server:
     enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000  # 每隔 5 秒清理服务列表 （默认值 60*1000 是1分钟
   instance:
     #    hostname: localhost
     prefer-ip-address: true
@@ -14,3 +15,5 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+    healthcheck:
+      enabled: true # 开启健康检查 （需要spring-boot-starter-actuator依赖）
