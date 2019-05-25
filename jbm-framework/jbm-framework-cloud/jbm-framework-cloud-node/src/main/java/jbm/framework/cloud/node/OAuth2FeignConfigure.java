@@ -1,5 +1,6 @@
 package jbm.framework.cloud.node;
 
+import com.alibaba.fastjson.JSON;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
@@ -18,8 +19,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
+import org.springframework.security.oauth2.client.OAuth2RestOperations;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
 import org.springframework.security.oauth2.client.test.OAuth2ContextConfiguration;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.config.annotation.web.configuration.OAuth2ClientConfiguration;
 import org.springframework.util.LinkedMultiValueMap;
@@ -41,25 +46,30 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class OAuth2FeignConfigure {
     // feign的OAuth2ClientContext
 //    @Resource
-    private OAuth2ClientContext feignOAuth2ClientContext = new DefaultOAuth2ClientContext();
     @Autowired
     private OAuth2ClientProperties credentials;
 
     @Autowired
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
-//    @Bean
-//    public OAuth2RestTemplate clientCredentialsRestTemplate() {
-//        return new OAuth2RestTemplate(clientCredentialsResourceDetails);
-//    }
+    @Bean
+    public OAuth2RestOperations restOperations(
+            ClientCredentialsResourceDetails resource, OAuth2ClientContext context) {
+        return new OAuth2RestTemplate(resource, context);
+    }
 
     @Bean
-    public RequestInterceptor oauth2FeignRequestInterceptor() {
-        ClientCredentialsResourceDetails clientCredentialsResourceDetails = new ClientCredentialsResourceDetails();
-        clientCredentialsResourceDetails.setClientId("client");
-        clientCredentialsResourceDetails.setClientSecret("123456");
-        clientCredentialsResourceDetails.setAccessTokenUri("http://platform.hubao-tech.com/uaa/oauth/token");
-        return new OAuth2FeignRequestInterceptor(feignOAuth2ClientContext, clientCredentialsResourceDetails);
+    public ClientCredentialsResourceDetails clientCredentialsResourceDetails(OAuth2ProtectedResourceDetails resource) {
+        ClientCredentialsResourceDetails details = JSON.parseObject(JSON.toJSONString(resource), ClientCredentialsResourceDetails.class);
+        details.setGrantType("client_credentials");
+        return details;
+    }
+
+
+    @Bean
+    public RequestInterceptor oauth2FeignRequestInterceptor(ClientCredentialsResourceDetails resource, OAuth2RestOperations oAuth2RestOperations) {
+        DefaultOAuth2ClientContext context = new DefaultOAuth2ClientContext(oAuth2RestOperations.getAccessToken());
+        return new OAuth2FeignRequestInterceptor(context, resource);
     }
 
     @Bean
@@ -77,8 +87,8 @@ public class OAuth2FeignConfigure {
 
 
     @Bean
-    public Decoder feignDecoder() {
-        return new CustomResponseEntityDecoder(new SpringDecoder(this.messageConverters), feignOAuth2ClientContext);
+    public Decoder feignDecoder(OAuth2ClientContext context) {
+        return new CustomResponseEntityDecoder(new SpringDecoder(this.messageConverters), context);
     }
 
 
@@ -163,8 +173,8 @@ public class OAuth2FeignConfigure {
 
 
     @Bean
-    public ErrorDecoder errorDecoder() {
-        return new RestClientErrorDecoder(feignOAuth2ClientContext);
+    public ErrorDecoder errorDecoder(OAuth2ClientContext context) {
+        return new RestClientErrorDecoder(context);
     }
 
     /**

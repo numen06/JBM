@@ -111,11 +111,11 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         // 配置两个客户端,一个用于password认证一个用于client认证
         clients.inMemory().withClient("client")
-                .authorizedGrantTypes("client_credentials", "refresh_token").scopes("select").authorities("client")
+                .authorizedGrantTypes("authorization_code", "client_credentials", "refresh_token").scopes("select").autoApprove(true).authorities("client")
                 .secret(passwordEncoder().encode("123456")).and().withClient("platform_server")
-                .authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
+                .authorizedGrantTypes("authorization_code","password", "refresh_token").scopes("select").autoApprove(true).authorities("client")
                 .secret(passwordEncoder().encode("123456")).and().withClient("client_2")
-                .authorizedGrantTypes("password", "refresh_token").scopes("select").authorities("client")
+                .authorizedGrantTypes("authorization_code","password", "refresh_token").scopes("select").autoApprove(true).authorities("client")
                 .secret(passwordEncoder().encode("123456"));
     }
 
