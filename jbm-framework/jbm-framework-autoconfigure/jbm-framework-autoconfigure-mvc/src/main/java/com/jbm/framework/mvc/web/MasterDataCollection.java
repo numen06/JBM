@@ -1,5 +1,6 @@
 package com.jbm.framework.mvc.web;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 public abstract class MasterDataCollection<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>>
         extends BaseCollection implements IMasterDataController<Entity, Service> {
@@ -43,6 +46,19 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             }
         }
         return entity;
+    }
+
+    protected List<Entity> validatorMasterDataList(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
+        List<Entity> entitys = jsonRequestBody.tryGetList(service.getEntityClass());
+        if (valNull) {
+            if (CollectionUtil.isEmpty(entitys)) {
+                throw new ServiceException("列表参数为空");
+            }
+            if (ObjectUtils.isNull(entitys)) {
+                throw new ServiceException("参数错误");
+            }
+        }
+        return entitys;
     }
 
 
@@ -103,6 +119,26 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             return ResultForm.error(null, "保存对象失败");
         }
     }
+
+    /**
+     * 保存多个对象
+     *
+     * @param jsonRequestBody
+     * @return
+     */
+    @RequestMapping("/saveBatch")
+    @Override
+    public Object saveBatch(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+        try {
+            validator(jsonRequestBody);
+            List<Entity> entitys = validatorMasterDataList(jsonRequestBody, true);
+            service.saveBatch(entitys);
+            return ResultForm.success(entitys, "保存对象成功");
+        } catch (Exception e) {
+            return ResultForm.error(null, "保存对象失败");
+        }
+    }
+
 
     /**
      * 模拟数据保存
