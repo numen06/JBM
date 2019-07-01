@@ -9,6 +9,18 @@
         <version>5.0.0-SNAPSHOT</version>
         <relativePath>../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
+    <distributionManagement>
+        <repository>
+            <id>jbm-releases</id>
+            <name>jbm-releases</name>
+            <url>https://repo.rdc.aliyun.com/repository/35340-release-NxvguQ/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jbm-snapshots</id>
+            <name>jbm-snapshots</name>
+            <url>https://repo.rdc.aliyun.com/repository/35340-snapshot-j7ghlW/</url>
+        </snapshotRepository>
+    </distributionManagement>
     <dependencies>
         <!-- 基础包 -->
         <dependency>
@@ -40,8 +52,8 @@
             <artifactId>commons-collections</artifactId>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>org.apache.commons</groupId>-->
-            <!--<artifactId>commons-math3</artifactId>-->
+        <!--<groupId>org.apache.commons</groupId>-->
+        <!--<artifactId>commons-math3</artifactId>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
