@@ -12,6 +12,7 @@ import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ObjectUtils;
+import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,7 +50,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
     protected List<Entity> validatorMasterDataList(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        List<Entity> entitys = jsonRequestBody.tryGetList(service.getEntityClass());
+        List<Entity> entitys = jsonRequestBody.tryGetList( service.getEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");

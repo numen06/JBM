@@ -43,11 +43,15 @@ public class JsonRequestBody extends JSONBean {
     }
 
     public <T> List<T> tryGetList(Class<T> clazz) {
+        String key = StringUtils.uncapitalize(clazz.getSimpleName()) + "s";
+        if (this.containsKey(key)) {
+            return this.getJSONArray(key).toJavaList(clazz);
+        }
         return JSON.parseArray(this.toJSONString(), clazz);
     }
 
     public <T> List<T> getList(String key, Class<T> clazz) {
-        return JSON.parseArray(this.getJSONArray(key).toJSONString(), clazz);
+        return this.getJSONArray(key).toJavaList(clazz);
     }
 
     /**
