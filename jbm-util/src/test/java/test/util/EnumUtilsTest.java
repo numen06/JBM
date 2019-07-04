@@ -12,6 +12,7 @@ public class EnumUtilsTest extends TestCase {
 
 
     public void testContains() {
+        System.out.println(EnumUtils.contains(TestEnum.class, null));
         System.out.println(EnumUtils.contains(TestEnum.class, "test1"));
         System.out.println(EnumUtils.contains(TestEnum.class, "test2"));
         System.out.println(EnumUtils.contains(TestEnum.class, "test3"));
