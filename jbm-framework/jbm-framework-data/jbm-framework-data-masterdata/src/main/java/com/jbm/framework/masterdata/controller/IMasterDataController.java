@@ -19,4 +19,5 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
 
     Object mock();
 
+    Object deleteByIds(JsonRequestBody jsonRequestBody);
 }

@@ -180,4 +180,21 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             return ResultForm.error(null, "删除对象失败");
         }
     }
+
+    @RequestMapping("/deleteByIds")
+    @Override
+    public Object deleteByIds(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+        try {
+            // 获取前端信息List<BusCompanyInfo>
+            validator(jsonRequestBody);
+            List<Long> ids = jsonRequestBody.getList("ids", Long.class);
+            if (CollectionUtil.isEmpty(ids)) {
+                throw new ServiceException("ID为空");
+            }
+            this.service.removeByIds(ids);
+            return ResultForm.success("success", "批量成功刪除");
+        } catch (Exception e) {
+            return ResultForm.error(e, e.getMessage());
+        }
+    }
 }
