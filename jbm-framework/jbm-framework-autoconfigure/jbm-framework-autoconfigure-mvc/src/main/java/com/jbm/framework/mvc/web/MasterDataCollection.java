@@ -98,8 +98,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         try {
             validator(jsonRequestBody);
             Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> dataPaging = service.selectEntitys(entity);
-            return ResultForm.success(dataPaging, "查询列表成功");
+            List<Entity> list = service.selectEntitys(entity);
+            return ResultForm.success(list, "查询列表成功");
         } catch (ServiceException e) {
             return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
