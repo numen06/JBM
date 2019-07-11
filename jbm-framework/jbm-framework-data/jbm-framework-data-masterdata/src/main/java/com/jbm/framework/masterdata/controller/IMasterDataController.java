@@ -15,8 +15,11 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      */
     Object pageList(JsonRequestBody jsonRequestBody);
 
+    Object list(JsonRequestBody jsonRequestBody);
+
     /**
      * 获取单一对对象
+     *
      * @param jsonRequestBody
      * @return
      */
@@ -24,6 +27,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
 
     /**
      * 保存单一对象
+     *
      * @param jsonRequestBody
      * @return
      */
@@ -37,6 +41,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
 
     /**
      * 保存多个对象
+     *
      * @param jsonRequestBody
      * @return
      */
@@ -44,12 +49,14 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
 
     /**
      * 生产假数据
+     *
      * @return
      */
     Object mock();
 
     /**
      * 批量删除
+     *
      * @param jsonRequestBody
      * @return
      */

@@ -18,6 +18,10 @@ public class ResultForm implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public ResultForm() {
+        this(200);
+    }
+
     public ResultForm(int status) {
         super();
         this.status = status;
@@ -90,7 +94,7 @@ public class ResultForm implements Serializable {
     /**
      * 返回状态码
      */
-    private Integer status = 0;
+    private Integer status = 200;
 
     private Integer errorCode;
 

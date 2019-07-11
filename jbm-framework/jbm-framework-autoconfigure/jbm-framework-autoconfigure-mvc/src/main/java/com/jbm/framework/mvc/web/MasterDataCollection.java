@@ -65,7 +65,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
 
 
     /**
-     * 列表查询
+     * 分页列表查询
      *
      * @param jsonRequestBody
      * @return
@@ -79,8 +79,31 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             PageForm pageForm = jsonRequestBody.getPageForm();
             DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
             return ResultForm.success(dataPaging, "查询分页列表成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             return ResultForm.error(null, "查询分页列表失败", e);
+        }
+    }
+
+    /**
+     * 列表查询
+     *
+     * @param jsonRequestBody
+     * @return
+     */
+    @RequestMapping("/list")
+    @Override
+    public Object list(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+        try {
+            validator(jsonRequestBody);
+            Entity entity = validatorMasterData(jsonRequestBody, false);
+            List<Entity> dataPaging = service.selectEntitys(entity);
+            return ResultForm.success(dataPaging, "查询列表成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
+        } catch (Exception e) {
+            return ResultForm.error(null, "查询列表失败", e);
         }
     }
 
@@ -117,6 +140,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             Entity entity = validatorMasterData(jsonRequestBody, true);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             return ResultForm.error(null, "保存对象失败");
         }
@@ -136,6 +161,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             List<Entity> entitys = validatorMasterDataList(jsonRequestBody, true);
             service.saveBatch(entitys);
             return ResultForm.success(entitys, "保存对象成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             return ResultForm.error(null, "保存对象失败");
         }
@@ -155,6 +182,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             return ResultForm.error(null, "保存对象失败");
         }
@@ -175,6 +204,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             service.delete(entity);
             // smsConfService.delete(smsConf);
             return ResultForm.success(entity, "删除对象成功");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             System.err.println(e);
             return ResultForm.error(null, "删除对象失败");
@@ -193,6 +224,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             }
             this.service.removeByIds(ids);
             return ResultForm.success("success", "批量成功刪除");
+        } catch (ServiceException e) {
+            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
             return ResultForm.error(e, e.getMessage());
         }
