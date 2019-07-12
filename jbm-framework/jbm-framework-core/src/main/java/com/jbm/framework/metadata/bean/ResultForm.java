@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.MessageEnum;
 import com.jbm.framework.metadata.enumerate.ResultEnum;
 
@@ -74,6 +75,13 @@ public class ResultForm implements Serializable {
 
     public static ResultForm error(Object result, String message, Exception e) {
         return error(result, 500, message, e);
+    }
+
+    public static ResultForm error(Exception e) {
+        if (e instanceof ServiceException) {
+            return error(null, 500, "", e);
+        }
+        return error(null, 500, "", e);
     }
 
     public static ResultForm error(Object result, Integer errorCode, String message, Exception e) {
