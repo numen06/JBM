@@ -16,5 +16,9 @@ public class EnumUtils extends EnumUtil {
         return EnumUtil.getEnumMap(enumClass).containsKey(val);
     }
 
+    public static <E extends Enum<E>> boolean notContains(final Class<E> enumClass, String val) {
+        return !contains(enumClass, val);
+    }
+
 
 }
