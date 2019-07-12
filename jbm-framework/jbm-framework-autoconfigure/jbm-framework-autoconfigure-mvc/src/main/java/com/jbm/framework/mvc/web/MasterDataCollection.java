@@ -79,10 +79,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             PageForm pageForm = jsonRequestBody.getPageForm();
             DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
             return ResultForm.success(dataPaging, "查询分页列表成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(null, "查询分页列表失败", e);
+            return ResultForm.error(e);
         }
     }
 
@@ -100,10 +98,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             Entity entity = validatorMasterData(jsonRequestBody, false);
             List<Entity> list = service.selectEntitys(entity);
             return ResultForm.success(list, "查询列表成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(null, "查询列表失败", e);
+            return ResultForm.error(e);
         }
     }
 
@@ -122,7 +118,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             entity = service.selectEntity(entity);
             return ResultForm.success(entity, "查询对象成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询对象失败");
+            return ResultForm.error(e);
         }
     }
 
@@ -140,10 +136,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             Entity entity = validatorMasterData(jsonRequestBody, true);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(null, "保存对象失败");
+            return ResultForm.error(e);
         }
     }
 
@@ -161,10 +155,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             List<Entity> entitys = validatorMasterDataList(jsonRequestBody, true);
             service.saveBatch(entitys);
             return ResultForm.success(entitys, "保存对象成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(null, "保存对象失败");
+            return ResultForm.error(e);
         }
     }
 
@@ -182,10 +174,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(null, "保存对象失败");
+            return ResultForm.error(e);
         }
     }
 
@@ -204,11 +194,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             service.delete(entity);
             // smsConfService.delete(smsConf);
             return ResultForm.success(entity, "删除对象成功");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            System.err.println(e);
-            return ResultForm.error(null, "删除对象失败");
+            return ResultForm.error(e);
         }
     }
 
@@ -224,10 +211,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             }
             this.service.removeByIds(ids);
             return ResultForm.success("success", "批量成功刪除");
-        } catch (ServiceException e) {
-            return ResultForm.error(null, e.getMessage(), e);
         } catch (Exception e) {
-            return ResultForm.error(e, e.getMessage());
+            return ResultForm.error(e);
         }
     }
 }
