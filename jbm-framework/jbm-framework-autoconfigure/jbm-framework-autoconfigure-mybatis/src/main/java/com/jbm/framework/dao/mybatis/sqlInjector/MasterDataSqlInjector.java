@@ -17,8 +17,8 @@ public class MasterDataSqlInjector extends DefaultSqlInjector {
 	public final static String DELETE_BY_CODE ="DeleteByCode";
 
 	@Override
-	public List<AbstractMethod> getMethodList() {
-		List<AbstractMethod> methods = super.getMethodList();
+	public List<AbstractMethod> getMethodList(Class<?> mapperClass) {
+		List<AbstractMethod> methods = super.getMethodList(mapperClass);
 		methods.add(new SelectByCode());
 		methods.add(new UpdateByCode());
 		methods.add(new DeleteByCode());

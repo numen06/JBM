@@ -1,24 +1,12 @@
 package com.jbm.framework.service.mybatis;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.mybatis.spring.SqlSessionTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
-import com.baomidou.mybatisplus.core.toolkit.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -34,6 +22,13 @@ import com.jbm.util.ArrayUtils;
 import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 import com.jbm.util.ObjectUtils;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
 
 public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseMapper<Entity>, Entity>
         implements IBaseSqlService<Entity>, IService<Entity> {
@@ -43,7 +38,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @SuppressWarnings("unchecked")
     @Override
     public Class<Entity> getEntityClass() {
-        return ReflectionKit.getSuperClassGenericType(getClass(), 0);
+        return currentModelClass();
     }
 
     public BaseSqlService() {
@@ -438,7 +433,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @SuppressWarnings("unchecked")
     @Override
     protected Class<Entity> currentModelClass() {
-        return ReflectionKit.getSuperClassGenericType(getClass(), 0);
+        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
     }
 
 }

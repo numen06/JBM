@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.mybatis;
 import java.util.ArrayList;
 import java.util.List;
 
+import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,16 +13,29 @@ import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 
 @Configuration
 public class MybatisPlusConfig {
-	/**
-	 * 分页拦截器
-	 * 
-	 * @return
-	 */
-	@Bean
-	public PaginationInterceptor paginationInterceptor() {
-		PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
-		paginationInterceptor.setDialectType("mysql");
-		List<ISqlParser> sqlParserList = new ArrayList<>();
+
+
+    /**
+     * 自动填充字段
+     *
+     * @return
+     */
+    @Bean
+    public MasterdataObjectHandler masterdataObjectHandler() {
+        return new MasterdataObjectHandler();
+    }
+
+
+    /**
+     * 分页拦截器
+     *
+     * @return
+     */
+    @Bean
+    public PaginationInterceptor paginationInterceptor() {
+        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
+        paginationInterceptor.setDialectType("mysql");
+        List<ISqlParser> sqlParserList = new ArrayList<>();
 //		TenantSqlParser tenantSqlParser = new TenantSqlParser();
 //		tenantSqlParser.setTenantHandler(new TenantHandler() {
 //			@Override
@@ -43,7 +57,7 @@ public class MybatisPlusConfig {
 //				return false;
 //			}
 //		});
-		paginationInterceptor.setSqlParserList(sqlParserList);
+        paginationInterceptor.setSqlParserList(sqlParserList);
 //      paginationInterceptor.setSqlParserFilter(new ISqlParserFilter() {
 //      @Override
 //      public boolean doFilter(MetaObject metaObject) {
@@ -55,11 +69,11 @@ public class MybatisPlusConfig {
 //          return false;
 //      }
 //  });
-		return paginationInterceptor;
-	}
-	
-	@Bean
-	public MasterDataSqlInjector masterDataSqlInjector() {
-		return new MasterDataSqlInjector();
-	}
+        return paginationInterceptor;
+    }
+
+    @Bean
+    public MasterDataSqlInjector masterDataSqlInjector() {
+        return new MasterDataSqlInjector();
+    }
 }
