@@ -16,13 +16,11 @@ public class SelectByCode extends AbstractMethod {
 
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
-//		SqlMethod sqlMethod = SqlMethod.SELECT_BY_ID;
-//        SqlSource sqlSource = new RawSqlSource(configuration, String.format(sqlScript,
-//                this.sqlSelectColumns(tableInfo, false), tableInfo.getTableName(), "code", "code"), Object.class);
-//        return super.addSelectMappedStatementForTable(mapperClass, method, sqlSource, tableInfo);
-
-//        SqlMethod sqlMethod = SqlMethod.LOGIC_SELECT_BY_ID;
-        SqlSource sqlSource = new RawSqlSource(this.configuration, String.format(sqlScript, this.sqlSelectColumns(tableInfo, false), tableInfo.getTableName(), column, column, tableInfo.getLogicDeleteSql(true, false)), Object.class);
+        SqlMethod sqlMethod = SqlMethod.LOGIC_SELECT_BY_ID;
+        SqlSource sqlSource = new RawSqlSource(configuration, String.format(sqlMethod.getSql(),
+                sqlSelectColumns(tableInfo, false),
+                tableInfo.getTableName(), column, column,
+                tableInfo.getLogicDeleteSql(true, false)), Object.class);
         return this.addSelectMappedStatementForTable(mapperClass, method, sqlSource, tableInfo);
     }
 }

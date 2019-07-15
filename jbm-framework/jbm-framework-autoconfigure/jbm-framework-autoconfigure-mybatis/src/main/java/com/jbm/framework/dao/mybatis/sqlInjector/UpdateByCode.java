@@ -17,22 +17,18 @@ public class UpdateByCode extends AbstractMethod {
     //	UPDATE_BY_ID("updateById", "根据ID 选择修改数据", "<script>\nUPDATE %s %s WHERE %s=#{%s} %s\n</script>"),
     private final String method = "updateByCode";
     private final String sqlScript = "<script>\\nUPDATE %s %s WHERE %s=#{%s} %s\\n</script>";
+    private final String column = "code";
 
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
-//        String sql;
-//        String sql = String.format(sqlScript, tableInfo.getTableName(),
-//                sqlSet(false, false, tableInfo, Constants.ENTITY_DOT), "code", Constants.ENTITY_DOT + "code",
-//                new StringBuilder("<if test=\"et instanceof java.util.Map\">")
-//                        .append("<if test=\"et.MP_OPTLOCK_VERSION_ORIGINAL!=null\">")
-//                        .append(" AND ${et.MP_OPTLOCK_VERSION_COLUMN}=#{et.MP_OPTLOCK_VERSION_ORIGINAL}")
-//                        .append("</if></if>"));
-//        sql = String.format(sql, tableInfo.getTableName(), tableInfo.getKeyColumn(), tableInfo.getKeyProperty());
-        String sql;
-        SqlSource sqlSource;
-        sql = String.format(sqlScript, tableInfo.getTableName(), tableInfo.getKeyColumn(), tableInfo.getKeyProperty());
-        sqlSource = this.languageDriver.createSqlSource(this.configuration, sql, Object.class);
-        return this.addDeleteMappedStatement(mapperClass, method, sqlSource);
+        boolean logicDelete = tableInfo.isLogicDelete();
+        SqlMethod sqlMethod = SqlMethod.UPDATE_BY_ID;
+        final String additional = optlockVersion() + tableInfo.getLogicDeleteSql(true, false);
+        String sql = String.format(sqlMethod.getSql(), tableInfo.getTableName(),
+                sqlSet(logicDelete, false, tableInfo, false, ENTITY, ENTITY_DOT),
+                column, ENTITY_DOT + column, additional);
+        SqlSource sqlSource = languageDriver.createSqlSource(configuration, sql, modelClass);
+        return addUpdateMappedStatement(mapperClass, modelClass, method, sqlSource);
     }
 
 }
