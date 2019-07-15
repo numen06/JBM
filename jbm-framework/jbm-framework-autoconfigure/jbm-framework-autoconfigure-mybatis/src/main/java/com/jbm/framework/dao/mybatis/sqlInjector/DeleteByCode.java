@@ -15,6 +15,6 @@ public class DeleteByCode extends AbstractMethod {
 //		SqlMethod sqlMethod = SqlMethod.DELETE_BY_ID;
 		SqlSource sqlSource = languageDriver.createSqlSource(configuration,
 				String.format(sqlScript, tableInfo.getTableName(), "code", "code"), modelClass);
-		return this.addDeleteMappedStatement(mapperClass, method, sqlSource);
+		return this.addDeleteMappedStatement(mapperClass, MasterDataSqlInjector.DELETE_BY_CODE, sqlSource);
 	}
 }

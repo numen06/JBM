@@ -11,9 +11,9 @@ import com.baomidou.mybatisplus.core.injector.DefaultSqlInjector;
  */
 public class MasterDataSqlInjector extends DefaultSqlInjector {
 	public final static String SELECT_BY_CODE ="selectByCode";
-	
+
 	public final static String UPDATE_BY_CODE ="UpdateByCode";
-	
+
 	public final static String DELETE_BY_CODE ="DeleteByCode";
 
 	@Override

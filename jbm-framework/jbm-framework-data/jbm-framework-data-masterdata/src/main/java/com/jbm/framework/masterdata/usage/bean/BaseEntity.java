@@ -29,9 +29,9 @@ public abstract class BaseEntity implements PrimaryKey<Long> {
 	private Long id;
 	
 	
-	@TableField(value = "delete_flag")
-	@TableLogic
-	private Integer deleteFlag;
+//	@TableField(value = "delete_flag")
+//	@TableLogic
+//	private Integer deleteFlag;
 
 	public BaseEntity() {
 		super();
@@ -50,13 +50,13 @@ public abstract class BaseEntity implements PrimaryKey<Long> {
 		this.id = id;
 	}
 
-	public Integer getDeleteFlag() {
-		return deleteFlag;
-	}
-
-	public void setDeleteFlag(Integer deleteFlag) {
-		this.deleteFlag = deleteFlag;
-	}
+//	public Integer getDeleteFlag() {
+//		return deleteFlag;
+//	}
+//
+//	public void setDeleteFlag(Integer deleteFlag) {
+//		this.deleteFlag = deleteFlag;
+//	}
 	
 	
 

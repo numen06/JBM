@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.metadata.TableInfo;
 
 public class SelectByCode extends AbstractMethod {
     //    SELECT_BY_ID("selectById", "根据ID 查询一条数据", "SELECT %s FROM %s WHERE %s=#{%s}"),
-    private final String method = "selectByCode";
     private final String sqlScript = "SELECT %s FROM %s WHERE %s=#{%s}";
     private final String column = "code";
 
@@ -21,6 +20,6 @@ public class SelectByCode extends AbstractMethod {
                 sqlSelectColumns(tableInfo, false),
                 tableInfo.getTableName(), column, column,
                 tableInfo.getLogicDeleteSql(true, false)), Object.class);
-        return this.addSelectMappedStatementForTable(mapperClass, method, sqlSource, tableInfo);
+        return this.addSelectMappedStatementForTable(mapperClass, MasterDataSqlInjector.SELECT_BY_CODE, sqlSource, tableInfo);
     }
 }
