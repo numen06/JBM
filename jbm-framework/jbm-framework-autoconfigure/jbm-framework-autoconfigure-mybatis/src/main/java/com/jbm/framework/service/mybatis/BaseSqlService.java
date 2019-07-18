@@ -6,8 +6,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -385,18 +387,15 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
             pageForm = PageForm.NO_PAGING();
         final Page<T> page = new Page<T>(pageForm.getCurrPage(), pageForm.getPageSize());
         final Map<String, String> rule = MapUtils.split(pageForm.getSortRule(), Maps.newLinkedHashMap(), ",", ":");
-        final List<String> descs = Lists.newArrayList();
-        final List<String> ascs = Lists.newArrayList();
         for (String col : rule.keySet()) {
             String sort = rule.get(col);
+            final String unCol = StrUtil.toUnderlineCase(col);
             if ("DESC".equalsIgnoreCase(sort)) {
-                descs.add(StrUtil.toUnderlineCase(col));
+                page.addOrder(OrderItem.desc(unCol));
             } else {
-                ascs.add(StrUtil.toUnderlineCase(col));
+                page.addOrder(OrderItem.asc(unCol));
             }
         }
-        page.setAscs(ascs);
-        page.setDescs(descs);
         return page;
     }
 
