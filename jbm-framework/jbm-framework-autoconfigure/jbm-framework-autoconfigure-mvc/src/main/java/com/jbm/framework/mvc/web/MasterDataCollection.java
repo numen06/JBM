@@ -191,9 +191,10 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         try {
             validator(jsonRequestBody);
             Entity entity = validatorMasterData(jsonRequestBody, true);
-            service.delete(entity);
-            // smsConfService.delete(smsConf);
-            return ResultForm.success(entity, "删除对象成功");
+            if (service.delete(entity))
+                return ResultForm.success(entity, "删除对象成功");
+            else
+                return ResultForm.success(entity, "删除对象失败");
         } catch (Exception e) {
             return ResultForm.error(e);
         }

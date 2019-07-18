@@ -1,5 +1,6 @@
 package com.jbm.framework.service.mybatis;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -389,9 +390,9 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         for (String col : rule.keySet()) {
             String sort = rule.get(col);
             if ("DESC".equalsIgnoreCase(sort)) {
-                descs.add(col);
+                descs.add(StrUtil.toUnderlineCase(col));
             } else {
-                ascs.add(col);
+                ascs.add(StrUtil.toUnderlineCase(col));
             }
         }
         page.setAscs(ascs);
