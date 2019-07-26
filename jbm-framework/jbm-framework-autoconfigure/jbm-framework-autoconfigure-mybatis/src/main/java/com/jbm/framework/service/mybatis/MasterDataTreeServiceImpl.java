@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
@@ -16,7 +17,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     public List<Entity> selectRootListByCode(Entity entity) throws DataServiceException {
         QueryWrapper<Entity> entityWrapper = new QueryWrapper<>(entity);
-        entityWrapper.isNull("parent_code");
+        entityWrapper.isNull(StrUtil.toUnderlineCase("parentCode"));
         return super.list(entityWrapper);
     }
 
@@ -25,7 +26,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         if (entity.getParentCode() == null) {
             subEntitys = this.selectRootListByCode(entity);
         } else {
-            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentCode", entity.getCode()));
+            subEntitys = this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), entity.getCode()));
         }
         return this.selectTreeByParentCode(subEntitys);
     }
@@ -42,13 +43,13 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
     }
 
     public List<Entity> selectListByParentCode(String parentCode) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap("parentCode", parentCode));
+        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), parentCode));
     }
 
     @Override
     public List<Entity> selectRootListById(Entity entity) throws DataServiceException {
         QueryWrapper<Entity> entityWrapper = new QueryWrapper<>(entity);
-        entityWrapper.isNull("parent_id");
+        entityWrapper.isNull(StrUtil.toUnderlineCase("parentId"));
         return super.list(entityWrapper);
     }
 
@@ -58,7 +59,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         if (entity.getId() == null) {
             subEntitys = this.selectRootListById(entity);
         } else {
-            subEntitys = this.selectEntitys(MapUtils.newParamMap("parentId", entity.getId()));
+            subEntitys = this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), entity.getId()));
         }
         return this.selectTreeByParentCode(subEntitys);
     }
@@ -83,12 +84,12 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap("parentId", parentId));
+        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), parentId));
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap("parentId", entity.getId()));
+        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), entity.getId()));
     }
 
 

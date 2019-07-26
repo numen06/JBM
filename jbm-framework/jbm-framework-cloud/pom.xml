@@ -19,6 +19,7 @@
         <!--测试程序不需要集成-->
         <module>jbm-framework-cloud-service-a</module>
         <module>jbm-framework-cloud-core</module>
+        <module>jbm-framework-cloud-pay</module>
     </modules>
     <dependencies>
         <dependency>
