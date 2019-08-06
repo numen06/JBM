@@ -246,6 +246,11 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-amqp</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>

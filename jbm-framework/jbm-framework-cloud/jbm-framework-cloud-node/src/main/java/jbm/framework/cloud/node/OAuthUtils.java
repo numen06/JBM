@@ -2,6 +2,7 @@ package jbm.framework.cloud.node;
 
 import com.alibaba.fastjson.JSON;
 import com.jbm.framework.cloud.auth.model.JbmAuthUser;
+import com.jbm.framework.exceptions.ServiceException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
@@ -29,6 +30,9 @@ public class OAuthUtils {
      */
     public static JbmAuthUser getCurrentJbmAuthUser(OAuth2Authentication principal) {
         JbmAuthUser jbmAuthUser = JSON.parseObject(JSON.toJSONString(principal.getUserAuthentication().getDetails()), JbmAuthUser.class);
+        if (jbmAuthUser.getUserId() == null) {
+            throw new ServiceException("没有获取到当前用户信息");
+        }
         return jbmAuthUser;
     }
 

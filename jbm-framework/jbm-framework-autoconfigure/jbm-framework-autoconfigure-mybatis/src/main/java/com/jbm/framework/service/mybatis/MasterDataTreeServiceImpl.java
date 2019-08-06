@@ -6,6 +6,7 @@ import java.util.List;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
