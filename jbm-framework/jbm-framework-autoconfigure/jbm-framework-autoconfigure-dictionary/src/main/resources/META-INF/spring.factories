@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.dictionary.DictionaryAutoConfiguration
+#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+#jbm.framework.boot.autoconfigure.dictionary.DictionaryAutoConfiguration

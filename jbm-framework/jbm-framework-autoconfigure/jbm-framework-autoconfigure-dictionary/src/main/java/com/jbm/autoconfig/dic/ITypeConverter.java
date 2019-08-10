@@ -1,12 +1,13 @@
 package com.jbm.autoconfig.dic;
 
+import java.util.List;
+
 /**
  * 字典类型转换
- * 
- * @author wesley
  *
  * @param <T>
+ * @author wesley
  */
 public interface ITypeConverter<T> {
-	<K, V> T convert(K key, V value);
+    List<JbmDictionary> convert(T obj);
 }

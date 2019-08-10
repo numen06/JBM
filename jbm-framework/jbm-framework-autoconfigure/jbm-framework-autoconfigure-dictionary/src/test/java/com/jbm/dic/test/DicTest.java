@@ -1,5 +1,11 @@
 package com.jbm.dic.test;
 
+import com.alibaba.fastjson.JSON;
+import com.jbm.autoconfig.dic.DictionaryTemplate;
+import com.jbm.autoconfig.dic.EnumTypeConverter;
+import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
+import jbm.framework.boot.autoconfigure.dictionary.DictionaryAutoConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,36 +13,44 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.jbm.autoconfig.dic.DictionaryTemplate;
-
-import jbm.framework.boot.autoconfigure.dictionary.DictionaryAutoConfiguration;
-
 @RunWith(SpringRunner.class)
 @SpringBootConfiguration
-@SpringBootTest(classes = { DictionaryAutoConfiguration.class })
+@EnableJbmDictionary
+@SpringBootTest(classes = {DictionaryAutoConfiguration.class})
+@Slf4j
 public class DicTest {
 
-	@Autowired
-	private DictionaryTemplate dictionaryCache;
+    @Autowired
+    private DictionaryTemplate dictionaryTemplate;
 
-	@Test
-	public void exampleTest1() {
-		System.out.println(dictionaryCache.getValue(DicTestBean3.class, "test0"));
-		// System.out.println(dictionaryCache.getValue("name"));
-	}
+    /**
+     * 测试枚举类型
+     */
+    @Test
+    public void exampleTest3() {
+        log.info("{}", dictionaryTemplate.getValues(PileDealStatusDict2.class));
+    }
 
-	@Test
-	public void exampleTest2() {
-		System.out.println(dictionaryCache.getValues(DicTestBean3.class));
+
+    /**
+     * 测试枚举类型
+     */
+    @Test
+    public void exampleTest4() {
+        EnumTypeConverter enumTypeConverter = new EnumTypeConverter();
+        System.out.println(JSON.toJSONString(enumTypeConverter.convert(PileDealStatusDict2.class)));
 //		System.out.println(dictionaryCache.getValues("test"));
-	}
-	
-	@Test
-	public void exampleTest3() {
-		System.out.println(DicTestBean3.test0.eq("test"));
-		System.out.println(DicTestBean3.test0.toJsonString());
-		System.out.println(DicTestBean3.test0.toString());
+    }
+
+    /**
+     * 测试注解枚举
+     */
+    @Test
+    public void exampleTest5() {
+        EnumTypeConverter enumTypeConverter = new EnumTypeConverter();
+        System.out.println(JSON.toJSONString(enumTypeConverter.convert(PileDealStatusDict3.class)));
 //		System.out.println(dictionaryCache.getValues("test"));
-	}
+    }
+
 
 }
