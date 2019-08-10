@@ -36,7 +36,7 @@ public class DictionaryScanner {
 
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
-            log.info("put [{}] cache type:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getCode(), jbmDictionary.getValue());
+            log.info("put application:[{}] cache type:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getCode(), jbmDictionary.getValue());
             dictionaryTemplate.putIfAbsent(jbmDictionary);
         }
         jbmDictionaryArrayList.addAll(jbmDictionaries);
