@@ -2,6 +2,7 @@ package com.jbm.autoconfig.dic;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.EnumUtil;
+import com.jbm.framework.dictionary.JbmDictionary;
 import com.jbm.util.ListUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -38,7 +39,7 @@ public class DictionaryScanner implements InitializingBean {
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
             jbmDictionary.setApplication(dictionaryTemplate.getApplication());
-            log.info("put application:[{}] cache type:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getCode(), jbmDictionary.getValue());
+            log.info("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(),jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
             dictionaryTemplate.putIfAbsent(jbmDictionary);
         }
 //        jbmDictionaryArrayList.addAll(jbmDictionaries);

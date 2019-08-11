@@ -2,6 +2,7 @@ package com.jbm.autoconfig.dic;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.jbm.framework.dictionary.JbmDictionary;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

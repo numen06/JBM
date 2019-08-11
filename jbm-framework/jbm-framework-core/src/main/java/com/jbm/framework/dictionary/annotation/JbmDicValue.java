@@ -1,4 +1,4 @@
-package com.jbm.autoconfig.dic.annotation;
+package com.jbm.framework.dictionary.annotation;
 
 
 import java.lang.annotation.ElementType;

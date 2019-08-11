@@ -1,5 +1,7 @@
 package com.jbm.autoconfig.dic;
 
+import com.jbm.framework.dictionary.JbmDictionary;
+
 import java.util.List;
 
 /**

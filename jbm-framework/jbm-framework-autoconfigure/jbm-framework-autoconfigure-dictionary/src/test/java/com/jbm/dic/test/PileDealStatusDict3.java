@@ -1,14 +1,10 @@
 package com.jbm.dic.test;
 
-import com.jbm.autoconfig.dic.annotation.JbmDicType;
-import com.jbm.autoconfig.dic.annotation.JbmDicValue;
-
 /**
  * 充电桩状态-字典
  * Created by youg.gao on 2016/5/24.
  */
 //@Constant(namespaces = "evop_pile_deal_status")
-@JbmDicType()
 public enum PileDealStatusDict3 {
     /**
      * 空闲中
@@ -32,7 +28,6 @@ public enum PileDealStatusDict3 {
     OffLine("离线"),
     ;
 
-    @JbmDicValue
     private String test;
 
     PileDealStatusDict3(String test) {

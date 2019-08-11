@@ -1,4 +1,4 @@
-package com.jbm.autoconfig.dic.annotation;
+package com.jbm.framework.dictionary.annotation;
 
 import java.lang.annotation.*;
 
@@ -8,5 +8,7 @@ import java.lang.annotation.*;
 public @interface JbmDicType {
 
     String value() default "";
+
+    String typeName() default "";
 
 }

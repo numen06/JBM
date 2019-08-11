@@ -8,9 +8,11 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.jbm.autoconfig.dic.annotation.JbmDicCode;
-import com.jbm.autoconfig.dic.annotation.JbmDicType;
-import com.jbm.autoconfig.dic.annotation.JbmDicValue;
+import com.jbm.framework.dictionary.JbmDictionary;
+import com.jbm.framework.dictionary.annotation.JbmDicCode;
+import com.jbm.framework.dictionary.annotation.JbmDicType;
+import com.jbm.framework.dictionary.annotation.JbmDicValue;
+import lombok.Data;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -35,20 +37,30 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
     private final static String TYPE_FIELD = "type";
 
 
+    private final static String TYPE_NAME_FIELD = "typeName";
+
+    @Data
+    class EnumType {
+        private String type;
+        private String typeName;
+    }
+
+
     @Override
     public List<JbmDictionary> convert(Class<? extends Enum<?>> emClass) {
         final Enum<?>[] enums = emClass.getEnumConstants();
         final List<JbmDictionary> jbmDictionaries = Lists.newArrayList();
         final List<String> fields = EnumUtil.getFieldNames(emClass);
         final Map<String, String> keys = this.parseCodeAnnotation(emClass, fields);
-        final String type = getType(emClass);
+        final EnumType enumType = getType(emClass);
 //        if (StrUtil.isBlank(type)) {
 //            throw new NullPointerException("字典的类型不能为空");
 //        }
         for (Enum<?> e : enums) {
             //不存在value
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put(TYPE_FIELD, type);
+            jsonObject.put(TYPE_FIELD, enumType.getType());
+            jsonObject.put(TYPE_NAME_FIELD, enumType.getTypeName());
             JbmDictionary jbmDictionary = this.putValue(jsonObject, keys, e, fields);
             if (jbmDictionary == null)
                 return jbmDictionaries;
@@ -66,11 +78,18 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
         return jbmDictionaries;
     }
 
-    private String getType(Class<? extends Enum<?>> emClass) {
+    private EnumType getType(Class<? extends Enum<?>> emClass) {
         JbmDicType jbmDicType = emClass.getDeclaredAnnotation(JbmDicType.class);
-        String type = ObjectUtil.isNotEmpty(jbmDicType) ? jbmDicType.value() : emClass.getSimpleName();
-        type = StrUtil.isBlank(type) ? emClass.getSimpleName() : type;
-        return type;
+        EnumType enumType = new EnumType();
+        if (ObjectUtil.isNotEmpty(jbmDicType)) {
+            String type = jbmDicType.value();
+            enumType.setType(StrUtil.isBlank(type) ? emClass.getSimpleName() : type);
+            enumType.setTypeName(StrUtil.isBlank(jbmDicType.typeName()) ? emClass.getSimpleName() : jbmDicType.typeName());
+        } else {
+            enumType.setType(emClass.getSimpleName());
+            enumType.setTypeName(emClass.getSimpleName());
+        }
+        return enumType;
     }
 
     private JbmDictionary putValue(JSONObject jsonObject, Map<String, String> keys, Enum<?> e, List<String> fields) {

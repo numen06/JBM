@@ -1,4 +1,4 @@
-package com.jbm.autoconfig.dic;
+package com.jbm.framework.dictionary;
 
 import lombok.Data;
 
@@ -25,6 +25,11 @@ public class JbmDictionary {
      * 分组，分类，命名空间
      */
     private String type;
+
+    /**
+     * 类型的解释
+     */
+    private String typeName;
 
     /**
      * 其他参数

@@ -400,7 +400,7 @@ public abstract class ReflectionUtils {
 	}
 
 	/**
-	 * Determine whether the given field is a "public static final" constant.
+	 * Determine whether the given field is a "public static final" dictionary.
 	 * 
 	 * @param field
 	 *            the field to check
