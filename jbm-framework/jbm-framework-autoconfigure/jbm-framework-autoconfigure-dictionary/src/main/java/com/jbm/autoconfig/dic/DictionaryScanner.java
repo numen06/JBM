@@ -25,7 +25,6 @@ public class DictionaryScanner implements InitializingBean {
 
     private final DictionaryTemplate dictionaryTemplate;
 
-    private List<JbmDictionary> jbmDictionaryArrayList = ListUtils.newArrayList();
 
     private ITypeConverter typeConverter = new EnumTypeConverter();
 
@@ -42,10 +41,11 @@ public class DictionaryScanner implements InitializingBean {
             log.info("put application:[{}] cache type:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getCode(), jbmDictionary.getValue());
             dictionaryTemplate.putIfAbsent(jbmDictionary);
         }
-        jbmDictionaryArrayList.addAll(jbmDictionaries);
+//        jbmDictionaryArrayList.addAll(jbmDictionaries);
     }
 
     public List<JbmDictionary> scanner() {
+        List<JbmDictionary> jbmDictionaryArrayList = ListUtils.newArrayList();
         for (String pack : enumScanPackages.getPackageNames()) {
             Set<Class<?>> classes = ClassUtil.scanPackage(pack, new cn.hutool.core.lang.Filter() {
                 @Override
@@ -57,11 +57,11 @@ public class DictionaryScanner implements InitializingBean {
                 this.putIfAbsent(typeConverter.convert(emClass));
             }
         }
-        return this.jbmDictionaryArrayList;
+        return jbmDictionaryArrayList;
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet()  {
         try {
             log.info("JBM开始扫描字典");
             scanner();
