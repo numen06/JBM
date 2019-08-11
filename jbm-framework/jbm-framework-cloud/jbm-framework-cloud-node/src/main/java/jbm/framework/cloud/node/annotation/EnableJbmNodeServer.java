@@ -1,5 +1,6 @@
 package jbm.framework.cloud.node.annotation;
 
+import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import jbm.framework.cloud.node.NodeConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -11,6 +12,7 @@ import java.lang.annotation.*;
 @Import({NodeConfiguration.class})
 @Documented
 @EnableOAuth2FeignClient
+//@EnableJbmDictionary
 @EnableResourceServer
 public @interface EnableJbmNodeServer {
 
