@@ -18,6 +18,7 @@ public class DictionaryAutoConfiguration {
     // private final static Logger logger =
     // LoggerFactory.getLogger(DictionaryAutoConfiguration.class);
 
+
     @Autowired
     private DictionaryProperties dictionaryProperties;
 
@@ -37,9 +38,14 @@ public class DictionaryAutoConfiguration {
     @Bean
     public DictionaryTemplate dictionaryTemplate() {
         DictionaryTemplate dictionaryTemplate = new DictionaryTemplate();
-        DictionaryScanner dictionaryScanner = new DictionaryScanner(dictionaryTemplate, enumScanPackages);
-        dictionaryScanner.scanner();
         return dictionaryTemplate;
+    }
+
+    @Bean
+    public DictionaryScanner dictionaryScanner(DictionaryTemplate dictionaryTemplate) {
+        DictionaryScanner dictionaryScanner = new DictionaryScanner(dictionaryTemplate, enumScanPackages);
+//        dictionaryScanner.scanner();
+        return dictionaryScanner;
     }
 
 

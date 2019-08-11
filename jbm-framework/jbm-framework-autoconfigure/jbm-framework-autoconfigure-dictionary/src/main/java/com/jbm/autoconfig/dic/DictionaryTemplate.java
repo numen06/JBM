@@ -2,6 +2,7 @@ package com.jbm.autoconfig.dic;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +16,15 @@ import java.util.function.Consumer;
  *
  * @author wesley.zhang
  */
+@Slf4j
 public class DictionaryTemplate {
     private final static Logger logger = LoggerFactory.getLogger(DictionaryTemplate.class);
-    @Value("${spring.application.name:jbm}")
+    @Value("${spring.application.name:}")
     private String application;
+
+    public String getApplication() {
+        return application;
+    }
 
     private Map<String, List<JbmDictionary>> jbmDicMapCache = Maps.newLinkedHashMap();
 
@@ -51,6 +57,7 @@ public class DictionaryTemplate {
         if (!this.jbmDicMapCache.containsKey(jbmDictionary.getType())) {
             this.jbmDicMapCache.putIfAbsent(jbmDictionary.getType(), Lists.newArrayList());
         }
+        jbmDictionary.setApplication(application);
         jbmDicMapCache.get(jbmDictionary.getType()).add(jbmDictionary);
     }
 

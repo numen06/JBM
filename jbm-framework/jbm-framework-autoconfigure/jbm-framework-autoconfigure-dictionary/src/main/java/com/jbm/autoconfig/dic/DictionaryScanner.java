@@ -4,6 +4,8 @@ import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.EnumUtil;
 import com.jbm.util.ListUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Set;
@@ -16,7 +18,7 @@ import java.util.Set;
  * @date 2018年11月29日 下午4:43:26
  */
 @Slf4j
-public class DictionaryScanner {
+public class DictionaryScanner implements InitializingBean {
 
 
     private final EnumScanPackages enumScanPackages;
@@ -36,6 +38,7 @@ public class DictionaryScanner {
 
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
+            jbmDictionary.setApplication(dictionaryTemplate.getApplication());
             log.info("put application:[{}] cache type:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getCode(), jbmDictionary.getValue());
             dictionaryTemplate.putIfAbsent(jbmDictionary);
         }
@@ -57,4 +60,14 @@ public class DictionaryScanner {
         return this.jbmDictionaryArrayList;
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try {
+            log.info("JBM开始扫描字典");
+            scanner();
+            log.info("JBM结束扫描字典");
+        } catch (Exception e) {
+            log.error("扫描字典错误", e);
+        }
+    }
 }
