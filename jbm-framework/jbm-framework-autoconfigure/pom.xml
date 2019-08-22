@@ -40,6 +40,7 @@
 		<module>jbm-framework-autoconfigure-fastdfs</module>
 		<module>jbm-framework-autoconfigure-canal</module>
         <module>jbm-framework-autoconfigure-amqp</module>
+        <module>jbm-framework-autoconfigure-baidu-ocr</module>
     </modules>
 	<dependencies>
 		<dependency>
