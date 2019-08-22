@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(BaiduOcrProperties.class)
-@ConditionalOnProperty(prefix = BaiduOcrProperties.PREFIX)
+//@ConditionalOnProperty(BaiduOcrProperties.PREFIX)
 public class BaiduOcrAutoConfiguration {
 
     @Autowired
