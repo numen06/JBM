@@ -9,7 +9,7 @@ public class BaiduOcrProperties {
 
     public static final String PREFIX = "baidu.ocr";
 
-    private String appId;
+    private String appid;
     private String apiKey;
     private String secretKey;
     private String proxyHost;

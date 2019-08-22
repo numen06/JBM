@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(BaiduOcrProperties.class)
-//@ConditionalOnProperty(BaiduOcrProperties.PREFIX)
+@ConditionalOnProperty(prefix = BaiduOcrProperties.PREFIX, name = {"appid"})
 public class BaiduOcrAutoConfiguration {
 
     @Autowired
@@ -18,7 +18,7 @@ public class BaiduOcrAutoConfiguration {
     @Bean
     public AipOcr baiduOcr() {
         // 初始化一个AipOcr
-        AipOcr client = new AipOcr(baiduOcrProperties.getAppId(), baiduOcrProperties.getApiKey(), baiduOcrProperties.getSecretKey());
+        AipOcr client = new AipOcr(baiduOcrProperties.getAppid(), baiduOcrProperties.getApiKey(), baiduOcrProperties.getSecretKey());
         // 可选：设置网络连接参数
         client.setConnectionTimeoutInMillis(2000);
         client.setSocketTimeoutInMillis(60000);
