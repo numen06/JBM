@@ -19,7 +19,7 @@
             <exclusions>
                 <exclusion>
                     <artifactId>*</artifactId>
-                    <groupId>*</groupId>
+                    <groupId>org.slf4j</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

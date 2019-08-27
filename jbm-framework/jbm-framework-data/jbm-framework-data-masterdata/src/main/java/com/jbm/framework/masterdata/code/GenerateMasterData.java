@@ -114,7 +114,7 @@ public class GenerateMasterData {
                     extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
                 }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
-                    extClass = "com.jbm.framework.masterdata.service.MasterDataTreeServiceImpl";
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl";
                 }
                 break;
             case controller:
