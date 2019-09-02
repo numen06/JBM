@@ -14,6 +14,8 @@ public class MasterdataObjectHandler implements MetaObjectHandler {
             metaObject.setValue("createTime", DateUtil.date());
         if (metaObject.hasSetter("updateTime"))
             metaObject.setValue("updateTime", DateUtil.date());
+        if (metaObject.hasSetter("deleted"))
+            metaObject.setValue("deleted", 0);
     }
 
     /**
