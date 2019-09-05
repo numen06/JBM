@@ -1,5 +1,6 @@
 package com.jbm.framework.dictionary;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
 import java.util.Map;
@@ -44,4 +45,13 @@ public class JbmDictionary {
         this.values = values;
     }
 
+    /**
+     * 通过类型和CODE生成唯一ID
+     *
+     * @return
+     */
+    public long hashId() {
+        final String temp = StrUtil.concat(true, application, code, value);
+        return new Long(temp.hashCode()).longValue();
+    }
 }

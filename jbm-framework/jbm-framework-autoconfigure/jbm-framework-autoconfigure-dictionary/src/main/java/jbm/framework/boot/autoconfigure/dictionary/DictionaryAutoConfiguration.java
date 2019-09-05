@@ -40,15 +40,17 @@ public class DictionaryAutoConfiguration {
     @Bean
     public DictionaryTemplate dictionaryTemplate() {
         DictionaryTemplate dictionaryTemplate = new DictionaryTemplate();
+        DictionaryScanner dictionaryScanner = new DictionaryScanner(dictionaryTemplate, enumScanPackages);
+        dictionaryScanner.afterPropertiesSet();
         return dictionaryTemplate;
     }
 
-    @Bean
-    public DictionaryScanner dictionaryScanner(DictionaryTemplate dictionaryTemplate) {
-        DictionaryScanner dictionaryScanner = new DictionaryScanner(dictionaryTemplate, enumScanPackages);
-//        dictionaryScanner.scanner();
-        return dictionaryScanner;
-    }
+//    @Bean
+//    public DictionaryScanner dictionaryScanner(DictionaryTemplate dictionaryTemplate) {
+//        DictionaryScanner dictionaryScanner = new DictionaryScanner(dictionaryTemplate, enumScanPackages);
+////        dictionaryScanner.scanner();
+//        return dictionaryScanner;
+//    }
 
 
 }
