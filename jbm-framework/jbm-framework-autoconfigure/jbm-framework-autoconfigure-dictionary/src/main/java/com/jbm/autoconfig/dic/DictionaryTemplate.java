@@ -19,14 +19,17 @@ import java.util.Map;
 @Slf4j
 public class DictionaryTemplate {
     private final static Logger logger = LoggerFactory.getLogger(DictionaryTemplate.class);
-    @Value("${spring.application.name:}")
-    private String application;
 
-    public String getApplication() {
-        return application;
+    private DictionaryScanner dictionaryScanner;
+
+    public DictionaryTemplate(DictionaryScanner dictionaryScanner) {
+        this.dictionaryScanner = dictionaryScanner;
     }
 
-    private Map<String, List<JbmDictionary>> jbmDicMapCache = Maps.newLinkedHashMap();
+    public String getApplication() {
+        return dictionaryScanner.getApplication();
+    }
+
 
     public DictionaryTemplate() {
         super();
@@ -40,8 +43,8 @@ public class DictionaryTemplate {
      */
     public List<JbmDictionary> getAllDictionarys() {
         List<JbmDictionary> jbmDictionaries = Lists.newArrayList();
-        for (String key : jbmDicMapCache.keySet()) {
-            jbmDictionaries.addAll(jbmDicMapCache.get(key));
+        for (String key : dictionaryScanner.getJbmDicMapCache().keySet()) {
+            jbmDictionaries.addAll(dictionaryScanner.getJbmDicMapCache().get(key));
         }
         return jbmDictionaries;
     }
@@ -52,7 +55,7 @@ public class DictionaryTemplate {
      * @return
      */
     public Map<String, List<JbmDictionary>> getJbmDicMapCache() {
-        return jbmDicMapCache;
+        return dictionaryScanner.getJbmDicMapCache();
     }
 
     /**
@@ -73,7 +76,7 @@ public class DictionaryTemplate {
      */
     public List<JbmDictionary> getValues(String type) {
         try {
-            return jbmDicMapCache.get(type);
+            return dictionaryScanner.getJbmDicMapCache().get(type);
         } catch (Exception e) {
             logger.error("读取缓存失败", e);
         }
@@ -81,27 +84,4 @@ public class DictionaryTemplate {
     }
 
 
-    /**
-     * 插入到字典
-     *
-     * @param jbmDictionaries
-     */
-    public void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
-        for (JbmDictionary jbmDictionary : jbmDictionaries) {
-            this.putIfAbsent(jbmDictionary);
-        }
-    }
-
-    /**
-     * 插入字典
-     *
-     * @param jbmDictionary
-     */
-    public void putIfAbsent(JbmDictionary jbmDictionary) {
-        if (!this.jbmDicMapCache.containsKey(jbmDictionary.getType())) {
-            this.jbmDicMapCache.putIfAbsent(jbmDictionary.getType(), Lists.newArrayList());
-        }
-        jbmDictionary.setApplication(application);
-        jbmDicMapCache.get(jbmDictionary.getType()).add(jbmDictionary);
-    }
 }

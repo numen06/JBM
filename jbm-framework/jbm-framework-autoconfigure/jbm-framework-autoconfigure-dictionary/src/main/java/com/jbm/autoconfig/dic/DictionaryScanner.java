@@ -2,6 +2,8 @@ package com.jbm.autoconfig.dic;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.EnumUtil;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.jbm.framework.dictionary.JbmDictionary;
 import com.jbm.util.ListUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,25 +27,49 @@ public class DictionaryScanner implements InitializingBean {
 
     private final EnumScanPackages enumScanPackages;
 
-    private final DictionaryTemplate dictionaryTemplate;
+//    private final DictionaryTemplate dictionaryTemplate;
 
+    private Map<String, List<JbmDictionary>> jbmDicMapCache = Maps.newLinkedHashMap();
+
+    public Map<String, List<JbmDictionary>> getJbmDicMapCache() {
+        return jbmDicMapCache;
+    }
 
     private ITypeConverter typeConverter = new EnumTypeConverter();
 
+    @Value("${spring.application.name:}")
+    private String application;
 
-    public DictionaryScanner(DictionaryTemplate dictionaryTemplate, EnumScanPackages enumScanPackages) {
+    public String getApplication() {
+        return application;
+    }
+
+    public DictionaryScanner(  EnumScanPackages enumScanPackages) {
         super();
         this.enumScanPackages = enumScanPackages;
-        this.dictionaryTemplate = dictionaryTemplate;
+//        this.dictionaryTemplate = dictionaryTemplate;
     }
 
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
-            jbmDictionary.setApplication(dictionaryTemplate.getApplication());
+            jbmDictionary.setApplication(application);
             log.info("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(),jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
-            dictionaryTemplate.putIfAbsent(jbmDictionary);
+            this.putIfAbsent(jbmDictionary);
         }
 //        jbmDictionaryArrayList.addAll(jbmDictionaries);
+    }
+
+    /**
+     * 插入字典
+     *
+     * @param jbmDictionary
+     */
+    public void putIfAbsent(JbmDictionary jbmDictionary) {
+        if (!this.jbmDicMapCache.containsKey(jbmDictionary.getType())) {
+            this.jbmDicMapCache.putIfAbsent(jbmDictionary.getType(), Lists.newArrayList());
+        }
+        jbmDictionary.setApplication(application);
+        jbmDicMapCache.get(jbmDictionary.getType()).add(jbmDictionary);
     }
 
     public List<JbmDictionary> scanner() {
