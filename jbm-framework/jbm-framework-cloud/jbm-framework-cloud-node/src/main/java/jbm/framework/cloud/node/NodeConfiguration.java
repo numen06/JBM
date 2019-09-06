@@ -19,13 +19,13 @@ import javax.servlet.http.HttpServletResponse;
 @EnableResourceServer
 public class NodeConfiguration extends ResourceServerConfigurerAdapter {
 
-    @EnableGlobalMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true, proxyTargetClass = true)
-    protected static class GlobalSecurityConfiguration extends GlobalMethodSecurityConfiguration {
-        @Override
-        protected MethodSecurityExpressionHandler createExpressionHandler() {
-            return new OAuth2MethodSecurityExpressionHandler();
-        }
-    }
+//    @EnableGlobalMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true, proxyTargetClass = true)
+//    protected static class GlobalSecurityConfiguration extends GlobalMethodSecurityConfiguration {
+//        @Override
+//        protected MethodSecurityExpressionHandler createExpressionHandler() {
+//            return new OAuth2MethodSecurityExpressionHandler();
+//        }
+//    }
 
 
     @Value("${security.oauth2.ignore:}")

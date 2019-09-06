@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.baidu.ocr;
+package jbm.framework.boot.autoconfigure.amqp;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

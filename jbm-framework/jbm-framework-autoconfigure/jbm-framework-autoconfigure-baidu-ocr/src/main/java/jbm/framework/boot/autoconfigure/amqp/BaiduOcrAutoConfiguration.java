@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.baidu.ocr;
+package jbm.framework.boot.autoconfigure.amqp;
 
 import com.baidu.aip.ocr.AipOcr;
 import org.springframework.beans.factory.annotation.Autowired;

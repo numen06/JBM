@@ -1,5 +1,6 @@
 package com.jbm.framework.masterdata.code;
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
@@ -20,6 +21,7 @@ import javax.annotation.Resource;
 
 @Aspect
 @Configuration
+@Slf4j
 public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
 
     private String targetPackages;
@@ -29,6 +31,7 @@ public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
 
     @Bean
     public TransactionInterceptor txAdvice() {
+        log.info("JBM开始切面事务");
 
         DefaultTransactionAttribute txAttr_REQUIRED = new DefaultTransactionAttribute();
         txAttr_REQUIRED.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -50,6 +53,7 @@ public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
         source.addTransactionalMethod("list*", txAttr_REQUIRED_READONLY);
         source.addTransactionalMethod("count*", txAttr_REQUIRED_READONLY);
         source.addTransactionalMethod("is*", txAttr_REQUIRED_READONLY);
+        log.info("JBM开始切面结束");
         return new TransactionInterceptor(transactionManager, source);
     }
 

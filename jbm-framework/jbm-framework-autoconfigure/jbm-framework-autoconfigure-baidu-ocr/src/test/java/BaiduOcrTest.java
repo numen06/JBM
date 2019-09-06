@@ -1,15 +1,11 @@
 import com.baidu.aip.ocr.AipOcr;
-import com.baidu.aip.util.Util;
-import jbm.framework.boot.autoconfigure.baidu.ocr.BaiduOcrAutoConfiguration;
-import jbm.framework.boot.autoconfigure.baidu.ocr.BaiduOcrProperties;
+import jbm.framework.boot.autoconfigure.amqp.BaiduOcrAutoConfiguration;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit4.SpringRunner;
 
