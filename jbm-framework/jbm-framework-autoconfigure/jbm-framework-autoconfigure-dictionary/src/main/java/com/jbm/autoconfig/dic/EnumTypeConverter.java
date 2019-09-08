@@ -72,7 +72,7 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
                 jsonObject.put(field, ReflectUtil.getFieldValue(e, field));
             }
             jbmDictionary = jsonObject.toJavaObject(JbmDictionary.class);
-            jbmDictionary.setValues(jsonObject);
+//            jbmDictionary.setValues(jsonObject);
             jbmDictionaries.add(jbmDictionary);
         }
         return jbmDictionaries;

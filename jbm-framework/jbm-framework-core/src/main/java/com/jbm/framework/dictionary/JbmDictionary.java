@@ -3,10 +3,11 @@ package com.jbm.framework.dictionary;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
-public class JbmDictionary {
+public class JbmDictionary implements Serializable {
 
 
     /**
@@ -32,18 +33,18 @@ public class JbmDictionary {
      */
     private String typeName;
 
-    /**
-     * 其他参数
-     */
-    private Map<String, Object> values;
+//    /**
+//     * 其他参数
+//     */
+//    private Map<String, Object> values;
 
     public JbmDictionary() {
         super();
     }
 
-    public JbmDictionary(Map<String, Object> values) {
-        this.values = values;
-    }
+//    public JbmDictionary(Map<String, Object> values) {
+//        this.values = values;
+//    }
 
     /**
      * 通过类型和CODE生成唯一ID

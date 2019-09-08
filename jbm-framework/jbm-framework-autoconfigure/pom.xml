@@ -41,6 +41,7 @@
 		<module>jbm-framework-autoconfigure-canal</module>
         <module>jbm-framework-autoconfigure-amqp</module>
         <module>jbm-framework-autoconfigure-baidu-ocr</module>
+        <module>jbm-framework-autoconfigure-taskflow</module>
     </modules>
 	<dependencies>
 		<dependency>
