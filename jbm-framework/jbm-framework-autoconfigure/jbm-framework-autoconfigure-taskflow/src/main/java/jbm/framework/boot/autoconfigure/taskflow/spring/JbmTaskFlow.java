@@ -64,7 +64,7 @@ public abstract class JbmTaskFlow {
     }
 
     public final void execute(Object... sources) {
-        this.execute(Lists.newArrayList(sources));
+        this.execute2(Lists.newArrayList(sources));
     }
 
 
@@ -81,6 +81,6 @@ public abstract class JbmTaskFlow {
     }
 
     public final void execute() {
-        this.execute(Lists.newArrayList());
+        this.execute2(Lists.newArrayList());
     }
 }

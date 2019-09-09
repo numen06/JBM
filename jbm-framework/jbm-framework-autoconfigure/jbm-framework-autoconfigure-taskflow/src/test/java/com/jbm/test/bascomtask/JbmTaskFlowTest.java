@@ -34,7 +34,7 @@ public class JbmTaskFlowTest extends PathTaskTestBase {
     public void testTask() {
         JbmTestTask jbmTestTask = new JbmTestTask();
 //        jbmTestTask.init();
-        jbmTestTask.execute2(sources());
+//        jbmTestTask.execute2(sources());
         jbmTestTask.execute2(sources());
     }
 

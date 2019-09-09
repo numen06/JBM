@@ -46,9 +46,7 @@ public class JbmTaskMethodClosure extends TaskMethodClosure {
         if (pojo instanceof JbmBaseProcessor) {
             JbmBaseProcessor processor = (JbmBaseProcessor) pojo;
             //没有执行相当于已经终止这条线
-            if (!worked) {
-                processor.setStop(true);
-            }
+            processor.setStop(!worked);
         }
     }
 
