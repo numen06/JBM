@@ -366,6 +366,12 @@
                 <artifactId>jbm-framework-webjars-manager</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
+            <!--aliyun-->
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-aliyun-oss</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
             <!-- mqtt -->
             <dependency>
                 <groupId>org.eclipse.paho</groupId>
