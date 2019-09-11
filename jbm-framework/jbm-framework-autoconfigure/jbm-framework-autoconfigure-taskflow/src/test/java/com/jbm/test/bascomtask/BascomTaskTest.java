@@ -4,6 +4,8 @@ import com.ebay.bascomtask.annotations.Work;
 import com.ebay.bascomtask.main.Orchestrator;
 import org.junit.Test;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class BascomTaskTest {
     class HelloTask {
         String getMessage() {
@@ -41,8 +43,26 @@ public class BascomTaskTest {
         public void exec() {
             orc.addWork(new HelloTask());
             orc.addWork(new WorldTask());
+            orc.execute();
             System.out.println("Hello World");
         }
+    }
+
+
+    class ProxyTask {
+        @Work
+        public void exec(AtomicReference<String> helloTask, AtomicReference<HelloTask> worldTask) {
+            System.out.println(helloTask.get() + " " + worldTask.get().getMessage());
+        }
+    }
+
+    @Test
+    public void proxyHelloWorld() {
+        Orchestrator orc = Orchestrator.create();
+        orc.addWork(new AtomicReference<String>("test"));
+//        orc.addWork(new AtomicReference<HelloTask>(new HelloTask()));
+        orc.addWork(new ProxyTask());
+        orc.execute();  // Invokes tasks and waits all results are ready
     }
 
     class ConcatenatorTask {
@@ -52,17 +72,11 @@ public class BascomTaskTest {
         }
     }
 
-    @Test
-    public void helloWorld() {
-        Orchestrator orc = Orchestrator.create();
-        orc.addWork(new HelloWorldTask());
-        orc.execute();  // Invokes tasks and waits all results are ready
-    }
 
     @Test
     public void hasHelloWorld() {
         Orchestrator orc = Orchestrator.create();
-        orc.addWork(new HelloWorldTask(orc));
+//        orc.addWork(new HelloWorldTask(orc));
         orc.addWork(new ConcatenatorTask());
         orc.execute();  // Invokes tasks and waits all results are ready
     }

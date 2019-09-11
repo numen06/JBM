@@ -31,6 +31,7 @@
         <module>jbm-framework-data</module>
         <module>jbm-framework-spring</module>
         <module>jbm-framework-cloud</module>
+        <module>jbm-framework-aliyun</module>
     </modules>
 
 

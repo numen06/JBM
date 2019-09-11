@@ -21,6 +21,15 @@
             <artifactId>jbm-util</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jodd</groupId>
+            <artifactId>jodd-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-rules-core</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.zengfr.project</groupId>
             <artifactId>stepchain-spring-boot-starter</artifactId>
             <version>0.0.7</version>
