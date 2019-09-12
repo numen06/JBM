@@ -9,9 +9,9 @@ import jbm.framework.excel.ExcelTemplate;
 @EnableConfigurationProperties(ExcelProperties.class)
 public class ExcelAutoConfiguration {
 
-	@Bean
-	public ExcelTemplate beetlTemplate(ResourceLoader resourceLoader) {
-		return new ExcelTemplate(resourceLoader);
-	}
+    @Bean
+    public ExcelTemplate excelTemplate(ResourceLoader resourceLoader) {
+        return new ExcelTemplate(resourceLoader);
+    }
 
 }

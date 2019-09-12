@@ -1,6 +1,7 @@
 package jbm.framework.aliyun.oss;
 
 import cn.hutool.core.map.MapUtil;
+import com.aliyun.oss.OSSClient;
 import com.google.common.collect.Maps;
 import jbm.framework.aliyun.oss.config.OSSClientProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,6 @@ public class OSSAutoConfiguration implements ImportBeanDefinitionRegistrar, Envi
     private Map<String, OSSClientProperties> propertiesMap = Maps.newHashMap();
 
     @Override
-
     public void setEnvironment(Environment environment) {
         this.readProperties(environment);
     }
@@ -42,8 +42,10 @@ public class OSSAutoConfiguration implements ImportBeanDefinitionRegistrar, Envi
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         for (String clientName : propertiesMap.keySet()) {
             OSSClientProperties ossClientProperties = propertiesMap.get(clientName);
+            ossClientProperties.setClientName(clientName);
             log.info("load oss client: {}", clientName);
             registry.registerBeanDefinition(clientName, this.ossClient(ossClientProperties));
+            registry.registerBeanDefinition(clientName + "Template", this.ossClientTemplate(ossClientProperties));
         }
     }
 
@@ -56,14 +58,22 @@ public class OSSAutoConfiguration implements ImportBeanDefinitionRegistrar, Envi
     }
 
     private BeanDefinition ossClient(OSSClientProperties ossClientProperties) {
-
-        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(OSSClientProperties.class);
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(OSSClient.class);
         // 创建DynamicDataSource
         beanDefinitionBuilder.addConstructorArgValue(ossClientProperties.getEndpoint());
         beanDefinitionBuilder.addConstructorArgValue(ossClientProperties.getAccessKeyId());
         beanDefinitionBuilder.addConstructorArgValue(ossClientProperties.getAccessKeySecret());
         BeanDefinition beanDefinition = beanDefinitionBuilder.getRawBeanDefinition();
 
+        return beanDefinition;
+    }
+
+    private BeanDefinition ossClientTemplate(OSSClientProperties ossClientProperties) {
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(AliyunOSSTemplate.class);
+        // 创建DynamicDataSource
+        beanDefinitionBuilder.addConstructorArgReference(ossClientProperties.getClientName());
+        beanDefinitionBuilder.addConstructorArgValue(ossClientProperties.getBucketName());
+        BeanDefinition beanDefinition = beanDefinitionBuilder.getRawBeanDefinition();
         return beanDefinition;
     }
 }

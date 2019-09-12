@@ -20,5 +20,6 @@ public class OSSClientProperties {
     private String accessKeyId;
     private String accessKeySecret;
     private String bucketName;
+    private String clientName;
 
 }
