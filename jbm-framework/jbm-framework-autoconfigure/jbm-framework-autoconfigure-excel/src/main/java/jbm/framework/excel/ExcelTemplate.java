@@ -1,6 +1,5 @@
 package jbm.framework.excel;
 
-import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.BeanUtils;
 import com.jbm.util.ConvertUtils;
 import com.jbm.util.TimeUtils;
@@ -9,6 +8,7 @@ import jbm.framework.excel.handler.ExcelResource;
 import jbm.framework.excel.handler.SheetHandler;
 import jbm.framework.excel.model.ReadParam;
 import jbm.framework.excel.utils.Utils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.*;
 
+@Slf4j
 public class ExcelTemplate {
 
     static private ExcelTemplate excelUtils = new ExcelTemplate();
@@ -103,31 +104,35 @@ public class ExcelTemplate {
     public <T> List<T> readExcel2ObjectsHandler(Sheet sheet, Class<T> clazz, ReadParam readParam) throws Exception {
         Row row = sheet.getRow(readParam.getOffsetLine());
         List<T> list = new ArrayList<>();
-        Map<Integer, ExcelHeader> maps = Utils.getHeaderMap(row, clazz);
-        if (maps == null || maps.size() <= 0)
-            throw new RuntimeException("要读取的Excel的格式不正确，检查是否设定了合适的行");
-        int maxLine = sheet.getLastRowNum() > (readParam.getOffsetLine() + readParam.getLimitLine()) ? (readParam.getOffsetLine() + readParam.getLimitLine()) : sheet.getLastRowNum();
-        for (int i = readParam.getOffsetLine() + 1; i <= maxLine; i++) {
-            row = sheet.getRow(i);
-            if (row == null) {
-                continue;
-            }
-            T obj = clazz.newInstance();
-            for (Cell cell : row) {
-                int ci = cell.getColumnIndex();
-                ExcelHeader header = maps.get(ci);
-                if (null == header)
-                    continue;
-                String filed = header.getFiled();
-                String val = Utils.getCellValue(cell);
-                try {
-                    Object value = Utils.str2TargetClass(val, header.getFiledClazz());
-                    BeanUtils.setProperty(obj, filed, value);
-                } catch (Exception e) {
+        try {
+            Map<Integer, ExcelHeader> maps = Utils.getHeaderMap(row, clazz);
+            if (maps == null || maps.size() <= 0)
+                throw new RuntimeException("要读取的Excel的格式不正确，检查是否设定了合适的行");
+            int maxLine = sheet.getLastRowNum() > (readParam.getOffsetLine() + readParam.getLimitLine()) ? (readParam.getOffsetLine() + readParam.getLimitLine()) : sheet.getLastRowNum();
+            for (int i = readParam.getOffsetLine() + 1; i <= maxLine; i++) {
+                row = sheet.getRow(i);
+                if (row == null) {
                     continue;
                 }
+                T obj = clazz.newInstance();
+                for (Cell cell : row) {
+                    int ci = cell.getColumnIndex();
+                    ExcelHeader header = maps.get(ci);
+                    if (null == header)
+                        continue;
+                    String filed = header.getFiled();
+                    String val = Utils.getCellValue(cell);
+                    try {
+                        Object value = Utils.str2TargetClass(val, header.getFiledClazz());
+                        BeanUtils.setProperty(obj, filed, value);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                }
+                list.add(obj);
             }
-            list.add(obj);
+        } catch (Exception e) {
+            log.error("读取表格{}错误", sheet.getSheetName());
         }
         return list;
 

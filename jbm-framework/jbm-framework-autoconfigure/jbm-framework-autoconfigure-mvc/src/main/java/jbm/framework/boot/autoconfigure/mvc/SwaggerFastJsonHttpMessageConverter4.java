@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.mvc;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.parser.ParserConfig;
 import org.springframework.http.MediaType;
 import org.springframework.util.ClassUtils;
 
@@ -22,6 +23,7 @@ public class SwaggerFastJsonHttpMessageConverter4 extends FastJsonHttpMessageCon
 		aa.add(MediaType.TEXT_HTML);
 		this.setSupportedMediaTypes(aa);
 		this.getFastJsonConfig().setSerializerFeatures(SerializerFeature.BrowserCompatible, SerializerFeature.PrettyFormat, SerializerFeature.DisableCircularReferenceDetect);
+
 		try {
 			ClassUtils.forName("springfox.documentation.spring.web.json.Json", ClassUtils.getDefaultClassLoader());
 			this.getFastJsonConfig().getSerializeConfig().put(Json.class, SwaggerJsonSerializer.instance);
