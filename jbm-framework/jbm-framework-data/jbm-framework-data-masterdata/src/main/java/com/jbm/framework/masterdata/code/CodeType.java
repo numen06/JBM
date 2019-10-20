@@ -5,5 +5,5 @@ package com.jbm.framework.masterdata.code;
  * @date:2019/4/18
  */
 public enum CodeType {
-    service, serviceImpl, mapper, controller;
+    service, serviceImpl, mapper, controller, mapperXml;
 }

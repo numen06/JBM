@@ -101,6 +101,8 @@ public class GenerateMasterData {
             case mapper:
                 extClass = BaseMapper.class.getName();
                 break;
+            case mapperXml:
+                break;
             case service:
                 if (superclass.equals(MasterDataEntity.class)) {
                     extClass = IMasterDataService.class.getName();
@@ -139,7 +141,12 @@ public class GenerateMasterData {
         try {
             String temp = basePackage.replace(".", "/");
             Path wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("java").resolve(temp);
+            String ext = ".java";
             switch (codeType) {
+                case mapperXml:
+                    wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("resources").resolve("mapper");
+                    ext = ".xml";
+                    break;
                 case serviceImpl:
                     wp = wp.resolve(service.name()).resolve("impl");
                     break;
@@ -148,7 +155,7 @@ public class GenerateMasterData {
                     break;
             }
             FileUtil.mkdir(wp.toFile());
-            String fileName = this.entityClass.getSimpleName() + toUpperCaseFirstOne(codeType.name()) + ".java";
+            String fileName = this.entityClass.getSimpleName() + toUpperCaseFirstOne(codeType.name()) + ext;
             File file = wp.resolve(fileName).toFile();
             if (FileUtil.exist(file) && this.skip) {
                 return null;
@@ -187,6 +194,7 @@ public class GenerateMasterData {
 
 
     public void generateAll() throws Exception {
+        generate(mapperXml);
         generate(mapper);
         generate(service);
         generate(serviceImpl);
