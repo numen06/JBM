@@ -1,15 +1,23 @@
 package jbm.framework.boot.autoconfigure.mybatis;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+import cn.hutool.core.util.ArrayUtil;
+import com.baomidou.mybatisplus.autoconfigure.MybatisPlusProperties;
 import com.baomidou.mybatisplus.core.parser.ISqlParser;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.google.common.collect.Sets;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
+import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 @Configuration
 public class MybatisPlusConfig {
@@ -76,4 +84,31 @@ public class MybatisPlusConfig {
     public MasterDataSqlInjector masterDataSqlInjector() {
         return new MasterDataSqlInjector();
     }
+
+
+    @Autowired
+    private MybatisPlusProperties mybatisPlusProperties;
+
+    /**
+     * 自动刷新插件
+     *
+     * @return
+     */
+//    @ConditionalOnProperty("mybatis-plus.global-config.refresh")
+    @Bean
+    public MybatisMapperRefresh mybatisMapperRefresh(ApplicationContext applicationContext, SqlSessionFactory sqlSessionFactory) {
+        Set<Resource> mapperLocations = Sets.newLinkedHashSet();
+        for (String xx : mybatisPlusProperties.getMapperLocations()) {
+            try {
+                mapperLocations.addAll(Arrays.asList(applicationContext.getResources(xx)));
+            } catch (Exception e) {
+                continue;
+            }
+        }
+        MybatisMapperRefresh mybatisMapperRefresh = new MybatisMapperRefresh(ArrayUtil.toArray(mapperLocations.iterator(), Resource.class), sqlSessionFactory, 10, 5,
+                true);
+
+        return mybatisMapperRefresh;
+    }
+
 }
