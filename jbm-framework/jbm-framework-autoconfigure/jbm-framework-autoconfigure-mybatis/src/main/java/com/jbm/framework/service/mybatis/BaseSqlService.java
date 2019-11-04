@@ -244,7 +244,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm)
             throws DataServiceException {
-        return this.selectMapperPaging(statement, params, pageForm);
+        return this.selectMapperPaging(sqlStatement(statement), params, pageForm);
     }
 
     /**
@@ -261,7 +261,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         final Page<Map<String, Object>> page = buildPage(pageForm);
         final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
         tempParams.put(UUID.randomUUID().toString(), page);
-        final List<T> list = this.sqlSessionTemplate.selectList(statement, tempParams);
+        final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
         final DataPaging<T> dataPaging = new DataPaging<>(list, page.getTotal(), page.getPages(), pageForm);
         return dataPaging;
     }
@@ -276,7 +276,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
      */
     @SuppressWarnings("unchecked")
     protected <T> T selectMapperOne(final String statement, final Object... args) throws DataServiceException {
-        return (T) CollectionUtils.firstResult(selectMapperList(statement, args));
+        return (T) CollectionUtils.firstResult(selectMapperList(sqlStatement(statement), args));
     }
 
     /**
