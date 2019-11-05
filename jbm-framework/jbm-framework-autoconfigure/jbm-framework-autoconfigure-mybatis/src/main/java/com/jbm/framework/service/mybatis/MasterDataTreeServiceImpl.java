@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -78,6 +79,9 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         }
         for (Iterator<Entity> iterator = subEntitys.iterator(); iterator.hasNext(); ) {
             Entity subEntity = iterator.next();
+            if (ObjectUtil.isEmpty(subEntity.getParentId())) {
+                continue;
+            }
             this.selectTreeByParentId(subEntity);
         }
         return subEntitys;
