@@ -846,7 +846,7 @@
             </dependency>
             <dependency>
                 <groupId>org.activiti</groupId>
-                <artifactId>spring-boot-sample-custom-mybatis-mapper</artifactId>
+                <artifactId>spring-boot-jbm.framework.aliyun.iot.sample-custom-mybatis-mapper</artifactId>
                 <version>${activiti.version}</version>
                 <exclusions>
                     <exclusion>

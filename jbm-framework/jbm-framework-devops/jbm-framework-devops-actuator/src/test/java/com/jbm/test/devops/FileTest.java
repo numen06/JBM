@@ -41,7 +41,7 @@ public class FileTest extends TestCase {
 
 	public void testUpload() {
 		HttpResponse httpResponse = HttpRequest.post("http://127.0.0.1:8080/source/deploy")
-			.form("file", new File("D:/workspace/jbm-framework/jbm-framework-sample/jbm-framework-sample-restapi/target/jbm-framework-sample-restapi.jar")).send();
+			.form("file", new File("D:/workspace/jbm-framework/jbm-framework-jbm.framework.aliyun.iot.sample/jbm-framework-jbm.framework.aliyun.iot.sample-restapi/target/jbm-framework-jbm.framework.aliyun.iot.sample-restapi.jar")).send();
 		String id = (String) JSON.parseObject(httpResponse.body(), HashMap.class).get("result");
 		System.err.println(id);
 		HttpResponse httpResponse2 = HttpRequest.post("http://127.0.0.1:8080/source/release").form("sourceInfoName", id).send();

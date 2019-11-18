@@ -26,7 +26,7 @@ public class MD5Util {
 	public static void main(String[] args) throws IOException {
 		long begin = System.currentTimeMillis();
 
-		File big = new File("‪‪E:\\tools\\eclipse.rar");
+		File big = new File("‪‪E:\\jbm.framework.aliyun.iot.sample\\eclipse.rar");
 
 		String md5 = getFileMD5String(big);
 

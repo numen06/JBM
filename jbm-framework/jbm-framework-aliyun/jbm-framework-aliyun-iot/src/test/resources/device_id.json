@@ -1,0 +1,12 @@
+{
+  "productKey": "a1J1V4pV8W0",
+  "deviceName": "okc001",
+  "deviceSecret": "JOMWWmkV6qShi4LVqQaM92Rw2Kr2Kclb",
+  "region": "cn-shanghai",
+  "subDevice": [
+    {
+      "productKey": "a13hxodvCJj",
+      "deviceName": "dianbiao001"
+    }
+  ]
+}

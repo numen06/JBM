@@ -37,7 +37,7 @@
 ```
 
 
-[JBM操作MySql案例](https://github.com/numen06/jbm-framework-sample/tree/master/jbm-framework-sample-mysql)
+[JBM操作MySql案例](https://github.com/numen06/jbm-framework-jbm.framework.aliyun.iot.sample/tree/master/jbm-framework-jbm.framework.aliyun.iot.sample-mysql)
 通过集成
 
 ```
