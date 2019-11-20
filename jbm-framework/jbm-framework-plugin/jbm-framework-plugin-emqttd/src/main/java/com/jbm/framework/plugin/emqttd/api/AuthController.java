@@ -57,9 +57,13 @@ public class AuthController {
     public AuthReq getUser(AuthReq authReq) {
         log.info("getAuth");
         log.info(JSON.toJSONString(authReq));
+        if (authCache.containsKey(authReq.getClientid())){
+            return authCache.get(authReq.getClientid());
+        }
         authReq.setUsername(IdUtil.fastSimpleUUID());
         authReq.setPassword(IdUtil.fastSimpleUUID());
         authCache.put(authReq.getClientid(), authReq);
+        log.info(JSON.toJSONString(authReq));
         return authReq;
     }
 
