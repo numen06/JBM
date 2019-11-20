@@ -1,5 +1,8 @@
 package com.jbm.framework.plugin.emqttd.api;
 
+import cn.hutool.cache.Cache;
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.framework.plugin.emqttd.dto.AclReq;
 import com.jbm.framework.plugin.emqttd.dto.AuthReq;
@@ -20,11 +23,13 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/mqtt")
 public class AuthController {
 
+    private Cache<Object, AuthReq> authCache = CacheUtil.newLRUCache(100);
+
     @RequestMapping("/auth")
     public void auth(AuthReq authReq, HttpServletResponse response) {
         log.info("auth");
         log.info(JSON.toJSONString(authReq));
-        if (authReq.getClientid().equals("test"))
+        if (authCache.containsKey(authReq.getClientid()))
             return;
         response.setStatus(401);
     }
@@ -34,7 +39,7 @@ public class AuthController {
     public void acl(AclReq aclReq, HttpServletResponse response) {
         log.info("acl");
         log.info(JSON.toJSONString(aclReq));
-        if (aclReq.getClientid().equals("test"))
+        if (authCache.containsKey(aclReq.getClientid()))
             return;
         response.setStatus(401);
     }
@@ -43,7 +48,20 @@ public class AuthController {
     public void superuser(SuperReq superReq, HttpServletResponse response) {
         log.info("superuser");
         log.info(JSON.toJSONString(superReq));
+        if (authCache.containsKey(superReq.getClientid()))
+            return;
         response.setStatus(401);
     }
+
+    @RequestMapping("/getAuth")
+    public AuthReq getUser(AuthReq authReq) {
+        log.info("getAuth");
+        log.info(JSON.toJSONString(authReq));
+        authReq.setUsername(IdUtil.fastSimpleUUID());
+        authReq.setPassword(IdUtil.fastSimpleUUID());
+        authCache.put(authReq.getClientid(), authReq);
+        return authReq;
+    }
+
 
 }
