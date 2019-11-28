@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jbm</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
     <groupId>com.jbm</groupId>
     <packaging>pom</packaging>
     <developers>
@@ -72,9 +72,15 @@
                 <configuration>
                     <tagNameFormat>@{project.version}</tagNameFormat>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <generateReleasePoms>false</generateReleasePoms>
+                    <arguments>-DskipTests</arguments>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
         </plugins>
     </build>
 
