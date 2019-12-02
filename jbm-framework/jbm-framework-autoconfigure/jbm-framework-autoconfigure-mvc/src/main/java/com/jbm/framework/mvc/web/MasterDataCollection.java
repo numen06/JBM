@@ -211,9 +211,9 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
                 throw new ServiceException("ID为空");
             }
             this.service.removeByIds(ids);
-            return ResultForm.success("success", "批量成功刪除");
+            return ResultForm.success("success", "批量刪除成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultForm.error("success", "批量刪除失败");
         }
     }
 }
