@@ -42,6 +42,7 @@
         <module>jbm-framework-autoconfigure-amqp</module>
         <module>jbm-framework-autoconfigure-baidu-ocr</module>
         <module>jbm-framework-autoconfigure-taskflow</module>
+        <module>jbm-framework-autoconfigure-modbus</module>
     </modules>
 	<dependencies>
 		<dependency>
