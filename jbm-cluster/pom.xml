@@ -3,19 +3,64 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>jbm</artifactId>
         <groupId>com.jbm</groupId>
+        <artifactId>jbm-framework-dependencies</artifactId>
         <version>6.0.0-SNAPSHOT</version>
+        <relativePath>../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbm-cluster</artifactId>
     <packaging>pom</packaging>
+
+
     <modules>
         <module>jbm-cluster-system</module>
         <module>jbm-cluster-gateway</module>
         <module>jbm-cluster-auth</module>
+        <module>jbm-cluster-api</module>
+        <module>jbm-cluster-core</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-dependencies</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <!--自定义版本-->
+        <opencloud.common.version>3.0.0-SNAPSHOT</opencloud.common.version>
+        <opencloud.base-client.version>3.0.0-SNAPSHOT</opencloud.base-client.version>
+        <opencloud.msg-client.version>3.0.0-SNAPSHOT</opencloud.msg-client.version>
+        <opencloud.bpm-client.version>3.0.0-SNAPSHOT</opencloud.bpm-client.version>
+        <opencloud.task-client.version>3.0.0-SNAPSHOT</opencloud.task-client.version>
+        <!--镜像前缀-->
+        <docker.image.prefix>open.cloud</docker.image.prefix>
+    </properties>
 
 </project>

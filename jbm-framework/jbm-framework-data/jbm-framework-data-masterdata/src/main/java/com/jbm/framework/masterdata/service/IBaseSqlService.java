@@ -11,7 +11,7 @@ import com.jbm.framework.masterdata.usage.bean.BaseEntity;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
-public interface IBaseSqlService<Entity extends BaseEntity> {
+public interface IBaseSqlService<Entity extends BaseEntity>  {
 
     public Class<Entity> getEntityClass();
 
