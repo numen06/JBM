@@ -43,7 +43,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
      * @return
      */
     @Override
-    public IPage<BaseAction> findListPage(PageForm pageForm) {
+    public DataPaging<BaseAction> findListPage(PageForm pageForm) {
         BaseAction query = pageParams.mapToObject(BaseAction.class);
         QueryWrapper<BaseAction> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

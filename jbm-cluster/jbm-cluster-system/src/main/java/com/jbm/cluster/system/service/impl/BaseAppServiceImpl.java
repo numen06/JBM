@@ -58,7 +58,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
      * @return
      */
     @Override
-    public IPage<BaseApp> findListPage(PageForm pageForm) {
+    public DataPaging<BaseApp> findListPage(PageForm pageForm) {
         BaseApp query = pageParams.mapToObject(BaseApp.class);
 //        CriteriaQuery<BaseApp> cq = new CriteriaQuery(pageParams);
 //        cq.lambda()

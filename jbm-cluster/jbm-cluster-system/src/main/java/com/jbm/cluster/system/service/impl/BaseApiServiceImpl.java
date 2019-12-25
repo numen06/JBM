@@ -38,7 +38,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      * @return
      */
     @Override
-    public IPage<BaseApi> findListPage(PageForm pageForm) {
+    public DataPaging<BaseApi> findListPage(PageForm pageForm) {
         BaseApi query = pageParams.mapToObject(BaseApi.class);
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

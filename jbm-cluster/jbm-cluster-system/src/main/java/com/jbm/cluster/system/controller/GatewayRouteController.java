@@ -38,7 +38,7 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @GetMapping("/gateway/route")
-    public ResultBody<IPage<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(gatewayRouteService.findListPage(new PageParams(map)));
     }
 

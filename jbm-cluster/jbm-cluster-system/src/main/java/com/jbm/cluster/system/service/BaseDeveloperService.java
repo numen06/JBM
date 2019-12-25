@@ -54,7 +54,7 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
      * @param pageForm
      * @return
      */
-    IPage<BaseDeveloper> findListPage(PageForm pageForm);
+    DataPaging<BaseDeveloper> findListPage(PageForm pageForm);
 
     /**
      * 查询列表

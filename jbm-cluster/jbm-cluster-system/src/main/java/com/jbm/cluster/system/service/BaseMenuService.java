@@ -17,7 +17,7 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
      * @param pageForm
      * @return
      */
-    IPage<BaseMenu> findListPage(PageForm pageForm);
+    DataPaging<BaseMenu> findListPage(PageForm pageForm);
 
     /**
      * 查询列表

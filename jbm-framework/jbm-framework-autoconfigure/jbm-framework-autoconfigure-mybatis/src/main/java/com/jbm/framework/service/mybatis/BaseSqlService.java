@@ -63,7 +63,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public DataPaging<Entity> selectEntitysByWapper(QueryWrapper queryWrapper, PageForm pageForm) throws DataServiceException {
         final Page<Entity> page = buildPage(pageForm);
-        final IPage<Entity> data = this.baseMapper.selectPage(page, queryWrapper);
+        final DataPaging<Entity> data = this.baseMapper.selectPage(page, queryWrapper);
         DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
     }
@@ -111,7 +111,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) throws DataServiceException {
         final Page<Entity> page = buildPage(pageForm);
-        final IPage<Entity> data = this.baseMapper.selectPage(page, this.buildEntityQueryWrapper(entity));
+        final DataPaging<Entity> data = this.baseMapper.selectPage(page, this.buildEntityQueryWrapper(entity));
         DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
     }
@@ -119,7 +119,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public DataPaging<Entity> selectEntitys(Map<String, Object> params, PageForm pageForm) throws DataServiceException {
         final Page<Entity> page = buildPage(pageForm);
-        final IPage<Entity> data = this.baseMapper.selectPage(page, this.buildMapperQueryWrapper(params));
+        final DataPaging<Entity> data = this.baseMapper.selectPage(page, this.buildMapperQueryWrapper(params));
         DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
     }

@@ -1,15 +1,14 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.cluster.system.mapper.GatewayRateLimitApisMapper;
-import com.jbm.cluster.system.mapper.GatewayRateLimitMapper;
 import com.jbm.cluster.system.service.GatewayRateLimitService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ import java.util.List;
 @Transactional(rollbackFor = Exception.class)
 public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRateLimit> implements GatewayRateLimitService {
     @Autowired
-    private GatewayRateLimitMapper gatewayRateLimitMapper;
+    private GatewayRateLimitService gatewayRateLimitService;
 
     @Autowired
     private GatewayRateLimitApisMapper gatewayRateLimitApisMapper;
@@ -39,13 +38,13 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      * @return
      */
     @Override
-    public IPage<GatewayRateLimit> findListPage(PageForm pageForm, GatewayRateLimit query) {
+    public DataPaging<GatewayRateLimit> findListPage(PageForm pageForm, GatewayRateLimit query) {
         QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayRateLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayRateLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return gatewayRateLimitMapper.selectPage(pageForm, queryWrapper);
+        return gatewayRateLimitService.selectEntitysByWapper(queryWrapper, pageForm);
     }
 
     /**
@@ -82,7 +81,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      */
     @Override
     public GatewayRateLimit getRateLimitPolicy(Long policyId) {
-        return gatewayRateLimitMapper.selectById(policyId);
+        return gatewayRateLimitService.selectById(policyId);
     }
 
     /**
@@ -94,7 +93,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     public GatewayRateLimit addRateLimitPolicy(GatewayRateLimit policy) {
         policy.setCreateTime(new Date());
         policy.setUpdateTime(policy.getCreateTime());
-        gatewayRateLimitMapper.insert(policy);
+        gatewayRateLimitService.insert(policy);
         return policy;
     }
 
@@ -106,7 +105,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     @Override
     public GatewayRateLimit updateRateLimitPolicy(GatewayRateLimit policy) {
         policy.setUpdateTime(new Date());
-        gatewayRateLimitMapper.updateById(policy);
+        gatewayRateLimitService.updateById(policy);
         return policy;
     }
 
@@ -118,7 +117,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     @Override
     public void removeRateLimitPolicy(Long policyId) {
         clearRateLimitApisByPolicyId(policyId);
-        gatewayRateLimitMapper.deleteById(policyId);
+        gatewayRateLimitService.deleteById(policyId);
     }
 
     /**

@@ -37,7 +37,7 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/rate")
-    public ResultBody<IPage<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(gatewayRateLimitService.findListPage(new PageParams(map)));
     }
 
@@ -52,7 +52,7 @@ public class GatewayRateLimitController {
             @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/rate/api/list")
-    public ResultBody<IPage<GatewayRateLimit>> getRateLimitApiList(
+    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitApiList(
             @RequestParam("policyId") Long policyId
     ) {
         return ResultBody.ok().data(gatewayRateLimitService.findRateLimitApiList(policyId));

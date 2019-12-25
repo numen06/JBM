@@ -35,7 +35,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping(value = "/api")
-    public ResultBody<IPage<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(apiService.findListPage(new PageParams(map)));
     }
 

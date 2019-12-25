@@ -48,7 +48,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
      * @return
      */
     @Override
-    public IPage<BaseMenu> findListPage(PageForm pageForm) {
+    public DataPaging<BaseMenu> findListPage(PageForm pageForm) {
         BaseMenu query = pageParams.mapToObject(BaseMenu.class);
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
@@ -21,9 +22,7 @@ public interface BaseRoleService extends IMasterDataService<BaseRole> {
      * @param pageForm
      * @return
      */
-    IPage<BaseRole> findListPage(PageForm pageForm);
-
-    IPage<BaseRole> findListPage(PageForm pageForm, BaseRole baseRole);
+    DataPaging<BaseRole> findListPage(PageForm pageForm, BaseRole baseRole);
 
     /**
      * 查询列表

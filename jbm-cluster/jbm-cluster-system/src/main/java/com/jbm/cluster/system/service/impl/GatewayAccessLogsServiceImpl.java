@@ -29,7 +29,7 @@ public class GatewayAccessLogsServiceImpl implements GatewayAccessLogsService {
      * @return
      */
     @Override
-    public IPage<GatewayAccessLogs> findListPage(PageForm pageForm) {
+    public DataPaging<GatewayAccessLogs> findListPage(PageForm pageForm) {
         GatewayAccessLogs query =  pageParams.mapToObject(GatewayAccessLogs.class);
         QueryWrapper<GatewayAccessLogs> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

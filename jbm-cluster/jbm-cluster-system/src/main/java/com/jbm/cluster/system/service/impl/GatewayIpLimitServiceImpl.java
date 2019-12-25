@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayIpLimit;
 import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.opencloud.base.server.mapper.GatewayIpLimitApisMapper;
 import com.opencloud.base.server.mapper.GatewayIpLimitMapper;
 import com.opencloud.base.server.service.GatewayIpLimitService;
@@ -39,14 +41,13 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLi
      * @return
      */
     @Override
-    public IPage<GatewayIpLimit> findListPage(PageForm pageForm) {
-        GatewayIpLimit query = pageParams.mapToObject(GatewayIpLimit.class);
+    public DataPaging<GatewayIpLimit> findListPage(PageForm pageForm,GatewayIpLimit query ) {
         QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayIpLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayIpLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return gatewayIpLimitMapper.selectPage(pageParams,queryWrapper);
+        return gatewayIpLimitMapper.selectPage(queryWrapper,pageForm);
     }
 
     /**

@@ -18,7 +18,7 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param pageForm
      * @return
      */
-    IPage<BaseApp> findListPage(PageForm pageForm);
+    DataPaging<BaseApp> findListPage(PageForm pageForm);
 
     /**
      * 获取app信息

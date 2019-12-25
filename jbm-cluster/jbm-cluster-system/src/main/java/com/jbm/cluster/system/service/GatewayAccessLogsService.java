@@ -14,5 +14,5 @@ public interface GatewayAccessLogsService {
      * @param pageForm
      * @return
      */
-    IPage<GatewayAccessLogs> findListPage(PageForm pageForm);
+    DataPaging<GatewayAccessLogs> findListPage(PageForm pageForm);
 }

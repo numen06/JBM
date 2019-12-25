@@ -133,7 +133,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      * @return
      */
     @Override
-    public IPage<BaseUser> findListPage(PageForm pageForm) {
+    public DataPaging<BaseUser> findListPage(PageForm pageForm) {
         BaseUser query = pageParams.mapToObject(BaseUser.class);
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

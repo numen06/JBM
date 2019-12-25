@@ -29,7 +29,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
      * @return
      */
     @Override
-    public IPage<GatewayRoute> findListPage(PageForm pageForm) {
+    public DataPaging<GatewayRoute> findListPage(PageForm pageForm) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
         return page(pageParams, queryWrapper);
     }

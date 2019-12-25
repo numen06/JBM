@@ -59,7 +59,7 @@ public class BaseUserController implements IBaseUserServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @GetMapping("/user")
-    public ResultBody<IPage<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseUserService.findListPage(new PageParams(map)));
     }
 

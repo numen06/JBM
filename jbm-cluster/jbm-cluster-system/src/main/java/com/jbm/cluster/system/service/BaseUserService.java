@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
@@ -18,6 +20,7 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
 
     /**
      * 添加用户信息
+     *
      * @param baseUser
      * @return
      */
@@ -54,7 +57,7 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      * @param pageForm
      * @return
      */
-    IPage<BaseUser> findListPage(PageForm pageForm);
+    DataPaging<BaseUser> findListPage(PageForm pageForm);
 
     /**
      * 查询列表

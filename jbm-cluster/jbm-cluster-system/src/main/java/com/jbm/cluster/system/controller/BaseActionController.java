@@ -33,7 +33,7 @@ public class BaseActionController {
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @GetMapping("/action")
-    public ResultBody<IPage<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseActionService.findListPage(new PageParams(map)));
     }
 

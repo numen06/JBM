@@ -31,7 +31,7 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @GetMapping("/role")
-    public ResultBody<IPage<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseRoleService.findListPage(new PageParams(map)));
     }
 

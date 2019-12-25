@@ -20,7 +20,7 @@ public interface GatewayIpLimitService extends IMasterDataService<GatewayIpLimit
      * @param pageForm
      * @return
      */
-    IPage<GatewayIpLimit> findListPage(PageForm pageForm);
+    DataPaging<GatewayIpLimit> findListPage(PageForm pageForm);
 
     /**
      * 查询白名单

@@ -121,7 +121,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
      * @return
      */
     @Override
-    public IPage<BaseDeveloper> findListPage(PageForm pageForm) {
+    public DataPaging<BaseDeveloper> findListPage(PageForm pageForm) {
         BaseDeveloper query = pageParams.mapToObject(BaseDeveloper.class);
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

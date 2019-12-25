@@ -19,7 +19,7 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      * @param pageForm
      * @return
      */
-    IPage<BaseAction> findListPage(PageForm pageForm);
+    DataPaging<BaseAction> findListPage(PageForm pageForm);
 
     /**
      * 根据主键获取操作
