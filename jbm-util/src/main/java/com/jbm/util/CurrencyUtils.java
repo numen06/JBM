@@ -11,7 +11,7 @@ import java.text.NumberFormat;
  * @date: 2018/7/31 14:50
  * @description:
  */
-public class CurrencyUtils extends org.apache.commons.lang3.math.NumberUtils {
+public class CurrencyUtils extends NumberUtils {
     private static final Double MILLION = 10000.0;
     private static final Double MILLIONS = 1000000.0;
     private static final Double BILLION = 100000000.0;
