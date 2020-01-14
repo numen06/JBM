@@ -1,11 +1,12 @@
 package com.jbm.cluster.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseApi;
-import com.jbm.cluster.system.service.BaseApiService;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.system.service.BaseApiService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -15,7 +16,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author liuyadu
@@ -35,8 +35,8 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping(value = "/api")
-    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(apiService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(apiService.findListPage(jsonRequestBody));
     }
 
 
@@ -217,7 +217,7 @@ public class BaseApiController {
     ) {
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
         wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
-        apiService.remove(wrapper);
+        apiService.deleteByWapper(wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -244,7 +244,7 @@ public class BaseApiController {
         wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setIsOpen(open);
-        apiService.update(entity, wrapper);
+        apiService.updateByWrapper(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -270,7 +270,7 @@ public class BaseApiController {
         wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setStatus(status);
-        apiService.update(entity, wrapper);
+        apiService.updateByWrapper(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -296,7 +296,7 @@ public class BaseApiController {
         wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         BaseApi entity = new BaseApi();
         entity.setStatus(auth);
-        apiService.update(entity, wrapper);
+        apiService.updateByWrapper(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();

@@ -112,11 +112,11 @@
             <version>${com.google.zxing.version}</version>
         </dependency>
         <!--swagger-->
-        <dependency>
+   <!--     <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
             <version>${swagger2.version}</version>
-        </dependency>
+        </dependency>-->
         <!--工具类-->
         <!--        <dependency>-->
         <!--            <groupId>cn.hutool</groupId>-->
@@ -134,5 +134,15 @@
             <artifactId>jbm-framework-data-masterdata</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

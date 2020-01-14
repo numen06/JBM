@@ -1,13 +1,15 @@
 package com.jbm.cluster.system.gateway.server.filter;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
+import cn.hutool.core.lang.Validator;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.common.security.OpenAuthority;
-import com.opencloud.gateway.spring.server.configuration.ApiProperties;
-import com.opencloud.gateway.spring.server.locator.ResourceLocator;
-import com.opencloud.gateway.spring.server.util.matcher.ReactiveIpAddressMatcher;
+import com.jbm.cluster.system.gateway.server.configuration.ApiProperties;
+import com.jbm.cluster.system.gateway.server.locator.ResourceLocator;
+import com.jbm.cluster.system.gateway.server.util.matcher.ReactiveIpAddressMatcher;
+import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -268,13 +270,15 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
     public boolean matchIpOrOrigin(Set<String> values, String ipAddress, String origin) {
         ReactiveIpAddressMatcher ipAddressMatcher = null;
         for (String value : values) {
-            if (StringUtils.matchIp(value)) {
+            if (Validator.isIpv4(value)) {
                 ipAddressMatcher = new ReactiveIpAddressMatcher(value);
                 if (ipAddressMatcher.matches(ipAddress)) {
                     return true;
                 }
             } else {
-                if (StringUtils.matchDomain(value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
+//                if (StringUtils.matchDomain(value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
+                //wesley修改去掉domain
+                if (StringUtils.isNotBlank(origin) && origin.contains(value)) {
                     return true;
                 }
             }

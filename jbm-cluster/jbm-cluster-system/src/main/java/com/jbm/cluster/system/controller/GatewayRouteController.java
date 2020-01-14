@@ -1,19 +1,18 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
-import com.opencloud.base.server.service.GatewayRouteService;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.system.service.GatewayRouteService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 网关智能路由
@@ -38,8 +37,8 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @GetMapping("/gateway/route")
-    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayRouteService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(gatewayRouteService.findListPage(jsonRequestBody));
     }
 
 

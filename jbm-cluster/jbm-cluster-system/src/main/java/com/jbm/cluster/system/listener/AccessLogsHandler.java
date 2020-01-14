@@ -1,9 +1,10 @@
 package com.jbm.cluster.system.listener;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
-import com.opencloud.base.server.mapper.GatewayLogsMapper;
-import com.opencloud.base.server.service.IpRegionService;
 import com.jbm.cluster.common.constants.QueueConstants;
+import com.jbm.cluster.system.mapper.GatewayLogsMapper;
+import com.jbm.cluster.system.service.IpRegionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class AccessLogsHandler {
     public void accessLogsQueue(@Payload Map access) {
         try {
             if (access != null) {
-                GatewayAccessLogs logs = BeanConvertUtils.mapToObject(access, GatewayAccessLogs.class);
+                GatewayAccessLogs logs = BeanUtil.mapToBean(access, GatewayAccessLogs.class, true);
                 if (logs != null) {
                     if (logs.getIp() != null) {
                         logs.setRegion(ipRegionService.getRegion(logs.getIp()));

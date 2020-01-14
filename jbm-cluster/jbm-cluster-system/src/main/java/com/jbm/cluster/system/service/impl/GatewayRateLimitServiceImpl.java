@@ -8,6 +8,7 @@ import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.cluster.system.mapper.GatewayRateLimitApisMapper;
 import com.jbm.cluster.system.service.GatewayRateLimitService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +35,18 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayRateLimit> findListPage(PageForm pageForm, GatewayRateLimit query) {
+    public DataPaging<GatewayRateLimit> findListPage(JsonRequestBody jsonRequestBody) {
+        GatewayRateLimit query = jsonRequestBody.tryGet(GatewayRateLimit.class);
         QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayRateLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayRateLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return gatewayRateLimitService.selectEntitysByWapper(queryWrapper, pageForm);
+        return gatewayRateLimitService.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
     }
 
     /**

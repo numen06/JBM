@@ -6,12 +6,14 @@ import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
-import com.opencloud.base.server.service.BaseAuthorityService;
-import com.opencloud.base.server.service.BaseUserService;
+import com.jbm.cluster.system.service.BaseAuthorityService;
+import com.jbm.cluster.system.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -78,7 +80,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/authority/menu")
     @Override
-    public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
+    public ResultBody findAuthorityMenu() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
         return ResultBody.ok().data(result);
     }

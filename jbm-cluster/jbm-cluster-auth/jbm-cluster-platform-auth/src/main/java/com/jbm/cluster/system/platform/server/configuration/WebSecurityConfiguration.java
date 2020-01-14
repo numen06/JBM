@@ -1,6 +1,6 @@
 package com.jbm.cluster.system.platform.server.configuration;
 
-import com.opencloud.uaa.admin.server.service.impl.UserDetailsServiceImpl;
+import com.jbm.cluster.system.platform.server.service.impl.UserDetailsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

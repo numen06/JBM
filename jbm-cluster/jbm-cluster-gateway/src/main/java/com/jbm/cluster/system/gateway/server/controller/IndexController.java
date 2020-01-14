@@ -1,5 +1,6 @@
 package com.jbm.cluster.system.gateway.server.controller;
 
+import com.jbm.cluster.system.gateway.server.configuration.ApiProperties;
 import com.opencloud.gateway.spring.server.configuration.ApiProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

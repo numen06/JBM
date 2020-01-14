@@ -6,6 +6,8 @@ import com.jbm.cluster.api.model.AuthorityAction;
 import com.jbm.cluster.api.model.entity.BaseAction;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -33,8 +35,8 @@ public class BaseActionController {
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @GetMapping("/action")
-    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseActionService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(baseActionService.findListPage(jsonRequestBody));
     }
 
 

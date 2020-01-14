@@ -3,6 +3,7 @@ package com.jbm.cluster.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseAction;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
@@ -13,13 +14,6 @@ import java.util.List;
  * @author liuyadu
  */
 public interface BaseActionService extends IMasterDataService<BaseAction> {
-    /**
-     * 分页查询
-     *
-     * @param pageForm
-     * @return
-     */
-    DataPaging<BaseAction> findListPage(PageForm pageForm);
 
     /**
      * 根据主键获取操作

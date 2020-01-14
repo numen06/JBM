@@ -1,12 +1,14 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.system.service.GatewayRouteService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +27,13 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayRoute> findListPage(PageForm pageForm) {
+    public DataPaging<GatewayRoute> findListPage(JsonRequestBody jsonRequestBody) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
-        return page(pageParams, queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
     }
 
     /**

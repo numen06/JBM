@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.common.security.OpenClientDetails;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 /**
  * 应用信息管理
@@ -15,10 +17,10 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
     /**
      * 查询应用列表
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
-    DataPaging<BaseApp> findListPage(PageForm pageForm);
+    DataPaging<BaseApp> findListPage(JsonRequestBody jsonRequestBody);
 
     /**
      * 获取app信息

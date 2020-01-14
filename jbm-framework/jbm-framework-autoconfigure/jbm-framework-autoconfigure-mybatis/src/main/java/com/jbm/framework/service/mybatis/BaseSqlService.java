@@ -1,8 +1,10 @@
 package com.jbm.framework.service.mybatis;
 
+import cn.hutool.core.util.PageUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -17,7 +19,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IBaseSqlService;
+import com.jbm.framework.masterdata.usage.CriteriaQuery;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.utils.PageUtils;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ArrayUtils;
@@ -62,9 +67,9 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     @Override
     public DataPaging<Entity> selectEntitysByWapper(QueryWrapper queryWrapper, PageForm pageForm) throws DataServiceException {
-        final Page<Entity> page = buildPage(pageForm);
-        final DataPaging<Entity> data = this.baseMapper.selectPage(page, queryWrapper);
-        DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
+        final Page<Entity> page = PageUtils.buildPage(pageForm);
+        final IPage<Entity> data = this.baseMapper.selectPage(page, queryWrapper);
+        DataPaging<Entity> dataPaging = new DataPaging<Entity>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
     }
 
@@ -110,18 +115,26 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     @Override
     public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) throws DataServiceException {
-        final Page<Entity> page = buildPage(pageForm);
-        final DataPaging<Entity> data = this.baseMapper.selectPage(page, this.buildEntityQueryWrapper(entity));
+        final Page<Entity> page = PageUtils.buildPage(pageForm);
+        final IPage<Entity> data = this.baseMapper.selectPage(page, this.buildEntityQueryWrapper(entity));
         DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
     }
 
     @Override
     public DataPaging<Entity> selectEntitys(Map<String, Object> params, PageForm pageForm) throws DataServiceException {
-        final Page<Entity> page = buildPage(pageForm);
-        final DataPaging<Entity> data = this.baseMapper.selectPage(page, this.buildMapperQueryWrapper(params));
+        final Page<Entity> page = PageUtils.buildPage(pageForm);
+        final IPage<Entity> data = this.baseMapper.selectPage(page, this.buildMapperQueryWrapper(params));
         DataPaging<Entity> dataPaging = new DataPaging<>(data.getRecords(), data.getTotal(), data.getPages(), pageForm);
         return dataPaging;
+    }
+
+    @Override
+    public DataPaging<Entity> pageList(CriteriaQuery<Entity> wrapper) {
+        PageParams page = wrapper.getPagerInfo();
+        IPage list = this.baseMapper.selectPage(page, wrapper);
+        //EntityMap.setEnumConvertInterceptor(null);
+        return PageUtils.pageToDataPaging(list);
     }
 
     @Override
@@ -232,6 +245,13 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return super.updateById(entity);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateByWrapper(Entity entity, Wrapper<Entity> updateWrapper) throws DataServiceException {
+        return super.update(entity, updateWrapper);
+    }
+
+
     // ---------------------------------------------------------直接操作Mapper------------------------------------------------------------------------
 
 //	protected Entity selectEntity(String statement, Map<String, Object> params) throws DataServiceException {
@@ -258,7 +278,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
      */
     protected <T> DataPaging<T> selectMapperPaging(final String statement, Map<String, Object> params,
                                                    PageForm pageForm) throws DataServiceException {
-        final Page<Map<String, Object>> page = buildPage(pageForm);
+        final Page<Map<String, Object>> page = PageUtils.buildPage(pageForm);
         final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
         tempParams.put(UUID.randomUUID().toString(), page);
         final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
@@ -381,22 +401,6 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return queryWrapper;
     }
 
-    private <T> Page<T> buildPage(PageForm pageForm) {
-        if (pageForm == null)
-            pageForm = PageForm.NO_PAGING();
-        final Page<T> page = new Page<T>(pageForm.getCurrPage(), pageForm.getPageSize());
-        final Map<String, String> rule = MapUtils.split(pageForm.getSortRule(), Maps.newLinkedHashMap(), ",", ":");
-        for (String col : rule.keySet()) {
-            String sort = rule.get(col);
-            final String unCol = StrUtil.toUnderlineCase(col);
-            if ("DESC".equalsIgnoreCase(sort)) {
-                page.addOrder(OrderItem.desc(unCol));
-            } else {
-                page.addOrder(OrderItem.asc(unCol));
-            }
-        }
-        return page;
-    }
 
     private Object buildMapperParameter(final Object[] args) {
         final Map<String, Object> map = Maps.newLinkedHashMap();

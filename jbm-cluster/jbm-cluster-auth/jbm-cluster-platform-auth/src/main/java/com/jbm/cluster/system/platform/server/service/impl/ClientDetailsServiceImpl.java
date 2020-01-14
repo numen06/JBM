@@ -1,5 +1,6 @@
 package com.jbm.cluster.system.platform.server.service.impl;
 
+import com.jbm.cluster.system.platform.server.service.feign.BaseAppServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.ClientDetails;

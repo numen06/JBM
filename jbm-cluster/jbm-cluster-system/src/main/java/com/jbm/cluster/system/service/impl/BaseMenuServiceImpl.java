@@ -1,18 +1,18 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseMenu;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.system.mapper.BaseMenuMapper;
 import com.jbm.cluster.system.service.BaseActionService;
 import com.jbm.cluster.system.service.BaseAuthorityService;
 import com.jbm.cluster.system.service.BaseMenuService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,17 +44,17 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseMenu> findListPage(PageForm pageForm) {
-        BaseMenu query = pageParams.mapToObject(BaseMenu.class);
+    public DataPaging<BaseMenu> findListPage(JsonRequestBody jsonRequestBody) {
+        BaseMenu query = jsonRequestBody.tryGet(BaseMenu.class);
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuCode()), BaseMenu::getMenuCode, query.getMenuCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuName()), BaseMenu::getMenuName, query.getMenuName());
-        return baseMenuMapper.selectPage(new Page(pageParams.getPage(), pageParams.getLimit()), queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
     }
 
     /**

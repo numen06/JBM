@@ -1,18 +1,18 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
-import com.opencloud.base.server.service.GatewayRateLimitService;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.system.service.GatewayRateLimitService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 网关流量控制
@@ -37,8 +37,8 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/rate")
-    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayRateLimitService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(gatewayRateLimitService.findListPage(jsonRequestBody));
     }
 
     /**

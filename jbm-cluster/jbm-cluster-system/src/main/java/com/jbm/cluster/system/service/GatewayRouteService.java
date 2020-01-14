@@ -3,6 +3,9 @@ package com.jbm.cluster.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
@@ -18,7 +21,7 @@ public interface GatewayRouteService extends IMasterDataService<GatewayRoute> {
      * @param pageForm
      * @return
      */
-    DataPaging<GatewayRoute> findListPage(PageForm pageForm);
+    DataPaging<GatewayRoute> findListPage(JsonRequestBody jsonRequestBody);
 
     /**
      * 查询可用路由列表

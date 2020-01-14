@@ -3,7 +3,7 @@ package com.jbm.cluster.system.gateway.server.exception;
 import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
 import com.jbm.cluster.common.model.ResultBody;
-import com.opencloud.gateway.spring.server.service.AccessLogService;
+import com.jbm.cluster.system.gateway.server.service.AccessLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.gateway.support.NotFoundException;

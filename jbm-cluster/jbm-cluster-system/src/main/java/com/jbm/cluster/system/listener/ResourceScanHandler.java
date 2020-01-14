@@ -1,13 +1,14 @@
 package com.jbm.cluster.system.listener;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.entity.BaseApi;
-import com.opencloud.base.server.service.BaseApiService;
-import com.opencloud.base.server.service.BaseAuthorityService;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.system.service.BaseApiService;
+import com.jbm.cluster.system.service.BaseAuthorityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class ResourceScanHandler {
             while (iterator.hasNext()) {
                 Map map = (Map) iterator.next();
                 try {
-                    BaseApi api = BeanConvertUtils.mapToObject(map, BaseApi.class);
+                    BaseApi api = BeanUtil.mapToBean(map, BaseApi.class,true);
                     codes.add(api.getApiCode());
                     BaseApi save = baseApiService.getApi(api.getApiCode());
                     if (save == null) {
@@ -79,7 +80,7 @@ public class ResourceScanHandler {
                 // 清理无效权限数据
                 baseAuthorityService.clearInvalidApi(serviceId, codes);
                 restTemplate.refreshGateway();
-                redisTemplate.opsForValue().set(key, array.size(), Duration.ofMinutes(3));
+                redisTemplate.opsForValue().set(Duration.ofMinutes(3), key, array.size());
             }
 
         } catch (Exception e) {

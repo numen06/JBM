@@ -2,12 +2,12 @@ package com.jbm.cluster.system.controller;
 
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseUser;
-import com.opencloud.base.server.service.BaseAuthorityService;
-import com.opencloud.base.server.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
+import com.jbm.cluster.system.service.BaseAuthorityService;
+import com.jbm.cluster.system.service.BaseUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

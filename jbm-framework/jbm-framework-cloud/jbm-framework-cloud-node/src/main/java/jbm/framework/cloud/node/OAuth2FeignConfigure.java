@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import feign.*;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import jodd.net.HttpStatus;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +144,7 @@ public class OAuth2FeignConfigure {
         private void clearTokenAndRetry(Response response, String body) throws FeignException {
             log.error("接收到Feign请求资源响应,响应内容:{}", body);
             context.setAccessToken(null);
-            throw new RetryableException("access_token过期，即将进行重试", new Date());
+            //throw new RetryableException("access_token过期，即将进行重试", new Date());
         }
 
         private boolean isParameterizeHttpEntity(Type type) {
@@ -198,7 +199,7 @@ public class OAuth2FeignConfigure {
             if (HttpServletResponse.SC_UNAUTHORIZED == response.status()) {
                 logger.error("接收到Feign请求资源响应401，access_token已经过期，重置access_token为null待重新获取。");
                 context.setAccessToken(null);
-                return new RetryableException("疑似access_token过期，即将进行重试", new Date());
+                //return new RetryableException( "疑似access_token过期，即将进行重试", new Date());
             }
             return errorStatus(methodKey, response);
         }

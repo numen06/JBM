@@ -1,9 +1,10 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
-import com.opencloud.base.server.service.GatewayAccessLogsService;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.system.service.GatewayAccessLogsService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +35,8 @@ public class GatewayAccessLogsController {
      */
     @ApiOperation(value = "获取分页访问日志列表", notes = "获取分页访问日志列表")
     @GetMapping("/gateway/access/logs")
-    public ResultBody<DataPaging<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayAccessLogsService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(gatewayAccessLogsService.findListPage(jsonRequestBody));
     }
 
 }

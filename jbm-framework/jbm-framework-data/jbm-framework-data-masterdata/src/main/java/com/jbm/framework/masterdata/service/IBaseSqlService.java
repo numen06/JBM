@@ -5,13 +5,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.framework.exceptions.DataServiceException;
+import com.jbm.framework.masterdata.usage.CriteriaQuery;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
-public interface IBaseSqlService<Entity extends BaseEntity>  {
+public interface IBaseSqlService<Entity extends BaseEntity> {
 
     public Class<Entity> getEntityClass();
 
@@ -58,7 +61,7 @@ public interface IBaseSqlService<Entity extends BaseEntity>  {
      * 查询实体
      *
      * @param entity
-     * @param pageable
+     * @param pageForm
      * @return
      */
     public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) throws DataServiceException;
@@ -119,6 +122,8 @@ public interface IBaseSqlService<Entity extends BaseEntity>  {
 
     boolean update(Entity entity, Entity updateEntity) throws DataServiceException;
 
+    boolean updateByWrapper(Entity entity, Wrapper<Entity> wrapper) throws DataServiceException;
+
 //	List<Entity> selectList(Wrapper<Entity> wrapper);
 
     Entity selectById(Long id) throws DataServiceException;
@@ -126,6 +131,8 @@ public interface IBaseSqlService<Entity extends BaseEntity>  {
     List<Entity> selectEntitys(Map<String, Object> params) throws DataServiceException;
 
     DataPaging<Entity> selectEntitys(Map<String, Object> params, PageForm pageForm) throws DataServiceException;
+
+    DataPaging<Entity> pageList(CriteriaQuery<Entity> wrapper);
 
     /**
      * 查找列表，将实体的主键作为KEY输出为MAP
@@ -275,12 +282,12 @@ public interface IBaseSqlService<Entity extends BaseEntity>  {
 //
 //	List<Entity> selectEntitys(String sqlStatement, Map<String, Object> params) throws DataServiceException;
 
-    DataPaging<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper, PageForm pageForm) throws DataServiceException;
+    DataPaging<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper, PageForm pageForm) throws DataServiceException;
 
-    List<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    List<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
 
-    Entity selectEntityByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    Entity selectEntityByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
 
-    boolean deleteByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    boolean deleteByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
 
 }

@@ -1,17 +1,18 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayIpLimit;
 import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.cluster.api.model.entity.GatewayRateLimit;
+import com.jbm.cluster.system.mapper.GatewayIpLimitApisMapper;
+import com.jbm.cluster.system.mapper.GatewayIpLimitMapper;
+import com.jbm.cluster.system.service.GatewayIpLimitService;
+import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
-import com.opencloud.base.server.mapper.GatewayIpLimitApisMapper;
-import com.opencloud.base.server.mapper.GatewayIpLimitMapper;
-import com.opencloud.base.server.service.GatewayIpLimitService;
-import com.opencloud.common.mybatis.base.service.impl.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.List;
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLimitMapper, GatewayIpLimit> implements GatewayIpLimitService {
+public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl< GatewayIpLimit> implements GatewayIpLimitService {
 
     @Autowired
     private GatewayIpLimitMapper gatewayIpLimitMapper;
@@ -37,17 +38,18 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLi
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayIpLimit> findListPage(PageForm pageForm,GatewayIpLimit query ) {
+    public DataPaging<GatewayIpLimit> findListPage(JsonRequestBody jsonRequestBody) {
+        GatewayRateLimit query = jsonRequestBody.tryGet(GatewayRateLimit.class);
         QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayIpLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayIpLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return gatewayIpLimitMapper.selectPage(queryWrapper,pageForm);
+        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
     }
 
     /**

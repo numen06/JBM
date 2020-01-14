@@ -1,5 +1,6 @@
 package com.jbm.cluster.system.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
@@ -7,6 +8,8 @@ import com.jbm.cluster.system.service.BaseAppService;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -37,8 +40,8 @@ public class BaseAppController implements IBaseAppServiceClient {
      */
     @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
     @GetMapping("/app")
-    public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) Map map) {
-        DataPaging<BaseApp> IPage = baseAppService.findListPage(new PageParams(map));
+    public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        DataPaging<BaseApp> IPage = baseAppService.findListPage(jsonRequestBody);
         return ResultBody.ok().data(IPage);
     }
 
@@ -232,7 +235,7 @@ public class BaseAppController implements IBaseAppServiceClient {
         client.setAccessTokenValiditySeconds(accessTokenValidity);
         client.setRefreshTokenValiditySeconds(refreshTokenValidity);
         client.setAutoApproveScopes(autoApproveScopes != null ? Arrays.asList(autoApproveScopes.split(",")) : null);
-        Map info = BeanConvertUtils.objectToMap(app);
+        Map info = BeanUtil.beanToMap(app);
         client.setAdditionalInformation(info);
         baseAppService.updateAppClientInfo(client);
         return ResultBody.ok();

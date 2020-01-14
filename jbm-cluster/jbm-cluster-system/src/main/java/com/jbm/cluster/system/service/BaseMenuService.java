@@ -11,13 +11,6 @@ import java.util.List;
  * @author liuyadu
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
-    /**
-     * 分页查询
-     *
-     * @param pageForm
-     * @return
-     */
-    DataPaging<BaseMenu> findListPage(PageForm pageForm);
 
     /**
      * 查询列表

@@ -14,6 +14,8 @@ import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IAdvSqlService;
 import com.jbm.framework.masterdata.usage.bean.AdvEntity;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 import org.apache.ibatis.binding.MapperMethod;
@@ -30,6 +32,12 @@ public class AdvSqlService<Entity extends AdvEntity> extends BaseSqlService<Enti
 
 	public AdvSqlService() {
 		super();
+	}
+
+	@Override
+	public DataPaging<Entity> findListPage(JsonRequestBody jsonRequestBody) {
+		Entity query = jsonRequestBody.tryGet(this.getEntityClass());
+		return this.selectEntitys(query, jsonRequestBody.getPageForm());
 	}
 
 	@Override

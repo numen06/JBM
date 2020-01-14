@@ -1,7 +1,7 @@
 package com.jbm.cluster.system.service.impl;
 
+import cn.hutool.core.lang.Validator;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -11,6 +11,7 @@ import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.common.utils.WebUtils;
 import com.jbm.cluster.system.mapper.BaseUserMapper;
 import com.jbm.cluster.system.service.BaseAccountService;
 import com.jbm.cluster.system.service.BaseAuthorityService;
@@ -21,6 +22,9 @@ import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -69,11 +73,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
-        if (StringUtils.matchEmail(baseUser.getEmail())) {
+        if (Validator.isEmail(baseUser.getEmail())) {
             //注册email账号登陆
             baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
         }
-        if (StringUtils.matchMobile(baseUser.getMobile())) {
+        if (Validator.isMobile(baseUser.getMobile())) {
             //注册手机号账号登陆
             baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
         }
@@ -129,12 +133,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseUser> findListPage(PageForm pageForm) {
-        BaseUser query = pageParams.mapToObject(BaseUser.class);
+    public DataPaging<BaseUser> findListPage(JsonRequestBody jsonRequestBody) {
+        BaseUser query = jsonRequestBody.tryGet(BaseUser.class);
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId())
@@ -142,7 +146,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return baseUserMapper.selectPage(pageParams, queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
     }
 
     /**
@@ -254,11 +258,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, ACCOUNT_DOMAIN);
 
             // 手机号登陆
-            if (StringUtils.matchMobile(account)) {
+            if (Validator.isEmail(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, ACCOUNT_DOMAIN);
             }
             // 邮箱登陆
-            if (StringUtils.matchEmail(account)) {
+            if (Validator.isMobile(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, ACCOUNT_DOMAIN);
             }
         }

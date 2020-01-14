@@ -1,6 +1,6 @@
 package com.jbm.cluster.system.gateway.server.filter;
 
-import com.opencloud.gateway.spring.server.filter.context.GatewayContext;
+import com.jbm.cluster.system.gateway.server.filter.context.GatewayContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.web.server.ServerWebExchange;

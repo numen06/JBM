@@ -1,6 +1,11 @@
 package com.jbm.cluster.system.platform.server.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.common.security.OpenHelper;
+import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientDetails;
+import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientProperties;
+import com.jbm.cluster.common.utils.WebUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -12,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;

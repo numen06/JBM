@@ -1,5 +1,7 @@
 package com.jbm.cluster.system.platform.server.configuration;
 
+import com.jbm.cluster.common.exception.OpenAccessDeniedHandler;
+import com.jbm.cluster.common.exception.OpenAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;

@@ -1,10 +1,12 @@
 package com.jbm.cluster.system.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayIpLimit;
 import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
@@ -14,13 +16,7 @@ import java.util.List;
  * @author liuyadu
  */
 public interface GatewayIpLimitService extends IMasterDataService<GatewayIpLimit> {
-    /**
-     * 分页查询
-     *
-     * @param pageForm
-     * @return
-     */
-    DataPaging<GatewayIpLimit> findListPage(PageForm pageForm);
+
 
     /**
      * 查询白名单

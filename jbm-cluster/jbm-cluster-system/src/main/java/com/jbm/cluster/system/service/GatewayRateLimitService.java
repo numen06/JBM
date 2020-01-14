@@ -5,6 +5,7 @@ import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
@@ -20,10 +21,10 @@ public interface GatewayRateLimitService extends IMasterDataService<GatewayRateL
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
-    DataPaging<GatewayRateLimit> findListPage(PageForm pageForm, GatewayRateLimit query);
+    DataPaging<GatewayRateLimit> findListPage(JsonRequestBody jsonRequestBody);
 
     /**
      * 查询接口流量限制

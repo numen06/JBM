@@ -1,13 +1,15 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
-import com.opencloud.base.server.service.BaseRoleService;
-import com.opencloud.base.server.service.BaseUserService;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.system.service.BaseRoleService;
+import com.jbm.cluster.system.service.BaseUserService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 系统用户信息
@@ -59,8 +60,8 @@ public class BaseUserController implements IBaseUserServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @GetMapping("/user")
-    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseUserService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(baseUserService.findListPage(jsonRequestBody));
     }
 
     /**

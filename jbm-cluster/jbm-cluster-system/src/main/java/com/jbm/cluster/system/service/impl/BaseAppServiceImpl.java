@@ -1,14 +1,21 @@
 package com.jbm.cluster.system.service.impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseApp;
+import com.jbm.cluster.api.model.entity.BaseDeveloper;
+import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.masterdata.usage.CriteriaQuery;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.system.mapper.BaseAppMapper;
 import com.jbm.cluster.system.service.BaseAppService;
 import com.jbm.cluster.system.service.BaseAuthorityService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.security.OpenClientDetails;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.RandomValueUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,25 +61,26 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
     /**
      * 查询应用列表
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseApp> findListPage(PageForm pageForm) {
-        BaseApp query = pageParams.mapToObject(BaseApp.class);
-//        CriteriaQuery<BaseApp> cq = new CriteriaQuery(pageParams);
-//        cq.lambda()
-//                .eq(ObjectUtils.isNotEmpty(query.getDeveloperId()), BaseApp::getDeveloperId, query.getDeveloperId())
-//                .eq(ObjectUtils.isNotEmpty(query.getAppType()), BaseApp::getAppType, query.getAppType())
-//                .eq(ObjectUtils.isNotEmpty(pageParams.getRequestMap().get("aid")), BaseApp::getAppId, pageParams.getRequestMap().get("aid"))
-//                .likeRight(ObjectUtils.isNotEmpty(query.getAppName()), BaseApp::getAppName, query.getAppName())
-//                .likeRight(ObjectUtils.isNotEmpty(query.getAppNameEn()), BaseApp::getAppNameEn, query.getAppNameEn());
-//        cq.select("app.*,developer.user_name");
-//        //关联BaseDeveloper表
-//        cq.createAlias(BaseDeveloper.class);
-//        cq.orderByDesc("create_time");
-//        return pageList(cq);
-        return  null;
+    public DataPaging<BaseApp> findListPage(JsonRequestBody jsonRequestBody) {
+        BaseApp query = jsonRequestBody.tryGet(BaseApp.class);
+        PageParams pageParams = new PageParams(jsonRequestBody);
+        CriteriaQuery<BaseApp> cq = new CriteriaQuery(pageParams);
+        cq.lambda()
+                .eq(ObjectUtils.isNotEmpty(query.getDeveloperId()), BaseApp::getDeveloperId, query.getDeveloperId())
+                .eq(ObjectUtils.isNotEmpty(query.getAppType()), BaseApp::getAppType, query.getAppType())
+                .eq(ObjectUtils.isNotEmpty(pageParams.getRequestMap().get("aid")), BaseApp::getAppId, pageParams.getRequestMap().get("aid"))
+                .likeRight(ObjectUtils.isNotEmpty(query.getAppName()), BaseApp::getAppName, query.getAppName())
+                .likeRight(ObjectUtils.isNotEmpty(query.getAppNameEn()), BaseApp::getAppNameEn, query.getAppNameEn());
+        cq.select("app.*,developer.user_name");
+        //关联BaseDeveloper表
+        cq.createAlias(BaseDeveloper.class);
+        cq.orderByDesc("create_time");
+        return pageList(cq);
+
     }
 
     /**
@@ -140,7 +148,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
             app.setIsPersist(0);
         }
         baseAppMapper.insert(app);
-        Map info = BeanConvertUtils.objectToMap(app);
+        Map info = BeanUtil.beanToMap(app);
         // 功能授权
         BaseClientDetails client = new BaseClientDetails();
         client.setClientId(app.getApiKey());
@@ -169,7 +177,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
         baseAppMapper.updateById(app);
         // 修改客户端附加信息
         BaseApp appInfo = getAppInfo(app.getAppId());
-        Map info = BeanConvertUtils.objectToMap(appInfo);
+        Map info = BeanUtil.beanToMap(appInfo);
         BaseClientDetails client = (BaseClientDetails) jdbcClientDetailsService.loadClientByClientId(appInfo.getApiKey());
         client.setAdditionalInformation(info);
         jdbcClientDetailsService.updateClientDetails(client);

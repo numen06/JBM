@@ -1,12 +1,13 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
-import com.opencloud.base.server.service.BaseDeveloperService;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.system.service.BaseDeveloperService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -57,8 +58,8 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @GetMapping("/developer")
-    public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseDeveloperService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(baseDeveloperService.findListPage(jsonRequestBody));
     }
 
     /**

@@ -1,18 +1,22 @@
 package com.jbm.cluster.system.service.impl;
 
+import cn.hutool.core.lang.Validator;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
-import com.opencloud.base.server.mapper.BaseDeveloperMapper;
-import com.opencloud.base.server.service.BaseAccountService;
-import com.opencloud.base.server.service.BaseDeveloperService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.opencloud.common.mybatis.base.service.impl.MasterDataServiceImpl;
+import com.jbm.cluster.common.utils.WebUtils;
+import com.jbm.cluster.system.mapper.BaseDeveloperMapper;
+import com.jbm.cluster.system.service.BaseAccountService;
+import com.jbm.cluster.system.service.BaseDeveloperService;
+import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -31,7 +35,7 @@ import java.util.Map;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloperMapper, BaseDeveloper> implements BaseDeveloperService {
+public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloper> implements BaseDeveloperService {
 
     @Autowired
     private BaseDeveloperMapper baseDeveloperMapper;
@@ -57,11 +61,11 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
         baseDeveloperMapper.insert(baseDeveloper);
         //默认注册用户名账户
         baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getUserName(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
-        if (StringUtils.matchEmail(baseDeveloper.getEmail())) {
+        if (Validator.isEmail(baseDeveloper.getEmail())) {
             //注册email账号登陆
             baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getEmail(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
         }
-        if (StringUtils.matchMobile(baseDeveloper.getMobile())) {
+        if (Validator.isMobile(baseDeveloper.getMobile())) {
             //注册手机号账号登陆
             baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getMobile(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
         }
@@ -117,12 +121,12 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseDeveloper> findListPage(PageForm pageForm) {
-        BaseDeveloper query = pageParams.mapToObject(BaseDeveloper.class);
+    public DataPaging<BaseDeveloper> findListPage(JsonRequestBody jsonRequestBody) {
+        BaseDeveloper query = jsonRequestBody.tryGet(BaseDeveloper.class);
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseDeveloper::getUserId, query.getUserId())
@@ -130,7 +134,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return baseDeveloperMapper.selectPage(pageParams, queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
     }
 
     /**
@@ -196,11 +200,11 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
             baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, ACCOUNT_DOMAIN);
 
             // 手机号登陆
-            if (StringUtils.matchMobile(account)) {
+            if (Validator.isMobile(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, ACCOUNT_DOMAIN);
             }
             // 邮箱登陆
-            if (StringUtils.matchEmail(account)) {
+            if (Validator.isEmail(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, ACCOUNT_DOMAIN);
             }
         }

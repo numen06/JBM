@@ -1,10 +1,12 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
-import com.opencloud.base.server.service.BaseRoleService;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.system.service.BaseRoleService;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -13,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author liuyadu
@@ -31,8 +32,8 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @GetMapping("/role")
-    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseRoleService.findListPage(new PageParams(map)));
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
+        return ResultBody.ok().data(baseRoleService.findListPage(jsonRequestBody) );
     }
 
     /**

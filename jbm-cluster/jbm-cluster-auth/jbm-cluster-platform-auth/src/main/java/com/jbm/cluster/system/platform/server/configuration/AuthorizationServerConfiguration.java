@@ -1,5 +1,8 @@
 package com.jbm.cluster.system.platform.server.configuration;
 
+import com.jbm.cluster.common.exception.OpenOAuth2WebResponseExceptionTranslator;
+import com.jbm.cluster.common.security.OpenHelper;
+import com.jbm.cluster.common.security.OpenTokenEnhancer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

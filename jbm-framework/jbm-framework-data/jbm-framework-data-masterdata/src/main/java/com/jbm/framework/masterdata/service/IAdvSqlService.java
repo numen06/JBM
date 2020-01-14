@@ -6,11 +6,23 @@ import java.util.Map;
 
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.bean.AdvEntity;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
 public interface IAdvSqlService<Entity extends AdvEntity> extends IBaseSqlService<Entity> {
 
     public final static String CODE_COLUMN = "code";
+
+
+
+    /**
+     * 分页查询
+     *
+     * @param jsonRequestBody
+     * @return
+     */
+    DataPaging<Entity> findListPage(JsonRequestBody jsonRequestBody);
 
     /**
      * 通过code删除实体

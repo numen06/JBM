@@ -30,10 +30,10 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-            <id>ias-releases</id>
-            <name>Infinite Automation Release Repository</name>
-            <url>https://maven.mangoautomation.net/repository/ias-release/</url>
-        </repository>
+    <id>ias-releases</id>
+    <name>Infinite Automation Release Repository</name>
+    <url>https://maven.mangoautomation.net/repository/ias-release/</url>
+</repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -49,6 +49,12 @@
             <groupId>org.t-io</groupId>
             <artifactId>tio-core</artifactId>
             <version>3.0.7.v20180628-RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.t-io</groupId>
+            <artifactId>tio-core</artifactId>
+            <version>3.0.7.v20180628-RELEASE</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

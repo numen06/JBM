@@ -1,16 +1,17 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.system.mapper.BaseApiMapper;
 import com.jbm.cluster.system.service.BaseApiService;
 import com.jbm.cluster.system.service.BaseAuthorityService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,12 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param jsonRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseApi> findListPage(PageForm pageForm) {
-        BaseApi query = pageParams.mapToObject(BaseApi.class);
+    public DataPaging<BaseApi> findListPage(JsonRequestBody jsonRequestBody) {
+        BaseApi query = jsonRequestBody.tryGet(BaseApi.class);
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
@@ -49,7 +50,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
                 .eq(ObjectUtils.isNotEmpty(query.getStatus()), BaseApi::getStatus, query.getStatus())
                 .eq(ObjectUtils.isNotEmpty(query.getIsAuth()), BaseApi::getIsAuth, query.getIsAuth());
         queryWrapper.orderByDesc("create_time");
-        return baseApiMapper.selectPage(pageParams, queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
     }
 
     /**

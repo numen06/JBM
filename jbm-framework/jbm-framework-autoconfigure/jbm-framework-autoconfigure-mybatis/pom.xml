@@ -46,6 +46,10 @@
             <artifactId>jbm-framework-spring</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-data-masterdata</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

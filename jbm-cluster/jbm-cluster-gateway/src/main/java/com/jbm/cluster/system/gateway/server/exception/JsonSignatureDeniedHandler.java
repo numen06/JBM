@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
 import com.jbm.cluster.common.exception.OpenSignatureException;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.cluster.system.gateway.server.service.AccessLogService;
 import com.opencloud.gateway.spring.server.service.AccessLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
