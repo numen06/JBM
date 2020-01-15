@@ -26,8 +26,6 @@ package com.jbm.cluster.system.gateway.server;
 
 import com.jbm.cluster.system.gateway.server.locator.JdbcRouteDefinitionLocator;
 import com.jbm.cluster.system.gateway.server.locator.ResourceLocator;
-import com.opencloud.gateway.spring.server.locator.JdbcRouteDefinitionLocator;
-import com.opencloud.gateway.spring.server.locator.ResourceLocator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

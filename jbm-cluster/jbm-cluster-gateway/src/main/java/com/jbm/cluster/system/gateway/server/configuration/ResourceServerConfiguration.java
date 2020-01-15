@@ -8,11 +8,6 @@ import com.jbm.cluster.system.gateway.server.locator.ResourceLocator;
 import com.jbm.cluster.system.gateway.server.oauth2.RedisAuthenticationManager;
 import com.jbm.cluster.system.gateway.server.service.AccessLogService;
 import com.jbm.cluster.system.gateway.server.service.feign.BaseAppServiceClient;
-import com.opencloud.gateway.spring.server.exception.JsonAccessDeniedHandler;
-import com.opencloud.gateway.spring.server.exception.JsonAuthenticationEntryPoint;
-import com.opencloud.gateway.spring.server.exception.JsonSignatureDeniedHandler;
-import com.opencloud.gateway.spring.server.filter.*;
-import com.opencloud.gateway.spring.server.oauth2.RedisAuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -100,7 +95,7 @@ public class ResourceServerConfiguration {
         JsonAccessDeniedHandler accessDeniedHandler = new JsonAccessDeniedHandler(accessLogService);
         AccessManager accessManager = new AccessManager(apiresourceLocator, apiProperties);
         AuthenticationWebFilter oauth2 = new AuthenticationWebFilter(new RedisAuthenticationManager(new RedisTokenStore(redisConnectionFactory)));
-        oauth2.setServerAuthenticationConverter(new ServerBearerTokenAuthenticationConverter());
+        //oauth2.setServerAuthenticationConverter(new ServerBearerTokenAuthenticationConverter());
         oauth2.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(entryPoint));
         oauth2.setAuthenticationSuccessHandler(new ServerAuthenticationSuccessHandler() {
             @Override
@@ -125,7 +120,7 @@ public class ResourceServerConfiguration {
                 // 日志前置过滤器
                 .addFilterAt(new PreRequestFilter(), SecurityWebFiltersOrder.FIRST)
                 // 跨域过滤器
-                .addFilterAt(corsFilter(), SecurityWebFiltersOrder.CORS)
+                //.addFilterAt(corsFilter(), SecurityWebFiltersOrder.CORS)
                 // 签名验证过滤器
                 .addFilterAt(new PreSignatureFilter(baseAppServiceClient,apiProperties, new JsonSignatureDeniedHandler(accessLogService)), SecurityWebFiltersOrder.CSRF)
                 // 访问验证前置过滤器

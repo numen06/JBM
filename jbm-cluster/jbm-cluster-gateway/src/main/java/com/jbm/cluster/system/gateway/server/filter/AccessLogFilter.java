@@ -1,7 +1,6 @@
 package com.jbm.cluster.system.gateway.server.filter;
 
 import com.jbm.cluster.system.gateway.server.service.AccessLogService;
-import com.opencloud.gateway.spring.server.service.AccessLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
