@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.opencloud.base.server.mapper.BaseAppMapper">
+    <!-- 表名 -->
+    <sql id="t_name">base_app</sql>
+    <!-- 别名 -->
+    <sql id="t_alias">base_app as app</sql>
+    <!--外键表关联定义 -->
+    <sql id="join">
+        <if test="ew.aliasMap.developer != null">
+            <![CDATA[left join base_developer ${ew.aliasMap.developer} on ${ew.aliasMap.developer}.user_id = app.developer_id]]>
+        </if>
+    </sql>
+    <!-- 自定义分页 -->
+    <select id="pageList" resultType="com.opencloud.common.mybatis.EntityMap">
+        select ${ew.select} FROM
+        <include refid="t_alias"/>
+        <include refid="join"/>
+        ${ew.customSqlSegment}
+    </select>
+</mapper>
