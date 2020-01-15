@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseAuthorityActionMapper extends BaseMapper<BaseAuthorityAction> {

@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 /**
  * 第三方登录接口
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface OpenOAuth2Service {
     /**

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface GatewayRateLimitApisMapper extends BaseMapper<GatewayRateLimitApi> {

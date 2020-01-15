@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.security;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class OpenSecurityConstants {
     public final static String OPEN_ID = "openid";

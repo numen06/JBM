@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 自定义oauth2异常提示
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class OpenOAuth2WebResponseExceptionTranslator implements WebResponseExceptionTranslator {

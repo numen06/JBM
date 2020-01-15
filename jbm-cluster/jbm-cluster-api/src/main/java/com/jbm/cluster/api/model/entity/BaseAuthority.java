@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * 系统权限-菜单权限、操作权限、API权限
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

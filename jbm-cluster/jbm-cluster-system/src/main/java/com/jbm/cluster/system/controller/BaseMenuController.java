@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Api(tags = "系统菜单资源管理")
 @RestController

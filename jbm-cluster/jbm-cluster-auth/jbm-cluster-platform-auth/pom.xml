@@ -12,16 +12,6 @@
     <artifactId>jbm-cluster-platform-auth</artifactId>
     <description>平台用户认证服务器</description>
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.opencloud</groupId>-->
-<!--            <artifactId>open-cloud-common-starter</artifactId>-->
-<!--            <version>${opencloud.common.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.opencloud</groupId>-->
-<!--            <artifactId>open-cloud-base-client</artifactId>-->
-<!--            <version>${opencloud.base-client.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>

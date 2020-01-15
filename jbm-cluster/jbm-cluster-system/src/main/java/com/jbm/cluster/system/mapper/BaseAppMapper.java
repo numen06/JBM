@@ -6,7 +6,7 @@ import com.jbm.cluster.api.model.entity.BaseApp;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseAppMapper extends BaseMapper<BaseApp> {

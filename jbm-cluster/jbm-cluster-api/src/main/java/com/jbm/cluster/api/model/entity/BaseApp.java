@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 系统应用-基础信息
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

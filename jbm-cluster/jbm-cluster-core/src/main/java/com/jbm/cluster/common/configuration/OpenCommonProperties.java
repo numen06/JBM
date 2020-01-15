@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @date: 2018/11/23 14:40
  * @description:
  */
-@ConfigurationProperties(prefix = "opencloud.common")
+@ConfigurationProperties(prefix = "jbm.common")
 public class OpenCommonProperties {
     /**
      * 网关客户端Id

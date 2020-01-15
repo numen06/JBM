@@ -10,7 +10,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 /**
  * 应用信息管理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface BaseAppService extends IMasterDataService<BaseApp> {
 

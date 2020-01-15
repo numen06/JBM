@@ -8,7 +8,7 @@ import java.util.Random;
  * 验证码工具类
  * 可生成数字、大写、小写字母及三者混合类型的验证码。 支持自定义验证码字符数量； 支持自定义验证码图片的大小； 支持自定义需排除的特殊字符；
  * 支持自定义干扰线的数量； 支持自定义验证码图文颜色
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class ValidateCodeUtils {
 

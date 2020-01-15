@@ -31,7 +31,7 @@ import javax.sql.DataSource;
 /**
  * 平台认证服务器配置
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Configuration
 @EnableAuthorizationServer

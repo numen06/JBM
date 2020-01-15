@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 自定义网关监控端点
- * @author liuyadu
+ * @author wesley.zhang
  */
 @RestControllerEndpoint(
         id = "open"

@@ -8,7 +8,7 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
  * 系统用户登录账号管理
  * 支持多账号登陆
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface BaseAccountService extends IMasterDataService<BaseAccount> {
 

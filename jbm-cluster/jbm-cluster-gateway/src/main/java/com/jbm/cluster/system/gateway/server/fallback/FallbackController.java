@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 /**
  * 响应超时熔断处理器
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @RestController
 public class FallbackController {

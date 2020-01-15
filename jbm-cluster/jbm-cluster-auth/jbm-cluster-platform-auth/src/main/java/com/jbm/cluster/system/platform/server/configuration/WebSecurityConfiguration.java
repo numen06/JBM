@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 /**
  * Web服务配置类
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 @Configuration

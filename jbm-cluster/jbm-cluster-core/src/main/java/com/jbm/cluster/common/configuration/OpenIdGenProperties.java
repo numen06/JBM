@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author LYD
  * @date 2018/7/29
  */
-@ConfigurationProperties(prefix = "opencloud.id")
+@ConfigurationProperties(prefix = "jbm.id")
 public class OpenIdGenProperties {
     /**
      * 工作ID (0~31)

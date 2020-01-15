@@ -9,7 +9,7 @@ import java.util.Map;
  * @date: 2019/2/14 14:34
  * @description:
  */
-@ConfigurationProperties(prefix = "opencloud.client")
+@ConfigurationProperties(prefix = "jbm.client")
 public class OpenOAuth2ClientProperties {
 
     private Map<String, OpenOAuth2ClientDetails> oauth2;

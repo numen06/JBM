@@ -10,7 +10,7 @@ import java.util.Date;
 
 /**
  * 系统权限-应用关联
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

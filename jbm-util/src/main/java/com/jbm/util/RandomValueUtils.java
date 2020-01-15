@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * 随机生成工具类
  *
- * @author liuyadu
+ * @author wesley.zhang
  * @date 2017/5/9
  */
 public class RandomValueUtils extends RandomStringUtils {

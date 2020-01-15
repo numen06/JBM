@@ -27,7 +27,7 @@ import java.util.Map.Entry;
 /**
  * Http与Servlet工具类.
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class WebUtils {
 

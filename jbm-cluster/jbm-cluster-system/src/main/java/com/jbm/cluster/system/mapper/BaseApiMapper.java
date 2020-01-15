@@ -5,7 +5,7 @@ import com.jbm.cluster.api.model.entity.BaseApi;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseApiMapper extends BaseMapper<BaseApi> {

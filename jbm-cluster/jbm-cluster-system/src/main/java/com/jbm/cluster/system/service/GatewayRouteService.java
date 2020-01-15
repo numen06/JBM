@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 路由管理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface GatewayRouteService extends IMasterDataService<GatewayRoute> {
     /**

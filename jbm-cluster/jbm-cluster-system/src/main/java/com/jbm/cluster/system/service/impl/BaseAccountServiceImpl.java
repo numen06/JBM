@@ -21,7 +21,7 @@ import java.util.Date;
 /**
  * 通用账号
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 @Service

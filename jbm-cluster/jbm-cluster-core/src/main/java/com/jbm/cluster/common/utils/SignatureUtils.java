@@ -14,7 +14,7 @@ import java.text.ParseException;
 import java.util.*;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class SignatureUtils {

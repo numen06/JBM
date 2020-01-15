@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * 系统用户信息
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Api(tags = "系统应用管理")
 @RestController

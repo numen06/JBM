@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 自定义已授权权限标识
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class OpenAuthority implements GrantedAuthority {

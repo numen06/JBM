@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 /**
  * 自定义注解扫描
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class RequestMappingScan implements ApplicationListener<ApplicationReadyEvent> {

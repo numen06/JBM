@@ -5,7 +5,7 @@ import com.jbm.cluster.api.model.entity.BaseAction;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseActionMapper extends BaseMapper<BaseAction> {

@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * 网关IP访问控制
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface GatewayIpLimitService extends IMasterDataService<GatewayIpLimit> {
 

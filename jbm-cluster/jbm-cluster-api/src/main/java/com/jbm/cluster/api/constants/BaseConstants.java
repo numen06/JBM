@@ -3,7 +3,7 @@ package com.jbm.cluster.api.constants;
 /**
  * 通用权限常量
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class BaseConstants {
 

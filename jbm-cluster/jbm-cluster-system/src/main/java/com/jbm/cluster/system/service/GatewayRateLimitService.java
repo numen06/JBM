@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 访问日志
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface GatewayRateLimitService extends IMasterDataService<GatewayRateLimit> {
 

@@ -9,7 +9,7 @@ import java.util.Objects;
 
 /**
  * 菜单权限
- * @author liuyadu
+ * @author wesley.zhang
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AuthorityMenu extends BaseMenu implements Serializable {

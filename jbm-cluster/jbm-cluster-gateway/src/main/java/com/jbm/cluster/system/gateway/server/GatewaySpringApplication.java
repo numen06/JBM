@@ -39,12 +39,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 网关服务
  * 接口调用统一入口、数字验签、身份认证、接口鉴权、接口限流、黑白名单限制
  * 开发环境下提供在线调试文档.
- * @author liuyadu
+ * @author wesley.zhang
  */
 @EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication
-@RemoteApplicationEventScan(basePackages = "com.opencloud")
+@RemoteApplicationEventScan(basePackages = "com.jbm")
 public class GatewaySpringApplication implements CommandLineRunner {
     @Autowired
     public ResourceLocator resourceLocator;

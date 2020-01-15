@@ -16,7 +16,7 @@ import java.util.*;
  * body 缓存
  * headers 缓存
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class XServletRequestWrapper extends HttpServletRequestWrapper {
     private HttpServletRequest request;

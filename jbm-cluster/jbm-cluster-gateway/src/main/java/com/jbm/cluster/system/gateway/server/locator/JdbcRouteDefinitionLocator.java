@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 自定义动态路由加载器
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class JdbcRouteDefinitionLocator implements ApplicationListener<RemoteRefreshRouteEvent>, ApplicationEventPublisherAware {

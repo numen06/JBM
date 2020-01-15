@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * 认证信息帮助类
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class OpenHelper {

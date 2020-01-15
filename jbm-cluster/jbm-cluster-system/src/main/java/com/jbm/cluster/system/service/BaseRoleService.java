@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 角色管理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface BaseRoleService extends IMasterDataService<BaseRole> {
 

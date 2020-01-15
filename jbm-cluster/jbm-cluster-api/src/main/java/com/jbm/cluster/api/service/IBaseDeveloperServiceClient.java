@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface IBaseDeveloperServiceClient {
 

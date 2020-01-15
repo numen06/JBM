@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

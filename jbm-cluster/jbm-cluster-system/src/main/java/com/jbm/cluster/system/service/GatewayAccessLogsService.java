@@ -6,7 +6,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 
 /**
  * 网关访问日志
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface GatewayAccessLogsService {
     /**

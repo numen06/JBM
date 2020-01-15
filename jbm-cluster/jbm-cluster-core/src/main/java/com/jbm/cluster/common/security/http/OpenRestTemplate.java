@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.security.http;
 
-import com.jbm.cluster.common.event.RemoteRefreshRouteEvent;
 import com.jbm.cluster.common.configuration.OpenCommonProperties;
+import com.jbm.cluster.common.event.RemoteRefreshRouteEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ApplicationEventPublisher;

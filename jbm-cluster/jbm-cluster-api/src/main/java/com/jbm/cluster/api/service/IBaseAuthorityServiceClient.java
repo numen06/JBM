@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 权限控制API接口
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface IBaseAuthorityServiceClient {
     /**

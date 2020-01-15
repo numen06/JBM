@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.constants;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class CommonConstants {
     /**

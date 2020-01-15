@@ -14,7 +14,7 @@ import java.io.IOException;
 
 /**
  * 自定义访问拒绝
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class OpenAccessDeniedHandler implements AccessDeniedHandler {

@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author LYD
  * @date 2018/7/29
  */
-@ConfigurationProperties(prefix = "opencloud.scan")
+@ConfigurationProperties(prefix = "jbm.scan")
 public class OpenScanProperties {
 
     /**

@@ -20,7 +20,7 @@ import java.nio.charset.Charset;
 /**
  * 网关认证异常处理,记录日志
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class JsonAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {

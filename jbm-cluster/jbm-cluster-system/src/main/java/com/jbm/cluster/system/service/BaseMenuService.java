@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * 菜单资源管理
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 

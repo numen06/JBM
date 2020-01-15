@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Api(tags = "系统接口资源管理")
 @RestController
@@ -212,9 +212,7 @@ public class BaseApiController {
             @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form")
     })
     @PostMapping("/api/batch/remove")
-    public ResultBody batchRemove(
-            @RequestParam(value = "ids") String ids
-    ) {
+    public ResultBody batchRemove(@RequestParam(value = "ids") String ids) {
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
         wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         apiService.deleteByWapper(wrapper);

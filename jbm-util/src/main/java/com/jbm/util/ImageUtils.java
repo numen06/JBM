@@ -1,6 +1,6 @@
 package com.jbm.util;
 
-import cn.hutool.core.util.ImageUtil;
+import cn.hutool.core.img.ImgUtil;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.imageio.ImageIO;
@@ -10,7 +10,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.net.MalformedURLException;
 
-public class ImageUtils extends ImageUtil {
+public class ImageUtils extends ImgUtil {
 
     /**
      * 图片缩放

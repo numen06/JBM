@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * 自定义未认证处理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class OpenAuthenticationEntryPoint implements AuthenticationEntryPoint {

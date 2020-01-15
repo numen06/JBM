@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 自定义认证用户信息
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class OpenUserDetails implements UserDetails {
     private static final long serialVersionUID = -123308657146774881L;

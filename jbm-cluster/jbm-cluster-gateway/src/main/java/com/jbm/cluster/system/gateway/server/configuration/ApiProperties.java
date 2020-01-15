@@ -11,7 +11,7 @@ import java.util.Set;
  * @date: 2018/11/23 14:40
  * @description:
  */
-@ConfigurationProperties(prefix = "opencloud.api")
+@ConfigurationProperties(prefix = "jbm.api")
 public class ApiProperties {
     /**
      * 是否开启签名验证

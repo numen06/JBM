@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseAuthorityMapper extends BaseMapper<BaseAuthority> {

@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 操作资源管理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public interface BaseActionService extends IMasterDataService<BaseAction> {
 

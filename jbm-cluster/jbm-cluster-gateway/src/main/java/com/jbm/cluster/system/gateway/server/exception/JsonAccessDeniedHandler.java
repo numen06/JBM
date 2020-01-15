@@ -19,7 +19,7 @@ import java.nio.charset.Charset;
 
 /**
  * 网关权限异常处理,记录日志
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class JsonAccessDeniedHandler implements ServerAccessDeniedHandler {

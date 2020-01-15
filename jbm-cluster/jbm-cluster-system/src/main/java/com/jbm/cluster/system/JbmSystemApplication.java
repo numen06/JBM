@@ -12,7 +12,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 平台基础服务
  * 提供系统用户、权限分配、资源、客户端管理
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @EnableCaching
 @EnableFeignClients

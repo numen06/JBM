@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class OpenRedisTokenService implements ResourceServerTokenServices {
