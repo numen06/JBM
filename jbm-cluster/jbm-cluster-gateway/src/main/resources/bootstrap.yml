@@ -62,7 +62,7 @@ management:
         # 开放部分端点和自定义端点
         include: health,info,open
 
-opencloud:
+jbm:
   # 开放api
   api:
     # 参数签名验证
@@ -88,8 +88,4 @@ opencloud:
       - /**/login/**
       - /**/logout/**
 
-#mybatis plus 设置
-mybatis-plus:
-  #实体扫描，多个package用逗号或者分号分隔
-  typeAliasesPackage: com.opencloud.gateway.spring.server.**.entity
-  mapper-locations: classpath:mapper/*.xml
+
