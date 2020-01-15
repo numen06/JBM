@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 社交第三方账号客户端
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/2/14 14:56
  * @description:
  */

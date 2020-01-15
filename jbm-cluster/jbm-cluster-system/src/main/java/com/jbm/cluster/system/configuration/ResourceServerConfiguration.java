@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 /**
  * oauth2资源服务器配置
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/10/23 10:31
  * @description:
  */

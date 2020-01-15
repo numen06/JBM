@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Map;
 
 /**
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/2/14 14:34
  * @description:
  */

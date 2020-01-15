@@ -12,7 +12,7 @@ import java.util.*;
 
 /**
  * 自定义客户端信息
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/5/30 18:07
  * @description:
  */

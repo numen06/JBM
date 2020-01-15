@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 /**
  * 系统资源-菜单信息
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/10/24 16:21
  * @description:
  */

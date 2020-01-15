@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 /**
  * 自定义RestTemplate请求工具类
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/12/11 15:51
  * @description:
  */

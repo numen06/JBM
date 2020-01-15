@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
 /**
  * oauth2资源服务器配置
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/5/8 18:45
  * @description:
  */

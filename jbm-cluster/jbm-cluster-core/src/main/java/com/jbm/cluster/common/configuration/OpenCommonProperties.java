@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 自定义网关配置
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/11/23 14:40
  * @description:
  */

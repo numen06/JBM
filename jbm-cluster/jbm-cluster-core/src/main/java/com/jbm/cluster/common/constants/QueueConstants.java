@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.constants;
 
 /**
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/2/21 17:46
  * @description:
  */

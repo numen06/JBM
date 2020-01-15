@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 系统资源-API接口
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/10/24 16:21
  * @description:
  */
