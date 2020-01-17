@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  * @classDesc: 统一异常处理
  */
 @Slf4j
@@ -140,7 +140,7 @@ public class JsonExceptionHandler implements ErrorWebExceptionHandler {
      * @return
      */
     private Mono<? extends Void> write(ServerWebExchange exchange,
-                                       ServerResponse response,Throwable ex) {
+                                       ServerResponse response, Throwable ex) {
         exchange.getResponse().getHeaders()
                 .setContentType(response.headers().getContentType());
         // 保存日志

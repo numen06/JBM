@@ -26,7 +26,7 @@ import java.util.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/5/8 11:27
  * @description:
  */
@@ -107,7 +107,7 @@ public class AccessLogService {
             map.put("userAgent", userAgent);
             map.put("responseTime", new Date());
             map.put("error", error);
-            Mono<Authentication>  authenticationMono = exchange.getPrincipal();
+            Mono<Authentication> authenticationMono = exchange.getPrincipal();
             Mono<OpenUserDetails> authentication = authenticationMono
                     .map(Authentication::getPrincipal)
                     .cast(OpenUserDetails.class);

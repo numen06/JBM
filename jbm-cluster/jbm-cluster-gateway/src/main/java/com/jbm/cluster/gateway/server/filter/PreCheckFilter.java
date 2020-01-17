@@ -1,6 +1,5 @@
 package com.jbm.cluster.gateway.server.filter;
 
-
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.gateway.server.exception.JsonAccessDeniedHandler;
@@ -17,7 +16,7 @@ import reactor.core.publisher.Mono;
 /**
  * 访问验证前置过滤器
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 public class PreCheckFilter implements WebFilter {

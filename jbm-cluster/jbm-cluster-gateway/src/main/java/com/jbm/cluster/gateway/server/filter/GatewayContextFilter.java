@@ -37,7 +37,7 @@ import java.util.Map;
  * SpringCloud Gateway 记录缓存请求Body和Form表单
  * GatewayContext gatewayContext = exchange.getAttribute(GatewayContext.CACHE_GATEWAY_CONTEXT);
  * https://github.com/chenggangpro/spring-cloud-gateway-plugin
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @AllArgsConstructor
@@ -85,7 +85,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
      * @param chain
      * @return
      */
-    private Mono<Void> readFormData(ServerWebExchange exchange,WebFilterChain chain,GatewayContext gatewayContext){
+    private Mono<Void> readFormData(ServerWebExchange exchange, WebFilterChain chain, GatewayContext gatewayContext){
         HttpHeaders headers = exchange.getRequest().getHeaders();
         return exchange.getFormData()
                 .doOnNext(multiValueMap -> {

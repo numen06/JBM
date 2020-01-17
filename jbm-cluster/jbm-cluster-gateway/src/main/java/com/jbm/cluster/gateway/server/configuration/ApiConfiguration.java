@@ -9,11 +9,11 @@ import com.jbm.cluster.common.configuration.OpenCommonProperties;
 import com.jbm.cluster.gateway.server.actuator.ApiEndpoint;
 import com.jbm.cluster.gateway.server.exception.JsonExceptionHandler;
 import com.jbm.cluster.gateway.server.filter.GatewayContextFilter;
-import com.jbm.cluster.gateway.server.service.feign.BaseAuthorityServiceClient;
 import com.jbm.cluster.gateway.server.filter.RemoveGatewayContextFilter;
 import com.jbm.cluster.gateway.server.locator.JdbcRouteDefinitionLocator;
 import com.jbm.cluster.gateway.server.locator.ResourceLocator;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
+import com.jbm.cluster.gateway.server.service.feign.BaseAuthorityServiceClient;
 import com.jbm.cluster.gateway.server.service.feign.GatewayServiceClient;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +52,7 @@ import java.util.TimeZone;
 /**
  * 网关配置类
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Configuration

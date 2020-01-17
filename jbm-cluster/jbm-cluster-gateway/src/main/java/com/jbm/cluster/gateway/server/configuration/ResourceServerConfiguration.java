@@ -22,6 +22,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.security.oauth2.server.resource.web.server.ServerBearerTokenAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
@@ -37,7 +38,7 @@ import reactor.core.publisher.Mono;
 /**
  * oauth2资源服务器配置
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/5/8 18:45
  * @description:
  */
@@ -94,7 +95,7 @@ public class ResourceServerConfiguration {
         JsonAccessDeniedHandler accessDeniedHandler = new JsonAccessDeniedHandler(accessLogService);
         AccessManager accessManager = new AccessManager(apiresourceLocator, apiProperties);
         AuthenticationWebFilter oauth2 = new AuthenticationWebFilter(new RedisAuthenticationManager(new RedisTokenStore(redisConnectionFactory)));
-        //oauth2.setServerAuthenticationConverter(new ServerBearerTokenAuthenticationConverter());
+        oauth2.setServerAuthenticationConverter(new ServerBearerTokenAuthenticationConverter());
         oauth2.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(entryPoint));
         oauth2.setAuthenticationSuccessHandler(new ServerAuthenticationSuccessHandler() {
             @Override
@@ -119,7 +120,7 @@ public class ResourceServerConfiguration {
                 // 日志前置过滤器
                 .addFilterAt(new PreRequestFilter(), SecurityWebFiltersOrder.FIRST)
                 // 跨域过滤器
-                //.addFilterAt(corsFilter(), SecurityWebFiltersOrder.CORS)
+                .addFilterAt(corsFilter(), SecurityWebFiltersOrder.CORS)
                 // 签名验证过滤器
                 .addFilterAt(new PreSignatureFilter(baseAppServiceClient,apiProperties, new JsonSignatureDeniedHandler(accessLogService)), SecurityWebFiltersOrder.CSRF)
                 // 访问验证前置过滤器

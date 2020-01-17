@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 public class SwaggerProvider implements SwaggerResourcesProvider {
     public static final String API_URI = "/v2/api-docs";

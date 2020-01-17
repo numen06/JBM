@@ -29,11 +29,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 /**
  * 访问权限控制管理类
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Component
@@ -276,15 +277,27 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
                     return true;
                 }
             } else {
-//                if (StringUtils.matchDomain(value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
-                //wesley修改去掉domain
-                if (StringUtils.isNotBlank(origin) && origin.contains(value)) {
+                if (isDomain(value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
                     return true;
                 }
             }
         }
         return false;
     }
+
+    /**
+     * 检测域名
+     * @param domain
+     * @return
+     */
+    public static boolean isDomain(String domain) {
+        if (domain == null) {
+            return false;
+        }
+        String regex = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$";
+        return Pattern.matches(regex, domain);
+    }
+
 
     public ApiProperties getApiProperties() {
         return apiProperties;

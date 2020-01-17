@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 数字验签前置过滤器
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/11/28 18:26
  * @description:
  */

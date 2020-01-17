@@ -26,8 +26,8 @@ import javax.sql.DataSource;
  * @date: 2018/10/23 10:31
  * @description:
  */
-//@Configuration
-//@EnableResourceServer
+@Configuration
+@EnableResourceServer
 public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;

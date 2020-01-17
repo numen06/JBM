@@ -20,17 +20,19 @@
         <module>jbm-cluster-auth</module>
         <module>jbm-cluster-api</module>
         <module>jbm-cluster-core</module>
+        <module>jbm-cluster-node</module>
+        <module>jbm-cluster-app</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
+            <!--<dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-dependencies</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>

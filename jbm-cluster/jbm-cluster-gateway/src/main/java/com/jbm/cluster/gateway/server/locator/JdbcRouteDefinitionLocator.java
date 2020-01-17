@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 自定义动态路由加载器
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 public class JdbcRouteDefinitionLocator implements ApplicationListener<RemoteRefreshRouteEvent>, ApplicationEventPublisherAware {
@@ -61,7 +61,7 @@ public class JdbcRouteDefinitionLocator implements ApplicationListener<RemoteRef
             "        p.policy_type = 'url'";
 
 
-    public JdbcRouteDefinitionLocator(JdbcTemplate jdbcTemplate,InMemoryRouteDefinitionRepository repository) {
+    public JdbcRouteDefinitionLocator(JdbcTemplate jdbcTemplate, InMemoryRouteDefinitionRepository repository) {
         this.jdbcTemplate = jdbcTemplate;
         this.repository = repository;
     }

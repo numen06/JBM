@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.server.resource.BearerTokenAuthentica
 import reactor.core.publisher.Mono;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/5/9 10:53
  * @description:
  */

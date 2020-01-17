@@ -18,30 +18,15 @@
             <artifactId>ip2region</artifactId>
             <version>1.7.2</version>
         </dependency>
-       <!-- <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-cloud-node</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-cloud-gateway</artifactId>
+            <artifactId>jbm-cluster-node</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
         </dependency>
-        <!--<dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
-        <!--<dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>-->
     </dependencies>
 
     <build>
