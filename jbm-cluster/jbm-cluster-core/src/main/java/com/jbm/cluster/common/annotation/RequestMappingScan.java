@@ -4,7 +4,7 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.jbm.cluster.common.configuration.OpenScanProperties;
+import com.jbm.cluster.common.configuration.JbmScanProperties;
 import com.jbm.util.StringUtils;
 import com.jbm.cluster.common.constants.QueueConstants;
 import io.swagger.annotations.ApiOperation;
@@ -47,9 +47,9 @@ import java.util.concurrent.Executors;
 public class RequestMappingScan implements ApplicationListener<ApplicationReadyEvent> {
     private AmqpTemplate amqpTemplate;
     private static final AntPathMatcher pathMatch = new AntPathMatcher();
-    private OpenScanProperties scanProperties;
+    private JbmScanProperties scanProperties;
 
-    public RequestMappingScan(AmqpTemplate amqpTemplate, OpenScanProperties scanProperties) {
+    public RequestMappingScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
         this.amqpTemplate = amqpTemplate;
         this.scanProperties = scanProperties;
     }

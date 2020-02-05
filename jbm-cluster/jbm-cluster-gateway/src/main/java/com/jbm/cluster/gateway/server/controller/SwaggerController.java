@@ -1,6 +1,6 @@
 package com.jbm.cluster.gateway.server.controller;
 
-import com.jbm.cluster.common.configuration.OpenCommonProperties;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class SwaggerController {
      * @return
      */
     @Bean
-    public SecurityConfiguration security(OpenCommonProperties commonProperties) {
+    public SecurityConfiguration security(JbmClusterProperties commonProperties) {
         return new SecurityConfiguration(commonProperties.getClientId(),
                 commonProperties.getClientSecret(),
                 "realm", commonProperties.getClientId(),

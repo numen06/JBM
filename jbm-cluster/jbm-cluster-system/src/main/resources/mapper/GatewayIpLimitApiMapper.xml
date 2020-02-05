@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.opencloud.base.server.mapper.GatewayIpLimitApisMapper">
+<mapper namespace="com.jbm.cluster.system.mapper.GatewayIpLimitApisMapper">
   <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.GatewayIpLimitApi">
     <!--
       WARNING - @mbg.generated
@@ -28,7 +28,7 @@
     <result column="auth_type" property="authType" jdbcType="INTEGER"/>
   </resultMap>
 
-  <resultMap id="IpLimitApi" extends="ApiResultMap" type="com.opencloud.base.client.model.IpLimitApi">
+  <resultMap id="IpLimitApi" extends="ApiResultMap" type="com.jbm.cluster.api.model.IpLimitApi">
     <!--
       WARNING - @mbg.generated
     -->

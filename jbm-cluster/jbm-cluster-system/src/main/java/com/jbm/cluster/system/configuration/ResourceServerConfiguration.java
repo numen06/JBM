@@ -1,15 +1,19 @@
 package com.jbm.cluster.system.configuration;
 
+import cn.hutool.core.util.ArrayUtil;
 import com.jbm.cluster.common.exception.OpenAccessDeniedHandler;
 import com.jbm.cluster.common.exception.OpenAuthenticationEntryPoint;
 import com.jbm.cluster.common.security.OpenHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
@@ -31,24 +35,39 @@ import javax.sql.DataSource;
 public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
-    @Autowired
-    private DataSource dataSource;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
+    @Value("${security.oauth2.ignore:}")
+    private String[] ignores;
+
+    /**
+     * 如果没有加密创建一个加密
+     * @return
+     */
     @Bean
-    public RedisTokenStore redisTokenStore() {
-        return new RedisTokenStore(redisConnectionFactory);
+    @ConditionalOnMissingBean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
+    @Autowired
+    private DataSource dataSource;
 
     @Bean
-    public JdbcClientDetailsService clientDetailsService() {
+    public JdbcClientDetailsService clientDetailsService(PasswordEncoder passwordEncoder) {
         JdbcClientDetailsService jdbcClientDetailsService = new JdbcClientDetailsService(dataSource);
         jdbcClientDetailsService.setPasswordEncoder(passwordEncoder);
         return jdbcClientDetailsService;
     }
 
+    /**
+     * token存储器
+     *
+     * @return
+     */
+    @Bean
+    public RedisTokenStore tokenStore() {
+        return new RedisTokenStore(redisConnectionFactory);
+    }
 
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
@@ -58,25 +77,16 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
+        if (ArrayUtil.isEmpty(ignores)) {
+            ignores = new String[]{};
+        }
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .authorizeRequests()
                 // 监控端点内部放行
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 // fegin访问或无需身份认证
-                .antMatchers(
-                        "/authority/access",
-                        "/authority/app",
-                        "/app/*/info",
-                        "/app/client/*/info",
-                        "/gateway/api/**",
-                        "/user/add/thirdParty",
-                        "/user/info",
-                        "/user/login",
-                        "/developer/add/thirdParty",
-                        "/developer/info",
-                        "/developer/login"
-                ).permitAll()
+                .antMatchers(ignores).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 //认证鉴权错误处理,为了统一异常处理。每个资源服务器都应该加上。

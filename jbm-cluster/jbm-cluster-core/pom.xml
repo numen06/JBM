@@ -138,6 +138,7 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>

@@ -1,6 +1,6 @@
 package com.jbm.cluster.common.security.http;
 
-import com.jbm.cluster.common.configuration.OpenCommonProperties;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.common.event.RemoteRefreshRouteEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.bus.BusProperties;
@@ -21,10 +21,10 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class OpenRestTemplate extends RestTemplate {
 
-    private OpenCommonProperties common;
+    private JbmClusterProperties common;
     private ApplicationEventPublisher publisher;
     private BusProperties busProperties;
-    public OpenRestTemplate(OpenCommonProperties common,  BusProperties busProperties, ApplicationEventPublisher publisher) {
+    public OpenRestTemplate(JbmClusterProperties common, BusProperties busProperties, ApplicationEventPublisher publisher) {
         this.common = common;
         this.publisher = publisher;
         this.busProperties = busProperties;
@@ -106,11 +106,11 @@ public class OpenRestTemplate extends RestTemplate {
         }
     }
 
-    public OpenCommonProperties getCommon() {
+    public JbmClusterProperties getCommon() {
         return common;
     }
 
-    public void setCommon(OpenCommonProperties common) {
+    public void setCommon(JbmClusterProperties common) {
         this.common = common;
     }
 }

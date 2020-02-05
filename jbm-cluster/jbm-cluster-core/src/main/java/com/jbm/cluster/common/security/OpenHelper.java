@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.security;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.jbm.cluster.common.configuration.OpenCommonProperties;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.core.Authentication;
@@ -161,7 +161,7 @@ public class OpenHelper {
      * @param properties
      * @return
      */
-    public static JwtAccessTokenConverter buildJwtTokenEnhancer(OpenCommonProperties properties) throws Exception {
+    public static JwtAccessTokenConverter buildJwtTokenEnhancer(JbmClusterProperties properties) throws Exception {
         JwtAccessTokenConverter converter = new OpenJwtAccessTokenEnhancer();
         converter.setSigningKey(properties.getJwtSigningKey());
         converter.afterPropertiesSet();
@@ -174,7 +174,7 @@ public class OpenHelper {
      * @param properties
      * @return
      */
-    public static RemoteTokenServices buildRemoteTokenServices(OpenCommonProperties properties) {
+    public static RemoteTokenServices buildRemoteTokenServices(JbmClusterProperties properties) {
         // 使用自定义系统用户凭证转换器
         DefaultAccessTokenConverter accessTokenConverter = buildAccessTokenConverter();
         RemoteTokenServices tokenServices = new RemoteTokenServices();
@@ -192,7 +192,7 @@ public class OpenHelper {
      * @param properties
      * @return
      */
-    public static ResourceServerTokenServices buildJwtTokenServices(OpenCommonProperties properties) throws Exception {
+    public static ResourceServerTokenServices buildJwtTokenServices(JbmClusterProperties properties) throws Exception {
         // 使用自定义系统用户凭证转换器
         DefaultAccessTokenConverter accessTokenConverter = buildAccessTokenConverter();
         OpenJwtTokenService tokenServices = new OpenJwtTokenService();

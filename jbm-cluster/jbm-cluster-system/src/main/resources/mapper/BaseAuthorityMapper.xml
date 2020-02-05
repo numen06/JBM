@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.opencloud.base.server.mapper.BaseAuthorityMapper">
+<mapper namespace="com.jbm.cluster.system.mapper.BaseAuthorityMapper">
     <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseAuthority">
         <!--
           WARNING - @mbg.generated
@@ -13,7 +13,7 @@
         <result column="status" property="status" jdbcType="TINYINT"/>
     </resultMap>
 
-    <resultMap id="AuthorityResource" type="com.opencloud.base.client.model.AuthorityResource">
+    <resultMap id="AuthorityResource" type="com.jbm.cluster.api.model.AuthorityResource">
         <result column="path" jdbcType="VARCHAR" property="path"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="service_id" jdbcType="VARCHAR" property="serviceId"/>
@@ -23,29 +23,29 @@
         <result column="status" jdbcType="INTEGER" property="status"/>
     </resultMap>
 
-    <resultMap id="Authority" type="com.opencloud.common.security.OpenAuthority">
+    <resultMap id="Authority" type="com.jbm.cluster.common.security.OpenAuthority">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="expire_time" jdbcType="TIMESTAMP" property="expireTime"/>
         <result column="owner" jdbcType="VARCHAR" property="owner"/>
     </resultMap>
 
-    <resultMap id="AuthorityMenu" type="com.opencloud.base.client.model.AuthorityMenu"
-               extends="com.opencloud.base.server.mapper.BaseMenuMapper.BaseResultMap">
+    <resultMap id="AuthorityMenu" type="com.jbm.cluster.api.model.AuthorityMenu"
+               extends="com.jbm.cluster.system.mapper.BaseMenuMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <collection property="actionList" column="{menuId=menu_id,status=status}" select="selectAuthorityAction"/>
     </resultMap>
 
-    <resultMap id="AuthorityAction" type="com.opencloud.base.client.model.AuthorityAction"
-               extends="com.opencloud.base.server.mapper.BaseActionMapper.BaseResultMap">
+    <resultMap id="AuthorityAction" type="com.jbm.cluster.api.model.AuthorityAction"
+               extends="com.jbm.cluster.system.mapper.BaseActionMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="service_id" jdbcType="VARCHAR" property="serviceId"/>
     </resultMap>
 
-    <resultMap id="AuthorityApi" type="com.opencloud.base.client.model.AuthorityApi"
-               extends="com.opencloud.base.server.mapper.BaseApiMapper.BaseResultMap">
+    <resultMap id="AuthorityApi" type="com.jbm.cluster.api.model.AuthorityApi"
+               extends="com.jbm.cluster.system.mapper.BaseApiMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="prefix" jdbcType="VARCHAR" property="prefix"/>

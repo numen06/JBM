@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.jbm.cluster.common.configuration.OpenCommonProperties;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.gateway.server.actuator.ApiEndpoint;
 import com.jbm.cluster.gateway.server.exception.JsonExceptionHandler;
 import com.jbm.cluster.gateway.server.filter.GatewayContextFilter;
@@ -56,7 +56,7 @@ import java.util.TimeZone;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({ApiProperties.class, OpenCommonProperties.class})
+@EnableConfigurationProperties({ApiProperties.class, JbmClusterProperties.class})
 public class ApiConfiguration {
 
 

@@ -9,8 +9,9 @@
         <relativePath>../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>jbm-cluster</artifactId>
+<!--    <groupId>com.jbm</groupId>
+    <version>6.0.0-SNAPSHOT</version>-->
     <packaging>pom</packaging>
 
 
@@ -26,13 +27,27 @@
 
     <dependencyManagement>
         <dependencies>
-            <!--<dependency>
+           <!-- <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-dependencies</artifactId>
+                <artifactId>jbm-framework</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${alibaba.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -62,8 +77,47 @@
         <opencloud.bpm-client.version>3.0.0-SNAPSHOT</opencloud.bpm-client.version>
         <opencloud.task-client.version>3.0.0-SNAPSHOT</opencloud.task-client.version>
         <!--镜像前缀-->
-        <docker.image.prefix>open.cloud</docker.image.prefix>
+        <docker.image.prefix>jbm.cloud</docker.image.prefix>
     </properties>
+
+    <build>
+        <resources>
+            <!-- 先指定 src/main/resources下所有文件及文件夹为资源文件 -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${maven.compiler.encoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <!--打包跳过测试-->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <!-- 环境 -->
     <profiles>
         <!-- 开发 -->
@@ -86,16 +140,16 @@
         </profile>
         <!-- 测试 -->
         <profile>
-            <id>test</id>
+            <id>home</id>
             <properties>
                 <!--当前环境-->
-                <profile.name>test</profile.name>
+                <profile.name>home</profile.name>
                 <!--Nacos配置中心地址-->
-                <config.server-addr>nacos:8848</config.server-addr>
+                <config.server-addr>192.168.8.6:8848</config.server-addr>
                 <!--Nacos配置中心命名空间,用于支持多环境.这里必须使用ID，不能使用名称,默认为空-->
                 <config.namespace></config.namespace>
                 <!--Nacos服务发现地址-->
-                <discovery.server-addr>nocas:8848</discovery.server-addr>
+                <discovery.server-addr>192.168.8.6:8848</discovery.server-addr>
             </properties>
         </profile>
         <!-- 生产 -->

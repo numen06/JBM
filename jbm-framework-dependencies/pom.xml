@@ -6,12 +6,6 @@
     <version>6.0.0-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
-    <parent>
-        <!-- Import dependency management from Spring Boot -->
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-parent</artifactId>
-        <version>2.1.6.RELEASE</version>
-    </parent>
     <distributionManagement>
         <repository>
             <id>jbm-releases</id>
@@ -44,9 +38,9 @@
         <jdk.version>1.8</jdk.version>
         <jbm.framework.version>6.0.0-SNAPSHOT</jbm.framework.version>
         <spring.cloud.version>Greenwich.SR2</spring.cloud.version>
-        <spring.boot.version>2.0.2.RELEASE</spring.boot.version>
+        <spring.boot.version>2.1.6.RELEASE</spring.boot.version>
         <druid.version>1.1.12</druid.version>
-        <dubbo.version>2.6.4</dubbo.version>
+        <dubbo.version>2.6.7</dubbo.version>
         <fastjson.version>1.2.58</fastjson.version>
         <okhttp.version>2.7.5</okhttp.version>
         <jpush.version>3.2.7</jpush.version>
@@ -70,7 +64,7 @@
         <lombok.version>1.18.4</lombok.version>
         <!--6.0 add-->
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
-        <alibaba.cloud.version>0.9.0.RELEASE</alibaba.cloud.version>
+        <alibaba.cloud.version>0.2.2.RELEASE</alibaba.cloud.version>
         <alibaba.fastjson.version>1.2.60</alibaba.fastjson.version>
         <apache.commons-lang3.version>3.3.2</apache.commons-lang3.version>
         <apache.commons-io.version>2.5</apache.commons-io.version>
@@ -601,11 +595,11 @@
                 <artifactId>c3p0</artifactId>
                 <version>${c3p0.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
-            </dependency>
+            </dependency>-->
             <!-- mybatis -->
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -919,14 +913,6 @@
                 <artifactId>zt-zip</artifactId>
                 <version>1.9</version>
             </dependency>
-            <!-- spring session -->
-            <dependency>
-                <groupId>org.springframework.session</groupId>
-                <artifactId>spring-session-bom</artifactId>
-                <version>${spring-session-bom.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <!-- 模板 -->
             <dependency>
                 <groupId>com.github.pfmiles</groupId>
@@ -976,7 +962,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
+   <!-- <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -993,5 +979,5 @@
                 <version>2.7</version>
             </plugin>
         </plugins>
-    </build>
+    </build>-->
 </project>

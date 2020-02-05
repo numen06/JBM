@@ -22,17 +22,17 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-resource-server</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-redis</artifactId>
         </dependency>
-       <!-- <dependency>
+        <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
-        </dependency>-->
+        </dependency>
         <!--使用Undertow 替换内置 Tomcat-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,11 +49,6 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
             <version>${alibaba.cloud.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
         </dependency>
     </dependencies>
 

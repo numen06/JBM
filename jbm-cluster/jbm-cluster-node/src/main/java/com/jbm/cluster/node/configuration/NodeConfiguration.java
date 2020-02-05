@@ -1,0 +1,154 @@
+package com.jbm.cluster.node.configuration;
+
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.jbm.cluster.common.annotation.RequestMappingScan;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
+import com.jbm.cluster.common.configuration.JbmIdGenProperties;
+import com.jbm.cluster.common.configuration.JbmScanProperties;
+import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
+import com.jbm.cluster.common.exception.OpenRestResponseErrorHandler;
+import com.jbm.cluster.common.filter.XFilter;
+import com.jbm.cluster.common.health.DbHealthIndicator;
+import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientProperties;
+import jbm.framework.spring.config.SpringContextHolder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.bus.BusProperties;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * @program: JBM
+ * @author: wesley.zhang
+ * @create: 2020-02-05 20:52
+ **/
+@Slf4j
+//@Configuration
+@EnableConfigurationProperties({JbmClusterProperties.class, JbmIdGenProperties.class, OpenOAuth2ClientProperties.class, JbmScanProperties.class})
+public class NodeConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(JbmScanProperties.class)
+    public JbmScanProperties scanProperties() {
+        return new JbmScanProperties();
+    }
+
+    /**
+     * xss过滤
+     * body缓存
+     *
+     * @return
+     */
+    @Bean
+    public FilterRegistrationBean XssFilter() {
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new XFilter());
+        log.info("XFilter [{}]", filterRegistrationBean);
+        return filterRegistrationBean;
+    }
+
+    /**
+     * 分页插件
+     */
+    @ConditionalOnMissingBean(PaginationInterceptor.class)
+    @Bean
+    public PaginationInterceptor paginationInterceptor() {
+        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
+        log.info("PaginationInterceptor [{}]", paginationInterceptor);
+        return paginationInterceptor;
+    }
+
+    /**
+     * 默认加密配置
+     *
+     * @return
+     */
+    @Bean
+    @ConditionalOnMissingBean(BCryptPasswordEncoder.class)
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        log.info("BCryptPasswordEncoder [{}]", encoder);
+        return encoder;
+    }
+
+
+    /**
+     * Spring上下文工具配置
+     *
+     * @return
+     */
+    @Bean
+    @ConditionalOnMissingBean(SpringContextHolder.class)
+    public SpringContextHolder springContextHolder() {
+        SpringContextHolder holder = new SpringContextHolder();
+        log.info("SpringContextHolder [{}]", holder);
+        return holder;
+    }
+
+    /**
+     * 统一异常处理配置
+     *
+     * @return
+     */
+    @Bean
+    @ConditionalOnMissingBean(OpenGlobalExceptionHandler.class)
+    public OpenGlobalExceptionHandler exceptionHandler() {
+        OpenGlobalExceptionHandler exceptionHandler = new OpenGlobalExceptionHandler();
+        log.info("OpenGlobalExceptionHandler [{}]", exceptionHandler);
+        return exceptionHandler;
+    }
+
+    /**
+     * 自定义Oauth2请求类
+     *
+     * @param openCommonProperties
+     * @return
+     */
+    @Bean
+    @ConditionalOnMissingBean(OpenRestTemplate.class)
+    public OpenRestTemplate openRestTemplate(JbmClusterProperties openCommonProperties, BusProperties busProperties, ApplicationEventPublisher publisher) {
+        OpenRestTemplate restTemplate = new OpenRestTemplate(openCommonProperties, busProperties, publisher);
+        //设置自定义ErrorHandler
+        restTemplate.setErrorHandler(new OpenRestResponseErrorHandler());
+        log.info("OpenRestTemplate [{}]", restTemplate);
+        return restTemplate;
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        //设置自定义ErrorHandler
+        restTemplate.setErrorHandler(new OpenRestResponseErrorHandler());
+        log.info("RestTemplate [{}]", restTemplate);
+        return restTemplate;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(DbHealthIndicator.class)
+    public DbHealthIndicator dbHealthIndicator() {
+        DbHealthIndicator dbHealthIndicator = new DbHealthIndicator();
+        log.info("DbHealthIndicator [{}]", dbHealthIndicator);
+        return dbHealthIndicator;
+    }
+
+
+    /**
+     * 自定义注解扫描
+     *
+     * @return
+     */
+    @Bean
+    @ConditionalOnMissingBean(RequestMappingScan.class)
+    public RequestMappingScan resourceAnnotationScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
+        RequestMappingScan scan = new RequestMappingScan(amqpTemplate,scanProperties);
+        log.info("RequestMappingScan [{}]", scan);
+        return scan;
+    }
+
+}
