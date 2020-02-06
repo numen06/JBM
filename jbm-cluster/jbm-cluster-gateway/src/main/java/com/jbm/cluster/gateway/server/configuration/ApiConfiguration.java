@@ -80,7 +80,6 @@ public class ApiConfiguration {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public ErrorWebExceptionHandler errorWebExceptionHandler(ObjectProvider<List<ViewResolver>> viewResolversProvider,
                                                              ServerCodecConfigurer serverCodecConfigurer, AccessLogService accessLogService) {
-
         JsonExceptionHandler jsonExceptionHandler = new JsonExceptionHandler(accessLogService);
         jsonExceptionHandler.setViewResolvers(viewResolversProvider.getIfAvailable(Collections::emptyList));
         jsonExceptionHandler.setMessageWriters(serverCodecConfigurer.getWriters());
@@ -89,56 +88,56 @@ public class ApiConfiguration {
         return jsonExceptionHandler;
     }
 
-    /**
-     * Jackson全局配置
-     *
-     * @param properties
-     * @return
-     */
-    @Bean
-    @Primary
-    public JacksonProperties jacksonProperties(JacksonProperties properties) {
-        properties.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-        properties.getSerialization().put(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
-        properties.setDateFormat("yyyy-MM-dd HH:mm:ss");
-        properties.setTimeZone(TimeZone.getTimeZone("GMT+8"));
-        log.info("JacksonProperties [{}]", properties);
-        return properties;
-    }
+//    /**
+//     * Jackson全局配置
+//     *
+//     * @param properties
+//     * @return
+//     */
+//    @Bean
+//    @Primary
+//    public JacksonProperties jacksonProperties(JacksonProperties properties) {
+//        properties.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
+//        properties.getSerialization().put(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
+//        properties.setDateFormat("yyyy-MM-dd HH:mm:ss");
+//        properties.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+//        log.info("JacksonProperties [{}]", properties);
+//        return properties;
+//    }
 
-    /**
-     * 转换器全局配置
-     *
-     * @param converters
-     * @return
-     */
-    @Bean
-    public HttpMessageConverters httpMessageConverters(List<HttpMessageConverter<?>> converters) {
-        MappingJackson2HttpMessageConverter jackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
-        ObjectMapper objectMapper = new ObjectMapper();
-        // 忽略为空的字段
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        objectMapper.getSerializationConfig().withFeatures(
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-        /**
-         * 序列换成json时,将所有的long变成string
-         * js中long过长精度丢失
-         */
-        SimpleModule simpleModule = new SimpleModule();
-        simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
-        simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
-        objectMapper.registerModule(simpleModule);
-        jackson2HttpMessageConverter.setObjectMapper(objectMapper);
-        log.info("MappingJackson2HttpMessageConverter [{}]", jackson2HttpMessageConverter);
-        return new HttpMessageConverters(jackson2HttpMessageConverter);
-    }
+//    /**
+//     * 转换器全局配置
+//     *
+//     * @param converters
+//     * @return
+//     */
+//    @Bean
+//    public HttpMessageConverters httpMessageConverters(List<HttpMessageConverter<?>> converters) {
+//        MappingJackson2HttpMessageConverter jackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        // 忽略为空的字段
+//        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+//        objectMapper.getSerializationConfig().withFeatures(
+//                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+//        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+//        /**
+//         * 序列换成json时,将所有的long变成string
+//         * js中long过长精度丢失
+//         */
+//        SimpleModule simpleModule = new SimpleModule();
+//        simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
+//        simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
+//        objectMapper.registerModule(simpleModule);
+//        jackson2HttpMessageConverter.setObjectMapper(objectMapper);
+//        log.info("MappingJackson2HttpMessageConverter [{}]", jackson2HttpMessageConverter);
+//        return new HttpMessageConverters(jackson2HttpMessageConverter);
+//    }
 
-    @Bean
-    @Primary
-    public SwaggerProvider swaggerProvider(RouteDefinitionLocator routeDefinitionLocator) {
-        return new SwaggerProvider(routeDefinitionLocator);
-    }
+//    @Bean
+//    @Primary
+//    public SwaggerProvider swaggerProvider(RouteDefinitionLocator routeDefinitionLocator) {
+//        return new SwaggerProvider(routeDefinitionLocator);
+//    }
 
     /**
      * 动态路由加载

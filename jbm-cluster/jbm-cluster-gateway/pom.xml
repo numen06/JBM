@@ -13,16 +13,16 @@
 
     <description>API网关服务-spring</description>
     <dependencies>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-core</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-api</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-node</artifactId>
@@ -64,10 +64,6 @@
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>swagger-bootstrap-ui</artifactId>
             <version>${swagger-bootstrap-ui.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
         </dependency>
     </dependencies>
     <build>

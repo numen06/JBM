@@ -33,6 +33,10 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+        </dependency>
         <!--使用Undertow 替换内置 Tomcat-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

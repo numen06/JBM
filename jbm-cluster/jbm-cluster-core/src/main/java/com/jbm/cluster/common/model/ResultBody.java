@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.jbm.cluster.common.constants.ErrorCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -16,9 +17,8 @@ import java.util.ResourceBundle;
  * @author admin
  */
 @ApiModel(value = "响应结果")
+@Data
 public class ResultBody<T> implements Serializable {
-    private static final long serialVersionUID = -6190689122701100762L;
-
     /**
      * 响应编码
      */

@@ -2,6 +2,7 @@ package com.jbm.cluster.common.exception;
 
 import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
@@ -217,5 +218,4 @@ public class OpenGlobalExceptionHandler {
         log.error("==> error:{} exception: {}",resultBody, exception);
         return resultBody;
     }
-
 }

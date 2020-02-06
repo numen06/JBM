@@ -33,41 +33,30 @@ import javax.sql.DataSource;
 @Configuration
 @EnableResourceServer
 public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
-    @Autowired
-    private RedisConnectionFactory redisConnectionFactory;
 
     @Value("${security.oauth2.ignore:}")
     private String[] ignores;
 
-    /**
-     * 如果没有加密创建一个加密
-     * @return
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Bean
-    public JdbcClientDetailsService clientDetailsService(PasswordEncoder passwordEncoder) {
+    public RedisTokenStore redisTokenStore() {
+        return new RedisTokenStore(redisConnectionFactory);
+    }
+
+
+    @Bean
+    public JdbcClientDetailsService clientDetailsService() {
         JdbcClientDetailsService jdbcClientDetailsService = new JdbcClientDetailsService(dataSource);
         jdbcClientDetailsService.setPasswordEncoder(passwordEncoder);
         return jdbcClientDetailsService;
     }
 
-    /**
-     * token存储器
-     *
-     * @return
-     */
-    @Bean
-    public RedisTokenStore tokenStore() {
-        return new RedisTokenStore(redisConnectionFactory);
-    }
 
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
@@ -77,16 +66,25 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-        if (ArrayUtil.isEmpty(ignores)) {
-            ignores = new String[]{};
-        }
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .authorizeRequests()
                 // 监控端点内部放行
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 // fegin访问或无需身份认证
-                .antMatchers(ignores).permitAll()
+                .antMatchers(
+                        "/authority/access",
+                        "/authority/app",
+                        "/app/*/info",
+                        "/app/client/*/info",
+                        "/gateway/api/**",
+                        "/user/add/thirdParty",
+                        "/user/info",
+                        "/user/login",
+                        "/developer/add/thirdParty",
+                        "/developer/info",
+                        "/developer/login"
+                ).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 //认证鉴权错误处理,为了统一异常处理。每个资源服务器都应该加上。
@@ -96,6 +94,5 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                 .and()
                 .csrf().disable();
     }
-
 }
 
