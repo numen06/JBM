@@ -22,7 +22,7 @@ public class SwaggerFastJsonHttpMessageConverter4 extends FastJsonHttpMessageCon
 		aa.add(MediaType.APPLICATION_JSON_UTF8);
 		aa.add(MediaType.TEXT_HTML);
 		this.setSupportedMediaTypes(aa);
-		this.getFastJsonConfig().setSerializerFeatures(SerializerFeature.BrowserCompatible, SerializerFeature.PrettyFormat, SerializerFeature.DisableCircularReferenceDetect);
+		this.getFastJsonConfig().setSerializerFeatures(SerializerFeature.BrowserCompatible, SerializerFeature.PrettyFormat,SerializerFeature.SkipTransientField, SerializerFeature.DisableCircularReferenceDetect);
 
 		try {
 			ClassUtils.forName("springfox.documentation.spring.web.json.Json", ClassUtils.getDefaultClassLoader());

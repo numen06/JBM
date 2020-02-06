@@ -1,12 +1,14 @@
 package com.jbm.framework.masterdata.usage.bean;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 /**
  * @author wesley
  *
- * @param <CODE>
  */
 @MappedSuperclass
 public class MasterDataTreeEntity extends MasterDataEntity {
@@ -23,6 +25,9 @@ public class MasterDataTreeEntity extends MasterDataEntity {
 	@Column
 	private Long parentId;
 
+//	@Transient
+	@TableField(exist = false)
+	private Boolean leaf;
 	/**
 	 * 层级
 	 */
@@ -52,5 +57,15 @@ public class MasterDataTreeEntity extends MasterDataEntity {
 	public void setParentId(Long parentId) {
 		this.parentId = parentId;
 	}
+
+	public Boolean getLeaf() {
+		return leaf;
+	}
+
+	public void setLeaf(Boolean leaf) {
+		this.leaf = leaf;
+	}
+
+
 
 }

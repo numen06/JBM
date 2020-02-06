@@ -3,11 +3,14 @@ package com.jbm.framework.service.mybatis;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
@@ -23,6 +26,26 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         return super.list(entityWrapper);
     }
 
+    /**
+     * 将列表转换成树列表
+     * @param list
+     */
+    public List<Entity> listToTreeList(List<Entity> list) {
+        Map<Long, Entity> tempMap = Maps.newLinkedHashMap();
+        //转换成map
+        for (Entity entity : list) {
+            tempMap.put(entity.getId(), entity);
+            entity.setLeaf(false);
+        }
+        for (Entity entity : list) {
+            if (ObjectUtil.isNotEmpty(entity.getParentId())) {
+                tempMap.get(entity.getParentId()).setLeaf(true);
+            }
+        }
+        return list;
+    }
+
+
     public List<Entity> selectTreeByParentCode(Entity entity) throws DataServiceException {
         List<Entity> subEntitys = new ArrayList<Entity>();
         if (entity.getParentCode() == null) {
@@ -30,6 +53,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         } else {
             subEntitys = this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), entity.getCode()));
         }
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys));
         return this.selectTreeByParentCode(subEntitys);
     }
 
@@ -63,7 +87,8 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         } else {
             subEntitys = this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), entity.getId()));
         }
-        return this.selectTreeByParentCode(subEntitys);
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys));
+        return this.selectTreeByParentId(subEntitys);
     }
 
     @Override
