@@ -70,7 +70,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
         try {
             validator(jsonRequestBody);
             Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectTreeByParentId(entity);
+            List<Entity> list = service.selectChildNodesById(entity);
             return ResultForm.success(list, "查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "查询树结构成功", e);
@@ -83,7 +83,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
         try {
             validator(jsonRequestBody);
             Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectTreeByParentCode(entity);
+            List<Entity> list = service.selectChildNodesByCode(entity);
             return ResultForm.success(list, "通过Code查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "通过Code查询树结构成功", e);
