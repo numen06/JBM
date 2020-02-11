@@ -55,17 +55,9 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
 
     public List<Entity> selectChildNodesByCode(Entity entity) throws DataServiceException {
-        List<Entity> treeList = new ArrayList<Entity>();
-        List<Entity> subEntitys = new ArrayList<Entity>();
-        if (entity.getParentCode() == null) {
-            subEntitys = this.selectRootListByCode(entity);
-        } else {
-            subEntitys = this.selectListByParentCode(entity.getCode());
-        }
-        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys));
-        treeList.addAll(subEntitys);
-        treeList.addAll(this.selectChildNodesByCode(subEntitys));
-        return treeList;
+        List<Entity> subEntitys = this.selectChildNodesByCode(entity.getCode());
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys) ? false : true);
+        return subEntitys;
     }
 
     public List<Entity> selectChildNodesByCode(List<Entity> subEntitys) throws DataServiceException {
@@ -105,7 +97,9 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     @Override
     public List<Entity> selectChildNodesById(Entity entity) throws DataServiceException {
-        return this.selectChildNodesById(entity.getId());
+        List<Entity> subEntitys = this.selectChildNodesById(entity.getId());
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys) ? false : true);
+        return subEntitys;
     }
 
     @Override
@@ -118,6 +112,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
             subEntitys = this.selectListByParentId(parentId);
         }
         treeList.addAll(subEntitys);
+        //递归查询下一层
         treeList.addAll(this.selectChildNodesById(subEntitys));
         return treeList;
     }
@@ -133,6 +128,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
             subEntitys = this.selectListByParentCode(parentCode);
         }
         treeList.addAll(subEntitys);
+        //递归查询下一层
         treeList.addAll(this.selectChildNodesByCode(subEntitys));
         return treeList;
     }
