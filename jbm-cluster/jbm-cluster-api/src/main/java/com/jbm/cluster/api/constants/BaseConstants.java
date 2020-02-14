@@ -10,7 +10,7 @@ public class BaseConstants {
     /**
      * 服务名称
      */
-    public static final String BASE_SERVER = "open-cloud-base-server";
+    public static final String BASE_SERVER = "jbm-cluster-system";
 
     /**
      * 默认接口分类

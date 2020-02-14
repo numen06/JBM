@@ -3,9 +3,11 @@ package com.jbm.cluster.api.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -14,9 +16,10 @@ import java.util.Date;
  * @author wesley.zhang
  */
 @Data
+@Entity
 @NoArgsConstructor
 @TableName("gateway_access_logs")
-public class GatewayAccessLogs implements Serializable {
+public class GatewayAccessLogs extends MasterDataEntity {
     /**
      * 访问ID
      */

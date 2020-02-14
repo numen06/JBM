@@ -21,7 +21,7 @@ public interface BaseAuthorityUserMapper extends BaseMapper<BaseAuthorityUser> {
      * @param userId
      * @return
      */
-    List<OpenAuthority> selectAuthorityByUser(@Param("userId") Long userId);
+    List<OpenAuthority> selectAuthorityByUser(@Param("id") Long userId);
 
     /**
      * 获取用户已授权权限完整信息
@@ -29,5 +29,5 @@ public interface BaseAuthorityUserMapper extends BaseMapper<BaseAuthorityUser> {
      * @param userId
      * @return
      */
-    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("userId") Long userId);
+    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("id") Long userId);
 }

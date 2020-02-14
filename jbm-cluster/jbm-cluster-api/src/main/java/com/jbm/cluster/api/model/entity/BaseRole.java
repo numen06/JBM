@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统角色-基础信息
  *
@@ -16,16 +18,12 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_role")
 public class BaseRole extends MasterDataEntity {
     private static final long serialVersionUID = 5197785628543375591L;
-    /**
-     * 角色ID
-     */
-    @TableId(type= IdType.ID_WORKER)
-    private Long roleId;
 
     /**
      * 角色编码

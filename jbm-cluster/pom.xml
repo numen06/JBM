@@ -23,6 +23,7 @@
         <module>jbm-cluster-core</module>
         <module>jbm-cluster-node</module>
         <module>jbm-cluster-app</module>
+        <module>jbm-cluster-center</module>
     </modules>
 
     <dependencyManagement>
@@ -77,7 +78,7 @@
         <opencloud.bpm-client.version>3.0.0-SNAPSHOT</opencloud.bpm-client.version>
         <opencloud.task-client.version>3.0.0-SNAPSHOT</opencloud.task-client.version>
         <!--镜像前缀-->
-        <docker.image.prefix>jbm.cloud</docker.image.prefix>
+        <docker.image.prefix>com.jbm.cluster</docker.image.prefix>
     </properties>
 
     <build>

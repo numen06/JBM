@@ -3,9 +3,9 @@ package com.jbm.cluster.system.platform.server.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.OpenHelper;
-import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientDetails;
-import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientProperties;
-import com.jbm.cluster.common.utils.WebUtils;
+import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientDetails;
+import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
+import com.jbm.framework.mvc.WebUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -32,7 +32,7 @@ import java.util.Map;
 @RestController
 public class LoginController {
     @Autowired
-    private OpenOAuth2ClientProperties clientProperties;
+    private JbmOAuth2ClientProperties clientProperties;
     @Autowired
     private TokenStore tokenStore;
     @Autowired
@@ -102,7 +102,7 @@ public class LoginController {
 
 
     public JSONObject getToken(String userName, String password, String type, HttpHeaders headers) {
-        OpenOAuth2ClientDetails clientDetails =  clientProperties.getOauth2().get("admin");
+        JbmOAuth2ClientDetails clientDetails =  clientProperties.getOauth2().get("admin");
         String url = WebUtils.getServerUrl(WebUtils.getHttpServletRequest()) + "/oauth/token";
         // 使用oauth2密码模式登录.
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();

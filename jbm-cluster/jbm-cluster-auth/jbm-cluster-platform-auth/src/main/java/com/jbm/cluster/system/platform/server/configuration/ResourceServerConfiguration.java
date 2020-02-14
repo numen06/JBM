@@ -1,7 +1,7 @@
 package com.jbm.cluster.system.platform.server.configuration;
 
-import com.jbm.cluster.common.exception.OpenAccessDeniedHandler;
-import com.jbm.cluster.common.exception.OpenAuthenticationEntryPoint;
+import com.jbm.cluster.common.exception.JbmAccessDeniedHandler;
+import com.jbm.cluster.common.exception.JbmAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
@@ -57,8 +57,8 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                 .and()
                 // 认证鉴权错误处理,为了统一异常处理。每个资源服务器都应该加上。
                 .exceptionHandling()
-                .accessDeniedHandler(new OpenAccessDeniedHandler())
-                .authenticationEntryPoint(new OpenAuthenticationEntryPoint())
+                .accessDeniedHandler(new JbmAccessDeniedHandler())
+                .authenticationEntryPoint(new JbmAuthenticationEntryPoint())
                 .and()
                 .csrf().disable()
                 // 禁用httpBasic

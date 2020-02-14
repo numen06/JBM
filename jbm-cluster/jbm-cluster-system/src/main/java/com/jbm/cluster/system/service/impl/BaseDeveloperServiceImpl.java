@@ -9,10 +9,10 @@ import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.utils.WebUtils;
 import com.jbm.cluster.system.mapper.BaseDeveloperMapper;
 import com.jbm.cluster.system.service.BaseAccountService;
 import com.jbm.cluster.system.service.BaseDeveloperService;
+import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -60,14 +60,14 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
         //保存系统用户信息
         baseDeveloperMapper.insert(baseDeveloper);
         //默认注册用户名账户
-        baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getUserName(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
+        baseAccountService.register(baseDeveloper.getId(), baseDeveloper.getUserName(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
         if (Validator.isEmail(baseDeveloper.getEmail())) {
             //注册email账号登陆
-            baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getEmail(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
+            baseAccountService.register(baseDeveloper.getId(), baseDeveloper.getEmail(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
         }
         if (Validator.isMobile(baseDeveloper.getMobile())) {
             //注册手机号账号登陆
-            baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getMobile(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
+            baseAccountService.register(baseDeveloper.getId(), baseDeveloper.getMobile(), baseDeveloper.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseDeveloper.getStatus(), ACCOUNT_DOMAIN, null);
         }
     }
 
@@ -79,11 +79,11 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
      */
     @Override
     public void updateUser(BaseDeveloper baseDeveloper) {
-        if (baseDeveloper == null || baseDeveloper.getUserId() == null) {
+        if (baseDeveloper == null || baseDeveloper.getId() == null) {
             return;
         }
         if (baseDeveloper.getStatus() != null) {
-            baseAccountService.updateStatusByUserId(baseDeveloper.getUserId(), ACCOUNT_DOMAIN, baseDeveloper.getStatus());
+            baseAccountService.updateStatusByUserId(baseDeveloper.getId(), ACCOUNT_DOMAIN, baseDeveloper.getStatus());
         }
         baseDeveloperMapper.updateById(baseDeveloper);
     }
@@ -103,7 +103,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
             //保存系统用户信息
             baseDeveloperMapper.insert(baseDeveloper);
             // 注册账号信息
-            baseAccountService.register(baseDeveloper.getUserId(), baseDeveloper.getUserName(), baseDeveloper.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, ACCOUNT_DOMAIN, null);
+            baseAccountService.register(baseDeveloper.getId(), baseDeveloper.getUserName(), baseDeveloper.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, ACCOUNT_DOMAIN, null);
         }
     }
 
@@ -129,7 +129,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
         BaseDeveloper query = jsonRequestBody.tryGet(BaseDeveloper.class);
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseDeveloper::getUserId, query.getUserId())
+                .eq(ObjectUtils.isNotEmpty(query.getId()), BaseDeveloper::getId, query.getId())
                 .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseDeveloper::getUserType, query.getUserType())
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
@@ -218,7 +218,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
                     log.setDomain(ACCOUNT_DOMAIN);
                     log.setUserId(baseAccount.getUserId());
                     log.setAccount(baseAccount.getAccount());
-                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
+                    log.setAccountId(String.valueOf(baseAccount.getId()));
                     log.setAccountType(baseAccount.getAccountType());
                     log.setLoginIp(WebUtils.getRemoteAddress(request));
                     log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));

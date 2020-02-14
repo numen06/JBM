@@ -8,11 +8,10 @@
         <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="role_id" property="roleId" jdbcType="BIGINT"/>
     </resultMap>
-
-    <select id="selectRoleUserList" resultMap="com.jbm.cluster.system.mapper.BaseRoleMapper.BaseResultMap">
+    <select id="selectRoleUserList" resultType="com.jbm.cluster.api.model.entity.BaseRole">
         SELECT
         base_role_user.user_id,
-        base_role.role_id,
+        base_role.id,
         base_role.role_code,
         base_role.role_name,
         base_role.role_desc,

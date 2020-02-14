@@ -8,21 +8,20 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统用户-登录账号
  *
  * @author wesley.zhang
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_account")
 public class BaseAccount extends MasterDataEntity {
 
-
-
-    @TableId(type = IdType.ID_WORKER)
-    private Long accountId;
 
     /**
      * 系统用户Id

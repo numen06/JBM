@@ -122,7 +122,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         api.setUpdateTime(api.getCreateTime());
         baseApiMapper.insert(api);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
+        baseAuthorityService.saveOrUpdateAuthority(api.getId(), ResourceType.api);
     }
 
     /**
@@ -133,7 +133,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      */
     @Override
     public void updateApi(BaseApi api) {
-        BaseApi saved = getApi(api.getApiId());
+        BaseApi saved = getApi(api.getId());
         if (saved == null) {
             throw new OpenAlertException("信息不存在!");
         }
@@ -152,7 +152,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         api.setUpdateTime(new Date());
         baseApiMapper.updateById(api);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
+        baseAuthorityService.saveOrUpdateAuthority(api.getId(), ResourceType.api);
     }
 
     /**

@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统资源-API接口
  *
@@ -17,15 +19,12 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_api")
 public class BaseApi extends MasterDataEntity {
-    /**
-     * 资源ID
-     */
-    @TableId(type = IdType.ID_WORKER)
-    private Long apiId;
+
 
     /**
      * 资源编码

@@ -11,12 +11,12 @@ import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
-import com.jbm.cluster.common.utils.WebUtils;
 import com.jbm.cluster.system.mapper.BaseUserMapper;
 import com.jbm.cluster.system.service.BaseAccountService;
 import com.jbm.cluster.system.service.BaseAuthorityService;
 import com.jbm.cluster.system.service.BaseRoleService;
 import com.jbm.cluster.system.service.BaseUserService;
+import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
@@ -187,13 +187,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 Map roleMap = Maps.newHashMap();
-                roleMap.put("roleId", role.getRoleId());
+                roleMap.put("roleId", role.getId());
                 roleMap.put("roleCode", role.getRoleCode());
                 roleMap.put("roleName", role.getRoleName());
                 // 用户角色详情
                 roles.add(roleMap);
                 // 加入角色标识
-                OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), OpenSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
+                OpenAuthority authority = new OpenAuthority(role.getId().toString(), OpenSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
                 authorities.add(authority);
             }
         }
@@ -258,11 +258,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, ACCOUNT_DOMAIN);
 
             // 手机号登陆
-            if (Validator.isEmail(account)) {
+            if (Validator.isMobile(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, ACCOUNT_DOMAIN);
             }
             // 邮箱登陆
-            if (Validator.isMobile(account)) {
+            if (Validator.isEmail(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, ACCOUNT_DOMAIN);
             }
         }
@@ -277,7 +277,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                     log.setDomain(ACCOUNT_DOMAIN);
                     log.setUserId(baseAccount.getUserId());
                     log.setAccount(baseAccount.getAccount());
-                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
+                    log.setAccountId(String.valueOf(baseAccount.getId()));
                     log.setAccountType(baseAccount.getAccountType());
                     log.setLoginIp(WebUtils.getRemoteAddress(request));
                     log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));

@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 网关动态路由
  *
@@ -16,11 +18,11 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("gateway_route")
 public class GatewayRoute extends MasterDataEntity {
-    private static final long serialVersionUID = -2952097064941740301L;
 
     /**
      * 路由ID

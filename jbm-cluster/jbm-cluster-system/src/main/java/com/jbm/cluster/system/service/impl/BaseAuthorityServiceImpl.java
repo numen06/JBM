@@ -159,7 +159,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         }
         // 设置权限标识
         baseAuthority.setAuthority(authority);
-        if (baseAuthority.getAuthorityId() == null) {
+        if (baseAuthority.getId() == null) {
             baseAuthority.setCreateTime(new Date());
             baseAuthority.setUpdateTime(baseAuthority.getCreateTime());
             // 新增权限
@@ -214,17 +214,17 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
     @Override
     public Boolean isGranted(Long resourceId, ResourceType resourceType) {
         BaseAuthority authority = getAuthority(resourceId, resourceType);
-        if (authority == null || authority.getAuthorityId() == null) {
+        if (authority == null || authority.getId() == null) {
             return false;
         }
         QueryWrapper<BaseAuthorityRole> roleQueryWrapper = new QueryWrapper();
-        roleQueryWrapper.lambda().eq(BaseAuthorityRole::getAuthorityId, authority.getAuthorityId());
+        roleQueryWrapper.lambda().eq(BaseAuthorityRole::getAuthorityId, authority.getId());
         int roleGrantedCount = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
         QueryWrapper<BaseAuthorityUser> userQueryWrapper = new QueryWrapper();
-        userQueryWrapper.lambda().eq(BaseAuthorityUser::getAuthorityId, authority.getAuthorityId());
+        userQueryWrapper.lambda().eq(BaseAuthorityUser::getAuthorityId, authority.getId());
         int userGrantedCount = baseAuthorityUserMapper.selectCount(userQueryWrapper);
         QueryWrapper<BaseAuthorityApp> appQueryWrapper = new QueryWrapper();
-        appQueryWrapper.lambda().eq(BaseAuthorityApp::getAuthorityId, authority.getAuthorityId());
+        appQueryWrapper.lambda().eq(BaseAuthorityApp::getAuthorityId, authority.getId());
         int appGrantedCount = baseAuthorityAppMapper.selectCount(appQueryWrapper);
         return roleGrantedCount > 0 || userGrantedCount > 0 || appGrantedCount > 0;
     }
@@ -512,7 +512,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 加入角色已授权
-                List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(role.getRoleId());
+                List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(role.getId());
                 if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
                     authorities.addAll(roleGrantedAuthority);
                 }
@@ -549,7 +549,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 加入角色已授权
-                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getRoleId());
+                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getId());
                 if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
                     authorities.addAll(roleGrantedAuthority);
                 }

@@ -14,8 +14,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 /**
  * 网关IP访问控制
  *
@@ -51,11 +49,11 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "查询策略已绑定API列表", notes = "获取分页接口列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
+            @ApiImplicitParam(name = "id", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/ip/api/list")
     public ResultBody<DataPaging<GatewayIpLimit>> getIpLimitApiList(
-            @RequestParam("policyId") Long policyId
+            @RequestParam("id") Long policyId
     ) {
         return ResultBody.ok().data(gatewayIpLimitService.findIpLimitApiList(policyId));
     }
@@ -69,12 +67,12 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "绑定API", notes = "一个API只能绑定一个策略")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(name = "id", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/gateway/limit/ip/api/add")
     public ResultBody addIpLimitApis(
-            @RequestParam("policyId") Long policyId,
+            @RequestParam("id") Long policyId,
             @RequestParam(value = "apiIds", required = false) String apiIds
     ) {
         gatewayIpLimitService.addIpLimitApis(policyId, StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
@@ -90,7 +88,7 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "获取IP限制", notes = "获取IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "策略ID", paramType = "path"),
+            @ApiImplicitParam(name = "id", required = true, value = "策略ID", paramType = "path"),
     })
     @GetMapping("/gateway/limit/ip/{policyId}/info")
     public ResultBody<GatewayIpLimit> getIpLimit(@PathVariable("policyId") Long policyId) {
@@ -124,7 +122,7 @@ public class GatewayIpLimitController {
         Long policyId = null;
         GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
         if(result!=null){
-            policyId = result.getPolicyId();
+            policyId = result.getId();
         }
         return ResultBody.ok().data(policyId);
     }
@@ -140,20 +138,20 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "编辑IP限制", notes = "编辑IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "接口Id", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "接口Id", paramType = "form"),
             @ApiImplicitParam(name = "policyName", required = true, value = "策略名称", paramType = "form"),
             @ApiImplicitParam(name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
             @ApiImplicitParam(name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
     })
     @PostMapping("/gateway/limit/ip/update")
     public ResultBody updateIpLimit(
-            @RequestParam("policyId") Long policyId,
+            @RequestParam("id") Long policyId,
             @RequestParam(value = "policyName") String policyName,
             @RequestParam(value = "policyType") Integer policyType,
             @RequestParam(value = "ipAddress") String ipAddress
     ) {
         GatewayIpLimit ipLimit = new GatewayIpLimit();
-        ipLimit.setPolicyId(policyId);
+        ipLimit.setId(policyId);
         ipLimit.setPolicyName(policyName);
         ipLimit.setPolicyType(policyType);
         ipLimit.setIpAddress(ipAddress);
@@ -171,11 +169,11 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "移除IP限制", notes = "移除IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "policyId", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "id", paramType = "form"),
     })
     @PostMapping("/gateway/limit/ip/remove")
     public ResultBody removeIpLimit(
-            @RequestParam("policyId") Long policyId
+            @RequestParam("id") Long policyId
     ) {
         gatewayIpLimitService.removeIpLimitPolicy(policyId);
         // 刷新网关

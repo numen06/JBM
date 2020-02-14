@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统资源-菜单信息
  *
@@ -16,16 +18,11 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_menu")
 public class BaseMenu extends MasterDataEntity {
-    private static final long serialVersionUID = -4414780909980518788L;
-    /**
-     * 菜单Id
-     */
-    @TableId(type= IdType.ID_WORKER)
-    private Long menuId;
 
     /**
      * 菜单编码

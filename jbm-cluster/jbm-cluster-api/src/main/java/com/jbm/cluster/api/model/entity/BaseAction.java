@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统资源-功能操作
  *
@@ -16,16 +18,11 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_action")
 public class BaseAction extends MasterDataEntity {
-    private static final long serialVersionUID = 1471599074044557390L;
-    /**
-     * 资源ID
-     */
-    @TableId(type= IdType.ID_WORKER)
-    private Long actionId;
 
     /**
      * 资源编码

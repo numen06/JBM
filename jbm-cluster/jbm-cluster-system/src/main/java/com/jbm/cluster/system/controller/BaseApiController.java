@@ -59,7 +59,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取接口资源", notes = "获取接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "apiId", required = true, value = "ApiId", paramType = "path"),
+            @ApiImplicitParam(name = "id", required = true, value = "ApiId", paramType = "path"),
     })
     @GetMapping("/api/{apiId}/info")
     public ResultBody<BaseApi> getApi(@PathVariable("apiId") Long apiId) {
@@ -136,7 +136,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "编辑接口资源", notes = "编辑接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "apiId", required = true, value = "接口Id", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "接口Id", paramType = "form"),
             @ApiImplicitParam(name = "apiCode", required = true, value = "接口编码", paramType = "form"),
             @ApiImplicitParam(name = "apiName", required = true, value = "接口名称", paramType = "form"),
             @ApiImplicitParam(name = "apiCategory", required = true, value = "接口分类", paramType = "form"),
@@ -150,7 +150,7 @@ public class BaseApiController {
     })
     @PostMapping("/api/update")
     public ResultBody updateApi(
-            @RequestParam("apiId") Long apiId,
+            @RequestParam("id") Long apiId,
             @RequestParam(value = "apiCode") String apiCode,
             @RequestParam(value = "apiName") String apiName,
             @RequestParam(value = "apiCategory") String apiCategory,
@@ -163,7 +163,7 @@ public class BaseApiController {
             @RequestParam(value = "isOpen", required = false, defaultValue = "0") Integer isOpen
     ) {
         BaseApi api = new BaseApi();
-        api.setApiId(apiId);
+        api.setId(apiId);
         api.setApiCode(apiCode);
         api.setApiName(apiName);
         api.setApiCategory(apiCategory);
@@ -189,11 +189,11 @@ public class BaseApiController {
      */
     @ApiOperation(value = "移除接口资源", notes = "移除接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "apiId", required = true, value = "ApiId", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "ApiId", paramType = "form"),
     })
     @PostMapping("/api/remove")
     public ResultBody removeApi(
-            @RequestParam("apiId") Long apiId
+            @RequestParam("id") Long apiId
     ) {
         apiService.removeApi(apiId);
         // 刷新网关
@@ -214,7 +214,7 @@ public class BaseApiController {
     @PostMapping("/api/batch/remove")
     public ResultBody batchRemove(@RequestParam(value = "ids") String ids) {
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
+        wrapper.lambda().in(BaseApi::getId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         apiService.deleteByWapper(wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
@@ -239,7 +239,7 @@ public class BaseApiController {
     ) {
         Assert.isTrue((open.intValue() != 1 || open.intValue() != 0), "isOpen只支持0,1");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
+        wrapper.lambda().in(BaseApi::getId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setIsOpen(open);
         apiService.updateByWrapper(entity, wrapper);
@@ -265,7 +265,7 @@ public class BaseApiController {
     ) {
         Assert.isTrue((status.intValue() != 0 || status.intValue() != 1 || status.intValue() != 2), "status只支持0,1,2");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
+        wrapper.lambda().in(BaseApi::getId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setStatus(status);
         apiService.updateByWrapper(entity, wrapper);
@@ -291,7 +291,7 @@ public class BaseApiController {
     ) {
         Assert.isTrue((auth.intValue() != 0 || auth.intValue() != 1), "auth只支持0,1");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
+        wrapper.lambda().in(BaseApi::getId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         BaseApi entity = new BaseApi();
         entity.setStatus(auth);
         apiService.updateByWrapper(entity, wrapper);

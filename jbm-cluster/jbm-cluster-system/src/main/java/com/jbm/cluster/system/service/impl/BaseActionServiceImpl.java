@@ -125,7 +125,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         aciton.setUpdateTime(aciton.getCreateTime());
         baseActionMapper.insert(aciton);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(aciton.getActionId(), ResourceType.action);
+        baseAuthorityService.saveOrUpdateAuthority(aciton.getId(), ResourceType.action);
         return aciton;
     }
 
@@ -137,9 +137,9 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
      */
     @Override
     public BaseAction updateAction(BaseAction aciton) {
-        BaseAction saved = getAction(aciton.getActionId());
+        BaseAction saved = getAction(aciton.getId());
         if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在", aciton.getActionId()));
+            throw new OpenAlertException(String.format("%s信息不存在", aciton.getId()));
         }
         if (!saved.getActionCode().equals(aciton.getActionCode())) {
             // 和原来不一致重新检查唯一性
@@ -156,7 +156,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         aciton.setUpdateTime(new Date());
         baseActionMapper.updateById(aciton);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(aciton.getActionId(), ResourceType.action);
+        baseAuthorityService.saveOrUpdateAuthority(aciton.getId(), ResourceType.action);
         return aciton;
     }
 
@@ -187,7 +187,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         List<BaseAction> actionList = findListByMenuId(menuId);
         if (actionList != null && actionList.size() > 0) {
             for (BaseAction action : actionList) {
-                removeAction(action.getActionId());
+                removeAction(action.getId());
             }
         }
     }

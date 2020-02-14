@@ -67,7 +67,7 @@ public class ResourceScanHandler {
                         api.setIsPersist(1);
                         baseApiService.addApi(api);
                     } else {
-                        api.setApiId(save.getApiId());
+                        api.setId(save.getId());
                         baseApiService.updateApi(api);
                     }
                 } catch (Exception e) {

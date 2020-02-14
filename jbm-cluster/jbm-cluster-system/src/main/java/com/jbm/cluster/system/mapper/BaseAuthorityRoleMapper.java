@@ -21,7 +21,7 @@ public interface BaseAuthorityRoleMapper extends BaseMapper<BaseAuthorityRole> {
      * @param roleId
      * @return
      */
-    List<OpenAuthority> selectAuthorityByRole(@Param("roleId") Long roleId);
+    List<OpenAuthority> selectAuthorityByRole(@Param("id") Long roleId);
 
     /**
      * 获取角色菜单权限
@@ -29,5 +29,5 @@ public interface BaseAuthorityRoleMapper extends BaseMapper<BaseAuthorityRole> {
      * @param roleId
      * @return
      */
-    List<AuthorityMenu> selectAuthorityMenuByRole(@Param("roleId") Long roleId);
+    List<AuthorityMenu> selectAuthorityMenuByRole(@Param("id") Long roleId);
 }

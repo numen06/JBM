@@ -10,22 +10,19 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
+import javax.persistence.Entity;
+
 /**
  * 系统用户-管理员信息
  *
  * @author wesley.zhang
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_developer")
 public class BaseDeveloper extends MasterDataEntity {
-    private static final long serialVersionUID = -735161640894047414L;
-    /**
-     * 系统用户ID
-     */
-    @TableId(type = IdType.ID_WORKER)
-    private Long userId;
 
     /**
      * 登陆名

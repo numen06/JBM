@@ -124,7 +124,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
         menu.setUpdateTime(menu.getCreateTime());
         baseMenuMapper.insert(menu);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
+        baseAuthorityService.saveOrUpdateAuthority(menu.getId(), ResourceType.menu);
         return menu;
     }
 
@@ -136,9 +136,9 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
      */
     @Override
     public BaseMenu updateMenu(BaseMenu menu) {
-        BaseMenu saved = getMenu(menu.getMenuId());
+        BaseMenu saved = getMenu(menu.getId());
         if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在!", menu.getMenuId()));
+            throw new OpenAlertException(String.format("%s信息不存在!", menu.getId()));
         }
         if (!saved.getMenuCode().equals(menu.getMenuCode())) {
             // 和原来不一致重新检查唯一性
@@ -155,7 +155,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
         menu.setUpdateTime(new Date());
         baseMenuMapper.updateById(menu);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
+        baseAuthorityService.saveOrUpdateAuthority(menu.getId(), ResourceType.menu);
         return menu;
     }
 

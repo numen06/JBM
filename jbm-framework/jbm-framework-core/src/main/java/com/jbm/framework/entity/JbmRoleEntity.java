@@ -38,7 +38,7 @@ public class JbmRoleEntity implements Serializable {
     @Override
     public String toString() {
         return "SysRole{" +
-                ", roleId=" + roleId +
+                ", id=" + roleId +
                 ", roleName=" + roleName +
                 ", roleCode=" + roleCode +
                 ", roleDesc=" + roleDesc +

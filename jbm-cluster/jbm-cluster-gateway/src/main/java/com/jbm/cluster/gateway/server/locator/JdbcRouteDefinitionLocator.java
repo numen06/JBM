@@ -142,7 +142,7 @@ public class JdbcRouteDefinitionLocator implements ApplicationListener<RemoteRef
                     result.setPolicyName(rs.getString("policy_name"));
                     result.setServiceId(rs.getString("service_id"));
                     result.setPath(rs.getString("path"));
-                    result.setApiId(rs.getLong("api_id"));
+                    result.setId(rs.getLong("api_id"));
                     result.setApiCode(rs.getString("api_code"));
                     result.setApiName(rs.getString("api_name"));
                     result.setApiCategory(rs.getString("api_category"));
@@ -166,7 +166,7 @@ public class JdbcRouteDefinitionLocator implements ApplicationListener<RemoteRef
                     RouteDefinition definition = new RouteDefinition();
                     List<PredicateDefinition> predicates = Lists.newArrayList();
                     List<FilterDefinition> filters = Lists.newArrayList();
-                    definition.setId(item.getApiId().toString());
+                    definition.setId(item.getId().toString());
                     PredicateDefinition predicatePath = new PredicateDefinition();
                     String fullPath = getFullPath(routeList, item.getServiceId(), item.getPath());
                     Map<String, String> predicatePathParams = new HashMap<>(8);

@@ -4,8 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.jbm</groupId>
-        <artifactId>jbm-framework</artifactId>
+        <artifactId>jbm-framework-dependencies</artifactId>
         <version>6.0.0-SNAPSHOT</version>
+        <relativePath>../../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
     <artifactId>jbm-framework-cloud</artifactId>
     <packaging>pom</packaging>
@@ -14,7 +15,6 @@
         <module>jbm-framework-cloud-config</module>
         <module>jbm-framework-cloud-registry</module>
         <module>jbm-framework-cloud-gateway</module>
-        <module>jbm-framework-cloud-monitor</module>
         <module>jbm-framework-cloud-node</module>
         <!--测试程序不需要集成-->
         <module>jbm-framework-cloud-service-a</module>
@@ -22,6 +22,7 @@
         <module>jbm-framework-cloud-pay</module>
     </modules>
     <dependencies>
+
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-core</artifactId>
@@ -42,6 +43,7 @@
     </dependencies>
     <dependencyManagement>
         <dependencies>
+            <!-- spring cloud -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>

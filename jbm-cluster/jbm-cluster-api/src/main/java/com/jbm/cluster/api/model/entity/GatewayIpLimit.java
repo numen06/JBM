@@ -8,19 +8,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * @author wesley.zhang
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("gateway_ip_limit")
 public class GatewayIpLimit extends MasterDataEntity {
-    /**
-     * 策略ID
-     */
-    @TableId(type = IdType.ID_WORKER)
-    private Long policyId;
 
     /**
      * 策略名称

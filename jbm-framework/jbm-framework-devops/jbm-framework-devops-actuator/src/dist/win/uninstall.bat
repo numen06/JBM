@@ -1,1 +1,0 @@
-nssm.exe remove jbm-framework-devops-actuator

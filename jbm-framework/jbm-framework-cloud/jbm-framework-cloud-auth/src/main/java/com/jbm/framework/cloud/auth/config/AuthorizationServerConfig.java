@@ -100,7 +100,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 //            additionalInfo.put("license", JbmSecurityConstants.LICENSE);
 //            JbmAuthUser user = (JbmAuthUser) authentication.getUserAuthentication().getPrincipal();
 //            if (user != null) {
-//                additionalInfo.put("userId", user.getUserId());
+//                additionalInfo.put("id", user.getUserId());
 //            }
 //            ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInfo);
 //            return accessToken;

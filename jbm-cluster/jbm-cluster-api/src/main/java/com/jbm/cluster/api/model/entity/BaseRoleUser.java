@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统角色-角色与用户关联
  *
@@ -14,11 +16,11 @@ import lombok.NoArgsConstructor;
  * @description:
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_role_user")
 public class BaseRoleUser extends MasterDataEntity {
-    private static final long serialVersionUID = -667816444278087761L;
     /**
      * 系统用户ID
      */
@@ -29,29 +31,4 @@ public class BaseRoleUser extends MasterDataEntity {
      */
     private Long roleId;
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    /**
-     * 获取角色ID
-     *
-     * @return role_id - 角色ID
-     */
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    /**
-     * 设置角色ID
-     *
-     * @param roleId 角色ID
-     */
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
 }

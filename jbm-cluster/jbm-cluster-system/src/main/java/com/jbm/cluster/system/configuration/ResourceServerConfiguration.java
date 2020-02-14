@@ -1,19 +1,16 @@
 package com.jbm.cluster.system.configuration;
 
-import cn.hutool.core.util.ArrayUtil;
-import com.jbm.cluster.common.exception.OpenAccessDeniedHandler;
-import com.jbm.cluster.common.exception.OpenAuthenticationEntryPoint;
+import com.jbm.cluster.common.exception.JbmAccessDeniedHandler;
+import com.jbm.cluster.common.exception.JbmAuthenticationEntryPoint;
 import com.jbm.cluster.common.security.OpenHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
@@ -89,8 +86,8 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                 .and()
                 //认证鉴权错误处理,为了统一异常处理。每个资源服务器都应该加上。
                 .exceptionHandling()
-                .accessDeniedHandler(new OpenAccessDeniedHandler())
-                .authenticationEntryPoint(new OpenAuthenticationEntryPoint())
+                .accessDeniedHandler(new JbmAccessDeniedHandler())
+                .authenticationEntryPoint(new JbmAuthenticationEntryPoint())
                 .and()
                 .csrf().disable();
     }

@@ -8,18 +8,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Entity;
+
 /**
  * 系统权限-菜单权限、操作权限、API权限
  *
  * @author wesley.zhang
  */
 @Data
+@Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_authority")
 public class BaseAuthority  extends MasterDataEntity {
-    @TableId(type = IdType.ID_WORKER)
-    private Long authorityId;
 
     /**
      * 权限标识

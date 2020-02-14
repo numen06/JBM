@@ -10,7 +10,7 @@ import com.jbm.cluster.common.exception.OpenRestResponseErrorHandler;
 import com.jbm.cluster.common.filter.XFilter;
 import com.jbm.cluster.common.health.DbHealthIndicator;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
-import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientProperties;
+import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -20,7 +20,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
  **/
 @Slf4j
 //@Configuration
-@EnableConfigurationProperties({JbmClusterProperties.class, JbmIdGenProperties.class, OpenOAuth2ClientProperties.class, JbmScanProperties.class})
+@EnableConfigurationProperties({JbmClusterProperties.class, JbmIdGenProperties.class, JbmOAuth2ClientProperties.class, JbmScanProperties.class})
 public class NodeConfiguration {
 
     @Bean

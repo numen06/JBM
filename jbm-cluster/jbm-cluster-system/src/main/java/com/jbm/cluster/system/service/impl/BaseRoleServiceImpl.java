@@ -1,7 +1,6 @@
 package com.jbm.cluster.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseRole;
@@ -107,7 +106,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      */
     @Override
     public BaseRole updateRole(BaseRole role) {
-        BaseRole saved = getRole(role.getRoleId());
+        BaseRole saved = getRole(role.getId());
         if (role == null) {
             throw new OpenAlertException("信息不存在!");
         }

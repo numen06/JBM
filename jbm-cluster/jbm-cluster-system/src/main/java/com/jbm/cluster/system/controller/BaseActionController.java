@@ -1,6 +1,5 @@
 package com.jbm.cluster.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.system.service.BaseActionService;
 import com.jbm.cluster.api.model.AuthorityAction;
 import com.jbm.cluster.api.model.entity.BaseAction;
@@ -14,8 +13,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -48,7 +45,7 @@ public class BaseActionController {
      */
     @ApiOperation(value = "获取功能按钮详情", notes = "获取功能按钮详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
+            @ApiImplicitParam(name = "id", required = true, value = "功能按钮Id", paramType = "path"),
     })
     @GetMapping("/action/{actionId}/info")
     public ResultBody<AuthorityAction> getAction(@PathVariable("actionId") Long actionId) {
@@ -70,7 +67,7 @@ public class BaseActionController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
             @ApiImplicitParam(name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(name = "menuId", required = true, value = "上级菜单", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "上级菜单", paramType = "form"),
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
@@ -79,7 +76,7 @@ public class BaseActionController {
     public ResultBody<Long> addAction(
             @RequestParam(value = "actionCode") String actionCode,
             @RequestParam(value = "actionName") String actionName,
-            @RequestParam(value = "menuId") Long menuId,
+            @RequestParam(value = "id") Long menuId,
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "actionDesc", required = false, defaultValue = "") String actionDesc
@@ -94,7 +91,7 @@ public class BaseActionController {
         Long actionId = null;
         BaseAction result = baseActionService.addAction(action);
         if (result != null) {
-            actionId = result.getActionId();
+            actionId = result.getId();
             openRestTemplate.refreshGateway();
         }
         return ResultBody.ok().data(actionId);
@@ -114,26 +111,26 @@ public class BaseActionController {
      */
     @ApiOperation(value = "编辑功能按钮", notes = "添加功能按钮")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "功能按钮ID", paramType = "form"),
             @ApiImplicitParam(name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
             @ApiImplicitParam(name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(name = "menuId", required = true, value = "上级菜单", paramType = "form"),
+            @ApiImplicitParam(name = "id", required = true, value = "上级菜单", paramType = "form"),
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
     })
     @PostMapping("/action/update")
     public ResultBody updateAction(
-            @RequestParam("actionId") Long actionId,
+            @RequestParam("id") Long actionId,
             @RequestParam(value = "actionCode") String actionCode,
             @RequestParam(value = "actionName") String actionName,
-            @RequestParam(value = "menuId") Long menuId,
+            @RequestParam(value = "id") Long menuId,
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "actionDesc", required = false, defaultValue = "") String actionDesc
     ) {
         BaseAction action = new BaseAction();
-        action.setActionId(actionId);
+        action.setId(actionId);
         action.setActionCode(actionCode);
         action.setActionName(actionName);
         action.setMenuId(menuId);
@@ -155,11 +152,11 @@ public class BaseActionController {
      */
     @ApiOperation(value = "移除功能按钮", notes = "移除功能按钮")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
+            @ApiImplicitParam(name = "id", required = true, value = "功能按钮ID", paramType = "form")
     })
     @PostMapping("/action/remove")
     public ResultBody removeAction(
-            @RequestParam("actionId") Long actionId
+            @RequestParam("id") Long actionId
     ) {
         baseActionService.removeAction(actionId);
         // 刷新网关

@@ -8,8 +8,6 @@ import com.jbm.cluster.system.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.system.mapper.BaseAccountMapper;
 import com.jbm.cluster.system.service.BaseAccountService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
-import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -136,7 +134,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     @Override
     public int updateStatus(Long accountId, Integer status) {
         BaseAccount baseAccount = new BaseAccount();
-        baseAccount.setAccountId(accountId);
+        baseAccount.setId(accountId);
         baseAccount.setUpdateTime(new Date());
         baseAccount.setStatus(status);
         return baseAccountMapper.updateById(baseAccount);

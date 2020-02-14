@@ -1,30 +1,56 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.jbm</groupId>
-		<artifactId>jbm-framework</artifactId>
-		<version>6.0.0-SNAPSHOT</version>
-	</parent>
-	<artifactId>jbm-framework-micro</artifactId>
-	<packaging>pom</packaging>
-	<developers>
-		<developer>
-			<id>wesley</id>
-			<name>wesley zhang</name>
-			<email>numen06@qq.com</email>
-			<roles>
-				<role>Project lead</role>
-			</roles>
-		</developer>
-	</developers>
-	<modules>
-		<module>jbm-framework-micro-service</module>
-		<module>jbm-framework-micro-core</module>
-		<module>jbm-framework-micro-web</module>
-		<module>jbm-framework-micro-fastservice</module>
-		<module>jbm-framework-micro-rest</module>
-	</modules>
-
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jbm</groupId>
+        <artifactId>jbm-framework</artifactId>
+        <version>6.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>jbm-framework-micro</artifactId>
+    <packaging>pom</packaging>
+    <developers>
+        <developer>
+            <id>wesley</id>
+            <name>wesley zhang</name>
+            <email>numen06@qq.com</email>
+            <roles>
+                <role>Project lead</role>
+            </roles>
+        </developer>
+    </developers>
+    <modules>
+        <module>jbm-framework-micro-mysql</module>
+        <module>jbm-framework-micro-server</module>
+        <module>jbm-framework-micro-boot</module>
+    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-logger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

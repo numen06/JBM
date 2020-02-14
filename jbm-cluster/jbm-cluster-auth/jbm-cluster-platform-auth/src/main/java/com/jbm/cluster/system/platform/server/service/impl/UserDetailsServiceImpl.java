@@ -4,7 +4,7 @@ import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.common.model.ResultBody;
 import com.jbm.cluster.common.security.OpenUserDetails;
-import com.jbm.cluster.common.security.oauth2.client.OpenOAuth2ClientProperties;
+import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import com.jbm.cluster.system.platform.server.service.feign.BaseUserServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +25,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private BaseUserServiceClient baseUserServiceClient;
     @Autowired
-    private OpenOAuth2ClientProperties clientProperties;
+    private JbmOAuth2ClientProperties clientProperties;
 
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
         ResultBody<UserAccount> resp = baseUserServiceClient.userLogin(username);
         UserAccount account = resp.getData();
-        if (account == null || account.getAccountId() == null) {
+        if (account == null || account.getId() == null) {
             throw new UsernameNotFoundException("系统用户 " + username + " 不存在!");
         }
         String domain = account.getDomain();
-        Long accountId = account.getAccountId();
+        Long accountId = account.getId();
         Long userId = account.getUserId();
         String password = account.getPassword();
         String nickName = account.getNickName();

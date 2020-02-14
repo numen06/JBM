@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.jbm.cluster.system.mapper.BaseRoleMapper">
-    <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseRole">
-        <!--
-          WARNING - @mbg.generated
-        -->
-        <id column="role_id" property="roleId" jdbcType="BIGINT"/>
-        <result column="role_code" property="roleCode" jdbcType="VARCHAR"/>
-        <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
-        <result column="role_desc" property="roleDesc" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="TINYINT"/>
-        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
-        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
-        <result column="is_persist" property="isPersist" jdbcType="INTEGER"/>
-    </resultMap>
-
-    <select id="selectRoleList" resultMap="BaseResultMap">
+    <select id="selectRoleList" resultType="com.jbm.cluster.api.model.entity.BaseRole">
         select * from base_role
     </select>
 </mapper>

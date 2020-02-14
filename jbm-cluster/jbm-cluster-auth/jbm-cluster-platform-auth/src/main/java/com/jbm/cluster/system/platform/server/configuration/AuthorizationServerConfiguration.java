@@ -1,8 +1,8 @@
 package com.jbm.cluster.system.platform.server.configuration;
 
-import com.jbm.cluster.common.exception.OpenOAuth2WebResponseExceptionTranslator;
+import com.jbm.cluster.common.exception.JbmOAuth2WebResponseExceptionTranslator;
 import com.jbm.cluster.common.security.OpenHelper;
-import com.jbm.cluster.common.security.OpenTokenEnhancer;
+import com.jbm.cluster.common.security.JbmTokenEnhancer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -79,7 +79,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
      */
     @Bean
     public TokenEnhancer tokenEnhancer() {
-        return new OpenTokenEnhancer();
+        return new JbmTokenEnhancer();
     }
 
     /**
@@ -113,7 +113,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         // 自定义错误页
         endpoints.pathMapping("/oauth/error", "/oauth/error");
         // 自定义异常转换类
-        endpoints.exceptionTranslator(new OpenOAuth2WebResponseExceptionTranslator());
+        endpoints.exceptionTranslator(new JbmOAuth2WebResponseExceptionTranslator());
     }
 
     private DefaultTokenServices createDefaultTokenServices() {

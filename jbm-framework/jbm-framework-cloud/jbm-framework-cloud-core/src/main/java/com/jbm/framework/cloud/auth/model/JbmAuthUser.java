@@ -3,13 +3,9 @@ package com.jbm.framework.cloud.auth.model;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import lombok.Data;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -55,8 +51,8 @@ public class JbmAuthUser extends User {
 //    }
 
 
-    public static JbmAuthUser getInstances(OAuth2Authentication principal) {
-        return JSON.parseObject(JSON.toJSONString(principal.getUserAuthentication().getDetails()), JbmAuthUser.class);
+    public static JbmAuthUser getInstances(Authentication principal) {
+        return JSON.parseObject(JSON.toJSONString(principal.getDetails()), JbmAuthUser.class);
     }
 
 

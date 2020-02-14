@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 系统用户信息
@@ -130,7 +129,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/developer/update")
     public ResultBody updateUser(
-            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "id") Long userId,
             @RequestParam(value = "nickName") String nickName,
             @RequestParam(value = "status") Integer status,
             @RequestParam(value = "userType") String userType,
@@ -140,7 +139,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
             @RequestParam(value = "avatar", required = false) String avatar
     ) {
         BaseDeveloper developer = new BaseDeveloper();
-        developer.setUserId(userId);
+        developer.setId(userId);
         developer.setNickName(nickName);
         developer.setUserType(userType);
         developer.setEmail(email);
@@ -163,7 +162,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
     @PostMapping("/developer/update/password")
     public ResultBody updatePassword(
-            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "id") Long userId,
             @RequestParam(value = "password") String password
     ) {
         baseDeveloperService.updatePassword(userId, password);
