@@ -1,11 +1,15 @@
 package com.jbm.cluster.common.exception;
 
+import com.jbm.framework.exceptions.ServiceException;
+
+import javax.xml.ws.Service;
+
 /**
  * 提示消息异常
  *
  * @author admin
  */
-public class OpenAlertException extends OpenException {
+public class OpenAlertException extends ServiceException {
     private static final long serialVersionUID = 4908906410210213271L;
 
     public OpenAlertException() {

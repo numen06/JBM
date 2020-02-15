@@ -4,7 +4,7 @@ import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.system.service.BaseDeveloperService;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;

@@ -1,5 +1,7 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.mvc.WebResourcesConfigurer
+jbm.framework.boot.autoconfigure.mvc.WebMvcConfiguration,\
+jbm.framework.boot.autoconfigure.fegin.FeignAutoConfiguration,\
+jbm.framework.boot.autoconfigure.FastJsonConfiguration
 
 
 org.springframework.context.ApplicationListener=\

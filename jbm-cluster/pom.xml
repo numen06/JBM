@@ -23,7 +23,6 @@
         <module>jbm-cluster-core</module>
         <module>jbm-cluster-node</module>
         <module>jbm-cluster-app</module>
-        <module>jbm-cluster-center</module>
     </modules>
 
     <dependencyManagement>

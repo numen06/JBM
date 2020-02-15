@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 //@Configuration

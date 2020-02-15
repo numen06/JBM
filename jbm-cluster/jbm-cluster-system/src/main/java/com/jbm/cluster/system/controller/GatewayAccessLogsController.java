@@ -1,7 +1,7 @@
 package com.jbm.cluster.system.controller;
 
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.system.service.GatewayAccessLogsService;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * 网关智能路由

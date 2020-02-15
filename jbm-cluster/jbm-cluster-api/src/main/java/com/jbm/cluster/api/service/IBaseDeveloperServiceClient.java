@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.model.UserAccount;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 

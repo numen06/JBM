@@ -3,7 +3,7 @@ package com.jbm.cluster.system.controller;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.cluster.system.service.BaseAuthorityService;

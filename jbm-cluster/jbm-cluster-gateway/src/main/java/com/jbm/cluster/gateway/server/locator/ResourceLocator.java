@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 资源加载器
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class ResourceLocator implements ApplicationListener<RemoteRefreshRouteEvent> {

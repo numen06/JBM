@@ -10,12 +10,12 @@ import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.*;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.exception.OpenException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
 import com.jbm.cluster.system.mapper.*;
 import com.jbm.cluster.system.service.*;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -579,7 +579,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
     @Override
     public Boolean isGrantedByRoleIds(String authorityId, Long... roleIds) {
         if (roleIds == null || roleIds.length == 0) {
-            throw new OpenException("roleIds is empty");
+            throw new ServiceException("roleIds is empty");
         }
         QueryWrapper<BaseAuthorityRole> roleQueryWrapper = new QueryWrapper();
         roleQueryWrapper.lambda()

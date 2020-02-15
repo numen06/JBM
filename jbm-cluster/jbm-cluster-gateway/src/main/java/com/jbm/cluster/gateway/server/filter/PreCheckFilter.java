@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 /**
  * 访问验证前置过滤器
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class PreCheckFilter implements WebFilter {

@@ -4,7 +4,7 @@ import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.system.service.BaseRoleService;
 import com.jbm.cluster.system.service.BaseUserService;
 import com.jbm.framework.usage.form.JsonRequestBody;

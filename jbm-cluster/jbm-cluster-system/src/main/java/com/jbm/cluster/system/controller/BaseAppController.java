@@ -1,11 +1,10 @@
 package com.jbm.cluster.system.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.system.service.BaseAppService;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.usage.form.JsonRequestBody;

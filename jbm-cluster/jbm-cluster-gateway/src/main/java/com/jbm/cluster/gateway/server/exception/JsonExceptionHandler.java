@@ -1,9 +1,9 @@
 package com.jbm.cluster.gateway.server.exception;
 
 import com.jbm.cluster.common.constants.ErrorCode;
-import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
+import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.gateway.support.NotFoundException;
@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  * @classDesc: 统一异常处理
  */
 @Slf4j
@@ -101,7 +101,7 @@ public class JsonExceptionHandler implements ErrorWebExceptionHandler {
             resultBody = ResultBody.failed().code(ErrorCode.SERVICE_UNAVAILABLE.getCode()).msg(ErrorCode.SERVICE_UNAVAILABLE.getMessage()).httpStatus(HttpStatus.SERVICE_UNAVAILABLE.value()).path(request.getURI().getPath());
             log.error("==> 错误解析:{}", resultBody);
         } else {
-            resultBody = OpenGlobalExceptionHandler.resolveException((Exception) ex, exchange.getRequest().getURI().getPath());
+            resultBody = GlobalDefaultExceptionHandler.resolveException((Exception) ex, exchange.getRequest().getURI().getPath());
         }
         /**
          * 参考AbstractErrorWebExceptionHandler

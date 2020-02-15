@@ -3,7 +3,7 @@ package com.jbm.cluster.api.service;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;

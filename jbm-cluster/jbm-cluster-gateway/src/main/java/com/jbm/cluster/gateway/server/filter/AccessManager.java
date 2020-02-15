@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * 访问权限控制管理类
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 @Component

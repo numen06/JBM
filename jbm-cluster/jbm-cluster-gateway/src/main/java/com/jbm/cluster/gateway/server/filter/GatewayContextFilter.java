@@ -37,7 +37,7 @@ import java.util.Map;
  * SpringCloud Gateway 记录缓存请求Body和Form表单
  * GatewayContext gatewayContext = exchange.getAttribute(GatewayContext.CACHE_GATEWAY_CONTEXT);
  * https://github.com/chenggangpro/spring-cloud-gateway-plugin
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 @AllArgsConstructor

@@ -15,6 +15,7 @@ import com.jbm.framework.metadata.enumerate.ResultEnum;
  *
  * @author Wesley
  */
+@Deprecated
 public class ResultForm implements Serializable {
 
     private static final long serialVersionUID = 1L;

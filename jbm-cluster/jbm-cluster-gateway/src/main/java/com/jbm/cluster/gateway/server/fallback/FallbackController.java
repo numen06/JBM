@@ -1,7 +1,7 @@
 package com.jbm.cluster.gateway.server.fallback;
 
 import com.jbm.cluster.common.constants.ErrorCode;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 /**
  * 响应超时熔断处理器
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @RestController
 public class FallbackController {

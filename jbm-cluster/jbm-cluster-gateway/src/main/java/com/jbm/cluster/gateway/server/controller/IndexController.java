@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/11/5 16:33
  * @description:
  */

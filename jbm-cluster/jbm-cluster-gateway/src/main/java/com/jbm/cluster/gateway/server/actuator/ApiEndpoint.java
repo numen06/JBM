@@ -1,7 +1,7 @@
 package com.jbm.cluster.gateway.server.actuator;
 
 import com.jbm.cluster.common.event.RemoteRefreshRouteEvent;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
 import org.springframework.cloud.bus.endpoint.AbstractBusEndpoint;
 import org.springframework.context.ApplicationEventPublisher;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 自定义网关监控端点
- * @author liuyadu
+ * @author wesley.zhang
  */
 @RestControllerEndpoint(
         id = "open"

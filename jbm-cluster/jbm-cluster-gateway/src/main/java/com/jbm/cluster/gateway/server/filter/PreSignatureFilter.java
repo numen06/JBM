@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenSignatureException;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.utils.SignatureUtils;
 import com.jbm.cluster.gateway.server.configuration.ApiProperties;
 import com.jbm.cluster.gateway.server.exception.JsonSignatureDeniedHandler;
@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 数字验签前置过滤器
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/11/28 18:26
  * @description:
  */

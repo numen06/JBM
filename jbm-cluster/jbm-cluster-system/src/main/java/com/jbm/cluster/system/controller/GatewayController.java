@@ -6,7 +6,7 @@ import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.api.service.IGatewayServiceClient;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.system.service.GatewayIpLimitService;
 import com.jbm.cluster.system.service.GatewayRateLimitService;
 import com.jbm.cluster.system.service.GatewayRouteService;

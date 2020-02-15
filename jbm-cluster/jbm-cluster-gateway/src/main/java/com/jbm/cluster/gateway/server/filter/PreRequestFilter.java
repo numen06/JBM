@@ -1,6 +1,6 @@
 package com.jbm.cluster.gateway.server.filter;
 
-import com.jbm.cluster.common.interceptor.FeignRequestInterceptor;
+import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * 请求前缀过滤器,增加请求时间
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class PreRequestFilter implements WebFilter {

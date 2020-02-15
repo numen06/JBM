@@ -1,7 +1,8 @@
 package com.jbm.cluster.common.exception;
 
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
+import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,7 +23,7 @@ public class JbmAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException exception) throws IOException, ServletException {
-        ResultBody resultBody = OpenGlobalExceptionHandler.resolveException(exception,request.getRequestURI());
+        ResultBody resultBody = GlobalDefaultExceptionHandler.resolveException(exception,request.getRequestURI());
         response.setStatus(resultBody.getHttpStatus());
         writeJson(response, resultBody);
     }

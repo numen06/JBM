@@ -26,7 +26,7 @@ import java.util.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 /**
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/5/8 11:27
  * @description:
  */

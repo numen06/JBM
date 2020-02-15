@@ -3,7 +3,7 @@ package com.jbm.cluster.system.controller;
 import com.jbm.cluster.system.service.BaseActionService;
 import com.jbm.cluster.api.model.AuthorityAction;
 import com.jbm.cluster.api.model.entity.BaseAction;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;

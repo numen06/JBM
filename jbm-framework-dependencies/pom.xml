@@ -68,7 +68,8 @@
         <apache.commons-io.version>2.5</apache.commons-io.version>
         <apache.commons.beanutils>1.9.3</apache.commons.beanutils>
         <com.google.zxing.version>3.1.0</com.google.zxing.version>
-        <swagger2.version>2.9.2</swagger2.version>
+        <swagger.version>2.9.2</swagger.version>
+        <io.swagger.version>1.5.20</io.swagger.version>
         <swagger-bootstrap-ui.version>1.9.5</swagger-bootstrap-ui.version>
         <oracle.version>10.2.0.4.0</oracle.version>
         <!--plugin-->
@@ -108,6 +109,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>-->
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${io.swagger.version}</version>
+            </dependency>
             <!-- spring admin -->
             <dependency>
                 <groupId>de.codecentric</groupId>

@@ -1,5 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.jbm.cluster.node.configuration.NodeConfiguration,\
-com.jbm.cluster.node.configuration.MqAutoConfiguration,\
-com.jbm.cluster.node.configuration.FeignAutoConfiguration,\
-com.jbm.cluster.node.configuration.JbmWebMvcConfiguration
+com.jbm.cluster.node.configuration.MqAutoConfiguration

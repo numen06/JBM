@@ -1,12 +1,14 @@
 package com.jbm.cluster.common.exception;
 
+import com.jbm.framework.exceptions.ServiceException;
+
 /**
  * 签名异常
  *
  * @author admin
  */
-public class OpenSignatureException extends OpenException {
-    private static final long serialVersionUID = 4908906410210213271L;
+public class OpenSignatureException extends ServiceException {
+    private static final long serialVersionUID = 1L;
 
     public OpenSignatureException() {
     }

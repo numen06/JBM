@@ -1,9 +1,9 @@
 package com.jbm.cluster.gateway.server.exception;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
-import com.jbm.cluster.common.model.ResultBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
+import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -20,7 +20,7 @@ import java.nio.charset.Charset;
 /**
  * 网关认证异常处理,记录日志
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Slf4j
 public class JsonAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
@@ -32,7 +32,7 @@ public class JsonAuthenticationEntryPoint implements ServerAuthenticationEntryPo
 
     @Override
     public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException e) {
-        ResultBody resultBody = OpenGlobalExceptionHandler.resolveException(e,exchange.getRequest().getURI().getPath());
+        ResultBody resultBody = GlobalDefaultExceptionHandler.resolveException(e,exchange.getRequest().getURI().getPath());
         return Mono.defer(() -> {
             return Mono.just(exchange.getResponse());
         }).flatMap((response) -> {

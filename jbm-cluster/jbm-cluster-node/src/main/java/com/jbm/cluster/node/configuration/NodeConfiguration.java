@@ -1,11 +1,10 @@
 package com.jbm.cluster.node.configuration;
 
-import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.jbm.cluster.common.annotation.RequestMappingScan;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.common.configuration.JbmIdGenProperties;
 import com.jbm.cluster.common.configuration.JbmScanProperties;
-import com.jbm.cluster.common.exception.OpenGlobalExceptionHandler;
+import com.jbm.cluster.common.exception.OAuth2ExceptionHandler;
 import com.jbm.cluster.common.exception.OpenRestResponseErrorHandler;
 import com.jbm.cluster.common.filter.XFilter;
 import com.jbm.cluster.common.health.DbHealthIndicator;
@@ -53,17 +52,6 @@ public class NodeConfiguration {
     }
 
     /**
-     * 分页插件
-     */
-    @ConditionalOnMissingBean(PaginationInterceptor.class)
-    @Bean
-    public PaginationInterceptor paginationInterceptor() {
-        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
-        log.info("PaginationInterceptor [{}]", paginationInterceptor);
-        return paginationInterceptor;
-    }
-
-    /**
      * 默认加密配置
      *
      * @return
@@ -90,15 +78,16 @@ public class NodeConfiguration {
         return holder;
     }
 
+
     /**
-     * 统一异常处理配置
+     * 全局异常处理配置
      *
      * @return
      */
     @Bean
-    @ConditionalOnMissingBean(OpenGlobalExceptionHandler.class)
-    public OpenGlobalExceptionHandler exceptionHandler() {
-        OpenGlobalExceptionHandler exceptionHandler = new OpenGlobalExceptionHandler();
+    @ConditionalOnMissingBean(OAuth2ExceptionHandler.class)
+    public OAuth2ExceptionHandler exceptionHandler() {
+        OAuth2ExceptionHandler exceptionHandler = new OAuth2ExceptionHandler();
         log.info("OpenGlobalExceptionHandler [{}]", exceptionHandler);
         return exceptionHandler;
     }
