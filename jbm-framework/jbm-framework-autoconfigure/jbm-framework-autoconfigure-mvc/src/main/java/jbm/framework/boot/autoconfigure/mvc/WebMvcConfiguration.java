@@ -15,7 +15,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author wesley.zhang
  */
 @Slf4j
-@ConditionalOnClass(name = "org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter")
+@Configuration
+@ConditionalOnClass(name = "org.springframework.web.servlet.config.annotation.WebMvcConfigurer")
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
     /**

@@ -133,11 +133,11 @@ public class ApiConfiguration {
 //        return new HttpMessageConverters(jackson2HttpMessageConverter);
 //    }
 
-//    @Bean
-//    @Primary
-//    public SwaggerProvider swaggerProvider(RouteDefinitionLocator routeDefinitionLocator) {
-//        return new SwaggerProvider(routeDefinitionLocator);
-//    }
+    @Bean
+    @Primary
+    public SwaggerProvider swaggerProvider(RouteDefinitionLocator routeDefinitionLocator) {
+        return new SwaggerProvider(routeDefinitionLocator);
+    }
 
     /**
      * 动态路由加载

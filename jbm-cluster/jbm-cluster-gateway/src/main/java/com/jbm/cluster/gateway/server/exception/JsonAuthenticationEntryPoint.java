@@ -1,9 +1,9 @@
 package com.jbm.cluster.gateway.server.exception;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.cluster.common.exception.GlobalDefaultExceptionHandler;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
-import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
+import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;

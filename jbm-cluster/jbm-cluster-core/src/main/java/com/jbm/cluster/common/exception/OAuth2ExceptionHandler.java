@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.exception;
 
 import com.jbm.framework.metadata.bean.ResultBody;
-import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;

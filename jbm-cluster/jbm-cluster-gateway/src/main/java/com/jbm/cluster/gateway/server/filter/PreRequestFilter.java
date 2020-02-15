@@ -1,6 +1,6 @@
 package com.jbm.cluster.gateway.server.filter;
 
-import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
+import com.jbm.cluster.common.model.FeignRequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;

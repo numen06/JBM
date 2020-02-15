@@ -1,9 +1,9 @@
 package com.jbm.cluster.gateway.server.exception;
 
 import com.jbm.cluster.common.constants.ErrorCode;
-import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.cluster.common.exception.GlobalDefaultExceptionHandler;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
-import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
+import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.gateway.support.NotFoundException;

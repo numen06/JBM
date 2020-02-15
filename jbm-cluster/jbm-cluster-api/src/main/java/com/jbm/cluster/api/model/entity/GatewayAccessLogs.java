@@ -20,11 +20,6 @@ import java.util.Date;
 @NoArgsConstructor
 @TableName("gateway_access_logs")
 public class GatewayAccessLogs extends MasterDataEntity {
-    /**
-     * 访问ID
-     */
-    @TableId(type= IdType.ID_WORKER)
-    private Long accessId;
 
     /**
      * 访问路径

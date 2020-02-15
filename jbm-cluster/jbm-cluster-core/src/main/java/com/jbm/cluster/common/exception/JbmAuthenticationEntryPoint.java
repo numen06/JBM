@@ -2,7 +2,6 @@ package com.jbm.cluster.common.exception;
 
 import com.alibaba.fastjson.JSON;
 import com.jbm.framework.metadata.bean.ResultBody;
-import jbm.framework.boot.autoconfigure.mvc.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
