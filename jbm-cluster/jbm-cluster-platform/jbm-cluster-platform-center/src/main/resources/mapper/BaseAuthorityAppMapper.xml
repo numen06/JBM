@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jbm.cluster.system.mapper.BaseAuthorityAppMapper">
+<mapper namespace="com.jbm.cluster.center.mapper.BaseAuthorityAppMapper">
     <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseAuthorityApp">
         <!--
           WARNING - @mbg.generated
@@ -11,7 +11,7 @@
     </resultMap>
 
     <select id="selectAuthorityByApp"
-            resultMap="com.jbm.cluster.system.mapper.BaseAuthorityMapper.Authority">
+            resultMap="com.jbm.cluster.center.mapper.BaseAuthorityMapper.Authority">
     SELECT
       a.authority_id,
       a.authority,

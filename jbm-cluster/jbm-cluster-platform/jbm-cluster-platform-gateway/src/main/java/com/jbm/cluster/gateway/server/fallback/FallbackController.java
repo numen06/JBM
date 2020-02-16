@@ -1,7 +1,7 @@
 package com.jbm.cluster.gateway.server.fallback;
 
-import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;

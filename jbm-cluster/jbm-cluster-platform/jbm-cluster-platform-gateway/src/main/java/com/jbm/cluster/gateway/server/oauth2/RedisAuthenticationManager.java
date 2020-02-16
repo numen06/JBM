@@ -1,6 +1,6 @@
 package com.jbm.cluster.gateway.server.oauth2;
 
-import com.jbm.cluster.common.constants.ErrorCode;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;

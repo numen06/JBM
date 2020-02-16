@@ -1,9 +1,9 @@
 package com.jbm.cluster.gateway.server.filter;
 
 import com.jbm.cluster.api.model.AuthorityResource;
-import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.gateway.server.exception.JsonAccessDeniedHandler;
 import com.jbm.cluster.gateway.server.util.ReactiveWebUtils;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;

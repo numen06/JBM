@@ -1,8 +1,8 @@
 package com.jbm.cluster.gateway.server.exception;
 
-import com.jbm.cluster.common.constants.ErrorCode;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import com.jbm.framework.mvc.WebExceptionResolve;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;

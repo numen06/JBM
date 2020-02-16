@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jbm.cluster.system.mapper.GatewayRateLimitApisMapper">
+<mapper namespace="com.jbm.cluster.center.mapper.GatewayRateLimitApisMapper">
     <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.GatewayRateLimitApi">
         <!--
           WARNING - @mbg.generated
@@ -9,7 +9,7 @@
         <result column="api_id" jdbcType="BIGINT" property="apiId"/>
     </resultMap>
 
-    <resultMap id="RateLimitApi" extends="com.jbm.cluster.system.mapper.GatewayIpLimitApisMapper.ApiResultMap"
+    <resultMap id="RateLimitApi" extends="com.jbm.cluster.center.mapper.GatewayIpLimitApisMapper.ApiResultMap"
                type="com.jbm.cluster.api.model.RateLimitApi">
         <!--
           WARNING - @mbg.generated

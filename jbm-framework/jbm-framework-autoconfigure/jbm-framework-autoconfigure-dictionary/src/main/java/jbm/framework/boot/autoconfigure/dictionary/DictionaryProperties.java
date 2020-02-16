@@ -7,7 +7,7 @@ public class DictionaryProperties {
 
 	public static final String PREFIX = "dictionary";
 
-	public final static String DEF_NAMESPACES = "system";
+	public final static String DEF_NAMESPACES = "center";
 
 	/**
 	 * 常量扫描

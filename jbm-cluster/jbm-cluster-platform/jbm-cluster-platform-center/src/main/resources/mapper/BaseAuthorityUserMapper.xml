@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jbm.cluster.system.mapper.BaseAuthorityUserMapper">
+<mapper namespace="com.jbm.cluster.center.mapper.BaseAuthorityUserMapper">
     <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseAuthorityUser">
         <!--
           WARNING - @mbg.generated
@@ -10,15 +10,15 @@
         <result column="expire_time" jdbcType="TIMESTAMP" property="expireTime"/>
     </resultMap>
     <resultMap id="UserAuthorityMenu" type="com.jbm.cluster.api.model.AuthorityMenu"
-               extends="com.jbm.cluster.system.mapper.BaseMenuMapper.BaseResultMap">
+               extends="com.jbm.cluster.center.mapper.BaseMenuMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <collection property="actionList" column="{menuId=menu_id,userId=user_id}"
-                    select="com.jbm.cluster.system.mapper.BaseAuthorityMapper.selectAuthorityAction"/>
+                    select="com.jbm.cluster.center.mapper.BaseAuthorityMapper.selectAuthorityAction"/>
     </resultMap>
 
     <select id="selectAuthorityByUser"
-            resultMap="com.jbm.cluster.system.mapper.BaseAuthorityMapper.Authority">
+            resultMap="com.jbm.cluster.center.mapper.BaseAuthorityMapper.Authority">
         SELECT
             a.authority_id,
             a.authority,
