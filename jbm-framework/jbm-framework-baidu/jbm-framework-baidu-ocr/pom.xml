@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-framework-autoconfigure-baidu-ocr</artifactId>
+    <artifactId>jbm-framework-baidu-ocr</artifactId>
     <dependencies>
         <!-- 百度图像识别 -->
         <dependency>
