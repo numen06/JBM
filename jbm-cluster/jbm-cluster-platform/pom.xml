@@ -11,9 +11,9 @@
     <packaging>pom</packaging>
     <artifactId>jbm-cluster-platform</artifactId>
     <modules>
-        <module>jbm-cluster-system</module>
-        <module>jbm-cluster-gateway</module>
-        <module>jbm-cluster-auth</module>
+        <module>jbm-cluster-platform-center</module>
+        <module>jbm-cluster-platform-gateway</module>
+        <module>jbm-cluster-platform-auth</module>
     </modules>
 
 </project>

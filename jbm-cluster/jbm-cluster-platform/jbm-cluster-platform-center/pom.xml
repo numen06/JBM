@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-cluster-system</artifactId>
+    <artifactId>jbm-cluster-platform-center</artifactId>
 
     <description>平台基础服务器</description>
     <dependencies>
