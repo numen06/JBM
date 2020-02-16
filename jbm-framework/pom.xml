@@ -32,7 +32,6 @@
         <module>jbm-framework-spring</module>
         <module>jbm-framework-cloud</module>
         <module>jbm-framework-aliyun</module>
-        <module>jbm-framework-plugin</module>
     </modules>
 
 

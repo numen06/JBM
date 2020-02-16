@@ -37,12 +37,18 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-oauth2</artifactId>
         </dependency>
+        <!--fegin-->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-fegin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!--mvc-->
-<!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!--Redis-->
         <dependency>
             <groupId>com.jbm</groupId>

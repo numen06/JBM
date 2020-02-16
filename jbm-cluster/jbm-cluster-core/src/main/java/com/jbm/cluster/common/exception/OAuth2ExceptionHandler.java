@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.exception;
 
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.WebExceptionResolve;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
@@ -31,7 +32,7 @@ public class OAuth2ExceptionHandler {
      */
     @ExceptionHandler({OAuth2Exception.class, InvalidTokenException.class})
     public static ResultBody oauth2Exception(Exception ex, HttpServletRequest request, HttpServletResponse response) {
-        ResultBody resultBody = GlobalDefaultExceptionHandler.resolveException(ex, request.getRequestURI());
+        ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
         response.setStatus(resultBody.getHttpStatus());
         return resultBody;
     }

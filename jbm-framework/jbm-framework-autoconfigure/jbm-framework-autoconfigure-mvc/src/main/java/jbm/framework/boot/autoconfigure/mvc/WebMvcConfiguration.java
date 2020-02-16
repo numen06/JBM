@@ -1,5 +1,6 @@
 package jbm.framework.boot.autoconfigure.mvc;
 
+import jbm.framework.boot.autoconfigure.GlobalDefaultExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -24,6 +25,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
      */
     @Configuration
     @Order(101)
+    @ConditionalOnClass(javax.servlet.Filter.class)
     public static class ApiWebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         @Override
         public void configure(WebSecurity web) throws Exception {
@@ -52,16 +54,5 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
-    /**
-     * 全局异常处理配置
-     *
-     * @return
-     */
-    @Bean
-    @ConditionalOnMissingBean(GlobalDefaultExceptionHandler.class)
-    public GlobalDefaultExceptionHandler exceptionHandler() {
-        GlobalDefaultExceptionHandler exceptionHandler = new GlobalDefaultExceptionHandler();
-        log.info("OpenGlobalExceptionHandler [{}]", exceptionHandler);
-        return exceptionHandler;
-    }
+
 }

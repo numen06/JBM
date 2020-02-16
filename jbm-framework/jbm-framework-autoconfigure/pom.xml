@@ -18,7 +18,6 @@
 		<module>jbm-framework-autoconfigure-jpa</module>
 		<module>jbm-framework-autoconfigure-druid</module>
 		<module>jbm-framework-autoconfigure-logger</module>
-		<module>jbm-framework-autoconfigure-activiti</module>
 		<module>jbm-framework-autoconfigure-jpa-h2</module>
 		<module>jbm-framework-autoconfigure-swagger</module>
 		<module>jbm-framework-autoconfigure-freemark</module>
@@ -43,6 +42,7 @@
         <module>jbm-framework-autoconfigure-baidu-ocr</module>
         <module>jbm-framework-autoconfigure-taskflow</module>
         <module>jbm-framework-autoconfigure-modbus</module>
+        <module>jbm-framework-autoconfigure-fegin</module>
     </modules>
 	<dependencies>
 		<dependency>

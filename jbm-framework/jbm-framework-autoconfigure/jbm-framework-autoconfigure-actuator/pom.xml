@@ -16,24 +16,6 @@
 			<artifactId>spring-boot-starter-logging</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.jodd</groupId>
-			<artifactId>jodd-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jodd</groupId>
-			<artifactId>jodd-http</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jodd</groupId>
-					<artifactId>jodd-upload</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-		</dependency>
 		<!-- <dependency> -->
 		<!-- <groupId>com.jbm</groupId> -->
 		<!-- <artifactId>jbm-framework-autoconfigure-tio</artifactId> -->

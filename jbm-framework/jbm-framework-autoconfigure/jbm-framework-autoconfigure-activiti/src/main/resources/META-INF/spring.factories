@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.activiti.AcivitiAutoConfiguration

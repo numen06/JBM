@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.exception;
 
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.WebExceptionResolve;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
@@ -19,7 +20,7 @@ public class JbmOAuth2WebResponseExceptionTranslator implements WebResponseExcep
     @Override
     public ResponseEntity translate(Exception e) throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        ResultBody responseData = GlobalDefaultExceptionHandler.resolveException(e,request.getRequestURI());
+        ResultBody responseData = WebExceptionResolve.resolveException(e,request.getRequestURI());
         return ResponseEntity.status(responseData.getHttpStatus()).body(responseData);
     }
 }

@@ -44,8 +44,6 @@
         <fastjson.version>1.2.58</fastjson.version>
         <okhttp.version>2.7.5</okhttp.version>
         <jpush.version>3.2.7</jpush.version>
-        <activiti.version>5.19.0.2</activiti.version>
-        <drools.version>5.6.0.Final</drools.version>
         <jodd.version>5.0.6</jodd.version>
         <camel.version>2.17.1</camel.version>
         <guava.version>23.0</guava.version>
@@ -163,22 +161,12 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-micro-fastservice</artifactId>
+                <artifactId>jbm-framework-micro-server</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-micro-service</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-micro-web</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-micro-rest</artifactId>
+                <artifactId>jbm-framework-micro-mysql</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <!-- autoconfigure -->
@@ -259,11 +247,6 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-autoconfigure-activiti</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-fastdfs</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
@@ -305,6 +288,11 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-taskflow</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-fegin</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>

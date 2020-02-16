@@ -16,13 +16,12 @@
 
 
     <modules>
-        <module>jbm-cluster-system</module>
-        <module>jbm-cluster-gateway</module>
-        <module>jbm-cluster-auth</module>
         <module>jbm-cluster-api</module>
         <module>jbm-cluster-core</module>
         <module>jbm-cluster-node</module>
         <module>jbm-cluster-app</module>
+        <module>jbm-cluster-platform</module>
+        <module>jbm-cluster-services</module>
     </modules>
 
     <dependencyManagement>
