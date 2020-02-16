@@ -9,16 +9,6 @@
     </parent>
     <artifactId>jbm-framework-micro</artifactId>
     <packaging>pom</packaging>
-    <developers>
-        <developer>
-            <id>wesley</id>
-            <name>wesley zhang</name>
-            <email>numen06@qq.com</email>
-            <roles>
-                <role>Project lead</role>
-            </roles>
-        </developer>
-    </developers>
     <modules>
         <module>jbm-framework-micro-mysql</module>
         <module>jbm-framework-micro-server</module>

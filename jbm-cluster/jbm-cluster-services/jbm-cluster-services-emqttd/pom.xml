@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-framework-plugin-emqttd</artifactId>
+    <artifactId>jbm-cluster-services-emqttd</artifactId>
 
     <dependencies>
         <dependency>
