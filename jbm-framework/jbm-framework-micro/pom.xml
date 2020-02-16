@@ -28,12 +28,6 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
