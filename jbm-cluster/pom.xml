@@ -75,8 +75,8 @@
         <opencloud.msg-client.version>3.0.0-SNAPSHOT</opencloud.msg-client.version>
         <opencloud.bpm-client.version>3.0.0-SNAPSHOT</opencloud.bpm-client.version>
         <opencloud.task-client.version>3.0.0-SNAPSHOT</opencloud.task-client.version>
-        <!--镜像前缀-->
-        <docker.image.prefix>com.jbm.cluster</docker.image.prefix>
+        <!--aliyun镜像前缀-->
+        <docker.image.prefix>registry.cn-hangzhou.aliyuncs.com/51jbm</docker.image.prefix>
     </properties>
 
     <build>
