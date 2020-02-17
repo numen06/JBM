@@ -42,6 +42,8 @@
         <module>jbm-framework-autoconfigure-taskflow</module>
         <module>jbm-framework-autoconfigure-modbus</module>
         <module>jbm-framework-autoconfigure-fegin</module>
+        <module>jbm-framework-autoconfigure-ip2region</module>
+        <module>jbm-framework-autoconfigure-git</module>
     </modules>
 	<dependencies>
 		<dependency>

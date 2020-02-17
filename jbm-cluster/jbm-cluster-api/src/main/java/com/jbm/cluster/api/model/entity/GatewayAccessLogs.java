@@ -13,6 +13,7 @@ import java.util.Date;
 
 /**
  * 开放网关-访问日志
+ *
  * @author wesley.zhang
  */
 @Data
@@ -20,6 +21,7 @@ import java.util.Date;
 @NoArgsConstructor
 @TableName("gateway_access_logs")
 public class GatewayAccessLogs extends MasterDataEntity {
+
 
     /**
      * 访问路径
@@ -69,7 +71,7 @@ public class GatewayAccessLogs extends MasterDataEntity {
     private String userAgent;
 
     /**
-     *区域
+     * 区域
      */
     private String region;
 

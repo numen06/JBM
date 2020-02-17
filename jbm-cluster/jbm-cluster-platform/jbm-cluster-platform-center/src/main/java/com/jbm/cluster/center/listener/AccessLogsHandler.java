@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
-import com.jbm.cluster.center.service.IpRegionService;
+import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class AccessLogsHandler {
      * 临时存放减少io
      */
     @Autowired
-    private IpRegionService ipRegionService;
+    private IpRegionTemplate ipRegionTemplate;
 
     /**
      * 接收访问日志
@@ -43,7 +43,7 @@ public class AccessLogsHandler {
                 GatewayAccessLogs logs = BeanUtil.mapToBean(access, GatewayAccessLogs.class, true);
                 if (logs != null) {
                     if (logs.getIp() != null) {
-                        logs.setRegion(ipRegionService.getRegion(logs.getIp()));
+                        logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));
                     }
                     logs.setUseTime(logs.getResponseTime().getTime() - logs.getRequestTime().getTime());
                     gatewayLogsMapper.insert(logs);
