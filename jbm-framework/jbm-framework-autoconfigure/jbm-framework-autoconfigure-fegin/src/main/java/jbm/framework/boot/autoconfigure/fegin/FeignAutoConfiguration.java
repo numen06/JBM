@@ -32,14 +32,14 @@ public class FeignAutoConfiguration {
 
     @Bean
     public Encoder feignFormEncoder(ObjectFactory<HttpMessageConverters> messageConverters) {
-        Encoder encoder = new FeignSpringFormEncoder(new SpringEncoder(feignHttpMessageConverter(messageConverters)));
+        Encoder encoder = new FeignSpringFormEncoder(new SpringEncoder(messageConverters));
         log.info("FeignSpringFormEncoder [{}]", encoder);
         return encoder;
     }
 
     @Bean
     public ResponseEntityDecoder feignDecoder(ObjectFactory<HttpMessageConverters> messageConverters) {
-        return new ResponseEntityDecoder(new SpringDecoder(feignHttpMessageConverter(messageConverters)));
+        return new ResponseEntityDecoder(new SpringDecoder(messageConverters));
     }
 
     @Bean
@@ -50,11 +50,6 @@ public class FeignAutoConfiguration {
         return interceptor;
     }
 
-    private ObjectFactory<HttpMessageConverters> feignHttpMessageConverter(ObjectFactory<HttpMessageConverters> messageConverters) {
-        final HttpMessageConverters httpMessageConverters =
-                new HttpMessageConverters(fastJsonHttpMessageConverter);
-        return () -> httpMessageConverters;
-    }
 
     @Bean
     public Request.Options options() {

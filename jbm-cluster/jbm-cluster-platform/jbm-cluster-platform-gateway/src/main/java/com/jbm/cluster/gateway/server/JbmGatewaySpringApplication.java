@@ -45,14 +45,14 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableDiscoveryClient
 @SpringBootApplication
 @RemoteApplicationEventScan(basePackages = "com.jbm")
-public class GatewaySpringApplication implements CommandLineRunner {
+public class JbmGatewaySpringApplication implements CommandLineRunner {
     @Autowired
     public ResourceLocator resourceLocator;
     @Autowired
     private JdbcRouteDefinitionLocator jdbcRouteDefinitionLocator;
 
     public static void main(String[] args) {
-        SpringApplication.run(GatewaySpringApplication.class, args);
+        SpringApplication.run(JbmGatewaySpringApplication.class, args);
     }
 
     @Override
