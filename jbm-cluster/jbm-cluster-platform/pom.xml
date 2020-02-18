@@ -14,6 +14,7 @@
         <module>jbm-cluster-platform-center</module>
         <module>jbm-cluster-platform-gateway</module>
         <module>jbm-cluster-platform-auth</module>
+        <module>jbm-cluster-platform-doc</module>
     </modules>
 
 </project>

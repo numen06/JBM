@@ -44,6 +44,7 @@
         <module>jbm-framework-autoconfigure-fegin</module>
         <module>jbm-framework-autoconfigure-ip2region</module>
         <module>jbm-framework-autoconfigure-git</module>
+        <module>jbm-framework-autoconfigure-minio</module>
     </modules>
 	<dependencies>
 		<dependency>
