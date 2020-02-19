@@ -1,9 +1,9 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.common.security.OpenClientDetails;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 /**
@@ -16,10 +16,10 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
     /**
      * 查询应用列表
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApp> findListPage(JsonRequestBody jsonRequestBody);
+    DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 获取app信息

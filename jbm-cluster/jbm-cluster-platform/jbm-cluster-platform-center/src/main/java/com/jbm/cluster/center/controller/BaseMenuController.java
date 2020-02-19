@@ -2,11 +2,11 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.model.entity.BaseAction;
 import com.jbm.cluster.api.model.entity.BaseMenu;
-import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -39,8 +40,8 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
     @GetMapping("/menu")
-    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(baseResourceMenuService.findListPage(jsonRequestBody) );
+    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)) );
     }
 
     /**

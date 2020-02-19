@@ -1,13 +1,8 @@
 package com.jbm.framework.masterdata.controller;
 
-import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
-import com.jbm.framework.usage.form.JsonRequestBody;
-
-import java.util.List;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 
 /**
  * 带有树形结构的数据库访问类
@@ -17,11 +12,11 @@ import java.util.List;
  */
 public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>> extends IMasterDataController<Entity, Service> {
 
-    Object root(JsonRequestBody jsonRequestBody);
+    Object root(PageRequestBody pageRequestBody);
 
-    Object rootByCode(JsonRequestBody jsonRequestBody);
+    Object rootByCode(PageRequestBody pageRequestBody);
 
-    Object tree(JsonRequestBody jsonRequestBody);
+    Object tree(PageRequestBody pageRequestBody);
 
-    Object treeByCode(JsonRequestBody jsonRequestBody);
+    Object treeByCode(PageRequestBody pageRequestBody);
 }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.enums.SqlKeyword;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.util.StringUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 
@@ -19,7 +20,7 @@ import java.util.Map;
  * @date: 2018/9/4 8:42
  * @@desc: 自定义查询构造器
  */
-public class CriteriaQuery<T> extends QueryWrapper<T> {
+public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
 
     private static final long serialVersionUID = 1L;
     /**
@@ -36,11 +37,41 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
     private PageParams pageParams;
 
 
-    public CriteriaQuery() {
-
+    /**
+     * 通过分页创建空查询
+     *
+     * @param pageParams
+     * @return
+     */
+    public static CriteriaQueryWrapper from(PageParams pageParams) {
+        return new CriteriaQueryWrapper(pageParams);
     }
 
-    public CriteriaQuery(PageParams pageParams) {
+
+    public CriteriaQueryWrapper() {
+        super();
+    }
+
+    public CriteriaQueryWrapper(T entity) {
+        super(entity);
+    }
+
+    public CriteriaQueryWrapper(T entity, String... columns) {
+        super(entity, columns);
+    }
+
+
+    public CriteriaQueryWrapper(PageParams pageParams) {
+        this.setPageParams(pageParams);
+    }
+
+
+    public CriteriaQueryWrapper(T entity, PageParams pageParams) {
+        super(entity);
+        this.setPageParams(pageParams);
+    }
+
+    public void setPageParams(PageParams pageParams) {
         this.pageParams = pageParams;
         String sort = pageParams.getSort();
         apply("1=1");
@@ -52,6 +83,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
             orderBy(true, isAsc, sort);
         }
     }
+
 
     public Map<String, String> getAliasMap() {
         return aliasMap;
@@ -80,7 +112,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * 等于
      */
     @Override
-    public CriteriaQuery<T> eq(String column, Object val) {
+    public CriteriaQueryWrapper<T> eq(String column, Object val) {
         super.eq(ObjectUtils.isNotEmpty(val) && !val.equals(-1) && !val.equals(-1L), column, val);
         return this;
     }
@@ -89,7 +121,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * like
      */
     @Override
-    public CriteriaQuery<T> like(String column, Object val) {
+    public CriteriaQueryWrapper<T> like(String column, Object val) {
         like(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -98,7 +130,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * in
      */
     @Override
-    public CriteriaQuery<T> in(String column, Object... val) {
+    public CriteriaQueryWrapper<T> in(String column, Object... val) {
         in(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -108,7 +140,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * ge
      */
     @Override
-    public CriteriaQuery<T> ge(String column, Object val) {
+    public CriteriaQueryWrapper<T> ge(String column, Object val) {
         ge(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -117,7 +149,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * le
      */
     @Override
-    public CriteriaQuery<T> le(String column, Object val) {
+    public CriteriaQueryWrapper<T> le(String column, Object val) {
         le(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -126,7 +158,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * lt
      */
     @Override
-    public CriteriaQuery<T> lt(String column, Object val) {
+    public CriteriaQueryWrapper<T> lt(String column, Object val) {
         lt(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -135,7 +167,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * gt
      */
     @Override
-    public CriteriaQuery<T> gt(String column, Object val) {
+    public CriteriaQueryWrapper<T> gt(String column, Object val) {
         gt(ObjectUtils.isNotEmpty(val), column, val);
         return this;
     }
@@ -145,7 +177,7 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
      * or
      */
     @Override
-    public CriteriaQuery<T> or() {
+    public CriteriaQueryWrapper<T> or() {
         super.or();
         return this;
     }
@@ -169,12 +201,12 @@ public class CriteriaQuery<T> extends QueryWrapper<T> {
     /**
      * 指定查询
      */
-    public CriteriaQuery<T> select(String sql) {
+    public CriteriaQueryWrapper<T> select(String sql) {
         this.select.add(sql);
         return this;
     }
 
-    public PageParams getPagerInfo() {
+    public PageParams getPageParams() {
         return pageParams;
     }
 

@@ -2,7 +2,7 @@ package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 
 public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {
 
@@ -10,42 +10,42 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
     /**
      * 查询列表
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object pageList(JsonRequestBody jsonRequestBody);
+    Object pageList(PageRequestBody pageRequestBody);
 
-    Object list(JsonRequestBody jsonRequestBody);
+    Object list(PageRequestBody pageRequestBody);
 
     /**
      * 获取单一对对象
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object model(JsonRequestBody jsonRequestBody);
+    Object model(PageRequestBody pageRequestBody);
 
     /**
      * 保存单一对象
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object save(JsonRequestBody jsonRequestBody);
+    Object save(PageRequestBody pageRequestBody);
 
     /**
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object remove(JsonRequestBody jsonRequestBody);
+    Object remove(PageRequestBody pageRequestBody);
 
     /**
      * 保存多个对象
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object saveBatch(JsonRequestBody jsonRequestBody);
+    Object saveBatch(PageRequestBody pageRequestBody);
 
     /**
      * 生产假数据
@@ -57,8 +57,8 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
     /**
      * 批量删除
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object deleteByIds(JsonRequestBody jsonRequestBody);
+    Object deleteByIds(PageRequestBody pageRequestBody);
 }

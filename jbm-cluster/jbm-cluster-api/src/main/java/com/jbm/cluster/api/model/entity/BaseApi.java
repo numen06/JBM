@@ -26,6 +26,14 @@ import javax.persistence.Entity;
 public class BaseApi extends MasterDataEntity {
 
 
+    public Long getApiId() {
+        return this.getId();
+    }
+
+    public void setApiId(Long apiId) {
+        this.setId(apiId);
+    }
+
     /**
      * 资源编码
      */

@@ -1,14 +1,13 @@
 package com.jbm.framework.masterdata.service;
 
+import com.jbm.framework.exceptions.DataServiceException;
+import com.jbm.framework.masterdata.usage.bean.AdvEntity;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.bean.AdvEntity;
-import com.jbm.framework.usage.form.JsonRequestBody;
-import com.jbm.framework.usage.paging.DataPaging;
-import com.jbm.framework.usage.paging.PageForm;
 
 public interface IAdvSqlService<Entity extends AdvEntity> extends IBaseSqlService<Entity> {
 
@@ -19,10 +18,10 @@ public interface IAdvSqlService<Entity extends AdvEntity> extends IBaseSqlServic
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    DataPaging<Entity> findListPage(JsonRequestBody jsonRequestBody);
+    DataPaging<Entity> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 通过code删除实体

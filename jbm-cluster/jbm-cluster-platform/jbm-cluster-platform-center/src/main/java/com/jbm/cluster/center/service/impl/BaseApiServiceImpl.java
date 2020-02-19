@@ -5,12 +5,13 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseApi;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseApiMapper;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +36,13 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseApi> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseApi query = jsonRequestBody.tryGet(BaseApi.class);
-        QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
+    public DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody) {
+        BaseApi query = pageRequestBody.tryGet(BaseApi.class);
+        CriteriaQueryWrapper<BaseApi> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
                 .likeRight(ObjectUtils.isNotEmpty(query.getApiName()), BaseApi::getApiName, query.getApiName())
@@ -50,7 +51,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
                 .eq(ObjectUtils.isNotEmpty(query.getStatus()), BaseApi::getStatus, query.getStatus())
                 .eq(ObjectUtils.isNotEmpty(query.getIsAuth()), BaseApi::getIsAuth, query.getIsAuth());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     /**
@@ -196,8 +197,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     public int getCount(QueryWrapper<BaseApi> queryWrapper) {
         return baseApiMapper.selectCount(queryWrapper);
     }
-
-
 
 
 }

@@ -17,6 +17,10 @@
             <artifactId>jbm-cluster-node</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-minio</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

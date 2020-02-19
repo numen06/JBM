@@ -3,6 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.api.model.AuthorityAction;
 import com.jbm.cluster.api.model.entity.BaseAction;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.usage.form.JsonRequestBody;
@@ -13,6 +14,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -32,8 +35,8 @@ public class BaseActionController {
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @GetMapping("/action")
-    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(baseActionService.findListPage(jsonRequestBody));
+    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(baseActionService.findListPage(PageRequestBody.from(map)));
     }
 
 

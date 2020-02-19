@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 /**
@@ -12,8 +12,8 @@ public interface GatewayAccessLogsService {
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayAccessLogs> findListPage(JsonRequestBody jsonRequestBody);
+    DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody);
 }

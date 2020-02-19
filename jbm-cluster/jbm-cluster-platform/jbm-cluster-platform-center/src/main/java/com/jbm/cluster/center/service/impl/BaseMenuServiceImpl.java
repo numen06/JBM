@@ -10,6 +10,8 @@ import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -44,17 +46,17 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseMenu> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseMenu query = jsonRequestBody.tryGet(BaseMenu.class);
-        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
+    public DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody) {
+        BaseMenu query = pageRequestBody.tryGet(BaseMenu.class);
+        CriteriaQueryWrapper<BaseMenu> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuCode()), BaseMenu::getMenuCode, query.getMenuCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuName()), BaseMenu::getMenuName, query.getMenuName());
-        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     /**

@@ -16,15 +16,17 @@ import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.framework.mvc.WebUtils;
-import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.mvc.WebUtils;
+import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -43,6 +45,7 @@ import java.util.Map;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
+@Slf4j
 public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> implements BaseUserService {
 
     @Autowired
@@ -133,20 +136,20 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseUser> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseUser query = jsonRequestBody.tryGet(BaseUser.class);
-        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
+    public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
+        BaseUser query = pageRequestBody.tryGet(BaseUser.class);
+        CriteriaQueryWrapper<BaseUser> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId())
                 .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType())
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.jbm.framework.usage.paging;
 
+import cn.hutool.db.Page;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +15,7 @@ import java.util.Map;
  * @param <E>
  * @author Wesley
  */
+@Data
 public class DataPaging<E> implements Serializable {
     /**
      *
@@ -21,8 +25,8 @@ public class DataPaging<E> implements Serializable {
     /**
      * 空的数据
      */
-    private final List<E> EMPTY_CONTENT = new ArrayList<>();
-    private final PageForm EMPTY_PAGEABLE = new PageForm();
+    public final static List EMPTY_CONTENT = new ArrayList<>();
+    public final static PageForm EMPTY_PAGEABLE = new PageForm();
 
     /**
      * 查询的内容
@@ -33,6 +37,7 @@ public class DataPaging<E> implements Serializable {
      * 总数
      */
     private Long total;
+
 
     private Long totalPage;
 
@@ -86,22 +91,6 @@ public class DataPaging<E> implements Serializable {
         return total;
     }
 
-    public void setTotal(Long total) {
-        this.total = total;
-    }
-
-    public List<E> getContents() {
-        return contents;
-    }
-
-    public void setContents(List<E> contents) {
-        this.contents = contents;
-    }
-
-    public List<E> EMPTY_CONTENT() {
-        return EMPTY_CONTENT;
-    }
-
     private Map<String, Object> exposition;
 
     public Map<String, Object> getExposition() {
@@ -120,12 +109,29 @@ public class DataPaging<E> implements Serializable {
         exposition.put(type, mapper);
     }
 
-    public Long getTotalPage() {
+    public Integer getSize() {
+        return pageForm.getPageSize();
+    }
+
+    public void setSize(Integer size) {
+        pageForm.setPageSize(size.intValue());
+    }
+
+    public Integer getCurrent() {
+        return pageForm.getCurrPage();
+    }
+
+    public void setCurrent(Integer current) {
+        pageForm.setCurrPage(current.intValue());
+    }
+
+    public Long getPages() {
         return totalPage;
     }
 
-    public void setTotalPage(Long totalPage) {
-        this.totalPage = totalPage;
+    public void setPages(Long pages) {
+        this.totalPage = pages;
     }
+
 
 }

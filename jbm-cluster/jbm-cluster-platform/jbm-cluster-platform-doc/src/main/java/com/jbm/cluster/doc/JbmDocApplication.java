@@ -31,9 +31,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 
 /**
- * 平台认证服务
- * 提供微服务间oauth2统一平台认证服务
- * 提供认证客户端、令牌、已授权管理`
+ * 平台文档服务
+ * 提供文档的增删下载
  *
  * @author wesley.zhang
  */

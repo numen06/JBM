@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
 import com.jbm.framework.usage.form.JsonRequestBody;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 /**
  * 网关智能路由
@@ -33,8 +36,8 @@ public class GatewayAccessLogsController {
      */
     @ApiOperation(value = "获取分页访问日志列表", notes = "获取分页访问日志列表")
     @GetMapping("/gateway/access/logs")
-    public ResultBody<DataPaging<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(gatewayAccessLogsService.findListPage(jsonRequestBody));
+    public ResultBody<DataPaging<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(gatewayAccessLogsService.findListPage(PageRequestBody.from(map)));
     }
 
 }

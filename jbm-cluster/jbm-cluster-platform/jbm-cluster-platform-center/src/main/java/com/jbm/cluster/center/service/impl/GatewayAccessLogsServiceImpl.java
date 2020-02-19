@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.masterdata.utils.PageUtils;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -27,18 +29,18 @@ public class GatewayAccessLogsServiceImpl implements GatewayAccessLogsService {
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayAccessLogs> findListPage(JsonRequestBody jsonRequestBody) {
-        GatewayAccessLogs query = jsonRequestBody.tryGet(GatewayAccessLogs.class);
-        QueryWrapper<GatewayAccessLogs> queryWrapper = new QueryWrapper();
+    public DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody) {
+        GatewayAccessLogs query = pageRequestBody.tryGet(GatewayAccessLogs.class);
+        CriteriaQueryWrapper<GatewayAccessLogs> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPath()), GatewayAccessLogs::getPath, query.getPath())
                 .eq(ObjectUtils.isNotEmpty(query.getIp()), GatewayAccessLogs::getIp, query.getIp())
                 .eq(ObjectUtils.isNotEmpty(query.getServiceId()), GatewayAccessLogs::getServiceId, query.getServiceId());
         queryWrapper.orderByDesc("request_time");
-        return PageUtils.pageToDataPaging(gatewayLogsMapper.selectPage(PageUtils.buildPage(jsonRequestBody), queryWrapper));
+        return PageUtils.pageToDataPaging(gatewayLogsMapper.selectPage(queryWrapper.getPageParams(), queryWrapper));
     }
 }

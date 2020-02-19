@@ -12,11 +12,14 @@ import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseDeveloperMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseDeveloperService;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +36,7 @@ import java.util.Map;
  * @date: 2018/10/24 16:33
  * @description:
  */
+@Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloper> implements BaseDeveloperService {
@@ -121,20 +125,20 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseDeveloper> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseDeveloper query = jsonRequestBody.tryGet(BaseDeveloper.class);
-        QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
+    public DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody) {
+        BaseDeveloper query = pageRequestBody.tryGet(BaseDeveloper.class);
+        CriteriaQueryWrapper<BaseDeveloper> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getId()), BaseDeveloper::getId, query.getId())
                 .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseDeveloper::getUserType, query.getUserType())
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper,jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     /**

@@ -2,7 +2,9 @@ package com.jbm.test;
 
 import com.jlefebure.spring.boot.minio.MinioException;
 import com.jlefebure.spring.boot.minio.MinioService;
+import com.jlefebure.spring.boot.minio.notification.MinioNotification;
 import io.minio.messages.Item;
+import io.minio.notification.NotificationInfo;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -49,5 +51,10 @@ public class TestController {
         // Copy the stream to the response's output stream.
         IOUtils.copy(inputStream, response.getOutputStream());
         response.flushBuffer();
+    }
+
+    @MinioNotification({"s3:ObjectAccessed:Get"})
+    public void handleGet(NotificationInfo notificationInfo) {
+        System.out.println("Minio Hello world");
     }
 }

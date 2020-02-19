@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Maps;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -44,10 +45,6 @@ public class PageUtils {
         return dataPaging;
     }
 
-
-    public static Page buildPage(JsonRequestBody jsonRequestBody) {
-        return buildPage(jsonRequestBody.getPageForm());
-    }
 
     public static PageForm pageToPageForm(IPage page) {
         final PageForm pageForm = new PageForm(new Long(page.getCurrent()).intValue(), new Long(page.getSize()).intValue());

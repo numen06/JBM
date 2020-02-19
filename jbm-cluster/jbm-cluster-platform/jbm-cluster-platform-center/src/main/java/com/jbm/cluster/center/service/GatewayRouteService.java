@@ -2,7 +2,7 @@ package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -16,10 +16,10 @@ public interface GatewayRouteService extends IMasterDataService<GatewayRoute> {
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayRoute> findListPage(JsonRequestBody jsonRequestBody);
+    DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询可用路由列表

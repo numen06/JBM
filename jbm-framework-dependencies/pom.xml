@@ -237,6 +237,11 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-minio</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-git</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>

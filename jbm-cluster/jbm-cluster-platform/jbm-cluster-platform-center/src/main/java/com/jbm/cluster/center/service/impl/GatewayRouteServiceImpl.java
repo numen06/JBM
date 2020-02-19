@@ -5,6 +5,7 @@ import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.service.GatewayRouteService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -27,13 +28,13 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayRoute> findListPage(JsonRequestBody jsonRequestBody) {
+    public DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
-        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper, pageRequestBody.getPageForm());
     }
 
     /**

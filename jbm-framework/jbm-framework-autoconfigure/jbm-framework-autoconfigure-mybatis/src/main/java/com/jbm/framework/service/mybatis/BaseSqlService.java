@@ -1,14 +1,11 @@
 package com.jbm.framework.service.mybatis;
 
-import cn.hutool.core.util.PageUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -19,9 +16,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IBaseSqlService;
-import com.jbm.framework.masterdata.usage.CriteriaQuery;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.masterdata.utils.PageUtils;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -29,18 +27,16 @@ import com.jbm.util.ArrayUtils;
 import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 import com.jbm.util.ObjectUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+@Slf4j
 public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseMapper<Entity>, Entity>
         implements IBaseSqlService<Entity>, IService<Entity> {
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @SuppressWarnings("unchecked")
     @Override
@@ -63,6 +59,11 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public List<Entity> selectByIds(Collection<Long> ids) throws DataServiceException {
         return Lists.newArrayList(super.listByIds(ids));
+    }
+
+    @Override
+    public DataPaging<Entity> selectEntitysByWapper(CriteriaQueryWrapper<Entity> criteriaQueryWrapper) throws DataServiceException {
+        return this.pageList(criteriaQueryWrapper);
     }
 
     @Override
@@ -129,10 +130,9 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return dataPaging;
     }
 
-    @Override
-    public DataPaging<Entity> pageList(CriteriaQuery<Entity> wrapper) {
-        PageParams page = wrapper.getPagerInfo();
-        IPage list = this.baseMapper.selectPage(page, wrapper);
+    protected DataPaging<Entity> pageList(CriteriaQueryWrapper<Entity> wrapper) {
+        PageParams pageParams = wrapper.getPageParams();
+        IPage list = this.baseMapper.selectPage(pageParams, wrapper);
         //EntityMap.setEnumConvertInterceptor(null);
         return PageUtils.pageToDataPaging(list);
     }
@@ -216,10 +216,13 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return ObjectUtils.nullToDefault(this.selectEntity(parameter), def);
     }
 
-//	@Override
-//	public List<Entity> selectEntitys(Entity entity, Map<String, Object> expand) throws DataServiceException {
-//		return super.list(this.buildMapperQueryWrapper(expand));
-//	}
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException {
+        final Entity entity = pageRequestBody.tryGet(this.getEntityClass());
+        final PageParams pageParams = pageRequestBody.getPageParams();
+        return this.pageList(new CriteriaQueryWrapper(entity, pageParams));
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -384,7 +387,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
                 queryWrapper.eq(key, val);
             }
         }
-        logger.info("entity:{},params:{}", JSON.toJSONString(entity), JSON.toJSONString(params));
+        log.info("entity:{},params:{}", JSON.toJSONString(entity), JSON.toJSONString(params));
         return queryWrapper;
     }
 
@@ -412,7 +415,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
             try {
                 parameter = MapUtils.fromArray(args);
             } catch (Exception e) {
-                logger.error("组装参数错误", e);
+                log.error("组装参数错误", e);
                 throw new DataServiceException("组装参数错误", e);
             }
         }

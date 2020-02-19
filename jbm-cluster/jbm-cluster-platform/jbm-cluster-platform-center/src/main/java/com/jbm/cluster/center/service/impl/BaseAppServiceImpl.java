@@ -10,10 +10,9 @@ import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.center.mapper.BaseAppMapper;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
-import com.jbm.framework.masterdata.usage.CriteriaQuery;
-import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.RandomValueUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -61,18 +60,17 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
     /**
      * 查询应用列表
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseApp> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseApp query = jsonRequestBody.tryGet(BaseApp.class);
-        PageParams pageParams = new PageParams(jsonRequestBody);
-        CriteriaQuery<BaseApp> cq = new CriteriaQuery(pageParams);
+    public DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody) {
+        BaseApp query = pageRequestBody.tryGet(BaseApp.class);
+        CriteriaQueryWrapper<BaseApp> cq = new CriteriaQueryWrapper(pageRequestBody.getPageParams());
         cq.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getDeveloperId()), BaseApp::getDeveloperId, query.getDeveloperId())
                 .eq(ObjectUtils.isNotEmpty(query.getAppType()), BaseApp::getAppType, query.getAppType())
-                .eq(ObjectUtils.isNotEmpty(pageParams.getRequestMap().get("aid")), BaseApp::getAppId, pageParams.getRequestMap().get("aid"))
+                .eq(ObjectUtils.isNotEmpty(pageRequestBody.get("aid")), BaseApp::getAppId,pageRequestBody.get("aid"))
                 .likeRight(ObjectUtils.isNotEmpty(query.getAppName()), BaseApp::getAppName, query.getAppName())
                 .likeRight(ObjectUtils.isNotEmpty(query.getAppNameEn()), BaseApp::getAppNameEn, query.getAppNameEn());
         cq.select("app.*,developer.user_name");

@@ -4,6 +4,7 @@ import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 系统用户信息
@@ -60,8 +62,8 @@ public class BaseUserController implements IBaseUserServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @GetMapping("/user")
-    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(baseUserService.findListPage(jsonRequestBody));
+    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(baseUserService.findListPage(PageRequestBody.from(map)));
     }
 
     /**

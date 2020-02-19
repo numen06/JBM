@@ -20,6 +20,7 @@ public class JSONBean extends JSONObject {
 
     /**
      * 获取字段的同时判断字段是否为空
+     *
      * @param key
      * @return
      * @throws ValidateException
@@ -33,6 +34,7 @@ public class JSONBean extends JSONObject {
 
     /**
      * 获取字段的同时判断是否是email
+     *
      * @param key
      * @return
      * @throws ValidateException
@@ -45,6 +47,7 @@ public class JSONBean extends JSONObject {
 
     /**
      * 获取字段的同时判断是不是手机号
+     *
      * @param key
      * @return
      * @throws ValidateException
@@ -57,6 +60,7 @@ public class JSONBean extends JSONObject {
 
     /**
      * 获取字段的同时判断是不是符合正则表达式
+     *
      * @param key
      * @param regex
      * @param errorMsg
@@ -67,6 +71,16 @@ public class JSONBean extends JSONObject {
         String val = this.getString(key);
         Validator.validateMatchRegex(regex, val, errorMsg);
         return val;
+    }
+
+    /**
+     * 判断是否存在某一类对象
+     *
+     * @param clazz
+     * @return
+     */
+    public Boolean containsClass(Class clazz) {
+        return super.containsKey(StringUtils.uncapitalize(clazz.getSimpleName()));
     }
 
 }

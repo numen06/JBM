@@ -9,6 +9,7 @@ import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseActionMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -39,18 +40,18 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseAction> findListPage(JsonRequestBody jsonRequestBody) {
-        BaseAction query = jsonRequestBody.tryGet(BaseAction.class);
+    public DataPaging<BaseAction> findListPage(PageRequestBody pageRequestBody) {
+        BaseAction query = pageRequestBody.tryGet(BaseAction.class);
         QueryWrapper<BaseAction> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionCode()), BaseAction::getActionCode, query.getActionCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper( queryWrapper,jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper( queryWrapper,pageRequestBody.getPageForm());
     }
 
     /**

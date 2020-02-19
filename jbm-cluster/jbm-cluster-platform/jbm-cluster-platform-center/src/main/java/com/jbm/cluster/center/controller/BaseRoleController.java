@@ -2,6 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.framework.usage.form.JsonRequestBody;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -32,8 +34,8 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @GetMapping("/role")
-    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(baseRoleService.findListPage(jsonRequestBody) );
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(baseRoleService.findListPage(PageRequestBody.from(map)) );
     }
 
     /**

@@ -14,6 +14,9 @@ import java.util.Objects;
 public class AuthorityApi extends BaseApi implements Serializable {
 
     private static final long serialVersionUID = 3474271304324863160L;
+
+
+
     /**
      * 权限ID
      */

@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
@@ -13,6 +14,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * 网关流量控制
@@ -37,8 +40,8 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/rate")
-    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(gatewayRateLimitService.findListPage(jsonRequestBody));
+    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(gatewayRateLimitService.findListPage(PageRequestBody.from(map)));
     }
 
     /**

@@ -3,7 +3,7 @@ package com.jbm.cluster.center.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.model.entity.BaseApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -17,10 +17,10 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApi> findListPage(JsonRequestBody jsonRequestBody);
+    DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

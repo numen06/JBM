@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 分页参数
  *
- * @author liuyau
+ * @author wesley.zhang
  * @date 2018/07/10
  */
 public class PageParams extends Page implements Serializable {
@@ -63,13 +63,18 @@ public class PageParams extends Page implements Serializable {
      */
     private String orderBy;
 
-    public PageParams() {
-        requestMap = Maps.newHashMap();
+
+    public static PageParams from(Map map) {
+        return new PageParams(map);
     }
 
-    public PageParams(JsonRequestBody jsonRequestBody) {
-        this(jsonRequestBody.getPageForm());
-        requestMap.putAll(jsonRequestBody);
+    public static PageParams from(PageForm pageForm) {
+        return new PageParams(pageForm);
+    }
+
+
+    public PageParams() {
+        requestMap = Maps.newHashMap();
     }
 
     public PageParams(PageForm pageForm) {
@@ -170,12 +175,12 @@ public class PageParams extends Page implements Serializable {
     }
 
     public <T> T mapToObject(Class<T> t) {
-        return BeanUtil.mapToBean(this.requestMap, t,true);
+        return BeanUtil.mapToBean(this.requestMap, t, true);
     }
 
-    public Map<String, Object> getRequestMap() {
-        return requestMap;
-    }
+//    public Map<String, Object> getRequestMap() {
+//        return requestMap;
+//    }
 
     public void setRequestMap(Map<String, Object> requestMap) {
         this.requestMap = requestMap;

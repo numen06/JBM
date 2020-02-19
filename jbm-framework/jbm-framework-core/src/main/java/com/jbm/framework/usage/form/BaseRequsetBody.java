@@ -1,7 +1,6 @@
 package com.jbm.framework.usage.form;
 
 import com.alibaba.fastjson.JSON;
-import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import com.jbm.util.json.JSONBean;
 
@@ -9,26 +8,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 前端请求封装类
- *
- * @author wesley.zhang
- */
-public class JsonRequestBody extends JSONBean {
+ * @program: JBM6
+ * @author: wesley.zhang
+ * @create: 2020-02-19 21:28
+ **/
+public class BaseRequsetBody extends JSONBean {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
 
-    private PageForm pageForm;
-
-    public JsonRequestBody() {
+    public BaseRequsetBody() {
         super();
+    }
+
+
+    public BaseRequsetBody(Map map) {
+        super();
+        this.putAll(map);
     }
 
     @Override
     public Object put(String key, Object value) {
-    return super.put(key, value);
+        return super.put(key, value);
     }
 
     /**
@@ -41,6 +41,7 @@ public class JsonRequestBody extends JSONBean {
     public <T> T tryGet(Class<T> clazz) {
         return tryGet(StringUtils.uncapitalize(clazz.getSimpleName()), clazz);
     }
+
 
     public <T> List<T> tryGetList(Class<T> clazz) {
         String key = StringUtils.uncapitalize(clazz.getSimpleName()) + "s";
@@ -70,12 +71,6 @@ public class JsonRequestBody extends JSONBean {
 
     public Map<String, Object> tryToMap() {
         return this;
-    }
-
-    public PageForm getPageForm() {
-        if (pageForm == null)
-            pageForm = this.tryGet("pageForm", PageForm.class);
-        return pageForm;
     }
 
 

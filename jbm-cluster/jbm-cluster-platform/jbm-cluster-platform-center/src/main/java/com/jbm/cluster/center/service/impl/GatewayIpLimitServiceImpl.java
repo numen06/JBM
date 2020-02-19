@@ -9,8 +9,9 @@ import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.center.mapper.GatewayIpLimitApisMapper;
 import com.jbm.cluster.center.mapper.GatewayIpLimitMapper;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,18 +38,18 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl< GatewayIpL
     /**
      * 分页查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayIpLimit> findListPage(JsonRequestBody jsonRequestBody) {
-        GatewayRateLimit query = jsonRequestBody.tryGet(GatewayRateLimit.class);
-        QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
+    public DataPaging<GatewayIpLimit> findListPage(PageRequestBody pageRequestBody) {
+        GatewayRateLimit query = pageRequestBody.tryGet(GatewayRateLimit.class);
+        CriteriaQueryWrapper<GatewayIpLimit> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayIpLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayIpLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper, jsonRequestBody.getPageForm());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     /**

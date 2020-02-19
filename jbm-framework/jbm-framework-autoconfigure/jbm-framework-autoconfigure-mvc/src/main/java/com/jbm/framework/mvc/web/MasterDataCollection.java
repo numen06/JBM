@@ -7,8 +7,9 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultForm;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ObjectUtils;
@@ -33,15 +34,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
 
-    protected void validator(JsonRequestBody jsonRequestBody) throws Exception {
-        if (ObjectUtils.isNull(jsonRequestBody)) {
+    protected void validator(BaseRequsetBody baseRequsetBody) throws Exception {
+        if (ObjectUtils.isNull(baseRequsetBody)) {
             throw new ServiceException("参数错误");
         }
 
     }
 
-    protected Entity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
+    protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+        Entity entity = baseRequsetBody.tryGet(service.getEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -50,8 +51,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         return entity;
     }
 
-    protected List<Entity> validatorMasterDataList(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        List<Entity> entitys = jsonRequestBody.tryGetList(service.getEntityClass());
+    protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+        List<Entity> entitys = baseRequsetBody.tryGetList(service.getEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
@@ -67,16 +68,16 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 分页列表查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/pageList")
     @Override
-    public Object pageList(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            PageForm pageForm = jsonRequestBody.getPageForm();
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, false);
+            PageForm pageForm = pageRequestBody.getPageForm();
             DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
             return ResultForm.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
@@ -87,15 +88,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 列表查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/list")
     @Override
-    public Object list(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object list(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, false);
             List<Entity> list = service.selectEntitys(entity);
             return ResultForm.success(list, "查询列表成功");
         } catch (Exception e) {
@@ -106,15 +107,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 查询实体
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/model")
     @Override
-    public Object model(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object model(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, true);
             entity = service.selectEntity(entity);
             return ResultForm.success(entity, "查询对象成功");
         } catch (Exception e) {
@@ -125,15 +126,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 保存
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/save")
     @Override
-    public Object save(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object save(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, true);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
         } catch (Exception e) {
@@ -144,15 +145,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 保存多个对象
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/saveBatch")
     @Override
-    public Object saveBatch(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object saveBatch(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            List<Entity> entitys = validatorMasterDataList(jsonRequestBody, true);
+            validator(pageRequestBody);
+            List<Entity> entitys = validatorMasterDataList(pageRequestBody, true);
             service.saveBatch(entitys);
             return ResultForm.success(entitys, "保存对象成功");
         } catch (Exception e) {
@@ -182,15 +183,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 删除
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
     @RequestMapping("/delete")
     @Override
-    public Object remove(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object remove(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, true);
             if (service.delete(entity))
                 return ResultForm.success(entity, "删除对象成功");
             else
@@ -202,11 +203,11 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
 
     @RequestMapping("/deleteByIds")
     @Override
-    public Object deleteByIds(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public Object deleteByIds(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
             // 获取前端信息List<BusCompanyInfo>
-            validator(jsonRequestBody);
-            List<Long> ids = jsonRequestBody.getList("ids", Long.class);
+            validator(pageRequestBody);
+            List<Long> ids = pageRequestBody.getList("ids", Long.class);
             if (CollectionUtil.isEmpty(ids)) {
                 throw new ServiceException("ID为空");
             }

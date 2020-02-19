@@ -2,6 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.center.service.BaseApiService;
@@ -16,6 +17,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -35,8 +37,8 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping(value = "/api")
-    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) JsonRequestBody jsonRequestBody) {
-        return ResultBody.ok().data(apiService.findListPage(jsonRequestBody));
+    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(apiService.findListPage(PageRequestBody.from(map)));
     }
 
 
@@ -150,7 +152,7 @@ public class BaseApiController {
     })
     @PostMapping("/api/update")
     public ResultBody updateApi(
-            @RequestParam("id") Long apiId,
+            @RequestParam(value = "apiId") Long apiId,
             @RequestParam(value = "apiCode") String apiCode,
             @RequestParam(value = "apiName") String apiName,
             @RequestParam(value = "apiCategory") String apiCategory,
