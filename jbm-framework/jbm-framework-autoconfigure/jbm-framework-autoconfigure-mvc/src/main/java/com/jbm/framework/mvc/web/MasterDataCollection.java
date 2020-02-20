@@ -6,7 +6,7 @@ import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultForm;
 import com.jbm.framework.usage.form.BaseRequsetBody;
@@ -42,7 +42,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
     protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
-        Entity entity = baseRequsetBody.tryGet(service.getEntityClass());
+        Entity entity = baseRequsetBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -52,7 +52,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
     protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
-        List<Entity> entitys = baseRequsetBody.tryGetList(service.getEntityClass());
+        List<Entity> entitys = baseRequsetBody.tryGetList(service.currentEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
@@ -172,7 +172,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     public Object mock() {
         try {
             MockConfig mockConfig = MockConfig.newInstance().setEnabledCircle(true).excludes("id").globalConfig();
-            Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
+            Entity entity = JMockData.mock(service.currentEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
             return ResultForm.success(entity, "保存对象成功");
         } catch (Exception e) {
@@ -192,7 +192,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, true);
-            if (service.delete(entity))
+            if (service.deleteEntity(entity))
                 return ResultForm.success(entity, "删除对象成功");
             else
                 return ResultForm.success(entity, "删除对象失败");

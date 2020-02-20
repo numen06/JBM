@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.util.StringUtils;
 import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
@@ -173,7 +173,7 @@ public class GenerateMasterData {
 
 
     public void generate(CodeType codeType) throws Exception {
-//        if (!ArrayUtil.contains(this.entityClass.getInterfaces(), ClassUtil.loadClass("com.jbm.framework.masterdata.usage.bean.MasterDataEntity"))) {
+//        if (!ArrayUtil.contains(this.entityClass.getInterfaces(), ClassUtil.loadClass("com.jbm.framework.masterdata.usage.entity.MasterDataEntity"))) {
 //            return;
 //        }
         try {

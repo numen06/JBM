@@ -1,7 +1,7 @@
 package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 
 /**

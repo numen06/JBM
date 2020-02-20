@@ -14,7 +14,7 @@ public class JbmScanProperties {
     /**
      * 请求资源注册到API列表
      */
-    private Boolean registerRequestMapping = false;
+    private Boolean registerRequestMapping = true;
 
     public boolean isRegisterRequestMapping() {
         return registerRequestMapping;

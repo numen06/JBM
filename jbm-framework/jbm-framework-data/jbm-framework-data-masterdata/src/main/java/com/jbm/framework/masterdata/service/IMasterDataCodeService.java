@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.service;
 
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.bean.AdvEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
@@ -9,10 +10,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface IAdvSqlService<Entity extends AdvEntity> extends IBaseSqlService<Entity> {
+public interface IMasterDataCodeService<Entity extends MasterDataEntity> extends IMasterDataService<Entity> {
 
     public final static String CODE_COLUMN = "code";
-
 
 
     /**

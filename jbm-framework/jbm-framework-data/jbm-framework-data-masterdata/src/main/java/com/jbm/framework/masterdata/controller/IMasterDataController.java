@@ -1,7 +1,7 @@
 package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 
 public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {

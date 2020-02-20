@@ -5,6 +5,7 @@ import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.PageForm;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**

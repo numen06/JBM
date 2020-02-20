@@ -1,9 +1,12 @@
 package com.jbm.framework.usage.form;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.TypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.util.StringUtils;
 import com.jbm.util.json.JSONBean;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +33,7 @@ public class BaseRequsetBody extends JSONBean {
     public Object put(String key, Object value) {
         return super.put(key, value);
     }
+
 
     /**
      * 默认获取同类名字<br/>

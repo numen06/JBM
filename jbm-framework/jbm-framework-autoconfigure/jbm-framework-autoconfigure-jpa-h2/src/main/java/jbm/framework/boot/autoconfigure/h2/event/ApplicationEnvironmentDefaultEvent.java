@@ -13,13 +13,13 @@ import org.springframework.util.ClassUtils;
 
 /**
  * 默认配置文件注入
- * 
+ *
  * @author wesley
  *
  */
 public class ApplicationEnvironmentDefaultEvent implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
-	private static final String PROPERTIES = "classpath:configs/jpa.properties";
+	private static final String PROPERTIES = "classpath:configs/h2.properties";
 
 	private ResourceLoader resourceLoader = null;
 

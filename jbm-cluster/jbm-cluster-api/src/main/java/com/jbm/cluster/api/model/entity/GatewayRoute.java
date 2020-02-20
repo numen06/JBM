@@ -1,9 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,11 +22,15 @@ import javax.persistence.Entity;
 @TableName("gateway_route")
 public class GatewayRoute extends MasterDataEntity {
 
-    /**
-     * 路由ID
-     */
-    @TableId(type = IdType.ID_WORKER)
-    private Long routeId;
+
+    public Long getRouteId() {
+        return this.getId();
+    }
+
+    public void setRouteId(Long routeId) {
+        this.setId(routeId);
+    }
+
 
     /**
      * 路由名称

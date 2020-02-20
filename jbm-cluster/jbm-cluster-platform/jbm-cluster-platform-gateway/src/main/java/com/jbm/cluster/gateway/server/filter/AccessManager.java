@@ -2,6 +2,7 @@ package com.jbm.cluster.gateway.server.filter;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.lang.Validator;
+import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.security.OpenAuthority;
@@ -107,10 +108,17 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
         // 动态权限列表
         return resourceLocator.getAuthorityResources().stream()
                 .filter(res -> StringUtils.isNotBlank(res.getPath()))
+//                .filter(res -> pathMatch.match(res.getPath(), requestPath))
+//                .filter(res -> !res.getPath().equals("/**"))
                 .filter(res -> {
-                    Boolean isAuth = res.getIsAuth() != null && res.getIsAuth().intValue() == 1 ? true : false;
                     // 无需认证,返回true
-                    return pathMatch.match(res.getPath(), requestPath) && !isAuth;
+//                    if (pathMatch.match(res.getPath(), requestPath)) {
+                    Boolean isAuth = res.getIsAuth() != null && res.getIsAuth().intValue() == 1 ? true : false;
+                    log.info("权限匹配地址{}:{}", requestPath, res.getPath());
+                    log.info("匹配规则详情{}", JSON.toJSONString(res));
+                    return !isAuth;
+//                    }
+//                    return false;
                 }).findFirst().isPresent();
     }
 
@@ -287,6 +295,7 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
 
     /**
      * 检测域名
+     *
      * @param domain
      * @return
      */
