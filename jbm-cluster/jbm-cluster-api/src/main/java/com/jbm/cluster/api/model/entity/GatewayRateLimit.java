@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
@@ -7,9 +9,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
@@ -17,7 +20,9 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("gateway_rate_limit")
 public class GatewayRateLimit extends MasterDataEntity {
-
+    @Id
+    @TableId(type = IdType.ID_WORKER)
+    private Long policyId;
 
     /**
      * 策略名称

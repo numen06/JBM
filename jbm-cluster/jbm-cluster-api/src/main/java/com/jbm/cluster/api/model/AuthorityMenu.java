@@ -2,7 +2,6 @@ package com.jbm.cluster.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jbm.cluster.api.model.entity.BaseMenu;
-import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
@@ -10,24 +9,12 @@ import java.util.Objects;
 
 /**
  * 菜单权限
- *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Data
 public class AuthorityMenu extends BaseMenu implements Serializable {
 
     private static final long serialVersionUID = 3474271304324863160L;
-
-
-    public Long getMenuId() {
-        return this.getId();
-    }
-
-    public void setMenuId(Long id) {
-        this.setId(id);
-    }
-
     /**
      * 权限ID
      */
@@ -71,7 +58,7 @@ public class AuthorityMenu extends BaseMenu implements Serializable {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AuthorityMenu)) {
+        if(!(obj instanceof AuthorityMenu)) {
             return false;
         }
         AuthorityMenu a = (AuthorityMenu) obj;

@@ -35,16 +35,5 @@ public class MasterDataIdEntity extends MasterDataEntity {
     @TableId(type = com.baomidou.mybatisplus.annotation.IdType.ID_WORKER)
     private Long id;
 
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateTime;
-
 
 }

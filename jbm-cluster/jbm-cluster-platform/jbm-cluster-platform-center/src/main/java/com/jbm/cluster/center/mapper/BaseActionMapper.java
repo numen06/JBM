@@ -1,13 +1,13 @@
 package com.jbm.cluster.center.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.api.model.entity.BaseAction;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseActionMapper extends BaseMapper<BaseAction> {
+public interface BaseActionMapper extends SuperMapper<BaseAction> {
 
 }

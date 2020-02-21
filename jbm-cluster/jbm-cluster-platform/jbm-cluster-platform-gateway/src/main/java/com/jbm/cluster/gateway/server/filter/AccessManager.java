@@ -2,7 +2,6 @@ package com.jbm.cluster.gateway.server.filter;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.lang.Validator;
-import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.security.OpenAuthority;
@@ -35,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * 访问权限控制管理类
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Component
@@ -108,17 +107,14 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
         // 动态权限列表
         return resourceLocator.getAuthorityResources().stream()
                 .filter(res -> StringUtils.isNotBlank(res.getPath()))
-//                .filter(res -> pathMatch.match(res.getPath(), requestPath))
-//                .filter(res -> !res.getPath().equals("/**"))
                 .filter(res -> {
-                    // 无需认证,返回true
-//                    if (pathMatch.match(res.getPath(), requestPath)) {
-                    Boolean isAuth = res.getIsAuth() != null && res.getIsAuth().intValue() == 1 ? true : false;
-                    log.info("权限匹配地址{}:{}", requestPath, res.getPath());
-                    log.info("匹配规则详情{}", JSON.toJSONString(res));
-                    return !isAuth;
-//                    }
-//                    return false;
+                    if (pathMatch.match(res.getPath(), requestPath)) {
+                        Boolean isAuth = res.getIsAuth() != null && res.getIsAuth().intValue() == 1 ? true : false;
+                        // 无需认证,返回true
+                        log.info("匹配规则{}:{}", requestPath, res.getPath());
+                        return isAuth;
+                    }
+                    return false;
                 }).findFirst().isPresent();
     }
 
@@ -285,28 +281,14 @@ public class AccessManager implements ReactiveAuthorizationManager<Authorization
                     return true;
                 }
             } else {
-                if (isDomain(value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
+                String regex = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$";
+                if (Pattern.matches(regex, value) && StringUtils.isNotBlank(origin) && origin.contains(value)) {
                     return true;
                 }
             }
         }
         return false;
     }
-
-    /**
-     * 检测域名
-     *
-     * @param domain
-     * @return
-     */
-    public static boolean isDomain(String domain) {
-        if (domain == null) {
-            return false;
-        }
-        String regex = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$";
-        return Pattern.matches(regex, domain);
-    }
-
 
     public ApiProperties getApiProperties() {
         return apiProperties;

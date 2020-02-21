@@ -1,19 +1,20 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseMenu;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +26,14 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implements BaseMenuService {
+public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> implements BaseMenuService {
     @Autowired
     private BaseMenuMapper baseMenuMapper;
-
     @Autowired
     private BaseAuthorityService baseAuthorityService;
 
@@ -52,11 +52,11 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
     @Override
     public DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody) {
         BaseMenu query = pageRequestBody.tryGet(BaseMenu.class);
-        CriteriaQueryWrapper<BaseMenu> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuCode()), BaseMenu::getMenuCode, query.getMenuCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuName()), BaseMenu::getMenuName, query.getMenuName());
-        return this.selectEntitysByWapper(queryWrapper);
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -126,7 +126,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
         menu.setUpdateTime(menu.getCreateTime());
         baseMenuMapper.insert(menu);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getId(), ResourceType.menu);
+        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
         return menu;
     }
 
@@ -138,9 +138,9 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
      */
     @Override
     public BaseMenu updateMenu(BaseMenu menu) {
-        BaseMenu saved = getMenu(menu.getId());
+        BaseMenu saved = getMenu(menu.getMenuId());
         if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在!", menu.getId()));
+            throw new OpenAlertException(String.format("%s信息不存在!", menu.getMenuId()));
         }
         if (!saved.getMenuCode().equals(menu.getMenuCode())) {
             // 和原来不一致重新检查唯一性
@@ -157,7 +157,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl< BaseMenu> implem
         menu.setUpdateTime(new Date());
         baseMenuMapper.updateById(menu);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getId(), ResourceType.menu);
+        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
         return menu;
     }
 

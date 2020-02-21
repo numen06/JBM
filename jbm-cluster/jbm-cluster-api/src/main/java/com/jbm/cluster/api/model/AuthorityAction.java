@@ -2,28 +2,16 @@ package com.jbm.cluster.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.jbm.cluster.api.model.entity.BaseAction;
-import lombok.Data;
 
 import java.util.Objects;
 
 /**
  * 功能权限
- *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Data
 public class AuthorityAction extends BaseAction {
     private static final long serialVersionUID = -691740581827186502L;
-
-
-    public Long getActionId() {
-        return this.getId();
-    }
-
-    public void setActionId(Long id) {
-        this.setId(id);
-    }
 
     /**
      * 权限ID
@@ -70,7 +58,7 @@ public class AuthorityAction extends BaseAction {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AuthorityAction)) {
+        if(!(obj instanceof AuthorityAction)) {
             return false;
         }
         AuthorityAction a = (AuthorityAction) obj;

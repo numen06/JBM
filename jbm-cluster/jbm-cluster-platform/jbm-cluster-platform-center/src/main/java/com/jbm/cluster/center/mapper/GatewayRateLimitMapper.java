@@ -1,9 +1,9 @@
 package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface GatewayRateLimitMapper extends BaseMapper<GatewayRateLimit> {
+public interface GatewayRateLimitMapper extends SuperMapper<GatewayRateLimit> {
 }

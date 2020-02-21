@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseApp;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
-import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.center.mapper.BaseAppMapper;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -33,7 +33,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/11/12 16:26
  * @description:
  */
@@ -66,19 +66,18 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
     @Override
     public DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody) {
         BaseApp query = pageRequestBody.tryGet(BaseApp.class);
-        CriteriaQueryWrapper<BaseApp> cq = new CriteriaQueryWrapper(pageRequestBody.getPageParams());
+        CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         cq.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getDeveloperId()), BaseApp::getDeveloperId, query.getDeveloperId())
                 .eq(ObjectUtils.isNotEmpty(query.getAppType()), BaseApp::getAppType, query.getAppType())
-                .eq(ObjectUtils.isNotEmpty(pageRequestBody.get("aid")), BaseApp::getAppId,pageRequestBody.get("aid"))
+                .eq(ObjectUtils.isNotEmpty(pageRequestBody.get("aid")), BaseApp::getAppId, pageRequestBody.get("aid"))
                 .likeRight(ObjectUtils.isNotEmpty(query.getAppName()), BaseApp::getAppName, query.getAppName())
                 .likeRight(ObjectUtils.isNotEmpty(query.getAppNameEn()), BaseApp::getAppNameEn, query.getAppNameEn());
         cq.select("app.*,developer.user_name");
         //关联BaseDeveloper表
         cq.createAlias(BaseDeveloper.class);
         cq.orderByDesc("create_time");
-        return pageList(cq);
-
+        return this.selectPageList(cq);
     }
 
     /**

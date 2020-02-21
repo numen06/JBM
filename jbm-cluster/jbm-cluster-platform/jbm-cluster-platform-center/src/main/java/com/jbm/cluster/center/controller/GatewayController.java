@@ -6,10 +6,10 @@ import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.api.service.IGatewayServiceClient;
-import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
 import com.jbm.cluster.center.service.GatewayRouteService;
+import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 网关接口
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/3/12 15:12
  * @description:
  */

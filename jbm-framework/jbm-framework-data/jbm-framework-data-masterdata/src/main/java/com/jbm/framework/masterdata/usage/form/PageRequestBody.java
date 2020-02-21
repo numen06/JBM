@@ -33,13 +33,13 @@ public class PageRequestBody extends BaseRequsetBody {
     /**
      * 分页封装类
      */
-    public PageParams pageParams;
+    private PageParams pageParams;
 
 
     /**
      * 分页封装类
      */
-    public PageForm pageForm;
+    private PageForm pageForm;
 
     public PageParams getPageParams() {
         if (this.containsClass(PageForm.class)) {

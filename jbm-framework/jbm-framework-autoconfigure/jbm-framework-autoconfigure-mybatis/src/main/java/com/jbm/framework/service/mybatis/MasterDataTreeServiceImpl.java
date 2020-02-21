@@ -5,15 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.utils.EntityUtils;
-import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.util.CollectionUtils;
-import com.jbm.util.MapUtils;
 
 public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
@@ -28,7 +25,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 //        if (entity.getParentCode() == null) {
 //            subEntitys = this.selectRootListByCode(entity);
 //        } else {
-//            subEntitys = this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), entity.getCode()));
+//            subEntitys = this.selectPageList(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), entity.getCode()));
 //        }
 //        return this.selectTreeByParentCode(subEntitys);
 //    }
@@ -45,7 +42,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 //    }
 
 //    public List<Entity> selectListByParentCode(String parentCode) throws DataServiceException {
-//        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), parentCode));
+//        return this.selectPageList(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), parentCode));
 //    }
 
     @Override
@@ -100,7 +97,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         } else {
             queryWrapper.lambda().eq(Entity::getParentId, parentId);
         }
-        return this.selectEntitys(queryWrapper);
+        return this.selectPageList(queryWrapper);
     }
 
     @Override

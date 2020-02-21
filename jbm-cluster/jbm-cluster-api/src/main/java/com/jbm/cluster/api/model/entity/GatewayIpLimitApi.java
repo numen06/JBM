@@ -2,6 +2,7 @@ package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -9,14 +10,14 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("gateway_ip_limit_api")
-public class GatewayIpLimitApi extends MasterDataEntity {
+public class GatewayIpLimitApi extends MasterDataIdEntity {
 
     /**
      * 策略ID
@@ -29,41 +30,4 @@ public class GatewayIpLimitApi extends MasterDataEntity {
     private Long apiId;
 
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 获取策略ID
-     *
-     * @return policy_id - 策略ID
-     */
-    public Long getPolicyId() {
-        return policyId;
-    }
-
-    /**
-     * 设置策略ID
-     *
-     * @param policyId 策略ID
-     */
-    public void setPolicyId(Long policyId) {
-        this.policyId = policyId;
-    }
-
-    /**
-     * 获取接口资源ID
-     *
-     * @return api_id - 接口资源ID
-     */
-    public Long getApiId() {
-        return apiId;
-    }
-
-    /**
-     * 设置接口资源ID
-     *
-     * @param apiId 接口资源ID
-     */
-    public void setApiId(Long apiId) {
-        this.apiId = apiId;
-    }
 }

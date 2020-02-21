@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
@@ -7,11 +9,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * 系统资源-菜单信息
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/10/24 16:21
  * @description:
  */
@@ -21,6 +24,13 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("base_menu")
 public class BaseMenu extends MasterDataEntity {
+    private static final long serialVersionUID = -4414780909980518788L;
+    /**
+     * 菜单Id
+     */
+    @Id
+    @TableId(type= IdType.ID_WORKER)
+    private Long menuId;
 
     /**
      * 菜单编码

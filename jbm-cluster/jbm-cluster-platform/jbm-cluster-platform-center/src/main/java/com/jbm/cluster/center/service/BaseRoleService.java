@@ -3,6 +3,7 @@ package com.jbm.cluster.center.service;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
@@ -15,13 +16,8 @@ import java.util.List;
  */
 public interface BaseRoleService extends IMasterDataService<BaseRole> {
 
-    /**
-     * 分页查询
-     *
-     * @param pageForm
-     * @return
-     */
-    DataPaging<BaseRole> findListPage(PageForm pageForm, BaseRole baseRole);
+
+    DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表
@@ -89,6 +85,7 @@ public interface BaseRoleService extends IMasterDataService<BaseRole> {
 
     /**
      * 查询角色成员
+     *
      * @return
      */
     List<BaseRoleUser> findRoleUsers(Long roleId);

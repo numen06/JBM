@@ -2,6 +2,8 @@ package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.entity.BaseMenu;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
@@ -10,6 +12,8 @@ import java.util.List;
  * @author wesley.zhang
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
+
+    DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

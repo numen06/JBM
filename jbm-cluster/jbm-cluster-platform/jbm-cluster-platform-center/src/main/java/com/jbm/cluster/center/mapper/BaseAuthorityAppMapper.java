@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
 public interface BaseAuthorityAppMapper extends BaseMapper<BaseAuthorityApp> {

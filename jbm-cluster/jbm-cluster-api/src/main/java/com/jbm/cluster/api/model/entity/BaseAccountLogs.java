@@ -1,22 +1,28 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * 系统用户-登录日志
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
 @NoArgsConstructor
 @TableName("base_account_logs")
-public class BaseAccountLogs extends MasterDataEntity {
+public class BaseAccountLogs implements Serializable {
+    @Id
+    @TableId(type= IdType.ID_WORKER)
+    private Long id;
 
     private Date loginTime;
 

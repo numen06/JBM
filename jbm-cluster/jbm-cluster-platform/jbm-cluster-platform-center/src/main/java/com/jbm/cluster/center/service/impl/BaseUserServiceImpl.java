@@ -20,7 +20,6 @@ import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
-import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -39,14 +38,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/10/24 16:33
  * @description:
  */
+@Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-@Slf4j
-public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> implements BaseUserService {
+public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implements BaseUserService {
 
     @Autowired
     private BaseUserMapper baseUserMapper;
@@ -67,8 +66,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void addUser(BaseUser baseUser) {
-        if (getUserByUsername(baseUser.getUserName()) != null) {
-            throw new OpenAlertException("用户名:" + baseUser.getUserName() + "已存在!");
+        if(getUserByUsername(baseUser.getUserName())!=null){
+            throw new OpenAlertException("用户名:"+baseUser.getUserName()+"已存在!");
         }
         baseUser.setCreateTime(new Date());
         baseUser.setUpdateTime(baseUser.getCreateTime());
@@ -142,14 +141,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
         BaseUser query = pageRequestBody.tryGet(BaseUser.class);
-        CriteriaQueryWrapper<BaseUser> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId())
                 .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType())
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper);
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -190,13 +189,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 Map roleMap = Maps.newHashMap();
-                roleMap.put("roleId", role.getId());
+                roleMap.put("roleId", role.getRoleId());
                 roleMap.put("roleCode", role.getRoleCode());
                 roleMap.put("roleName", role.getRoleName());
                 // 用户角色详情
                 roles.add(roleMap);
                 // 加入角色标识
-                OpenAuthority authority = new OpenAuthority(role.getId().toString(), OpenSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
+                OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), OpenSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
                 authorities.add(authority);
             }
         }
@@ -280,7 +279,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                     log.setDomain(ACCOUNT_DOMAIN);
                     log.setUserId(baseAccount.getUserId());
                     log.setAccount(baseAccount.getAccount());
-                    log.setAccountId(String.valueOf(baseAccount.getId()));
+                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
                     log.setAccountType(baseAccount.getAccountType());
                     log.setLoginIp(WebUtils.getRemoteAddress(request));
                     log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));

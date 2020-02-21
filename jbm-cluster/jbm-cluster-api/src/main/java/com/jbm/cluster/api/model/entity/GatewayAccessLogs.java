@@ -1,24 +1,31 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * 开放网关-访问日志
- *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
 @NoArgsConstructor
 @TableName("gateway_access_logs")
-public class GatewayAccessLogs extends MasterDataEntity {
-
+public class GatewayAccessLogs implements Serializable {
+    /**
+     * 访问ID
+     */
+    @Id
+    @TableId(type= IdType.ID_WORKER)
+    private Long accessId;
 
     /**
      * 访问路径
@@ -68,7 +75,7 @@ public class GatewayAccessLogs extends MasterDataEntity {
     private String userAgent;
 
     /**
-     * 区域
+     *区域
      */
     private String region;
 

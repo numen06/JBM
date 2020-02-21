@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseAction;
 import com.jbm.cluster.api.model.entity.BaseMenu;
 import com.jbm.cluster.center.service.BaseActionService;
@@ -7,7 +8,6 @@ import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Api(tags = "系统菜单资源管理")
 @RestController
@@ -40,8 +40,8 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
     @GetMapping("/menu")
-    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)) );
+    public ResultBody<IPage<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -64,7 +64,7 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "获取菜单下所有操作", notes = "获取菜单下所有操作")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "id", paramType = "form"),
+            @ApiImplicitParam(name = "menuId", value = "menuId", paramType = "form"),
     })
     @GetMapping("/menu/action")
     public ResultBody<List<BaseAction>> getMenuAction(Long menuId) {
@@ -79,7 +79,7 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "获取菜单资源详情", notes = "获取菜单资源详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "id"),
+            @ApiImplicitParam(name = "menuId", required = true, value = "menuId"),
     })
     @GetMapping("/menu/{menuId}/info")
     public ResultBody<BaseMenu> getMenu(@PathVariable("menuId") Long menuId) {
@@ -141,7 +141,7 @@ public class BaseMenuController {
         Long menuId = null;
         BaseMenu result = baseResourceMenuService.addMenu(menu);
         if (result != null) {
-            menuId = result.getId();
+            menuId = result.getMenuId();
         }
         return ResultBody.ok().data(menuId);
     }
@@ -163,7 +163,7 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "编辑菜单资源", notes = "编辑菜单资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "菜单ID", paramType = "form"),
+            @ApiImplicitParam(name = "menuId", required = true, value = "菜单ID", paramType = "form"),
             @ApiImplicitParam(name = "menuCode", required = true, value = "菜单编码", paramType = "form"),
             @ApiImplicitParam(name = "menuName", required = true, value = "菜单名称", paramType = "form"),
             @ApiImplicitParam(name = "icon", required = false, value = "图标", paramType = "form"),
@@ -177,7 +177,7 @@ public class BaseMenuController {
     })
     @PostMapping("/menu/update")
     public ResultBody updateMenu(
-            @RequestParam("id") Long menuId,
+            @RequestParam("menuId") Long menuId,
             @RequestParam(value = "menuCode") String menuCode,
             @RequestParam(value = "menuName") String menuName,
             @RequestParam(value = "icon", required = false) String icon,
@@ -190,7 +190,7 @@ public class BaseMenuController {
             @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc
     ) {
         BaseMenu menu = new BaseMenu();
-        menu.setId(menuId);
+        menu.setMenuId(menuId);
         menu.setMenuCode(menuCode);
         menu.setMenuName(menuName);
         menu.setIcon(icon);
@@ -214,11 +214,11 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "移除菜单资源", notes = "移除菜单资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "id", paramType = "form"),
+            @ApiImplicitParam(name = "menuId", required = true, value = "menuId", paramType = "form"),
     })
     @PostMapping("/menu/remove")
     public ResultBody<Boolean> removeMenu(
-            @RequestParam("id") Long menuId
+            @RequestParam("menuId") Long menuId
     ) {
         baseResourceMenuService.removeMenu(menuId);
         openRestTemplate.refreshGateway();

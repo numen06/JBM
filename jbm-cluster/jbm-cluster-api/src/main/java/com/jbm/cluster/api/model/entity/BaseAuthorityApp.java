@@ -2,6 +2,7 @@ package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -11,14 +12,14 @@ import java.util.Date;
 
 /**
  * 系统权限-应用关联
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_authority_app")
-public class BaseAuthorityApp extends MasterDataEntity {
+public class BaseAuthorityApp extends MasterDataIdEntity {
     /**
      * 权限ID
      */

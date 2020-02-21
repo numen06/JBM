@@ -2,12 +2,12 @@ package com.jbm.cluster.center.mapper;
 
 
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseAccountLogsMapper extends BaseMapper<BaseAccountLogs> {
+public interface BaseAccountLogsMapper extends SuperMapper<BaseAccountLogs> {
 }

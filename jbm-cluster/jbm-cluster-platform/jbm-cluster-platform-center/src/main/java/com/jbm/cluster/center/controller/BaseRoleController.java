@@ -1,11 +1,11 @@
 package com.jbm.cluster.center.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
+import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.center.service.BaseRoleService;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Api(tags = "系统角色管理")
 @RestController
@@ -35,7 +35,7 @@ public class BaseRoleController {
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @GetMapping("/role")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseRoleService.findListPage(PageRequestBody.from(map)) );
+        return ResultBody.ok().data(baseRoleService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -57,7 +57,7 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "获取角色详情", notes = "获取角色详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "角色ID", defaultValue = "", required = true, paramType = "path")
+            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
     })
     @GetMapping("/role/{roleId}/info")
     public ResultBody<BaseRole> getRole(@PathVariable(value = "roleId") Long roleId) {
@@ -96,7 +96,7 @@ public class BaseRoleController {
         Long roleId = null;
         BaseRole result = baseRoleService.addRole(role);
         if (result != null) {
-            roleId = result.getId();
+            roleId = result.getRoleId();
         }
         return ResultBody.ok().data(roleId);
     }
@@ -113,7 +113,7 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "编辑角色", notes = "编辑角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "roleName", value = "角色显示名称", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
@@ -121,14 +121,14 @@ public class BaseRoleController {
     })
     @PostMapping("/role/update")
     public ResultBody updateRole(
-            @RequestParam(value = "id") Long roleId,
+            @RequestParam(value = "roleId") Long roleId,
             @RequestParam(value = "roleCode") String roleCode,
             @RequestParam(value = "roleName") String roleName,
             @RequestParam(value = "roleDesc", required = false) String roleDesc,
             @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
     ) {
         BaseRole role = new BaseRole();
-        role.setId(roleId);
+        role.setRoleId(roleId);
         role.setRoleCode(roleCode);
         role.setRoleName(roleName);
         role.setStatus(status);
@@ -146,11 +146,11 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "删除角色", notes = "删除角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "角色ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/role/remove")
     public ResultBody removeRole(
-            @RequestParam(value = "id") Long roleId
+            @RequestParam(value = "roleId") Long roleId
     ) {
         baseRoleService.removeRole(roleId);
         return ResultBody.ok();
@@ -165,7 +165,7 @@ public class BaseRoleController {
     @ApiOperation(value = "角色添加成员", notes = "角色添加成员")
     @PostMapping("/role/users/add")
     public ResultBody addUserRoles(
-            @RequestParam(value = "id") Long roleId,
+            @RequestParam(value = "roleId") Long roleId,
             @RequestParam(value = "userIds", required = false) String userIds
     ) {
         baseRoleService.saveRoleUsers(roleId, StringUtils.isNotBlank(userIds) ? userIds.split(",") : new String[]{});
@@ -181,7 +181,7 @@ public class BaseRoleController {
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
     @GetMapping("/role/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(
-            @RequestParam(value = "id") Long roleId
+            @RequestParam(value = "roleId") Long roleId
     ) {
         return ResultBody.ok().data(baseRoleService.findRoleUsers(roleId));
     }

@@ -1,12 +1,12 @@
 package com.jbm.cluster.center.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseApiMapper extends BaseMapper<BaseApi> {
+public interface BaseApiMapper extends SuperMapper<BaseApi> {
 }

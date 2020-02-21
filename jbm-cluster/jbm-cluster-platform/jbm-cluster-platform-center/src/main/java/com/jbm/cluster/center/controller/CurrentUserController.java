@@ -2,12 +2,12 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseUser;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.common.security.OpenHelper;
-import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.constants.CommonConstants;
+import com.jbm.cluster.common.security.OpenHelper;
+import com.jbm.cluster.common.security.OpenUserDetails;
+import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/5/24 13:31
  * @description:
  */

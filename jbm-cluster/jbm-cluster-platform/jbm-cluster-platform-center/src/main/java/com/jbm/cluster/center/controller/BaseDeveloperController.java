@@ -1,13 +1,13 @@
 package com.jbm.cluster.center.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
+import com.jbm.cluster.center.service.BaseDeveloperService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.center.service.BaseDeveloperService;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * 系统用户信息
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Api(tags = "系统用户管理")
 @RestController
@@ -131,7 +131,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/developer/update")
     public ResultBody updateUser(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "nickName") String nickName,
             @RequestParam(value = "status") Integer status,
             @RequestParam(value = "userType") String userType,
@@ -141,7 +141,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
             @RequestParam(value = "avatar", required = false) String avatar
     ) {
         BaseDeveloper developer = new BaseDeveloper();
-        developer.setId(userId);
+        developer.setUserId(userId);
         developer.setNickName(nickName);
         developer.setUserType(userType);
         developer.setEmail(email);
@@ -164,7 +164,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
     @PostMapping("/developer/update/password")
     public ResultBody updatePassword(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "password") String password
     ) {
         baseDeveloperService.updatePassword(userId, password);

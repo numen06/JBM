@@ -7,7 +7,6 @@ import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.bean.EntityMap;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import org.apache.ibatis.annotations.Param;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import java.util.List;
  * @date: 2018/12/24 12:49
  * @desc: 父类service
  */
-public abstract class BaseServiceImpl<M extends SuperMapper<T>, T> extends ServiceImpl<M, T> {
+public abstract class BaseServiceImpl<M extends  SuperMapper<T>, T> extends ServiceImpl<M, T> {
 
     @Autowired
     public ApplicationContext applicationContext;

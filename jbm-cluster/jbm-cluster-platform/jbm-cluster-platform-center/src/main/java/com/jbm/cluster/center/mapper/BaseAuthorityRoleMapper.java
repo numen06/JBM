@@ -2,18 +2,18 @@ package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseAuthorityRole;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseAuthorityRoleMapper extends BaseMapper<BaseAuthorityRole> {
+public interface BaseAuthorityRoleMapper extends SuperMapper<BaseAuthorityRole> {
 
     /**
      * 获取角色已授权权限
@@ -21,7 +21,7 @@ public interface BaseAuthorityRoleMapper extends BaseMapper<BaseAuthorityRole> {
      * @param roleId
      * @return
      */
-    List<OpenAuthority> selectAuthorityByRole(@Param("id") Long roleId);
+    List<OpenAuthority> selectAuthorityByRole(@Param("roleId") Long roleId);
 
     /**
      * 获取角色菜单权限
@@ -29,5 +29,5 @@ public interface BaseAuthorityRoleMapper extends BaseMapper<BaseAuthorityRole> {
      * @param roleId
      * @return
      */
-    List<AuthorityMenu> selectAuthorityMenuByRole(@Param("id") Long roleId);
+    List<AuthorityMenu> selectAuthorityMenuByRole(@Param("roleId") Long roleId);
 }

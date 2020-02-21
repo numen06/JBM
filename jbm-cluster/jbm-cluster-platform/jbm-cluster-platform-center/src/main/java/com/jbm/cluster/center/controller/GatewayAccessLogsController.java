@@ -1,11 +1,10 @@
 package com.jbm.cluster.center.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
+import com.jbm.cluster.center.service.GatewayAccessLogsService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.center.service.GatewayAccessLogsService;
-import com.jbm.framework.usage.form.JsonRequestBody;
-import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,7 @@ import java.util.Map;
 /**
  * 网关智能路由
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2019/3/12 15:12
  * @description:
  */
@@ -36,7 +35,7 @@ public class GatewayAccessLogsController {
      */
     @ApiOperation(value = "获取分页访问日志列表", notes = "获取分页访问日志列表")
     @GetMapping("/gateway/access/logs")
-    public ResultBody<DataPaging<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<IPage<GatewayAccessLogs>> getAccessLogListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(gatewayAccessLogsService.findListPage(PageRequestBody.from(map)));
     }
 

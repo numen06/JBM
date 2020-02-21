@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.framework.masterdata.annotation.TableAlias;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,22 +12,25 @@ import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * 系统用户-基础信息
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@TableAlias("user")
 @TableName("base_user")
 public class BaseUser extends MasterDataEntity {
     private static final long serialVersionUID = -735161640894047414L;
     /**
      * 系统用户ID
      */
+    @Id
     @TableId(type = IdType.ID_WORKER)
     private Long userId;
 

@@ -3,6 +3,8 @@ package com.jbm.cluster.center.service;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
@@ -55,6 +57,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
 //     * @return
 //     */
 //    DataPaging<BaseUser> findListPage(PageForm pageForm);
+
+    DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

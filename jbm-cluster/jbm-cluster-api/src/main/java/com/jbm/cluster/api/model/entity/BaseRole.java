@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
@@ -7,11 +9,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * 系统角色-基础信息
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/10/24 16:21
  * @description:
  */
@@ -22,6 +25,12 @@ import javax.persistence.Entity;
 @TableName("base_role")
 public class BaseRole extends MasterDataEntity {
     private static final long serialVersionUID = 5197785628543375591L;
+    /**
+     * 角色ID
+     */
+    @Id
+    @TableId(type= IdType.ID_WORKER)
+    private Long roleId;
 
     /**
      * 角色编码

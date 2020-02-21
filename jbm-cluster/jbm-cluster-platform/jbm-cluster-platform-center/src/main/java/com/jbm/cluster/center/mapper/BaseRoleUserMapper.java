@@ -2,17 +2,17 @@ package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseRoleUserMapper extends BaseMapper<BaseRoleUser> {
+public interface BaseRoleUserMapper extends SuperMapper<BaseRoleUser> {
     /**
      * 查询系统用户角色
      *

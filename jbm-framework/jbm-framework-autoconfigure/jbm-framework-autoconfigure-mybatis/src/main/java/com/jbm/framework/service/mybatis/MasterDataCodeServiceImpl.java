@@ -36,7 +36,7 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
     @Override
     public DataPaging<Entity> findListPage(PageRequestBody pageRequestBody) {
         Entity query = pageRequestBody.tryGet(super.currentModelClass());
-        return this.selectEntitys(query, pageRequestBody.getPageForm());
+        return this.selectPageList(query, pageRequestBody.getPageForm());
     }
 
     @Override

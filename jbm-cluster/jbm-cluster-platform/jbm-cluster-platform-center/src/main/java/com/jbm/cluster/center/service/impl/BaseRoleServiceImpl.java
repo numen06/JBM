@@ -1,20 +1,22 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
 import com.jbm.cluster.api.model.entity.BaseUser;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseRoleMapper;
 import com.jbm.cluster.center.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.constants.CommonConstants;
+import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
-import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ import java.util.List;
 
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -40,17 +42,18 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     /**
      * 分页查询
      *
-     * @param pageForm
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseRole> findListPage(PageForm pageForm, BaseRole baseRole) {
+    public DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody) {
+        BaseRole query = pageRequestBody.tryGet(BaseRole.class);
         QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(baseRole.getRoleCode()), BaseRole::getRoleCode, baseRole.getRoleCode())
-                .likeRight(ObjectUtils.isNotEmpty(baseRole.getRoleName()), BaseRole::getRoleName, baseRole.getRoleName());
+                .likeRight(ObjectUtils.isNotEmpty(query.getRoleCode()), BaseRole::getRoleCode, query.getRoleCode())
+                .likeRight(ObjectUtils.isNotEmpty(query.getRoleName()), BaseRole::getRoleName, query.getRoleName());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper, pageForm);
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -106,7 +109,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      */
     @Override
     public BaseRole updateRole(BaseRole role) {
-        BaseRole saved = getRole(role.getId());
+        BaseRole saved = getRole(role.getRoleId());
         if (role == null) {
             throw new OpenAlertException("信息不存在!");
         }

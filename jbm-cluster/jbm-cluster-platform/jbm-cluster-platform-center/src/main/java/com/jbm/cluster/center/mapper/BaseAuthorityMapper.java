@@ -5,18 +5,18 @@ import com.jbm.cluster.api.model.AuthorityApi;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.BaseAuthority;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseAuthorityMapper extends BaseMapper<BaseAuthority> {
+public interface BaseAuthorityMapper extends SuperMapper<BaseAuthority> {
 
     /**
      * 查询所有资源授权列表

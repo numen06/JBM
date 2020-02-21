@@ -4,6 +4,8 @@ import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayIpLimit;
 import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
@@ -14,6 +16,8 @@ import java.util.List;
  */
 public interface GatewayIpLimitService extends IMasterDataService<GatewayIpLimit> {
 
+
+    DataPaging<GatewayIpLimit> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询白名单

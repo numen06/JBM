@@ -1,15 +1,14 @@
 package com.jbm.cluster.center.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
-import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.framework.usage.form.JsonRequestBody;
-import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -27,7 +26,7 @@ import java.util.Map;
 /**
  * 系统用户信息
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Api(tags = "系统用户管理")
 @RestController
@@ -62,7 +61,7 @@ public class BaseUserController implements IBaseUserServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @GetMapping("/user")
-    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
+    public ResultBody<IPage<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseUserService.findListPage(PageRequestBody.from(map)));
     }
 
@@ -134,7 +133,7 @@ public class BaseUserController implements IBaseUserServiceClient {
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/user/update")
     public ResultBody updateUser(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "nickName") String nickName,
             @RequestParam(value = "status") Integer status,
             @RequestParam(value = "userType") String userType,
@@ -167,7 +166,7 @@ public class BaseUserController implements IBaseUserServiceClient {
     @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
     @PostMapping("/user/update/password")
     public ResultBody updatePassword(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "password") String password
     ) {
         baseUserService.updatePassword(userId, password);
@@ -184,7 +183,7 @@ public class BaseUserController implements IBaseUserServiceClient {
     @ApiOperation(value = "用户分配角色", notes = "用户分配角色")
     @PostMapping("/user/roles/add")
     public ResultBody addUserRoles(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "roleIds", required = false) String roleIds
     ) {
         baseRoleService.saveUserRoles(userId, StringUtils.isNotBlank(roleIds) ? roleIds.split(",") : new String[]{});
@@ -200,7 +199,7 @@ public class BaseUserController implements IBaseUserServiceClient {
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @GetMapping("/user/roles")
     public ResultBody<List<BaseRole>> getUserRoles(
-            @RequestParam(value = "id") Long userId
+            @RequestParam(value = "userId") Long userId
     ) {
         return ResultBody.ok().data(baseRoleService.getUserRoles(userId));
     }

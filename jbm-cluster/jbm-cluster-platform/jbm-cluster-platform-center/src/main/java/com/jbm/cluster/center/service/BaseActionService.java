@@ -2,6 +2,8 @@ package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.entity.BaseAction;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      * @return
      */
     BaseAction getAction(Long actionId);
+
+    DataPaging<BaseAction> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询菜单下所有操作

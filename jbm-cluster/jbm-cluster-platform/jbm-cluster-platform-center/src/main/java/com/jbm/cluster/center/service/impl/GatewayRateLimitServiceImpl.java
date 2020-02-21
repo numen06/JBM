@@ -1,12 +1,15 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.cluster.center.mapper.GatewayRateLimitApisMapper;
+import com.jbm.cluster.center.mapper.GatewayRateLimitMapper;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -19,14 +22,14 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRateLimit> implements GatewayRateLimitService {
     @Autowired
-    private GatewayRateLimitService gatewayRateLimitService;
+    private GatewayRateLimitMapper gatewayRateLimitMapper;
 
     @Autowired
     private GatewayRateLimitApisMapper gatewayRateLimitApisMapper;
@@ -45,7 +48,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayRateLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayRateLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return gatewayRateLimitService.selectEntitysByWapper(queryWrapper, pageRequestBody.getPageForm());
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -82,7 +85,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      */
     @Override
     public GatewayRateLimit getRateLimitPolicy(Long policyId) {
-        return gatewayRateLimitService.selectById(policyId);
+        return gatewayRateLimitMapper.selectById(policyId);
     }
 
     /**
@@ -94,7 +97,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     public GatewayRateLimit addRateLimitPolicy(GatewayRateLimit policy) {
         policy.setCreateTime(new Date());
         policy.setUpdateTime(policy.getCreateTime());
-        gatewayRateLimitService.insert(policy);
+        gatewayRateLimitMapper.insert(policy);
         return policy;
     }
 
@@ -106,7 +109,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     @Override
     public GatewayRateLimit updateRateLimitPolicy(GatewayRateLimit policy) {
         policy.setUpdateTime(new Date());
-        gatewayRateLimitService.updateById(policy);
+        gatewayRateLimitMapper.updateById(policy);
         return policy;
     }
 
@@ -118,7 +121,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     @Override
     public void removeRateLimitPolicy(Long policyId) {
         clearRateLimitApisByPolicyId(policyId);
-        gatewayRateLimitService.deleteById(policyId);
+        gatewayRateLimitMapper.deleteById(policyId);
     }
 
     /**

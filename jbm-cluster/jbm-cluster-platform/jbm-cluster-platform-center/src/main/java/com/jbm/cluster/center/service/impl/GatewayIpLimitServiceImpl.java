@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayIpLimit;
 import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
-import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.center.mapper.GatewayIpLimitApisMapper;
 import com.jbm.cluster.center.mapper.GatewayIpLimitMapper;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
-import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -22,12 +20,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl< GatewayIpLimit> implements GatewayIpLimitService {
+public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLimit> implements GatewayIpLimitService {
 
     @Autowired
     private GatewayIpLimitMapper gatewayIpLimitMapper;
@@ -43,13 +41,13 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl< GatewayIpL
      */
     @Override
     public DataPaging<GatewayIpLimit> findListPage(PageRequestBody pageRequestBody) {
-        GatewayRateLimit query = pageRequestBody.tryGet(GatewayRateLimit.class);
-        CriteriaQueryWrapper<GatewayIpLimit> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+        GatewayIpLimit query = pageRequestBody.tryGet(GatewayIpLimit.class);
+        QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayIpLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayIpLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper);
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

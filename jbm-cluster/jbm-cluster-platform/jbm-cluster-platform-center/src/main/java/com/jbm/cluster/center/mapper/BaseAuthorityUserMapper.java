@@ -2,18 +2,18 @@ package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseAuthorityUser;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseAuthorityUserMapper extends BaseMapper<BaseAuthorityUser> {
+public interface BaseAuthorityUserMapper extends SuperMapper<BaseAuthorityUser> {
 
     /**
      * 获取用户已授权权限
@@ -21,7 +21,7 @@ public interface BaseAuthorityUserMapper extends BaseMapper<BaseAuthorityUser> {
      * @param userId
      * @return
      */
-    List<OpenAuthority> selectAuthorityByUser(@Param("id") Long userId);
+    List<OpenAuthority> selectAuthorityByUser(@Param("userId") Long userId);
 
     /**
      * 获取用户已授权权限完整信息
@@ -29,5 +29,5 @@ public interface BaseAuthorityUserMapper extends BaseMapper<BaseAuthorityUser> {
      * @param userId
      * @return
      */
-    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("id") Long userId);
+    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("userId") Long userId);
 }

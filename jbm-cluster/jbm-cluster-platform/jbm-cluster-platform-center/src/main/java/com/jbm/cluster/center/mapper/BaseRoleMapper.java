@@ -1,17 +1,17 @@
 package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.entity.BaseRole;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Repository
-public interface BaseRoleMapper extends BaseMapper<BaseRole> {
+public interface BaseRoleMapper extends SuperMapper<BaseRole> {
 
     List<BaseRole> selectRoleList(Map params);
 }

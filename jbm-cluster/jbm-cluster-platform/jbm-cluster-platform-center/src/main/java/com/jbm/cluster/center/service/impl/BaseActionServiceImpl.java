@@ -5,13 +5,12 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseAction;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.mapper.BaseActionMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
@@ -51,7 +50,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionCode()), BaseAction::getActionCode, query.getActionCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper( queryWrapper,pageRequestBody.getPageForm());
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -126,7 +125,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         aciton.setUpdateTime(aciton.getCreateTime());
         baseActionMapper.insert(aciton);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(aciton.getId(), ResourceType.action);
+        baseAuthorityService.saveOrUpdateAuthority(aciton.getActionId(), ResourceType.action);
         return aciton;
     }
 
@@ -138,9 +137,9 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
      */
     @Override
     public BaseAction updateAction(BaseAction aciton) {
-        BaseAction saved = getAction(aciton.getId());
+        BaseAction saved = getAction(aciton.getActionId());
         if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在", aciton.getId()));
+            throw new OpenAlertException(String.format("%s信息不存在", aciton.getActionId()));
         }
         if (!saved.getActionCode().equals(aciton.getActionCode())) {
             // 和原来不一致重新检查唯一性
@@ -157,7 +156,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         aciton.setUpdateTime(new Date());
         baseActionMapper.updateById(aciton);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(aciton.getId(), ResourceType.action);
+        baseAuthorityService.saveOrUpdateAuthority(aciton.getActionId(), ResourceType.action);
         return aciton;
     }
 
@@ -188,7 +187,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         List<BaseAction> actionList = findListByMenuId(menuId);
         if (actionList != null && actionList.size() > 0) {
             for (BaseAction action : actionList) {
-                removeAction(action.getId());
+                removeAction(action.getActionId());
             }
         }
     }

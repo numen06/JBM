@@ -8,13 +8,13 @@ import com.jbm.cluster.api.model.AuthorityApi;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.*;
+import com.jbm.cluster.center.mapper.*;
+import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
-import com.jbm.cluster.center.mapper.*;
-import com.jbm.cluster.center.service.*;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.StringUtils;
@@ -32,11 +32,11 @@ import java.util.*;
  * 系统权限管理
  * 对菜单、操作、API等进行权限分配操作
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthority> implements BaseAuthorityService {
+public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthority> implements BaseAuthorityService {
 
     @Autowired
     private BaseAuthorityMapper baseAuthorityMapper;
@@ -159,7 +159,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         }
         // 设置权限标识
         baseAuthority.setAuthority(authority);
-        if (baseAuthority.getId() == null) {
+        if (baseAuthority.getAuthorityId() == null) {
             baseAuthority.setCreateTime(new Date());
             baseAuthority.setUpdateTime(baseAuthority.getCreateTime());
             // 新增权限
@@ -214,17 +214,17 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
     @Override
     public Boolean isGranted(Long resourceId, ResourceType resourceType) {
         BaseAuthority authority = getAuthority(resourceId, resourceType);
-        if (authority == null || authority.getId() == null) {
+        if (authority == null || authority.getAuthorityId() == null) {
             return false;
         }
         QueryWrapper<BaseAuthorityRole> roleQueryWrapper = new QueryWrapper();
-        roleQueryWrapper.lambda().eq(BaseAuthorityRole::getAuthorityId, authority.getId());
+        roleQueryWrapper.lambda().eq(BaseAuthorityRole::getAuthorityId, authority.getAuthorityId());
         int roleGrantedCount = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
         QueryWrapper<BaseAuthorityUser> userQueryWrapper = new QueryWrapper();
-        userQueryWrapper.lambda().eq(BaseAuthorityUser::getAuthorityId, authority.getId());
+        userQueryWrapper.lambda().eq(BaseAuthorityUser::getAuthorityId, authority.getAuthorityId());
         int userGrantedCount = baseAuthorityUserMapper.selectCount(userQueryWrapper);
         QueryWrapper<BaseAuthorityApp> appQueryWrapper = new QueryWrapper();
-        appQueryWrapper.lambda().eq(BaseAuthorityApp::getAuthorityId, authority.getId());
+        appQueryWrapper.lambda().eq(BaseAuthorityApp::getAuthorityId, authority.getAuthorityId());
         int appGrantedCount = baseAuthorityAppMapper.selectCount(appQueryWrapper);
         return roleGrantedCount > 0 || userGrantedCount > 0 || appGrantedCount > 0;
     }
@@ -395,7 +395,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         // 获取应用最新的权限列表
         List<OpenAuthority> authorities = findAuthorityByApp(appId);
         // 动态更新tokenStore客户端
-        OpenHelper.updateOpenClientAuthorities(redisTokenStore,baseApp.getApiKey(),authorities);
+        OpenHelper.updateOpenClientAuthorities(redisTokenStore, baseApp.getApiKey(), authorities);
     }
 
     /**
@@ -512,7 +512,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 加入角色已授权
-                List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(role.getId());
+                List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(role.getRoleId());
                 if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
                     authorities.addAll(roleGrantedAuthority);
                 }
@@ -549,7 +549,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 加入角色已授权
-                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getId());
+                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getRoleId());
                 if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
                     authorities.addAll(roleGrantedAuthority);
                 }
@@ -600,8 +600,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl< BaseAuthori
         if (StringUtils.isBlank(serviceId)) {
             return;
         }
-        QueryWrapper queryWrapper = new QueryWrapper<BaseApi>().select("api_id").eq("service_id", serviceId).notIn(codes!=null&&!codes.isEmpty(),"api_code", codes);
-        List<String> invalidApiIds = baseApiService.selectEntitysByWapper(queryWrapper);
+        List<String> invalidApiIds = baseApiService.listObjs(new QueryWrapper<BaseApi>().select("api_id").eq("service_id", serviceId).notIn(codes != null && !codes.isEmpty(), "api_code", codes), e -> e.toString());
         if (invalidApiIds != null) {
             // 防止删除默认api
             invalidApiIds.remove("1");

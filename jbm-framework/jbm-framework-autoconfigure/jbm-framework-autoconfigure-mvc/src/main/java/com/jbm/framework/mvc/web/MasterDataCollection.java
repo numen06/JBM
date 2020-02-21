@@ -78,7 +78,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, false);
             PageForm pageForm = pageRequestBody.getPageForm();
-            DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
+            DataPaging<Entity> dataPaging = service.selectPageList(entity, pageForm);
             return ResultForm.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
             return ResultForm.error(e);
@@ -97,7 +97,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, false);
-            List<Entity> list = service.selectEntitys(entity);
+            List<Entity> list = service.selectPageList(entity);
             return ResultForm.success(list, "查询列表成功");
         } catch (Exception e) {
             return ResultForm.error(e);

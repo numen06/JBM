@@ -3,11 +3,10 @@ package com.jbm.cluster.center.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.center.service.GatewayRouteService;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.framework.usage.form.JsonRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
@@ -34,7 +33,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
-        return this.selectEntitysByWapper(queryWrapper, pageRequestBody.getPageForm());
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

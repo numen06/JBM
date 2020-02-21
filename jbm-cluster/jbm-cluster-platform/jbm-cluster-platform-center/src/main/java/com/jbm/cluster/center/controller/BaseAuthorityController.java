@@ -9,9 +9,9 @@ import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/11/26 18:20
  * @description:
  */
@@ -79,7 +79,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/authority/menu")
     @Override
-    public ResultBody findAuthorityMenu() {
+    public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
         return ResultBody.ok().data(result);
     }
@@ -92,11 +92,11 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取功能权限列表", notes = "获取功能权限列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "功能按钮ID", paramType = "form")
+            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
     })
     @GetMapping("/authority/action")
     public ResultBody<List<BaseAuthorityAction>> findAuthorityAction(
-            @RequestParam(value = "id") Long actionId
+            @RequestParam(value = "actionId") Long actionId
     ) {
         List<BaseAuthorityAction> list = baseAuthorityService.findAuthorityAction(actionId);
         return ResultBody.ok().data(list);
@@ -111,7 +111,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取角色已分配权限", notes = "获取角色已分配权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "角色ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @GetMapping("/authority/role")
     public ResultBody<List<OpenAuthority>> findAuthorityRole(Long roleId) {
@@ -128,11 +128,11 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取用户已分配权限", notes = "获取用户已分配权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "用户ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
     })
     @GetMapping("/authority/user")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(
-            @RequestParam(value = "id") Long userId
+            @RequestParam(value = "userId") Long userId
     ) {
         BaseUser user = baseUserService.getUserById(userId);
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, CommonConstants.ROOT.equals(user.getUserName()));
@@ -168,13 +168,13 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "分配角色权限", notes = "分配角色权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/authority/role/grant")
     public ResultBody grantAuthorityRole(
-            @RequestParam(value = "id") Long roleId,
+            @RequestParam(value = "roleId") Long roleId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
@@ -194,13 +194,13 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "分配用户权限", notes = "分配用户权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
             @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/authority/user/grant")
     public ResultBody grantAuthorityUser(
-            @RequestParam(value = "id") Long userId,
+            @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
@@ -244,12 +244,12 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "功能按钮授权", notes = "功能按钮授权")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "功能按钮ID", paramType = "form"),
+            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", required = false, value = "全新ID:多个用,号隔开", paramType = "form"),
     })
     @PostMapping("/authority/action/grant")
     public ResultBody grantAuthorityAction(
-            @RequestParam(value = "id") Long actionId,
+            @RequestParam(value = "actionId") Long actionId,
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityAction(actionId, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});

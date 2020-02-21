@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
@@ -7,11 +9,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * 系统资源-API接口
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/10/24 16:21
  * @description:
  */
@@ -21,15 +24,12 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("base_api")
 public class BaseApi extends MasterDataEntity {
-
-
-    public Long getApiId() {
-        return this.getId();
-    }
-
-    public void setApiId(Long apiId) {
-        this.setId(apiId);
-    }
+    /**
+     * 资源ID
+     */
+    @Id
+    @TableId(type = IdType.ID_WORKER)
+    private Long apiId;
 
     /**
      * 资源编码
@@ -102,4 +102,5 @@ public class BaseApi extends MasterDataEntity {
      * 方法名
      */
     private String methodName;
+
 }

@@ -1,13 +1,12 @@
 package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.center.service.BaseApiService;
+import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
-import com.jbm.cluster.center.service.BaseApiService;
-import com.jbm.framework.usage.form.JsonRequestBody;
-import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Api(tags = "系统接口资源管理")
 @RestController
@@ -37,7 +36,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping(value = "/api")
-    public ResultBody<DataPaging<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
+    public ResultBody<IPage<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(apiService.findListPage(PageRequestBody.from(map)));
     }
 
@@ -61,7 +60,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "获取接口资源", notes = "获取接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "ApiId", paramType = "path"),
+            @ApiImplicitParam(name = "apiId", required = true, value = "ApiId", paramType = "path"),
     })
     @GetMapping("/api/{apiId}/info")
     public ResultBody<BaseApi> getApi(@PathVariable("apiId") Long apiId) {
@@ -138,7 +137,7 @@ public class BaseApiController {
      */
     @ApiOperation(value = "编辑接口资源", notes = "编辑接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "接口Id", paramType = "form"),
+            @ApiImplicitParam(name = "apiId", required = true, value = "接口Id", paramType = "form"),
             @ApiImplicitParam(name = "apiCode", required = true, value = "接口编码", paramType = "form"),
             @ApiImplicitParam(name = "apiName", required = true, value = "接口名称", paramType = "form"),
             @ApiImplicitParam(name = "apiCategory", required = true, value = "接口分类", paramType = "form"),
@@ -152,7 +151,7 @@ public class BaseApiController {
     })
     @PostMapping("/api/update")
     public ResultBody updateApi(
-            @RequestParam(value = "apiId") Long apiId,
+            @RequestParam("apiId") Long apiId,
             @RequestParam(value = "apiCode") String apiCode,
             @RequestParam(value = "apiName") String apiName,
             @RequestParam(value = "apiCategory") String apiCategory,
@@ -165,7 +164,7 @@ public class BaseApiController {
             @RequestParam(value = "isOpen", required = false, defaultValue = "0") Integer isOpen
     ) {
         BaseApi api = new BaseApi();
-        api.setId(apiId);
+        api.setApiId(apiId);
         api.setApiCode(apiCode);
         api.setApiName(apiName);
         api.setApiCategory(apiCategory);
@@ -191,11 +190,11 @@ public class BaseApiController {
      */
     @ApiOperation(value = "移除接口资源", notes = "移除接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", required = true, value = "ApiId", paramType = "form"),
+            @ApiImplicitParam(name = "apiId", required = true, value = "ApiId", paramType = "form"),
     })
     @PostMapping("/api/remove")
     public ResultBody removeApi(
-            @RequestParam("id") Long apiId
+            @RequestParam("apiId") Long apiId
     ) {
         apiService.removeApi(apiId);
         // 刷新网关
@@ -214,10 +213,12 @@ public class BaseApiController {
             @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form")
     })
     @PostMapping("/api/batch/remove")
-    public ResultBody batchRemove(@RequestParam(value = "ids") String ids) {
+    public ResultBody batchRemove(
+            @RequestParam(value = "ids") String ids
+    ) {
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
-        apiService.deleteByWapper(wrapper);
+        wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
+        apiService.remove(wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -241,10 +242,10 @@ public class BaseApiController {
     ) {
         Assert.isTrue((open.intValue() != 1 || open.intValue() != 0), "isOpen只支持0,1");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getId, ids.split(","));
+        wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setIsOpen(open);
-        apiService.updateByWrapper(entity, wrapper);
+        apiService.update(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -267,10 +268,10 @@ public class BaseApiController {
     ) {
         Assert.isTrue((status.intValue() != 0 || status.intValue() != 1 || status.intValue() != 2), "status只支持0,1,2");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getId, ids.split(","));
+        wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
         BaseApi entity = new BaseApi();
         entity.setStatus(status);
-        apiService.updateByWrapper(entity, wrapper);
+        apiService.update(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
@@ -293,10 +294,10 @@ public class BaseApiController {
     ) {
         Assert.isTrue((auth.intValue() != 0 || auth.intValue() != 1), "auth只支持0,1");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
+        wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         BaseApi entity = new BaseApi();
         entity.setStatus(auth);
-        apiService.updateByWrapper(entity, wrapper);
+        apiService.update(entity, wrapper);
         // 刷新网关
         openRestTemplate.refreshGateway();
         return ResultBody.ok();

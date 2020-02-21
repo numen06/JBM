@@ -9,7 +9,6 @@ import com.jbm.cluster.center.mapper.BaseApiMapper;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -22,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
@@ -42,7 +41,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Override
     public DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody) {
         BaseApi query = pageRequestBody.tryGet(BaseApi.class);
-        CriteriaQueryWrapper<BaseApi> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+        QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
                 .likeRight(ObjectUtils.isNotEmpty(query.getApiName()), BaseApi::getApiName, query.getApiName())
@@ -51,7 +50,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
                 .eq(ObjectUtils.isNotEmpty(query.getStatus()), BaseApi::getStatus, query.getStatus())
                 .eq(ObjectUtils.isNotEmpty(query.getIsAuth()), BaseApi::getIsAuth, query.getIsAuth());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitysByWapper(queryWrapper);
+        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**
@@ -123,7 +122,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         api.setUpdateTime(api.getCreateTime());
         baseApiMapper.insert(api);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(api.getId(), ResourceType.api);
+        baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
     }
 
     /**
@@ -134,7 +133,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      */
     @Override
     public void updateApi(BaseApi api) {
-        BaseApi saved = getApi(api.getId());
+        BaseApi saved = getApi(api.getApiId());
         if (saved == null) {
             throw new OpenAlertException("信息不存在!");
         }
@@ -153,7 +152,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         api.setUpdateTime(new Date());
         baseApiMapper.updateById(api);
         // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(api.getId(), ResourceType.api);
+        baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
     }
 
     /**

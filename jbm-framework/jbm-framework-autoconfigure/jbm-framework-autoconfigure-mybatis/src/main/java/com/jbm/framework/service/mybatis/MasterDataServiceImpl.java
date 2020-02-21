@@ -1,7 +1,6 @@
 package com.jbm.framework.service.mybatis;
 
 
-import cn.hutool.core.util.TypeUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -76,17 +75,17 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
 
     @Override
     public Entity selectEntity(Entity entity) {
-        return CollectionUtils.firstResult(this.selectEntitys(entity), null);
+        return CollectionUtils.firstResult(this.selectPageList(entity), null);
     }
 
     @Override
     public Entity selectEntity(Map<String, Object> parameter) {
-        return CollectionUtils.firstResult(this.selectEntitys(parameter), null);
+        return CollectionUtils.firstResult(this.selectPageList(parameter), null);
     }
 
     @Override
-    public List<Entity> selectEntitys(Entity entity) {
-        return selectEntitys(EntityUtils.buildEntityQueryWrapper(entity));
+    public List<Entity> selectPageList(Entity entity) {
+        return selectPageList(EntityUtils.buildEntityQueryWrapper(entity));
     }
 
     @Override
@@ -95,22 +94,23 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
     }
 
     @Override
-    public List<Entity> selectEntitys(Map<String, Object> params) {
+    public List<Entity> selectPageList(Map<String, Object> params) {
         return this.baseMapper.selectByMap(params);
     }
 
     @Override
-    public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) {
+    public DataPaging<Entity> selectPageList(Entity entity, PageForm pageForm) {
         return this.selectPageList(ServiceUtils.toCriteriaQueryWrapper(entity, pageForm));
     }
 
     @Override
-    public DataPaging<Entity> selectEntitys(Map<String, Object> params, PageForm pageForm) throws
+    public DataPaging<Entity> selectPageList(Map<String, Object> params, PageForm pageForm) throws
             DataServiceException {
         return this.selectPageList(ServiceUtils.toCriteriaQueryWrapper(params, pageForm));
     }
 
-    protected DataPaging<Entity> selectPageList(CriteriaQueryWrapper<Entity> wrapper) {
+    @Override
+    public DataPaging<Entity> selectPageList(CriteriaQueryWrapper<Entity> wrapper) {
         PageParams pageParams = wrapper.getPageParams();
         IPage list = this.baseMapper.selectPage(pageParams, wrapper);
         //EntityMap.setEnumConvertInterceptor(null);
@@ -119,21 +119,28 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
 
 
     @Override
+    public DataPaging<Entity> selectPageList(PageParams pageParams, QueryWrapper queryWrapper) {
+        IPage list = this.baseMapper.selectPage(pageParams, queryWrapper);
+        return ServiceUtils.pageToDataPaging(list);
+    }
+
+    @Override
     public Map<Long, Entity> selectEntityDictionary(Entity entity) {
-        List<Entity> list = this.selectEntitys(entity);
+        List<Entity> list = this.selectPageList(entity);
         return EntityUtils.entityToDictionary(list);
     }
 
     @Override
     public Map<Long, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper) {
-        List<Entity> list = this.selectEntitys(criteriaQueryWrapper);
+        List<Entity> list = super.list(criteriaQueryWrapper);
         return EntityUtils.entityToDictionary(list);
     }
 
     @Override
-    public List<Entity> selectEntitys(QueryWrapper queryWrapper) {
+    public List<Entity> selectPageList(QueryWrapper queryWrapper) {
         return baseMapper.selectList(queryWrapper);
     }
+
 
     @Override
     public Entity selectEntity(Entity entity, Entity def) {
@@ -190,7 +197,7 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) {
+    public DataPaging<Entity> selectPageList(PageRequestBody pageRequestBody) {
         final Entity entity = pageRequestBody.tryGet(this.currentEntityClass());
         final PageParams pageParams = pageRequestBody.getPageParams();
         IPage<Entity> pages = super.pageList(new CriteriaQueryWrapper(entity, pageParams));
@@ -233,7 +240,7 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
     @Autowired
     protected SqlSessionTemplate sqlSessionTemplate;
 
-    protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm) {
+    protected DataPaging<Entity> selectPageList(String statement, Map<String, Object> params, PageForm pageForm) {
         return this.selectMapperPaging(sqlStatement(statement), params, pageForm);
     }
 
@@ -345,7 +352,9 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
     }
 
     @Override
-    public Class<Entity>  currentEntityClass() {
+    public Class<Entity> currentEntityClass() {
         return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
     }
+
+
 }

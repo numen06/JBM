@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
-import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
@@ -33,12 +35,13 @@ public class GatewayAccessLogsServiceImpl implements GatewayAccessLogsService {
     @Override
     public DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody) {
         GatewayAccessLogs query = pageRequestBody.tryGet(GatewayAccessLogs.class);
-        CriteriaQueryWrapper<GatewayAccessLogs> queryWrapper = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+        QueryWrapper<GatewayAccessLogs> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getPath()), GatewayAccessLogs::getPath, query.getPath())
                 .eq(ObjectUtils.isNotEmpty(query.getIp()), GatewayAccessLogs::getIp, query.getIp())
                 .eq(ObjectUtils.isNotEmpty(query.getServiceId()), GatewayAccessLogs::getServiceId, query.getServiceId());
         queryWrapper.orderByDesc("request_time");
-        return ServiceUtils.pageToDataPaging(gatewayLogsMapper.selectPage(queryWrapper.getPageParams(), queryWrapper));
+        IPage page = gatewayLogsMapper.selectPage(pageRequestBody.getPageParams(), queryWrapper);
+        return ServiceUtils.pageToDataPaging(page);
     }
 }

@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
@@ -7,11 +9,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * 系统资源-功能操作
  *
- * @author: wesley.zhang
+ * @author: liuyadu
  * @date: 2018/10/24 16:21
  * @description:
  */
@@ -21,6 +24,13 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("base_action")
 public class BaseAction extends MasterDataEntity {
+    private static final long serialVersionUID = 1471599074044557390L;
+    /**
+     * 资源ID
+     */
+    @Id
+    @TableId(type= IdType.ID_WORKER)
+    private Long actionId;
 
     /**
      * 资源编码
@@ -61,4 +71,5 @@ public class BaseAction extends MasterDataEntity {
      * 服务ID
      */
     private String serviceId;
+
 }

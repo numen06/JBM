@@ -7,6 +7,7 @@ import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.util.Date;
 /**
  * 通用账号
  *
- * @author wesley.zhang
+ * @author liuyadu
  */
 @Slf4j
 @Service
@@ -134,7 +135,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     @Override
     public int updateStatus(Long accountId, Integer status) {
         BaseAccount baseAccount = new BaseAccount();
-        baseAccount.setId(accountId);
+        baseAccount.setAccountId(accountId);
         baseAccount.setUpdateTime(new Date());
         baseAccount.setStatus(status);
         return baseAccountMapper.updateById(baseAccount);
@@ -215,6 +216,4 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         log.setLoginNums(count + 1);
         baseAccountLogsMapper.insert(log);
     }
-
-
 }

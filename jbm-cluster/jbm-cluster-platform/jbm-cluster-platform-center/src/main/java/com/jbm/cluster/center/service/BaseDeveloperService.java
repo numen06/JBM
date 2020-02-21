@@ -1,8 +1,12 @@
 package com.jbm.cluster.center.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
@@ -47,6 +51,8 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
      */
     void updatePassword(Long userId, String password);
 
+
+    DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

@@ -92,7 +92,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 //	 * @param pageForm 分页信息
 //	 * @return
 //	 */
-//	DataPaging<Entity> selectEntitys(Entity entity, Map<String, Object> expand, PageForm pageForm)
+//	DataPaging<Entity> selectPageList(Entity entity, Map<String, Object> expand, PageForm pageForm)
 //			throws DataServiceException;
 
 //	/**
@@ -102,7 +102,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 //	 * @param expand 扩展
 //	 * @return
 //	 */
-//	List<Entity> selectEntitys(Entity entity, Map<String, Object> expand) throws DataServiceException;
+//	List<Entity> selectPageList(Entity entity, Map<String, Object> expand) throws DataServiceException;
 
     /**
      * 查询所有实体
@@ -279,10 +279,10 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 
     List<Entity> selectByIds(Collection<Long> ids) throws DataServiceException;
 
-//	DataPaging<Entity> selectEntitys(String sqlStatement, Map<String, Object> expand, PageForm pageForm)
+//	DataPaging<Entity> selectPageList(String sqlStatement, Map<String, Object> expand, PageForm pageForm)
 //			throws DataServiceException;
 //
-//	List<Entity> selectEntitys(String sqlStatement, Map<String, Object> params) throws DataServiceException;
+//	List<Entity> selectPageList(String sqlStatement, Map<String, Object> params) throws DataServiceException;
 
     DataPaging<Entity> selectEntitysByWapper(CriteriaQueryWrapper<Entity> criteriaQueryWrapper) throws DataServiceException;
 

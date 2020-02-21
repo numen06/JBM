@@ -1,11 +1,12 @@
 package com.jbm.cluster.api.model;
 
+
 import com.jbm.cluster.api.model.entity.BaseApi;
 
 import java.io.Serializable;
 
 /**
- * @author wesley.zhang
+ * @author liuyadu
  */
 public class RateLimitApi extends BaseApi implements Serializable {
     private static final long serialVersionUID = 1212925216631391016L;
