@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Api(tags = "系统接口资源管理")
 @RestController

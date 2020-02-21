@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class IpLimitApi extends BaseApi implements Serializable {
     private static final long serialVersionUID = 1212925216631391016L;

@@ -10,7 +10,7 @@ import org.dom4j.tree.AbstractEntity;
 import javax.persistence.Entity;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity
