@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity

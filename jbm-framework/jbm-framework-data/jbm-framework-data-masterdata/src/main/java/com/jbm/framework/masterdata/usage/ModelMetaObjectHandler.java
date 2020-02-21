@@ -8,7 +8,7 @@ import java.util.Date;
 /**
  * 自动填充模型数据
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 public class ModelMetaObjectHandler implements MetaObjectHandler {
 

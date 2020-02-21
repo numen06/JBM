@@ -13,7 +13,7 @@ import java.util.Date;
 
 /**
  * 开放网关-访问日志
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity

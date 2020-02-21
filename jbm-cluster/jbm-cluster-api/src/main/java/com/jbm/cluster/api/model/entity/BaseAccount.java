@@ -14,7 +14,7 @@ import javax.persistence.Id;
 /**
  * 系统用户-登录账号
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity

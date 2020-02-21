@@ -12,7 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity

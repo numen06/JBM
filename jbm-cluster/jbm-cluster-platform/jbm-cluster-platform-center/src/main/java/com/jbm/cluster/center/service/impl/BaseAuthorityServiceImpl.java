@@ -32,7 +32,7 @@ import java.util.*;
  * 系统权限管理
  * 对菜单、操作、API等进行权限分配操作
  *
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Service
 @Transactional(rollbackFor = Exception.class)

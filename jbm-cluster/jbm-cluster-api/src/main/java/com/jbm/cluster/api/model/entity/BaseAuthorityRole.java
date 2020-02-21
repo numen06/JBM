@@ -13,7 +13,7 @@ import java.util.Date;
 
 /**
  * 系统权限-角色关联
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Data
 @Entity

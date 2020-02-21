@@ -5,7 +5,7 @@ import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author liuyadu
+ * @author wesley.zhang
  */
 @Repository
 public interface BaseApiMapper extends SuperMapper<BaseApi> {
