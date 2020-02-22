@@ -1,9 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseMenu;
@@ -12,7 +10,6 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -56,7 +53,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuCode()), BaseMenu::getMenuCode, query.getMenuCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getMenuName()), BaseMenu::getMenuName, query.getMenuName());
-        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
+        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

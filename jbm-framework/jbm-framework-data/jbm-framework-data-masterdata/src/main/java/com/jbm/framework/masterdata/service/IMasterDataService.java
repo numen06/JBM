@@ -45,7 +45,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param entity
      * @return 查询结果
      */
-    public List<Entity> selectPageList(Entity entity);
+    public List<Entity> selectEntitys(Entity entity);
 
     /**
      * 查询实体
@@ -54,7 +54,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param pageForm
      * @return
      */
-    public DataPaging<Entity> selectPageList(Entity entity, PageForm pageForm);
+    public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm);
 
     @Transactional(rollbackFor = Exception.class)
     boolean updateEntity(Entity entity, Entity updateEntity);
@@ -75,7 +75,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param queryWrapper
      * @return
      */
-    List<Entity> selectPageList(QueryWrapper queryWrapper);
+    List<Entity> selectEntitys(QueryWrapper queryWrapper);
 
     /**
      * 查询实体
@@ -106,9 +106,9 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
 
     Entity selectById(Long id);
 
-    List<Entity> selectPageList(Map<String, Object> params);
+    List<Entity> selectEntitys(Map<String, Object> params);
 
-    DataPaging<Entity> selectPageList(Map<String, Object> params, PageForm pageForm);
+    DataPaging<Entity> selectEntitys(Map<String, Object> params, PageForm pageForm);
 
     /**
      * 查找列表，将实体的主键作为KEY输出为MAP
@@ -200,7 +200,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
     boolean updateById(Entity entity);
 
     @Transactional(rollbackFor = Exception.class)
-    DataPaging<Entity> selectPageList(PageRequestBody pageRequestBody);
+    DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody);
 
     /**
      * <p>
@@ -288,7 +288,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
 
     Class<Entity> currentEntityClass();
 
-    DataPaging<Entity> selectPageList(CriteriaQueryWrapper<Entity> wrapper);
+    DataPaging<Entity> selectEntitys(CriteriaQueryWrapper<Entity> wrapper);
 
-    DataPaging<Entity> selectPageList(PageParams pageParams, QueryWrapper queryWrapper);
+    DataPaging<Entity> selectEntitys(PageParams pageParams, QueryWrapper queryWrapper);
 }

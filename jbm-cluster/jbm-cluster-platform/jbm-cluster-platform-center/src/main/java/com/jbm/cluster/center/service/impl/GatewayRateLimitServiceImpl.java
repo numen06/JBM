@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
@@ -9,7 +8,6 @@ import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.cluster.center.mapper.GatewayRateLimitApisMapper;
 import com.jbm.cluster.center.mapper.GatewayRateLimitMapper;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
-import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -48,7 +46,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
                 .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayRateLimit::getPolicyName, query.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayRateLimit::getPolicyType, query.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
+        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

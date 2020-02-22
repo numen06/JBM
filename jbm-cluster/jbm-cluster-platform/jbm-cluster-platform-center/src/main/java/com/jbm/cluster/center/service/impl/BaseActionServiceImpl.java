@@ -50,7 +50,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionCode()), BaseAction::getActionCode, query.getActionCode())
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName());
         queryWrapper.orderByDesc("create_time");
-        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
+        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

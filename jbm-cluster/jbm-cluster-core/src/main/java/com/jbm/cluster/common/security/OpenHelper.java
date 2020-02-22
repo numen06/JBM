@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.security;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
@@ -59,6 +61,45 @@ public class OpenHelper {
         return null;
     }
 
+    /**
+     * 获取当前用户token信息
+     *
+     * @return
+     */
+    public static String getCurrenToken() {
+        try {
+            OAuth2AuthenticationDetails details = getCurrenAuthenticationDetails();
+            if (ObjectUtil.isEmpty(details))
+                return null;
+            return details.getTokenValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * 获取当前用户token信息
+     *
+     * @return
+     */
+    public static OAuth2AuthenticationDetails getCurrenAuthenticationDetails() {
+        OAuth2Authentication authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
+        return getCurrenAuthenticationDetails(authentication);
+    }
+
+    /**
+     * 获取用户的token
+     *
+     * @param authentication
+     * @return
+     */
+    public static OAuth2AuthenticationDetails getCurrenAuthenticationDetails(OAuth2Authentication authentication) {
+        if (authentication.getDetails() instanceof OAuth2AuthenticationDetails) {
+            return ((OAuth2AuthenticationDetails) authentication.getDetails());
+        }
+        return null;
+    }
 
     /**
      * 更新OpenUser

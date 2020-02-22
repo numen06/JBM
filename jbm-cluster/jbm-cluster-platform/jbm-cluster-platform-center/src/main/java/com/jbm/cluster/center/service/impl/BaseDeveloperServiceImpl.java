@@ -2,7 +2,6 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.lang.Validator;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.UserAccount;
@@ -13,7 +12,6 @@ import com.jbm.cluster.center.mapper.BaseDeveloperMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseDeveloperService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -138,7 +136,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDevelop
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return  this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
+        return  this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

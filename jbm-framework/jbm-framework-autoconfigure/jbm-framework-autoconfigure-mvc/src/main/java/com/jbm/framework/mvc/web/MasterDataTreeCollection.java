@@ -35,14 +35,14 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     /**
      * 列表查询
      *
-     * @param pageRequestBody
+     * @param baseRequsetBody
      * @return
      */
     @RequestMapping("/root")
     @Override
-    public Object root(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public ResultForm root(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {
-            validator(pageRequestBody);
+            validator(baseRequsetBody);
             List<Entity> list = service.selectRootListById();
             return ResultForm.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
@@ -53,11 +53,11 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
 
     @RequestMapping("/tree")
     @Override
-    public Object tree(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public ResultForm tree(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {
-            validator(pageRequestBody);
-            Entity entity = validatorMasterData(pageRequestBody, false);
-            List<Entity> list = service.selectTreeByParentId(entity);
+            validator(baseRequsetBody);
+            Entity entity = validatorMasterData(baseRequsetBody, false);
+            List<Entity> list = service.selectChildNodesById(entity);
             return ResultForm.success(list, "查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "查询树结构成功", e);

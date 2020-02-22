@@ -27,10 +27,6 @@ public class MasterDataTreeEntity extends MasterDataIdEntity {
      */
     private Integer level;
 
-    /**
-     * 层级
-     */
-    private Integer level;
 
     //	@Transient
     @TableField(exist = false)

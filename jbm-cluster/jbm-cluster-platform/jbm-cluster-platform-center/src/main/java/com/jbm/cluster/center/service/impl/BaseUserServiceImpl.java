@@ -148,7 +148,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implem
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectPageList(pageRequestBody.getPageParams(), queryWrapper);
+        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

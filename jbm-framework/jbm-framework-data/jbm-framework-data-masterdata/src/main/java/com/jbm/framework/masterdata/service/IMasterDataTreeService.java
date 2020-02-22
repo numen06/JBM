@@ -48,4 +48,3 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
 
     List<Entity> selectListByParentId(Entity entity) throws DataServiceException;
 }
-}

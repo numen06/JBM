@@ -77,7 +77,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
         //关联BaseDeveloper表
         cq.createAlias(BaseDeveloper.class);
         cq.orderByDesc("create_time");
-        return this.selectPageList(cq);
+        return this.selectEntitys(cq);
     }
 
     /**

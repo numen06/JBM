@@ -14,7 +14,10 @@ public class ServiceException extends RuntimeException {
     private int code = ErrorCode.ERROR.getCode();
 
     public ServiceException() {
+    }
 
+    public ServiceException(Exception e) {
+        super(e);
     }
 
     public ServiceException(String msg) {
@@ -24,6 +27,10 @@ public class ServiceException extends RuntimeException {
     public ServiceException(int code, String msg) {
         super(msg);
         this.code = code;
+    }
+
+    public ServiceException(String msg, Exception e) {
+        super(msg, e);
     }
 
     public ServiceException(int code, String msg, Throwable cause) {
