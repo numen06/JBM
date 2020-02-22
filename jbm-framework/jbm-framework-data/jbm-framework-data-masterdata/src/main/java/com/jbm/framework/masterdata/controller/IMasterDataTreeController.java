@@ -14,9 +14,6 @@ public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, 
 
     Object root(PageRequestBody pageRequestBody);
 
-    Object rootByCode(PageRequestBody pageRequestBody);
-
     Object tree(PageRequestBody pageRequestBody);
 
-    Object treeByCode(PageRequestBody pageRequestBody);
 }

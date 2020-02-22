@@ -27,9 +27,9 @@
 			<artifactId>beetl</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-			<scope>provided</scope>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.2.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>com.baomidou</groupId>
@@ -41,5 +41,17 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-extension</artifactId>
         </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>com.jbm</groupId>
+			<artifactId>jbm-framework-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+		</dependency>
+	</dependencies>
 </project>

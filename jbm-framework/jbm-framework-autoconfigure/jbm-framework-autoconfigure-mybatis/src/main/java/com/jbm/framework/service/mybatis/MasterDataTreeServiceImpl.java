@@ -3,107 +3,103 @@ package com.jbm.framework.service.mybatis;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.util.CollectionUtils;
+import com.jbm.util.MapUtils;
 
 public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
-//    public List<Entity> selectRootListByCode(Entity entity) throws DataServiceException {
-//        QueryWrapper<Entity> entityWrapper = new QueryWrapper<>(entity);
-//        entityWrapper.isNull(StrUtil.toUnderlineCase("parentCode"));
-//        return super.list(entityWrapper);
-//    }
-//
-//    public List<Entity> selectTreeByParentCode(Entity entity) throws DataServiceException {
-//        List<Entity> subEntitys = new ArrayList<Entity>();
-//        if (entity.getParentCode() == null) {
-//            subEntitys = this.selectRootListByCode(entity);
-//        } else {
-//            subEntitys = this.selectPageList(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), entity.getCode()));
-//        }
-//        return this.selectTreeByParentCode(subEntitys);
-//    }
-//
-//    public List<Entity> selectTreeByParentCode(List<Entity> subEntitys) throws DataServiceException {
-//        if (CollectionUtils.isEmpty(subEntitys)) {
-//            subEntitys = new ArrayList<Entity>();
-//        }
-//        for (Iterator<Entity> iterator = subEntitys.iterator(); iterator.hasNext(); ) {
-//            Entity subEntity = iterator.next();
-//            this.selectTreeByParentCode(subEntity);
-//        }
-//        return subEntitys;
-//    }
+    /**
+     * 将列表转换成树列表
+     *
+     * @param list
+     */
+    public List<Entity> listToTreeList(List<Entity> list) {
+        Map<Long, Entity> tempMap = Maps.newLinkedHashMap();
+        //转换成map
+        for (Entity entity : list) {
+            tempMap.put(entity.getId(), entity);
+            entity.setLeaf(true);
+        }
+        for (Entity entity : list) {
+            if (ObjectUtil.isNotEmpty(entity.getParentId())) {
+                tempMap.get(entity.getParentId()).setLeaf(false);
+            }
+        }
+        return list;
+    }
 
-//    public List<Entity> selectListByParentCode(String parentCode) throws DataServiceException {
-//        return this.selectPageList(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), parentCode));
-//    }
 
     @Override
     public List<Entity> selectRootListById() throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().isNull(Entity::getParentId);
-        return super.list(queryWrapper);
+        return super.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
-    public List<Entity> selectTreeByParentId(Entity entity) throws DataServiceException {
-        List<Entity> subEntitys = new ArrayList<>();
-        if (EntityUtils.keyIsEmpty(entity)) {
+    public List<Entity> selectChildNodesById(Entity entity) throws DataServiceException {
+        List<Entity> subEntitys = this.selectChildNodesById(entity.getId());
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys) ? false : true);
+        return subEntitys;
+    }
+
+    @Override
+    public List<Entity> selectChildNodesById(Long parentId) throws DataServiceException {
+        List<Entity> treeList = new ArrayList<Entity>();
+        List<Entity> subEntitys = new ArrayList<Entity>();
+        if (parentId == null) {
             subEntitys = this.selectRootListById();
         } else {
-            Long id = EntityUtils.getKeyValue(entity);
-            if (id <= 0l) {
-                subEntitys = this.selectRootListById();
-            } else {
-                subEntitys = this.selectListByParentId(entity);
-            }
+            subEntitys = this.selectListByParentId(parentId);
         }
-        return this.selectTreeByParentId(subEntitys);
+        treeList.addAll(subEntitys);
+        //递归查询下一层
+        treeList.addAll(this.selectChildNodesById(subEntitys));
+        return treeList;
     }
 
-    @Override
-    public List<Entity> selectTreeByParentId(Long parentId) throws DataServiceException {
-        List<Entity> subEntitys = this.selectListByParentId(parentId);
-        return this.selectTreeByParentId(subEntitys);
-    }
 
     @Override
-    public List<Entity> selectTreeByParentId(List<Entity> subEntitys) throws DataServiceException {
+    public List<Entity> selectChildNodesById(List<Entity> subEntitys) throws DataServiceException {
         if (CollectionUtils.isEmpty(subEntitys)) {
             subEntitys = new ArrayList<Entity>();
         }
+        List<Entity> treeList = new ArrayList<Entity>();
         for (Iterator<Entity> iterator = subEntitys.iterator(); iterator.hasNext(); ) {
             Entity subEntity = iterator.next();
-            if (ObjectUtil.isEmpty(subEntity.getParentId())) {
+            subEntity.setLeaf(true);
+            if (ObjectUtil.isEmpty(subEntity.getId())) {
                 continue;
             }
-            this.selectTreeByParentId(subEntity);
+            List<Entity> tempList = this.selectChildNodesById(subEntity);
+            treeList.addAll(tempList);
         }
-        return subEntitys;
+        return treeList;
     }
 
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
-        if (ObjectUtil.isEmpty(parentId)) {
-            queryWrapper.lambda().isNull(Entity::getParentId);
-        } else {
-            queryWrapper.lambda().eq(Entity::getParentId, parentId);
-        }
-        return this.selectPageList(queryWrapper);
+        queryWrapper.lambda().eq(Entity::getParentId, parentId);
+        return super.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
-        Long id = EntityUtils.getKeyValue(entity);
-        return this.selectTreeByParentId(id);
+        QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(Entity::getParentId, entity.getId());
+        return super.selectEntitysByWapper(queryWrapper);
     }
 
 

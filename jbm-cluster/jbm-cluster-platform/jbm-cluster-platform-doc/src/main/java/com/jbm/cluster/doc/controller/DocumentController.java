@@ -1,5 +1,7 @@
 package com.jbm.cluster.doc.controller;
 
+import com.jbm.cluster.common.security.OpenHelper;
+import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jlefebure.spring.boot.minio.MinioException;
 import com.jlefebure.spring.boot.minio.MinioService;
@@ -34,10 +36,16 @@ public class DocumentController {
     @Autowired
     private MinioService minioService;
 
+    @GetMapping("/user")
+    public ResultBody user() {
+        OpenUserDetails openUesr = OpenHelper.getUser();
+        return ResultBody.ok().data(openUesr);
+    }
+
     @ApiOperation(value = "获取文档列表")
     @GetMapping("/list")
-    public List<Item> list() throws MinioException {
-        return minioService.list();
+    public ResultBody list() throws MinioException {
+        return ResultBody.ok().data(minioService.list());
     }
 
     @ApiOperation(value = "上传文档")

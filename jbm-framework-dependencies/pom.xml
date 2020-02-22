@@ -317,6 +317,16 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-mqtt</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-influxdb</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
@@ -361,6 +371,43 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-aliyun-oss</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+
+            <!--cluster-->
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-platform-auth</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-platform-gateway</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-platform-doc</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-platform-center</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-api</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-node</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-core</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <!-- mqtt -->

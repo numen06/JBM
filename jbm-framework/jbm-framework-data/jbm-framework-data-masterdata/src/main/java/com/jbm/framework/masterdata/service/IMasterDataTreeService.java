@@ -22,9 +22,10 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
      * @return
      * @throws DataServiceException
      */
-    List<Entity> selectTreeByParentId(Entity entity) throws DataServiceException;
+    List<Entity> selectChildNodesById(Entity entity) throws DataServiceException;
 
-    List<Entity> selectTreeByParentId(Long parentId) throws DataServiceException;
+    List<Entity> selectChildNodesById(Long parentId) throws DataServiceException;
+
 
     /**
      * 通过所有父节点获取下面所有子节点（递归慎用）
@@ -33,7 +34,7 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
      * @return
      * @throws DataServiceException
      */
-    List<Entity> selectTreeByParentId(List<Entity> subEntitys) throws DataServiceException;
+    List<Entity> selectChildNodesById(List<Entity> subEntitys) throws DataServiceException;
 
     /**
      * 通过父节点获取子节点
@@ -43,43 +44,8 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
      * @throws DataServiceException
      */
     List<Entity> selectListByParentId(Long parentId) throws DataServiceException;
-//
-//    /**
-//     * 获取parentCode为空的列表
-//     *
-//     * @param entity
-//     * @return
-//     * @throws DataServiceException
-//     */
-//    List<Entity> selectRootListByCode(Entity entity) throws DataServiceException;
-//
-//    /**
-//     * 通过父节点获取所有下面的子节点（递归慎用）
-//     *
-//     * @param entity
-//     * @return
-//     * @throws DataServiceException
-//     */
-//    List<Entity> selectTreeByParentCode(Entity entity) throws DataServiceException;
-
-//    /**
-//     * 通过所有父节点获取下面所有子节点（递归慎用）
-//     *
-//     * @param subEntitys
-//     * @return
-//     * @throws DataServiceException
-//     */
-//    List<Entity> selectTreeByParentCode(List<Entity> subEntitys) throws DataServiceException;
-
-//    /**
-//     * 通过父节点获取子节点
-//     *
-//     * @param parentCode
-//     * @return
-//     * @throws DataServiceException
-//     */
-//    List<Entity> selectListByParentCode(String parentCode) throws DataServiceException;
 
 
     List<Entity> selectListByParentId(Entity entity) throws DataServiceException;
+}
 }
