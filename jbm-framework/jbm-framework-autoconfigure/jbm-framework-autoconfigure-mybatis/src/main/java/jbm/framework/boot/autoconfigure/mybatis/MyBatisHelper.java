@@ -24,9 +24,9 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
- * Mybatis - 获取Mybatis查询sql工具
+ * 获取Mybatis查询sql工具
  *
- * @author liuzh/abel533/isea533
+ * @author wesley.zhang
  */
 @SuppressWarnings({"unused", "rawtypes", "unchecked"})
 public class MyBatisHelper {
