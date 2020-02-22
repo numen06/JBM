@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
+        group:
+        refreshable-dataids: common.properties
+        server-addr: 172.16.106.26:8848
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties
+      discovery:
+        namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
+        group:
+        server-addr: 172.16.106.26:8848
