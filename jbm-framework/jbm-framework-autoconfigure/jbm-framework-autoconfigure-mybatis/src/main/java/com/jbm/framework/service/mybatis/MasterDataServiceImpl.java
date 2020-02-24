@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.masterdata.usage.ClassQueryWrapper;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -33,7 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends BaseServiceImpl<SuperMapper<Entity>, Entity> implements IMasterDataService<Entity> {
+public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> extends BaseServiceImpl<SuperMapper<Entity>, Entity> implements IMasterDataService<Entity> {
 
     @Override
     public Entity selectById(Long id) {
@@ -60,12 +61,12 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
 
     @Override
     public List<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper) {
-        return super.list(queryWrapper);
+        return this.baseMapper.selectList(queryWrapper);
     }
 
     @Override
     public Entity selectEntityByWapper(QueryWrapper<Entity> queryWrapper) {
-        return super.getOne(queryWrapper);
+        return this.getOne(queryWrapper);
     }
 
     @Override
@@ -354,6 +355,18 @@ public class MasterDataServiceImpl<Entity extends MasterDataEntity> extends Base
     @Override
     public Class<Entity> currentEntityClass() {
         return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
+    }
+
+
+    /**
+     * 泛型方法使用的包装类
+     *
+     * @return
+     */
+    protected QueryWrapper currentQueryWrapper() {
+        QueryWrapper queryWrapper = ClassQueryWrapper.QueryWrapper(this.currentEntityClass());
+        queryWrapper.lambda();
+        return queryWrapper;
     }
 
 

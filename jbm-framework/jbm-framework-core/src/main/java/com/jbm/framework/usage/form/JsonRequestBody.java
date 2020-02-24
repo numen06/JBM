@@ -16,4 +16,16 @@ import java.util.Map;
 public class JsonRequestBody extends BaseRequsetBody {
 
 
+    /**
+     * 分页封装类
+     */
+    private PageForm pageForm;
+
+    public PageForm getPageForm() {
+        if (this.pageForm == null) {
+            this.pageForm = this.tryGet(PageForm.class);
+        }
+        return this.pageForm;
+    }
+
 }

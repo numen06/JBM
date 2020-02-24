@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -18,6 +19,7 @@ import java.util.Date;
  **/
 @Data
 @MappedSuperclass
+@EqualsAndHashCode(callSuper = true)
 public class MasterDataIdEntity extends MasterDataEntity {
 
 

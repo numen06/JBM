@@ -46,7 +46,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
             List<Entity> list = service.selectRootListById();
             return ResultForm.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询树根节点列表成功", e);
+            return ResultForm.error(null, "查询树根节点列表失败", e);
         }
     }
 
@@ -60,7 +60,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
             List<Entity> list = service.selectChildNodesById(entity);
             return ResultForm.success(list, "查询树结构成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询树结构成功", e);
+            return ResultForm.error(null, "查询树结构失败", e);
         }
     }
 

@@ -52,10 +52,7 @@
         <curator.version>4.0.1</curator.version>
         <c3p0.version>0.9.1.2</c3p0.version>
         <mqtt.client.version>1.2.0</mqtt.client.version>
-        <mybatis.version>3.5.1</mybatis.version>
-        <mybatis-plus.version>3.1.2</mybatis-plus.version>
-        <mybatis-spring.version>2.0.1</mybatis-spring.version>
-        <mybatis-spring-boot.version>2.0.0</mybatis-spring-boot.version>
+        <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <hutool.version>4.5.8</hutool.version>
         <beetl.version>2.9.6</beetl.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
@@ -654,16 +651,6 @@
                 <version>${mybatis-plus.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mybatis</groupId>
-                <artifactId>mybatis-spring</artifactId>
-                <version>${mybatis-spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mybatis</groupId>
-                <artifactId>mybatis</artifactId>
-                <version>${mybatis.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>de.javakaffee</groupId>
                 <artifactId>kryo-serializers</artifactId>
                 <version>${kryo.version}</version>
@@ -805,21 +792,21 @@
                 <artifactId>metadata-extractor</artifactId>
                 <version>2.11.0</version>
             </dependency>
-            <dependency>
-                <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis-spring-boot.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>mybatis-spring-boot-autoconfigure</artifactId>
-                        <groupId>org.mybatis.spring.boot</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>h2</artifactId>
-                        <groupId>com.h2database</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>org.mybatis.spring.boot</groupId>-->
+<!--                <artifactId>mybatis-spring-boot-starter</artifactId>-->
+<!--                <version>${mybatis-spring-boot.version}</version>-->
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <artifactId>mybatis-spring-boot-autoconfigure</artifactId>-->
+<!--                        <groupId>org.mybatis.spring.boot</groupId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <artifactId>h2</artifactId>-->
+<!--                        <groupId>com.h2database</groupId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
+<!--            </dependency>-->
             <!-- <dependency> -->
             <!-- <groupId>org.apache.shiro</groupId> -->
             <!-- <artifactId>shiro-core</artifactId> -->

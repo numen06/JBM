@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.usage.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -11,6 +12,7 @@ import javax.persistence.MappedSuperclass;
  */
 @Data
 @MappedSuperclass
+@EqualsAndHashCode(callSuper = true)
 public class MasterDataTreeEntity extends MasterDataIdEntity {
     /**
      *

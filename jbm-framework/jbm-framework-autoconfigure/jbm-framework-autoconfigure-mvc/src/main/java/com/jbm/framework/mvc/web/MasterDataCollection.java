@@ -93,7 +93,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      */
     @RequestMapping("/list")
     @Override
-    public Object list(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object list(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, false);
@@ -112,7 +112,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      */
     @RequestMapping("/model")
     @Override
-    public Object model(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object model(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, true);
@@ -131,7 +131,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      */
     @RequestMapping("/save")
     @Override
-    public Object save(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object save(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, true);
@@ -150,7 +150,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      */
     @RequestMapping("/saveBatch")
     @Override
-    public Object saveBatch(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object saveBatch(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             validator(pageRequestBody);
             List<Entity> entitys = validatorMasterDataList(pageRequestBody, true);
@@ -188,7 +188,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      */
     @RequestMapping("/delete")
     @Override
-    public Object remove(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object remove(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             validator(pageRequestBody);
             Entity entity = validatorMasterData(pageRequestBody, true);
@@ -203,7 +203,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
 
     @RequestMapping("/deleteByIds")
     @Override
-    public Object deleteByIds(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public Object deleteByIds(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
             // 获取前端信息List<BusCompanyInfo>
             validator(pageRequestBody);

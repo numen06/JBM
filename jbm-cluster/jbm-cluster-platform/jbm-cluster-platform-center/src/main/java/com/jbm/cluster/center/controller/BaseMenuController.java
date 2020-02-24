@@ -57,6 +57,19 @@ public class BaseMenuController {
 
 
     /**
+     * 菜单所有资源列表
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取某个应用的所有菜单", notes = "获取某个应用的所有菜单")
+    @GetMapping("/menu/all/{appId}")
+    public ResultBody<List<BaseMenu>> getMenuAllList(@PathVariable("appId") Long appId) {
+        return ResultBody.ok().data(baseResourceMenuService.findAllList());
+    }
+
+
+
+    /**
      * 获取菜单下所有操作
      *
      * @param menuId

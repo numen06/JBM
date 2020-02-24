@@ -29,7 +29,7 @@ public class BaseMenu extends MasterDataEntity {
      * 菜单Id
      */
     @Id
-    @TableId(type= IdType.ID_WORKER)
+    @TableId(type = IdType.ID_WORKER)
     private Long menuId;
 
     /**
@@ -91,4 +91,9 @@ public class BaseMenu extends MasterDataEntity {
      * 服务ID
      */
     private String serviceId;
+
+    /**
+     * 对应的什么APP
+     */
+    private Long appId;
 }

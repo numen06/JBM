@@ -9,15 +9,18 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.LambdaUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
+import com.jbm.framework.masterdata.usage.ClassQueryWrapper;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 
-public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
+public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
     /**
      * 将列表转换成树列表
@@ -42,9 +45,9 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     @Override
     public List<Entity> selectRootListById() throws DataServiceException {
-        QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
         queryWrapper.lambda().isNull(Entity::getParentId);
-        return super.selectEntitysByWapper(queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
@@ -90,16 +93,16 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
-        QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
         queryWrapper.lambda().eq(Entity::getParentId, parentId);
-        return super.selectEntitysByWapper(queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
-        QueryWrapper<Entity> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
         queryWrapper.lambda().eq(Entity::getParentId, entity.getId());
-        return super.selectEntitysByWapper(queryWrapper);
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
 

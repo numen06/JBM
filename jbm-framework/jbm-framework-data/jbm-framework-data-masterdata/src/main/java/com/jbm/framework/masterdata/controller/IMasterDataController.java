@@ -1,8 +1,10 @@
 package com.jbm.framework.masterdata.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.form.BaseRequsetBody;
 
 public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {
 
@@ -15,7 +17,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      */
     Object pageList(PageRequestBody pageRequestBody);
 
-    Object list(PageRequestBody pageRequestBody);
+    Object list(BaseRequsetBody pageRequestBody);
 
     /**
      * 获取单一对对象
@@ -23,7 +25,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object model(PageRequestBody pageRequestBody);
+    Object model(BaseRequsetBody pageRequestBody);
 
     /**
      * 保存单一对象
@@ -31,13 +33,13 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object save(PageRequestBody pageRequestBody);
+    Object save(BaseRequsetBody pageRequestBody);
 
     /**
      * @param pageRequestBody
      * @return
      */
-    Object remove(PageRequestBody pageRequestBody);
+    Object remove(BaseRequsetBody pageRequestBody);
 
     /**
      * 保存多个对象
@@ -45,7 +47,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object saveBatch(PageRequestBody pageRequestBody);
+    Object saveBatch(BaseRequsetBody pageRequestBody);
 
     /**
      * 生产假数据
@@ -60,5 +62,5 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object deleteByIds(PageRequestBody pageRequestBody);
+    Object deleteByIds(BaseRequsetBody pageRequestBody);
 }

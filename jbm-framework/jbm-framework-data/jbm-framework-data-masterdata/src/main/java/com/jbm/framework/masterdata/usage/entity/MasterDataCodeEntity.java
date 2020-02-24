@@ -1,6 +1,7 @@
 package com.jbm.framework.masterdata.usage.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.MappedSuperclass;
 
@@ -11,6 +12,7 @@ import javax.persistence.MappedSuperclass;
  **/
 @Data
 @MappedSuperclass
+@EqualsAndHashCode(callSuper = true)
 public class MasterDataCodeEntity extends MasterDataIdEntity {
 
     private String code;

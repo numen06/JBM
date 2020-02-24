@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * 菜单资源管理
+ *
  * @author wesley.zhang
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
@@ -17,6 +18,7 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 
     /**
      * 查询列表
+     *
      * @return
      */
     List<BaseMenu> findAllList();
@@ -28,6 +30,16 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
      * @return
      */
     BaseMenu getMenu(Long menuId);
+
+
+    /**
+     * 根据主键获取菜单
+     *
+     * @param appId
+     * @return
+     */
+    List<BaseMenu> getMenuByAppId(Long appId);
+
 
     /**
      * 检查菜单编码是否存在

@@ -80,6 +80,13 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         return baseMenuMapper.selectById(menuId);
     }
 
+    @Override
+    public List<BaseMenu> getMenuByAppId(Long appId) {
+        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseMenu::getAppId, appId);
+        return this.selectEntitys(queryWrapper);
+    }
+
     /**
      * 检查菜单编码是否存在
      *

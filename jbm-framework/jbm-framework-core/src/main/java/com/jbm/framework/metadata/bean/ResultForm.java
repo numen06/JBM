@@ -1,19 +1,16 @@
 package com.jbm.framework.metadata.bean;
 
-import java.io.Serializable;
-import java.text.MessageFormat;
-import java.util.*;
-
-import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Maps;
-import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
-import com.jbm.framework.metadata.enumerate.MessageEnum;
-import com.jbm.framework.metadata.enumerate.ResultEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
  * 后台返回给前台的封装类
@@ -36,6 +33,12 @@ public class ResultForm<T> implements Serializable {
      */
     @ApiModelProperty(value = "提示消息")
     private String message;
+
+    @ApiModelProperty(value = "错误信息")
+    private String exception;
+
+    @ApiModelProperty(value = "是否成功")
+    private Boolean success;
 
     /**
      * 请求路径
@@ -79,11 +82,11 @@ public class ResultForm<T> implements Serializable {
     }
 
     public static <T> ResultForm<T> error(Exception e) {
-        return ResultForm.failed().msg(e.getMessage());
+        return ResultForm.failed().exception(e);
     }
 
     public static <T> ResultForm<T> error(T data, String msg, Exception e) {
-        return ResultForm.failed().result(data).msg(msg);
+        return ResultForm.failed().result(data).msg(msg).exception(e);
     }
 
 
@@ -120,15 +123,24 @@ public class ResultForm<T> implements Serializable {
 
 
     public static ResultForm ok() {
-        return new ResultForm().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
+        ResultForm resultForm = new ResultForm().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
+        resultForm.setSuccess(true);
+        return resultForm;
     }
 
     public static ResultForm failed() {
-        return new ResultForm().code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
+        ResultForm resultForm = new ResultForm().code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
+        resultForm.setSuccess(false);
+        return resultForm;
     }
 
     public ResultForm code(int code) {
         this.code = code;
+        return this;
+    }
+
+    public ResultForm exception(Exception e) {
+        this.setException(e.getMessage());
         return this;
     }
 
