@@ -46,7 +46,7 @@ public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEnt
     @Override
     public List<Entity> selectRootListById() throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().isNull(Entity::getParentId);
+        queryWrapper.isNull("parent_id");
         return this.selectEntitysByWapper(queryWrapper);
     }
 
@@ -94,14 +94,14 @@ public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEnt
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().eq(Entity::getParentId, parentId);
+        queryWrapper.eq("parent_id", parentId);
         return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().eq(Entity::getParentId, entity.getId());
+        queryWrapper.eq("parent_id", entity.getParentId());
         return this.selectEntitysByWapper(queryWrapper);
     }
 

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
-import com.jbm.cluster.center.mapper.GatewayRateLimitApisMapper;
+import com.jbm.cluster.center.mapper.GatewayRateLimitApiMapper;
 import com.jbm.cluster.center.mapper.GatewayRateLimitMapper;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -30,7 +30,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     private GatewayRateLimitMapper gatewayRateLimitMapper;
 
     @Autowired
-    private GatewayRateLimitApisMapper gatewayRateLimitApisMapper;
+    private GatewayRateLimitApiMapper gatewayRateLimitApisMapper;
 
     /**
      * 分页查询

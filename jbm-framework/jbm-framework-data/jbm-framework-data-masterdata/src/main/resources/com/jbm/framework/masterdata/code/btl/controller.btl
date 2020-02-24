@@ -3,6 +3,7 @@ package ${basePackage}.controller;
 import ${entityClass.name};
 import ${basePackage}.service.${entityClass.simpleName}Service;
 import ${extClass};
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author: auto generate by jbm
  * @Create: ${time}
  */
+@Api(tags = "${entityClass.simpleName}开放接口")
 @RestController
 @RequestMapping("/${mapping}")
 public class ${entityClass.simpleName}Controller extends ${extClassName}<${entityClass.simpleName}, ${entityClass.simpleName}Service> {

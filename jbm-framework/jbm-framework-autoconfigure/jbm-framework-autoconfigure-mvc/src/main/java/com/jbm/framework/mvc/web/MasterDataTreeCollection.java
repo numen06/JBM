@@ -4,15 +4,17 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultForm;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.util.ObjectUtils;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+@Slf4j
 public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
         extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity, Service> {
 
@@ -38,7 +40,8 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
      * @param baseRequsetBody
      * @return
      */
-    @RequestMapping("/root")
+    @ApiOperation(value = "获取根节点列表", notes = "获取根节点列表")
+    @PostMapping("/root")
     @Override
     public ResultForm root(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {
@@ -50,8 +53,8 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
         }
     }
 
-
-    @RequestMapping("/tree")
+    @ApiOperation(value = "获取根树状结构", notes = "获取根树状结构")
+    @PostMapping("/tree")
     @Override
     public ResultForm tree(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {

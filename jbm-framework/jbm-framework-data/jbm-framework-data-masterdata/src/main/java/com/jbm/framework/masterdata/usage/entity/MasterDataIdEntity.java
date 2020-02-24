@@ -3,6 +3,7 @@ package com.jbm.framework.masterdata.usage.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,9 +19,10 @@ import java.util.Date;
  * @create: 2020-02-20 23:55
  **/
 @Data
+@TableName
 @MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
-public class MasterDataIdEntity extends MasterDataEntity {
+public abstract class MasterDataIdEntity extends MasterDataEntity {
 
 
     public MasterDataIdEntity() {

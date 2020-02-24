@@ -5,6 +5,7 @@ import cn.hutool.core.util.TypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.util.StringUtils;
 import com.jbm.util.json.JSONBean;
+import io.swagger.annotations.ApiModel;
 
 import java.io.Serializable;
 import java.util.List;

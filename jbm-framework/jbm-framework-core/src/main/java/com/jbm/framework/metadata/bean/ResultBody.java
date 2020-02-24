@@ -86,15 +86,15 @@ public class ResultBody<T> implements Serializable {
         return timestamp;
     }
 
-    @JSONField(serialize = false, deserialize = false)
+//    @JSONField(serialize = false, deserialize = false)
     public int getHttpStatus() {
         return httpStatus;
     }
 
-    @JSONField(serialize = false, deserialize = false)
-    public boolean isOk() {
-        return this.code == ErrorCode.OK.getCode();
-    }
+//    @JSONField(serialize = false, deserialize = false)
+//    public boolean isOk() {
+//        return this.code == ErrorCode.OK.getCode();
+//    }
 
 
     public static ResultBody ok() {
@@ -166,7 +166,32 @@ public class ResultBody<T> implements Serializable {
      */
     @JSONField(serialize = false, deserialize = false)
     private static String i18n(String message, String defaultMessage) {
-        return resourceBundle.containsKey(message)?resourceBundle.getString(message):defaultMessage;
+        return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
+    }
+
+    @ApiModelProperty(value = "错误信息")
+    private String exception;
+
+    @ApiModelProperty(value = "是否成功")
+    private Boolean getSuccess() {
+        return this.code == ErrorCode.OK.getCode();
+    }
+
+
+    public static <T> ResultForm<T> success(T data, String msg) {
+        return ResultForm.ok().result(data).msg(msg);
+    }
+
+    public static <T> ResultForm<T> error(T data, String msg) {
+        return ResultForm.failed().result(data).msg(msg);
+    }
+
+    public static <T> ResultForm<T> error(Exception e) {
+        return ResultForm.failed().exception(e);
+    }
+
+    public static <T> ResultForm<T> error(T data, String msg, Exception e) {
+        return ResultForm.failed().result(data).msg(msg).exception(e);
     }
 
 

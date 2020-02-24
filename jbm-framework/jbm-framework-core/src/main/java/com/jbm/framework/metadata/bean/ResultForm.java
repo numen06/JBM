@@ -55,6 +55,7 @@ public class ResultForm<T> implements Serializable {
     /**
      * http状态码
      */
+    @ApiModelProperty(value = "http状态码")
     private int httpStatus;
 
     /**

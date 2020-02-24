@@ -3,11 +3,12 @@ package com.jbm.framework.masterdata.code;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ClassUtil;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.util.StringUtils;
 import jodd.util.StringUtil;
@@ -46,6 +47,7 @@ public class GenerateMasterData {
     private Boolean ignore;
     private Class superclass;
 
+
     public void setSkip(Boolean skip) {
         this.skip = skip;
     }
@@ -65,7 +67,7 @@ public class GenerateMasterData {
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
         this.basePackage = ClassUtil.getPackage(entityClass);
-        if (BaseEntity.class.isAssignableFrom(entityClass))
+        if (MasterDataEntity.class.isAssignableFrom(entityClass))
             this.superclass = entityClass.getSuperclass();
     }
 
@@ -99,13 +101,19 @@ public class GenerateMasterData {
         String extClass = null;
         switch (codeType) {
             case mapper:
-                extClass = BaseMapper.class.getName();
+                extClass = SuperMapper.class.getName();
                 break;
             case mapperXml:
-                extClass = BaseMapper.class.getName();
+                extClass = SuperMapper.class.getName();
                 break;
             case service:
                 if (superclass.equals(MasterDataEntity.class)) {
+                    extClass = IMasterDataService.class.getName();
+                }
+                if (superclass.equals(MasterDataIdEntity.class)) {
+                    extClass = IMasterDataService.class.getName();
+                }
+                if (superclass.equals(MasterDataCodeEntity.class)) {
                     extClass = IMasterDataService.class.getName();
                 }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
@@ -116,6 +124,12 @@ public class GenerateMasterData {
                 if (superclass.equals(MasterDataEntity.class)) {
                     extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
                 }
+                if (superclass.equals(MasterDataIdEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
+                }
+                if (superclass.equals(MasterDataCodeEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
+                }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
                     extClass = "com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl";
                 }
@@ -124,13 +138,19 @@ public class GenerateMasterData {
                 if (superclass.equals(MasterDataEntity.class)) {
                     extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
                 }
+                if (superclass.equals(MasterDataIdEntity.class)) {
+                    extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+                }
+                if (superclass.equals(MasterDataCodeEntity.class)) {
+                    extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+                }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
                     extClass = "com.jbm.framework.mvc.web.MasterDataTreeCollection";
                 }
                 break;
         }
         if (StringUtil.isBlank(extClass))
-            throw new ClassNotFoundException("未发现父类");
+            throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
         t.binding("extClass", extClass);
         t.binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
         return t;
@@ -178,9 +198,11 @@ public class GenerateMasterData {
 //        }
         try {
             if (superclass == null) {
+                logger.info("未检测到超类跳过:{}", this.entityClass);
                 return;
             }
             if (this.ignore) {
+                logger.info("设置为忽略生成:{}", this.entityClass);
                 return;
             }
             Template t = buildData(codeType);

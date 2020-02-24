@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.usage.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,6 +18,7 @@ import java.util.Date;
  */
 @MappedSuperclass
 @Data
+@TableName
 public abstract class MasterDataEntity implements Serializable {
 
     /**

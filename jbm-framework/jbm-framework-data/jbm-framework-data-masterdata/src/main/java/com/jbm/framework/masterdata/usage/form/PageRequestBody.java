@@ -3,6 +3,8 @@ package com.jbm.framework.masterdata.usage.form;
 import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.PageForm;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,6 +16,7 @@ import java.util.Map;
  * @create: 2020-02-19 21:31
  **/
 @Data
+@ApiModel(value = "分页请求实体")
 public class PageRequestBody extends BaseRequsetBody {
 
 
@@ -33,12 +36,14 @@ public class PageRequestBody extends BaseRequsetBody {
     /**
      * 分页封装类
      */
+    @ApiModelProperty(value = "分页参数")
     private PageParams pageParams;
 
 
     /**
      * 分页封装类
      */
+    @ApiModelProperty(value = "分页封装实体")
     private PageForm pageForm;
 
     public PageParams getPageParams() {

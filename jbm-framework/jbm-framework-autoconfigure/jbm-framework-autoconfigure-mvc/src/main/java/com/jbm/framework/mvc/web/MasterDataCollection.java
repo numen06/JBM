@@ -13,9 +13,11 @@ import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ObjectUtils;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -71,7 +73,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/pageList")
+    @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
+    @PostMapping("/pageList")
     @Override
     public Object pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
@@ -91,7 +94,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/list")
+    @ApiOperation(value = "获取列表", notes = "获取列表")
+    @PostMapping("/list")
     @Override
     public Object list(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
@@ -110,7 +114,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/model")
+    @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
+    @PostMapping("/model")
     @Override
     public Object model(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
@@ -129,7 +134,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/save")
+    @ApiOperation(value = "保存单个实体", notes = "保存单个实体")
+    @PostMapping("/save")
     @Override
     public Object save(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
@@ -148,7 +154,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/saveBatch")
+    @ApiOperation(value = "批量保存", notes = "批量保存")
+    @PostMapping("/saveBatch")
     @Override
     public Object saveBatch(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
@@ -167,7 +174,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      *
      * @return
      */
-    @RequestMapping("/mock")
+    @ApiOperation(value = "模拟数据", notes = "模拟数据")
+    @PostMapping("/mock")
     @Override
     public Object mock() {
         try {
@@ -186,7 +194,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/delete")
+    @ApiOperation(value = "删除实体", notes = "删除实体")
+    @PostMapping("/delete")
     @Override
     public Object remove(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
@@ -201,7 +210,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         }
     }
 
-    @RequestMapping("/deleteByIds")
+    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @PostMapping("/deleteByIds")
     @Override
     public Object deleteByIds(@RequestBody(required = false) BaseRequsetBody pageRequestBody) {
         try {
