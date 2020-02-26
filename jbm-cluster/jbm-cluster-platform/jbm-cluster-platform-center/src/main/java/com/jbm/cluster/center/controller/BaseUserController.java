@@ -197,7 +197,7 @@ public class BaseUserController implements IBaseUserServiceClient {
      * @return
      */
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
-    @GetMapping("/user/roles")
+    @PostMapping("/user/roles")
     public ResultBody<List<BaseRole>> getUserRoles(
             @RequestParam(value = "userId") Long userId
     ) {
