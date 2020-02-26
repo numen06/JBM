@@ -75,7 +75,7 @@ public class Module2Excel {
 		});
 
 		// ExcelTemplate.getInstance().exportObject2Excel("D:\\IdeaSpace\\Excel4J\\src\\test\\resource\\map_template.xlsx",
-		// 0, classes, data, Student1.class, false, "D:/C.xlsx");
+		// 0, classes, result, Student1.class, false, "D:/C.xlsx");
 	}
 
 	@Test

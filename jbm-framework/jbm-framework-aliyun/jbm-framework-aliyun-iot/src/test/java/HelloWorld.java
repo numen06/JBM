@@ -214,7 +214,7 @@ public class HelloWorld {
                          * 这个流程只能走一次，获取到 secret 之后，下次启动需要读取本地存储的三元组，
                          * 直接执行初始化建联，不可以再走动态初始化
                          */
-                        // deviceSecret = response.data.get("deviceSecret");
+                        // deviceSecret = response.result.get("deviceSecret");
                         // init(pk,dn,ds);
                         return;
                     }

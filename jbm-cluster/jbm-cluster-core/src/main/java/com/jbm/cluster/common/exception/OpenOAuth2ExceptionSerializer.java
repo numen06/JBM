@@ -24,7 +24,7 @@ public class OpenOAuth2ExceptionSerializer extends StdSerializer<OpenOAuth2Excep
     public void serialize(OpenOAuth2Exception ex, JsonGenerator gen, SerializerProvider provider) throws IOException {
         gen.writeStartObject();
         gen.writeStringField("message", ex.getMessage());
-        gen.writeStringField("data", "");
+        gen.writeStringField("result", "");
         gen.writeNumberField("timestamp", System.currentTimeMillis());
         if (ex.getAdditionalInformation() != null) {
             for (Map.Entry<String, String> entry : ex.getAdditionalInformation().entrySet()) {

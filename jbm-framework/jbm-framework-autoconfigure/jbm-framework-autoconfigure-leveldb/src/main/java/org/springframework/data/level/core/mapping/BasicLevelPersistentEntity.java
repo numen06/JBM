@@ -33,8 +33,8 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
+	 *
+	 * @see org.springframework.result.Level.core.mapping.LevelPersistentEntity#
 	 * getTimeToLiveAccessor()
 	 */
 	@Override
@@ -44,8 +44,8 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
+	 *
+	 * @see org.springframework.result.Level.core.mapping.LevelPersistentEntity#
 	 * hasExplictTimeToLiveProperty()
 	 */
 	@Override
@@ -55,8 +55,8 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
+	 *
+	 * @see org.springframework.result.Level.core.mapping.LevelPersistentEntity#
 	 * getExplicitTimeToLiveProperty()
 	 */
 	@Override
@@ -67,9 +67,9 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#
-	 * returnPropertyIfBetterIdPropertyCandidateOrNull(org.springframework.data.
+	 *
+	 * @see org.springframework.result.mapping.model.BasicPersistentEntity#
+	 * returnPropertyIfBetterIdPropertyCandidateOrNull(org.springframework.result.
 	 * mapping.PersistentProperty)
 	 */
 	@Override

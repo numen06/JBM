@@ -1,24 +1,19 @@
 package com.jbm.framework.service.mybatis;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.google.common.collect.Maps;
+import com.jbm.framework.exceptions.DataServiceException;
+import com.jbm.framework.masterdata.service.IMasterDataTreeService;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.utils.EntityUtils;
+import com.jbm.util.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.LambdaUtils;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.google.common.collect.Maps;
-import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.ClassQueryWrapper;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
-import com.jbm.framework.masterdata.utils.EntityUtils;
-import com.jbm.util.CollectionUtils;
-import com.jbm.util.MapUtils;
 
 public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
@@ -46,7 +41,7 @@ public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEnt
     @Override
     public List<Entity> selectRootListById() throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.isNull("parent_id");
+        queryWrapper.isNull(EntityUtils.toDbName(Entity::getParentId));
         return this.selectEntitysByWapper(queryWrapper);
     }
 
@@ -94,14 +89,14 @@ public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEnt
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.eq("parent_id", parentId);
+        queryWrapper.eq(EntityUtils.toDbName(Entity::getParentId), parentId);
         return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
         QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
-        queryWrapper.eq("parent_id", entity.getParentId());
+        queryWrapper.eq(EntityUtils.toDbName(Entity::getParentId), entity.getId());
         return this.selectEntitysByWapper(queryWrapper);
     }
 

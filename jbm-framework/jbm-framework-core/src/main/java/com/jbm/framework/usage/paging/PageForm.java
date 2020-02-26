@@ -1,7 +1,10 @@
 package com.jbm.framework.usage.paging;
 
 import com.jbm.framework.metadata.usage.bean.IBaseForm;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <pre>
@@ -12,6 +15,7 @@ import lombok.Data;
  * @author wesley
  */
 @Data
+@ApiModel(value = "分页实体")
 public class PageForm implements IBaseForm {
 
     private static final long serialVersionUID = 1L;
@@ -23,26 +27,31 @@ public class PageForm implements IBaseForm {
     /**
      * 当前页
      */
+    @ApiModelProperty(value = "当前页")
     private Integer currPage;
     /**
      * 单页数量
      */
+    @ApiModelProperty(value = "单页数量")
     private Integer pageSize;
     /**
      * 排序字段组合<br/>
      * id:asc,sort:desc
      */
+    @ApiModelProperty(value = "排序规则—id:asc,code:desc")
     private String sortRule;
 
     /**
      * 搜索词
      */
+    @ApiModelProperty(value = "搜索词")
     private String keyword;
 
     /**
      * 匹配规则<br/>
      * field:eq,field:in,field:like
      */
+    @ApiModelProperty(value = "匹配规则")
     private MatchRule matchRule;
 
     public PageForm() {
@@ -62,28 +71,5 @@ public class PageForm implements IBaseForm {
         this.sortRule = sortRule;
     }
 
-    public Integer getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public Integer getCurrPage() {
-        return currPage;
-    }
-
-    public void setCurrPage(Integer currPage) {
-        this.currPage = currPage;
-    }
-
-    public String getSortRule() {
-        return sortRule;
-    }
-
-    public void setSortRule(String sortRule) {
-        this.sortRule = sortRule;
-    }
 
 }

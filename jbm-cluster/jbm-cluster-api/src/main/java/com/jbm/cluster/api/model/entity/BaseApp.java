@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * 系统应用-基础信息
@@ -24,6 +26,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName("base_app")
 @TableAlias("app")
+@Table(name = "base_app", indexes = {@Index(name = "apiKeyIndex", columnList = "api_key", unique = true)})
 public class BaseApp extends MasterDataEntity {
     @Id
     @TableId(type = IdType.INPUT)

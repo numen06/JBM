@@ -38,7 +38,7 @@ public class OAuth2AccessTokenMessageConverter extends AbstractHttpMessageConver
     protected OAuth2AccessToken readInternal(Class<? extends OAuth2AccessToken> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         throw new UnsupportedOperationException(
-                "This converter is only used for converting from externally aqcuired form data");
+                "This converter is only used for converting from externally aqcuired form result");
     }
 
     @Override

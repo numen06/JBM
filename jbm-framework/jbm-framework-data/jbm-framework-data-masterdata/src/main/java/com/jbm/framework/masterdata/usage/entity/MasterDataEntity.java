@@ -3,6 +3,7 @@ package com.jbm.framework.masterdata.usage.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,11 +26,13 @@ public abstract class MasterDataEntity implements Serializable {
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
+    @ApiModelProperty("创建时间")
     private Date createTime;
     /**
      * 更新时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
+    @ApiModelProperty("更新时间")
     private Date updateTime;
 
 

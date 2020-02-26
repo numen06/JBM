@@ -24,7 +24,7 @@ public class ClientDetailsServiceImpl implements ClientDetailsService {
 
     @Override
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
-        ClientDetails details = baseAppRemoteService.getAppClientInfo(clientId).getData();
+        ClientDetails details = baseAppRemoteService.getAppClientInfo(clientId).getResult();
         if (details != null && details.getClientId()!=null && details.getAdditionalInformation() != null) {
             String status = details.getAdditionalInformation().getOrDefault("status", "0").toString();
             if(!"1".equals(status)){

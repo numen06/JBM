@@ -359,7 +359,7 @@ public class WebUtils {
      * application/x-www-form-urlencode
      * application/json
      * application/json;charset=UTF-8
-     * multipart/form-data
+     * multipart/form-result
      *
      * @param request
      * @return

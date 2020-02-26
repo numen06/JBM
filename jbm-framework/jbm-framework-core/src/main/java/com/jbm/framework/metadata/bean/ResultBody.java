@@ -39,11 +39,12 @@ public class ResultBody<T> implements Serializable {
      * 响应数据
      */
     @ApiModelProperty(value = "响应数据")
-    private T data;
+    private T result;
 
     /**
      * http状态码
      */
+    @ApiModelProperty(value = "http状态码")
     private int httpStatus;
 
     /**
@@ -61,40 +62,6 @@ public class ResultBody<T> implements Serializable {
     public ResultBody() {
         super();
     }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public Map<String, Object> getExtra() {
-        return extra;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-//    @JSONField(serialize = false, deserialize = false)
-    public int getHttpStatus() {
-        return httpStatus;
-    }
-
-//    @JSONField(serialize = false, deserialize = false)
-//    public boolean isOk() {
-//        return this.code == ErrorCode.OK.getCode();
-//    }
 
 
     public static ResultBody ok() {
@@ -116,7 +83,7 @@ public class ResultBody<T> implements Serializable {
     }
 
     public ResultBody data(T data) {
-        this.data = data;
+        this.result = data;
         return this;
     }
 
@@ -144,7 +111,7 @@ public class ResultBody<T> implements Serializable {
                 "code=" + code +
                 ", message='" + message + '\'' +
                 ", path='" + path + '\'' +
-                ", data=" + data +
+                ", result=" + result +
                 ", httpStatus=" + httpStatus +
                 ", extra=" + extra +
                 ", timestamp=" + timestamp +
@@ -173,25 +140,29 @@ public class ResultBody<T> implements Serializable {
     private String exception;
 
     @ApiModelProperty(value = "是否成功")
-    private Boolean getSuccess() {
+    public Boolean getSuccess() {
         return this.code == ErrorCode.OK.getCode();
     }
 
-
-    public static <T> ResultForm<T> success(T data, String msg) {
-        return ResultForm.ok().result(data).msg(msg);
+    public ResultBody exception(Exception e) {
+        this.exception = e.getMessage();
+        return this;
     }
 
-    public static <T> ResultForm<T> error(T data, String msg) {
-        return ResultForm.failed().result(data).msg(msg);
+    public static <T> ResultBody<T> success(T data, String msg) {
+        return ResultBody.ok().data(data).msg(msg);
     }
 
-    public static <T> ResultForm<T> error(Exception e) {
-        return ResultForm.failed().exception(e);
+    public static <T> ResultBody<T> error(T data, String msg) {
+        return ResultBody.failed().data(data).msg(msg);
     }
 
-    public static <T> ResultForm<T> error(T data, String msg, Exception e) {
-        return ResultForm.failed().result(data).msg(msg).exception(e);
+    public static <T> ResultBody<T> error(Exception e) {
+        return ResultBody.failed().exception(e);
+    }
+
+    public static <T> ResultBody<T> error(T data, String msg, Exception e) {
+        return ResultBody.failed().data(data).msg(msg).exception(e);
     }
 
 

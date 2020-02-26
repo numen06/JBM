@@ -365,7 +365,6 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
      */
     protected QueryWrapper currentQueryWrapper() {
         QueryWrapper queryWrapper = ClassQueryWrapper.QueryWrapper(this.currentEntityClass());
-        queryWrapper.lambda();
         return queryWrapper;
     }
 

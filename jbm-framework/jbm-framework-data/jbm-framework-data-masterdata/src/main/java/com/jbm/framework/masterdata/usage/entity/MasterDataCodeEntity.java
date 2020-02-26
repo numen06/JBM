@@ -1,5 +1,8 @@
 package com.jbm.framework.masterdata.usage.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,6 +18,9 @@ import javax.persistence.MappedSuperclass;
 @EqualsAndHashCode(callSuper = true)
 public class MasterDataCodeEntity extends MasterDataIdEntity {
 
+
+    @ApiModelProperty("编码")
+    @TableId(type = IdType.ASSIGN_UUID)
     private String code;
 
     public MasterDataCodeEntity() {
@@ -34,7 +40,6 @@ public class MasterDataCodeEntity extends MasterDataIdEntity {
     public MasterDataCodeEntity(String code) {
         this.code = code;
     }
-
 
 
 }

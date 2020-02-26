@@ -8,6 +8,7 @@ import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -15,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +42,7 @@ public class BaseMenuController {
      */
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
     @GetMapping("/menu")
-    public ResultBody<IPage<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
+    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)));
     }
 
@@ -66,7 +68,6 @@ public class BaseMenuController {
     public ResultBody<List<BaseMenu>> getMenuAllList(@PathVariable("appId") Long appId) {
         return ResultBody.ok().data(baseResourceMenuService.findAllList());
     }
-
 
 
     /**

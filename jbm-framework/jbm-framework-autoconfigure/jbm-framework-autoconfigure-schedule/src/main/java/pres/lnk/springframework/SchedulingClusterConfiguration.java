@@ -34,7 +34,7 @@ public class SchedulingClusterConfiguration {
     @ConditionalOnMissingBean(AbstractScheduler.class)
     public AbstractScheduler getScheduler() {
         try {
-            ClassUtils.forName("org.springframework.data.redis.core.RedisTemplate",ClassUtils.getDefaultClassLoader());
+            ClassUtils.forName("org.springframework.result.redis.core.RedisTemplate",ClassUtils.getDefaultClassLoader());
             logger.info("启用Redis集群环境的定时任务");
             return new RedisSchedulerImpl();
         } catch (ClassNotFoundException e) {

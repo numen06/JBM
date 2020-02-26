@@ -31,7 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
         ResultBody<UserAccount> resp = baseUserServiceClient.userLogin(username);
-        UserAccount account = resp.getData();
+        UserAccount account = resp.getResult();
         if (account == null || account.getAccountId() == null) {
             throw new UsernameNotFoundException("系统用户 " + username + " 不存在!");
         }

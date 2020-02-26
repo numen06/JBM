@@ -78,7 +78,7 @@ public class WaitingRoom {
     }
 
     /**
-     * This method is used by the data listening thread to post responses as they are received from the transport.
+     * This method is used by the result listening thread to post responses as they are received from the transport.
      *
      * @param response the response message
      * @throws WaitingRoomException

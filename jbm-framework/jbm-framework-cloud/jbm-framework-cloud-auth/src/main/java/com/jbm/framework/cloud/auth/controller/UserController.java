@@ -2,7 +2,7 @@ package com.jbm.framework.cloud.auth.controller;
 
 import com.google.common.collect.Lists;
 import com.jbm.framework.cloud.auth.model.JbmAuthUser;
-import com.jbm.framework.metadata.bean.ResultForm;
+import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -41,18 +41,18 @@ public class UserController {
     private ConsumerTokenServices tokenServices;
 
     @RequestMapping("/exit")
-    public ResultForm revokeToken(OAuth2Authentication authentication) {
+    public ResultBody revokeToken(OAuth2Authentication authentication) {
         try {
             if (authentication.getDetails() instanceof OAuth2AuthenticationDetails) {
                 String token = ((OAuth2AuthenticationDetails) authentication.getDetails()).getTokenValue();
                 tokenServices.revokeToken(token);
                 log.info("token:{}退出登录", token);
-                return ResultForm.success(token, "退出登录成功");
+                return ResultBody.success(token, "退出登录成功");
             }
         } catch (Exception e) {
             log.error("退出登录错误", e);
         }
-        return ResultForm.error(null, "退出登录失败");
+        return ResultBody.error(null, "退出登录失败");
     }
 
 

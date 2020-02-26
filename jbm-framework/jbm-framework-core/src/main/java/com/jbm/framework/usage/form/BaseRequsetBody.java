@@ -16,6 +16,7 @@ import java.util.Map;
  * @author: wesley.zhang
  * @create: 2020-02-19 21:28
  **/
+@ApiModel(value = "请求实体")
 public class BaseRequsetBody extends JSONBean {
 
     private static final long serialVersionUID = 1L;

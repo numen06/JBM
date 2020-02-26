@@ -43,7 +43,7 @@ public class COTASample extends BaseSample {
                 if (aRequest instanceof MqttRrpcRequest) {
                     // 云端下行数据 拿到
                     String cotaData = new String((byte[]) ((MqttRrpcRequest) aRequest).payloadObj);
-                    ALog.d(TAG, "received data=" + cotaData);
+                    ALog.d(TAG, "received result=" + cotaData);
 //                     ((MqttRrpcRequest) aRequest).payloadObj;
 //                    ResponseModel<Map<String, String>> responseModel = JSONObject.parseObject(((MqttRrpcRequest) aRequest).payloadObj, new TypeReference<ResponseModel<Map<String, String>>>(){}.getType());
 
@@ -53,7 +53,7 @@ public class COTASample extends BaseSample {
                         "id": "123",
                         "version": "1.0",
                         "code": 200,
-                        "data": {
+                        "result": {
                         "configId": "123dagdah",
                             "configSize": 1234565,
                             "sign": "123214adfadgadg",

@@ -110,7 +110,7 @@ public class TestRoutes {
 
 	/**
 	 * 上传文件测试
-	 * 
+	 *
 	 * @param uploadFile
 	 * @param request
 	 * @param config
@@ -125,7 +125,7 @@ public class TestRoutes {
 		if (uploadFile != null) {
 			File file = new File("d:/" + uploadFile.getName());
 			FileUtil.writeBytes(uploadFile.getData(), file);// .writeByteArrayToFile(file,
-															// uploadFile.getData());
+															// uploadFile.getResult());
 
 			System.out.println("【" + before + "】");
 			System.out.println("【" + end + "】");

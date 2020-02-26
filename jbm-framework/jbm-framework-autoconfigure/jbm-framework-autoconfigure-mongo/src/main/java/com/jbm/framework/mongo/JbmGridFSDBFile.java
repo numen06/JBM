@@ -87,7 +87,7 @@ public class JbmGridFSDBFile {
 		if (extraElements != null && extraElements.containsKey("contentType")) {
 			return extraElements.getString("contentType");
 		} else {
-			throw new MongoGridFSException("No contentType data for this GridFS file");
+			throw new MongoGridFSException("No contentType result for this GridFS file");
 		}
 	}
 

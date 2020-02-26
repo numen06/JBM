@@ -137,9 +137,9 @@ public class SwaggerAutoConfiguration implements BeanFactoryAware {
 	private List<Parameter> buildGlobalOperationParametersFromSwaggerProperties(List<SwaggerProperties.GlobalOperationParameter> globalOperationParameters) {
 		List<Parameter> parameters = Lists.newArrayList();
 
-		ParameterBuilder tokenPar = new ParameterBuilder();
-		tokenPar.name("x-auth-token").description("令牌").modelRef(new ModelRef("string")).parameterType("header").required(false).build();
-		parameters.add(tokenPar.build());
+//		ParameterBuilder tokenPar = new ParameterBuilder();
+//		tokenPar.name("Authorization").description("令牌").modelRef(new ModelRef("string")).parameterType("header").required(false).build();
+//		parameters.add(tokenPar.build());
 
 		if (Objects.isNull(globalOperationParameters)) {
 			return parameters;

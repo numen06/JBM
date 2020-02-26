@@ -141,7 +141,7 @@ public class GatewaySample extends BaseSample {
 
             @Override
             public void onDataPush(String s, AMessage message) {
-                // new String((byte[]) message.getData())
+                // new String((byte[]) message.getResult())
                 // {"method":"thing.service.property.set","id":"184220091","params":{"test":2},"version":"1.0.0"} 示例
                 ALog.d(TAG, "收到子设备下行数据  onDataPush() called with: topic = [" + s + "], message = [" + getMessage(message) + "]");
             }
@@ -322,7 +322,7 @@ public class GatewaySample extends BaseSample {
                 ALog.d(TAG, "== onReceived() called with: aRequest = [" + aRequest + "], iConnectRrpcHandle = [" + iConnectRrpcHandle + "]" + getPkDn(info));
                 AResponse response = new AResponse();
                 // 回复示例
-                response.data = "{\"id\":\"123\", \"code\":\"200\"" + ",\"data\":{} }";
+                response.data = "{\"id\":\"123\", \"code\":\"200\"" + ",\"result\":{} }";
                 //TODO
                 if (aRequest instanceof MqttRrpcRequest) {
                     String receivedData = new String((byte[]) ((MqttRrpcRequest) aRequest).payloadObj);

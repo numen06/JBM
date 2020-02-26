@@ -1,12 +1,16 @@
 package com.jbm.framework.masterdata.utils;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.baomidou.mybatisplus.core.toolkit.LambdaUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.core.toolkit.support.SerializedLambda;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +22,7 @@ import java.util.Map;
  * @author: wesley.zhang
  * @create: 2020-02-21 01:32
  **/
+@Slf4j
 public class EntityUtils {
 
 
@@ -86,4 +91,39 @@ public class EntityUtils {
         }
         return result;
     }
+
+    /***
+     * 转换方法引用为属性名
+     * @param func
+     * @return
+     */
+    public static <T> String toFieldName(SFunction<T, ?> func) {
+        SerializedLambda lambda = LambdaUtils.resolve(func);
+        // 获取方法名
+        String methodName = lambda.getImplMethodName();
+        String prefix = null;
+        if (methodName.startsWith("get")) {
+            prefix = "get";
+        } else if (methodName.startsWith("is")) {
+            prefix = "is";
+        }
+        if (prefix == null) {
+            log.info("无效的getter方法: {}", methodName);
+        }
+        String field = StrUtil.subAfter(methodName, prefix, false);
+        return StrUtil.lowerFirst(field);
+    }
+
+    /**
+     * 转换为字段的名称
+     *
+     * @param func
+     * @param <T>
+     * @return
+     */
+    public static <T> String toDbName(SFunction<T, ?> func) {
+        return StrUtil.toUnderlineCase(toFieldName(func));
+    }
+
+
 }

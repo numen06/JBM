@@ -3,14 +3,14 @@ package org.springframework.data.level;
 import org.springframework.data.keyvalue.core.KeyValueTemplate;
 
 /**
- * 
+ *
  * @author wesley
  *
  */
 public class LevelKeyValueTemplate extends KeyValueTemplate {
 	/**
 	 * Create new {@link LevelKeyValueTemplate}.
-	 * 
+	 *
 	 * @param adapter
 	 *            must not be {@literal null}.
 	 * @param mappingContext
@@ -22,9 +22,9 @@ public class LevelKeyValueTemplate extends KeyValueTemplate {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
-	 * org.springframework.data.keyvalue.core.KeyValueTemplate#getMappingContext
+	 * org.springframework.result.keyvalue.core.KeyValueTemplate#getMappingContext
 	 * ()
 	 */
 	@Override

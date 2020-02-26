@@ -64,7 +64,7 @@ public class IndexController {
         if (auth != null) {
             try {
                 AuthorizationRequest authorizationRequest = (AuthorizationRequest) auth;
-                ClientDetails clientDetails = baseAppRemoteService.getAppClientInfo(authorizationRequest.getClientId()).getData();
+                ClientDetails clientDetails = baseAppRemoteService.getAppClientInfo(authorizationRequest.getClientId()).getResult();
                 model.put("app", clientDetails.getAdditionalInformation());
             } catch (Exception e) {
 

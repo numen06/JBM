@@ -29,11 +29,11 @@ public class GatewayContext {
      */
     private HttpHeaders requestHeaders;
     /**
-     * cache form data
+     * cache form result
      */
     private MultiValueMap<String, String> formData;
     /**
-     * cache all request data include:form data and query param
+     * cache all request result include:form result and query param
      */
     private MultiValueMap<String, String> allRequestData = new LinkedMultiValueMap<>(0);
 

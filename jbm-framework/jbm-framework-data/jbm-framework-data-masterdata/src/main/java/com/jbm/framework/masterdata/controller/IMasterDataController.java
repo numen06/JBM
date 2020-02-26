@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
+import com.jbm.framework.usage.paging.DataPaging;
+
+import java.util.List;
 
 public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {
 
@@ -15,9 +19,9 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object pageList(PageRequestBody pageRequestBody);
+    ResultBody<DataPaging<Entity>> pageList(PageRequestBody pageRequestBody);
 
-    Object list(BaseRequsetBody pageRequestBody);
+    ResultBody<List<Entity>> list(BaseRequsetBody pageRequestBody);
 
     /**
      * 获取单一对对象
@@ -25,7 +29,7 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object model(BaseRequsetBody pageRequestBody);
+    ResultBody<Entity> model(BaseRequsetBody pageRequestBody);
 
     /**
      * 保存单一对象
@@ -33,13 +37,13 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object save(BaseRequsetBody pageRequestBody);
+    ResultBody<Entity> save(BaseRequsetBody pageRequestBody);
 
     /**
      * @param pageRequestBody
      * @return
      */
-    Object remove(BaseRequsetBody pageRequestBody);
+    ResultBody<Boolean> remove(BaseRequsetBody pageRequestBody);
 
     /**
      * 保存多个对象
@@ -47,14 +51,14 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object saveBatch(BaseRequsetBody pageRequestBody);
+    ResultBody<List<Entity>> saveBatch(BaseRequsetBody pageRequestBody);
 
     /**
      * 生产假数据
      *
      * @return
      */
-    Object mock();
+    ResultBody<Entity> mock();
 
     /**
      * 批量删除
@@ -62,5 +66,5 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    Object deleteByIds(BaseRequsetBody pageRequestBody);
+    ResultBody<Boolean> deleteByIds(BaseRequsetBody pageRequestBody);
 }

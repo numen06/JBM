@@ -78,7 +78,7 @@ public class PreSignatureFilter implements WebFilter {
                     String appId = params.get(CommonConstants.SIGN_APP_ID_KEY).toString();
                     // 获取客户端信息
                     ResultBody<BaseApp> result = baseAppServiceClient.getApp(appId);
-                    BaseApp app = result.getData();
+                    BaseApp app = result.getResult();
                     if (app == null || app.getAppId() == null) {
                         return signatureDeniedHandler.handle(exchange, new OpenSignatureException("appId无效"));
                     }

@@ -1,7 +1,10 @@
 package com.jbm.framework.usage.paging;
 
 import cn.hutool.db.Page;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,29 +19,28 @@ import java.util.Map;
  * @author Wesley
  */
 @Data
+@ApiModel(value = "分页实体")
 public class DataPaging<E> implements Serializable {
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
-
     /**
      * 空的数据
      */
     public final static List EMPTY_CONTENT = new ArrayList<>();
+    /**
+     * 空分页对象
+     */
     public final static PageForm EMPTY_PAGEABLE = new PageForm();
 
     /**
      * 查询的内容
      */
+    @ApiModelProperty(value = "分页列表")
     private List<E> contents = EMPTY_CONTENT;
 
-    /**
-     * 总数
-     */
+    @ApiModelProperty(value = "总条目数")
     private Long total;
 
-
+    @ApiModelProperty(value = "总页数")
     private Long totalPage;
 
     /**
@@ -79,23 +81,9 @@ public class DataPaging<E> implements Serializable {
         this.pageForm = pageForm;
     }
 
-    public PageForm getPageForm() {
-        return pageForm;
-    }
-
-    public void setPageForm(PageForm pageForm) {
-        this.pageForm = pageForm;
-    }
-
-    public Long getTotal() {
-        return total;
-    }
-
+    @ApiModelProperty(value = "列表扩展解析")
     private Map<String, Object> exposition;
 
-    public Map<String, Object> getExposition() {
-        return exposition;
-    }
 
     public <K, V, T extends Map<K, V>> void putExp(Map<String, T> exp) {
         if (exposition == null)
@@ -109,6 +97,7 @@ public class DataPaging<E> implements Serializable {
         exposition.put(type, mapper);
     }
 
+    @ApiModelProperty(value = "总条目数")
     public Integer getSize() {
         return pageForm.getPageSize();
     }
@@ -117,6 +106,7 @@ public class DataPaging<E> implements Serializable {
         pageForm.setPageSize(size.intValue());
     }
 
+    @ApiModelProperty(value = "当前页")
     public Integer getCurrent() {
         return pageForm.getCurrPage();
     }
@@ -125,6 +115,7 @@ public class DataPaging<E> implements Serializable {
         pageForm.setCurrPage(current.intValue());
     }
 
+    @ApiModelProperty(value = "总页数")
     public Long getPages() {
         return totalPage;
     }

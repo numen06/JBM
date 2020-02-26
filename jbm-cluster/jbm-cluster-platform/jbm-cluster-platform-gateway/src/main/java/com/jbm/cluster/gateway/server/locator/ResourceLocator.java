@@ -144,7 +144,7 @@ public class ResourceLocator implements ApplicationListener<RemoteRefreshRouteEv
         ConfigAttribute cfg;
         try {
             // 查询所有接口
-            resources = baseAuthorityServiceClient.findAuthorityResource().getData();
+            resources = baseAuthorityServiceClient.findAuthorityResource().getResult();
             if (resources != null) {
                 for (AuthorityResource item : resources) {
                     String path = item.getPath();
@@ -177,7 +177,7 @@ public class ResourceLocator implements ApplicationListener<RemoteRefreshRouteEv
     public List<IpLimitApi> loadIpBlackList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiBlackList().getData();
+            list = gatewayServiceClient.getApiBlackList().getResult();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));
@@ -196,7 +196,7 @@ public class ResourceLocator implements ApplicationListener<RemoteRefreshRouteEv
     public List<IpLimitApi> loadIpWhiteList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiWhiteList().getData();
+            list = gatewayServiceClient.getApiWhiteList().getResult();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));

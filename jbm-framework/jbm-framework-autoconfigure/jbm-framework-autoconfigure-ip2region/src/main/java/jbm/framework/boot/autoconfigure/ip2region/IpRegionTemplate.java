@@ -45,7 +45,7 @@ public class IpRegionTemplate implements InitializingBean {
 
                 try {
                     URL url = IpRegionTemplate.class.getClassLoader().getResource("data/ip2region.db");
-//                    ClassPathResource resource = new ClassPathResource("data/ip2region.db", IpRegionTemplate.class);
+//                    ClassPathResource resource = new ClassPathResource("result/ip2region.db", IpRegionTemplate.class);
                     log.info("db地址{}", url);
                     if (URLUtil.isFileURL(url)) {
                         dbPath = url.getPath();

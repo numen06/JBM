@@ -1,9 +1,9 @@
 package com.jbm.framework.masterdata.usage.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,7 +11,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import java.util.Date;
 
 /**
  * @program: JBM6
@@ -36,7 +35,8 @@ public abstract class MasterDataIdEntity extends MasterDataEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = com.baomidou.mybatisplus.annotation.IdType.ID_WORKER)
+    @TableId(type = IdType.ASSIGN_ID)
+    @ApiModelProperty("主键ID")
     private Long id;
 
 

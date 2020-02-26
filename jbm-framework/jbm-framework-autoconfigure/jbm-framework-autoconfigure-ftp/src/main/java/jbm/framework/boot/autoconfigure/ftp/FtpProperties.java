@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.ftp;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "spring.data.ftp")
+@ConfigurationProperties(prefix = "spring.result.ftp")
 public class FtpProperties extends FTPClient {
 
 	private String hostname;

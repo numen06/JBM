@@ -109,7 +109,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                     List<String> entryValue;
                     try {
                         /*
-                         * repackage form data
+                         * repackage form result
                          */
                         for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
                             entryKey = entry.getKey();
@@ -131,7 +131,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                         formDataBodyString = formDataBodyBuilder.substring(0, formDataBodyBuilder.length() - 1);
                     }
                     /*
-                     * get data bytes
+                     * get result bytes
                      */
                     byte[] bodyBytes =  formDataBodyString.getBytes(charset);
                     int contentLength = bodyBytes.length;

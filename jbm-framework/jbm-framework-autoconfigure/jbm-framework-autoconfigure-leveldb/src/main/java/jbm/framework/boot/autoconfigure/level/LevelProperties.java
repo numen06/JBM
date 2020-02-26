@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.level;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.data.level.LevelOption;
 
-@ConfigurationProperties(prefix = "spring.data.level")
+@ConfigurationProperties(prefix = "spring.result.level")
 public class LevelProperties extends LevelOption {
 
 	/**

@@ -418,7 +418,7 @@ public class SubThingSample extends BaseSample {
             if (CONNECT_ID.equals(connectId) && !StringUtils.isEmptyString(topic) &&
                     topic.startsWith("/sys/" + productKey + "/" + deviceName + "/rrpc/request")) {
                 ALog.d(TAG, "收到云端同步下行" + printAMessage(aMessage));
-//                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.data));
+//                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
                 // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
                 MqttPublishRequest request = new MqttPublishRequest();
                 request.isRPC = false;
@@ -426,8 +426,8 @@ public class SubThingSample extends BaseSample {
                 String resId = topic.substring(topic.indexOf("rrpc/request/") + 13);
                 request.msgId = resId;
                 // TODO 用户根据实际情况填写 仅做参考
-                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"data\":{} }";
-//                    aResponse.data =
+                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
+//                    aResponse.result =
                 LinkKit.getInstance().getMqttClient().publish(request, new IConnectSendListener() {
                     public void onResponse(ARequest aRequest, AResponse aResponse) {
                         ALog.d(TAG, "onResponse() called with: aRequest = [" + aRequest + "], aResponse = [" + aResponse + "]");
@@ -441,7 +441,7 @@ public class SubThingSample extends BaseSample {
             else if (CONNECT_ID.equals(connectId) && !TextUtils.isEmpty(topic) &&
                     topic.startsWith("/ext/rrpc/")) {
                 ALog.d(TAG, "收到云端自定义RRPC下行");
-                //                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.data));
+                //                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
                 // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
                 MqttPublishRequest request = new MqttPublishRequest();
                 // 支持 0 和 1， 默认0
@@ -452,8 +452,8 @@ public class SubThingSample extends BaseSample {
                 String resId = array[3];
                 request.msgId = resId;
                 // TODO 用户根据实际情况填写 仅做参考
-                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"data\":{} }";
-                //                    aResponse.data =
+                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
+                //                    aResponse.result =
                 LinkKit.getInstance().publish(request, new IConnectSendListener() {
                     @Override
                     public void onResponse(ARequest aRequest, AResponse aResponse) {
@@ -490,7 +490,7 @@ public class SubThingSample extends BaseSample {
                     if (isSetPropertySuccess) {
                         if (result instanceof InputParams) {
                             Map<String, ValueWrapper> data = (Map<String, ValueWrapper>) ((InputParams) result).getData();
-//                        data.get()
+//                        result.get()
                             ALog.d(TAG, "收到异步下行数据 " + data);
                             // 响应云端 接收数据成功
                             itResResponseCallback.onComplete(identify, null, null);

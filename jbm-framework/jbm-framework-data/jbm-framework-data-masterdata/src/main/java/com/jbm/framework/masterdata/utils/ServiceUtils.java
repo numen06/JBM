@@ -1,5 +1,6 @@
 package com.jbm.framework.masterdata.utils;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -18,6 +19,7 @@ import com.jbm.util.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +30,41 @@ import java.util.Map;
 @Slf4j
 public class ServiceUtils {
 
+
+    /**
+     * 通过指定主键生成MAP
+     *
+     * @param entitys
+     * @param key
+     * @param <Entity>
+     * @param toList   是否转换为List
+     * @return
+     */
+    public static <Entity> Map<String, Entity> entityToDictionary(List<Entity> entitys, String key, boolean toList) {
+        Map<String, Entity> result = Maps.newLinkedHashMap();
+        for (Entity entity : entitys) {
+            result.put(BeanUtil.getProperty(entity, key), entity);
+        }
+        return result;
+    }
+
+    /**
+     * 将实体转换成Map
+     *
+     * @param entitys
+     * @param key
+     * @param value
+     * @param <Entity>
+     * @param toList   是否转换为List
+     * @return
+     */
+    public static <Entity> Map<String, Entity> entityToDictionary(List<Entity> entitys, String key, String value, boolean toList) {
+        Map<String, Entity> result = Maps.newLinkedHashMap();
+        for (Entity entity : entitys) {
+            result.put(BeanUtil.getProperty(entity, key), BeanUtil.getProperty(entity, value));
+        }
+        return result;
+    }
 
     /**
      * 创建默认的分页查询

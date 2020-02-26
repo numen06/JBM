@@ -50,7 +50,7 @@ public class ExcellTest {
 		excelTemplate.exportObjects2Excel(list, Student.class, true, "A.xlsx");
 
 		// 基于模板导出Excel
-		// excelTemplate.exportObjects2Excel(tempPath, 0, list, data,
+		// excelTemplate.exportObjects2Excel(tempPath, 0, list, result,
 		// Student.class, false, "B.xlsx");
 		// 不基于模板导出Excel
 	}

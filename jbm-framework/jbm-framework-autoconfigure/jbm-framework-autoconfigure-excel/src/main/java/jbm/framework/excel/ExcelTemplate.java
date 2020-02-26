@@ -217,7 +217,7 @@ public class ExcelTemplate {
     /* 二. 参数说明 */
     /* *) templatePath => 模板路径 */
     /* *) sheetIndex => Sheet索引(默认0) */
-    /* *) data => 导出内容List集合 */
+    /* *) result => 导出内容List集合 */
     /* *) extendMap => 扩展内容Map(具体就是key匹配替换模板#key内容) */
     /* *) clazz => 映射对象Class */
     /* *) isWriteHeader => 是否写入表头 */
@@ -296,7 +296,7 @@ public class ExcelTemplate {
     /* 二. 参数说明 */
     /* *) templatePath => 模板路径 */
     /* *) sheetIndex => Sheet索引(默认0) */
-    /* *) data => 导出内容Map集合 */
+    /* *) result => 导出内容Map集合 */
     /* *) extendMap => 扩展内容Map(具体就是key匹配替换模板#key内容) */
     /* *) clazz => 映射对象Class */
     /* *) isWriteHeader => 是否写入表头 */
@@ -353,7 +353,7 @@ public class ExcelTemplate {
     /* 1) 根据Java对象映射表头 */
     /* 2) 写入数据内容 */
     /* 二. 参数说明 */
-    /* *) data => 导出内容List集合 */
+    /* *) result => 导出内容List集合 */
     /* *) isWriteHeader => 是否写入表头 */
     /* *) sheetName => Sheet索引名(默认0) */
     /* *) clazz => 映射对象Class */
@@ -423,7 +423,7 @@ public class ExcelTemplate {
     /* 1) 写入表头内容(可选) */
     /* 2) 写入数据内容 */
     /* 二. 参数说明 */
-    /* *) data => 导出内容List集合 */
+    /* *) result => 导出内容List集合 */
     /* *) header => 表头集合,有则写,无则不写 */
     /* *) sheetName => Sheet索引名(默认0) */
     /* *) isXSSF => 是否Excel2007以上 */

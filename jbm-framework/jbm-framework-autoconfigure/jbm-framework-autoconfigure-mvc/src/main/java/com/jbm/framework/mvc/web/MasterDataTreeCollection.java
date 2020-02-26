@@ -4,7 +4,7 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
-import com.jbm.framework.metadata.bean.ResultForm;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.ApiOperation;
@@ -43,27 +43,27 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     @ApiOperation(value = "获取根节点列表", notes = "获取根节点列表")
     @PostMapping("/root")
     @Override
-    public ResultForm root(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
+    public ResultBody<List<Entity>> root(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {
             validator(baseRequsetBody);
             List<Entity> list = service.selectRootListById();
-            return ResultForm.success(list, "查询树根节点列表成功");
+            return ResultBody.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询树根节点列表失败", e);
+            return ResultBody.error(null, "查询树根节点列表失败", e);
         }
     }
 
     @ApiOperation(value = "获取根树状结构", notes = "获取根树状结构")
     @PostMapping("/tree")
     @Override
-    public ResultForm tree(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
+    public ResultBody<List<Entity>> tree(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
         try {
             validator(baseRequsetBody);
             Entity entity = validatorMasterData(baseRequsetBody, false);
             List<Entity> list = service.selectChildNodesById(entity);
-            return ResultForm.success(list, "查询树结构成功");
+            return ResultBody.success(list, "查询树结构成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询树结构失败", e);
+            return ResultBody.error(null, "查询树结构失败", e);
         }
     }
 

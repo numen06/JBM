@@ -30,7 +30,7 @@ public class ModbusRead {
     public void timeRead() throws ModbusTransportException, ErrorResponseException {
 
         for (String psn : deviceService.getModbusMasterMap().keySet()) {
-            log.info("start request psn data");
+            log.info("start request psn result");
             ModbusMaster modbusMaster = deviceService.getModbusMasterMap().get(psn);
 
             BatchRead<Integer> batch = new BatchRead<Integer>();
@@ -43,7 +43,7 @@ public class ModbusRead {
             batch.setContiguousRequests(false);
 //            ReadHoldingRegistersRequest request = new ReadHoldingRegistersRequest(1, 75, 10);
             BatchResults<Integer> results = modbusMaster.send(batch);
-            log.info("end request psn data:{}", results.toString());
+            log.info("end request psn result:{}", results.toString());
         }
 //        ReadHoldingRegistersRequest request = new ReadHoldingRegistersRequest(1, 75, 10);
 ////        Tio.sendToBsId(serverGroupContext, "PSN001", new ModbusRequestPacket(request));
