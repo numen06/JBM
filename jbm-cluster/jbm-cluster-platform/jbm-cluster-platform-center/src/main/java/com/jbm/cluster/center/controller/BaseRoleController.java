@@ -33,7 +33,7 @@ public class BaseRoleController {
      * @return
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
-    @GetMapping("/role")
+    @PostMapping("/role")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseRoleService.findListPage(PageRequestBody.from(map)));
     }
@@ -44,7 +44,7 @@ public class BaseRoleController {
      * @return
      */
     @ApiOperation(value = "获取所有角色列表", notes = "获取所有角色列表")
-    @GetMapping("/role/all")
+    @PostMapping("/role/all")
     public ResultBody<List<BaseRole>> getRoleAllList() {
         return ResultBody.ok().data(baseRoleService.findAllList());
     }
@@ -59,7 +59,7 @@ public class BaseRoleController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
     })
-    @GetMapping("/role/{roleId}/info")
+    @PostMapping("/role/{roleId}/info")
     public ResultBody<BaseRole> getRole(@PathVariable(value = "roleId") Long roleId) {
         BaseRole result = baseRoleService.getRole(roleId);
         return ResultBody.ok().data(result);
@@ -179,7 +179,7 @@ public class BaseRoleController {
      * @return
      */
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
-    @GetMapping("/role/users")
+    @PostMapping("/role/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(
             @RequestParam(value = "roleId") Long roleId
     ) {
