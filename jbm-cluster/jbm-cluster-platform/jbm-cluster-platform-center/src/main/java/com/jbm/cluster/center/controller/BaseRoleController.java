@@ -1,11 +1,16 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseRoleUser;
 import com.jbm.cluster.center.service.BaseRoleService;
+import com.jbm.framework.masterdata.controller.IMasterDataController;
+import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
@@ -23,7 +28,7 @@ import java.util.Map;
  */
 @Api(tags = "系统角色管理")
 @RestController
-public class BaseRoleController {
+public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleService> {
     @Autowired
     private BaseRoleService baseRoleService;
 
@@ -34,8 +39,8 @@ public class BaseRoleController {
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @PostMapping("/role")
-    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseRoleService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return ResultBody.ok().data(baseRoleService.findListPage(pageRequestBody));
     }
 
     /**
@@ -68,10 +73,6 @@ public class BaseRoleController {
     /**
      * 添加角色
      *
-     * @param roleCode 角色编码
-     * @param roleName 角色显示名称
-     * @param roleDesc 描述
-     * @param status   启用禁用
      * @return
      */
     @ApiOperation(value = "添加角色", notes = "添加角色")
@@ -82,19 +83,14 @@ public class BaseRoleController {
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/role/add")
-    public ResultBody<Long> addRole(
-            @RequestParam(value = "roleCode") String roleCode,
-            @RequestParam(value = "roleName") String roleName,
-            @RequestParam(value = "roleDesc", required = false) String roleDesc,
-            @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
-    ) {
-        BaseRole role = new BaseRole();
-        role.setRoleCode(roleCode);
-        role.setRoleName(roleName);
-        role.setStatus(status);
-        role.setRoleDesc(roleDesc);
+    public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+//        BaseRole role = new BaseRole();
+//        role.setRoleCode(roleCode);
+//        role.setRoleName(roleName);
+//        role.setStatus(status);
+//        role.setRoleDesc(roleDesc);
         Long roleId = null;
-        BaseRole result = baseRoleService.addRole(role);
+        BaseRole result = baseRoleService.addRole(pageRequestBody.tryGet(BaseRole.class));
         if (result != null) {
             roleId = result.getRoleId();
         }
@@ -104,11 +100,6 @@ public class BaseRoleController {
     /**
      * 编辑角色
      *
-     * @param roleId   角色ID
-     * @param roleCode 角色编码
-     * @param roleName 角色显示名称
-     * @param roleDesc 描述
-     * @param status   启用禁用
      * @return
      */
     @ApiOperation(value = "编辑角色", notes = "编辑角色")
@@ -121,19 +112,20 @@ public class BaseRoleController {
     })
     @PostMapping("/role/update")
     public ResultBody updateRole(
-            @RequestParam(value = "roleId") Long roleId,
-            @RequestParam(value = "roleCode") String roleCode,
-            @RequestParam(value = "roleName") String roleName,
-            @RequestParam(value = "roleDesc", required = false) String roleDesc,
-            @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
+//            @RequestParam(value = "roleId") Long roleId,
+//            @RequestParam(value = "roleCode") String roleCode,
+//            @RequestParam(value = "roleName") String roleName,
+//            @RequestParam(value = "roleDesc", required = false) String roleDesc,
+//            @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
-        BaseRole role = new BaseRole();
-        role.setRoleId(roleId);
-        role.setRoleCode(roleCode);
-        role.setRoleName(roleName);
-        role.setStatus(status);
-        role.setRoleDesc(roleDesc);
-        baseRoleService.updateRole(role);
+//        BaseRole role = new BaseRole();
+//        role.setRoleId(roleId);
+//        role.setRoleCode(roleCode);
+//        role.setRoleName(roleName);
+//        role.setStatus(status);
+//        role.setRoleDesc(roleDesc);
+        baseRoleService.updateRole(pageRequestBody.tryGet(BaseRole.class));
         return ResultBody.ok();
     }
 
@@ -141,7 +133,6 @@ public class BaseRoleController {
     /**
      * 删除角色
      *
-     * @param roleId
      * @return
      */
     @ApiOperation(value = "删除角色", notes = "删除角色")
@@ -149,26 +140,28 @@ public class BaseRoleController {
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/role/remove")
-    public ResultBody removeRole(
-            @RequestParam(value = "roleId") Long roleId
+    public ResultBody removeRole(@RequestBody(required = false) PageRequestBody pageRequestBody
+//            @RequestParam(value = "roleId") Long roleId
     ) {
-        baseRoleService.removeRole(roleId);
+        baseRoleService.removeRole(pageRequestBody.tryGet(BaseRole.class).getRoleId());
         return ResultBody.ok();
     }
 
     /**
      * 角色添加成员
-     * @param roleId
-     * @param userIds
+     *
      * @return
      */
     @ApiOperation(value = "角色添加成员", notes = "角色添加成员")
     @PostMapping("/role/users/add")
     public ResultBody addUserRoles(
-            @RequestParam(value = "roleId") Long roleId,
-            @RequestParam(value = "userIds", required = false) String userIds
+//            @RequestParam(value = "roleId") Long roleId,
+//            @RequestParam(value = "userIds", required = false) String userIds
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
-        baseRoleService.saveRoleUsers(roleId, StringUtils.isNotBlank(userIds) ? userIds.split(",") : new String[]{});
+        BaseRole role = pageRequestBody.tryGet(BaseRole.class);
+        String[] userIds = StrUtil.splitToArray(pageRequestBody.getString("userIds"), ',');
+        baseRoleService.saveRoleUsers(role.getRoleId(), userIds);
         return ResultBody.ok();
     }
 
@@ -181,9 +174,11 @@ public class BaseRoleController {
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
     @PostMapping("/role/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(
-            @RequestParam(value = "roleId") Long roleId
+//            @RequestParam(value = "roleId") Long roleId
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
-        return ResultBody.ok().data(baseRoleService.findRoleUsers(roleId));
+        BaseRole role = pageRequestBody.tryGet(BaseRole.class);
+        return ResultBody.ok().data(baseRoleService.findRoleUsers(role.getRoleId()));
     }
 
 }

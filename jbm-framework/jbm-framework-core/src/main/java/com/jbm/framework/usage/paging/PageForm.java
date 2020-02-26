@@ -71,5 +71,13 @@ public class PageForm implements IBaseForm {
         this.sortRule = sortRule;
     }
 
+    public void setPage(Integer page) {
+        this.currPage = page;
+    }
+
+    public void setLimit(Integer limit) {
+        this.pageSize = limit;
+    }
+
 
 }
