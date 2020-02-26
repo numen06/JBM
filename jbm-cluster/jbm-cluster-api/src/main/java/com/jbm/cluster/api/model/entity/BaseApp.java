@@ -26,7 +26,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @TableName("base_app")
 @TableAlias("app")
-@Table(name = "base_app", indexes = {@Index(name = "apiKeyIndex", columnList = "api_key", unique = true)})
+@Table(name = "base_app", indexes = {@Index(name = "apiKeyIndex", columnList = "apiKey", unique = true)})
 public class BaseApp extends MasterDataEntity {
     @Id
     @TableId(type = IdType.INPUT)

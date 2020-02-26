@@ -114,7 +114,7 @@
                 AND api.service_id = #{serviceId}
             </if>
         </where>
-       order by api.create_time desc
+        order by api.create_time desc
     </select>
 
     <select id="selectAuthorityAll"

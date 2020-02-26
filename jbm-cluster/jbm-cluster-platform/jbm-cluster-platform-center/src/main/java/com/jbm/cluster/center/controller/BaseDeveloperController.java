@@ -27,12 +27,11 @@ import java.util.Map;
  *
  * @author wesley.zhang
  */
-@Api(tags = "系统用户管理")
+@Api(tags = "系统开发者管理")
 @RestController
 public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @Autowired
     private BaseDeveloperService baseDeveloperService;
-
 
 
     /**
