@@ -44,7 +44,7 @@ public class MinioConfiguration {
     private MinioConfigurationProperties minioConfigurationProperties;
 
     @Bean
-    public MinioClient minioClient() throws InvalidEndpointException, InvalidPortException, IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException, InternalException, NoResponseException, InvalidBucketNameException, XmlPullParserException, ErrorResponseException, MinioException {
+    public MinioClient minioClient() throws InvalidEndpointException, InvalidPortException, IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException, InternalException, NoResponseException, InvalidBucketNameException, XmlPullParserException, ErrorResponseException, MinioException, InvalidResponseException {
 
         MinioClient minioClient = null;
         try {
@@ -80,7 +80,7 @@ public class MinioConfiguration {
                     }
                 }
             } catch
-            (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | MinioException
+            (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException | InternalException | MinioException | InvalidResponseException
                             e) {
                 log.error("Error while checking bucket", e);
                 throw e;
