@@ -1,10 +1,10 @@
 package com.jbm.test;
 
-import com.jlefebure.spring.boot.minio.MinioException;
-import com.jlefebure.spring.boot.minio.MinioService;
-import com.jlefebure.spring.boot.minio.notification.MinioNotification;
 import io.minio.messages.Item;
 import io.minio.notification.NotificationInfo;
+import jbm.framework.boot.autoconfigure.minio.MinioException;
+import jbm.framework.boot.autoconfigure.minio.MinioService;
+import jbm.framework.boot.autoconfigure.minio.notification.MinioNotification;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;

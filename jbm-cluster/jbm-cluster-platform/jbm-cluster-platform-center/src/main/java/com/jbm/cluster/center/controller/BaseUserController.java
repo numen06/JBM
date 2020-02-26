@@ -59,8 +59,8 @@ public class BaseUserController implements IBaseUserServiceClient {
      *
      * @return
      */
-    @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
-    @GetMapping("/user")
+    @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
+    @PostMapping("/user")
     public ResultBody<IPage<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseUserService.findListPage(PageRequestBody.from(map)));
     }
@@ -71,7 +71,7 @@ public class BaseUserController implements IBaseUserServiceClient {
      * @return
      */
     @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
-    @GetMapping("/user/all")
+    @PostMapping("/user/all")
     public ResultBody<List<BaseRole>> getUserAllList() {
         return ResultBody.ok().data(baseUserService.findAllList());
     }

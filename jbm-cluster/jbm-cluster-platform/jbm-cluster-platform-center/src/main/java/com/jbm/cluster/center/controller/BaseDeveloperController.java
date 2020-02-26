@@ -57,7 +57,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
      * @return
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
-    @GetMapping("/developer")
+    @PostMapping("/developer")
     public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseDeveloperService.findListPage(PageRequestBody.from(map)));
     }

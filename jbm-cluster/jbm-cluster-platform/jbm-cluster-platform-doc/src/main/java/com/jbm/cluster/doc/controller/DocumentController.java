@@ -3,15 +3,13 @@ package com.jbm.cluster.doc.controller;
 import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jlefebure.spring.boot.minio.MinioException;
-import com.jlefebure.spring.boot.minio.MinioService;
-import io.minio.messages.Item;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import jbm.framework.boot.autoconfigure.minio.MinioException;
+import jbm.framework.boot.autoconfigure.minio.MinioService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * @program: JBM6
