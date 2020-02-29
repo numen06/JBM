@@ -106,7 +106,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see org.springframework.result.keyvalue.core.mapping.KeySpaceResolver#
+		 * @see org.springframework.data.keyvalue.core.mapping.KeySpaceResolver#
 		 * resolveKeySpace(java.lang.Class)
 		 */
 		@Override
@@ -138,7 +138,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see org.springframework.result.keyvalue.core.KeySpaceResolver#
+		 * @see org.springframework.data.keyvalue.core.KeySpaceResolver#
 		 * resolveKeySpace(java.lang.Class)
 		 */
 		@Override
@@ -185,7 +185,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 		/*
 		 * (non-Javadoc)
 		 *
-		 * @see org.springframework.result.redis.core.TimeToLiveResolver#
+		 * @see org.springframework.data.redis.core.TimeToLiveResolver#
 		 * resolveTimeToLive(java.lang.Object)
 		 */
 		@Override

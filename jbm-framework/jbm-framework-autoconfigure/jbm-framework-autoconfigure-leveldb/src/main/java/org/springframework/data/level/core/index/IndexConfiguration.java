@@ -28,7 +28,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.springframework.result.redis.core.index.IndexDefinitionProvider#
+	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * hasIndexFor(java.io.Serializable)
 	 */
 	@Override
@@ -39,7 +39,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.springframework.result.redis.core.index.IndexDefinitionProvider#
+	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * hasIndexFor(java.io.Serializable, java.lang.String)
 	 */
 	public boolean hasIndexFor(Serializable keyspace, String path) {
@@ -49,7 +49,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.springframework.result.redis.core.index.IndexDefinitionProvider#
+	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * getIndexDefinitionsFor(java.io.Serializable, java.lang.String)
 	 */
 	public Set<IndexDefinition> getIndexDefinitionsFor(Serializable keyspace, String path) {
@@ -59,7 +59,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.springframework.result.redis.core.index.IndexDefinitionProvider#
+	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * getIndexDefinitionsFor(java.io.Serializable)
 	 */
 	public Set<IndexDefinition> getIndexDefinitionsFor(Serializable keyspace) {
@@ -78,8 +78,8 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see org.springframework.result.redis.core.index.IndexDefinitionRegistry#
-	 * addIndexDefinition(org.springframework.result.redis.core.index.
+	 * @see org.springframework.data.redis.core.index.IndexDefinitionRegistry#
+	 * addIndexDefinition(org.springframework.data.redis.core.index.
 	 * IndexDefinition)
 	 */
 	public void addIndexDefinition(IndexDefinition indexDefinition) {

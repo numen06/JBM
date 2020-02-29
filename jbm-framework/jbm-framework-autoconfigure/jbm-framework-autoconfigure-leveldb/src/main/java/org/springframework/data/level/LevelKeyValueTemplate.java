@@ -24,7 +24,7 @@ public class LevelKeyValueTemplate extends KeyValueTemplate {
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * org.springframework.result.keyvalue.core.KeyValueTemplate#getMappingContext
+	 * org.springframework.data.keyvalue.core.KeyValueTemplate#getMappingContext
 	 * ()
 	 */
 	@Override
