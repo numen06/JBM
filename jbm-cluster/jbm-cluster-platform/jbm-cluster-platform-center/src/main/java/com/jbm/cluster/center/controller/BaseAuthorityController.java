@@ -1,16 +1,18 @@
 package com.jbm.cluster.center.controller;
 
+import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
+import com.jbm.cluster.api.form.BaseAuthorityUserForm;
 import com.jbm.cluster.api.model.AuthorityApi;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.AuthorityResource;
-import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.model.entity.*;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
@@ -19,13 +21,11 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: liuyadu
@@ -85,6 +85,19 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     }
 
     /**
+     * 获取菜单权限树结构列表
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
+    @GetMapping("/authority/menu/treeList")
+    public ResultBody<List<AuthorityMenu>> findAuthorityMenuTreeList() {
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
+        List<Map<String, Object>> result2 = ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
+        return ResultBody.ok().data(result2).msg("查询列表成功");
+    }
+
+    /**
      * 获取功能权限列表
      *
      * @param actionId
@@ -119,6 +132,34 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
         return ResultBody.ok().data(result);
     }
 
+    /**
+     * 获取角色已分配权限
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取角色已分配权限JSON方式", notes = "获取角色已分配权限")
+    @PostMapping("/authority/byRole")
+    public ResultBody<List<OpenAuthority>> findAuthorityRoles(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
+        List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(baseAuthorityRoleForm.getRoleId());
+        return ResultBody.ok().data(result);
+    }
+
+
+    /**
+     * 获取用户已分配权限
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取用户已分配权限JSON", notes = "获取用户已分配权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
+    })
+    @PostMapping("/authority/byUser")
+    public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
+        BaseUser user = baseUserService.getUserById(baseAuthorityUserForm.getUserId());
+        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), CommonConstants.ROOT.equals(user.getUserName()));
+        return ResultBody.ok().data(result);
+    }
 
     /**
      * 获取用户已分配权限
@@ -159,6 +200,22 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     }
 
     /**
+     * 获取应用已分配接口权限
+     *
+     * @param appId 角色ID
+     * @return
+     */
+    @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
+    })
+    @PostMapping("/authority/byApp")
+    public ResultBody<List<OpenAuthority>> findAuthorityApp(@RequestBody(required = false) BaseAuthorityApp baseAuthorityApp) {
+        List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(baseAuthorityApp.getAppId());
+        return ResultBody.ok().data(result);
+    }
+
+    /**
      * 分配角色权限
      *
      * @param roleId       角色ID
@@ -185,6 +242,20 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
 
 
     /**
+     * 分配角色权限
+     *
+     * @return
+     */
+    @ApiOperation(value = "分配角色权限JSON提交方式", notes = "分配角色权限")
+    @PostMapping("/authority/grant/role")
+    public ResultBody grantAuthorityRole(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
+        baseAuthorityService.addAuthorityRole(baseAuthorityRoleForm.getRoleId(), baseAuthorityRoleForm.getExpireTime(), baseAuthorityRoleForm.getAuthorityIds());
+        openRestTemplate.refreshGateway();
+        return ResultBody.ok();
+    }
+
+
+    /**
      * 分配用户权限
      *
      * @param userId       用户ID
@@ -205,6 +276,14 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityUser(userId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
+        openRestTemplate.refreshGateway();
+        return ResultBody.ok();
+    }
+
+    @ApiOperation(value = "分配用户权限JSON提交方式", notes = "分配用户权限")
+    @PostMapping("/authority/grant/user")
+    public ResultBody grantAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
+        baseAuthorityService.addAuthorityUser(baseAuthorityUserForm.getUserId(), baseAuthorityUserForm.getExpireTime(), baseAuthorityUserForm.getAuthorityIds());
         openRestTemplate.refreshGateway();
         return ResultBody.ok();
     }

@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
@@ -45,7 +46,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implements BaseUserService {
+public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> implements BaseUserService {
 
     @Autowired
     private BaseUserMapper baseUserMapper;
@@ -58,6 +59,17 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implem
 
     private final String ACCOUNT_DOMAIN = BaseConstants.ACCOUNT_DOMAIN_ADMIN;
 
+    @Override
+    public BaseUser saveEntity(BaseUser baseUser) {
+        if (ObjectUtil.isEmpty(baseUser.getUserId())) {
+            this.addUser(baseUser);
+        } else {
+            this.updateUser(baseUser);
+        }
+        return baseUser;
+    }
+
+
     /**
      * 添加系统用户
      *
@@ -66,8 +78,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implem
      */
     @Override
     public void addUser(BaseUser baseUser) {
-        if(getUserByUsername(baseUser.getUserName())!=null){
-            throw new OpenAlertException("用户名:"+baseUser.getUserName()+"已存在!");
+        if (getUserByUsername(baseUser.getUserName()) != null) {
+            throw new OpenAlertException("用户名:" + baseUser.getUserName() + "已存在!");
         }
         baseUser.setCreateTime(new Date());
         baseUser.setUpdateTime(baseUser.getCreateTime());
@@ -235,6 +247,10 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implem
         return saved;
     }
 
+    @Override
+    public UserAccount login(String account) {
+        return this.login(account, null);
+    }
 
     /**
      * 支持系统用户名、手机号、email登陆
@@ -243,22 +259,18 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl< BaseUser> implem
      * @return
      */
     @Override
-    public UserAccount login(String account) {
+    public UserAccount login(String account, String loginType) {
         if (StringUtils.isBlank(account)) {
             return null;
         }
-        Map<String, String> parameterMap = WebUtils.getParameterMap(WebUtils.getHttpServletRequest());
         // 第三方登录标识
-        String loginType = parameterMap.get("login_type");
         BaseAccount baseAccount = null;
         if (StringUtils.isNotBlank(loginType)) {
             baseAccount = baseAccountService.getAccount(account, loginType, ACCOUNT_DOMAIN);
         } else {
             // 非第三方登录
-
             //用户名登录
             baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, ACCOUNT_DOMAIN);
-
             // 手机号登陆
             if (Validator.isMobile(account)) {
                 baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, ACCOUNT_DOMAIN);

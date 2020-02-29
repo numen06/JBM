@@ -1,5 +1,6 @@
 package com.jbm.framework.masterdata.utils;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -92,6 +93,13 @@ public class EntityUtils {
         return result;
     }
 
+//    public static <T> String setDefault(T bean, boolean criteria, SFunction<T, ?> func) {
+//        if (criteria) {
+//            BeanUtil.getProperty(bean, toFieldName(func));
+//        }
+//
+//    }
+
     /***
      * 转换方法引用为属性名
      * @param func
@@ -104,6 +112,8 @@ public class EntityUtils {
         String prefix = null;
         if (methodName.startsWith("get")) {
             prefix = "get";
+        } else if (methodName.startsWith("set")) {
+            prefix = "set";
         } else if (methodName.startsWith("is")) {
             prefix = "is";
         }

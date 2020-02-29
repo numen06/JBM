@@ -1,5 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
@@ -10,6 +12,7 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -102,6 +105,59 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         return count > 0 ? true : false;
     }
 
+
+    @Override
+    public BaseMenu saveEntity(BaseMenu menu) {
+        if (ObjectUtil.isNotEmpty(menu.getMenuId())) {
+            BaseMenu saved = getMenu(menu.getMenuId());
+            if (saved == null) {
+                throw new OpenAlertException(String.format("%s信息不存在!", menu.getMenuId()));
+            }
+            if (!saved.getMenuCode().equals(menu.getMenuCode())) {
+                // 和原来不一致重新检查唯一性
+                if (isExist(menu.getMenuCode())) {
+                    throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
+                }
+            }
+        }else{
+            if (isExist(menu.getMenuCode())) {
+                throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
+            }
+        }
+        if (StrUtil.isEmpty(menu.getScheme())) {
+            menu.setScheme("/");
+        }
+        if (StrUtil.isEmpty(menu.getPath())) {
+            menu.setPath("");
+        }
+        if (StrUtil.isEmpty(menu.getTarget())) {
+            menu.setTarget("_self");
+        }
+        if (ObjectUtil.isEmpty(menu.getStatus())) {
+            menu.setStatus(1);
+        }
+        if (ObjectUtil.isEmpty(menu.getParentId())) {
+            menu.setParentId(0l);
+        }
+        if (ObjectUtil.isEmpty(menu.getPriority())) {
+            menu.setPriority(0);
+        }
+        menu.setServiceId(DEFAULT_SERVICE_ID);
+        menu.setCreateTime(new Date());
+        menu.setUpdateTime(menu.getCreateTime());
+        super.saveEntity(menu);
+        // 同步权限表里的信息
+        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
+
+        return menu;
+    }
+
+    @Override
+    public boolean deleteEntity(BaseMenu menu) {
+        this.removeMenu(menu.getMenuId());
+        return false;
+    }
+
     /**
      * 添加菜单资源
      *
@@ -110,28 +166,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      */
     @Override
     public BaseMenu addMenu(BaseMenu menu) {
-        if (isExist(menu.getMenuCode())) {
-            throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
-        }
-        if (menu.getParentId() == null) {
-            menu.setParentId(0L);
-        }
-        if (menu.getPriority() == null) {
-            menu.setPriority(0);
-        }
-        if (menu.getStatus() == null) {
-            menu.setStatus(1);
-        }
-        if (menu.getIsPersist() == null) {
-            menu.setIsPersist(0);
-        }
-        menu.setServiceId(DEFAULT_SERVICE_ID);
-        menu.setCreateTime(new Date());
-        menu.setUpdateTime(menu.getCreateTime());
-        baseMenuMapper.insert(menu);
-        // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
-        return menu;
+        return this.saveEntity(menu);
     }
 
     /**
@@ -142,27 +177,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      */
     @Override
     public BaseMenu updateMenu(BaseMenu menu) {
-        BaseMenu saved = getMenu(menu.getMenuId());
-        if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在!", menu.getMenuId()));
-        }
-        if (!saved.getMenuCode().equals(menu.getMenuCode())) {
-            // 和原来不一致重新检查唯一性
-            if (isExist(menu.getMenuCode())) {
-                throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
-            }
-        }
-        if (menu.getParentId() == null) {
-            menu.setParentId(0l);
-        }
-        if (menu.getPriority() == null) {
-            menu.setPriority(0);
-        }
-        menu.setUpdateTime(new Date());
-        baseMenuMapper.updateById(menu);
-        // 同步权限表里的信息
-        baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
-        return menu;
+        return this.saveEntity(menu);
     }
 
 

@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.annotation.TableAlias;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,6 +27,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableAlias("user")
 @TableName("base_user")
+@ApiModel("系统用户")
 public class BaseUser extends MasterDataEntity {
     private static final long serialVersionUID = -735161640894047414L;
     /**
@@ -32,46 +35,55 @@ public class BaseUser extends MasterDataEntity {
      */
     @Id
     @TableId(type = IdType.ID_WORKER)
+    @ApiModelProperty("用户ID")
     private Long userId;
 
     /**
      * 登陆名
      */
+    @ApiModelProperty("登录名")
     private String userName;
 
     /**
      * 用户类型:super-超级管理员 normal-普通管理员
      */
+    @ApiModelProperty("用户类型:super-超级管理员 normal-普通管理员")
     private String userType;
 
     /**
      * 企业ID
      */
+    @ApiModelProperty("企业ID")
     private Long companyId;
 
     /**
      * 昵称
      */
+    @ApiModelProperty("昵称")
     private String nickName;
 
     /**
      * 头像
      */
+    @ApiModelProperty("头像")
     private String avatar;
 
     /**
      * 邮箱
      */
+    @ApiModelProperty("邮箱")
     private String email;
 
     /**
      * 手机号
      */
+    @ApiModelProperty("手机号")
     private String mobile;
 
     /**
      * 描述
      */
+    @ApiModelProperty("描述")
     private String userDesc;
 
     /**
@@ -79,10 +91,12 @@ public class BaseUser extends MasterDataEntity {
      */
     @JsonIgnore
     @TableField(exist = false)
+    @ApiModelProperty("密码")
     private String password;
 
     /**
      * 状态:0-禁用 1-正常 2-锁定
      */
+    @ApiModelProperty("状态:0-禁用 1-正常 2-锁定")
     private Integer status;
 }

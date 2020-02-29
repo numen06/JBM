@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
@@ -48,7 +49,8 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         QueryWrapper<BaseAction> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(query.getActionCode()), BaseAction::getActionCode, query.getActionCode())
-                .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName());
+                .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName())
+                .eq(ObjectUtils.isNotEmpty(query.getMenuId()), BaseAction::getMenuId, query.getMenuId());
         queryWrapper.orderByDesc("create_time");
         return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
@@ -95,6 +97,18 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
                 .eq(BaseAction::getActionCode, acitonCode);
         int count = baseActionMapper.selectCount(queryWrapper);
         return count > 0 ? true : false;
+    }
+
+
+    @Override
+    public BaseAction saveEntity(BaseAction aciton) {
+        BaseAction result = null;
+        if (ObjectUtil.isEmpty(aciton.getActionId())) {
+            result = addAction(aciton);
+        } else {
+            result = updateAction(aciton);
+        }
+        return result;
     }
 
     /**

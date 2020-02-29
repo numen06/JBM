@@ -16,7 +16,7 @@ public class RestTemplateFactory {
 
 //	private static TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
 //		@Override
-//		public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+//		public boolean isTrusted(X509Certificate[] chain, String loginType) throws CertificateException {
 //			return true;
 //		}
 //	};

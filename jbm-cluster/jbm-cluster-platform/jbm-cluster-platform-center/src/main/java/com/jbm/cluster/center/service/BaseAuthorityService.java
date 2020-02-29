@@ -92,9 +92,10 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
 
     /**
      * 移除功能按钮权限
+     *
      * @param actionId
      */
-    void  removeAuthorityAction(Long actionId);
+    void removeAuthorityAction(Long actionId);
 
     /**
      * 是否已被授权
@@ -212,6 +213,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
 
     /**
      * 清理无效权限
+     *
      * @param serviceId
      * @param codes
      */

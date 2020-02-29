@@ -101,4 +101,6 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      * @return
      */
     UserAccount login(String account);
+
+    UserAccount login(String account, String loginType);
 }

@@ -10,11 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <artifactId>jbm-cluster-platform</artifactId>
+    <description>平台基推送服务器</description>
     <modules>
         <module>jbm-cluster-platform-center</module>
         <module>jbm-cluster-platform-gateway</module>
         <module>jbm-cluster-platform-auth</module>
         <module>jbm-cluster-platform-doc</module>
+        <module>jbm-cluster-platform-push</module>
+        <module>jbm-cluster-platform-logs</module>
     </modules>
 
 </project>

@@ -92,10 +92,9 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         Map map = Maps.newHashMap();
         map.put("status", status);
         List<AuthorityMenu> authorities = baseAuthorityMapper.selectAuthorityMenu(map);
-        authorities.sort((AuthorityMenu h1, AuthorityMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
         return authorities;
-
     }
+
 
     @Override
     public List<AuthorityApi> findAuthorityApi(String serviceId) {
@@ -301,8 +300,6 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
                 authority.setAuthorityId(Long.parseLong(id));
                 authority.setRoleId(roleId);
                 authority.setExpireTime(expireTime);
-                authority.setCreateTime(new Date());
-                authority.setUpdateTime(authority.getCreateTime());
                 // 批量添加授权
                 baseAuthorityRoleMapper.insert(authority);
             }

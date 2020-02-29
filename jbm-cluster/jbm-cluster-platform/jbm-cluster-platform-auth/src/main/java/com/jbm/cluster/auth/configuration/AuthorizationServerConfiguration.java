@@ -1,5 +1,6 @@
 package com.jbm.cluster.auth.configuration;
 
+import com.jbm.cluster.auth.integration.IntegrationAuthenticationFilter;
 import com.jbm.cluster.common.exception.JbmOAuth2WebResponseExceptionTranslator;
 import com.jbm.cluster.common.security.JbmTokenEnhancer;
 import com.jbm.cluster.common.security.OpenHelper;
@@ -39,12 +40,15 @@ import javax.sql.DataSource;
 public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
     @Autowired
     private AuthenticationManager authenticationManager;
-    @Autowired
-    private DataSource dataSource;
+//    @Autowired
+//    private DataSource dataSource;
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
     @Autowired
+    @Qualifier(value = "integrationUserDetailsService")
     private UserDetailsService userDetailsService;
+    @Autowired
+    private IntegrationAuthenticationFilter integrationAuthenticationFilter;
     /**
      * 自定义获取客户端,为了支持自定义权限,
      */
@@ -69,10 +73,10 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
      *
      * @return
      */
-    @Bean
-    public ApprovalStore approvalStore() {
-        return new JdbcApprovalStore(dataSource);
-    }
+//    @Bean
+//    public ApprovalStore approvalStore() {
+//        return new JdbcApprovalStore(dataSource);
+//    }
 
     /**
      * 令牌信息拓展
@@ -84,15 +88,15 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         return new JbmTokenEnhancer();
     }
 
-    /**
-     * 授权码
-     *
-     * @return
-     */
-    @Bean
-    public AuthorizationCodeServices authorizationCodeServices() {
-        return new JdbcAuthorizationCodeServices(dataSource);
-    }
+//    /**
+//     * 授权码
+//     *
+//     * @return
+//     */
+//    @Bean
+//    public AuthorizationCodeServices authorizationCodeServices() {
+//        return new JdbcAuthorizationCodeServices(dataSource);
+//    }
 
 
     @Override
@@ -105,17 +109,18 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         endpoints
                 .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
                 .authenticationManager(authenticationManager)
-                .approvalStore(approvalStore())
+//                .approvalStore(approvalStore())
                 .userDetailsService(userDetailsService)
                 .tokenServices(createDefaultTokenServices())
                 .accessTokenConverter(OpenHelper.buildAccessTokenConverter())
-                .authorizationCodeServices(authorizationCodeServices());
+        //JDBC的code授权
+//                .authorizationCodeServices(authorizationCodeServices());
         // 自定义确认授权页面
-        endpoints.pathMapping("/oauth/confirm_access", "/oauth/confirm_access");
+//        endpoints.pathMapping("/oauth/confirm_access", "/oauth/confirm_access");
         // 自定义错误页
-        endpoints.pathMapping("/oauth/error", "/oauth/error");
+//        endpoints.pathMapping("/oauth/error", "/oauth/error");
         // 自定义异常转换类
-        endpoints.exceptionTranslator(new JbmOAuth2WebResponseExceptionTranslator());
+        .exceptionTranslator(new JbmOAuth2WebResponseExceptionTranslator());
     }
 
     private DefaultTokenServices createDefaultTokenServices() {
@@ -130,11 +135,11 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security
+        security.allowFormAuthenticationForClients()
                 // 开启/oauth/check_token验证端口认证权限访问
                 .checkTokenAccess("isAuthenticated()")
-                // 开启表单认证
-                .allowFormAuthenticationForClients();
+                .checkTokenAccess("permitAll()")
+                .addTokenEndpointAuthenticationFilter(integrationAuthenticationFilter);
     }
 
 }

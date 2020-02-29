@@ -6,6 +6,7 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -21,7 +22,8 @@ import java.util.Map;
  */
 @Api(tags = "系统功能按钮管理")
 @RestController
-public class BaseActionController {
+@RequestMapping("/action")
+public class BaseActionController extends MasterDataCollection<BaseAction, BaseActionService> {
     @Autowired
     private BaseActionService baseActionService;
     @Autowired
@@ -33,9 +35,21 @@ public class BaseActionController {
      * @return
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
-    @GetMapping("/action")
+    @GetMapping("")
     public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseActionService.findListPage(PageRequestBody.from(map)));
+    }
+
+
+    /**
+     * 获取分页功能按钮列表
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
+    @PostMapping("/findListPage")
+    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return ResultBody.ok().data(baseActionService.findListPage(pageRequestBody));
     }
 
 
@@ -49,7 +63,7 @@ public class BaseActionController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
     })
-    @GetMapping("/action/{actionId}/info")
+    @GetMapping("/{actionId}/info")
     public ResultBody<AuthorityAction> getAction(@PathVariable("actionId") Long actionId) {
         return ResultBody.ok().data(baseActionService.getAction(actionId));
     }
@@ -59,9 +73,9 @@ public class BaseActionController {
      *
      * @param actionCode 功能按钮编码
      * @param actionName 功能按钮名称
-     * @param menuId        上级菜单
-     * @param status        是否启用
-     * @param priority      优先级越小越靠前
+     * @param menuId     上级菜单
+     * @param status     是否启用
+     * @param priority   优先级越小越靠前
      * @param actionDesc 描述
      * @return
      */
@@ -74,7 +88,7 @@ public class BaseActionController {
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
     })
-    @PostMapping("/action/add")
+    @PostMapping("/add")
     public ResultBody<Long> addAction(
             @RequestParam(value = "actionCode") String actionCode,
             @RequestParam(value = "actionName") String actionName,
@@ -105,9 +119,9 @@ public class BaseActionController {
      * @param actionId   功能按钮ID
      * @param actionCode 功能按钮编码
      * @param actionName 功能按钮名称
-     * @param menuId        上级菜单
-     * @param status        是否启用
-     * @param priority      优先级越小越靠前
+     * @param menuId     上级菜单
+     * @param status     是否启用
+     * @param priority   优先级越小越靠前
      * @param actionDesc 描述
      * @return
      */
@@ -121,7 +135,7 @@ public class BaseActionController {
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
     })
-    @PostMapping("/action/update")
+    @PostMapping("/update")
     public ResultBody updateAction(
             @RequestParam("actionId") Long actionId,
             @RequestParam(value = "actionCode") String actionCode,
@@ -156,7 +170,7 @@ public class BaseActionController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
     })
-    @PostMapping("/action/remove")
+    @PostMapping("/remove")
     public ResultBody removeAction(
             @RequestParam("actionId") Long actionId
     ) {

@@ -17,26 +17,6 @@ import java.util.Map;
 
 public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
-    /**
-     * 将列表转换成树列表
-     *
-     * @param list
-     */
-    public List<Entity> listToTreeList(List<Entity> list) {
-        Map<Long, Entity> tempMap = Maps.newLinkedHashMap();
-        //转换成map
-        for (Entity entity : list) {
-            tempMap.put(entity.getId(), entity);
-            entity.setLeaf(true);
-        }
-        for (Entity entity : list) {
-            if (ObjectUtil.isNotEmpty(entity.getParentId())) {
-                tempMap.get(entity.getParentId()).setLeaf(false);
-            }
-        }
-        return list;
-    }
-
 
     @Override
     public List<Entity> selectRootListById() throws DataServiceException {

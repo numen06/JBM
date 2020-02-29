@@ -84,18 +84,16 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      */
     @Override
     public BaseRole addRole(BaseRole role) {
-        if (isExist(role.getRoleCode())) {
-            throw new OpenAlertException(String.format("%s编码已存在!", role.getRoleCode()));
-        }
+//        if (isExist(role.getRoleCode())) {
+//            throw new OpenAlertException(String.format("%s编码已存在!", role.getRoleCode()));
+//        }
         if (role.getStatus() == null) {
             role.setStatus(BaseConstants.ENABLED);
         }
         if (role.getIsPersist() == null) {
             role.setIsPersist(BaseConstants.DISABLED);
         }
-        role.setCreateTime(new Date());
-        role.setUpdateTime(role.getCreateTime());
-        baseRoleMapper.insert(role);
+        this.saveEntity(role);
         return role;
     }
 

@@ -1,13 +1,16 @@
 package com.jbm.framework.masterdata.utils;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
@@ -196,5 +199,50 @@ public class ServiceUtils {
         return parameter;
     }
 
+
+    /**
+     * 将列表转换成树列表
+     *
+     * @param list
+     * @param idFunc
+     * @param pidFunc
+     * @param leafFunc
+     * @param <T>
+     * @return
+     */
+    public static <T> List<Map<String, Object>> listToTreeList(List<T> list, SFunction<T, ?> idFunc, SFunction<T, ?> pidFunc) {
+        final String idKey = EntityUtils.toFieldName(idFunc);
+        final String pidKey = EntityUtils.toFieldName(pidFunc);
+//        final String leafKey = EntityUtils.toFieldName(leafFunc);
+        return listToTreeList(list, idKey, pidKey, "leaf");
+    }
+
+    /**
+     * 将列表转换成树列表
+     *
+     * @param list
+     */
+    public static List<Map<String, Object>> listToTreeList(List<?> list, String idKey, String pidKey, String leafKey) {
+        List<Map<String, Object>> result = Lists.newArrayList();
+//        Map<Object, Map<String, Object>> tempMap = Maps.newLinkedHashMap();
+        List<Object> pids = Lists.newArrayList();
+        //转换成map
+        for (Object entity : list) {
+            Map<String, Object> mapEntity = BeanUtil.beanToMap(entity);
+//            Object id = mapEntity.get(idKey);
+            Object pid = mapEntity.get(pidKey);
+            pids.add(pid);
+//            tempMap.put(id, mapEntity);
+            mapEntity.put(leafKey, true);
+            result.add(mapEntity);
+        }
+        for (Map<String, Object> mapEntity : result) {
+            Object id = mapEntity.get(idKey);
+            if (CollectionUtil.contains(pids, id)) {
+                mapEntity.put(leafKey, false);
+            }
+        }
+        return result;
+    }
 
 }

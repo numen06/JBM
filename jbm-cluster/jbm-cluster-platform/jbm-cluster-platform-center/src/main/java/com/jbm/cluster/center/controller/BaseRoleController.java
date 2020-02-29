@@ -28,6 +28,7 @@ import java.util.Map;
  */
 @Api(tags = "系统角色管理")
 @RestController
+@RequestMapping("/role")
 public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleService> {
     @Autowired
     private BaseRoleService baseRoleService;
@@ -38,7 +39,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @return
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
-    @PostMapping("/role")
+    @PostMapping("")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         return ResultBody.ok().data(baseRoleService.findListPage(pageRequestBody));
     }
@@ -49,7 +50,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @return
      */
     @ApiOperation(value = "获取所有角色列表", notes = "获取所有角色列表")
-    @PostMapping("/role/all")
+    @PostMapping("/all")
     public ResultBody<List<BaseRole>> getRoleAllList() {
         return ResultBody.ok().data(baseRoleService.findAllList());
     }
@@ -64,7 +65,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
     })
-    @PostMapping("/role/{roleId}/info")
+    @PostMapping("/{roleId}/info")
     public ResultBody<BaseRole> getRole(@PathVariable(value = "roleId") Long roleId) {
         BaseRole result = baseRoleService.getRole(roleId);
         return ResultBody.ok().data(result);
@@ -82,7 +83,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
-    @PostMapping("/role/add")
+    @PostMapping("/add")
     public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody pageRequestBody) {
 //        BaseRole role = new BaseRole();
 //        role.setRoleCode(roleCode);
@@ -110,7 +111,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
-    @PostMapping("/role/update")
+    @PostMapping("/update")
     public ResultBody updateRole(
 //            @RequestParam(value = "roleId") Long roleId,
 //            @RequestParam(value = "roleCode") String roleCode,
@@ -139,7 +140,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
-    @PostMapping("/role/remove")
+    @PostMapping("/remove")
     public ResultBody removeRole(@RequestBody(required = false) PageRequestBody pageRequestBody
 //            @RequestParam(value = "roleId") Long roleId
     ) {
@@ -153,7 +154,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @return
      */
     @ApiOperation(value = "角色添加成员", notes = "角色添加成员")
-    @PostMapping("/role/users/add")
+    @PostMapping("/users/add")
     public ResultBody addUserRoles(
 //            @RequestParam(value = "roleId") Long roleId,
 //            @RequestParam(value = "userIds", required = false) String userIds
@@ -172,7 +173,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @return
      */
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
-    @PostMapping("/role/users")
+    @PostMapping("/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(
 //            @RequestParam(value = "roleId") Long roleId
             @RequestBody(required = false) PageRequestBody pageRequestBody

@@ -1,39 +1,36 @@
 package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.cluster.api.model.AuthorityExt;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import java.util.Date;
 
 /**
  * 系统权限-用户关联
+ *
  * @author wesley.zhang
  */
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@ApiModel("用户权限设置")
 @TableName("base_authority_user")
-public class BaseAuthorityUser extends MasterDataIdEntity {
-    /**
-     * 权限ID
-     */
-    private Long authorityId;
+public class BaseAuthorityUser extends AuthorityExt {
 
     /**
      * 用户ID
      */
+    @ApiModelProperty("用户ID")
     private Long userId;
 
-    /**
-     * 过期时间
-     */
-    private Date expireTime;
-
-    private static final long serialVersionUID = 1L;
 }

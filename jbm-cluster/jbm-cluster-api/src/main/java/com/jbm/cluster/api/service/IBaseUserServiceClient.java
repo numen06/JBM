@@ -2,6 +2,9 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -19,6 +22,10 @@ public interface IBaseUserServiceClient {
     @PostMapping("/user/login")
     ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username);
 
+
+    @PostMapping("/user/loginByType")
+    ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
+                                            @RequestParam(value = "loginType") String loginType);
 
     /**
      * 注册第三方系统登录账号
