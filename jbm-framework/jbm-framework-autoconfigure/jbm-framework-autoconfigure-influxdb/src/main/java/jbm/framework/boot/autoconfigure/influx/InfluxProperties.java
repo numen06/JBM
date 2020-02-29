@@ -2,7 +2,7 @@ package jbm.framework.boot.autoconfigure.influx;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "spring.result.influx")
+@ConfigurationProperties(prefix = "spring.data.influx")
 public class InfluxProperties {
 
 	private String url;

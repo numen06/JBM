@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ArrayUtils;
@@ -197,6 +198,31 @@ public class ServiceUtils {
             }
         }
         return parameter;
+    }
+
+
+    /**
+     * @param list
+     * @param <T>
+     * @return
+     */
+    public static <T extends MasterDataTreeEntity> List<T> listToTreeList(List<T> list) {
+        List<T> result = Lists.newArrayList();
+        List<Object> pids = Lists.newArrayList();
+        //转换成map
+        for (T entity : list) {
+            Object pid = entity.getParentId();
+            pids.add(pid);
+            entity.setLeaf(true);
+            result.add(entity);
+        }
+        for (T entity : result) {
+            Object id = entity.getId();
+            if (CollectionUtil.contains(pids, id)) {
+                entity.setLeaf(false);
+            }
+        }
+        return result;
     }
 
 
