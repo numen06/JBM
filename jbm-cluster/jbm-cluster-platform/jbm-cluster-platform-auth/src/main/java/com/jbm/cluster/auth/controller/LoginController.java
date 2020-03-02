@@ -1,5 +1,6 @@
 package com.jbm.cluster.auth.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.cluster.common.security.OpenHelper;
@@ -37,6 +38,7 @@ public class LoginController {
     private TokenStore tokenStore;
     @Autowired
     private RestTemplate restTemplate;
+
     /**
      * 获取用户基础信息
      *
@@ -76,7 +78,7 @@ public class LoginController {
     })
     @PostMapping("/login/token")
     public Object getLoginToken(@RequestParam String username, @RequestParam String password, @RequestHeader HttpHeaders httpHeaders) throws Exception {
-        Map result = getToken(username, password, null,httpHeaders);
+        Map result = getToken(username, password, null, httpHeaders);
         if (result.containsKey("access_token")) {
             return ResultBody.ok().data(result);
         } else {
@@ -87,22 +89,20 @@ public class LoginController {
 
     /**
      * 退出移除令牌
-     *
-     * @param token
      */
     @ApiOperation(value = "退出并移除令牌", notes = "退出并移除令牌,令牌将失效")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "token", required = true, value = "访问令牌", paramType = "form")
-    })
-    @PostMapping("/logout/token")
-    public ResultBody removeToken(@RequestParam String token) {
+    @GetMapping("/token/logout")
+    public ResultBody removeToken() {
+        String token = OpenHelper.getCurrenToken();
+        if (StrUtil.isEmpty(token))
+            ResultBody.failed().msg("令牌异常");
         tokenStore.removeAccessToken(tokenStore.readAccessToken(token));
-        return ResultBody.ok();
+        return ResultBody.ok().msg("退出成功");
     }
 
 
     public JSONObject getToken(String userName, String password, String type, HttpHeaders headers) {
-        JbmOAuth2ClientDetails clientDetails =  clientProperties.getOauth2().get("admin");
+        JbmOAuth2ClientDetails clientDetails = clientProperties.getOauth2().get("admin");
         String url = WebUtils.getServerUrl(WebUtils.getHttpServletRequest()) + "/oauth/token";
         // 使用oauth2密码模式登录.
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();

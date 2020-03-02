@@ -20,7 +20,6 @@ public class MasterDataCodeEntity extends MasterDataIdEntity {
 
 
     @ApiModelProperty("编码")
-    @TableId(type = IdType.ASSIGN_UUID)
     private String code;
 
     public MasterDataCodeEntity() {

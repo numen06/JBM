@@ -33,11 +33,11 @@ management:
       exposure:
         include: '*'
 
+swagger2:
+  enabled: true
+  description: 平台用户认证服务器
+  title: 平台用户认证服务器
 jbm:
-  swagger2:
-    enabled: true
-    description: 平台用户认证服务器
-    title: 平台用户认证服务器
   client:
     oauth2:
       admin:
