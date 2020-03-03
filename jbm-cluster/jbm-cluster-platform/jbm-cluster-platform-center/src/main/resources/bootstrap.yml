@@ -25,7 +25,7 @@ management:
 jbm:
   cluster:
     token-type: redis
-    ignores:
+    permit-all:
       - /authority/access
       - /authority/app
       - /app/*/info
