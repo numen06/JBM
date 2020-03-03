@@ -27,11 +27,11 @@ import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.schema.ModelRef;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.service.Parameter;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger.web.ApiKeyVehicle;
+import springfox.documentation.swagger.web.SecurityConfiguration;
 
 /**
  * @author wesley.zhang
@@ -182,4 +182,32 @@ public class SwaggerAutoConfiguration implements BeanFactoryAware {
         resultOperationParameters.addAll(docketOperationParameters);
         return buildGlobalOperationParametersFromSwaggerProperties(resultOperationParameters);
     }
+
+
+    /**
+     * swagger oauth认证
+     *
+     * @param swaggerProperties
+     * @return
+     */
+    @Bean
+    public SecurityConfiguration security(SwaggerProperties swaggerProperties) {
+        return new SecurityConfiguration(swaggerProperties.getClientId(),
+                swaggerProperties.getClientSecret(),
+                "realm", swaggerProperties.getClientId(),
+                "", ApiKeyVehicle.HEADER, "", ",");
+    }
+
+
+    @Bean
+    List<GrantType> grantTypes(SwaggerProperties swaggerProperties) {
+        List<GrantType> grantTypes = new ArrayList<>();
+        TokenRequestEndpoint tokenRequestEndpoint = new TokenRequestEndpoint(
+                swaggerProperties.getUserAuthorizationUri(),
+                swaggerProperties.getClientId(), swaggerProperties.getClientSecret());
+        TokenEndpoint tokenEndpoint = new TokenEndpoint(swaggerProperties.getAccessTokenUri(), "access_token");
+        grantTypes.add(new AuthorizationCodeGrant(tokenRequestEndpoint, tokenEndpoint));
+        return grantTypes;
+    }
+
 }
