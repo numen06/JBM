@@ -3,7 +3,6 @@ package com.jbm.cluster.auth.configuration;
 import com.jbm.cluster.auth.integration.IntegrationAuthenticationFilter;
 import com.jbm.cluster.common.exception.JbmOAuth2WebResponseExceptionTranslator;
 import com.jbm.cluster.common.security.JbmTokenEnhancer;
-import com.jbm.cluster.common.security.OpenHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -19,16 +18,11 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
-import org.springframework.security.oauth2.provider.approval.ApprovalStore;
-import org.springframework.security.oauth2.provider.approval.JdbcApprovalStore;
-import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
-import org.springframework.security.oauth2.provider.code.JdbcAuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
-
-import javax.sql.DataSource;
 
 /**
  * 平台认证服务器配置
@@ -40,7 +34,7 @@ import javax.sql.DataSource;
 public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
     @Autowired
     private AuthenticationManager authenticationManager;
-//    @Autowired
+    //    @Autowired
 //    private DataSource dataSource;
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
@@ -104,6 +98,12 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         clients.withClientDetails(customClientDetailsService);
     }
 
+    /**
+     * 加载默认的token解析器
+     */
+    @Autowired
+    private AccessTokenConverter accessTokenConverter;
+
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints
@@ -112,15 +112,15 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 //                .approvalStore(approvalStore())
                 .userDetailsService(userDetailsService)
                 .tokenServices(createDefaultTokenServices())
-                .accessTokenConverter(OpenHelper.buildAccessTokenConverter())
-        //JDBC的code授权
+                .accessTokenConverter(accessTokenConverter)
+                //JDBC的code授权
 //                .authorizationCodeServices(authorizationCodeServices());
-        // 自定义确认授权页面
+                // 自定义确认授权页面
 //        endpoints.pathMapping("/oauth/confirm_access", "/oauth/confirm_access");
-        // 自定义错误页
+                // 自定义错误页
 //        endpoints.pathMapping("/oauth/error", "/oauth/error");
-        // 自定义异常转换类
-        .exceptionTranslator(new JbmOAuth2WebResponseExceptionTranslator());
+                // 自定义异常转换类
+                .exceptionTranslator(new JbmOAuth2WebResponseExceptionTranslator());
     }
 
     private DefaultTokenServices createDefaultTokenServices() {

@@ -1,6 +1,14 @@
 package com.jbm.cluster.common.configuration;
 
+import cn.hutool.core.io.FileUtil;
+import com.google.common.base.Charsets;
+import com.jbm.cluster.common.security.OAuthTokenType;
+import lombok.Data;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 自定义网关配置
@@ -9,16 +17,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @date: 2018/11/23 14:40
  * @description:
  */
+@Data
 @ConfigurationProperties(prefix = "jbm.cluster")
 public class JbmClusterProperties {
+
     /**
-     * 网关客户端Id
+     * token验证类型
      */
-    private String clientId;
-    /**
-     * 网关客户端密钥
-     */
-    private String clientSecret;
+    private OAuthTokenType tokenType;
+
     /**
      * 网关服务地址
      */
@@ -33,6 +40,15 @@ public class JbmClusterProperties {
      * 后台部署地址
      */
     private String adminServerAddr;
+
+    /**
+     * 网关客户端Id
+     */
+    private String clientId;
+    /**
+     * 网关客户端密钥
+     */
+    private String clientSecret;
 
     /**
      * 认证范围
@@ -60,111 +76,9 @@ public class JbmClusterProperties {
      */
     private String jwtSigningKey;
 
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
-    }
-
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
-
-    public String getApiServerAddr() {
-        return apiServerAddr;
-    }
-
-    public void setApiServerAddr(String apiServerAddr) {
-        this.apiServerAddr = apiServerAddr;
-    }
-
-    public String getScope() {
-        return scope;
-    }
-
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
-
-    public String getAccessTokenUri() {
-        return accessTokenUri;
-    }
-
-    public void setAccessTokenUri(String accessTokenUri) {
-        this.accessTokenUri = accessTokenUri;
-    }
-
-    public String getUserAuthorizationUri() {
-        return userAuthorizationUri;
-    }
-
-    public void setUserAuthorizationUri(String userAuthorizationUri) {
-        this.userAuthorizationUri = userAuthorizationUri;
-    }
-
-    public String getTokenInfoUri() {
-        return tokenInfoUri;
-    }
-
-    public void setTokenInfoUri(String tokenInfoUri) {
-        this.tokenInfoUri = tokenInfoUri;
-    }
-
-    public String getUserInfoUri() {
-        return userInfoUri;
-    }
-
-    public void setUserInfoUri(String userInfoUri) {
-        this.userInfoUri = userInfoUri;
-    }
-
-    public String getAdminServerAddr() {
-        return adminServerAddr;
-    }
-
-    public void setAdminServerAddr(String adminServerAddr) {
-        this.adminServerAddr = adminServerAddr;
-    }
-
-    public String getAuthServerAddr() {
-        return authServerAddr;
-    }
-
-    public void setAuthServerAddr(String authServerAddr) {
-        this.authServerAddr = authServerAddr;
-    }
-
-    public String getJwtSigningKey() {
-        return jwtSigningKey;
-    }
-
-    public void setJwtSigningKey(String jwtSigningKey) {
-        this.jwtSigningKey = jwtSigningKey;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("JbmClusterProperties{");
-        sb.append("clientId='").append(clientId).append('\'');
-        sb.append(", clientSecret='").append(clientSecret).append('\'');
-        sb.append(", apiServerAddr='").append(apiServerAddr).append('\'');
-        sb.append(", authServerAddr='").append(authServerAddr).append('\'');
-        sb.append(", adminServerAddr='").append(adminServerAddr).append('\'');
-        sb.append(", scope='").append(scope).append('\'');
-        sb.append(", accessTokenUri='").append(accessTokenUri).append('\'');
-        sb.append(", userAuthorizationUri='").append(userAuthorizationUri).append('\'');
-        sb.append(", tokenInfoUri='").append(tokenInfoUri).append('\'');
-        sb.append(", userInfoUri='").append(userInfoUri).append('\'');
-        sb.append(", jwtSigningKey='").append(jwtSigningKey).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
-
+    /**
+     * 忽略验证路径
+     */
+    private String[] permitAll = new String[]{};
 
 }

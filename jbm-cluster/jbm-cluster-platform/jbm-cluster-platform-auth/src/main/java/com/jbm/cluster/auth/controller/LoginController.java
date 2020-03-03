@@ -2,8 +2,8 @@ package com.jbm.cluster.auth.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientDetails;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import com.jbm.framework.mvc.WebUtils;
@@ -47,7 +47,7 @@ public class LoginController {
     @ApiOperation(value = "获取当前登录用户信息", notes = "获取当前登录用户信息")
     @GetMapping("/current/user")
     public ResultBody getUserProfile() {
-        return ResultBody.ok().data(OpenHelper.getUser());
+        return ResultBody.ok().data(JbmClusterHelper.getUser());
     }
 
 
@@ -93,7 +93,7 @@ public class LoginController {
     @ApiOperation(value = "退出并移除令牌", notes = "退出并移除令牌,令牌将失效")
     @GetMapping("/token/logout")
     public ResultBody removeToken() {
-        String token = OpenHelper.getCurrenToken();
+        String token = JbmClusterHelper.getCurrenToken();
         if (StrUtil.isEmpty(token))
             ResultBody.failed().msg("令牌异常");
         tokenStore.removeAccessToken(tokenStore.readAccessToken(token));

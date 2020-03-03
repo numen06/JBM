@@ -8,6 +8,7 @@ import com.jbm.cluster.common.exception.OAuth2ExceptionHandler;
 import com.jbm.cluster.common.exception.OpenRestResponseErrorHandler;
 import com.jbm.cluster.common.filter.XFilter;
 import com.jbm.cluster.common.health.DbHealthIndicator;
+import com.jbm.cluster.common.security.OpenUserConverter;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import jbm.framework.spring.config.SpringContextHolder;
@@ -19,7 +20,9 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -134,9 +137,23 @@ public class NodeConfiguration {
     @Bean
     @ConditionalOnMissingBean(RequestMappingScan.class)
     public RequestMappingScan resourceAnnotationScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
-        RequestMappingScan scan = new RequestMappingScan(amqpTemplate,scanProperties);
+        RequestMappingScan scan = new RequestMappingScan(amqpTemplate, scanProperties);
         log.info("RequestMappingScan [{}]", scan);
         return scan;
+    }
+
+    /**
+     * 构建token转换器
+     *
+     * @return
+     */
+    @Bean
+    @Primary
+    public DefaultAccessTokenConverter accessTokenConverter() {
+        OpenUserConverter userAuthenticationConverter = new OpenUserConverter();
+        DefaultAccessTokenConverter accessTokenConverter = new DefaultAccessTokenConverter();
+        accessTokenConverter.setUserTokenConverter(userAuthenticationConverter);
+        return accessTokenConverter;
     }
 
 }

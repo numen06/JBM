@@ -21,12 +21,6 @@ spring:
     allow-bean-definition-overriding: true
   profiles:
     active: ${profile.name}
-  thymeleaf:
-    cache: false
-    encoding: UTF-8
-    mode: LEGACYHTML5
-    prefix: classpath:/templates/
-    suffix: .html
 
 filters:
   # 熔断降级配置

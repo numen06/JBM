@@ -5,7 +5,7 @@ import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.security.OpenHelper;
+import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -42,7 +42,7 @@ public class CurrentUserController {
     @ApiOperation(value = "修改当前登录用户密码", notes = "修改当前登录用户密码")
     @GetMapping("/current/user/rest/password")
     public ResultBody restPassword(@RequestParam(value = "password") String password) {
-        baseUserService.updatePassword(OpenHelper.getUser().getUserId(), password);
+        baseUserService.updatePassword(JbmClusterHelper.getUser().getUserId(), password);
         return ResultBody.ok();
     }
 
@@ -61,7 +61,7 @@ public class CurrentUserController {
             @RequestParam(value = "userDesc", required = false) String userDesc,
             @RequestParam(value = "avatar", required = false) String avatar
     ) {
-        OpenUserDetails openUserDetails = OpenHelper.getUser();
+        OpenUserDetails openUserDetails = JbmClusterHelper.getUser();
         BaseUser user = new BaseUser();
         user.setUserId(openUserDetails.getUserId());
         user.setNickName(nickName);
@@ -70,7 +70,7 @@ public class CurrentUserController {
         baseUserService.updateUser(user);
         openUserDetails.setNickName(nickName);
         openUserDetails.setAvatar(avatar);
-        OpenHelper.updateOpenUser(redisTokenStore,openUserDetails);
+        JbmClusterHelper.updateOpenUser(redisTokenStore,openUserDetails);
         return ResultBody.ok();
     }
 
@@ -82,7 +82,7 @@ public class CurrentUserController {
     @ApiOperation(value = "获取当前登录用户已分配菜单权限", notes = "获取当前登录用户已分配菜单权限")
     @GetMapping("/current/user/menu")
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(OpenHelper.getUser().getUserId(), CommonConstants.ROOT.equals(OpenHelper.getUser().getUsername()));
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(JbmClusterHelper.getUser().getUserId(), CommonConstants.ROOT.equals(JbmClusterHelper.getUser().getUsername()));
         return ResultBody.ok().data(result);
     }
 }

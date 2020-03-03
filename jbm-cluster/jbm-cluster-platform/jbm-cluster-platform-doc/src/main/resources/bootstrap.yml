@@ -22,9 +22,14 @@ management:
     web:
       exposure:
         include: '*'
+
 jbm:
-  swagger2:
-    enabled: true
-    description: 平台文档服务器
-    title: 平台文档服务器
+  cluster:
+    token-type: redis
+    ignores:
+      - /get/**
+swagger2:
+  enabled: true
+  description: 平台文档服务器
+  title: 平台文档服务器
 

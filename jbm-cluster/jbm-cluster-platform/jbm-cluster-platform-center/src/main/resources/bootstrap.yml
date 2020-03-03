@@ -17,9 +17,15 @@ spring:
   profiles:
     active: ${profile.name}
 
-security:
-  oauth2:
-    ignore:
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+jbm:
+  cluster:
+    token-type: redis
+    ignores:
       - /authority/access
       - /authority/app
       - /app/*/info
@@ -31,15 +37,8 @@ security:
       - /developer/add/thirdParty
       - /developer/info
       - /developer/login
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-jbm:
-  swagger2:
-    enabled: true
-    description: 平台基础服务器
-    title: 平台基础服务器
+swagger2:
+  enabled: true
+  description: 平台基础服务器
+  title: 平台基础服务器
 

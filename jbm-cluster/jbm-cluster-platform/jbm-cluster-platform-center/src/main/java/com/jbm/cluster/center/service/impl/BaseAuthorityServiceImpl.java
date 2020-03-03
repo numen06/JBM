@@ -12,8 +12,8 @@ import com.jbm.cluster.center.mapper.*;
 import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.OpenAuthority;
-import com.jbm.cluster.common.security.OpenHelper;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -392,7 +392,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         // 获取应用最新的权限列表
         List<OpenAuthority> authorities = findAuthorityByApp(appId);
         // 动态更新tokenStore客户端
-        OpenHelper.updateOpenClientAuthorities(redisTokenStore, baseApp.getApiKey(), authorities);
+        JbmClusterHelper.updateOpenClientAuthorities(redisTokenStore, baseApp.getApiKey(), authorities);
     }
 
     /**

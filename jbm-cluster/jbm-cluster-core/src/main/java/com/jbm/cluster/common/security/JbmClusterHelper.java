@@ -2,9 +2,7 @@ package com.jbm.cluster.common.security;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -13,13 +11,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
-import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
-import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.util.Assert;
 
 import java.util.Collection;
@@ -32,7 +24,7 @@ import java.util.Map;
  * @author wesley.zhang
  */
 @Slf4j
-public class OpenHelper {
+public class JbmClusterHelper {
 
     /**
      * 获取认证用户信息
@@ -184,80 +176,5 @@ public class OpenHelper {
         return false;
     }
 
-    /**
-     * 构建token转换器
-     *
-     * @return
-     */
-    public static DefaultAccessTokenConverter buildAccessTokenConverter() {
-        OpenUserConverter userAuthenticationConverter = new OpenUserConverter();
-        DefaultAccessTokenConverter accessTokenConverter = new DefaultAccessTokenConverter();
-        accessTokenConverter.setUserTokenConverter(userAuthenticationConverter);
-        return accessTokenConverter;
-    }
 
-    /**
-     * 构建jwtToken转换器
-     *
-     * @param properties
-     * @return
-     */
-    public static JwtAccessTokenConverter buildJwtTokenEnhancer(JbmClusterProperties properties) throws Exception {
-        JwtAccessTokenConverter converter = new OpenJwtAccessTokenEnhancer();
-        converter.setSigningKey(properties.getJwtSigningKey());
-        converter.afterPropertiesSet();
-        return converter;
-    }
-
-    /**
-     * 构建自定义远程Token服务类
-     *
-     * @param properties
-     * @return
-     */
-    public static RemoteTokenServices buildRemoteTokenServices(JbmClusterProperties properties) {
-        // 使用自定义系统用户凭证转换器
-        DefaultAccessTokenConverter accessTokenConverter = buildAccessTokenConverter();
-        RemoteTokenServices tokenServices = new RemoteTokenServices();
-        tokenServices.setCheckTokenEndpointUrl(properties.getTokenInfoUri());
-        tokenServices.setClientId(properties.getClientId());
-        tokenServices.setClientSecret(properties.getClientSecret());
-        tokenServices.setAccessTokenConverter(accessTokenConverter);
-        log.info("buildRemoteTokenServices[{}]", tokenServices);
-        return tokenServices;
-    }
-
-    /**
-     * 构建资源服务器JwtToken服务类
-     *
-     * @param properties
-     * @return
-     */
-    public static ResourceServerTokenServices buildJwtTokenServices(JbmClusterProperties properties) throws Exception {
-        // 使用自定义系统用户凭证转换器
-        DefaultAccessTokenConverter accessTokenConverter = buildAccessTokenConverter();
-        OpenJwtTokenService tokenServices = new OpenJwtTokenService();
-        // 这里的签名key 保持和认证中心一致
-        JwtAccessTokenConverter converter = buildJwtTokenEnhancer(properties);
-        JwtTokenStore jwtTokenStore = new JwtTokenStore(converter);
-        tokenServices.setTokenStore(jwtTokenStore);
-        tokenServices.setJwtAccessTokenConverter(converter);
-        tokenServices.setDefaultAccessTokenConverter(accessTokenConverter);
-        log.info("buildJwtTokenServices[{}]", tokenServices);
-        return tokenServices;
-    }
-
-    /**
-     * 构建资源服务器RedisToken服务类
-     *
-     * @return
-     */
-    public static ResourceServerTokenServices buildRedisTokenServices(RedisConnectionFactory redisConnectionFactory) throws Exception {
-        OpenRedisTokenService tokenServices = new OpenRedisTokenService();
-        // 这里的签名key 保持和认证中心一致
-        RedisTokenStore redisTokenStore = new RedisTokenStore(redisConnectionFactory);
-        tokenServices.setTokenStore(redisTokenStore);
-        log.info("buildRedisTokenServices[{}]", tokenServices);
-        return tokenServices;
-    }
 }

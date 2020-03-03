@@ -212,6 +212,8 @@ public class GenerateMasterData {
             if (file == null)
                 return;
             t.renderTo(FileUtil.getOutputStream(file));
+        } catch (ClassNotFoundException e) {
+            logger.warn(e.getMessage());
         } catch (Exception e) {
             throw e;
         }
