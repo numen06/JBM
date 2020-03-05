@@ -45,6 +45,7 @@
         <module>jbm-framework-autoconfigure-ip2region</module>
         <module>jbm-framework-autoconfigure-git</module>
         <module>jbm-framework-autoconfigure-minio</module>
+        <module>jbm-framework-autoconfigure-mail</module>
     </modules>
 	<dependencies>
 		<dependency>
