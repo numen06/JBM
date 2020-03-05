@@ -3,24 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>jbm-cluster</artifactId>
+        <artifactId>jbm-framework-aliyun</artifactId>
         <groupId>com.jbm</groupId>
         <version>6.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-cluster-app</artifactId>
+    <artifactId>jbm-framework-aliyun-sms</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <version>2.1.6.RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.aliyun</groupId>
+            <artifactId>aliyun-java-sdk-core</artifactId>
+            <version>4.3.2</version>
         </dependency>
     </dependencies>
 

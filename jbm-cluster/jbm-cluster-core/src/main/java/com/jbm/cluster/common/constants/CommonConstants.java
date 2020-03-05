@@ -10,6 +10,18 @@ public class CommonConstants {
     public final static String ROOT = "admin";
 
     /**
+     * 短信验证码前缀
+     */
+    public final static String PIN_PREFIX = "PIN:";
+
+
+    /**
+     * 二维码登录授权码前缀
+     */
+    public final static String QR_PREFIX = "QR:";
+
+
+    /**
      * 默认最小页码
      */
     public static final int MIN_PAGE = 0;

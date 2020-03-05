@@ -1,0 +1,44 @@
+server:
+  port: 5675
+spring:
+  application:
+    name: ${artifactId}
+  cloud:
+    #手动配置Bus id,
+    bus:
+      id: ${spring.application.name}:${server.port}
+    nacos:
+      config:
+        refreshable-dataids: common.properties
+        shared-dataids: common.properties,sms.properties,db.properties,redis.properties,rabbitmq.properties
+        file-extension: yml
+  main:
+    allow-bean-definition-overriding: true
+  #解决restful 404错误 spring.mavc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  profiles:
+    active: ${profile.name}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+jbm:
+  cluster:
+    token-type: redis
+    permit-all:
+      - /get/**
+swagger2:
+  enabled: true
+  description: 平台文档服务器
+  title: 平台文档服务器
+
+
+
+
+

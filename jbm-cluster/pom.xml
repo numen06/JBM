@@ -19,7 +19,6 @@
         <module>jbm-cluster-api</module>
         <module>jbm-cluster-core</module>
         <module>jbm-cluster-node</module>
-        <module>jbm-cluster-app</module>
         <module>jbm-cluster-platform</module>
         <module>jbm-cluster-services</module>
     </modules>

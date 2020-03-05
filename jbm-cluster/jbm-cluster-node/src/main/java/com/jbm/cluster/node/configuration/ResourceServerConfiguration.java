@@ -51,7 +51,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 
     public static void initJbmNode() {
         try {
-            final String branner = FileUtil.readString("classpath:jbm.banner", Charsets.UTF_8);
+            final String branner = FileUtil.readString("classpath*:jbm.banner", Charsets.UTF_8);
             System.out.println(branner);
             log.info("JBM CLUSTER NODE SCUESS");
         } catch (Exception e) {

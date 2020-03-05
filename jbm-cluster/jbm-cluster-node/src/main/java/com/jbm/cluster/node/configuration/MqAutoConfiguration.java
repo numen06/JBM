@@ -1,10 +1,12 @@
 package com.jbm.cluster.node.configuration;
 
 import com.jbm.cluster.common.constants.QueueConstants;
+import com.jbm.cluster.node.client.NotificationClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 
 /**
@@ -32,4 +34,19 @@ public class MqAutoConfiguration {
         log.info("Query {} [{}]", QueueConstants.QUEUE_ACCESS_LOGS, queue);
         return queue;
     }
+
+
+    @Bean
+    public Queue pushQueue() {
+        Queue queue = new Queue(QueueConstants.QUEUE_PUSH_MESSAGE);
+        log.info("Query {} [{}]", QueueConstants.QUEUE_PUSH_MESSAGE, queue);
+        return queue;
+    }
+
+
+    @Bean
+    public NotificationClient notificationClient(RabbitTemplate template) {
+        return new NotificationClient(template);
+    }
+
 }
