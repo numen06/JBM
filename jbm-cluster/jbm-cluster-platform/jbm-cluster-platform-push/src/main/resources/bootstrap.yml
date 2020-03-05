@@ -10,7 +10,7 @@ spring:
     nacos:
       config:
         refreshable-dataids: common.properties
-        shared-dataids: common.properties,sms.properties,db.properties,redis.properties,rabbitmq.properties
+        shared-dataids: common.properties,mail.properties,sms.properties,db.properties,redis.properties,rabbitmq.properties
         file-extension: yml
   main:
     allow-bean-definition-overriding: true

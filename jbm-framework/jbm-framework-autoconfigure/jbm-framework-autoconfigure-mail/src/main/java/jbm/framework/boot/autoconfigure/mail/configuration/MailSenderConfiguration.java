@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.mail.configuration;
 
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -14,8 +15,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class MailSenderConfiguration {
 
     @Bean
-    public MailSendTemplate mailSendTemplate(JavaMailSender javaMailSender) {
-        MailSendTemplate mailSendTemplate = new MailSendTemplate(javaMailSender);
+    public MailSendTemplate mailSendTemplate(JavaMailSender javaMailSender, MailProperties mailProperties) {
+        MailSendTemplate mailSendTemplate = new MailSendTemplate(javaMailSender, mailProperties);
         return mailSendTemplate;
     }
 }

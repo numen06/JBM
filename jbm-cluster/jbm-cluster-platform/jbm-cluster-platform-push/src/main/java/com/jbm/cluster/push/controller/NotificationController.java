@@ -1,5 +1,6 @@
 package com.jbm.cluster.push.controller;
 
+import com.jbm.cluster.api.model.message.EmailNotification;
 import com.jbm.cluster.api.model.message.SmsNotification;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -24,6 +25,13 @@ public class NotificationController {
     @PostMapping("/send/sms")
     public ResultBody<String> sendSms(SmsNotification smsNotification) {
         this.dispatcher.dispatch(smsNotification);
+        return ResultBody.ok();
+    }
+
+    @ApiOperation("/邮件通知")
+    @PostMapping("/send/email")
+    public ResultBody<String> sendEmail(EmailNotification emailNotification) {
+        this.dispatcher.dispatch(emailNotification);
         return ResultBody.ok();
     }
 
