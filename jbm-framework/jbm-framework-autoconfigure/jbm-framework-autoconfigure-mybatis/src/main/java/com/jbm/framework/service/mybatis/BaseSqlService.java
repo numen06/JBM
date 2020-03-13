@@ -260,7 +260,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
                                                    PageForm pageForm) throws DataServiceException {
         final Page<Map<String, Object>> page = buildPage(pageForm);
         final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
-        tempParams.put(UUID.randomUUID().toString(), page);
+        tempParams.put("pg", page);
         final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
         final DataPaging<T> dataPaging = new DataPaging<>(list, page.getTotal(), page.getPages(), pageForm);
         return dataPaging;
