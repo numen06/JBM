@@ -1,5 +1,8 @@
 package com.jbm.cluster.doc.controller;
 
+import cn.hutool.core.io.FileTypeUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;
 import com.google.common.base.Charsets;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -51,15 +54,20 @@ public class DocumentController {
 //        System.out.println(FileNameUtil.getPath("/test/testwet/hsdad.xtew"));
 //    }
 
-    @ApiOperation(value = "上传文档")
-    @PostMapping("/upload/**")
-    public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
+
+    @ApiOperation(value = "上传随机文档")
+    @PostMapping("/put/**")
+    public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
         try {
             if (file == null) {
                 throw new NullPointerException("上传文件为空");
             }
             final String filePath = getExtractPath(request);
-            String fileName = file.getOriginalFilename();
+            //扩展名
+            String extName = FileUtil.extName(file.getOriginalFilename());
+            //随机名称
+            String mainName = IdUtil.objectId();
+            String fileName = mainName + "." + extName;
             Path result = Paths.get(filePath, fileName);
             minioService.upload(result, file.getInputStream(), file.getContentType());
             return ResultBody.ok().
@@ -69,6 +77,27 @@ public class DocumentController {
             return ResultBody.failed().msg("上传文档失败");
         }
     }
+
+    @ApiOperation(value = "上传特定文档")
+    @PostMapping("/upload/**")
+    public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
+        try {
+            if (file == null) {
+                throw new NullPointerException("上传文件为空");
+            }
+            final String filePath = getExtractPath(request);
+            String fileName = file.getOriginalFilename();
+
+            Path result = Paths.get(filePath, fileName);
+            minioService.upload(result, file.getInputStream(), file.getContentType());
+            return ResultBody.ok().
+                    data(FileNameUtil.normalize(result.toString(), true)).
+                    msg("上传文档成功");
+        } catch (Exception e) {
+            return ResultBody.failed().msg("上传文档失败");
+        }
+    }
+
 
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/**")
