@@ -1,11 +1,16 @@
 package jbm.framework.boot.autoconfigure.fastjson;
 
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.alibaba.fastjson.support.springfox.SwaggerJsonSerializer;
+import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumParserConfig;
+import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumSerializeConfig;
+import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumValueDeserializer;
+import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumValueSerializer;
 import org.beetl.ext.fn.Json;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -49,13 +54,23 @@ public class FastJsonConfiguration {
         supportedMediaTypes.add(MediaType.TEXT_XML);
         fastConverter.setSupportedMediaTypes(supportedMediaTypes);
 
+//        ParserConfig parserConfig = ParserConfig.getGlobalInstance();
+//        parserConfig.putDeserializer(Enum.class, new EnumValueDeserializer(Enum.class));
+//
+//        SerializeConfig globalInstance = SerializeConfig.getGlobalInstance();
+//        globalInstance.put(Enum.class, new EnumValueSerializer());
+
         //创建配置类
         FastJsonConfig fastJsonConfig = new FastJsonConfig();
-        SerializeConfig serializeConfig =  fastJsonConfig.getSerializeConfig();
+        //设置枚举
+        fastJsonConfig.setParserConfig(new EnumParserConfig());
+        fastJsonConfig.setSerializeConfig(new EnumSerializeConfig());
+        //设置swagger ui
+        SerializeConfig serializeConfig = fastJsonConfig.getSerializeConfig();
         serializeConfig.put(Json.class, new SwaggerJsonSerializer());
-        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
-        serializeConfig.put(Long.class, ToStringSerializer.instance);
-        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
+//        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
+//        serializeConfig.put(Long.class, ToStringSerializer.instance);
+//        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
         //修改配置返回内容的过滤
         //WriteNullListAsEmpty  ：List字段如果为null,输出为[],而非null
         //WriteNullStringAsEmpty ： 字符类型字段如果为null,输出为"",而非null
@@ -68,6 +83,7 @@ public class FastJsonConfiguration {
                 SerializerFeature.WriteNonStringValueAsString
         );
         fastConverter.setFastJsonConfig(fastJsonConfig);
+
         return fastConverter;
     }
 
