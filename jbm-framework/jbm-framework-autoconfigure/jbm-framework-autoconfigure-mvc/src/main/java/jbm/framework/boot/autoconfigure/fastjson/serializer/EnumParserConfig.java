@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
  **/
 public class EnumParserConfig extends ParserConfig {
 
+
     @Override
     public ObjectDeserializer getDeserializer(Class<?> clazz, Type type) {
         ObjectDeserializer derializer;

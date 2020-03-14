@@ -63,12 +63,12 @@ public class FastJsonConfiguration {
         //创建配置类
         FastJsonConfig fastJsonConfig = new FastJsonConfig();
         //设置枚举
-        fastJsonConfig.setParserConfig(new EnumParserConfig());
-        fastJsonConfig.setSerializeConfig(new EnumSerializeConfig());
+//        fastJsonConfig.setParserConfig(new EnumParserConfig());
+//        fastJsonConfig.setSerializeConfig(new EnumSerializeConfig());
         //设置swagger ui
         SerializeConfig serializeConfig = fastJsonConfig.getSerializeConfig();
         serializeConfig.put(Json.class, new SwaggerJsonSerializer());
-//        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
+        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
         serializeConfig.put(Long.class, ToStringSerializer.instance);
         serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
         //修改配置返回内容的过滤
