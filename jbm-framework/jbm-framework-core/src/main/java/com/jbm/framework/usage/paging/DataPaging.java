@@ -1,10 +1,8 @@
 package com.jbm.framework.usage.paging;
 
-import cn.hutool.db.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,10 +36,10 @@ public class DataPaging<E> implements Serializable {
     private List<E> contents = EMPTY_CONTENT;
 
     @ApiModelProperty(value = "总条目数")
-    private Long total;
+    private Integer total;
 
     @ApiModelProperty(value = "总页数")
-    private Long totalPage;
+    private Integer totalPage;
 
     /**
      * 查询的分页信息
@@ -60,7 +58,7 @@ public class DataPaging<E> implements Serializable {
     }
 
 
-    public DataPaging(List<E> contents, Long total) {
+    public DataPaging(List<E> contents, Integer total) {
         super();
         this.contents = contents;
         this.total = total;
@@ -69,15 +67,15 @@ public class DataPaging<E> implements Serializable {
     public DataPaging(List<E> contents, Long total, Long totalPage, PageForm pageForm) {
         super();
         this.contents = contents;
-        this.total = total;
-        this.totalPage = totalPage;
+        this.total = total.intValue();
+        this.totalPage = totalPage.intValue();
         this.pageForm = pageForm;
     }
 
     public DataPaging(List<E> contents, Long total, PageForm pageForm) {
         super();
         this.contents = contents;
-        this.total = total;
+        this.total = total.intValue();
         this.pageForm = pageForm;
     }
 
@@ -116,11 +114,11 @@ public class DataPaging<E> implements Serializable {
     }
 
     @ApiModelProperty(value = "总页数")
-    public Long getPages() {
+    public Integer getPages() {
         return totalPage;
     }
 
-    public void setPages(Long pages) {
+    public void setPages(Integer pages) {
         this.totalPage = pages;
     }
 

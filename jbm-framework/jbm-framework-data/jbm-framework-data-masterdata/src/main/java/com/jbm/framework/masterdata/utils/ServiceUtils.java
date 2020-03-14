@@ -108,7 +108,7 @@ public class ServiceUtils {
      * @return
      */
     public static <T> DataPaging<T> pageToDataPaging(IPage page, PageForm pageForm) {
-        final DataPaging<T> dataPaging = new DataPaging<>(page.getRecords(), page.getTotal(), page.getPages(), pageForm);
+        final DataPaging<T> dataPaging = new DataPaging<T>(page.getRecords(), page.getTotal(), page.getPages(), pageForm);
         return dataPaging;
     }
 
@@ -120,7 +120,7 @@ public class ServiceUtils {
      */
     public static <T> DataPaging<T> pageToDataPaging(IPage page) {
         final PageForm pageForm = pageToPageForm(page);
-        final DataPaging<T> dataPaging = new DataPaging<>(page.getRecords(), page.getTotal(), page.getPages(), pageForm);
+        final DataPaging<T> dataPaging = new DataPaging<T>(page.getRecords(), new Long(page.getTotal()), page.getPages(), pageForm);
         return dataPaging;
     }
 
