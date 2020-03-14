@@ -69,8 +69,8 @@ public class FastJsonConfiguration {
         SerializeConfig serializeConfig = fastJsonConfig.getSerializeConfig();
         serializeConfig.put(Json.class, new SwaggerJsonSerializer());
 //        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
-//        serializeConfig.put(Long.class, ToStringSerializer.instance);
-//        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
+        serializeConfig.put(Long.class, ToStringSerializer.instance);
+        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
         //修改配置返回内容的过滤
         //WriteNullListAsEmpty  ：List字段如果为null,输出为[],而非null
         //WriteNullStringAsEmpty ： 字符类型字段如果为null,输出为"",而非null
