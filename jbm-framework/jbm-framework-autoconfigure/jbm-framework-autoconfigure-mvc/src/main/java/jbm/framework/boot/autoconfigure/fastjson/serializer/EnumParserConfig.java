@@ -2,11 +2,8 @@ package jbm.framework.boot.autoconfigure.fastjson.serializer;
 
 import com.alibaba.fastjson.annotation.JSONType;
 import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.parser.deserializer.EnumDeserializer;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
-import com.alibaba.fastjson.util.TypeUtils;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 /**
@@ -33,7 +30,7 @@ public class EnumParserConfig extends ParserConfig {
                     // skip
                 }
             }
-            derializer = new EnumValueDeserializer(clazz);
+            derializer = new EnumValueDeserializer();
             return derializer;
         }
         return super.getDeserializer(clazz, type);

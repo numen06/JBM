@@ -1,6 +1,7 @@
 package com.jbm.framework.service.mybatis;
 
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -159,6 +160,16 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
 
     @Override
     public boolean deleteEntity(Entity entity) {
+        boolean hasId = false;
+        try {
+            Long id = EntityUtils.getKeyValue(entity);
+            hasId = ObjectUtil.isNotEmpty(hasId);
+            if (hasId) {
+                return this.deleteById(id);
+            }
+        } catch (Exception e) {
+            log.error("查找主键错误");
+        }
         QueryWrapper wrapper = new QueryWrapper(entity);
         if (wrapper.isEmptyOfWhere()) {
             throw new DataServiceException("没有任何查询添加无法进行删除操作");

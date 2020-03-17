@@ -21,18 +21,18 @@ import java.lang.reflect.Type;
  **/
 public class EnumValueDeserializer implements ObjectDeserializer {
 
-
-    private EnumDeserializer enumDeserializer;
-
-    public EnumValueDeserializer(Class<?> clazz) {
-        this.enumDeserializer = new EnumDeserializer(clazz);
-    }
+//
+//    private EnumDeserializer enumDeserializer;
+//
+//    public EnumValueDeserializer(Class<?> clazz) {
+//        this.enumDeserializer = new EnumDeserializer(clazz);
+//    }
 
     @Override
     public <T> T deserialze(DefaultJSONParser parser, Type type, Object fieldName) {
         Field field = this.getFieldAnnotationField((Class<?>) type);
         if (field == null) {
-            return enumDeserializer.deserialze(parser, type, fieldName);
+            return new EnumDeserializer((Class<?>) type).deserialze(parser, type, fieldName);
         }
         Class cls = (Class) type;
         Object[] enumConstants = cls.getEnumConstants();

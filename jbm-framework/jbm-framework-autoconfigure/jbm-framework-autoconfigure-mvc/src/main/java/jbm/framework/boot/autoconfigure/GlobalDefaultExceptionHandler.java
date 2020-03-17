@@ -1,5 +1,6 @@
 package jbm.framework.boot.autoconfigure;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.WebExceptionResolve;
@@ -53,6 +54,9 @@ public class GlobalDefaultExceptionHandler {
     @ExceptionHandler({ServiceException.class})
     public ResultBody openException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
         ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
+        if (ObjectUtil.isNotEmpty(ex.getMessage())) {
+            resultBody.msg(ex.getMessage());
+        }
         response.setStatus(resultBody.getHttpStatus());
         return resultBody;
     }
