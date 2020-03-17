@@ -185,7 +185,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Entity saveEntity(Entity entity) {
-        if (super.saveOrUpdate(entity)) {
+        if (!super.saveOrUpdate(entity)) {
             log.error("保存失败");
         }
         return entity;
