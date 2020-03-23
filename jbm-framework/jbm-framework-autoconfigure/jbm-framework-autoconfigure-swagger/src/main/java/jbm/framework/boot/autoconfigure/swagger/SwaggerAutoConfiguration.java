@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.swagger.annotations.Api;
+import jbm.framework.boot.autoconfigure.swagger.exp.MapReaderForApi;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -48,6 +49,12 @@ public class SwaggerAutoConfiguration implements BeanFactoryAware {
     public SwaggerProperties swaggerProperties() {
         return new SwaggerProperties();
     }
+
+    @Bean
+    public MapReaderForApi mapReaderForApi() {
+        return new MapReaderForApi();
+    }
+
 
     @Bean
     @ConditionalOnMissingBean

@@ -17,7 +17,7 @@ import java.util.List;
 public interface BaseRoleService extends IMasterDataService<BaseRole> {
 
 
-    DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseRole> findListPage(PageRequestBody<BaseRole> pageRequestBody);
 
     /**
      * 查询列表

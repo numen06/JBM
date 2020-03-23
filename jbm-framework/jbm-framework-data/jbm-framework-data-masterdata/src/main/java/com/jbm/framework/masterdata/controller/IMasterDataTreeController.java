@@ -2,8 +2,8 @@ package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.usage.form.BaseRequsetBody;
 
 import java.util.List;
 
@@ -14,8 +14,16 @@ import java.util.List;
  * @author wesley
  */
 public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>> extends IMasterDataController<Entity, Service> {
-    ResultBody<List<Entity>> root(BaseRequsetBody baseRequsetBody);
+    /**
+     * @param masterDataRequsetBody
+     * @return
+     */
+    ResultBody<List<Entity>> root(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
-    ResultBody<List<Entity>> tree(BaseRequsetBody baseRequsetBody);
+    /**
+     * @param masterDataRequsetBody
+     * @return
+     */
+    ResultBody<List<Entity>> tree(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
 }

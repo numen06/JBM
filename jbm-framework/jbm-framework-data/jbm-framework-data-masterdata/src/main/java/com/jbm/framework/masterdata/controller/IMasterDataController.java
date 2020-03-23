@@ -1,11 +1,10 @@
 package com.jbm.framework.masterdata.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -19,39 +18,39 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
      * @param pageRequestBody
      * @return
      */
-    ResultBody<DataPaging<Entity>> pageList(PageRequestBody pageRequestBody);
+    ResultBody<DataPaging<Entity>> pageList(PageRequestBody<Entity> pageRequestBody);
 
-    ResultBody<List<Entity>> list(BaseRequsetBody pageRequestBody);
+    ResultBody<List<Entity>> list(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
     /**
      * 获取单一对对象
      *
-     * @param pageRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<Entity> model(BaseRequsetBody pageRequestBody);
+    ResultBody<Entity> model(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
     /**
      * 保存单一对象
      *
-     * @param pageRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<Entity> save(BaseRequsetBody pageRequestBody);
+    ResultBody<Entity> save(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
     /**
-     * @param pageRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<Boolean> remove(BaseRequsetBody pageRequestBody);
+    ResultBody<Boolean> remove(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
     /**
      * 保存多个对象
      *
-     * @param pageRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<List<Entity>> saveBatch(BaseRequsetBody pageRequestBody);
+    ResultBody<List<Entity>> saveBatch(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 
     /**
      * 生产假数据
@@ -63,8 +62,8 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
     /**
      * 批量删除
      *
-     * @param pageRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<Boolean> deleteByIds(BaseRequsetBody pageRequestBody);
+    ResultBody<Boolean> deleteByIds(MasterDataRequsetBody<Entity> masterDataRequsetBody);
 }

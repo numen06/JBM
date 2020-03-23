@@ -21,7 +21,7 @@ public interface IMasterDataCodeService<Entity extends MasterDataEntity> extends
      * @param pageRequestBody
      * @return
      */
-    DataPaging<Entity> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<Entity> findListPage(PageRequestBody<Entity> pageRequestBody);
 
     /**
      * 通过code删除实体

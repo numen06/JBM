@@ -10,7 +10,9 @@ import com.jbm.framework.usage.paging.DataPaging;
  * @Create: 2020-03-05 03:05:23
  */
 public interface PushMessageService extends IMasterDataService<PushMessage> {
-    DataPaging<PushMessage> selectPageList(PageRequestBody pageRequestBody);
+
+    
+    DataPaging<PushMessage> selectPageList(PageRequestBody<PushMessage> pageRequestBody);
 
     boolean read(Long id);
 }

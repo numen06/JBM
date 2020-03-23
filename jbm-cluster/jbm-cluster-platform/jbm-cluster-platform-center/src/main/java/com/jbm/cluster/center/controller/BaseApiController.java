@@ -213,9 +213,7 @@ public class BaseApiController {
             @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form")
     })
     @PostMapping("/api/batch/remove")
-    public ResultBody batchRemove(
-            @RequestParam(value = "ids") String ids
-    ) {
+    public ResultBody batchRemove(@RequestParam(value = "ids") String ids) {
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();
         wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         apiService.remove(wrapper);
@@ -236,9 +234,8 @@ public class BaseApiController {
             @ApiImplicitParam(name = "open", required = true, value = "是否公开访问:0-否 1-是", paramType = "form")
     })
     @PostMapping("/api/batch/update/open")
-    public ResultBody batchUpdateOpen(
-            @RequestParam(value = "ids") String ids,
-            @RequestParam(value = "open") Integer open
+    public ResultBody batchUpdateOpen(@RequestParam(value = "ids") String ids,
+                                      @RequestParam(value = "open") Integer open
     ) {
         Assert.isTrue((open.intValue() != 1 || open.intValue() != 0), "isOpen只支持0,1");
         QueryWrapper<BaseApi> wrapper = new QueryWrapper();

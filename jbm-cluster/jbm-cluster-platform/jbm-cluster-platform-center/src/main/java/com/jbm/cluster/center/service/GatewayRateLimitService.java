@@ -24,7 +24,7 @@ public interface GatewayRateLimitService extends IMasterDataService<GatewayRateL
      * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayRateLimit> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<GatewayRateLimit> findListPage(PageRequestBody<GatewayRateLimit> pageRequestBody);
 
     /**
      * 查询接口流量限制

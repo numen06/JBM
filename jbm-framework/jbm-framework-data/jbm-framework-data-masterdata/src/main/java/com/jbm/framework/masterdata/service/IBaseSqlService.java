@@ -241,7 +241,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
     boolean updateById(Entity entity);
 
     @Transactional(rollbackFor = Exception.class)
-    DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException;
+    DataPaging<Entity> selectEntitys(PageRequestBody<Entity> pageRequestBody) throws DataServiceException;
 
     /**
      * <p>

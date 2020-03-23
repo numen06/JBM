@@ -17,7 +17,7 @@ import java.util.List;
 public interface GatewayIpLimitService extends IMasterDataService<GatewayIpLimit> {
 
 
-    DataPaging<GatewayIpLimit> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<GatewayIpLimit> findListPage(PageRequestBody<GatewayIpLimit> pageRequestBody);
 
     /**
      * 查询白名单

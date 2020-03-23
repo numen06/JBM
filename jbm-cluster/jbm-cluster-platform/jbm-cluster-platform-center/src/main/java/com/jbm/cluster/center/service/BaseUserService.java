@@ -50,15 +50,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      */
     void updatePassword(Long userId, String password);
 
-//    /**
-//     * 分页查询
-//     *
-//     * @param pageForm
-//     * @return
-//     */
-//    DataPaging<BaseUser> findListPage(PageForm pageForm);
 
-    DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseUser> findListPage(PageRequestBody<BaseUser> pageRequestBody);
 
     /**
      * 查询列表

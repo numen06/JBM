@@ -1,17 +1,11 @@
 package jbm.framework.boot.autoconfigure.fastjson;
 
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.alibaba.fastjson.support.springfox.SwaggerJsonSerializer;
-import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumParserConfig;
-import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumSerializeConfig;
-import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumValueDeserializer;
-import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumValueSerializer;
-import org.beetl.ext.fn.Json;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
@@ -67,7 +61,7 @@ public class FastJsonConfiguration {
 //        fastJsonConfig.setSerializeConfig(new EnumSerializeConfig());
         //设置swagger ui
         SerializeConfig serializeConfig = fastJsonConfig.getSerializeConfig();
-        serializeConfig.put(Json.class, new SwaggerJsonSerializer());
+        serializeConfig.put(springfox.documentation.spring.web.json.Json.class, SwaggerJsonSerializer.instance);
         serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
         serializeConfig.put(Long.class, ToStringSerializer.instance);
         serializeConfig.put(Long.TYPE, ToStringSerializer.instance);

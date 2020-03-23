@@ -23,7 +23,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EntityScan(basePackages = {"com.jbm.cluster.api.model"})
 @MapperScan(basePackageClasses = BaseMenuMapper.class)
-@EnableCodeAutoGeneate(entityPackageClasses = { BaseDic.class}, targetPackage = "com.jbm.cluster.center")
+@EnableCodeAutoGeneate(entityPackageClasses = {BaseDic.class}, targetPackage = "com.jbm.cluster.center")
 public class JbmCenterApplication {
 
     public static void main(String[] args) {

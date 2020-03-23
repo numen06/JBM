@@ -12,7 +12,6 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -50,7 +49,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<BaseMenu> findListPage(PageRequestBody<BaseMenu> pageRequestBody) {
         BaseMenu query = pageRequestBody.tryGet(BaseMenu.class);
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

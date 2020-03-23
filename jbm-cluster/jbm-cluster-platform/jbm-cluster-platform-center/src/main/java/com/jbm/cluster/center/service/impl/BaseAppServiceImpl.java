@@ -64,7 +64,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
      * @return
      */
     @Override
-    public DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<BaseApp> findListPage(PageRequestBody<BaseApp> pageRequestBody) {
         BaseApp query = pageRequestBody.tryGet(BaseApp.class);
         CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         cq.lambda()

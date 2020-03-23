@@ -123,11 +123,11 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDevelop
     /**
      * 分页查询
      *
-     * @param pageParams
+     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<BaseDeveloper> findListPage(PageRequestBody<BaseDeveloper> pageRequestBody) {
         BaseDeveloper query = pageRequestBody.tryGet(BaseDeveloper.class);
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

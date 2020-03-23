@@ -15,5 +15,5 @@ public interface GatewayAccessLogsService {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<GatewayAccessLogs> findListPage(PageRequestBody<GatewayAccessLogs> pageRequestBody);
 }

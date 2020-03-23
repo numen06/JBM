@@ -1,7 +1,5 @@
 package com.jbm.framework.usage.form;
 
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.TypeUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.util.StringUtils;
 import com.jbm.util.json.JSONBean;
@@ -17,7 +15,7 @@ import java.util.Map;
  * @create: 2020-02-19 21:28
  **/
 @ApiModel(value = "请求实体")
-public class BaseRequsetBody extends JSONBean {
+public class BaseRequsetBody<T extends Serializable> extends JSONBean {
 
     private static final long serialVersionUID = 1L;
 
@@ -30,6 +28,7 @@ public class BaseRequsetBody extends JSONBean {
         super();
         this.putAll(map);
     }
+
 
     @Override
     public Object put(String key, Object value) {
@@ -44,12 +43,12 @@ public class BaseRequsetBody extends JSONBean {
      * @param clazz
      * @return
      */
-    public <T> T tryGet(Class<T> clazz) {
+    public <E> E tryGet(Class<E> clazz) {
         return tryGet(StringUtils.uncapitalize(clazz.getSimpleName()), clazz);
     }
 
 
-    public <T> List<T> tryGetList(Class<T> clazz) {
+    public <E> List<E> tryGetList(Class<E> clazz) {
         String key = StringUtils.uncapitalize(clazz.getSimpleName()) + "s";
         if (this.containsKey(key)) {
             return this.getJSONArray(key).toJavaList(clazz);
@@ -57,7 +56,7 @@ public class BaseRequsetBody extends JSONBean {
         return JSON.parseArray(this.toJSONString(), clazz);
     }
 
-    public <T> List<T> getList(String key, Class<T> clazz) {
+    public <E> List<E> getList(String key, Class<E> clazz) {
         return this.getJSONArray(key).toJavaList(clazz);
     }
 
@@ -68,7 +67,7 @@ public class BaseRequsetBody extends JSONBean {
      * @param clazz 转换类类型
      * @return
      */
-    public <T> T tryGet(String name, Class<T> clazz) {
+    public <E> E tryGet(String name, Class<E> clazz) {
         if (StringUtils.isNotBlank(name) && this.containsKey(name)) {
             return JSON.parseObject(this.getJSONObject(name).toJSONString(), clazz);
         }

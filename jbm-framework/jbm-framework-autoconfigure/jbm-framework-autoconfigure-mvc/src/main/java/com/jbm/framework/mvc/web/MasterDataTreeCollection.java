@@ -4,6 +4,7 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.util.ObjectUtils;
@@ -23,7 +24,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     }
 
     @Override
-    protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws Exception {
+    protected Entity validatorMasterData(BaseRequsetBody<Entity> pageRequestBody, Boolean valNull) throws Exception {
         Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
@@ -37,15 +38,15 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     /**
      * 列表查询
      *
-     * @param baseRequsetBody
+     * @param masterDataRequsetBody
      * @return
      */
     @ApiOperation(value = "获取根节点列表", notes = "获取根节点列表")
     @PostMapping("/root")
     @Override
-    public ResultBody<List<Entity>> root(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
+    public ResultBody<List<Entity>> root(@RequestBody(required = false) MasterDataRequsetBody<Entity> masterDataRequsetBody) {
         try {
-            validator(baseRequsetBody);
+            validator(masterDataRequsetBody);
             List<Entity> list = service.selectRootListById();
             return ResultBody.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
@@ -56,10 +57,10 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     @ApiOperation(value = "获取根树状结构", notes = "获取根树状结构")
     @PostMapping("/tree")
     @Override
-    public ResultBody<List<Entity>> tree(@RequestBody(required = false) BaseRequsetBody baseRequsetBody) {
+    public ResultBody<List<Entity>> tree(@RequestBody(required = false) MasterDataRequsetBody<Entity> masterDataRequsetBody) {
         try {
-            validator(baseRequsetBody);
-            Entity entity = validatorMasterData(baseRequsetBody, false);
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, false);
             List<Entity> list = service.selectChildNodesById(entity);
             return ResultBody.success(list, "查询树结构成功");
         } catch (Exception e) {

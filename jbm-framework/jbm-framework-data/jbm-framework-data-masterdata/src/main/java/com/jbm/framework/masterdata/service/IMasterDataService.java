@@ -200,7 +200,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
     boolean updateById(Entity entity);
 
     @Transactional(rollbackFor = Exception.class)
-    DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody);
+    DataPaging<Entity> selectEntitys(PageRequestBody<Entity> pageRequestBody);
 
     /**
      * <p>

@@ -39,7 +39,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      * @return
      */
     @Override
-    public DataPaging<GatewayRateLimit> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<GatewayRateLimit> findListPage(PageRequestBody<GatewayRateLimit> pageRequestBody) {
         GatewayRateLimit query = pageRequestBody.tryGet(GatewayRateLimit.class);
         QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

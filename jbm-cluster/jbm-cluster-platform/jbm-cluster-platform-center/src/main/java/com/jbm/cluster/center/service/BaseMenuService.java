@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 
-    DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseMenu> findListPage(PageRequestBody<BaseMenu> pageRequestBody);
 
     /**
      * 查询列表

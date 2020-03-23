@@ -39,7 +39,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      * @return
      */
     @Override
-    public DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<BaseApi> findListPage(PageRequestBody<BaseApi> pageRequestBody) {
         BaseApi query = pageRequestBody.tryGet(BaseApi.class);
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

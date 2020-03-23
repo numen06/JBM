@@ -44,7 +44,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody) {
+    public DataPaging<BaseRole> findListPage(PageRequestBody<BaseRole> pageRequestBody) {
         BaseRole query = pageRequestBody.tryGet(BaseRole.class);
         QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
