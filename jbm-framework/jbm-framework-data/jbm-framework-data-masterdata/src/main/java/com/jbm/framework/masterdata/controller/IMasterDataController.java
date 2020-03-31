@@ -1,5 +1,6 @@
 package com.jbm.framework.masterdata.controller;
 
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
@@ -62,8 +63,8 @@ public interface IMasterDataController<Entity extends MasterDataEntity, Service 
     /**
      * 批量删除
      *
-     * @param masterDataRequsetBody
+     * @param idsForm
      * @return
      */
-    ResultBody<Boolean> deleteByIds(MasterDataRequsetBody<Entity> masterDataRequsetBody);
+    ResultBody<Boolean> deleteByIds(IdsForm idsForm);
 }

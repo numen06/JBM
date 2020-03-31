@@ -104,7 +104,7 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
     private CtField createField(ApiJsonPropertyBean property, CtClass ctClass) throws NotFoundException, CannotCompileException {
         ClassPool pool = ClassPool.getDefault();
         CtClass fileType = pool.get(property.getType().getName());
-        String fieldName = StrUtil.isBlank(property.getKey()) ? property.getType().getSimpleName() : property.getKey();
+        String fieldName = StrUtil.isBlank(property.getKey()) ? StrUtil.lowerFirst(property.getType().getSimpleName()) : property.getKey();
         CtField ctField = new CtField(fileType, fieldName, ctClass);
         ctField.setModifiers(Modifier.PUBLIC);
         ConstPool constPool = ctClass.getClassFile().getConstPool();
@@ -120,13 +120,15 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
     public void addClassType(ParameterContext context, ResolvedMethodParameter methodParameter, Class type) {
         ResolvedType parameterType = typeResolver.resolve(type);
         parameterType = context.alternateFor(parameterType);
+        context.getDocumentationContext().getAdditionalModels().add(parameterType);
         ModelReference modelRef = null;
         String typeName = typeNameFor(parameterType.getErasedType());
         if (isBaseType(typeName)) {
             modelRef = new ModelRef(typeName);
-        } else {
-            log.warn("Trying to infer dataType {}", parameterType);
         }
+//        else {
+//            log.warn("Trying to infer dataType {}", parameterType);
+//        }
         ModelContext modelContext = inputParam(
                 context.getGroupName(),
                 parameterType,
@@ -136,6 +138,7 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
                 context.getIgnorableParameterTypes());
         context.parameterBuilder()
                 .type(parameterType)
+                .parameterType("body")
                 .modelRef(Optional.fromNullable(modelRef)
                         .or(modelRefFactory(modelContext, nameExtractor).apply(parameterType)));
     }

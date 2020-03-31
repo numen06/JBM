@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -213,11 +214,10 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
     @PostMapping("/deleteByIds")
     @Override
-    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) MasterDataRequsetBody<Entity> masterDataRequsetBody) {
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
         try {
             // 获取前端信息List<BusCompanyInfo>
-            validator(masterDataRequsetBody);
-            List<Long> ids = masterDataRequsetBody.getList("ids", Long.class);
+            List<Long> ids = idsForm.getIds();
             if (CollectionUtil.isEmpty(ids)) {
                 return ResultBody.error(true, "ID为空");
             }

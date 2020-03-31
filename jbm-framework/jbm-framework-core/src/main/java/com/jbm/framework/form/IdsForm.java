@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @program: JBM6
  * @author: wesley.zhang
@@ -14,5 +16,5 @@ import lombok.Data;
 public class IdsForm {
 
     @ApiModelProperty("ID数组")
-    private Long[] ids;
+    private List<Long> ids;
 }
