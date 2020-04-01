@@ -23,7 +23,7 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
     private NotificationClient notificationClient;
 
     @Override
-    public DataPaging<PushMessage> selectPageList(PageRequestBody<PushMessage> pageRequestBody) {
+    public DataPaging<PushMessage> selectPageList(PageRequestBody pageRequestBody) {
         return super.selectEntitys(pageRequestBody);
     }
 

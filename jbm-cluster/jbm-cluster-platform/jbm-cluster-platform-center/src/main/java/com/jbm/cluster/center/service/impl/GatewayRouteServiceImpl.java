@@ -31,7 +31,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
      * @return
      */
     @Override
-    public DataPaging<GatewayRoute> findListPage(PageRequestBody<GatewayRoute> pageRequestBody) {
+    public DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
         return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }

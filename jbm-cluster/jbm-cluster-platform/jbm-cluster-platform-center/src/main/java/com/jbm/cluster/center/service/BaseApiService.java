@@ -20,7 +20,7 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApi> findListPage(PageRequestBody<BaseApi> pageRequestBody);
+    DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

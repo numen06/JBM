@@ -51,7 +51,7 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     void updatePassword(Long userId, String password);
 
 
-    DataPaging<BaseUser> findListPage(PageRequestBody<BaseUser> pageRequestBody);
+    DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

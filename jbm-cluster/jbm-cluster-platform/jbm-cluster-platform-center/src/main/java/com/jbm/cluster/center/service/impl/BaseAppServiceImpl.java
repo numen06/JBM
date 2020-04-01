@@ -40,7 +40,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implements BaseAppService {
+public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implements BaseAppService {
 
     @Autowired
     private BaseAppMapper baseAppMapper;
@@ -64,7 +64,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl< BaseApp> implemen
      * @return
      */
     @Override
-    public DataPaging<BaseApp> findListPage(PageRequestBody<BaseApp> pageRequestBody) {
+    public DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody) {
         BaseApp query = pageRequestBody.tryGet(BaseApp.class);
         CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
         cq.lambda()

@@ -1,10 +1,5 @@
 package com.jbm.framework.masterdata.service;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
@@ -14,6 +9,11 @@ import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public interface IBaseSqlService<Entity extends BaseEntity> {
 
@@ -145,7 +145,6 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
     /**
      * 查找列表，将实体的主键作为KEY输出为MAP
      *
-     * @param entity
      * @return
      * @throws DataServiceException
      */
@@ -241,7 +240,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
     boolean updateById(Entity entity);
 
     @Transactional(rollbackFor = Exception.class)
-    DataPaging<Entity> selectEntitys(PageRequestBody<Entity> pageRequestBody) throws DataServiceException;
+    DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException;
 
     /**
      * <p>

@@ -24,7 +24,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     }
 
     @Override
-    protected Entity validatorMasterData(BaseRequsetBody<Entity> pageRequestBody, Boolean valNull) throws Exception {
+    protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws Exception {
         Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
@@ -44,7 +44,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     @ApiOperation(value = "获取根节点列表", notes = "获取根节点列表")
     @PostMapping("/root")
     @Override
-    public ResultBody<List<Entity>> root(@RequestBody(required = false) MasterDataRequsetBody<Entity> masterDataRequsetBody) {
+    public ResultBody<List<Entity>> root(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
             validator(masterDataRequsetBody);
             List<Entity> list = service.selectRootListById();
@@ -57,7 +57,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     @ApiOperation(value = "获取根树状结构", notes = "获取根树状结构")
     @PostMapping("/tree")
     @Override
-    public ResultBody<List<Entity>> tree(@RequestBody(required = false) MasterDataRequsetBody<Entity> masterDataRequsetBody) {
+    public ResultBody<List<Entity>> tree(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
             validator(masterDataRequsetBody);
             Entity entity = validatorMasterData(masterDataRequsetBody, false);

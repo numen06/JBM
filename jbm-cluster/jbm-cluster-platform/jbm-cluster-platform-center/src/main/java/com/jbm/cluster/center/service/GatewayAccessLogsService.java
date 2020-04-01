@@ -6,6 +6,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 
 /**
  * 网关访问日志
+ *
  * @author wesley.zhang
  */
 public interface GatewayAccessLogsService {
@@ -15,5 +16,5 @@ public interface GatewayAccessLogsService {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayAccessLogs> findListPage(PageRequestBody<GatewayAccessLogs> pageRequestBody);
+    DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody);
 }

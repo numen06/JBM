@@ -17,7 +17,7 @@ import java.util.Map;
  **/
 @Data
 @ApiModel(value = "分页请求实体")
-public class PageRequestBody<Entity extends Serializable> extends BaseRequsetBody<Entity> {
+public class PageRequestBody extends BaseRequsetBody {
 
 
     public static PageRequestBody from(Map map) {
@@ -32,8 +32,6 @@ public class PageRequestBody<Entity extends Serializable> extends BaseRequsetBod
         super(map);
     }
 
-    @ApiModelProperty(value = "实体")
-    private Entity model;
 
     /**
      * 分页封装类

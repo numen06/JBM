@@ -52,7 +52,7 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
     void updatePassword(Long userId, String password);
 
 
-    DataPaging<BaseDeveloper> findListPage(PageRequestBody<BaseDeveloper> pageRequestBody);
+    DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询列表

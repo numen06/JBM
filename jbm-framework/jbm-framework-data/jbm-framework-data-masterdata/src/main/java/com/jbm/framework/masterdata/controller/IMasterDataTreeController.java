@@ -4,6 +4,8 @@ import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.swagger.annotation.ApiJsonObject;
+import org.springframework.cache.annotation.EnableCaching;
 
 import java.util.List;
 
@@ -18,12 +20,12 @@ public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, 
      * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<List<Entity>> root(MasterDataRequsetBody<Entity> masterDataRequsetBody);
+    ResultBody<List<Entity>> root(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
      * @param masterDataRequsetBody
      * @return
      */
-    ResultBody<List<Entity>> tree(MasterDataRequsetBody<Entity> masterDataRequsetBody);
+    ResultBody<List<Entity>> tree(MasterDataRequsetBody masterDataRequsetBody);
 
 }

@@ -48,7 +48,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @PostMapping("/findListPage")
-    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestBody(required = false) PageRequestBody<BaseAction> pageRequestBody) {
+    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         return ResultBody.ok().data(baseActionService.findListPage(pageRequestBody));
     }
 

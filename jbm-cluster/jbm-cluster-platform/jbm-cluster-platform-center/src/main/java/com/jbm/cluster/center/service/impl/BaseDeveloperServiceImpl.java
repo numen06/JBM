@@ -37,7 +37,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDeveloper> implements BaseDeveloperService {
+public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloper> implements BaseDeveloperService {
 
     @Autowired
     private BaseDeveloperMapper baseDeveloperMapper;
@@ -54,8 +54,8 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDevelop
      */
     @Override
     public void addUser(BaseDeveloper baseDeveloper) {
-        if(getUserByUsername(baseDeveloper.getUserName())!=null){
-            throw new OpenAlertException("用户名:"+baseDeveloper.getUserName()+"已存在!");
+        if (getUserByUsername(baseDeveloper.getUserName()) != null) {
+            throw new OpenAlertException("用户名:" + baseDeveloper.getUserName() + "已存在!");
         }
         baseDeveloper.setCreateTime(new Date());
         baseDeveloper.setUpdateTime(baseDeveloper.getCreateTime());
@@ -127,7 +127,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDevelop
      * @return
      */
     @Override
-    public DataPaging<BaseDeveloper> findListPage(PageRequestBody<BaseDeveloper> pageRequestBody) {
+    public DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody) {
         BaseDeveloper query = pageRequestBody.tryGet(BaseDeveloper.class);
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
@@ -136,7 +136,7 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl< BaseDevelop
                 .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
                 .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return  this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
 
     /**

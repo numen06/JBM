@@ -1,12 +1,12 @@
 package jbm.framework.boot.autoconfigure.swagger.exp;
 
-import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.*;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Optional;
+import com.jbm.framework.masterdata.controller.IMasterDataController;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.swagger.annotation.ApiJsonObject;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.PageForm;
@@ -26,6 +26,8 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.schema.contexts.ModelContext;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
 import springfox.documentation.spi.service.contexts.ParameterContext;
+import springfox.documentation.spi.service.contexts.RequestMappingContext;
+import springfox.documentation.spring.web.WebMvcRequestHandler;
 
 import static springfox.documentation.schema.ResolvedTypes.modelRefFactory;
 import static springfox.documentation.schema.Types.isBaseType;
@@ -57,16 +59,16 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
                 this.addClassType(context, methodParameter, optional.get().type());
             } else {
                 try {
-                    //注释上的参数
+                    //获取到Controller
+                    Class controllerClass = getControllerClass(context);
+                    Class entityType = getControllerEntityClass(controllerClass);
                     Class baseRequsetBodyType = methodParameter.getParameterType().getErasedType();
                     if (BaseRequsetBody.class.isAssignableFrom(baseRequsetBodyType)) {
-                        Class entityType = null;
-                        if (ObjectUtil.isNotEmpty(methodParameter.getParameterType().getTypeParameters())) {
-                            entityType = methodParameter.getParameterType().getTypeParameters().get(0).getErasedType();
-                        }
+//                        if (ObjectUtil.isNotEmpty(methodParameter.getParameterType().getTypeParameters())) {
+////                            entityType = methodParameter.getParameterType().getTypeParameters().get(0).getErasedType();
+////                        }
                         if (ObjectUtil.isNotEmpty(entityType)) {
-                            Class pageRequestBody = ClassUtil.loadClass("com.jbm.framework.masterdata.usage.form.PageRequestBody");
-                            if (pageRequestBody.isAssignableFrom(baseRequsetBodyType)) {
+                            if (PageRequestBody.class.isAssignableFrom(baseRequsetBodyType)) {
                                 entityType = this.createRefModel(entityType.getSimpleName(), new ApiJsonPropertyBean(entityType, "实体类"), new ApiJsonPropertyBean(PageForm.class, "分页实体"));
                             }
                             this.addClassType(context, methodParameter, entityType);
@@ -79,6 +81,32 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
         }
     }
 
+
+    /**
+     * 获取Controller的Class信息
+     *
+     * @return
+     */
+    public Class getControllerEntityClass(Class controllerClass) {
+        if (!IMasterDataController.class.isAssignableFrom(controllerClass))
+            return null;
+        Class entity = TypeUtil.getClass(TypeUtil.getTypeArgument(controllerClass));
+        return entity;
+    }
+
+    /**
+     * 获取Controller的Class信息
+     *
+     * @param context
+     * @return
+     */
+    public Class getControllerClass(ParameterContext context) {
+        RequestMappingContext requestMappingContext = (RequestMappingContext) BeanUtil.getFieldValue(context.getOperationContext(), "requestContext");
+        WebMvcRequestHandler webMvcRequestHandler = (WebMvcRequestHandler) BeanUtil.getFieldValue(requestMappingContext, "handler");
+        //获取到Controller
+        Class controllerClass = webMvcRequestHandler.getHandlerMethod().getBeanType();
+        return controllerClass;
+    }
 
     /**
      * 根据propertys中的值动态生成含有Swagger注解的javaBeen

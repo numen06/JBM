@@ -46,5 +46,14 @@
             <version>3.25.0-GA</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-data-masterdata</artifactId>
+        </dependency>
     </dependencies>
 </project>

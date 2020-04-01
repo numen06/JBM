@@ -22,7 +22,7 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      */
     BaseAction getAction(Long actionId);
 
-    DataPaging<BaseAction> findListPage(PageRequestBody<BaseAction> pageRequestBody);
+    DataPaging<BaseAction> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询菜单下所有操作

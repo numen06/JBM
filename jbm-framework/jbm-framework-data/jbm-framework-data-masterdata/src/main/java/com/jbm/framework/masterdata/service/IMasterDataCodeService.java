@@ -1,7 +1,6 @@
 package com.jbm.framework.masterdata.service;
 
 import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.bean.AdvEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -21,7 +20,7 @@ public interface IMasterDataCodeService<Entity extends MasterDataEntity> extends
      * @param pageRequestBody
      * @return
      */
-    DataPaging<Entity> findListPage(PageRequestBody<Entity> pageRequestBody);
+    DataPaging<Entity> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 通过code删除实体

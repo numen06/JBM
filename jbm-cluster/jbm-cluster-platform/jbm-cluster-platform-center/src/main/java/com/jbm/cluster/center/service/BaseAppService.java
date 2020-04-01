@@ -19,7 +19,7 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApp> findListPage(PageRequestBody<BaseApp> pageRequestBody);
+    DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 获取app信息

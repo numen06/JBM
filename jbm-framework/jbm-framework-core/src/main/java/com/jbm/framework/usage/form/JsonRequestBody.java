@@ -9,7 +9,7 @@ import java.io.Serializable;
  *
  * @author wesley.zhang
  */
-public class JsonRequestBody extends BaseRequsetBody<Serializable> {
+public class JsonRequestBody extends BaseRequsetBody {
 
 
     /**

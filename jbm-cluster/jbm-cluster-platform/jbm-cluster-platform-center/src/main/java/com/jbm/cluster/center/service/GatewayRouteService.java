@@ -19,7 +19,7 @@ public interface GatewayRouteService extends IMasterDataService<GatewayRoute> {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<GatewayRoute> findListPage(PageRequestBody<GatewayRoute> pageRequestBody);
+    DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody);
 
     /**
      * 查询可用路由列表

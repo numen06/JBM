@@ -33,7 +33,7 @@ public class GatewayAccessLogsServiceImpl implements GatewayAccessLogsService {
      * @return
      */
     @Override
-    public DataPaging<GatewayAccessLogs> findListPage(PageRequestBody<GatewayAccessLogs> pageRequestBody) {
+    public DataPaging<GatewayAccessLogs> findListPage(PageRequestBody pageRequestBody) {
         GatewayAccessLogs query = pageRequestBody.tryGet(GatewayAccessLogs.class);
         QueryWrapper<GatewayAccessLogs> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

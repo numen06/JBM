@@ -34,7 +34,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @PostMapping("")
-    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody) {
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         return ResultBody.ok().data(baseRoleService.findListPage(pageRequestBody));
     }
 
@@ -78,7 +78,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/add")
-    public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody) {
+    public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody pageRequestBody) {
 //        BaseRole role = new BaseRole();
 //        role.setRoleCode(roleCode);
 //        role.setRoleName(roleName);
@@ -112,7 +112,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
 //            @RequestParam(value = "roleName") String roleName,
 //            @RequestParam(value = "roleDesc", required = false) String roleDesc,
 //            @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
-            @RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
 //        BaseRole role = new BaseRole();
 //        role.setRoleId(roleId);
@@ -135,7 +135,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/remove")
-    public ResultBody removeRole(@RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody
+    public ResultBody removeRole(@RequestBody(required = false) PageRequestBody pageRequestBody
 //            @RequestParam(value = "roleId") Long roleId
     ) {
         baseRoleService.removeRole(pageRequestBody.tryGet(BaseRole.class).getRoleId());
@@ -152,7 +152,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     public ResultBody addUserRoles(
 //            @RequestParam(value = "roleId") Long roleId,
 //            @RequestParam(value = "userIds", required = false) String userIds
-            @RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
         BaseRole role = pageRequestBody.tryGet(BaseRole.class);
         String[] userIds = StrUtil.splitToArray(pageRequestBody.getString("userIds"), ',');
@@ -170,7 +170,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @PostMapping("/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(
 //            @RequestParam(value = "roleId") Long roleId
-            @RequestBody(required = false) PageRequestBody<BaseRole> pageRequestBody
+            @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
         BaseRole role = pageRequestBody.tryGet(BaseRole.class);
         return ResultBody.ok().data(baseRoleService.findRoleUsers(role.getRoleId()));

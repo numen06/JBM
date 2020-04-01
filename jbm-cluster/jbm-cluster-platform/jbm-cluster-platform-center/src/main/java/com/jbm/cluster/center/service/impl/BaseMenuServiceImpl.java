@@ -49,7 +49,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseMenu> findListPage(PageRequestBody<BaseMenu> pageRequestBody) {
+    public DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody) {
         BaseMenu query = pageRequestBody.tryGet(BaseMenu.class);
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()

@@ -151,7 +151,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseUser> findListPage(PageRequestBody<BaseUser> pageRequestBody) {
+    public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
         BaseUser query = pageRequestBody.tryGet(BaseUser.class);
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
