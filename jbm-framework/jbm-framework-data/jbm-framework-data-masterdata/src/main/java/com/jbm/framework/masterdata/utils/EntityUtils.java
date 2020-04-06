@@ -70,7 +70,7 @@ public class EntityUtils {
         }
         Object id = EntityUtils.getKeyValue(entity);
         if (ObjectUtil.isNotEmpty(id)) {
-            queryWrapper.eq(getEntityProperty(entity), id);
+            queryWrapper.eq(StrUtil.toUnderlineCase(getEntityProperty(entity)), id);
             return queryWrapper;
         }
         queryWrapper = new QueryWrapper<Entity>(entity);

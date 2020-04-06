@@ -18,6 +18,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.bind.annotation.RequestBody;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.schema.ModelReference;
 import springfox.documentation.schema.TypeNameExtractor;
@@ -53,7 +54,7 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
     public void apply(ParameterContext context) {
         ResolvedMethodParameter methodParameter = context.resolvedMethodParameter();
         // 判断是否需要修改对象ModelRef,这里我判断的是Map类型和String类型需要重新修改ModelRef对象
-        if (methodParameter.hasParameterAnnotation(ClassUtil.loadClass("org.springframework.web.bind.annotation.RequestBody"))) {
+        if (methodParameter.hasParameterAnnotation(RequestBody.class)) {
             Optional<ApiJsonObject> optional = methodParameter.findAnnotation(ApiJsonObject.class); // 根据参数上的ApiJsonObject注解中的参数动态生成Class
             if (optional.isPresent()) {
                 this.addClassType(context, methodParameter, optional.get().type());
@@ -63,11 +64,11 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
                     Class controllerClass = getControllerClass(context);
                     Class entityType = getControllerEntityClass(controllerClass);
                     Class baseRequsetBodyType = methodParameter.getParameterType().getErasedType();
-                    if (BaseRequsetBody.class.isAssignableFrom(baseRequsetBodyType)) {
+                    if (ObjectUtil.isNotEmpty(entityType) && ObjectUtil.isNotEmpty(baseRequsetBodyType)) {
+                        if (BaseRequsetBody.class.isAssignableFrom(baseRequsetBodyType)) {
 //                        if (ObjectUtil.isNotEmpty(methodParameter.getParameterType().getTypeParameters())) {
 ////                            entityType = methodParameter.getParameterType().getTypeParameters().get(0).getErasedType();
 ////                        }
-                        if (ObjectUtil.isNotEmpty(entityType)) {
                             if (PageRequestBody.class.isAssignableFrom(baseRequsetBodyType)) {
                                 entityType = this.createRefModel(entityType.getSimpleName(), new ApiJsonPropertyBean(entityType, "实体类"), new ApiJsonPropertyBean(PageForm.class, "分页实体"));
                             }
