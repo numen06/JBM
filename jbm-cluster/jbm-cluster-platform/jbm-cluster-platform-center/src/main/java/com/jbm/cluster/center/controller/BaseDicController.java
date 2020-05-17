@@ -28,7 +28,7 @@ public class BaseDicController extends MasterDataTreeCollection<BaseDic, BaseDic
     @ApiOperation("获取数据字典")
     @GetMapping("/getDicMap")
     public ResultBody<Map<String, List<BaseDic>>> getDicMap() {
-        OpenUserDetails user = JbmClusterHelper.getUser();
+//        OpenUserDetails user = JbmClusterHelper.getUser();
         List<BaseDic> listRoot = this.service.selectRootListById();
         Map<String, List<BaseDic>> result = Maps.newLinkedHashMap();
         for (int i = 0; i < listRoot.size(); i++) {
