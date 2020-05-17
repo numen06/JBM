@@ -118,7 +118,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                     throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
                 }
             }
-        }else{
+        } else {
             if (isExist(menu.getMenuCode())) {
                 throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
             }
@@ -153,8 +153,12 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
 
     @Override
     public boolean deleteEntity(BaseMenu menu) {
-        this.removeMenu(menu.getMenuId());
-        return false;
+        try {
+            this.removeMenu(menu.getMenuId());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

@@ -138,8 +138,16 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         if (ResourceType.menu.equals(resourceType)) {
             BaseMenu menu = baseMenuService.getMenu(resourceId);
             authority = OpenSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
+            //菜单保持authID和MenuId一致
+            baseAuthority.setAuthorityId(resourceId);
             baseAuthority.setMenuId(resourceId);
             baseAuthority.setStatus(menu.getStatus());
+            baseAuthority.setAuthority(authority);
+            try {
+                baseAuthorityMapper.insert(baseAuthority);
+            } catch (Exception e) {
+
+            }
         }
         if (ResourceType.action.equals(resourceType)) {
             BaseAction operation = baseActionService.getAction(resourceId);
