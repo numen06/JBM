@@ -11,6 +11,8 @@ import com.jbm.cluster.common.health.DbHealthIndicator;
 import com.jbm.cluster.common.security.OpenUserConverter;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
+import com.jbm.cluster.node.configuration.fegin.FeignRequestOAuth2Interceptor;
+import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -118,6 +120,14 @@ public class NodeConfiguration {
         restTemplate.setErrorHandler(new OpenRestResponseErrorHandler());
         log.info("RestTemplate [{}]", restTemplate);
         return restTemplate;
+    }
+
+    @Bean
+    @Primary
+    public FeignRequestInterceptor feignRequestInterceptor(OpenRestTemplate openRestTemplate) {
+        FeignRequestInterceptor interceptor = new FeignRequestOAuth2Interceptor(openRestTemplate.buildOAuth2ClientRequest());
+        log.info("FeignRequestOAuth2Interceptor [{}]", interceptor);
+        return interceptor;
     }
 
     @Bean
