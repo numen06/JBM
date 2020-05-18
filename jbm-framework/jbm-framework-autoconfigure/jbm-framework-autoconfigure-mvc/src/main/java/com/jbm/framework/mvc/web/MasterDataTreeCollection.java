@@ -17,7 +17,7 @@ import java.util.List;
 
 @Slf4j
 public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
-        extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity, Service> {
+        extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity> {
 
     public MasterDataTreeCollection() {
         super();

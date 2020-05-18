@@ -26,7 +26,7 @@ import java.util.List;
 
 @Slf4j
 public abstract class MasterDataCollection<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>>
-        extends BaseCollection implements IMasterDataController<Entity, Service> {
+        extends BaseCollection implements IMasterDataController<Entity> {
     @Autowired
     protected Service service;
     @Autowired

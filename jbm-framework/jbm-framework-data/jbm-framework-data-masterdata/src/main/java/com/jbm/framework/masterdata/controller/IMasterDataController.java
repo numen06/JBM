@@ -10,7 +10,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
-public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {
+public interface IMasterDataController<Entity extends MasterDataEntity> {
 
 
     /**

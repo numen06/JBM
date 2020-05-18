@@ -15,7 +15,7 @@ import java.util.List;
  * @param <Entity>
  * @author wesley
  */
-public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>> extends IMasterDataController<Entity, Service> {
+public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity> extends IMasterDataController<Entity> {
     /**
      * @param masterDataRequsetBody
      * @return
