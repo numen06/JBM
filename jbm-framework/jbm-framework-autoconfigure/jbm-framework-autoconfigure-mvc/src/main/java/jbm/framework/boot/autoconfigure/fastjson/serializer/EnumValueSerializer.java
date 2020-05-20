@@ -1,5 +1,6 @@
 package jbm.framework.boot.autoconfigure.fastjson.serializer;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
@@ -21,10 +22,14 @@ public class EnumValueSerializer implements ObjectSerializer {
     public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
         SerializeWriter out = serializer.out;
         Field field = this.getFieldAnnotationField((Class<?>) fieldType);
-        if (field == null)
-            out.writeEnum((Enum<?>) object);
-        else {
-            serializer.write(ReflectUtil.getFieldValue(object, field));
+        if (ObjectUtil.isNull(object)) {
+            out.writeNull();
+        } else {
+            if (field == null)
+                out.writeEnum((Enum<?>) object);
+            else {
+                serializer.write(ReflectUtil.getFieldValue(object, field));
+            }
         }
     }
 
