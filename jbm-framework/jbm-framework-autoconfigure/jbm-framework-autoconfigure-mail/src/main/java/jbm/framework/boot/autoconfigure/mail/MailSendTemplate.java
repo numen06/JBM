@@ -1,6 +1,8 @@
 package jbm.framework.boot.autoconfigure.mail;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.engine.beetl.BeetlUtil;
 import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +45,8 @@ public class MailSendTemplate {
             helper.setFrom(new InternetAddress(mailRequest.getMailFrom(), MimeUtility.encodeText(mailRequest.getName(), "UTF-8", "B")));
         helper.setTo(mailRequest.getMailTo());
         helper.setSubject(mailRequest.getTitle());
-        helper.setText(mailRequest.getContent(), true);
+        if (StrUtil.isNotBlank(mailRequest.getContent()))
+            helper.setText(mailRequest.getContent(), true);
         this.addAttachment(helper, mailRequest);
         return message;
     }
@@ -93,7 +96,14 @@ public class MailSendTemplate {
         try {
             MimeMessage message = this.buildNewMail(mailRequest);
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            Template template = BeetlUtil.getFileTemplate("mail", mailRequest.getTemplateFile());
+            Template template = null;
+            if (StrUtil.isNotBlank(mailRequest.getTemplateFile())) {
+                template = BeetlUtil.getStrTemplate(FileUtil.readUtf8String(mailRequest.getTemplateFile()));
+            } else {
+                template = BeetlUtil.getStrTemplate(mailRequest.getTemplate());
+            }
+            if (ObjectUtil.isNotEmpty(mailRequest.getTemplateModels()))
+                template.binding(mailRequest.getTemplateModels());
             String html = template.render();
             helper.setText(html, true);
             javaMailSender.send(message);
