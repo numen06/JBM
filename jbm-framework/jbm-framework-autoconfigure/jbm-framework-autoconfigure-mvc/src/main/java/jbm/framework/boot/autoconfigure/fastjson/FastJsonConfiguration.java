@@ -1,5 +1,7 @@
 package jbm.framework.boot.autoconfigure.fastjson;
 
+import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
@@ -61,7 +63,12 @@ public class FastJsonConfiguration {
 //        fastJsonConfig.setSerializeConfig(new EnumSerializeConfig());
         //设置swagger ui
         SerializeConfig serializeConfig = fastJsonConfig.getSerializeConfig();
-        serializeConfig.put(springfox.documentation.spring.web.json.Json.class, SwaggerJsonSerializer.instance);
+        try {
+            Class jsonClass = ClassUtil.loadClass("springfox.documentation.spring.web.json.Json");
+            serializeConfig.put(jsonClass, SwaggerJsonSerializer.instance);
+        } catch (Exception e) {
+
+        }
         serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
         serializeConfig.put(Long.class, ToStringSerializer.instance);
         serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
