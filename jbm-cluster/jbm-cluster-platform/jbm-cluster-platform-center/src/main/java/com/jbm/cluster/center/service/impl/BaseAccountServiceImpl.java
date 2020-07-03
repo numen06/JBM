@@ -7,8 +7,9 @@ import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.util.PasswordUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -172,6 +173,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
      */
     @Override
     public int updatePasswordByUserId(Long userId, String domain, String password) {
+
+        if (PasswordUtils.checkPassword(password) < 1)
+            throw new ServiceException("密码强度不够,请重新设置");
         BaseAccount baseAccount = new BaseAccount();
         baseAccount.setUpdateTime(new Date());
         baseAccount.setPassword(passwordEncoder.encode(password));

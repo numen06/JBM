@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.center.service.BaseAuthorityService;
@@ -7,15 +8,15 @@ import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.util.PasswordUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import sun.security.validator.ValidatorException;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class CurrentUserController {
     private BaseAuthorityService baseAuthorityService;
     @Autowired
     private RedisTokenStore redisTokenStore;
+
     /**
      * 修改当前登录用户密码
      *
@@ -45,6 +47,20 @@ public class CurrentUserController {
         baseUserService.updatePassword(JbmClusterHelper.getUser().getUserId(), password);
         return ResultBody.ok();
     }
+
+    @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
+    @PostMapping("/current/user/update/password")
+    public ResultBody updatePassword(@RequestBody BaseUserForm baseUserForm) {
+        Long userId = JbmClusterHelper.getUser().getUserId();
+        try {
+            PasswordUtils.validatorPassword(baseUserForm.getOriginPassword(), baseUserForm.getCurrentPassword(), baseUserForm.getConfirmPassword());
+        } catch (ValidatorException e) {
+            throw new ServiceException(e);
+        }
+        baseUserService.updatePassword(userId, baseUserForm.getCurrentPassword());
+        return ResultBody.ok();
+    }
+
 
     /**
      * 修改当前登录用户基本信息
@@ -70,7 +86,7 @@ public class CurrentUserController {
         baseUserService.updateUser(user);
         openUserDetails.setNickName(nickName);
         openUserDetails.setAvatar(avatar);
-        JbmClusterHelper.updateOpenUser(redisTokenStore,openUserDetails);
+        JbmClusterHelper.updateOpenUser(redisTokenStore, openUserDetails);
         return ResultBody.ok();
     }
 
