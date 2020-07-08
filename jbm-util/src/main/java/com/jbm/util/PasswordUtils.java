@@ -1,6 +1,7 @@
 package com.jbm.util;
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.util.password.PasswordGenerator;
 import sun.security.validator.ValidatorException;
 
 import java.util.regex.Matcher;
@@ -86,5 +87,23 @@ public class PasswordUtils {
         }
         return sort;
     }
+
+    private enum CharactorType {
+        LOWERCASE,
+        UPPERCASE,
+        NUMBER,
+        SPECIAL_CHARACTOR
+    }
+
+    public static String generatePassword(int passwordLength) {
+        PasswordGenerator passwordGenerator = new PasswordGenerator(passwordLength);
+        return passwordGenerator.generateRandomPassword();
+    }
+
+    public static String generatePassword() {
+        PasswordGenerator passwordGenerator = new PasswordGenerator(10);
+        return passwordGenerator.generateRandomPassword();
+    }
+
 
 }

@@ -19,4 +19,9 @@ public class PasswordUtilsTest {
         System.out.println(PasswordUtils.checkPassword("A123&fa"));
         System.out.println(PasswordUtils.checkPassword("A123&afad"));
     }
+
+    @Test
+    public void generatePassword() {
+        System.out.println(PasswordUtils.generatePassword(15));
+    }
 }
