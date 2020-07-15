@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 计算
+ *
  * @program: JBM6
  * @author: wesley.zhang
  * @create: 2020-07-15 19:03
@@ -45,7 +46,7 @@ public class FlowCount {
         return schePool;
     }
 
-    public int add() throws ExecutionException {
+    public int add() {
         return nowFlow.addAndGet(1);
     }
 
