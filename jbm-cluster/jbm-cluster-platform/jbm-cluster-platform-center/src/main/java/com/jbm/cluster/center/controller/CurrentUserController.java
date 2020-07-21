@@ -48,7 +48,7 @@ public class CurrentUserController {
         return ResultBody.ok();
     }
 
-    @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
+    @ApiOperation(value = "修改当前用户密码2", notes = "修改用户密码")
     @PostMapping("/current/user/update/password")
     public ResultBody updatePassword(@RequestBody BaseUserForm baseUserForm) {
         Long userId = JbmClusterHelper.getUser().getUserId();

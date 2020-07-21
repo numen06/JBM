@@ -25,12 +25,12 @@ public class PasswordUtils {
      * @throws ValidatorException
      */
     public static void validatorPassword(String originPassword, String currentPassword, String confirmPassword) throws ValidatorException {
-        boolean unified = StrUtil.equalsAnyIgnoreCase(currentPassword, confirmPassword);
+        boolean unified = StrUtil.equals(currentPassword, confirmPassword);
         if (!unified) {
             throw new ValidatorException("重复密码错误");
         }
-        unified = StrUtil.equalsAnyIgnoreCase(originPassword, currentPassword);
-        if (!unified) {
+        unified = StrUtil.equals(originPassword, currentPassword);
+        if (unified) {
             throw new ValidatorException("密码不能和原密码一致");
         }
     }

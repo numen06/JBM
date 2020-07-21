@@ -26,7 +26,7 @@ public class BaseUserForm extends BaseUser {
     private String originPassword;
     @ApiModelProperty("新密码")
     private String currentPassword;
-    @ApiModelProperty("新密码")
+    @ApiModelProperty("确认密码")
     private String confirmPassword;
 
 }
