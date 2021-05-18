@@ -40,9 +40,9 @@
         <jdk.version>1.8</jdk.version>
         <jbm.framework.version>6.0.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.1.21</druid.version>
-        <dubbo.version>2.6.7</dubbo.version>
-        <fastjson.version>1.2.58</fastjson.version>
-        <minio.version>6.0.13</minio.version>
+        <dubbo.version>2.7.10</dubbo.version>
+        <fastjson.version>1.2.76</fastjson.version>
+        <minio.version>8.2.1</minio.version>
         <okhttp.version>2.7.5</okhttp.version>
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>

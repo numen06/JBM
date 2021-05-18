@@ -1,6 +1,10 @@
 package jbm.framework.boot.autoconfigure.mail.configuration;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.mail.MailAccount;
+import cn.hutool.extra.mail.MailUtil;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
+import jodd.util.StringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,5 +22,22 @@ public class MailSenderConfiguration {
     public MailSendTemplate mailSendTemplate(JavaMailSender javaMailSender, MailProperties mailProperties) {
         MailSendTemplate mailSendTemplate = new MailSendTemplate(javaMailSender, mailProperties);
         return mailSendTemplate;
+    }
+
+    @Bean
+    public MailAccount mailAccount(MailProperties mailProperties) {
+        MailAccount account = new MailAccount();
+        account.setHost(mailProperties.getHost());
+        account.setPort(mailProperties.getPort());
+        account.setAuth(true);
+        String from = mailProperties.getUsername();
+        String username = StrUtil.subBefore(from, "@", false);
+        account.setFrom(from);
+        account.setUser(username);
+        account.setPass(mailProperties.getPassword());
+        if (account.getPort() != 25) {
+            account.setSslEnable(true);
+        }
+        return account;
     }
 }

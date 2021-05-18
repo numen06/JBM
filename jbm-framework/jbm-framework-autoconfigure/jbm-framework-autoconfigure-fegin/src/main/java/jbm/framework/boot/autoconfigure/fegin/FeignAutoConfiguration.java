@@ -15,6 +15,7 @@ import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
 import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Feign OAuth2 request interceptor.
@@ -31,6 +32,7 @@ public class FeignAutoConfiguration {
     private FastJsonHttpMessageConverter fastJsonHttpMessageConverter;
 
     @Bean
+    @Primary
     public Encoder feignFormEncoder(ObjectFactory<HttpMessageConverters> messageConverters) {
         Encoder encoder = new FeignSpringFormEncoder(new SpringEncoder(messageConverters));
         log.info("FeignSpringFormEncoder [{}]", encoder);
@@ -52,6 +54,7 @@ public class FeignAutoConfiguration {
 
 
     @Bean
+    @Primary
     public Request.Options options() {
         return new Request.Options(connectTimeOutMillis, readTimeOutMillis);
     }
