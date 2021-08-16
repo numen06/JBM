@@ -3,6 +3,7 @@ package org.springframework.data.influx;
 import java.util.List;
 import java.util.Map;
 
+import cn.hutool.core.collection.CollectionUtil;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ParameterMapping;
@@ -90,7 +91,7 @@ public class InfluxTemplate {
 
 	public Map<String, Object> selectOneByDB(String database, String mapper, Object params) {
 		List<Map<String, Object>> list = selectListByDB(mapper, database, params);
-		if (com.jbm.util.CollectionUtils.isEmpty(list))
+		if (CollectionUtil.isEmpty(list))
 			return null;
 		return list.get(0);
 	}

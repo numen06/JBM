@@ -1,5 +1,6 @@
 package org.springframework.boot.logging.logback;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.LogFile;

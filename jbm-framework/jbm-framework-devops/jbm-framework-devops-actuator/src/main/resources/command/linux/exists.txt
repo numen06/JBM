@@ -1,3 +1,0 @@
-#!/bin/sh
-#`ps aux|grep 32412|grep -v grep`
-ps -ef|grep $tid|grep -v grep|awk '{print $2}'

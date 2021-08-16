@@ -33,10 +33,10 @@ import java.util.regex.Pattern;
 /**
  * Simple utility class for working with the reflection API and handling
  * reflection exceptions.
- * 
+ *
  * <p>
  * Only intended for internal use.
- * 
+ *
  * @author Juergen Hoeller
  * @author Rob Harrop
  * @author Rod Johnson
@@ -54,7 +54,7 @@ public abstract class ReflectionUtils {
 	 * Attempt to find a {@link Field field} on the supplied {@link Class} with
 	 * the supplied <code>name</code>. Searches all superclasses up to
 	 * {@link Object}.
-	 * 
+	 *
 	 * @param clazz
 	 *            the class to introspect
 	 * @param name
@@ -69,7 +69,7 @@ public abstract class ReflectionUtils {
 	 * Attempt to find a {@link Field field} on the supplied {@link Class} with
 	 * the supplied <code>name</code> and/or {@link Class type}. Searches all
 	 * superclasses up to {@link Object}.
-	 * 
+	 *
 	 * @param clazz
 	 *            the class to introspect
 	 * @param name
@@ -105,7 +105,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * Thrown exceptions are handled via a call to
 	 * {@link #handleReflectionException(Exception)}.
-	 * 
+	 *
 	 * @param field
 	 *            the field to set
 	 * @param target
@@ -130,7 +130,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * Thrown exceptions are handled via a call to
 	 * {@link #handleReflectionException(Exception)}.
-	 * 
+	 *
 	 * @param field
 	 *            the field to get
 	 * @param target
@@ -152,7 +152,7 @@ public abstract class ReflectionUtils {
 	 * <code>Object</code>.
 	 * <p>
 	 * Returns <code>null</code> if no {@link Method} can be found.
-	 * 
+	 *
 	 * @param clazz
 	 *            the class to introspect
 	 * @param name
@@ -169,7 +169,7 @@ public abstract class ReflectionUtils {
 	 * <code>Object</code>.
 	 * <p>
 	 * Returns <code>null</code> if no {@link Method} can be found.
-	 * 
+	 *
 	 * @param clazz
 	 *            the class to introspect
 	 * @param name
@@ -202,7 +202,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * Thrown exceptions are handled via a call to
 	 * {@link #handleReflectionException}.
-	 * 
+	 *
 	 * @param method
 	 *            the method to invoke
 	 * @param target
@@ -221,7 +221,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * Thrown exceptions are handled via a call to
 	 * {@link #handleReflectionException}.
-	 * 
+	 *
 	 * @param method
 	 *            the method to invoke
 	 * @param target
@@ -242,7 +242,7 @@ public abstract class ReflectionUtils {
 	/**
 	 * Invoke the specified JDBC API {@link Method} against the supplied target
 	 * object with no arguments.
-	 * 
+	 *
 	 * @param method
 	 *            the method to invoke
 	 * @param target
@@ -259,7 +259,7 @@ public abstract class ReflectionUtils {
 	/**
 	 * Invoke the specified JDBC API {@link Method} against the supplied target
 	 * object with the supplied arguments.
-	 * 
+	 *
 	 * @param method
 	 *            the method to invoke
 	 * @param target
@@ -292,7 +292,7 @@ public abstract class ReflectionUtils {
 	 * Throws the underlying RuntimeException or Error in case of an
 	 * InvocationTargetException with such a root cause. Throws an
 	 * IllegalStateException with an appropriate message else.
-	 * 
+	 *
 	 * @param ex
 	 *            the reflection exception to handle
 	 */
@@ -318,7 +318,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * Throws the underlying RuntimeException or Error in case of such a root
 	 * cause. Throws an IllegalStateException else.
-	 * 
+	 *
 	 * @param ex
 	 *            the invocation target exception to handle
 	 */
@@ -335,7 +335,7 @@ public abstract class ReflectionUtils {
 	 * Rethrows the underlying exception cast to an {@link RuntimeException} or
 	 * {@link Error} if appropriate; otherwise, throws an
 	 * {@link IllegalStateException}.
-	 * 
+	 *
 	 * @param ex
 	 *            the exception to rethrow
 	 * @throws RuntimeException
@@ -360,7 +360,7 @@ public abstract class ReflectionUtils {
 	 * Rethrows the underlying exception cast to an {@link Exception} or
 	 * {@link Error} if appropriate; otherwise, throws an
 	 * {@link IllegalStateException}.
-	 * 
+	 *
 	 * @param ex
 	 *            the exception to rethrow
 	 * @throws Exception
@@ -380,7 +380,7 @@ public abstract class ReflectionUtils {
 	 * Determine whether the given method explicitly declares the given
 	 * exception or one of its superclasses, which means that an exception of
 	 * that type can be propagated as-is within a reflective invocation.
-	 * 
+	 *
 	 * @param method
 	 *            the declaring method
 	 * @param exceptionType
@@ -401,7 +401,7 @@ public abstract class ReflectionUtils {
 
 	/**
 	 * Determine whether the given field is a "public static final" dictionary.
-	 * 
+	 *
 	 * @param field
 	 *            the field to check
 	 */
@@ -412,7 +412,7 @@ public abstract class ReflectionUtils {
 
 	/**
 	 * Determine whether the given method is an "equals" method.
-	 * 
+	 *
 	 * @see java.lang.Object#equals(Object)
 	 */
 	public static boolean isEqualsMethod(Method method) {
@@ -425,7 +425,7 @@ public abstract class ReflectionUtils {
 
 	/**
 	 * Determine whether the given method is a "hashCode" method.
-	 * 
+	 *
 	 * @see java.lang.Object#hashCode()
 	 */
 	public static boolean isHashCodeMethod(Method method) {
@@ -434,7 +434,7 @@ public abstract class ReflectionUtils {
 
 	/**
 	 * Determine whether the given method is a "toString" method.
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	public static boolean isToStringMethod(Method method) {
@@ -459,7 +459,7 @@ public abstract class ReflectionUtils {
 	/**
 	 * Determine whether the given method is a CGLIB 'renamed' method, following
 	 * the pattern "CGLIB$methodName$0".
-	 * 
+	 *
 	 * @param renamedMethod
 	 *            the method to check
 	 * @see net.sf.cglib.proxy.Enhancer#rename
@@ -473,7 +473,7 @@ public abstract class ReflectionUtils {
 	 * necessary. The <code>setAccessible(true)</code> method is only called
 	 * when actually necessary, to avoid unnecessary conflicts with a JVM
 	 * SecurityManager (if active).
-	 * 
+	 *
 	 * @param field
 	 *            the field to make accessible
 	 * @see java.lang.reflect.Field#setAccessible
@@ -490,7 +490,7 @@ public abstract class ReflectionUtils {
 	 * necessary. The <code>setAccessible(true)</code> method is only called
 	 * when actually necessary, to avoid unnecessary conflicts with a JVM
 	 * SecurityManager (if active).
-	 * 
+	 *
 	 * @param method
 	 *            the method to make accessible
 	 * @see java.lang.reflect.Method#setAccessible
@@ -506,7 +506,7 @@ public abstract class ReflectionUtils {
 	 * if necessary. The <code>setAccessible(true)</code> method is only called
 	 * when actually necessary, to avoid unnecessary conflicts with a JVM
 	 * SecurityManager (if active).
-	 * 
+	 *
 	 * @param ctor
 	 *            the constructor to make accessible
 	 * @see java.lang.reflect.Constructor#setAccessible
@@ -523,7 +523,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * The same named method occurring on subclass and superclass will appear
 	 * twice, unless excluded by a {@link MethodFilter}.
-	 * 
+	 *
 	 * @param clazz
 	 *            class to start looking at
 	 * @param mc
@@ -540,7 +540,7 @@ public abstract class ReflectionUtils {
 	 * <p>
 	 * The same named method occurring on subclass and superclass will appear
 	 * twice, unless excluded by the specified {@link MethodFilter}.
-	 * 
+	 *
 	 * @param clazz
 	 *            class to start looking at
 	 * @param mc
@@ -624,7 +624,7 @@ public abstract class ReflectionUtils {
 	/**
 	 * Invoke the given callback on all fields in the target class, going up the
 	 * class hierarchy to get all declared fields.
-	 * 
+	 *
 	 * @param clazz
 	 *            the target class to analyze
 	 * @param fc
@@ -637,7 +637,7 @@ public abstract class ReflectionUtils {
 	/**
 	 * Invoke the given callback on all fields in the target class, going up the
 	 * class hierarchy to get all declared fields.
-	 * 
+	 *
 	 * @param clazz
 	 *            the target class to analyze
 	 * @param fc
@@ -670,7 +670,7 @@ public abstract class ReflectionUtils {
 	 * Given the source object and the destination, which must be the same class
 	 * or a subclass, copy all fields, including inherited fields. Designed to
 	 * work on objects with public no-arg constructors.
-	 * 
+	 *
 	 * @throws IllegalArgumentException
 	 *             if the arguments are incompatible
 	 */
@@ -700,7 +700,7 @@ public abstract class ReflectionUtils {
 
 		/**
 		 * Perform an operation using the given method.
-		 * 
+		 *
 		 * @param method
 		 *            the method to operate on
 		 */
@@ -715,7 +715,7 @@ public abstract class ReflectionUtils {
 
 		/**
 		 * Determine whether the given method matches.
-		 * 
+		 *
 		 * @param method
 		 *            the method to check
 		 */
@@ -729,7 +729,7 @@ public abstract class ReflectionUtils {
 
 		/**
 		 * Perform an operation using the given field.
-		 * 
+		 *
 		 * @param field
 		 *            the field to operate on
 		 */
@@ -744,7 +744,7 @@ public abstract class ReflectionUtils {
 
 		/**
 		 * Determine whether the given field matches.
-		 * 
+		 *
 		 * @param field
 		 *            the field to check
 		 */

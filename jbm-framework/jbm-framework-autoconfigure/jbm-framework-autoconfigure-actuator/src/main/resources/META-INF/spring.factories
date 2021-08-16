@@ -1,2 +1,2 @@
-org.springframework.context.ApplicationListener=\
-jbm.framework.boot.autoconfigure.base.listener.ApplicationPidListener
+#org.springframework.context.ApplicationListener=\
+#jbm.framework.boot.autoconfigure.base.listener.ApplicationPidListener

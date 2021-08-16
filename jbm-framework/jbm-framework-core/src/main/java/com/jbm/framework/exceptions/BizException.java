@@ -36,7 +36,7 @@ public class BizException extends RuntimeException {
 	}
 
 	public BizException(ServiceException serviceException) {
-		this(serviceException.getErrId(), serviceException.getMessage(), serviceException.getCause());
+		this(serviceException.getCode(), serviceException.getMessage(), serviceException.getCause());
 	}
 
 	public BizException(String message) {

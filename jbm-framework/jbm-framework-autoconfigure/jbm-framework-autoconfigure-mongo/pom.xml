@@ -31,6 +31,10 @@
 			<groupId>com.jbm</groupId>
 			<artifactId>jbm-util</artifactId>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-core</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

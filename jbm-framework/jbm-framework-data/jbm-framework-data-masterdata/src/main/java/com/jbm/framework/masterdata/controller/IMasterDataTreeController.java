@@ -1,11 +1,11 @@
 package com.jbm.framework.masterdata.controller;
 
-import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
+import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.swagger.annotation.ApiJsonObject;
+import org.springframework.cache.annotation.EnableCaching;
 
 import java.util.List;
 
@@ -15,13 +15,17 @@ import java.util.List;
  * @param <Entity>
  * @author wesley
  */
-public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>> extends IMasterDataController<Entity, Service> {
+public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity> extends IMasterDataController<Entity> {
+    /**
+     * @param masterDataRequsetBody
+     * @return
+     */
+    ResultBody<List<Entity>> root(MasterDataRequsetBody masterDataRequsetBody);
 
-    Object root(JsonRequestBody jsonRequestBody);
+    /**
+     * @param masterDataRequsetBody
+     * @return
+     */
+    ResultBody<List<Entity>> tree(MasterDataRequsetBody masterDataRequsetBody);
 
-    Object rootByCode(JsonRequestBody jsonRequestBody);
-
-    Object tree(JsonRequestBody jsonRequestBody);
-
-    Object treeByCode(JsonRequestBody jsonRequestBody);
 }

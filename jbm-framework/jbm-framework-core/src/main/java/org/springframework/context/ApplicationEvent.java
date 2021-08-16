@@ -45,7 +45,7 @@ public abstract class ApplicationEvent extends EventObject {
 
 
 	/**
-	 * Return the system time in milliseconds when the event happened.
+	 * Return the center time in milliseconds when the event happened.
 	 */
 	public final long getTimestamp() {
 		return this.timestamp;

@@ -13,11 +13,6 @@ import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.SpringApplicationEvent;
 import org.springframework.core.env.ConfigurableEnvironment;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-
-import jbm.framework.boot.autoconfigure.base.monitor.MonitorThread;
-import jodd.io.FileUtil;
 import jodd.util.StringUtil;
 
 public class ApplicationPidListener extends ApplicationPidFileWriter {
@@ -62,7 +57,6 @@ public class ApplicationPidListener extends ApplicationPidFileWriter {
 			ApplicationPreparedEvent e = (ApplicationPreparedEvent) event;
 			ConfigurableEnvironment env = e.getApplicationContext().getEnvironment();
 			Timer timer = new Timer(UUID.randomUUID().toString(), true);
-			timer.schedule(new MonitorThread(timer, env), 1000, 5000);
 //			File envFile = new File(MessageFormat.format("{0}-env.json", System.getProperty("application.name")));
 			try {
 //				FileUtil.writeString(envFile, JSON.toJSONString(env, SerializerFeature.PrettyFormat,

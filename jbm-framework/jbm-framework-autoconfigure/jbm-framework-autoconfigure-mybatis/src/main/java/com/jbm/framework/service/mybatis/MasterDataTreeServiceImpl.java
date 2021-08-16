@@ -2,19 +2,19 @@ package com.jbm.framework.service.mybatis;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.util.CollectionUtils;
-import com.jbm.util.MapUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+<<<<<<< HEAD
 
 public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity>
         implements IMasterDataTreeService<Entity> {
@@ -76,19 +76,28 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         }
         return treeList;
     }
+=======
 
-    public List<Entity> selectListByParentCode(String parentCode) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentCode"), parentCode));
+public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
+
+>>>>>>> 6.0.0
+
+    @Override
+    public List<Entity> selectRootListById() throws DataServiceException {
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
+        queryWrapper.isNull(EntityUtils.toDbName(Entity::getParentId));
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
-    public List<Entity> selectRootListById(Entity entity) throws DataServiceException {
-        QueryWrapper<Entity> entityWrapper = new QueryWrapper<>(entity);
-        entityWrapper.isNull(StrUtil.toUnderlineCase("parentId"));
-        return super.list(entityWrapper);
+    public List<Entity> selectChildNodesById(Entity entity) throws DataServiceException {
+        List<Entity> subEntitys = this.selectChildNodesById(entity.getId());
+        entity.setLeaf(CollectionUtil.isNotEmpty(subEntitys) ? false : true);
+        return subEntitys;
     }
 
     @Override
+<<<<<<< HEAD
     public List<Entity> selectRootListById() throws DataServiceException {
         QueryWrapper<Entity> entityWrapper = new QueryWrapper<>();
         entityWrapper.isNull(StrUtil.toUnderlineCase("parentId"));
@@ -103,6 +112,8 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
     }
 
     @Override
+=======
+>>>>>>> 6.0.0
     public List<Entity> selectChildNodesById(Long parentId) throws DataServiceException {
         List<Entity> treeList = new ArrayList<Entity>();
         List<Entity> subEntitys = new ArrayList<Entity>();
@@ -117,6 +128,7 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         return treeList;
     }
 
+<<<<<<< HEAD
 
     @Override
     public List<Entity> selectChildNodesByCode(String parentCode) throws DataServiceException {
@@ -132,6 +144,8 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
         treeList.addAll(this.selectChildNodesByCode(subEntitys));
         return treeList;
     }
+=======
+>>>>>>> 6.0.0
 
     @Override
     public List<Entity> selectChildNodesById(List<Entity> subEntitys) throws DataServiceException {
@@ -153,12 +167,16 @@ public class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> exte
 
     @Override
     public List<Entity> selectListByParentId(Long parentId) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), parentId));
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
+        queryWrapper.eq(EntityUtils.toDbName(Entity::getParentId), parentId);
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
     @Override
     public List<Entity> selectListByParentId(Entity entity) throws DataServiceException {
-        return this.selectEntitys(MapUtils.newParamMap(StrUtil.toUnderlineCase("parentId"), entity.getId()));
+        QueryWrapper<Entity> queryWrapper = currentQueryWrapper();
+        queryWrapper.eq(EntityUtils.toDbName(Entity::getParentId), entity.getId());
+        return this.selectEntitysByWapper(queryWrapper);
     }
 
 

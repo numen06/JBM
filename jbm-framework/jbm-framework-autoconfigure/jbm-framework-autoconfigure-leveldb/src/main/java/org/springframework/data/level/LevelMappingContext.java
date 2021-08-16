@@ -53,7 +53,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 	/**
 	 * Creates new {@link LevelMappingContext}.
-	 * 
+	 *
 	 * @param mappingConfiguration can be {@literal null}.
 	 */
 	public LevelMappingContext(MappingConfiguration mappingConfiguration) {
@@ -70,17 +70,17 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 	/**
 	 * Configures the {@link KeySpaceResolver} to be used if not explicit key space
 	 * is annotated to the domain type.
-	 * 
+	 *
 	 * @param fallbackKeySpaceResolver can be {@literal null}.
 	 */
 	public void setFallbackKeySpaceResolver(KeySpaceResolver fallbackKeySpaceResolver) {
 		this.fallbackKeySpaceResolver = fallbackKeySpaceResolver;
 	}
 
- 
+
 	/**
 	 * Get the {@link MappingConfiguration} used.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 */
 	public MappingConfiguration getMappingConfiguration() {
@@ -90,7 +90,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 	/**
 	 * {@link KeySpaceResolver} implementation considering {@link KeySpace} and
 	 * {@link KeyspaceConfiguration}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -105,7 +105,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 		/*
 		 * (non-Javadoc)
-		 * 
+		 *
 		 * @see org.springframework.data.keyvalue.core.mapping.KeySpaceResolver#
 		 * resolveKeySpace(java.lang.Class)
 		 */
@@ -127,7 +127,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 	/**
 	 * {@link KeySpaceResolver} implementation considering {@link KeySpace}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -137,7 +137,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 		/*
 		 * (non-Javadoc)
-		 * 
+		 *
 		 * @see org.springframework.data.keyvalue.core.KeySpaceResolver#
 		 * resolveKeySpace(java.lang.Class)
 		 */
@@ -152,7 +152,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 	/**
 	 * {@link TimeToLiveAccessor} implementation considering
 	 * {@link KeyspaceConfiguration}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
@@ -166,7 +166,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 		/**
 		 * Creates new {@link ConfigAwareTimeToLiveAccessor}
-		 * 
+		 *
 		 * @param keyspaceConfig must not be {@literal null}.
 		 * @param mappingContext must not be {@literal null}.
 		 */
@@ -184,7 +184,7 @@ public class LevelMappingContext<E extends KeyValuePersistentEntity<?, P>, P ext
 
 		/*
 		 * (non-Javadoc)
-		 * 
+		 *
 		 * @see org.springframework.data.redis.core.TimeToLiveResolver#
 		 * resolveTimeToLive(java.lang.Object)
 		 */

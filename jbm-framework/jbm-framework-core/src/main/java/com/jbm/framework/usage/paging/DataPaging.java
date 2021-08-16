@@ -1,5 +1,9 @@
 package com.jbm.framework.usage.paging;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,29 +16,30 @@ import java.util.Map;
  * @param <E>
  * @author Wesley
  */
+@Data
+@ApiModel(value = "分页实体")
 public class DataPaging<E> implements Serializable {
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
-
     /**
      * 空的数据
      */
-    private final List<E> EMPTY_CONTENT = new ArrayList<>();
-    private final PageForm EMPTY_PAGEABLE = new PageForm();
+    public final static List EMPTY_CONTENT = new ArrayList<>();
+    /**
+     * 空分页对象
+     */
+    public final static PageForm EMPTY_PAGEABLE = new PageForm();
 
     /**
      * 查询的内容
      */
+    @ApiModelProperty(value = "分页列表")
     private List<E> contents = EMPTY_CONTENT;
 
-    /**
-     * 总数
-     */
-    private Long total;
+    @ApiModelProperty(value = "总条目数")
+    private Integer total;
 
-    private Long totalPage;
+    @ApiModelProperty(value = "总页数")
+    private Integer totalPage;
 
     /**
      * 查询的分页信息
@@ -53,7 +58,7 @@ public class DataPaging<E> implements Serializable {
     }
 
 
-    public DataPaging(List<E> contents, Long total) {
+    public DataPaging(List<E> contents, Integer total) {
         super();
         this.contents = contents;
         this.total = total;
@@ -62,51 +67,21 @@ public class DataPaging<E> implements Serializable {
     public DataPaging(List<E> contents, Long total, Long totalPage, PageForm pageForm) {
         super();
         this.contents = contents;
-        this.total = total;
-        this.totalPage = totalPage;
+        this.total = total.intValue();
+        this.totalPage = totalPage.intValue();
         this.pageForm = pageForm;
     }
 
     public DataPaging(List<E> contents, Long total, PageForm pageForm) {
         super();
         this.contents = contents;
-        this.total = total;
+        this.total = total.intValue();
         this.pageForm = pageForm;
     }
 
-    public PageForm getPageForm() {
-        return pageForm;
-    }
-
-    public void setPageForm(PageForm pageForm) {
-        this.pageForm = pageForm;
-    }
-
-    public Long getTotal() {
-        return total;
-    }
-
-    public void setTotal(Long total) {
-        this.total = total;
-    }
-
-    public List<E> getContents() {
-        return contents;
-    }
-
-    public void setContents(List<E> contents) {
-        this.contents = contents;
-    }
-
-    public List<E> EMPTY_CONTENT() {
-        return EMPTY_CONTENT;
-    }
-
+    @ApiModelProperty(value = "列表扩展解析")
     private Map<String, Object> exposition;
 
-    public Map<String, Object> getExposition() {
-        return exposition;
-    }
 
     public <K, V, T extends Map<K, V>> void putExp(Map<String, T> exp) {
         if (exposition == null)
@@ -120,12 +95,32 @@ public class DataPaging<E> implements Serializable {
         exposition.put(type, mapper);
     }
 
-    public Long getTotalPage() {
+    @ApiModelProperty(value = "总条目数")
+    public Integer getSize() {
+        return pageForm.getPageSize();
+    }
+
+    public void setSize(Integer size) {
+        pageForm.setPageSize(size.intValue());
+    }
+
+    @ApiModelProperty(value = "当前页")
+    public Integer getCurrent() {
+        return pageForm.getCurrPage();
+    }
+
+    public void setCurrent(Integer current) {
+        pageForm.setCurrPage(current.intValue());
+    }
+
+    @ApiModelProperty(value = "总页数")
+    public Integer getPages() {
         return totalPage;
     }
 
-    public void setTotalPage(Long totalPage) {
-        this.totalPage = totalPage;
+    public void setPages(Integer pages) {
+        this.totalPage = pages;
     }
+
 
 }

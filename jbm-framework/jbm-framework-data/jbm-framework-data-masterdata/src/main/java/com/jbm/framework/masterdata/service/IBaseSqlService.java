@@ -1,15 +1,19 @@
 package com.jbm.framework.masterdata.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jbm.framework.exceptions.DataServiceException;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.bean.BaseEntity;
-import com.jbm.framework.usage.paging.DataPaging;
-import com.jbm.framework.usage.paging.PageForm;
 
 public interface IBaseSqlService<Entity extends BaseEntity> {
 
@@ -58,7 +62,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
      * 查询实体
      *
      * @param entity
-     * @param pageable
+     * @param pageForm
      * @return
      */
     public DataPaging<Entity> selectEntitys(Entity entity, PageForm pageForm) throws DataServiceException;
@@ -82,7 +86,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 
 //	/**
 //	 * 通过实体查询分页，并且加入扩展字段
-//	 * 
+//	 *
 //	 * @param entity   实体
 //	 * @param expand   扩展字段
 //	 * @param pageForm 分页信息
@@ -93,7 +97,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 
 //	/**
 //	 * 通过实体查询列表，并且加入扩展
-//	 * 
+//	 *
 //	 * @param entity 实体
 //	 * @param expand 扩展
 //	 * @return
@@ -119,6 +123,8 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 
     boolean update(Entity entity, Entity updateEntity) throws DataServiceException;
 
+    boolean updateByWrapper(Entity entity, Wrapper<Entity> wrapper) throws DataServiceException;
+
 //	List<Entity> selectList(Wrapper<Entity> wrapper);
 
     Entity selectById(Long id) throws DataServiceException;
@@ -139,7 +145,6 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
     /**
      * 查找列表，将实体的主键作为KEY输出为MAP
      *
-     * @param entity
      * @return
      * @throws DataServiceException
      */
@@ -234,6 +239,9 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
      */
     boolean updateById(Entity entity);
 
+    @Transactional(rollbackFor = Exception.class)
+    DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException;
+
     /**
      * <p>
      * 根据ID 批量更新
@@ -275,12 +283,14 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
 //
 //	List<Entity> selectEntitys(String sqlStatement, Map<String, Object> params) throws DataServiceException;
 
-    DataPaging<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper, PageForm pageForm) throws DataServiceException;
+    DataPaging<Entity> selectEntitysByWapper(CriteriaQueryWrapper<Entity> criteriaQueryWrapper) throws DataServiceException;
 
-    List<Entity> selectEntitysByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    DataPaging<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper, PageForm pageForm) throws DataServiceException;
 
-    Entity selectEntityByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    List<Entity> selectEntitysByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
 
-    boolean deleteByWapper(QueryWrapper<Entity>  queryWrapper) throws DataServiceException;
+    Entity selectEntityByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
+
+    boolean deleteByWapper(QueryWrapper<Entity> queryWrapper) throws DataServiceException;
 
 }

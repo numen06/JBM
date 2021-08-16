@@ -16,7 +16,7 @@ public class TreeNode {
     private String name;
     private Boolean checked;
     private String icon;
-    List<TreeNode> children = new ArrayList<>();
+    private List<TreeNode> children = new ArrayList<>();
 
     public TreeNode() {
     }

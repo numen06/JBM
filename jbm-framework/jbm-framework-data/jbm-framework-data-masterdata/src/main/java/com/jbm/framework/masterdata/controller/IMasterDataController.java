@@ -1,64 +1,70 @@
 package com.jbm.framework.masterdata.controller;
 
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
 
-public interface IMasterDataController<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>> {
+import java.util.List;
+
+public interface IMasterDataController<Entity extends MasterDataEntity> {
 
 
     /**
      * 查询列表
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    Object pageList(JsonRequestBody jsonRequestBody);
+    ResultBody<DataPaging<Entity>> pageList(PageRequestBody pageRequestBody);
 
-    Object list(JsonRequestBody jsonRequestBody);
+    ResultBody<List<Entity>> list(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
      * 获取单一对对象
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    Object model(JsonRequestBody jsonRequestBody);
+    ResultBody<Entity> model(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
      * 保存单一对象
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    Object save(JsonRequestBody jsonRequestBody);
+    ResultBody<Entity> save(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    Object remove(JsonRequestBody jsonRequestBody);
+    ResultBody<Boolean> remove(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
      * 保存多个对象
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    Object saveBatch(JsonRequestBody jsonRequestBody);
+    ResultBody<List<Entity>> saveBatch(MasterDataRequsetBody masterDataRequsetBody);
 
     /**
      * 生产假数据
      *
      * @return
      */
-    Object mock();
+    ResultBody<Entity> mock();
 
     /**
      * 批量删除
      *
-     * @param jsonRequestBody
+     * @param idsForm
      * @return
      */
-    Object deleteByIds(JsonRequestBody jsonRequestBody);
+    ResultBody<Boolean> deleteByIds(IdsForm idsForm);
 }

@@ -1,2 +1,0 @@
-#!/bin/sh
-nohup java -Xms512m -Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m -Dfile.encoding=UTF8 -jar $jar #foreach($arg in $args) $arg #end --tid $tid>/dev/null 2>&1 &

@@ -3,25 +3,29 @@ package com.jbm.framework.mvc.web;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
-import com.jbm.framework.metadata.bean.ResultForm;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
+import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.util.ObjectUtils;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+@Slf4j
 public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
-        extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity, Service> {
+        extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity> {
 
     public MasterDataTreeCollection() {
         super();
     }
 
     @Override
-    protected Entity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
+    protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws Exception {
+        Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -34,31 +38,33 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     /**
      * 列表查询
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    @RequestMapping("/root")
+    @ApiOperation(value = "获取根节点列表", notes = "获取根节点列表")
+    @PostMapping("/root")
     @Override
-    public Object root(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<List<Entity>> root(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectRootListById(entity);
-            return ResultForm.success(list, "查询树根节点列表成功");
+            validator(masterDataRequsetBody);
+            List<Entity> list = service.selectRootListById();
+            return ResultBody.success(list, "查询树根节点列表成功");
         } catch (Exception e) {
-            return ResultForm.error(null, "查询树根节点列表成功", e);
+            return ResultBody.error(null, "查询树根节点列表失败", e);
         }
     }
 
-    @RequestMapping("/rootByCode")
+    @ApiOperation(value = "获取根树状结构", notes = "获取根树状结构")
+    @PostMapping("/tree")
     @Override
-    public Object rootByCode(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<List<Entity>> tree(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectRootListByCode(entity);
-            return ResultForm.success(list, "通过Code查询树根节点列表成功");
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, false);
+            List<Entity> list = service.selectChildNodesById(entity);
+            return ResultBody.success(list, "查询树结构成功");
         } catch (Exception e) {
+<<<<<<< HEAD
             return ResultForm.error(null, "通过Code查询树根节点列表成功", e);
         }
     }
@@ -87,6 +93,9 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
             return ResultForm.success(list, "通过Code查询树结构成功");
         } catch (Exception e) {
             return ResultForm.error(null, "通过Code查询树结构成功", e);
+=======
+            return ResultBody.error(null, "查询树结构失败", e);
+>>>>>>> 6.0.0
         }
     }
 

@@ -8,47 +8,50 @@ import javax.persistence.MappedSuperclass;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 技术的实体
- * 
+ *
  * @author wesley
- *	
  */
 @MappedSuperclass
-public abstract class BaseEntity implements PrimaryKey<Long> {
+@Data
+public abstract class BaseEntity implements Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7148367690448503947L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 7148367690448503947L;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@TableId(type = com.baomidou.mybatisplus.annotation.IdType.ID_WORKER)
-	private Long id;
-	
-	
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = com.baomidou.mybatisplus.annotation.IdType.ID_WORKER)
+    private Long id;
+
+
 //	@TableField(value = "delete_flag")
 //	@TableLogic
 //	private Integer deleteFlag;
 
-	public BaseEntity() {
-		super();
-	}
+    public BaseEntity() {
+        super();
+    }
 
-	public BaseEntity(Long id) {
-		super();
-		this.id = id;
-	}
+    public BaseEntity(Long id) {
+        super();
+        this.id = id;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
 //	public Integer getDeleteFlag() {
 //		return deleteFlag;
@@ -57,7 +60,6 @@ public abstract class BaseEntity implements PrimaryKey<Long> {
 //	public void setDeleteFlag(Integer deleteFlag) {
 //		this.deleteFlag = deleteFlag;
 //	}
-	
-	
+
 
 }

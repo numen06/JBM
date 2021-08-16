@@ -3,8 +3,7 @@ package com.jbm.framework.masterdata.service;
 import java.util.List;
 
 import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.bean.MasterDataTreeEntity;
-import com.jbm.framework.usage.paging.PageForm;
+import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 
 /**
  * 带有树形结构的数据库访问类
@@ -14,14 +13,7 @@ import com.jbm.framework.usage.paging.PageForm;
  */
 public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> extends IMasterDataService<Entity> {
 
-    /**
-     * 获取parentId为空的列表
-     *
-     * @param entity
-     * @return
-     * @throws DataServiceException
-     */
-    List<Entity> selectRootListById(Entity entity) throws DataServiceException;
+    List<Entity> selectRootListById() throws DataServiceException;
 
     List<Entity> selectRootListById() throws DataServiceException;
 
@@ -36,7 +28,10 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
 
     List<Entity> selectChildNodesById(Long parentId) throws DataServiceException;
 
+<<<<<<< HEAD
     List<Entity> selectChildNodesByCode(String parentCode) throws DataServiceException;
+=======
+>>>>>>> 6.0.0
 
     /**
      * 通过所有父节点获取下面所有子节点（递归慎用）
@@ -56,6 +51,7 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
      */
     List<Entity> selectListByParentId(Long parentId) throws DataServiceException;
 
+<<<<<<< HEAD
     /**
      * 获取parentCode为空的列表
      *
@@ -94,6 +90,8 @@ public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> ext
      */
     List<Entity> selectListByParentCode(String parentCode) throws DataServiceException;
 
+=======
+>>>>>>> 6.0.0
 
     List<Entity> selectListByParentId(Entity entity) throws DataServiceException;
 }

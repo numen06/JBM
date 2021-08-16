@@ -33,7 +33,7 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
 	 * getTimeToLiveAccessor()
 	 */
@@ -44,7 +44,7 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
 	 * hasExplictTimeToLiveProperty()
 	 */
@@ -55,7 +55,7 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.Level.core.mapping.LevelPersistentEntity#
 	 * getExplicitTimeToLiveProperty()
 	 */
@@ -67,7 +67,7 @@ public class BasicLevelPersistentEntity<T> extends BasicKeyValuePersistentEntity
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#
 	 * returnPropertyIfBetterIdPropertyCandidateOrNull(org.springframework.data.
 	 * mapping.PersistentProperty)

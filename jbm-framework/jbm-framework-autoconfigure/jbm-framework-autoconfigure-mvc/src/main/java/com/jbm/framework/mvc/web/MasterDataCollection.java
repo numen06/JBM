@@ -4,25 +4,29 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.bean.MasterDataEntity;
-import com.jbm.framework.metadata.bean.ResultForm;
-import com.jbm.framework.usage.form.JsonRequestBody;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ObjectUtils;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
 @Slf4j
 public abstract class MasterDataCollection<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>>
-        extends BaseCollection implements IMasterDataController<Entity, Service> {
+        extends BaseCollection implements IMasterDataController<Entity> {
     @Autowired
     protected Service service;
     @Autowired
@@ -33,15 +37,15 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
 
-    protected void validator(JsonRequestBody jsonRequestBody) throws Exception {
-        if (ObjectUtils.isNull(jsonRequestBody)) {
+    protected void validator(BaseRequsetBody baseRequsetBody) throws Exception {
+        if (ObjectUtils.isNull(baseRequsetBody)) {
             throw new ServiceException("参数错误");
         }
 
     }
 
-    protected Entity validatorMasterData(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        Entity entity = jsonRequestBody.tryGet(service.getEntityClass());
+    protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+        Entity entity = baseRequsetBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtils.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -50,8 +54,8 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         return entity;
     }
 
-    protected List<Entity> validatorMasterDataList(JsonRequestBody jsonRequestBody, Boolean valNull) throws Exception {
-        List<Entity> entitys = jsonRequestBody.tryGetList(service.getEntityClass());
+    protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+        List<Entity> entitys = baseRequsetBody.tryGetList(service.currentEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
@@ -67,96 +71,101 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     /**
      * 分页列表查询
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/pageList")
+    @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
+    @PostMapping("/pageList")
     @Override
-    public Object pageList(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<DataPaging<Entity>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            PageForm pageForm = jsonRequestBody.getPageForm();
+            validator(pageRequestBody);
+            Entity entity = validatorMasterData(pageRequestBody, false);
+            PageForm pageForm = pageRequestBody.getPageForm();
             DataPaging<Entity> dataPaging = service.selectEntitys(entity, pageForm);
-            return ResultForm.success(dataPaging, "查询分页列表成功");
+            return ResultBody.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
     /**
      * 列表查询
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    @RequestMapping("/list")
+    @ApiOperation(value = "获取列表", notes = "获取列表")
+    @PostMapping("/list")
     @Override
-    public Object list(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<List<Entity>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, false);
             List<Entity> list = service.selectEntitys(entity);
-            return ResultForm.success(list, "查询列表成功");
+            return ResultBody.success(list, "查询列表成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
     /**
      * 查询实体
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    @RequestMapping("/model")
+    @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
+    @PostMapping("/model")
     @Override
-    public Object model(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<Entity> model(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, true);
             entity = service.selectEntity(entity);
-            return ResultForm.success(entity, "查询对象成功");
+            return ResultBody.success(entity, "查询对象成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
     /**
      * 保存
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    @RequestMapping("/save")
+    @ApiOperation(value = "保存单个实体", notes = "保存单个实体")
+    @PostMapping("/save")
     @Override
-    public Object save(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<Entity> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, true);
             entity = service.saveEntity(entity);
-            return ResultForm.success(entity, "保存对象成功");
+            return ResultBody.success(entity, "保存对象成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
     /**
      * 保存多个对象
      *
-     * @param jsonRequestBody
+     * @param masterDataRequsetBody
      * @return
      */
-    @RequestMapping("/saveBatch")
+    @ApiOperation(value = "批量保存", notes = "批量保存")
+    @PostMapping("/saveBatch")
     @Override
-    public Object saveBatch(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<List<Entity>> saveBatch(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            List<Entity> entitys = validatorMasterDataList(jsonRequestBody, true);
+            validator(masterDataRequsetBody);
+            List<Entity> entitys = validatorMasterDataList(masterDataRequsetBody, true);
             service.saveBatch(entitys);
-            return ResultForm.success(entitys, "保存对象成功");
+            return ResultBody.success(entitys, "保存对象成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
@@ -166,54 +175,65 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
      *
      * @return
      */
-    @RequestMapping("/mock")
+    @ApiOperation(value = "模拟数据", notes = "模拟数据")
+    @PostMapping("/mock")
     @Override
-    public Object mock() {
+    public ResultBody<Entity> mock() {
         try {
             MockConfig mockConfig = MockConfig.newInstance().setEnabledCircle(true).excludes("id").globalConfig();
-            Entity entity = JMockData.mock(service.getEntityClass(), mockConfig);
+            Entity entity = JMockData.mock(service.currentEntityClass(), mockConfig);
             entity = service.saveEntity(entity);
-            return ResultForm.success(entity, "保存对象成功");
+            return ResultBody.success(entity, "保存对象成功");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
     /**
      * 删除
      *
-     * @param jsonRequestBody
+     * @param pageRequestBody
      * @return
      */
-    @RequestMapping("/delete")
+    @ApiOperation(value = "删除实体", notes = "删除实体")
+    @PostMapping("/delete")
     @Override
-    public Object remove(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<Boolean> remove(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, true);
-            if (service.delete(entity))
-                return ResultForm.success(entity, "删除对象成功");
+            validator(masterDataRequsetBody);
+            Entity entity = validatorMasterData(masterDataRequsetBody, true);
+            if (service.deleteEntity(entity))
+                return ResultBody.success(true, "删除对象成功");
             else
-                return ResultForm.success(entity, "删除对象失败");
+                return ResultBody.success(false, "删除对象失败");
         } catch (Exception e) {
-            return ResultForm.error(e);
+            return ResultBody.error(e);
         }
     }
 
-    @RequestMapping("/deleteByIds")
+    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @PostMapping("/deleteByIds")
     @Override
-    public Object deleteByIds(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
         try {
             // 获取前端信息List<BusCompanyInfo>
-            validator(jsonRequestBody);
-            List<Long> ids = jsonRequestBody.getList("ids", Long.class);
+            List<Long> ids = idsForm.getIds();
             if (CollectionUtil.isEmpty(ids)) {
-                throw new ServiceException("ID为空");
+                return ResultBody.error(true, "ID为空");
             }
+<<<<<<< HEAD
             this.service.removeByIds(ids);
             return ResultForm.success("success", "批量刪除成功");
         } catch (Exception e) {
             return ResultForm.error("success", "批量刪除失败");
+=======
+            if (this.service.removeByIds(ids)) {
+                return ResultBody.success(false, "批量成功刪除");
+            }
+            return ResultBody.error(false, "批量成功刪除");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+>>>>>>> 6.0.0
         }
     }
 }

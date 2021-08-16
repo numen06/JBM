@@ -12,8 +12,8 @@
     <artifactId>jbm-framework-cloud-core</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.springframework.security.oauth</groupId>
-            <artifactId>spring-security-oauth2</artifactId>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -24,8 +24,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.mybatis</groupId>
-			<artifactId>mybatis</artifactId>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

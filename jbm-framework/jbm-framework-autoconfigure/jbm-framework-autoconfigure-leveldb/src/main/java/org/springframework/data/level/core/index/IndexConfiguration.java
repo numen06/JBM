@@ -27,7 +27,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * hasIndexFor(java.io.Serializable)
 	 */
@@ -38,7 +38,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * hasIndexFor(java.io.Serializable, java.lang.String)
 	 */
@@ -48,7 +48,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * getIndexDefinitionsFor(java.io.Serializable, java.lang.String)
 	 */
@@ -58,7 +58,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.redis.core.index.IndexDefinitionProvider#
 	 * getIndexDefinitionsFor(java.io.Serializable)
 	 */
@@ -77,7 +77,7 @@ public class IndexConfiguration implements ConfigurableIndexDefinitionProvider {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.data.redis.core.index.IndexDefinitionRegistry#
 	 * addIndexDefinition(org.springframework.data.redis.core.index.
 	 * IndexDefinition)

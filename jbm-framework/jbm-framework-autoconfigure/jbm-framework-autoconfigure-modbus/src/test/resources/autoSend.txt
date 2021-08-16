@@ -1,0 +1,2 @@
+#function|address|values|#function autoSend every time for sleep time end when autoSend=T
+readHoldingRegistersAsync|33|17

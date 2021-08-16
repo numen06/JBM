@@ -132,7 +132,7 @@ public class MqttSample extends BaseSample {
 //                if (iResourceResponseListener != null) {
 //                    AResponse response = new AResponse();
 //
-//                    response.data = "{\"id\":\"123\", \"code\":\"200\"" + ",\"data\":{} }";
+//                    response.result = "{\"id\":\"123\", \"code\":\"200\"" + ",\"result\":{} }";
 //                    iResourceResponseListener.onResponse(aResource, resourceRequest, response);
 //                }
                 // 如果不一定是json格式，可以参考如下方式回复

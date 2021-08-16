@@ -1,0 +1,39 @@
+package com.jbm.cluster.logs.controllers;
+
+
+import com.jbm.cluster.logs.entity.GatewayLogs;
+import com.jbm.cluster.logs.form.GatewayLogsForm;
+import com.jbm.cluster.logs.service.GatewayLogsService;
+import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Api(tags = "日志接口")
+@RestController
+@RequestMapping("/GatewayLogs")
+public class GatewayLogsController {
+    /**
+     * 临时存放减少io
+     */
+    @Autowired
+    private GatewayLogsService gatewayLogsService;
+
+
+    @ApiOperation(value = "获取多表查询分页列表")
+    @PostMapping({"/findLogs"})
+    public ResultBody<DataPaging<GatewayLogs>> findLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
+        try {
+            DataPaging<GatewayLogs> dataPaging = gatewayLogsService.findLogs(gatewayLogsForm.getPageForm(),gatewayLogsForm.getGatewayLogs());
+            return ResultBody.success(dataPaging, "查询分页列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询日志失败", e);
+        }
+    }
+
+}

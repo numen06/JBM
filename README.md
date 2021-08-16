@@ -1,7 +1,7 @@
 # JBM 
 [![输开源协议](https://img.shields.io/badge/License-Apache--2.0-brightgreen.svg "Apache")](https://www.apache.org/licenses/LICENSE-2.0)
 
-
+- java Business Model(JBM)
 - 由于框架诞生之初是初期期spring boot 1.0时代，所以有很多兼容性问题，在spring boot 2.0走红之后，JBM5.0全面升级融合个大主流中间件的starter 
 - 4.x以前版本主要基于dubbo分布式体系，5.0将重心转移到spring cloud
 - 基于java spring boot 模块化企业级框架
@@ -12,18 +12,26 @@
 - 框架所有内容通过分布式结构连接，通过Dubbo,Rest等方式相互调用
 
 
-### 技术选型
--JDK:JDK1.8+
+### 技术路线
+- JDK:JDK1.8+
 - 核心框架：Spring Boot
 - 安全框架：Spring Security
+- 注册中心：Nacos
 - 任务调度：Spring + Quartz + Zookeeper
 - 持久层框架：MyBatis + MyBatis-Plus + JPA + Spring Data
-- 文档性架构：MongoDB + FastDFS
+- 文档性架构：MongoDB + MinIO
 - 数据库连接池：Alibaba Druid
 - 缓存框架：Redis + Guava
 - 会话管理：Spring Session + Redis
 - 日志管理：SLF4J+Log4j2+LogBack 日志收集
-- 前端框架：Vue;Angular JS;Bootstrap;Jquery
+- 前端框架：Vue;Angular JS;Bootstrap;Jquery（独立项目）
+
+### 项目组成
+- jbm-cluster(分布式集群基础微服务)
+- jbm-framework-core(框架基础类服务)
+- jbm-framework-autoconfigure(spring boot插件集合整合多重技术框架，版本平衡最佳)
+- jbm-framework-micro(微服务基础父集合)
+- jbm-framework-dependencies(版本控制集合)
  
 [☆jbm-framework-dependencies](https://github.com/numen06/JBM/tree/master/jbm-framework-dependencies)为maven基础，标示框架内所有jar的版本，本框架已经消除大部分兼容性问题，为一次集成打下结实基础。
 集成到项目的时候统一继承，即可实现JBM统一版本技术体系管理功能。

@@ -49,11 +49,12 @@ public class ApplicationEnvironmentDefaultEvent implements ApplicationListener<A
 //				paths[i] = resourceLoader.getResource(path).getFilename();
 //			}
             logger.info("resoures develop path is {}", event.getEnvironment().getProperty("spring.resources.static-locations"));
-        } catch (IOException e) {
+            //设置字符串为""的问题
+            ParserConfig.getGlobalInstance().putDeserializer(String.class, JbmStringCodec.instance);
+        } catch (Exception e) {
             logger.error("读取配置文件{}错误", PROPERTIES, e);
         }
-        //设置字符串为""的问题
-        ParserConfig.getGlobalInstance().putDeserializer(String.class, JbmStringCodec.instance);
+
     }
 
 }

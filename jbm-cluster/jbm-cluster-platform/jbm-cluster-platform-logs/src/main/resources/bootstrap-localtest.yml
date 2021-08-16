@@ -1,0 +1,19 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: localtest
+        #                group:
+        refreshable-dataids: common.properties
+        server-addr: nacos.51jbm.cn:8848
+        shared-dataids: common.properties,rabbitmq.properties,elasticsearch.properties
+      discovery:
+        namespace: localtest
+        #                group:
+        server-addr: nacos.51jbm.cn:8848
+dubbo:
+  application:
+    name: ${artifactId}
+  registry:
+    address: nacos://${spring.cloud.nacos.discovery.server-addr}
+

@@ -130,7 +130,7 @@ public abstract class ClassUtils {
 		try {
 			cl = Thread.currentThread().getContextClassLoader();
 		} catch (Throwable ex) {
-			// Cannot access thread context ClassLoader - falling back to system
+			// Cannot access thread context ClassLoader - falling back to center
 			// class loader...
 		}
 		if (cl == null) {

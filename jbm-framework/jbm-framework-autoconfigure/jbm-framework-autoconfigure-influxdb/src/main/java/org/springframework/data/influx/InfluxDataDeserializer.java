@@ -1,21 +1,14 @@
 package org.springframework.data.influx;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
 import org.influxdb.dto.QueryResult;
 import org.influxdb.dto.QueryResult.Result;
 import org.influxdb.dto.QueryResult.Series;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.jbm.framework.exceptions.ServiceException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * 根据数据解析
@@ -64,7 +57,6 @@ public class InfluxDataDeserializer {
 	 * 
 	 * @param series
 	 * @return
-	 * @throws ServiceException
 	 * @throws ParseException
 	 */
 	public List<Map<String, Object>> serializeSeries(List<Map<String, Object>> list, Series series) {

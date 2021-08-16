@@ -1,0 +1,44 @@
+server:
+  port: 3312
+spring:
+  application:
+    name: ${artifactId}
+  cloud:
+    #手动配置Bus id,
+    bus:
+      id: ${spring.application.name}:${server.port}
+  main:
+    allow-bean-definition-overriding: true
+  #解决restful 404错误 spring.mavc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  profiles:
+    active: ${profile.name}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+jbm:
+  cluster:
+    token-type: redis
+#    permit-all:
+#      - /authority/access
+#      - /authority/app
+#      - /app/*/info
+#      - /app/client/*/info
+#      - /gateway/api/**
+#      - /user/add/thirdParty
+#      - /user/info
+#      - /user/login
+#      - /developer/add/thirdParty
+#      - /developer/info
+#      - /developer/login
+swagger2:
+  enabled: true
+  description: 日志处理基础服务器
+  title: 日志处理基础服务器
+

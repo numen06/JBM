@@ -30,7 +30,7 @@ public class LevelPersistentProperty extends KeyValuePersistentProperty<LevelPer
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#
 	 * isIdProperty()
