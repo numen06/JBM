@@ -5,16 +5,14 @@
     <parent>
         <groupId>com.jbm</groupId>
         <artifactId>jbm-framework-dependencies</artifactId>
-        <version>6.0.0-SNAPSHOT</version>
+        <version>6.1.0-SNAPSHOT</version>
         <relativePath>../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jbm-cluster</artifactId>
 <!--    <groupId>com.jbm</groupId>
-    <version>6.0.0-SNAPSHOT</version>-->
+    <version>6.1.0-SNAPSHOT</version>-->
     <packaging>pom</packaging>
-
-
     <modules>
         <module>jbm-cluster-api</module>
         <module>jbm-cluster-core</module>
@@ -22,7 +20,6 @@
         <module>jbm-cluster-platform</module>
         <module>jbm-cluster-services</module>
     </modules>
-
     <dependencyManagement>
         <dependencies>
            <!-- <dependency>
@@ -90,12 +87,6 @@
     </dependencies>
 
     <properties>
-        <!--自定义版本-->
-        <opencloud.common.version>3.0.0-SNAPSHOT</opencloud.common.version>
-        <opencloud.base-client.version>3.0.0-SNAPSHOT</opencloud.base-client.version>
-        <opencloud.msg-client.version>3.0.0-SNAPSHOT</opencloud.msg-client.version>
-        <opencloud.bpm-client.version>3.0.0-SNAPSHOT</opencloud.bpm-client.version>
-        <opencloud.task-client.version>3.0.0-SNAPSHOT</opencloud.task-client.version>
         <!--aliyun镜像前缀-->
         <docker.image.prefix>registry.cn-hangzhou.aliyuncs.com/51jbm</docker.image.prefix>
     </properties>

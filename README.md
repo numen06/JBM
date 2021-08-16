@@ -47,7 +47,7 @@
 <parent>
     <groupId>com.jbm</groupId>
     <artifactId>jbm-framework-sampleependencies</artifactId>
-    <version>6.0.0-SNAPSHOT</version>
+    <version>6.1.0-SNAPSHOT</version>
 </parent>
 ```
 

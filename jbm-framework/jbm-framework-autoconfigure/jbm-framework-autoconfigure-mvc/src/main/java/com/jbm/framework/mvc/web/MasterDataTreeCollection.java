@@ -64,38 +64,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
             List<Entity> list = service.selectChildNodesById(entity);
             return ResultBody.success(list, "查询树结构成功");
         } catch (Exception e) {
-<<<<<<< HEAD
-            return ResultForm.error(null, "通过Code查询树根节点列表成功", e);
-        }
-    }
-
-
-    @RequestMapping("/tree")
-    @Override
-    public Object tree(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
-        try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectChildNodesById(entity);
-            return ResultForm.success(list, "查询树结构成功");
-        } catch (Exception e) {
-            return ResultForm.error(null, "查询树结构成功", e);
-        }
-    }
-
-    @RequestMapping("/treeByCode")
-    @Override
-    public Object treeByCode(@RequestBody(required = false) JsonRequestBody jsonRequestBody) {
-        try {
-            validator(jsonRequestBody);
-            Entity entity = validatorMasterData(jsonRequestBody, false);
-            List<Entity> list = service.selectChildNodesByCode(entity);
-            return ResultForm.success(list, "通过Code查询树结构成功");
-        } catch (Exception e) {
-            return ResultForm.error(null, "通过Code查询树结构成功", e);
-=======
             return ResultBody.error(null, "查询树结构失败", e);
->>>>>>> 6.0.0
         }
     }
 

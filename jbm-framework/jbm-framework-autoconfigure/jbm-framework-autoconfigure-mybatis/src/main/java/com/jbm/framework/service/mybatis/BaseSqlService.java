@@ -3,6 +3,7 @@ package com.jbm.framework.service.mybatis;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -17,7 +18,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IBaseSqlService;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.ArrayUtils;
@@ -58,6 +61,11 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public List<Entity> selectByIds(Collection<Long> ids) throws DataServiceException {
         return Lists.newArrayList(super.listByIds(ids));
+    }
+
+    @Override
+    public DataPaging<Entity> selectEntitysByWapper(CriteriaQueryWrapper<Entity> criteriaQueryWrapper) throws DataServiceException {
+        return null;
     }
 
     @Override
@@ -161,15 +169,8 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean delete(Entity entity) throws DataServiceException {
-        return SqlHelper.delBool(this.baseMapper.delete(this.buildEntityQueryWrapper(entity)));
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
     public boolean deleteById(Long id) throws DataServiceException {
-        return SqlHelper.delBool(this.baseMapper.deleteById(id));
+        return false;
     }
 
     @Override
@@ -188,9 +189,19 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     @Override
+    public boolean delete(Entity entity) throws DataServiceException {
+        return false;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean update(Entity entity, Entity updateEntity) throws DataServiceException {
         return super.update(updateEntity, this.buildEntityQueryWrapper(updateEntity));
+    }
+
+    @Override
+    public boolean updateByWrapper(Entity entity, Wrapper<Entity> wrapper) throws DataServiceException {
+        return false;
     }
 
     @Override
@@ -224,6 +235,11 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public boolean saveOrUpdateBatch(Collection<Entity> entityList) {
         return super.saveOrUpdateBatch(entityList, 50);
+    }
+
+    @Override
+    public DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException {
+        return null;
     }
 
     @Override
