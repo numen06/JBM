@@ -38,12 +38,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <jdk.version>1.8</jdk.version>
-        <jbm.framework.version>6.0.0-SNAPSHOT</jbm.framework.version>
+        <jbm.framework.version>6.1.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.1.21</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.76</fastjson.version>
         <minio.version>8.3.0</minio.version>
-        <okhttp.version>2.7.5</okhttp.version>
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>
         <camel.version>2.17.1</camel.version>
@@ -58,6 +57,7 @@
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <lombok.version>1.18.12</lombok.version>
+        <okhttp.version>4.9.1</okhttp.version>
         <!--6.0 add-->
         <alibaba.cloud.version>0.2.1.RELEASE</alibaba.cloud.version>
         <apache.commons-lang3.version>3.3.2</apache.commons-lang3.version>
@@ -376,7 +376,28 @@
                 <artifactId>jbm-framework-aliyun-oss</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
-
+            <!--okhttp-->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>*</groupId>-->
+<!--                        <artifactId>*</artifactId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>2.10.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>1.5.21</version>
+            </dependency>
             <!--cluster-->
             <dependency>
                 <groupId>com.jbm</groupId>
@@ -775,17 +796,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- http -->
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup.okhttp</groupId>
-                <artifactId>mockwebserver</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
             <!-- push -->
             <dependency>
                 <groupId>cn.jpush.api</groupId>
@@ -798,21 +808,21 @@
                 <artifactId>metadata-extractor</artifactId>
                 <version>2.11.0</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>org.mybatis.spring.boot</groupId>-->
-<!--                <artifactId>mybatis-spring-boot-starter</artifactId>-->
-<!--                <version>${mybatis-spring-boot.version}</version>-->
-<!--                <exclusions>-->
-<!--                    <exclusion>-->
-<!--                        <artifactId>mybatis-spring-boot-autoconfigure</artifactId>-->
-<!--                        <groupId>org.mybatis.spring.boot</groupId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <artifactId>h2</artifactId>-->
-<!--                        <groupId>com.h2database</groupId>-->
-<!--                    </exclusion>-->
-<!--                </exclusions>-->
-<!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>org.mybatis.spring.boot</groupId>-->
+            <!--                <artifactId>mybatis-spring-boot-starter</artifactId>-->
+            <!--                <version>${mybatis-spring-boot.version}</version>-->
+            <!--                <exclusions>-->
+            <!--                    <exclusion>-->
+            <!--                        <artifactId>mybatis-spring-boot-autoconfigure</artifactId>-->
+            <!--                        <groupId>org.mybatis.spring.boot</groupId>-->
+            <!--                    </exclusion>-->
+            <!--                    <exclusion>-->
+            <!--                        <artifactId>h2</artifactId>-->
+            <!--                        <groupId>com.h2database</groupId>-->
+            <!--                    </exclusion>-->
+            <!--                </exclusions>-->
+            <!--            </dependency>-->
             <!-- <dependency> -->
             <!-- <groupId>org.apache.shiro</groupId> -->
             <!-- <artifactId>shiro-core</artifactId> -->
@@ -977,17 +987,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-   <!-- <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>-->
+    <!-- <build>
+         <plugins>
+             <plugin>
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-compiler-plugin</artifactId>
+                 <configuration>
+                     <source>${maven.compiler.source}</source>
+                     <target>${maven.compiler.target}</target>
+                     <encoding>${project.build.sourceEncoding}</encoding>
+                 </configuration>
+             </plugin>
+         </plugins>
+     </build>-->
 </project>
