@@ -73,3 +73,5 @@
 </dependency>
 ```
 提升为framework等级，提升整体util实用程度，基于jodd和hutool轻量级封装，延续两个的版本生命力，提升使用开发力度
+
+![img_1.png](img_1.png)
