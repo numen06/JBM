@@ -7,8 +7,11 @@
 陆续上传集群使用说明，希望更多的开发者加入更新
 联系邮箱；numen06@qq.com
 ```
-
+### 说明
 - Java Business Model(JBM)
+- 适合中大型项目开发，全分布式架构统一平台管理
+
+### 故事
 - 由于框架诞生之初是初期期spring boot 1.0时代，所以有很多兼容性问题，在spring boot 2.0走红之后，JBM5.0全面升级融合个大主流中间件的starter 
 - 4.x以前版本主要基于dubbo分布式体系，5.0将重心转移到spring cloud
 - 基于java spring boot 模块化企业级框架
