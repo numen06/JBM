@@ -1,6 +1,8 @@
 package com.jbm.cluster.logs.service;
 
 import com.jbm.cluster.logs.entity.GatewayLogs;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 /**
  * @program: JBM6
@@ -10,4 +12,5 @@ import com.jbm.cluster.logs.entity.GatewayLogs;
 public interface GatewayLogsService extends BaseDataService<GatewayLogs> {
 
 
+    DataPaging<GatewayLogs> findLogs(PageForm pageForm, GatewayLogs gatewayLogs);
 }

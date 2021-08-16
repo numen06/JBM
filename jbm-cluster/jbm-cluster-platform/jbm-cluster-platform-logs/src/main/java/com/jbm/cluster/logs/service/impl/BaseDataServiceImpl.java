@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 /**
  * @program: JBM6
  * @author: wesley.zhang
@@ -16,7 +18,7 @@ public class BaseDataServiceImpl<Entity, Repository extends MongoRepository<Enti
     private Repository repository;
 
     @Autowired
-    private MongoTemplate mongoTemplate;
+    protected MongoTemplate mongoTemplate;
 
     @Override
     public long count() {
@@ -36,9 +38,8 @@ public class BaseDataServiceImpl<Entity, Repository extends MongoRepository<Enti
     }
 
     @Override
-    public Iterable<Entity> getAll() {
+    public List<Entity> getAll() {
         return repository.findAll();
     }
-
 
 }

@@ -17,6 +17,6 @@ public interface BaseDataService<Entity> {
 
     void delete(Entity commodity);
 
-    Iterable<Entity> getAll();
+    List<Entity> getAll();
 
 }
