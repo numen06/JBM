@@ -39,8 +39,8 @@
 ```
 <parent>
     <groupId>com.jbm</groupId>
-    <jbm-framework-sampleependencies</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <artifactId>jbm-framework-sampleependencies</artifactId>
+    <version>6.0.0-SNAPSHOT</version>
 </parent>
 ```
 
