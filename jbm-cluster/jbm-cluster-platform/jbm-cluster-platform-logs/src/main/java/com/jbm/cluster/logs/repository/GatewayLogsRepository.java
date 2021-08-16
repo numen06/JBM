@@ -1,7 +1,7 @@
 package com.jbm.cluster.logs.repository;
 
 import com.jbm.cluster.logs.entity.GatewayLogs;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * @create: 2021-05-06 16:59
  **/
 @Repository
-public interface GatewayLogsRepository extends ElasticsearchRepository<GatewayLogs, String> {
+public interface GatewayLogsRepository extends MongoRepository<GatewayLogs, String> {
 
 
 }

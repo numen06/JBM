@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
  * @author: wesley.zhang
  * @create: 2021-05-06 16:56
  **/
-@org.apache.dubbo.config.annotation.Service
 @Service
 public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, GatewayLogsRepository> implements GatewayLogsService {
 }

@@ -1,5 +1,5 @@
 server:
-  port: 7777
+  port: 3312
 spring:
   application:
     name: ${artifactId}
@@ -25,20 +25,20 @@ management:
 jbm:
   cluster:
     token-type: redis
-    permit-all:
-      - /authority/access
-      - /authority/app
-      - /app/*/info
-      - /app/client/*/info
-      - /gateway/api/**
-      - /user/add/thirdParty
-      - /user/info
-      - /user/login
-      - /developer/add/thirdParty
-      - /developer/info
-      - /developer/login
+#    permit-all:
+#      - /authority/access
+#      - /authority/app
+#      - /app/*/info
+#      - /app/client/*/info
+#      - /gateway/api/**
+#      - /user/add/thirdParty
+#      - /user/info
+#      - /user/login
+#      - /developer/add/thirdParty
+#      - /developer/info
+#      - /developer/login
 swagger2:
   enabled: true
-  description: 平台基础服务器
-  title: 平台基础服务器
+  description: 日志处理基础服务器
+  title: 日志处理基础服务器
 

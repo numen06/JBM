@@ -2,7 +2,7 @@ package com.jbm.cluster.logs.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -13,7 +13,7 @@ import java.util.Date;
  * @create: 2021-05-06 16:52
  **/
 @Data
-@Document(indexName = "gateway_logs")
+@Document("gateway_logs")
 public class GatewayLogs implements Serializable {
     /**
      * 访问ID
@@ -66,10 +66,13 @@ public class GatewayLogs implements Serializable {
      */
     private String headers;
 
+    /**
+     * 用户权限
+     */
     private String userAgent;
 
     /**
-     *区域
+     * 区域
      */
     private String region;
 

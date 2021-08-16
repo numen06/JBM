@@ -1,7 +1,7 @@
 package com.jbm.test;
 
 import io.minio.messages.Item;
-import io.minio.notification.NotificationInfo;
+import io.minio.messages.NotificationRecords;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
 import jbm.framework.boot.autoconfigure.minio.MinioService;
 import jbm.framework.boot.autoconfigure.minio.notification.MinioNotification;
@@ -54,7 +54,7 @@ public class TestController {
     }
 
     @MinioNotification({"s3:ObjectAccessed:Get"})
-    public void handleGet(NotificationInfo notificationInfo) {
+    public void handleGet(NotificationRecords notificationInfo) {
         System.out.println("Minio Hello world");
     }
 }

@@ -1,8 +1,10 @@
 package com.jbm.cluster.doc.service;
 
 import com.alibaba.fastjson.JSON;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.notification.NotificationInfo;
+import io.minio.messages.NotificationRecords;
 import jbm.framework.boot.autoconfigure.minio.notification.MinioNotification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +24,13 @@ public class MinioNotificationService {
     @Autowired
     private MinioClient minioClient;
 
+    private String DEF_BUCKET_NAME = "doc";
+
     @PostConstruct
     public void init() {
         try {
-            if (!minioClient.bucketExists("doc")) {
-                minioClient.makeBucket("doc");
+            if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(DEF_BUCKET_NAME).build())) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(DEF_BUCKET_NAME).build());
             }
         } catch (Exception e) {
             log.error("创建Bucket失败", e);
@@ -36,19 +40,19 @@ public class MinioNotificationService {
 
 
     @MinioNotification({"s3:ObjectCreated:CompleteMultipartUpload"})
-    public void handleUpload(NotificationInfo notificationInfo) {
+    public void handleUpload(NotificationRecords notificationInfo) {
         log.info("文件上传{}", JSON.toJSONString(notificationInfo));
     }
 
 
     @MinioNotification({"s3:ObjectRemoved:Delete"})
-    public void handleDelete(NotificationInfo notificationInfo) {
+    public void handleDelete(NotificationRecords notificationInfo) {
         log.info("文件删除{}", JSON.toJSONString(notificationInfo));
     }
 
 
     @MinioNotification({"s3:ObjectAccessed:Get"})
-    public void handleGet(NotificationInfo notificationInfo) {
+    public void handleGet(NotificationRecords notificationInfo) {
         log.info("文件下载{}", JSON.toJSONString(notificationInfo));
     }
 }
