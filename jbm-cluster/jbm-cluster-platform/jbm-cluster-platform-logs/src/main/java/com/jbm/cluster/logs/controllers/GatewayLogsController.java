@@ -29,7 +29,7 @@ public class GatewayLogsController {
     @PostMapping({"/findLogs"})
     public ResultBody<DataPaging<GatewayLogs>> findLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
         try {
-            DataPaging<GatewayLogs> dataPaging = gatewayLogsService.findLogs(gatewayLogsForm.getPageForm(),gatewayLogsForm.getGatewayLogs());
+            DataPaging<GatewayLogs> dataPaging = gatewayLogsService.findLogs(gatewayLogsForm);
             return ResultBody.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
             return ResultBody.error(null, "查询日志失败", e);
