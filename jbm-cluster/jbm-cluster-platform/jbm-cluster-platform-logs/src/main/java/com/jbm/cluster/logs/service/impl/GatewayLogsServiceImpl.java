@@ -25,9 +25,20 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm) {
         Query query = new Query();
-        query.addCriteria(this.likeCriteria("path", gatewayLogsForm.getGatewayLogs().getPath()));
-        query.addCriteria(this.likeCriteria("region", gatewayLogsForm.getGatewayLogs().getRegion()));
-        query.addCriteria(this.likeCriteria("serviceId", gatewayLogsForm.getGatewayLogs().getServiceId()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getPath()))
+            query.addCriteria(this.likeCriteria("path", gatewayLogsForm.getGatewayLogs().getPath()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getIp()))
+            query.addCriteria(this.likeCriteria("ip", gatewayLogsForm.getGatewayLogs().getRegion()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getServiceId()))
+            query.addCriteria(this.likeCriteria("serviceId", gatewayLogsForm.getGatewayLogs().getServiceId()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getError()))
+            query.addCriteria(this.likeCriteria("error", gatewayLogsForm.getGatewayLogs().getError()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getHttpStatus()))
+            query.addCriteria(Criteria.where("httpStatus").is(gatewayLogsForm.getGatewayLogs().getHttpStatus()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getUseTime()))
+            query.addCriteria(Criteria.where("useTime").gte(gatewayLogsForm.getGatewayLogs().getUseTime()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getMethod()))
+            query.addCriteria(Criteria.where("method").is(gatewayLogsForm.getGatewayLogs().getMethod()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getBeginTime()))
             query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getEndTime()))
