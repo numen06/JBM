@@ -9,7 +9,7 @@ import java.util.Map;
  * @date 2018-3-27
  **/
 @Data
-public class MqttNotification extends Notification {
+public class MqttNotification implements Notification {
 
     /**
      * 用户id
@@ -40,5 +40,7 @@ public class MqttNotification extends Notification {
     /**
      * 等级
      */
-    private String level;
+    private Integer level;
+
+    private String msgId;
 }

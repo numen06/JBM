@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  *
  * @author wesley.zhang
  */
-@EnableFeignClients
+@EnableFeignClients("com.jbm.cluster.push.fegin")
 @SpringBootApplication
 @EnableDiscoveryClient
 @EntityScan(basePackageClasses = {PushMessage.class})

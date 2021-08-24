@@ -17,8 +17,8 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ibeetl</groupId>
-            <artifactId>beetl</artifactId>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-beetl</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>

@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.mail;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.template.engine.beetl.BeetlUtil;
+import jbm.framework.boot.autoconfigure.beetl.util.BeetlUtil;
 import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.beetl.core.Template;

@@ -1,5 +1,6 @@
 package com.jbm.framework.mvc;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
@@ -123,6 +124,8 @@ public class WebExceptionResolve {
         } else if (className.contains("OpenSignatureException")) {
             httpStatus = HttpStatus.BAD_REQUEST.value();
             code = ErrorCode.SIGNATURE_DENIED;
+        } else if (StrUtil.isEmpty(message)) {
+            code = ErrorCode.ERROR;
         } else if (message.equalsIgnoreCase(ErrorCode.TOO_MANY_REQUESTS.name())) {
             code = ErrorCode.TOO_MANY_REQUESTS;
         }
@@ -139,8 +142,8 @@ public class WebExceptionResolve {
         if (resultCode == null) {
             resultCode = ErrorCode.ERROR;
         }
-        ResultBody resultBody = ResultBody.failed().code(resultCode.getCode()).msg(exception.getMessage()).path(path).httpStatus(httpStatus);
-        log.error("==> error:{} exception: {}", resultBody, exception);
+        ResultBody resultBody = ResultBody.failed().code(resultCode.getCode()).msg("服务器发生错误,请联系管理员你处理。").path(path).httpStatus(httpStatus).exception(exception);
+        log.error("==> error:{}", resultBody, exception);
         return resultBody;
     }
 

@@ -9,7 +9,7 @@ import java.util.Map;
  * @date 2018-3-27
  **/
 @Data
-public class SmsNotification extends Notification {
+public class SmsNotification implements Notification {
 
     private String phoneNumber;
 

@@ -1,8 +1,11 @@
 package com.jbm.cluster.push.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.constants.push.MessageSendStatus;
 import com.jbm.cluster.api.model.entity.message.PushMessage;
+import com.jbm.cluster.api.model.message.MqttNotification;
 import com.jbm.cluster.node.client.NotificationClient;
+import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.cluster.push.service.PushMessageService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -10,6 +13,8 @@ import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import java.util.List;
 
 
 /**
@@ -21,22 +26,37 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
 
     @Autowired
     private NotificationClient notificationClient;
+    @Autowired
+    private NotificationDispatcher dispatcher;
 
     @Override
     public DataPaging<PushMessage> selectPageList(PageRequestBody pageRequestBody) {
         return super.selectEntitys(pageRequestBody);
     }
 
+    @Override
+    public boolean read(List<Long> ids) {
+        for (Long id : ids) {
+            this.read(id);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean unread(List<Long> ids) {
+        return false;
+    }
+
     public PushMessage buildDefPushMessage() {
         PushMessage message = new PushMessage();
-        message.setSmsStatus(MessageSendStatus.unsent);
-        message.setEmailStatus(MessageSendStatus.unsent);
+//        message.setSmsStatus(MessageSendStatus.unsent);
+//        message.setEmailStatus(MessageSendStatus.unsent);
         return message;
     }
 
     @Override
     public boolean save(PushMessage pushMessage) {
-        PushMessage message = buildDefPushMessage();
+//        PushMessage message = buildDefPushMessage();
 //        //发送邮件,发送短信
 //        if (messageDTO.getSendSms() || messageDTO.getSendEmail()) {
 //            sysUserVO = sysUserClient.findUserById(messageDTO.getSysUserId());
@@ -55,7 +75,7 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
 //                }
 //            }
 //        }
-        return super.save(message);
+        return super.save(pushMessage);
     }
 
 
@@ -66,6 +86,39 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
         message.setId(id);
         message.setReadFlag(1);
         return super.updateById(message);
+    }
+
+    @Override
+    public boolean unread(Long id) {
+        Assert.notNull(id, "站内信id不能为空");
+        PushMessage message = new PushMessage();
+        message.setId(id);
+        message.setReadFlag(0);
+        return super.updateById(message);
+    }
+
+    @Override
+    public void sendSysMessage(PushMessage pushMessage) {
+        pushMessage.setId(null);
+        pushMessage.setType("notification");
+        if (ObjectUtil.isEmpty(pushMessage.getLevel())) {
+            pushMessage.setLevel(1);
+        }
+        pushMessage.setSendUserId(null);
+        pushMessage.setReadFlag(0);
+        this.save(pushMessage);
+        dispatcher.dispatch( pushMessage);
+    }
+
+    @Override
+    public void sendUserMessage(PushMessage pushMessage) {
+        pushMessage.setId(null);
+        pushMessage.setType("notification");
+        pushMessage.setLevel(1);
+        pushMessage.setReadFlag(0);
+        this.save(pushMessage);
+        dispatcher.dispatch( pushMessage);
+
     }
 
 //    public boolean sendMail(PushMessage pushMessage) {

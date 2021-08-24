@@ -3,8 +3,12 @@ package com.jbm.cluster.push.controller;
 import com.jbm.cluster.api.model.message.EmailNotification;
 import com.jbm.cluster.api.model.message.MqttNotification;
 import com.jbm.cluster.api.model.message.SmsNotification;
+import com.jbm.cluster.push.fegin.GatewayLogsTest;
+import com.jbm.cluster.push.fegin.TestLogFegin;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2018-3-27
  **/
 @RestController
-@RequestMapping("/push")
+@RequestMapping("/notification")
 @Api(value = "notification", tags = "通知中心")
 public class NotificationController {
 
@@ -38,14 +42,19 @@ public class NotificationController {
         this.dispatcher.dispatch(emailNotification);
         return ResultBody.ok();
     }
+    @Autowired
+    private TestLogFegin testLogFegin;
 
 
-    @ApiOperation("发送站内信")
-    @PostMapping("/send/mqtt")
-    public ResultBody<String> sendEmail(@RequestBody MqttNotification mqttNotification) {
-        this.dispatcher.dispatch(mqttNotification);
-        return ResultBody.ok();
-    }
+//    @ApiOperation("发送站内信")
+//    @PostMapping("/send/mqtt")
+//    public ResultBody<String> sendEmail(@RequestBody MqttNotification mqttNotification) {
+//        this.dispatcher.dispatch(mqttNotification);
+////        testLogFegin.findLogs(new GatewayLogsTest());
+//        return ResultBody.ok();
+//    }
+
+
 
 
 }

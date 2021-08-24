@@ -8,8 +8,8 @@ import com.baomidou.mybatisplus.annotation.EnumValue;
  * @create: 2020-03-05 03:09
  **/
 public enum MessageSendStatus {
-    unsent("未发送"), wait("等待中"),
-    issued("已发送"), fail("发送失败");
+        unsent("未发送"), wait("等待中"),
+        issued("已发送"), fail("发送失败");
 
     @EnumValue
     private final String key;

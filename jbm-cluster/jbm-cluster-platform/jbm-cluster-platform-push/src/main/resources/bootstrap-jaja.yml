@@ -12,3 +12,6 @@ spring:
         #        group: ${config.group}
         server-addr: ${discovery.server-addr}
 #        ip: 10.100.50.2
+dubbo:
+  protocol:
+    port: ${random.int[20000,20880]}

@@ -1,9 +1,11 @@
 package com.jbm.test;
 
 import cn.hutool.core.util.ClassUtil;
-import cn.hutool.extra.template.engine.beetl.BeetlUtil;
+import cn.hutool.extra.template.TemplateEngine;
+import cn.hutool.extra.template.TemplateUtil;
 import jbm.framework.boot.autoconfigure.beetl.BeetlAutoConfiguration;
 import jbm.framework.boot.autoconfigure.beetl.BeetlProperties;
+import jbm.framework.boot.autoconfigure.beetl.util.BeetlUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;

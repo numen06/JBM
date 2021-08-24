@@ -27,7 +27,7 @@ public class PinController {
      * @Date: 2018/12/13
      **/
     @ApiOperation("发送验证码")
-    @PostMapping("send")
+    @PostMapping("/send")
     public ResultBody sendCode(String phoneNumber) {
         try {
             if (!Validator.isMobile(phoneNumber)) {
@@ -50,7 +50,7 @@ public class PinController {
      * @return
      */
     @ApiOperation("判断验证是否正确")
-    @PostMapping("vif")
+    @PostMapping("/vif")
     public ResultBody vidCode(String phoneNumber, String code) {
         if (ObjectUtils.isNull(code)) {
             return ResultBody.error(null, "验证码错误");

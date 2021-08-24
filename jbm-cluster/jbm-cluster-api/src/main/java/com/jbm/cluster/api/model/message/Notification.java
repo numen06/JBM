@@ -9,10 +9,10 @@ import java.io.Serializable;
  * @author: wesley.zhang
  * @create: 2020-03-05 03:52
  **/
-@Data
-public abstract class Notification implements Serializable {
+//@Data
+public interface Notification extends Serializable {
 
-    public String getNotifType() {
-        return this.getClass().getName();
-    }
+//    public String getNotifType() {
+//        return this.getClass().getName();
+//    }
 }

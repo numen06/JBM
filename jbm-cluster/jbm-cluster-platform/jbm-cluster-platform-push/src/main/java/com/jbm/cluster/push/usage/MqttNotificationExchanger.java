@@ -2,6 +2,7 @@ package com.jbm.cluster.push.usage;
 
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.api.model.entity.message.PushMessage;
 import com.jbm.cluster.api.model.message.MqttNotification;
 import com.jbm.cluster.api.model.message.Notification;
 import com.jbm.cluster.api.model.message.SmsNotification;
@@ -41,16 +42,16 @@ public class MqttNotificationExchanger implements NotificationExchanger {
 
     @Override
     public boolean support(Object notification) {
-        return notification.getClass().equals(MqttNotification.class);
+        return notification.getClass().equals(PushMessage.class);
     }
 
     @Override
     public boolean exchange(Notification notification) {
         Assert.notNull(realMqttPahoClientFactory, "MQTT链接未初始化");
-        MqttNotification mqttNotification = (MqttNotification) notification;
+        PushMessage mqttNotification = (PushMessage) notification;
         MqttMessage message = new MqttMessage();
-        message.setPayload(JSON.toJSONBytes(mqttNotification));
-        String topic = "user/" + mqttNotification.getUserId();
+        message.setPayload(JSON.toJSONBytes(notification));
+        String topic = "user/" + mqttNotification.getRecUserId();
         try {
             mqttClient.publish(topic, message);
             log.info("发送:{}成功", topic);

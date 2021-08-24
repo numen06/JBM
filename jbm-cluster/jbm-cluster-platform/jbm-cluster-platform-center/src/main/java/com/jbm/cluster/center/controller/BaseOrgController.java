@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author: auto generate by jbm
  * @Create: 2020-03-24 03:28:09
  */
-@Api(tags = "BaseOrg开放接口")
+@Api(tags = "组织结构管理")
 @RestController
 @RequestMapping("/baseOrg")
 public class BaseOrgController extends MasterDataTreeCollection<BaseOrg, BaseOrgService> {
