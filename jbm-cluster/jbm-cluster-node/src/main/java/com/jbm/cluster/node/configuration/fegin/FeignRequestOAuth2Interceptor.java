@@ -33,8 +33,13 @@ public class FeignRequestOAuth2Interceptor extends FeignRequestInterceptor {
     }
 
     protected String extract(String tokenType) {
-        OAuth2AccessToken accessToken = oAuth2RestTemplate.getAccessToken();
-        return String.format("%s %s", tokenType, accessToken.getValue());
+        try {
+            OAuth2AccessToken accessToken = oAuth2RestTemplate.getAccessToken();
+            return String.format("%s %s", tokenType, accessToken.getValue());
+        } catch (Exception e) {
+            log.info("获取集群的认证错误，请检查认证服务器设置。");
+        }
+        return null;
     }
 
 

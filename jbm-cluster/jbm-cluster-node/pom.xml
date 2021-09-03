@@ -12,10 +12,6 @@
     <artifactId>jbm-cluster-node</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-starter-dubbo</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-core</artifactId>
             <version>${project.version}</version>

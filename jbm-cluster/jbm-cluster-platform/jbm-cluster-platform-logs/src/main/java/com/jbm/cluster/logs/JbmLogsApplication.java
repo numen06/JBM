@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.jbm.cluster.logs.repository")
-@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
+@EnableDubbo(scanBasePackages = "com.jbm.cluster.logs")
 public class JbmLogsApplication {
 
     public static void main(String[] args) {

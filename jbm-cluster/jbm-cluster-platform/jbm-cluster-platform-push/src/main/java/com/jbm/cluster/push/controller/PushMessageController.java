@@ -1,12 +1,9 @@
 package com.jbm.cluster.push.controller;
 
 import com.jbm.cluster.api.model.entity.message.PushMessage;
-import com.jbm.cluster.api.model.message.MqttNotification;
 import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
-import com.jbm.cluster.push.fegin.GatewayLogsTest;
 import com.jbm.cluster.push.form.PushMessageForm;
-import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.cluster.push.service.PushMessageService;
 import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -14,7 +11,6 @@ import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

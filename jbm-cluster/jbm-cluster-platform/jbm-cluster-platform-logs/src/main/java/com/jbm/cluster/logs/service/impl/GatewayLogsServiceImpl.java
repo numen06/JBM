@@ -7,6 +7,7 @@ import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -20,6 +21,7 @@ import java.util.List;
  * @create: 2021-05-06 16:56
  **/
 @Service
+@DubboService
 public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, GatewayLogsRepository> implements GatewayLogsService {
 
     @Override
@@ -58,4 +60,10 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 //        Page<GatewayLogs> pagelist = new PageImpl<GatewayLogs>(list, pageable, count);
         return new DataPaging<GatewayLogs>(list, total, gatewayLogsForm.getPageForm());
     }
+
+    @Override
+    public String testDubbo(String tiancai) {
+        return tiancai;
+    }
+
 }

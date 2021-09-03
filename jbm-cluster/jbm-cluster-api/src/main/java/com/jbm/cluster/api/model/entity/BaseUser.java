@@ -34,7 +34,7 @@ public class BaseUser extends MasterDataEntity {
      * 系统用户ID
      */
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @TableId(type = IdType.AUTO)
     @ApiModelProperty("用户ID")
     private Long userId;
 
@@ -51,10 +51,13 @@ public class BaseUser extends MasterDataEntity {
     private String userType;
 
     /**
-     * 企业ID
+     * 组织架构企业ID
      */
-    @ApiModelProperty("企业ID")
+    @ApiModelProperty("公司ID")
     private Long companyId;
+
+    @ApiModelProperty("部门ID")
+    private Long departmentId;
 
     /**
      * 昵称

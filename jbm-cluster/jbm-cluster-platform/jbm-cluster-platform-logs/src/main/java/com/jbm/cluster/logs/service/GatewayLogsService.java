@@ -14,4 +14,6 @@ public interface GatewayLogsService extends BaseDataService<GatewayLogs> {
 
 
     DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm);
+
+    String testDubbo(String tiancai);
 }

@@ -33,7 +33,7 @@ public class BaseOrg extends MasterDataTreeEntity {
      * 组织类别
      * 组织类别:关联字典org_type
      */
-    @ApiModelProperty(value = "组织类型")
+    @ApiModelProperty(value = "组织类型:company,department")
     private String orgType;
 
 
