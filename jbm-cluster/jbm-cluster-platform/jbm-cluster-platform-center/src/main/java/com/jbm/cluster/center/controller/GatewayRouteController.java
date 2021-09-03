@@ -2,6 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.center.service.GatewayRouteService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
@@ -38,10 +39,35 @@ public class GatewayRouteController {
      *
      * @return
      */
+    @ApiOperation(value = "获取所有微服务", notes = "获取所有微服务")
+    @GetMapping("/gateway/getMicroServices")
+    public ResultBody<String[]> getMicroServices() {
+        return ResultBody.ok().data(gatewayRouteService.getMicroServices());
+    }
+
+    /**
+     * 获取分页路由列表
+     *
+     * @return
+     */
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @GetMapping("/gateway/route")
     public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayRouteService.findListPage(PageRequestBody.from(map)));
+        GatewayRoutePageForm gatewayRoutePageForm = new GatewayRoutePageForm();
+        gatewayRoutePageForm.setPageForm(PageRequestBody.from(map).getPageForm());
+        return ResultBody.ok().data(gatewayRouteService.findListPage(gatewayRoutePageForm));
+    }
+
+
+    /**
+     * 获取分页路由列表
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
+    @PostMapping("/gateway/routePage")
+    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestBody(required = false) GatewayRoutePageForm gatewayRoutePageForm) {
+        return ResultBody.ok().data(gatewayRouteService.findListPage(gatewayRoutePageForm));
     }
 
 
@@ -103,7 +129,7 @@ public class GatewayRouteController {
         route.setStatus(status);
         route.setRouteName(routeName);
         route.setRouteDesc(routeDesc);
-        if(route.getUrl()!=null && StringUtils.isNotEmpty(route.getUrl())){
+        if (route.getUrl() != null && StringUtils.isNotEmpty(route.getUrl())) {
             route.setServiceId(null);
         }
         gatewayRouteService.addRoute(route);
@@ -159,7 +185,7 @@ public class GatewayRouteController {
         route.setStatus(status);
         route.setRouteName(routeName);
         route.setRouteDesc(routeDesc);
-        if(route.getUrl()!=null  && StringUtils.isNotEmpty(route.getUrl())){
+        if (route.getUrl() != null && StringUtils.isNotEmpty(route.getUrl())) {
             route.setServiceId(null);
         }
         gatewayRouteService.updateRoute(route);

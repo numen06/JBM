@@ -2,6 +2,7 @@ package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.BaseConstants;
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.center.service.GatewayRouteService;
 import com.jbm.cluster.common.exception.OpenAlertException;
@@ -10,6 +11,8 @@ import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,16 +27,30 @@ import java.util.List;
 public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute> implements GatewayRouteService {
 
 
+    @Autowired
+    private DiscoveryClient discoveryClient;
+
+
     /**
-     * 分页查询
+     * 查询所有微服务
      *
-     * @param pageRequestBody
      * @return
      */
     @Override
-    public DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody) {
-        QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+    public List<String> getMicroServices() {
+        return discoveryClient.getServices();
+    }
+
+
+    /**
+     * 分页查询
+     *
+     * @param gatewayRoutePageForm
+     * @return
+     */
+    @Override
+    public DataPaging<GatewayRoute> findListPage(GatewayRoutePageForm gatewayRoutePageForm) {
+        return this.selectEntitys(gatewayRoutePageForm.getGatewayRoute(), gatewayRoutePageForm.getPageForm());
     }
 
     /**

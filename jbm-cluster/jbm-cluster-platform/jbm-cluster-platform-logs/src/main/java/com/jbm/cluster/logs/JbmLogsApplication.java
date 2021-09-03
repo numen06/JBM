@@ -1,6 +1,6 @@
 package com.jbm.cluster.logs;
 
-import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
+//import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.jbm.cluster.logs.repository")
-@EnableDubbo(scanBasePackages = "com.jbm.cluster.logs")
+//@EnableDubbo(scanBasePackages = "com.jbm.cluster.logs")
 public class JbmLogsApplication {
 
     public static void main(String[] args) {

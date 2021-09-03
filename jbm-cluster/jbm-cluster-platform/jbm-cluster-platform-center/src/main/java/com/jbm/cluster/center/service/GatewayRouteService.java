@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service;
 
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -13,13 +14,15 @@ import java.util.List;
  * @author wesley.zhang
  */
 public interface GatewayRouteService extends IMasterDataService<GatewayRoute> {
+    List<String> getMicroServices();
+
     /**
      * 分页查询
      *
-     * @param pageRequestBody
+     * @param gatewayRoutePageForm
      * @return
      */
-    DataPaging<GatewayRoute> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<GatewayRoute> findListPage(GatewayRoutePageForm gatewayRoutePageForm);
 
     /**
      * 查询可用路由列表

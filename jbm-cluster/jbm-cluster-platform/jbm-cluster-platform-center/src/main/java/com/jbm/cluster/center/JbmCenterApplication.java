@@ -3,7 +3,7 @@ package com.jbm.cluster.center;
 import com.jbm.cluster.api.model.entity.BaseDic;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
-import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
+//import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,7 +22,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication
-@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
+//@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
 @EntityScan(basePackages = {"com.jbm.cluster.api.model"})
 @MapperScan(basePackageClasses = BaseMenuMapper.class)
 @EnableCodeAutoGeneate(entityPackageClasses = {BaseDic.class}, targetPackage = "com.jbm.cluster.center")
