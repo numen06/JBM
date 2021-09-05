@@ -6,7 +6,6 @@ import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
-import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -21,7 +20,6 @@ import java.util.List;
  * @create: 2021-05-06 16:56
  **/
 @Service
-@DubboService
 public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, GatewayLogsRepository> implements GatewayLogsService {
 
     @Override
