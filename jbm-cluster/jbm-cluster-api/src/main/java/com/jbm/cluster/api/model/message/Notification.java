@@ -1,7 +1,5 @@
 package com.jbm.cluster.api.model.message;
 
-import lombok.Data;
-
 import java.io.Serializable;
 
 /**

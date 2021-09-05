@@ -1,11 +1,9 @@
 package com.jbm.cluster.center.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.model.entity.GatewayRateLimit;
 import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 

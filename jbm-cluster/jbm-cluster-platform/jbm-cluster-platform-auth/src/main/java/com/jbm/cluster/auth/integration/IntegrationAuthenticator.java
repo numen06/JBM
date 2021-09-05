@@ -1,8 +1,6 @@
 package com.jbm.cluster.auth.integration;
 
 import com.jbm.cluster.api.model.UserAccount;
-import com.jbm.cluster.auth.integration.IntegrationAuthentication;
-import com.jbm.cluster.common.security.OpenUserDetails;
 
 /**
  * @author wesley.zhang

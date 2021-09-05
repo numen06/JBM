@@ -2,8 +2,8 @@ package com.jbm.cluster.center.listener;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
-import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
+import com.jbm.cluster.common.constants.QueueConstants;
 import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

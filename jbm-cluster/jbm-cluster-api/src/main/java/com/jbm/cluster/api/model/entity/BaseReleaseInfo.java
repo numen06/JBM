@@ -1,9 +1,6 @@
 package com.jbm.cluster.api.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import java.util.Date;
 
 /**

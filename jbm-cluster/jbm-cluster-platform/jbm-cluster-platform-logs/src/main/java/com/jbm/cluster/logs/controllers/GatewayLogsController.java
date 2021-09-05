@@ -6,13 +6,13 @@ import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
-import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Api(tags = "日志接口")
 @RestController

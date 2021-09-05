@@ -1,6 +1,5 @@
 package com.jbm.cluster.api.form;
 
-import com.jbm.cluster.api.model.entity.BaseAuthorityRole;
 import com.jbm.cluster.api.model.entity.BaseAuthorityUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

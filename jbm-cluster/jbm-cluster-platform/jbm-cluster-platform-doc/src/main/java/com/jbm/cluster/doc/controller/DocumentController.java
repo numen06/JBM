@@ -1,6 +1,5 @@
 package com.jbm.cluster.doc.controller;
 
-import cn.hutool.core.io.FileTypeUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;

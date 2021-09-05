@@ -1,15 +1,11 @@
 package com.jbm.cluster.push.configuration;
 
-import com.jbm.cluster.api.model.message.MqttNotification;
-import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.push.usage.EmailNoficationExchanger;
 import com.jbm.cluster.push.usage.MqttNotificationExchanger;
 import com.jbm.cluster.push.usage.SmsNotificationExchanger;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
-import org.springframework.amqp.core.Queue;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

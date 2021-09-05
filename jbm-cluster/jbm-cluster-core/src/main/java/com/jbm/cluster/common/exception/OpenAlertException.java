@@ -2,8 +2,6 @@ package com.jbm.cluster.common.exception;
 
 import com.jbm.framework.exceptions.ServiceException;
 
-import javax.xml.ws.Service;
-
 /**
  * 提示消息异常
  *

@@ -1,6 +1,5 @@
 package com.jbm.cluster.node.configuration;
 
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import com.google.common.base.Charsets;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
-import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.usage.paging.DataPaging;

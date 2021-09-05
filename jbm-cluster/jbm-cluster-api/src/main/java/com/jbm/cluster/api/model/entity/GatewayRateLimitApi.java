@@ -5,7 +5,6 @@ import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.dom4j.tree.AbstractEntity;
 
 import javax.persistence.Entity;
 

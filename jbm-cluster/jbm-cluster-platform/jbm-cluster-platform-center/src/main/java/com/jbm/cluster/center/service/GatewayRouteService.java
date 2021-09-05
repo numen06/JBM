@@ -3,7 +3,6 @@ package com.jbm.cluster.center.service;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;

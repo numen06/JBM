@@ -2,7 +2,6 @@ package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

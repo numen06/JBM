@@ -6,8 +6,8 @@ import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.BaseAuthority;
 import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
-import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.framework.masterdata.service.IMasterDataService;
 
 import java.util.Collection;
 import java.util.Date;

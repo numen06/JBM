@@ -1,8 +1,6 @@
 package com.jbm.cluster.api.model.entity.message;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.cluster.api.model.message.Notification;
-import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

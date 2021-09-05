@@ -1,7 +1,6 @@
 package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

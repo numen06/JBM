@@ -3,14 +3,11 @@ package com.jbm.cluster.push.usage;
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.entity.message.PushMessage;
-import com.jbm.cluster.api.model.message.MqttNotification;
 import com.jbm.cluster.api.model.message.Notification;
-import com.jbm.cluster.api.model.message.SmsNotification;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 /**

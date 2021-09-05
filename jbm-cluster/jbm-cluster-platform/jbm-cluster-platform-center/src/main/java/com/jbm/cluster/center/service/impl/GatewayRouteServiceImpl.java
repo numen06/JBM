@@ -6,7 +6,6 @@ import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.center.service.GatewayRouteService;
 import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;

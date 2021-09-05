@@ -1,14 +1,8 @@
 package com.jbm.cluster.common.configuration;
 
-import cn.hutool.core.io.FileUtil;
-import com.google.common.base.Charsets;
 import com.jbm.cluster.common.security.OAuthTokenType;
 import lombok.Data;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 自定义网关配置

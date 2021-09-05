@@ -3,7 +3,6 @@ package com.jbm.cluster.center;
 import com.jbm.cluster.api.model.entity.BaseDic;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
-//import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

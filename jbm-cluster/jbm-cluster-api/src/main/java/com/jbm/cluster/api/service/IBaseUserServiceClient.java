@@ -2,9 +2,6 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
