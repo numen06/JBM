@@ -39,7 +39,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         }
         bigscreenView = this.getById(bigscreenView.getId());
         File viewDir = this.getViewDir(bigscreenView);
-        return !FileUtil.exist(viewDir);
+        return FileUtil.exist(viewDir);
     }
 
 
@@ -80,6 +80,47 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         ZipUtil.unzip(zipFile, distDir);
     }
 
+    /***
+     * 清理视图
+     * @param bigscreenView
+     * @return
+     */
+    @Override
+    public void cleanView(BigscreenView bigscreenView) {
+        if (ObjectUtil.isEmpty(bigscreenView.getId())) {
+            throw new ServiceException("ID不能为空");
+        }
+        bigscreenView = this.getById(bigscreenView.getId());
+        try {
+            File zip = this.getViewZip(bigscreenView);
+            if (FileUtil.exist(zip)) {
+                log.info("清理视图压缩包");
+                FileUtil.del(zip);
+            }
+            File viewDir = this.getViewDir(bigscreenView);
+            if (FileUtil.exist(viewDir)) {
+                log.info("清理视图文件夹");
+                FileUtil.del(viewDir);
+            }
+        } catch (Exception e) {
+            throw new ServiceException("清理视图失败", e);
+        }
+    }
+
+    @Override
+    public boolean deleteEntity(BigscreenView bigscreenView) {
+        this.cleanView(bigscreenView);
+        return super.deleteEntity(bigscreenView);
+    }
+
+    @Override
+    public boolean deleteById(Long id) {
+        BigscreenView bigscreenView = new BigscreenView();
+        bigscreenView.setId(id);
+        this.cleanView(bigscreenView);
+        return super.deleteById(id);
+    }
+
     @Override
     public BigscreenView saveEntity(BigscreenView bigscreenView) {
         Boolean isNew = ObjectUtil.isEmpty(bigscreenView.getId());
@@ -110,7 +151,8 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             }
         }
         bigscreenView = super.saveEntity(bigscreenView);
-        if (this.isUpload(bigscreenView)) {
+        //判断没有解包的话就重新解包一下
+        if (!this.isUpload(bigscreenView)) {
             this.upload(bigscreenView);
         }
         return bigscreenView;

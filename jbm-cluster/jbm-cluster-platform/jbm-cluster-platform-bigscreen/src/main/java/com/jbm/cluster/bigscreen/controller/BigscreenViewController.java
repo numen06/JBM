@@ -46,4 +46,17 @@ public class BigscreenViewController extends MasterDataCollection<BigscreenView,
             return ResultBody.error(e);
         }
     }
+
+    @ApiOperation(value = "清理视图", notes = "清理视图")
+    @PostMapping("/cleanView")
+    public ResultBody<Boolean> cleanView(@RequestBody(required = false) BigscreenView bigscreenView) {
+        try {
+            service.cleanView(bigscreenView);
+            return ResultBody.success(true, "清理视图成功");
+        } catch (ServiceException e) {
+            return ResultBody.error(false, e.getMessage(), e);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
 }

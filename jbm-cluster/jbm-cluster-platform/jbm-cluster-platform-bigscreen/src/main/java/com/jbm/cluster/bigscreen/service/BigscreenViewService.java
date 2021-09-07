@@ -10,5 +10,7 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
 public interface BigscreenViewService extends IMasterDataService<BigscreenView> {
     Boolean isUpload(BigscreenView bigscreenView);
 
+    void cleanView(BigscreenView bigscreenView);
+
     BigscreenView upload(BigscreenView bigscreenView);
 }
