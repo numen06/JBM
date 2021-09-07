@@ -11,7 +11,7 @@ import javax.persistence.Entity;
 /**
  * 系统角色-角色与用户关联
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/10/24 16:21
  * @description:
  */

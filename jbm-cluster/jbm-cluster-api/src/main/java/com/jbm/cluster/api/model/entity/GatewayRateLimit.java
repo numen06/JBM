@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import javax.persistence.Id;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@ApiModel("网关限流策略")
 @TableName("gateway_rate_limit")
 public class GatewayRateLimit extends MasterDataEntity {
     @Id

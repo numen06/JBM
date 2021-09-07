@@ -13,7 +13,7 @@ import javax.persistence.Entity;
 /**
  * 系统权限-功能操作关联表
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2018/10/24 16:21
  * @description:
  */

@@ -111,6 +111,23 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+            <!-- 输出到DIST目录 -->
+<!--            <plugin>-->
+<!--                <artifactId>maven-antrun-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>run</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <tasks>-->
+<!--                                <copy file="${project.build.directory}/${project.artifactId}.jar" tofile="${project.basedir}/dist/${project.artifactId}.jar" overwrite="true" />-->
+<!--                            </tasks>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 </project>

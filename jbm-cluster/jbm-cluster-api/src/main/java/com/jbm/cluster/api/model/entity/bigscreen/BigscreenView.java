@@ -24,7 +24,7 @@ public class BigscreenView extends MasterDataIdEntity {
     private String viewName;
     @ApiModelProperty(value = "访问地址")
     private String viewUrl;
-    @ApiModelProperty(value = "访问地址")
+    @ApiModelProperty(value = "静态参数")
     private String staticParams;
     @ApiModelProperty(value = "资源包地址")
     private String resourcePath;

@@ -16,7 +16,6 @@ spring:
     add-mappings: false
   profiles:
     active: ${profile.name}
-
 management:
   endpoints:
     web:
@@ -26,7 +25,8 @@ jbm:
   cluster:
     token-type: redis
     permit-all:
-      - /static/*
+      - /static/**
+      - /views/**
 swagger2:
   enabled: true
   description: 大屏管理服务

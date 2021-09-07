@@ -2,6 +2,7 @@ package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import javax.persistence.Entity;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@ApiModel("网关API限流")
 @TableName("gateway_rate_limit_api")
 public class GatewayRateLimitApi extends MasterDataIdEntity {
     /**

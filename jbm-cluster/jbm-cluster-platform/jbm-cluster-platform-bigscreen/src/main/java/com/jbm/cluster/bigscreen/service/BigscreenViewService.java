@@ -8,4 +8,7 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
  * @Create: 2021-09-03 17:08:07
  */
 public interface BigscreenViewService extends IMasterDataService<BigscreenView> {
+    Boolean isUpload(BigscreenView bigscreenView);
+
+    BigscreenView upload(BigscreenView bigscreenView);
 }

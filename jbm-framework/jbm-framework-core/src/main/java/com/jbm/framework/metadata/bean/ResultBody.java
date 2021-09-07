@@ -3,6 +3,7 @@ package com.jbm.framework.metadata.bean;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Maps;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -158,6 +159,9 @@ public class ResultBody<T> implements Serializable {
     }
 
     public static <T> ResultBody<T> error(Exception e) {
+        if (e instanceof ServiceException) {
+            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
+        }
         return ResultBody.failed().exception(e);
     }
 

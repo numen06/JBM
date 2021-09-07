@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * 网关流量控制
  *
- * @author: liuyadu
+ * @author: wesley.zhang
  * @date: 2019/3/12 15:12
  * @description:
  */
