@@ -166,6 +166,9 @@ public class ResultBody<T> implements Serializable {
     }
 
     public static <T> ResultBody<T> error(T data, String msg, Exception e) {
+        if (e instanceof ServiceException) {
+            return ResultBody.failed().data(data).msg(e.getMessage()).exception(e);
+        }
         return ResultBody.failed().data(data).msg(msg).exception(e);
     }
 
