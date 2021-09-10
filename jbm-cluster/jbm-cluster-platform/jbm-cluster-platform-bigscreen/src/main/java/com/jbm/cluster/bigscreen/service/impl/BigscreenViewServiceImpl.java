@@ -215,7 +215,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         File zipFile = this.downloadZip(bigscreenView);
         this.unZipView(bigscreenView, zipFile);
         //如果不存在视图首页则提示
-        if (!FileUtil.exist(new File(zipDir, "index.html"))) {
+        if (!FileUtil.exist(Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl(), "index.html").toFile())) {
             //发生异常清理视图
             this.cleanView(bigscreenView);
             throw new ServiceException("不存在index.html首页文件");
