@@ -48,6 +48,11 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         return viewDir;
     }
 
+    @Override
+    protected int deleteMapperMap(String statement, Object... args) {
+        return super.deleteMapperMap(statement, args);
+    }
+
     private File getViewZip(BigscreenView bigscreenView) {
         File zip = Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getId() + ".zip").toFile();
         return zip;
@@ -109,12 +114,23 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     @Override
     public boolean deleteEntity(BigscreenView bigscreenView) {
+        checkParentDelete(bigscreenView.getId());
         this.cleanView(bigscreenView);
         return super.deleteEntity(bigscreenView);
     }
 
+    private void checkParentDelete(Long parentId) {
+        BigscreenView parentView = new BigscreenView();
+        parentView.setParentId(parentId);
+        int cot = this.count(parentView);
+        if (cot > 0) {
+            throw new ServiceException("存在子视图不允许删除");
+        }
+    }
+
     @Override
     public boolean deleteById(Long id) {
+        checkParentDelete(id);
         BigscreenView bigscreenView = new BigscreenView();
         bigscreenView.setId(id);
         this.cleanView(bigscreenView);
@@ -124,6 +140,31 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
     @Override
     public BigscreenView saveEntity(BigscreenView bigscreenView) {
         Boolean isNew = ObjectUtil.isEmpty(bigscreenView.getId());
+        //如果存在父级节点
+        if (!ObjectUtil.isEmpty(bigscreenView.getParentId())) {
+            BigscreenView parentView = this.selectById(bigscreenView.getParentId());
+            if (ObjectUtil.isEmpty(parentView)) {
+                throw new ServiceException("不存在父视图");
+            }
+            //复制父级节点信息
+            bigscreenView.setViewUrl(parentView.getViewUrl());
+            bigscreenView.setResourcePath(parentView.getResourcePath());
+            if (StrUtil.isBlank(bigscreenView.getViewName())) {
+                bigscreenView.setViewName(parentView.getViewName() + "_COPY");
+            }
+            if (StrUtil.isBlank(bigscreenView.getViewUrl())) {
+                bigscreenView.setViewUrl(parentView.getViewUrl());
+            }
+            if (StrUtil.isBlank(bigscreenView.getStaticParams())) {
+                bigscreenView.setStaticParams(parentView.getStaticParams());
+            }
+            if (StrUtil.isBlank(bigscreenView.getPreviewPicture())) {
+                bigscreenView.setPreviewPicture(parentView.getPreviewPicture());
+            }
+            if (StrUtil.isBlank(bigscreenView.getConfigData())) {
+                bigscreenView.setConfigData(parentView.getConfigData());
+            }
+        }
         if (StrUtil.isBlank(bigscreenView.getResourcePath())) {
             throw new ServiceException("没有上传包");
         }
@@ -150,6 +191,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
                 throw new ServiceException("不是合法地址:/xxxx");
             }
         }
+
         bigscreenView = super.saveEntity(bigscreenView);
         //判断没有解包的话就重新解包一下
         if (!this.isUpload(bigscreenView)) {
@@ -166,11 +208,18 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             throw new ServiceException("ID不能为空");
         }
         bigscreenView = this.getById(bigscreenView.getId());
-        if (!FileUtil.exist(FileUtil.newFile(BigscreenConstants.ZIP_DIR))) {
-            FileUtil.createTempFile(FileUtil.newFile(BigscreenConstants.ZIP_DIR));
+        File zipDir = FileUtil.newFile(BigscreenConstants.ZIP_DIR);
+        if (!FileUtil.exist(zipDir)) {
+            FileUtil.createTempFile(zipDir);
         }
         File zipFile = this.downloadZip(bigscreenView);
         this.unZipView(bigscreenView, zipFile);
+        //如果不存在视图首页则提示
+        if (!FileUtil.exist(new File(zipDir, "index.html"))) {
+            //发生异常清理视图
+            this.cleanView(bigscreenView);
+            throw new ServiceException("不存在index.html首页文件");
+        }
         return bigscreenView;
     }
 

@@ -22,6 +22,8 @@ public class BigscreenView extends MasterDataIdEntity {
 
     @ApiModelProperty(value = "大屏名称")
     private String viewName;
+    @ApiModelProperty(value = "父级视图")
+    private Long parentId;
     @ApiModelProperty(value = "访问地址")
     private String viewUrl;
     @ApiModelProperty(value = "静态参数")
