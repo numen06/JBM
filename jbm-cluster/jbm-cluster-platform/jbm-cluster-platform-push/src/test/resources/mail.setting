@@ -1,8 +1,8 @@
 host=smtp.126.com
 port=465
-from=numen_smtp@126.com
-pass=smtp123456
-user=numen_smtp
+from=xxxxxxx@126.com
+pass=xxxxxxx
+user=xxxxxxx
 
 # 使用SSL安全连接
 sslEnable = true

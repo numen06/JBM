@@ -50,24 +50,12 @@
 ```
 <parent>
     <groupId>com.jbm</groupId>
-    <artifactId>jbm-framework-sampleependencies</artifactId>
+    <artifactId>jbm-framework-dependencies</artifactId>
     <version>6.1.0-SNAPSHOT</version>
 </parent>
 ```
 
-
-[JBM操作MySql案例](https://github.com/numen06/jbm-framework-jbm.framework.aliyun.iot.sample/tree/master/jbm-framework-jbm.framework.aliyun.iot.sample-mysql)
-通过集成
-
-```
-<dependency>
-    <groupId>com.jbm</groupId>
-    <artifactId>jbm-framework-micro-service</artifactId>
-</dependency>
-```
-
 完成富有对数据操作的微服务功能，围绕针对实体操作的ORM架构体系，自动创建数据库表和对应的所有增删改查，简单的几行代码就能完成。
-
 完成全自动生成代码模式，只需一键继承即可完成项目部署
 
 ```
@@ -76,6 +64,36 @@
     <artifactId>jbm-util</artifactId>
 </dependency>
 ```
+
 提升为framework等级，提升整体util实用程度，基于jodd和hutool轻量级封装，延续两个的版本生命力，提升使用开发力度
+
+### Docker集群快速部署
+集群部署之前需要中间件:Nacos,Redis等
+1.部署平台中心服务
+```
+docker run -itd --restart=always --name jbm-cluster-platform-center -v /opt/app/jbm-cluster-platform-center:/root -p 7777:7777 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-center --spring.profiles.active=jbm
+```
+2.部署权限认证服务
+```
+docker run -itd --restart=always --name jbm-cluster-platform-auth -p 5555:5555 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-auth  --spring.profiles.active=jbm
+```
+3.部署文档服务
+```
+docker run -itd --restart=always --name jbm-cluster-platform-doc --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-doc --spring.profiles.active=jbm
+```
+4.部署网关服务
+```
+docker run -itd --restart=always --name jbm-cluster-platform-doc --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-doc --spring.profiles.active=jbm
+```
+5.部署其他服务
+```
+#日志收集服务
+docker run -itd --restart=always --name jbm-cluster-platform-logs -p 3312:3312 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-logs --spring.profiles.active=jbm
+#推送消息服务
+docker run -itd --restart=always --name jbm-cluster-platform-push -p 3313:3313 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-push --spring.profiles.active=jbm
+```
+一键部署方案请关注更新
+
+
 
 ![img_1.png](img_1.png)
