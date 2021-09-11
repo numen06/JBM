@@ -69,6 +69,7 @@
 
 ### Docker集群快速部署
 集群部署之前需要中间件:Nacos,Redis等
+
 1.部署平台中心服务
 ```
 docker run -itd --restart=always --name jbm-cluster-platform-center -v /opt/app/jbm-cluster-platform-center:/root -p 7777:7777 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-center --spring.profiles.active=jbm
@@ -83,7 +84,7 @@ docker run -itd --restart=always --name jbm-cluster-platform-doc --privileged=tr
 ```
 4.部署网关服务
 ```
-docker run -itd --restart=always --name jbm-cluster-platform-doc --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-doc --spring.profiles.active=jbm
+docker run -itd --restart=always --name jbm-cluster-platform-gateway -p 6666:6666 --privileged=true registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-gateway --spring.profiles.active=jbm
 ```
 5.部署其他服务
 ```
