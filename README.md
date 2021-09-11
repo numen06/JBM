@@ -54,15 +54,18 @@
     <version>6.1.0-SNAPSHOT</version>
 </parent>
 ```
-
-完成富有对数据操作的微服务功能，围绕针对实体操作的ORM架构体系，自动创建数据库表和对应的所有增删改查，简单的几行代码就能完成。
-完成全自动生成代码模式，只需一键继承即可完成项目部署
-
+基础核心工具类，结合多重工具包和JBM针对解决Util
 ```
 <dependency>
     <groupId>com.jbm</groupId>
     <artifactId>jbm-util</artifactId>
 </dependency>
+```
+完成富有对数据操作的微服务功能，围绕针对实体操作的ORM架构体系，自动创建数据库表和对应的所有增删改查，简单的几行代码就能完成。
+完成全自动生成代码模式，只需一键继承即可完成项目部署
+```
+#启动类添加自动生产代码注解,指定Entity的包和生成目录,自动生成C\S\M相关文件,并可以直接POST访问增删改查
+@EnableCodeAutoGeneate(entityPackageClasses = {BigscreenView.class}, targetPackage = "com.jbm.cluster.bigscreen")
 ```
 
 提升为framework等级，提升整体util实用程度，基于jodd和hutool轻量级封装，延续两个的版本生命力，提升使用开发力度
