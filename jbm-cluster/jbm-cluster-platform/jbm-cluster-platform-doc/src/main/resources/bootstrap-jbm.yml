@@ -6,9 +6,8 @@ spring:
         #        group: ${config.group}
         refreshable-dataids: common.properties
         server-addr: nacos:8848
-        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,mongodb.properties
+        shared-dataids: common.properties,redis.properties,rabbitmq.properties,doc.properties
       discovery:
-        #        namespace:
+#        namespace:
         #        group: ${config.group}
         server-addr: nacos:8848
-#        ip: 10.100.50.2

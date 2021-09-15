@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseApp;
@@ -22,6 +23,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.cloud.stream.binding.StreamListenerMethodUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
@@ -56,6 +58,16 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * token有效期，默认7天
      */
     public static final int REFRESH_TOKEN_VALIDITY_SECONDS = 60 * 60 * 24 * 7;
+
+    @Override
+    public BaseApp saveEntity(BaseApp entity) {
+        if (StrUtil.isBlank(entity.getAppId())) {
+            return this.addAppInfo(entity);
+        } else {
+            return this.updateInfo(entity);
+        }
+//        return super.saveEntity(entity);
+    }
 
     /**
      * 查询应用列表

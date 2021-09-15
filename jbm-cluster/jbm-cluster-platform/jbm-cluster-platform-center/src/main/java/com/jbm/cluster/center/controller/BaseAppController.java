@@ -8,6 +8,7 @@ import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -26,7 +27,8 @@ import java.util.Map;
  */
 @Api(tags = "系统应用管理")
 @RestController
-public class BaseAppController implements IBaseAppServiceClient {
+@RequestMapping("/app")
+public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppService> implements IBaseAppServiceClient {
     @Autowired
     private BaseAppService baseAppService;
     @Autowired
@@ -38,7 +40,7 @@ public class BaseAppController implements IBaseAppServiceClient {
      * @return
      */
     @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
-    @GetMapping("/app")
+    @GetMapping("/")
     public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) Map map) {
         DataPaging<BaseApp> IPage = baseAppService.findListPage(PageRequestBody.from(map));
         return ResultBody.ok().data(IPage);
@@ -54,7 +56,7 @@ public class BaseAppController implements IBaseAppServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
     })
-    @GetMapping("/app/{appId}/info")
+    @GetMapping("/{appId}/info")
     @Override
     public ResultBody<BaseApp> getApp(
             @PathVariable("appId") String appId
@@ -73,7 +75,7 @@ public class BaseAppController implements IBaseAppServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clientId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
     })
-    @GetMapping("/app/client/{clientId}/info")
+    @GetMapping("/client/{clientId}/info")
     @Override
     public ResultBody<OpenClientDetails> getAppClientInfo(
             @PathVariable("clientId") String clientId
@@ -108,17 +110,17 @@ public class BaseAppController implements IBaseAppServiceClient {
             @ApiImplicitParam(name = "website", value = "官网地址", required = false, paramType = "form"),
             @ApiImplicitParam(name = "developerId", value = "开发者", required = false, paramType = "form")
     })
-    @PostMapping("/app/add")
+    @PostMapping("/add")
     public ResultBody<String> addApp(
             @RequestParam(value = "appName") String appName,
             @RequestParam(value = "appNameEn") String appNameEn,
             @RequestParam(value = "appType") String appType,
-            @RequestParam(value = "appIcon",required = false) String appIcon,
+            @RequestParam(value = "appIcon", required = false) String appIcon,
             @RequestParam(value = "appOs", required = false) String appOs,
             @RequestParam(value = "appDesc", required = false) String appDesc,
             @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "website",required = false) String website,
-            @RequestParam(value = "developerId",required = false) Long developerId
+            @RequestParam(value = "website", required = false) String website,
+            @RequestParam(value = "developerId", required = false) Long developerId
     ) {
         BaseApp app = new BaseApp();
         app.setAppName(appName);
@@ -142,15 +144,15 @@ public class BaseAppController implements IBaseAppServiceClient {
      * 编辑应用信息
      *
      * @param appId
-     * @param appName   应用名称
-     * @param appNameEn 应用英文名称
-     * @param appOs     手机应用操作系统:ios-苹果 android-安卓
-     * @param appType   应用类型:server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用
-     * @param appIcon   应用图标
-     * @param appDesc   应用说明
-     * @param status    状态
-     * @param website   官网地址
-     * @param developerId    开发者
+     * @param appName     应用名称
+     * @param appNameEn   应用英文名称
+     * @param appOs       手机应用操作系统:ios-苹果 android-安卓
+     * @param appType     应用类型:server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用
+     * @param appIcon     应用图标
+     * @param appDesc     应用说明
+     * @param status      状态
+     * @param website     官网地址
+     * @param developerId 开发者
      * @return
      * @
      */
@@ -160,14 +162,14 @@ public class BaseAppController implements IBaseAppServiceClient {
             @ApiImplicitParam(name = "appName", value = "应用名称", required = true, paramType = "form"),
             @ApiImplicitParam(name = "appNameEn", value = "应用英文名称", required = true, paramType = "form"),
             @ApiImplicitParam(name = "appType", value = "应用类型(server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用)", allowableValues = "server,app,pc,wap", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "appIcon", value = "应用图标",required = false, paramType = "form"),
+            @ApiImplicitParam(name = "appIcon", value = "应用图标", required = false, paramType = "form"),
             @ApiImplicitParam(name = "appOs", value = "手机应用操作系统", allowableValues = "android,ios", required = false, paramType = "form"),
             @ApiImplicitParam(name = "appDesc", value = "应用说明", required = false, paramType = "form"),
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
             @ApiImplicitParam(name = "website", value = "官网地址", required = false, paramType = "form"),
             @ApiImplicitParam(name = "developerId", value = "开发者", required = false, paramType = "form")
     })
-    @PostMapping("/app/update")
+    @PostMapping("/update")
     public ResultBody updateApp(
             @RequestParam("appId") String appId,
             @RequestParam(value = "appName") String appName,
@@ -177,7 +179,7 @@ public class BaseAppController implements IBaseAppServiceClient {
             @RequestParam(value = "appOs", required = false) String appOs,
             @RequestParam(value = "appDesc", required = false) String appDesc,
             @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "website",required = false) String website,
+            @RequestParam(value = "website", required = false) String website,
             @RequestParam(value = "developerId", required = false) Long developerId
     ) {
         BaseApp app = new BaseApp();
@@ -219,7 +221,7 @@ public class BaseAppController implements IBaseAppServiceClient {
             @ApiImplicitParam(name = "accessTokenValidity", value = "令牌有效期(秒)", required = true, paramType = "form"),
             @ApiImplicitParam(name = "refreshTokenValidity", value = "刷新令牌有效期(秒)", required = true, paramType = "form")
     })
-    @PostMapping("/app/client/update")
+    @PostMapping("/client/update")
     public ResultBody<String> updateAppClientInfo(
             @RequestParam("appId") String appId,
             @RequestParam(value = "grantTypes") String grantTypes,
@@ -251,7 +253,7 @@ public class BaseAppController implements IBaseAppServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),
     })
-    @PostMapping("/app/reset")
+    @PostMapping("/reset")
     public ResultBody<String> resetAppSecret(
             @RequestParam("appId") String appId
     ) {
@@ -269,7 +271,7 @@ public class BaseAppController implements IBaseAppServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),
     })
-    @PostMapping("/app/remove")
+    @PostMapping("/remove")
     public ResultBody removeApp(
             @RequestParam("appId") String appId
     ) {

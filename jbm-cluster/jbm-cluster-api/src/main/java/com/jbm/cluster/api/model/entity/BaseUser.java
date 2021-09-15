@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 /**
@@ -34,8 +36,9 @@ public class BaseUser extends MasterDataEntity {
      * 系统用户ID
      */
     @Id
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty("用户ID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
     /**

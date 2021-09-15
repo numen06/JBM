@@ -1,5 +1,7 @@
 package com.jbm.cluster.node.configuration.fegin;
 
+import cn.hutool.core.util.StrUtil;
+import com.jbm.util.StringUtils;
 import feign.RequestTemplate;
 import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +30,10 @@ public class FeignRequestOAuth2Interceptor extends FeignRequestInterceptor {
     @Override
     public void apply(RequestTemplate template) {
         template.header(this.header, new String[0]);
-        template.header(this.header, new String[]{this.extract(this.tokenType)});
+        String token = this.extract(this.tokenType);
+        if (StrUtil.isNotBlank(token)) {
+            template.header(this.header, new String[]{this.extract(this.tokenType)});
+        }
         super.apply(template);
     }
 
@@ -37,7 +42,7 @@ public class FeignRequestOAuth2Interceptor extends FeignRequestInterceptor {
             OAuth2AccessToken accessToken = oAuth2RestTemplate.getAccessToken();
             return String.format("%s %s", tokenType, accessToken.getValue());
         } catch (Exception e) {
-            log.info("获取集群的认证错误，请检查认证服务器设置。");
+            log.error("获取集群的认证错误，请检查认证服务器设置。");
         }
         return null;
     }
