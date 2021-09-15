@@ -13,12 +13,12 @@
         <repository>
             <id>jbm-releases</id>
             <name>jbm-releases</name>
-            <url>https://repo.rdc.aliyun.com/repository/35340-release-NxvguQ/</url>
+            <url>https://repo.rdc.aliyun.com/repository/2084842-release-b3KaCP/</url>
         </repository>
         <snapshotRepository>
             <id>jbm-snapshots</id>
             <name>jbm-snapshots</name>
-            <url>https://repo.rdc.aliyun.com/repository/35340-snapshot-j7ghlW/</url>
+            <url>https://repo.rdc.aliyun.com/repository/2084842-snapshot-btK7jQ/</url>
         </snapshotRepository>
     </distributionManagement>
     <dependencies>
