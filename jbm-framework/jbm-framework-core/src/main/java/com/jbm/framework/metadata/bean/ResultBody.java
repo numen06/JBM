@@ -154,6 +154,10 @@ public class ResultBody<T> implements Serializable {
         return ResultBody.ok().data(data).msg(msg);
     }
 
+    public static <T> ResultBody<T> success(String msg) {
+        return ResultBody.ok().data(null).msg(msg);
+    }
+
     public static <T> ResultBody<T> error(T data, String msg) {
         return ResultBody.failed().data(data).msg(msg);
     }

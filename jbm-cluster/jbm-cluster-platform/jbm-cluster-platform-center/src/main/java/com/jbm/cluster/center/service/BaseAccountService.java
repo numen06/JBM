@@ -48,6 +48,8 @@ public interface BaseAccountService extends IMasterDataService<BaseAccount> {
     BaseAccount register(Long userId, String account, String password, String accountType, Integer status, String domain, String registerIp);
 
 
+    BaseAccount register(BaseAccount baseAccount);
+
     /**
      * 检查账号是否存在
      *

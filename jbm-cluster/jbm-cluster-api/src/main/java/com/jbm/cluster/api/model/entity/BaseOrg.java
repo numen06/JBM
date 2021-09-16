@@ -19,10 +19,10 @@ import javax.persistence.Entity;
  **/
 @Data
 @Entity
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_org")
 @ApiModel(value = "组织结构")
+@EqualsAndHashCode(callSuper = true)
 public class BaseOrg extends MasterDataTreeEntity {
 
     @ApiModelProperty(value = "组织名称")
@@ -48,10 +48,9 @@ public class BaseOrg extends MasterDataTreeEntity {
 
     /**
      * 源ID by wesley.zhang on 2019/03/22 15:18
-     * 源ID（深圳）
-     * 深圳项目使用，主要做数据同步用
+     * 来源的ID
      */
-    @ApiModelProperty(value = "组织名称")
+    @ApiModelProperty(value = "来源ID")
     private String sourceId;
 
 
@@ -75,8 +74,6 @@ public class BaseOrg extends MasterDataTreeEntity {
 
     /**
      * 单位代码 by wesley.zhang on 2019/04/03 13:57
-     * 单位代码
-     * 单位代码
      */
     @ApiModelProperty(value = "组织代码")
     private String orgCode;

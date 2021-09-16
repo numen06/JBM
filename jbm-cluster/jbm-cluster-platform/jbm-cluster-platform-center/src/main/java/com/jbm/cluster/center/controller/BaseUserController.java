@@ -190,7 +190,33 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             @RequestParam(value = "password") String password
     ) {
         baseUserService.updatePassword(userId, password);
-        return ResultBody.ok();
+        return ResultBody.ok().msg("修改密码成功");
+    }
+
+
+    /**
+     * 修改用户密码
+     *
+     * @return
+     */
+    @ApiOperation(value = "激活用户Email帐号", notes = "用户ID必传")
+    @PostMapping("/activationEmailAccount")
+    public ResultBody activationEmailAccount(BaseUser baseUser) {
+        baseUserService.activationEmailAccount(baseUser);
+        return ResultBody.ok().msg("激活用户Email帐号成功");
+    }
+
+
+    /**
+     * 修改用户密码
+     *
+     * @return
+     */
+    @ApiOperation(value = "激活用户手机帐号", notes = "用户ID必传")
+    @PostMapping("/activationMobileAccount")
+    public ResultBody activationMobileAccount(BaseUser baseUser) {
+        baseUserService.activationMobileAccount(baseUser);
+        return ResultBody.ok().msg("修改密码成功");
     }
 
     /**
@@ -236,12 +262,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     }
 
 
-    /**
-     * 获取用户角色
-     *
-     * @param userId
-     * @return
-     */
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/userRoles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestBody BaseUser baseUser) {

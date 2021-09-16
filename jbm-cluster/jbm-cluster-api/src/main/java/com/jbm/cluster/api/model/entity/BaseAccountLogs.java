@@ -3,7 +3,10 @@ package com.jbm.cluster.api.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
@@ -19,10 +22,8 @@ import java.util.Date;
 @Entity
 @NoArgsConstructor
 @TableName("base_account_logs")
-public class BaseAccountLogs implements Serializable {
-    @Id
-    @TableId(type= IdType.ID_WORKER)
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class BaseAccountLogs extends MasterDataIdEntity {
 
     private Date loginTime;
 

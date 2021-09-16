@@ -7,8 +7,11 @@ import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 /**
@@ -24,7 +27,8 @@ import javax.persistence.Id;
 public class BaseAccount extends MasterDataEntity {
 
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long accountId;
 
     /**

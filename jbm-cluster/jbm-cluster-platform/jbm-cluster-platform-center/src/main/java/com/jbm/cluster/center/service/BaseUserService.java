@@ -25,6 +25,10 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      */
     void addUser(BaseUser baseUser);
 
+    void activationEmailAccount(BaseUser baseUser);
+
+    void activationMobileAccount(BaseUser baseUser);
+
     /**
      * 更新系统用户
      *

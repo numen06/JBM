@@ -1,12 +1,15 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
+import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
+import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.PasswordUtils;
@@ -96,6 +99,25 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     }
 
 
+    @Override
+    public BaseAccount register(BaseAccount baseAccount) {
+        if (isExist(baseAccount.getAccount(), baseAccount.getAccountType(), baseAccount.getDomain())) {
+            // 账号已被注册
+            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+        }
+        //加密
+        String encodePassword = passwordEncoder.encode(baseAccount.getPassword());
+//        BaseAccount baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
+//        baseAccount.setCreateTime(new Date());
+//        baseAccount.setUpdateTime(baseAccount.getCreateTime());
+        baseAccount.setStatus(1);
+        baseAccountMapper.insert(baseAccount);
+        return baseAccount;
+    }
+
+
+
+
     /**
      * 检测账号是否存在
      *
@@ -173,11 +195,10 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
      */
     @Override
     public int updatePasswordByUserId(Long userId, String domain, String password) {
-
         if (PasswordUtils.checkPassword(password) < 1)
             throw new ServiceException("密码强度不够,请重新设置");
         BaseAccount baseAccount = new BaseAccount();
-        baseAccount.setUpdateTime(new Date());
+//        baseAccount.setUpdateTime(new Date());
         baseAccount.setPassword(passwordEncoder.encode(password));
         QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
         wrapper.lambda()

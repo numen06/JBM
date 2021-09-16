@@ -6,25 +6,22 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.jbm.cluster.api.constants.AccountType;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.UserAccount;
-import com.jbm.cluster.api.model.entity.BaseAccount;
-import com.jbm.cluster.api.model.entity.BaseAccountLogs;
-import com.jbm.cluster.api.model.entity.BaseRole;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.model.entity.*;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
-import com.jbm.cluster.center.service.BaseAccountService;
-import com.jbm.cluster.center.service.BaseAuthorityService;
-import com.jbm.cluster.center.service.BaseRoleService;
-import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.Emptys;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -53,6 +50,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Autowired
     private BaseRoleService roleService;
     @Autowired
+    private BaseOrgService orgService;
+    @Autowired
     private BaseAuthorityService baseAuthorityService;
     @Autowired
     private BaseAccountService baseAccountService;
@@ -61,6 +60,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
+        if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
+            BaseOrg baseOrg = new BaseOrg();
+            baseOrg.setId(baseUser.getDepartmentId());
+            //查询上级公司
+            BaseOrg rCompany = orgService.findRelegationCompany(baseOrg);
+            baseUser.setCompanyId(rCompany.getId());
+        }
         if (ObjectUtil.isEmpty(baseUser.getUserId())) {
             this.addUser(baseUser);
         } else {
@@ -79,23 +85,56 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public void addUser(BaseUser baseUser) {
         if (getUserByUsername(baseUser.getUserName()) != null) {
-            throw new OpenAlertException("用户名:" + baseUser.getUserName() + "已存在!");
+            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
         }
-        baseUser.setCreateTime(new Date());
-        baseUser.setUpdateTime(baseUser.getCreateTime());
+//        baseUser.setCreateTime(new Date());
+//        baseUser.setUpdateTime(baseUser.getCreateTime());
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
-        if (Validator.isEmail(baseUser.getEmail())) {
-            //注册email账号登陆
-            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
-        }
-        if (Validator.isMobile(baseUser.getMobile())) {
-            //注册手机号账号登陆
-            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
-        }
+//        if (Validator.isEmail(baseUser.getEmail())) {
+//            //注册email账号登陆
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
+//        }
+//        if (Validator.isMobile(baseUser.getMobile())) {
+//            //注册手机号账号登陆
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
+//        }
     }
+
+    @Override
+    public void activationEmailAccount(BaseUser baseUser) {
+        BaseUser dbUser = this.getUserById(baseUser.getUserId());
+        if (ObjectUtil.isEmpty(dbUser)) {
+            throw new ServiceException("用户不存在!");
+        }
+        if (!Validator.isEmail(dbUser.getEmail())) {
+            throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
+        }
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), null);
+        //新建一个邮箱帐号
+        userNameAccunt.setAccountId(null);
+        userNameAccunt.setAccountType(AccountType.email.toString());
+        baseAccountService.register(userNameAccunt);
+    }
+
+    @Override
+    public void activationMobileAccount(BaseUser baseUser) {
+        BaseUser dbUser = this.getUserById(baseUser.getUserId());
+        if (ObjectUtil.isEmpty(dbUser)) {
+            throw new ServiceException("用户不存在!");
+        }
+        if (!Validator.isMobile(dbUser.getMobile())) {
+            throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
+        }
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), null);
+        //新建一个邮箱帐号
+        userNameAccunt.setAccountId(null);
+        userNameAccunt.setAccountType(AccountType.mobile.toString());
+        baseAccountService.register(userNameAccunt);
+    }
+
 
     /**
      * 更新系统用户
