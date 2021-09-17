@@ -5,7 +5,7 @@ import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.model.entity.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl;
+import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
  * @Create: 2020-03-24 03:28:09
  */
 @Service
-public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> implements BaseOrgService {
-
+public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> implements BaseOrgService {
 
     /***
      * 找到顶层公司
@@ -31,8 +30,11 @@ public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> imple
                 throw new ServiceException("没有部门ID");
             }
             BaseOrg dborg = this.selectById(org.getId());
+            if (ObjectUtil.isEmpty(dborg)) {
+                throw new ServiceException("上机机构失效");
+            }
             //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(porg.getParentId())) {
+            if (ObjectUtil.isEmpty(dborg.getParentId())) {
                 porg = dborg;
             }
             porg = this.selectById(dborg.getParentId());
@@ -61,8 +63,11 @@ public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> imple
                 throw new ServiceException("没有部门ID");
             }
             BaseOrg dborg = this.selectById(org.getId());
+            if (ObjectUtil.isEmpty(dborg)) {
+                throw new ServiceException("上机机构失效");
+            }
             //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(porg.getParentId())) {
+            if (ObjectUtil.isEmpty(dborg.getParentId())) {
                 porg = dborg;
             }
             porg = this.selectById(dborg.getParentId());

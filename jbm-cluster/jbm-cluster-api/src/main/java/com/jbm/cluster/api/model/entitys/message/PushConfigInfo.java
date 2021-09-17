@@ -1,7 +1,7 @@
-package com.jbm.cluster.api.model.entity.message;
+package com.jbm.cluster.api.model.entitys.message;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +22,7 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("push_config_info")
 @ApiModel("配送设置管理")
-public class PushConfigInfo extends MultiPlatformEntity {
+public class PushConfigInfo extends MultiPlatformIdEntity {
 
     @ApiModelProperty("是否启用")
     private Boolean enable;

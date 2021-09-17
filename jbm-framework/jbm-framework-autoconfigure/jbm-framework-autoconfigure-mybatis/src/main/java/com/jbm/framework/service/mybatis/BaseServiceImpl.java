@@ -16,11 +16,11 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * @author: zyf
+ * @author: wesley.zhang
  * @date: 2018/12/24 12:49
  * @desc: 父类service
  */
-public abstract class BaseServiceImpl<M extends  SuperMapper<T>, T> extends ServiceImpl<M, T> {
+public abstract class BaseServiceImpl<M extends SuperMapper<T>, T> extends ServiceImpl<M, T> {
 
     @Autowired
     public ApplicationContext applicationContext;

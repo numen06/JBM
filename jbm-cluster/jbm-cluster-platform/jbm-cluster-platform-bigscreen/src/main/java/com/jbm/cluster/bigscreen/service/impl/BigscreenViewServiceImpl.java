@@ -6,7 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpDownloader;
-import com.jbm.cluster.api.model.entity.bigscreen.BigscreenView;
+import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
 import com.jbm.framework.exceptions.ServiceException;

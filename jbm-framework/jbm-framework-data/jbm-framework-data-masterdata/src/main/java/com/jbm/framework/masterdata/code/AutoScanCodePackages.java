@@ -1,6 +1,5 @@
 package com.jbm.framework.masterdata.code;
 
-import com.jbm.framework.masterdata.annotation.MasterData;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;

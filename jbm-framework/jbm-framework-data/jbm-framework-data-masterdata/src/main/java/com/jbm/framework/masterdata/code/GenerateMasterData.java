@@ -6,10 +6,8 @@ import cn.hutool.core.util.ClassUtil;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.service.IMultiPlatformService;
+import com.jbm.framework.masterdata.usage.entity.*;
 import com.jbm.util.StringUtils;
 import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
@@ -66,6 +64,9 @@ public class GenerateMasterData {
         this();
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
+        if(ClassUtil.isAbstract(this.entityClass)) {
+            this.ignore = true;
+        }
         this.basePackage = ClassUtil.getPackage(entityClass);
         if (MasterDataEntity.class.isAssignableFrom(entityClass))
             this.superclass = entityClass.getSuperclass();
@@ -119,6 +120,15 @@ public class GenerateMasterData {
                 if (superclass.equals(MasterDataTreeEntity.class)) {
                     extClass = IMasterDataTreeService.class.getName();
                 }
+                if (superclass.equals(MultiPlatformEntity.class)) {
+                    extClass = IMultiPlatformService.class.getName();
+                }
+                if (superclass.equals(MultiPlatformIdEntity.class)) {
+                    extClass = IMultiPlatformService.class.getName();
+                }
+                if (superclass.equals(MultiPlatformTreeEntity.class)) {
+                    extClass = IMultiPlatformService.class.getName();
+                }
                 break;
             case serviceImpl:
                 if (superclass.equals(MasterDataEntity.class)) {
@@ -133,6 +143,15 @@ public class GenerateMasterData {
                 if (superclass.equals(MasterDataTreeEntity.class)) {
                     extClass = "com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl";
                 }
+                if (superclass.equals(MultiPlatformEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformServiceImpl";
+                }
+                if (superclass.equals(MultiPlatformIdEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformServiceImpl";
+                }
+                if (superclass.equals(MultiPlatformTreeEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl";
+                }
                 break;
             case controller:
                 if (superclass.equals(MasterDataEntity.class)) {
@@ -146,6 +165,15 @@ public class GenerateMasterData {
                 }
                 if (superclass.equals(MasterDataTreeEntity.class)) {
                     extClass = "com.jbm.framework.mvc.web.MasterDataTreeCollection";
+                }
+                if (superclass.equals(MultiPlatformEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
+                }
+                if (superclass.equals(MultiPlatformIdEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
+                }
+                if (superclass.equals(MultiPlatformTreeEntity.class)) {
+                    extClass = "com.jbm.framework.service.mybatis.MultiPlatformTreeCollection";
                 }
                 break;
         }

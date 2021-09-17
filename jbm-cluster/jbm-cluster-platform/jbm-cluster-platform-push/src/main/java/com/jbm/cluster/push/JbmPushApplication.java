@@ -1,6 +1,6 @@
 package com.jbm.cluster.push;
 
-import com.jbm.cluster.api.model.entity.message.PushMessage;
+import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -69,7 +69,7 @@ public class SwaggerController {
                 Optional.ofNullable(uiConfiguration).orElse(new UiConfiguration("/")), HttpStatus.OK));
     }
 
-    @GetMapping("")
+    @GetMapping("/")
     public Mono<ResponseEntity> swaggerResources() {
         return Mono.just((new ResponseEntity<>(swaggerResources.get(), HttpStatus.OK)));
     }

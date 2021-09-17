@@ -35,7 +35,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      * @return
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
-    @GetMapping("")
+    @GetMapping("/")
     public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseActionService.findListPage(PageRequestBody.from(map)));
     }

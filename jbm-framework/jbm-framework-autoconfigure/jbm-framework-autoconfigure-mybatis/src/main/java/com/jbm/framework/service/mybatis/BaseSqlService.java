@@ -34,7 +34,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-
+/**
+ * @author: wesley.zhang
+ * @date: 2018/12/24 12:49
+ * @desc: 父类service
+ */
 public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseMapper<Entity>, Entity>
         implements IBaseSqlService<Entity>, IService<Entity> {
 

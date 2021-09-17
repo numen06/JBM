@@ -80,7 +80,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @return
      */
     @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
-    @PostMapping("")
+    @PostMapping("/")
     public ResultBody<IPage<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseUserService.findListPage(PageRequestBody.from(map)));
     }

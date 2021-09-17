@@ -26,6 +26,10 @@ public class ModelMetaObjectHandler implements MetaObjectHandler {
         if (null == updateTime) {
             this.setFieldValByName("updateTime", now, metaObject);
         }
+        Object appId = this.getFieldValByName("appId", metaObject);
+        if (null == appId) {
+            this.setFieldValByName("appId", 1, metaObject);
+        }
     }
 
     @Override
@@ -34,6 +38,10 @@ public class ModelMetaObjectHandler implements MetaObjectHandler {
         Object updateTime = this.getFieldValByName("updateTime", metaObject);
         if (null == updateTime) {
             this.setFieldValByName("updateTime", now, metaObject);
+        }
+        Object appId = this.getFieldValByName("appId", metaObject);
+        if (null == appId) {
+            this.setFieldValByName("appId", 1, metaObject);
         }
     }
 }

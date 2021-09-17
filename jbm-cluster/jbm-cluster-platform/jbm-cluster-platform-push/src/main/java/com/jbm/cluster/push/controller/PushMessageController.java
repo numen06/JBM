@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.controller;
 
-import com.jbm.cluster.api.model.entity.message.PushMessage;
+import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.cluster.push.form.PushMessageForm;

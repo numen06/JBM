@@ -1,7 +1,5 @@
 package com.jbm.framework.masterdata.usage.bean;
 
-import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 

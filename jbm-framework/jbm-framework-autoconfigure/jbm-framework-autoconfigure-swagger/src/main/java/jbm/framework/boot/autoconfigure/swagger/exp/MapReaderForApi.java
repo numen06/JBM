@@ -1,10 +1,16 @@
 package jbm.framework.boot.autoconfigure.swagger.exp;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.*;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.TypeUtil;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.jbm.framework.masterdata.controller.IMasterDataController;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.swagger.annotation.ApiJsonObject;
@@ -18,7 +24,9 @@ import javassist.bytecode.annotation.StringMemberValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.schema.ModelReference;
 import springfox.documentation.schema.TypeNameExtractor;
@@ -29,6 +37,10 @@ import springfox.documentation.spi.service.ParameterBuilderPlugin;
 import springfox.documentation.spi.service.contexts.ParameterContext;
 import springfox.documentation.spi.service.contexts.RequestMappingContext;
 import springfox.documentation.spring.web.WebMvcRequestHandler;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static springfox.documentation.schema.ResolvedTypes.modelRefFactory;
 import static springfox.documentation.schema.Types.isBaseType;
@@ -79,6 +91,10 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
                     log.error("解析参数错误", e);
                 }
             }
+        }
+        //如果发现是form提交则改变请求类型
+        if (methodParameter.hasParameterAnnotation(RequestParam.class)) {
+            context.getOperationContext().operationBuilder().consumes(Sets.newHashSet(MediaType.APPLICATION_FORM_URLENCODED_VALUE)).build();
         }
     }
 

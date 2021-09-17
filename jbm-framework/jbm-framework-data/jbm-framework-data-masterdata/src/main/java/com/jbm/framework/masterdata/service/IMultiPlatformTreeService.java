@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.service;
 
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
 
 import java.util.List;
 
@@ -11,9 +12,8 @@ import java.util.List;
  * @param <Entity>
  * @author wesley
  */
-public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> extends IMasterDataService<Entity> {
-
-    List<Entity> selectRootListById() throws DataServiceException;
+public interface IMultiPlatformTreeService<Entity extends MultiPlatformTreeEntity> extends IMultiPlatformService<Entity> {
+    List<Entity> selectRootListById(Entity entity) throws DataServiceException;
 
     /**
      * 通过父节点获取所有下面的子节点（递归慎用）

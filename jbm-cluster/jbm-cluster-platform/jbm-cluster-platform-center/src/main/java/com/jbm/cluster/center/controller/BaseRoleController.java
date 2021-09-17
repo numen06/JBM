@@ -33,7 +33,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @return
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
-    @PostMapping("")
+    @PostMapping("/")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         return ResultBody.ok().data(baseRoleService.findListPage(pageRequestBody));
     }

@@ -1,12 +1,10 @@
 package com.jbm.cluster.bigscreen;
 
-import cn.hutool.core.util.ClassUtil;
-import com.jbm.cluster.api.model.entity.bigscreen.BigscreenView;
+import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.mapper.BigscreenViewMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.ClassUtils;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -32,7 +30,7 @@ import java.io.IOException;
 @EnableDiscoveryClient
 @SpringBootApplication
 @ComponentScans(value = {@ComponentScan(basePackageClasses = JbmBigscreenApplication.class)})
-@EntityScan(basePackages = {"com.jbm.cluster.api.model.entity.bigscreen"})
+@EntityScan(basePackages = {"com.jbm.cluster.api.model.entitys.bigscreen"})
 @MapperScan(basePackageClasses = BigscreenViewMapper.class)
 @EnableCodeAutoGeneate(entityPackageClasses = {BigscreenView.class}, targetPackage = "com.jbm.cluster.bigscreen")
 @Configuration

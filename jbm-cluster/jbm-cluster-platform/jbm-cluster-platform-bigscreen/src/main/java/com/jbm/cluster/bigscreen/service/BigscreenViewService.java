@@ -1,6 +1,6 @@
 package com.jbm.cluster.bigscreen.service;
 
-import com.jbm.cluster.api.model.entity.bigscreen.BigscreenView;
+import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

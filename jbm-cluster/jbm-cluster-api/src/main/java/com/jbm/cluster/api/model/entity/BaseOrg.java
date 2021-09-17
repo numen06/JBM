@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +23,7 @@ import javax.persistence.Entity;
 @TableName("base_org")
 @ApiModel(value = "组织结构")
 @EqualsAndHashCode(callSuper = true)
-public class BaseOrg extends MasterDataTreeEntity {
+public class BaseOrg extends MultiPlatformTreeEntity {
 
     @ApiModelProperty(value = "组织名称")
     private String orgName;

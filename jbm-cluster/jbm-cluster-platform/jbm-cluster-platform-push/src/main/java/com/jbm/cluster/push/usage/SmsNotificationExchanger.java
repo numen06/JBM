@@ -1,8 +1,8 @@
 package com.jbm.cluster.push.usage;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.api.model.message.Notification;
-import com.jbm.cluster.api.model.message.SmsNotification;
+import com.jbm.cluster.api.model.entitys.message.Notification;
+import com.jbm.cluster.api.model.entitys.message.SmsNotification;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.aliyun.sms.model.AliyunSms;
 import jbm.framework.aliyun.sms.model.SmsSendResult;

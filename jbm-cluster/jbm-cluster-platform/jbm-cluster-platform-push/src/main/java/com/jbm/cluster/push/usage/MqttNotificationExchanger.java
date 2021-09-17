@@ -2,8 +2,8 @@ package com.jbm.cluster.push.usage;
 
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.entity.message.PushMessage;
-import com.jbm.cluster.api.model.message.Notification;
+import com.jbm.cluster.api.model.entitys.message.PushMessage;
+import com.jbm.cluster.api.model.entitys.message.Notification;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;

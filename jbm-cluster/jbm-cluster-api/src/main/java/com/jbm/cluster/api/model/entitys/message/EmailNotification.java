@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.model.message;
+package com.jbm.cluster.api.model.entitys.message;
 
 import lombok.Data;
 

@@ -1,17 +1,14 @@
 package jbm.framework.boot.autoconfigure.mvc;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.alibaba.fastjson.parser.ParserConfig;
-import org.springframework.http.MediaType;
-import org.springframework.util.ClassUtils;
-
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter4;
 import com.alibaba.fastjson.support.springfox.SwaggerJsonSerializer;
-
+import org.springframework.http.MediaType;
+import org.springframework.util.ClassUtils;
 import springfox.documentation.spring.web.json.Json;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SwaggerFastJsonHttpMessageConverter4 extends FastJsonHttpMessageConverter4 {
 

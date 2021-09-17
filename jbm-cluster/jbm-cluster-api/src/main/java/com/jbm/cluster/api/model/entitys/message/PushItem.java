@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.model.entity.message;
+package com.jbm.cluster.api.model.entitys.message;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;

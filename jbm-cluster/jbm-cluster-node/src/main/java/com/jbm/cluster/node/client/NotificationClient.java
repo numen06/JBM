@@ -1,6 +1,6 @@
 package com.jbm.cluster.node.client;
 
-import com.jbm.cluster.api.model.message.Notification;
+import com.jbm.cluster.api.model.entitys.message.Notification;
 import com.jbm.cluster.common.constants.QueueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

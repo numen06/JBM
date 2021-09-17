@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.framework.masterdata.usage.EnumConvertInterceptor;
 import com.jbm.util.json.JSONBean;
 
-import java.util.HashMap;
-
 /**
  * 自定义Map
  */

@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.controller;
 
-import com.jbm.cluster.api.model.entity.message.PushConfigInfo;
+import com.jbm.cluster.api.model.entitys.message.PushConfigInfo;
 import com.jbm.cluster.push.service.PushConfigInfoService;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
 import io.swagger.annotations.Api;

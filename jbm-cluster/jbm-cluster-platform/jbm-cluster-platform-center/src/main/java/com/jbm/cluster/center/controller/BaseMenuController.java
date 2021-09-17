@@ -41,7 +41,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      * @return
      */
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
-    @GetMapping("")
+    @GetMapping("/")
     public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
         return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)));
     }

@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.usage;
 
-import com.jbm.cluster.api.model.message.Notification;
+import com.jbm.cluster.api.model.entitys.message.Notification;
 
 
 /**

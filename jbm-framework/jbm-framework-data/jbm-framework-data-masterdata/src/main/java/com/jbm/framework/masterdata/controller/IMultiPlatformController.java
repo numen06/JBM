@@ -1,7 +1,7 @@
 package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.form.IdsForm;
-import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.EntityPageSearchForm;
 import com.jbm.framework.usage.form.EntityRequsetForm;
@@ -9,7 +9,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
 
-public interface IMultiPlatformController<Entity extends MasterDataEntity> {
+public interface IMultiPlatformController<Entity extends MultiPlatformEntity> {
 
 
     /**

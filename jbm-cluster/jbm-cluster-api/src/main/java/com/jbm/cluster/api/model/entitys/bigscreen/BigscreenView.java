@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.model.entity.bigscreen;
+package com.jbm.cluster.api.model.entitys.bigscreen;
 
 
 import com.baomidou.mybatisplus.annotation.TableName;

@@ -23,7 +23,7 @@ public class ResultBody<T> implements Serializable {
      * 响应编码
      */
     @ApiModelProperty(value = "响应编码:0-请求处理成功")
-    private int code = 0;
+    private Integer code = 0;
     /**
      * 提示消息
      */
@@ -46,7 +46,7 @@ public class ResultBody<T> implements Serializable {
      * http状态码
      */
     @ApiModelProperty(value = "http状态码")
-    private int httpStatus;
+    private Integer httpStatus;
 
     /**
      * 附加数据
@@ -58,7 +58,7 @@ public class ResultBody<T> implements Serializable {
      * 响应时间
      */
     @ApiModelProperty(value = "响应时间")
-    private long timestamp = System.currentTimeMillis();
+    private Long timestamp = System.currentTimeMillis();
 
     public ResultBody() {
         super();

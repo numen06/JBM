@@ -1,7 +1,6 @@
 package com.jbm.framework.masterdata.controller;
 
 import com.jbm.framework.form.IdsForm;
-import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

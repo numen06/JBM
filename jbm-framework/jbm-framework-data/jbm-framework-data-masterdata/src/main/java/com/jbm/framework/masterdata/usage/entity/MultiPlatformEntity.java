@@ -11,8 +11,8 @@ import javax.persistence.MappedSuperclass;
 @TableName
 @MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
-public class MultiPlatformEntity extends MasterDataIdEntity {
+public class MultiPlatformEntity extends MasterDataEntity {
 
     @ApiModelProperty("应用ID")
-    private Long applicationId;
+    private Long appId;
 }

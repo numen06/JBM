@@ -1,7 +1,7 @@
 package com.jbm.cluster.push.usage;
 
-import com.jbm.cluster.api.model.message.EmailNotification;
-import com.jbm.cluster.api.model.message.Notification;
+import com.jbm.cluster.api.model.entitys.message.EmailNotification;
+import com.jbm.cluster.api.model.entitys.message.Notification;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
 

@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.form;
 
-import com.jbm.cluster.api.model.entity.message.PushMessage;
+import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
