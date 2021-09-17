@@ -1,6 +1,10 @@
 package com.jbm.cluster.logs.handler;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.api.model.GatewayLogInfo;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.service.GatewayLogsService;
@@ -30,18 +34,18 @@ public class AccessLogsHandler {
     /**
      * 接收访问日志
      *
-     * @param access
+     * @param gatewayLogInfoJson
      */
     @RabbitListener(queues = QueueConstants.QUEUE_ACCESS_LOGS)
-    public void accessLogsQueue(@Payload Map access) {
+    public void accessLogsQueue(@Payload String gatewayLogInfoJson) {
         try {
-            if (access != null) {
-                GatewayLogs logs = BeanUtil.mapToBean(access, GatewayLogs.class, true);
-                if (logs != null) {
+            if (StrUtil.isNotBlank(gatewayLogInfoJson) ) {
+                GatewayLogs logs = JSON.parseObject(gatewayLogInfoJson,GatewayLogs.class);
+                if (ObjectUtil.isEmpty(logs) ) {
                     if (logs.getIp() != null) {
                         logs.setRegion(logs.getIp());
                     }
-                    logs.setUseTime(logs.getResponseTime().getTime() - logs.getRequestTime().getTime());
+//                    logs.setUseTime(logs.getResponseTime().getTime() - logs.getRequestTime().getTime());
                     gatewayLogsService.save(logs);
                 }
             }

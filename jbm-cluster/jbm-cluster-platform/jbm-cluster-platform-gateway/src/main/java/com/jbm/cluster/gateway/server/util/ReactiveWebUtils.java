@@ -1,5 +1,6 @@
 package com.jbm.cluster.gateway.server.util;
 
+import cn.hutool.core.util.StrUtil;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -22,7 +23,17 @@ public class ReactiveWebUtils {
         ServerHttpRequest request = exchange.getRequest();
         Map<String, String> headers = request.getHeaders().toSingleValueMap();
         String unknown = "unknown";
-        String ip = headers.get("X-Forwarded-For");
+        String forwarded = headers.get("X-Forwarded-For");
+        String ip = null;
+        if (StrUtil.isNotBlank(forwarded)) {
+            String realIp = headers.get("X-Real-IP");
+            if (realIp.equalsIgnoreCase(forwarded)) {
+                ip = realIp;
+            } else {
+                ip = StrUtil.split(forwarded, ",").get(0);
+            }
+        }
+//        String ip = headers.get("X-Forwarded-For");
         if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
             ip = headers.get("Proxy-Client-IP");
         }

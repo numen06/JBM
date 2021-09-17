@@ -24,6 +24,7 @@ import javassist.bytecode.annotation.StringMemberValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -94,7 +95,10 @@ public class MapReaderForApi implements ParameterBuilderPlugin {
         }
         //如果发现是form提交则改变请求类型
         if (methodParameter.hasParameterAnnotation(RequestParam.class)) {
-            context.getOperationContext().operationBuilder().consumes(Sets.newHashSet(MediaType.APPLICATION_FORM_URLENCODED_VALUE)).build();
+            //只有post才处理
+            if (context.getOperationContext().httpMethod().equals(HttpMethod.POST)) {
+                context.getOperationContext().operationBuilder().consumes(Sets.newHashSet(MediaType.APPLICATION_FORM_URLENCODED_VALUE)).build();
+            }
         }
     }
 

@@ -93,7 +93,7 @@ public class ResultBody<T> implements Serializable {
         return this;
     }
 
-    public ResultBody httpStatus(int httpStatus) {
+    public ResultBody httpStatus(Integer httpStatus) {
         this.httpStatus = httpStatus;
         return this;
     }

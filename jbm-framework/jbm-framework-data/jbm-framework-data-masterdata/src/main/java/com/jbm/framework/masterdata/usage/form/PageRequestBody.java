@@ -1,3 +1,5 @@
+
+
 package com.jbm.framework.masterdata.usage.form;
 
 import com.jbm.framework.masterdata.usage.PageParams;
@@ -23,12 +25,20 @@ public class PageRequestBody extends BaseRequsetBody {
         return new PageRequestBody(map);
     }
 
+    public static PageRequestBody from(PageParams pageParams) {
+        return new PageRequestBody(pageParams);
+    }
+
     public PageRequestBody() {
         super();
     }
 
     public PageRequestBody(Map map) {
         super(map);
+    }
+
+    public PageRequestBody(PageParams pageParams) {
+       this.pageParams = pageParams;
     }
 
 

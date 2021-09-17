@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author: auto generate by jbm
  * @Create: 2021-09-16 15:35:49
  */
-@Api(tags = "BaseAccountLogs开放接口")
+@Api(tags = "登陆日志")
 @RestController
 @RequestMapping("/baseAccountLogs")
 public class BaseAccountLogsController extends MasterDataCollection<BaseAccountLogs, BaseAccountLogsService> {

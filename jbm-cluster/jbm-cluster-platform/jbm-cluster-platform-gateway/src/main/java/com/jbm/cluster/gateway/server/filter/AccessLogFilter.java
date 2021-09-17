@@ -1,11 +1,14 @@
 package com.jbm.cluster.gateway.server.filter;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.Charsets;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.server.ServerWebExchange;
@@ -32,6 +35,7 @@ public class AccessLogFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpResponse response = exchange.getResponse();
         DataBufferFactory bufferFactory = response.bufferFactory();
+        StringBuffer responseBodys = new StringBuffer();
         ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(response) {
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
@@ -43,6 +47,7 @@ public class AccessLogFilter implements WebFilter {
                         dataBuffer.read(content);
                         //释放掉内存
                         DataBufferUtils.release(dataBuffer);
+                        responseBodys.append(getResponseBody(response, content));
                         return bufferFactory.wrap(content);
                     }));
                 }
@@ -50,9 +55,18 @@ public class AccessLogFilter implements WebFilter {
                 return super.writeWith(body);
             }
         };
-        return chain.filter(exchange.mutate().response(decoratedResponse).build()).then(Mono.fromRunnable(()->{
-            accessLogService.sendLog(exchange, null);
+        return chain.filter(exchange.mutate().response(decoratedResponse).build()).then(Mono.fromRunnable(() -> {
+            accessLogService.sendLog(exchange, responseBodys.toString(), null);
         }));
+    }
+
+    private String getResponseBody(ServerHttpResponse response, byte[] content) {
+        if (response.getHeaders().containsKey("Content-Type")) {
+            if (StrUtil.contains(response.getHeaders().get("Content-Type").toString(), MediaType.APPLICATION_JSON_VALUE)) {
+                return StrUtil.str(content, Charsets.UTF_8);
+            }
+        }
+        return null;
     }
 
 
