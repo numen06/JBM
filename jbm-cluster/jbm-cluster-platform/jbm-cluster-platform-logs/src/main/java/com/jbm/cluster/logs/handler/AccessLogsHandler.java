@@ -8,11 +8,14 @@ import com.jbm.cluster.api.model.GatewayLogInfo;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.service.GatewayLogsService;
+import com.jbm.cluster.logs.utils.AddressUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerWebExchange;
 
 import java.util.Map;
 
@@ -39,18 +42,18 @@ public class AccessLogsHandler {
     @RabbitListener(queues = QueueConstants.QUEUE_ACCESS_LOGS)
     public void accessLogsQueue(@Payload String gatewayLogInfoJson) {
         try {
-            if (StrUtil.isNotBlank(gatewayLogInfoJson) ) {
-                GatewayLogs logs = JSON.parseObject(gatewayLogInfoJson,GatewayLogs.class);
-                if (ObjectUtil.isEmpty(logs) ) {
-                    if (logs.getIp() != null) {
-                        logs.setRegion(logs.getIp());
+            if (StrUtil.isNotBlank(gatewayLogInfoJson)) {
+                GatewayLogs logs = JSON.parseObject(gatewayLogInfoJson, GatewayLogs.class);
+                if (ObjectUtil.isNotEmpty(logs)) {
+                    if (StrUtil.isNotBlank(logs.getIp())) {
+                        logs.setRegion(AddressUtils.getIPRegion(logs.getIp()));
                     }
 //                    logs.setUseTime(logs.getResponseTime().getTime() - logs.getRequestTime().getTime());
                     gatewayLogsService.save(logs);
                 }
             }
         } catch (Exception e) {
-            log.error("error:", e);
+            log.error("日志接收错误:", e);
         }
     }
 }
