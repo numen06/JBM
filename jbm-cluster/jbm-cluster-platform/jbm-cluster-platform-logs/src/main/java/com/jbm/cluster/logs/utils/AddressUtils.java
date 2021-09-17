@@ -19,7 +19,7 @@ public class AddressUtils {
     public static final String IP_URL = "http://whois.pconline.com.cn/ipJson.jsp";
 
     // 未知地址
-    public static final String UNKNOWN = "XX XX";
+    public static final String UNKNOWN = "未知";
 
     /***
      * 获取地址信息
@@ -33,7 +33,7 @@ public class AddressUtils {
             return "内网IP";
         }
         try {
-            String rspStr = HttpUtil.createGet(IP_URL).form("ip", ip).form("json=", "true").execute().body();
+            String rspStr = HttpUtil.createGet(IP_URL).form("ip", ip).form("json", true).execute().body();
             if (StrUtil.isEmpty(rspStr)) {
                 log.error("获取地理位置异常 {}", ip);
                 return UNKNOWN;
@@ -41,7 +41,7 @@ public class AddressUtils {
             JSONObject obj = JSONObject.parseObject(rspStr);
             String region = obj.getString("pro");
             String city = obj.getString("city");
-            return String.format("%s %s", region, city);
+            return String.format("%s|%s", region, city);
         } catch (Exception e) {
             log.error("获取地理位置异常 {}", e);
         }

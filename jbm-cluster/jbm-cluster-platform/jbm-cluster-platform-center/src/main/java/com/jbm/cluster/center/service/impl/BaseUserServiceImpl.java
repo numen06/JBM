@@ -2,6 +2,9 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
@@ -335,6 +338,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                     log.setAccountType(baseAccount.getAccountType());
                     log.setLoginIp(WebUtils.getRemoteAddress(request));
                     log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
+                    UserAgent userAgent = UserAgentUtil.parse(log.getLoginAgent());
+                    log.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
+                    log.setOs(userAgent.getOs().getName());
                     baseAccountService.addLoginLog(log);
                 }
             } catch (Exception e) {
@@ -348,4 +354,5 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         }
         return null;
     }
+
 }
