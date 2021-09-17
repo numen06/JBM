@@ -23,7 +23,7 @@ public class ReactiveWebUtils {
         ServerHttpRequest request = exchange.getRequest();
         Map<String, String> headers = request.getHeaders().toSingleValueMap();
         String unknown = "unknown";
-        String forwarded = headers.get("X-Fonwarded-For");
+        String forwarded = headers.get("X-Forwarded-For");
         String ip = null;
         if (StrUtil.isNotBlank(forwarded)) {
             String realIp = headers.get("X-Real-IP");

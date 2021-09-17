@@ -1,5 +1,6 @@
 package com.jbm.framework.mvc;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.net.HttpHeaders;
@@ -466,7 +467,16 @@ public class WebUtils {
      */
     public static String getRemoteAddress(HttpServletRequest request) {
         String unknown = "unknown";
-        String ip = request.getHeader("X-Forwarded-For");
+        String forwarded = request.getHeader("X-Forwarded-For");
+        String ip = null;
+        if (StrUtil.isNotBlank(forwarded)) {
+            String realIp = request.getHeader("X-Real-IP");
+            if (realIp.equalsIgnoreCase(forwarded)) {
+                ip = realIp;
+            } else {
+                ip = StrUtil.split(forwarded, ",").get(0);
+            }
+        }
         if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
         }
