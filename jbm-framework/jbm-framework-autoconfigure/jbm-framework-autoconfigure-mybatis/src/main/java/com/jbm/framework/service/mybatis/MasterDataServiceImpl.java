@@ -4,8 +4,14 @@ package com.jbm.framework.service.mybatis;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.TableInfo;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.baomidou.mybatisplus.core.toolkit.Assert;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,14 +31,13 @@ import com.jbm.util.CollectionUtils;
 import com.jbm.util.MapUtils;
 import com.jbm.util.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.binding.MapperMethod;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.io.Serializable;
+import java.util.*;
 
 @Slf4j
 public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> extends BaseServiceImpl<SuperMapper<Entity>, Entity> implements IMasterDataService<Entity> {
@@ -377,6 +382,49 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     protected QueryWrapper currentQueryWrapper() {
         QueryWrapper queryWrapper = ClassQueryWrapper.QueryWrapper(this.currentEntityClass());
         return queryWrapper;
+    }
+
+    @Override
+    protected Class<Entity> currentModelClass() {
+        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public boolean saveOrUpdateBatch(Collection<Entity> entityList) {
+        return this.saveOrUpdateBatch(entityList, 50);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public boolean saveOrUpdateBatch(Collection<Entity> entityList, int batchSize) {
+        Assert.notEmpty(entityList, "error: entityList must not be empty");
+        Class<?> cls = currentModelClass();
+        TableInfo tableInfo = TableInfoHelper.getTableInfo(cls);
+        Assert.notNull(tableInfo, "error: can not execute. because can not find cache of TableInfo for entity!");
+        String keyProperty = tableInfo.getKeyProperty();
+        Assert.notEmpty(keyProperty, "error: can not execute. because can not find column for id from entity!");
+        int size = entityList.size();
+        executeBatch(sqlSession -> {
+            int i = 1;
+            for (Entity entity : entityList) {
+                Object idVal = ReflectionKit.getMethodValue(cls, entity, keyProperty);
+                if (StringUtils.checkValNull(idVal) || Objects.isNull(getById((Serializable) idVal))) {
+                    sqlSession.insert(sqlStatement(SqlMethod.INSERT_ONE), entity);
+                } else {
+                    MapperMethod.ParamMap<Entity> param = new MapperMethod.ParamMap<>();
+                    param.put(Constants.ENTITY, entity);
+                    sqlSession.update(sqlStatement(SqlMethod.UPDATE_BY_ID), param);
+                }
+                // 不知道以后会不会有人说更新失败了还要执行插入 😂😂😂
+                if ((i % batchSize == 0) || i == size) {
+                    sqlSession.flushStatements();
+                }
+                i++;
+            }
+        });
+        return true;
     }
 
 
