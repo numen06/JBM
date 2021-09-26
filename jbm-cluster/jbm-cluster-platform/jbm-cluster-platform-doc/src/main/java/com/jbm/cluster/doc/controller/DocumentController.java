@@ -5,6 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;
 import com.google.common.base.Charsets;
 import com.jbm.framework.metadata.bean.ResultBody;
+import io.minio.StatObjectResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
@@ -118,10 +119,30 @@ public class DocumentController {
         // Set the content type and attachment header.
         String fileName = FileNameUtil.getName(filePath);
         fileName = HttpUtil.encodeParams(fileName, Charsets.UTF_8);
+        StatObjectResponse statObjectResponse = minioService.getMetadata(Paths.get(filePath));
+        response.setContentLength(Long.valueOf(statObjectResponse.size()).intValue());
         response.addHeader("Content-disposition", "inline;filename=" + fileName);
         response.setContentType(URLConnection.guessContentTypeFromName(filePath));
         // Copy the stream to the response's output stream.
-        IOUtils.copy(inputStream, response.getOutputStream());
+        IOUtils.copyLarge(inputStream, response.getOutputStream());
+        response.flushBuffer();
+    }
+
+
+    @ApiOperation(value = "下载一个文档")
+    @GetMapping("/download/**")
+    public void download(HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
+        final String filePath = getExtractPath(request);
+        InputStream inputStream = minioService.get(Paths.get(filePath));
+        // Set the content type and attachment header.
+        String fileName = FileNameUtil.getName(filePath);
+        fileName = HttpUtil.encodeParams(fileName, Charsets.UTF_8);
+        StatObjectResponse statObjectResponse = minioService.getMetadata(Paths.get(filePath));
+        response.setContentLength(Long.valueOf(statObjectResponse.size()).intValue());
+        response.addHeader("Content-disposition", "attachment;filename=" + fileName);
+        response.setContentType(URLConnection.guessContentTypeFromName(filePath));
+        // Copy the stream to the response's output stream.
+        IOUtils.copyLarge(inputStream, response.getOutputStream());
         response.flushBuffer();
     }
 

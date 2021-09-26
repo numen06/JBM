@@ -55,20 +55,20 @@ public class JbmFlowTask implements IFlowTask {
         System.out.println(xx);
     }
 
-    public static void main(String[] args) {
-        JbmFlowTask task = new JbmFlowTask();
-        List<Method> methodLits = Lists.newArrayList();
-        ReflectUtils.addAllMethods(JbmFlowTask.class, methodLits);
-        Method[] testMethod = ReflectUtil.getMethods(JbmFlowTask.class, new Filter<Method>() {
-            @Override
-            public boolean accept(Method method) {
-                JbmWork jbmWork = method.getAnnotation(JbmWork.class);
-                return ObjectUtil.isNotEmpty(jbmWork);
-            }
-        });
-        System.out.println(JSON.toJSONString(testMethod));
-//        Methref.on(JbmFlowTask.class).to().test("test");
-//        task.test("test");
-    }
+//    public static void main(String[] args) {
+//        JbmFlowTask task = new JbmFlowTask();
+//        List<Method> methodLits = Lists.newArrayList();
+//        ReflectUtils.addAllMethods(JbmFlowTask.class, methodLits);
+//        Method[] testMethod = ReflectUtil.getMethods(JbmFlowTask.class, new Filter<Method>() {
+//            @Override
+//            public boolean accept(Method method) {
+//                JbmWork jbmWork = method.getAnnotation(JbmWork.class);
+//                return ObjectUtil.isNotEmpty(jbmWork);
+//            }
+//        });
+//        System.out.println(JSON.toJSONString(testMethod));
+////        Methref.on(JbmFlowTask.class).to().test("test");
+////        task.test("test");
+//    }
 
 }

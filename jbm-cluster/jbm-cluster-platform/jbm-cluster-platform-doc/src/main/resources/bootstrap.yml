@@ -14,7 +14,7 @@ spring:
         refreshable-dataids: common.properties
         shared-dataids: doc.properties,common.properties,redis.properties,rabbitmq.properties
       discovery:
-        namespace: emc
+        #namespace: emc
         server-addr: nacos-standalone
   main:
     allow-bean-definition-overriding: true
@@ -37,6 +37,7 @@ jbm:
     token-type: redis
     permit-all:
       - /get/**
+      - /download/**
 swagger2:
   enabled: true
   description: 平台文档服务器
