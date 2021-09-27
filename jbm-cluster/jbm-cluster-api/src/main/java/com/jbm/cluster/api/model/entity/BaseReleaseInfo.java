@@ -39,4 +39,11 @@ public class BaseReleaseInfo extends MasterDataIdEntity {
     @ApiModelProperty(value = "版本号")
     private String versionNumber;
 
+    @ApiModelProperty(value = "包下载地址")
+    private String packageUrl;
+
+    @ApiModelProperty(value = "关联APPID")
+    private Long appId;
+
+
 }
