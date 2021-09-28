@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpDownloader;
+import cn.hutool.http.HttpUtil;
 import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
@@ -212,7 +213,12 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         if (!FileUtil.exist(zipDir)) {
             FileUtil.createTempFile(zipDir);
         }
-        File zipFile = this.downloadZip(bigscreenView);
+        File zipFile = null;
+        try {
+            zipFile = this.downloadZip(bigscreenView);
+        } catch (Exception e) {
+            throw new ServiceException("下载资源包错误", e);
+        }
         this.unZipView(bigscreenView, zipFile);
         //如果不存在视图首页则提示
         if (!FileUtil.exist(Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl(), "index.html").toFile())) {
