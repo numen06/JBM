@@ -72,7 +72,7 @@ public class JbmClusterTemplate {
      *
      * @param pushMessage
      */
-    public void sendClusterNotification(PushMessage pushMessage) {
+    public void sendPushMessage(PushMessage pushMessage) {
         rabbitTemplate.convertAndSend(QueueConstants.QUEUE_PUSH_MESSAGE, pushMessage);
     }
 
