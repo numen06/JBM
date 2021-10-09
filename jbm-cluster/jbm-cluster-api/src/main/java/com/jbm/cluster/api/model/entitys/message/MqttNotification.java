@@ -9,38 +9,17 @@ import java.util.Map;
  * @date 2018-3-27
  **/
 @Data
-public class MqttNotification implements Notification {
+public class MqttNotification extends NotificationModel {
 
     /**
-     * 用户id
+     * 通道
      */
-    private String userId;
+    private String topic;
 
-    /**
-     * 标签组：a,b,c
-     */
-    private String tags;
-
-    /**
-     * 标题头
-     */
-    private String title;
     /**
      * 消息体
      */
-    private String body;
-    /**
-     * 参数
-     */
-    private Map<String, Object> params;
-    /**
-     * 类型
-     */
-    private String type;
-    /**
-     * 等级
-     */
-    private Integer level;
+    private Object body;
 
-    private String msgId;
+    private Integer qos = 1;
 }

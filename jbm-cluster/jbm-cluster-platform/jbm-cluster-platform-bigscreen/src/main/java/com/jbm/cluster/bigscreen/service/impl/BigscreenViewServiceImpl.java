@@ -1,9 +1,13 @@
 package com.jbm.cluster.bigscreen.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.StreamProgress;
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpDownloader;
 import cn.hutool.http.HttpUtil;
@@ -12,12 +16,22 @@ import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import com.jbm.util.PathUtils;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * @Author: auto generate by jbm
@@ -61,6 +75,20 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     private File downloadZip(final BigscreenView bigscreenView) {
         File zip = this.getViewZip(bigscreenView);
+        if (StrUtil.isNotBlank(bigscreenView.getResourcePath())) {
+            //如果是HTTP请求
+            if (HttpUtil.isHttp(bigscreenView.getResourcePath()) || HttpUtil.isHttps(bigscreenView.getResourcePath())) {
+                //如果已经是HTTP请求则放弃处理
+            } else {
+                String fileName = FileNameUtil.getName(bigscreenView.getResourcePath());
+                String docAddress = this.getDocAddress();
+                StringBuffer urlBuffer = new StringBuffer(docAddress);
+                urlBuffer.append("/download/").append(fileName);
+                log.info("直接转换文档服务器下载地址:{}", urlBuffer.toString());
+                bigscreenView.setResourcePath(urlBuffer.toString());
+            }
+        }
+
         HttpDownloader.downloadFile(bigscreenView.getResourcePath(), zip, 60, new StreamProgress() {
             @Override
             public void start() {
@@ -69,7 +97,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
             @Override
             public void progress(long l) {
-                log.debug("已下载{}bytes", l);
+                log.debug("已下载[{}]bytes", l);
             }
 
             @Override
@@ -138,8 +166,46 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         return super.deleteById(id);
     }
 
+    @Resource
+    private DiscoveryClient discoveryClient;
+
+    public String getDocAddress() {
+        List<ServiceInstance> instances = discoveryClient.getInstances("jbm-cluster-platform-doc");
+//        for (ServiceInstance instance : instances) {
+//            log.info(instance.getServiceId());
+//            log.info(instance.getHost());
+//            log.info(instance.getUri().toString());
+//        }
+        ServiceInstance instance = CollUtil.getFirst(instances);
+        if (ObjectUtil.isEmpty(instance)) {
+            throw new ServiceException("文档服务器不在线");
+        }
+        return instance.getUri().toString();
+    }
+
+
     @Override
     public BigscreenView saveEntity(BigscreenView bigscreenView) {
+//        try {
+//            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//            if (StrUtil.isNotBlank(bigscreenView.getResourcePath())) {
+//                //如果是HTTP请求
+//                if (HttpUtil.isHttp(bigscreenView.getResourcePath()) || HttpUtil.isHttps(bigscreenView.getResourcePath())) {
+////如果已经是HTTP请求则放弃处理
+//                } else {
+//                    String requestUrl = request.getRequestURL().toString();
+//                    StringBuffer sb = new StringBuffer("http://");
+//                    if (HttpUtil.isHttps(requestUrl)) {
+//                        sb = new StringBuffer("https://");
+//                    }
+//                    sb.append(request.getContextPath());
+//                    sb.append(bigscreenView.getResourcePath());
+//                    bigscreenView.setResourcePath(sb.toString());
+//                }
+//            }
+//        } catch (Exception e) {
+//            log.warn("没有获取到请求");
+//        }
         Boolean isNew = ObjectUtil.isEmpty(bigscreenView.getId());
         //如果存在父级节点
         if (!ObjectUtil.isEmpty(bigscreenView.getParentId())) {
@@ -216,6 +282,8 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         File zipFile = null;
         try {
             zipFile = this.downloadZip(bigscreenView);
+        } catch (ServiceException e) {
+            throw e;
         } catch (Exception e) {
             throw new ServiceException("下载资源包错误", e);
         }

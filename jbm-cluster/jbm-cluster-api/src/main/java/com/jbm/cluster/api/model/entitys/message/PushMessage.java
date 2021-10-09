@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 
 /**
+ * 站内信
+ *
  * @program: JBM6
  * @author: wesley.zhang
  * @create: 2020-03-04 21:21
@@ -20,7 +22,7 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("push_message")
-@ApiModel("推送消息")
+@ApiModel("站内信")
 public class PushMessage extends MasterDataCodeEntity implements Notification {
 
     /**
@@ -38,6 +40,11 @@ public class PushMessage extends MasterDataCodeEntity implements Notification {
      */
     @ApiModelProperty("标题")
     private String title;
+    /**
+     * 标签组：a,b,c
+     */
+    @ApiModelProperty("标签组")
+    private String tags;
     /**
      * 内容
      */

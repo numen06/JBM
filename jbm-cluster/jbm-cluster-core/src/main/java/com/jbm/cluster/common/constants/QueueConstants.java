@@ -11,4 +11,6 @@ public class QueueConstants {
     public static final String QUEUE_SCAN_API_RESOURCE = "cloud.scan.api.resource";
     public static final String QUEUE_ACCESS_LOGS = "cloud.access.logs";
     public static final String QUEUE_PUSH_MESSAGE = "cloud.push.message";
+    public static final String QUEUE_CLUSTER_EVENT = "cluster.event";
+    public static final String QUEUE_CLUSTER_EVENT_EXCHANGE = QUEUE_CLUSTER_EVENT + ".exchange";
 }

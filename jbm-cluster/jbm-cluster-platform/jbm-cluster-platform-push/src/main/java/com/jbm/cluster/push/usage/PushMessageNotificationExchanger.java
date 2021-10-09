@@ -1,12 +1,9 @@
 package com.jbm.cluster.push.usage;
 
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.entitys.message.MqttNotification;
-import com.jbm.cluster.api.model.entitys.message.Notification;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
+import com.jbm.cluster.api.model.entitys.message.Notification;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -20,13 +17,13 @@ import org.springframework.util.Assert;
  * @date 2018-3-27
  **/
 @Slf4j
-public class MqttNotificationExchanger implements NotificationExchanger {
+public class PushMessageNotificationExchanger implements NotificationExchanger {
 
     private RealMqttPahoClientFactory realMqttPahoClientFactory;
 
     private IMqttClient mqttClient;
 
-    public MqttNotificationExchanger(RealMqttPahoClientFactory realMqttPahoClientFactory) {
+    public PushMessageNotificationExchanger(RealMqttPahoClientFactory realMqttPahoClientFactory) {
         if (realMqttPahoClientFactory != null) {
             log.info("初始化站内消息通知");
         }
@@ -42,27 +39,21 @@ public class MqttNotificationExchanger implements NotificationExchanger {
 
     @Override
     public boolean support(Object notification) {
-        return notification.getClass().equals(MqttNotification.class);
+        return notification.getClass().equals(PushMessage.class);
     }
 
     @Override
     public boolean exchange(Notification notification) {
         Assert.notNull(realMqttPahoClientFactory, "MQTT链接未初始化");
-        MqttNotification mqttNotification = (MqttNotification) notification;
+        PushMessage mqttNotification = (PushMessage) notification;
         MqttMessage message = new MqttMessage();
-        if (ObjectUtil.isEmpty(mqttNotification)) {
-            mqttNotification.setBody("");
-        }
-        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody()));
-        message.setQos(mqttNotification.getQos());
+        message.setPayload(JSON.toJSONBytes(notification));
+        String topic = "user/" + mqttNotification.getRecUserId();
         try {
-            if (StrUtil.isBlank(mqttNotification.getTopic())) {
-                throw new NullPointerException("没有指定Topic");
-            }
-            mqttClient.publish(mqttNotification.getTopic(), message);
-            log.info("发送MQTT通知:{}", mqttNotification.getTopic());
+            mqttClient.publish(topic, message);
+            log.info("发送:{}成功", topic);
         } catch (Exception e) {
-            log.error("发送MQTT通知错误", e);
+            log.error("发送站内信错误", e);
             return false;
         }
         return true;

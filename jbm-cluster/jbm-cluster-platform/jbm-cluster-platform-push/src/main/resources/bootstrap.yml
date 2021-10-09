@@ -2,7 +2,7 @@ server:
   port: 3313
 spring:
   application:
-    name: ${artifactId}
+    name: ${artifactId}1
   cloud:
     #手动配置Bus id,
     bus:

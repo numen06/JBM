@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableFeignClients("com.jbm.cluster.push.fegin")
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableScheduling
 @EntityScan(basePackageClasses = {PushMessage.class})
 @EnableTransactionManagement
 @EnableCodeAutoGeneate(entityPackageClasses = {PushMessage.class}, targetPackage = "com.jbm.cluster.push")

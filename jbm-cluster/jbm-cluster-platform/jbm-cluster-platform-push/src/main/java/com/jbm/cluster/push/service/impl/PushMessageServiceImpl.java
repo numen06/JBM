@@ -2,7 +2,6 @@ package com.jbm.cluster.push.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
-import com.jbm.cluster.node.client.NotificationClient;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.cluster.push.service.PushMessageService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -22,8 +21,6 @@ import java.util.List;
 @Service
 public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> implements PushMessageService {
 
-    @Autowired
-    private NotificationClient notificationClient;
     @Autowired
     private NotificationDispatcher dispatcher;
 
