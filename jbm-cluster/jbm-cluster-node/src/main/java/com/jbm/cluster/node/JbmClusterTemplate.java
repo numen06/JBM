@@ -23,6 +23,7 @@ public class JbmClusterTemplate {
     //    @Autowired
     private ApplicationContext applicationContext;
 
+
     /**
      * 接收集群事件
      *
