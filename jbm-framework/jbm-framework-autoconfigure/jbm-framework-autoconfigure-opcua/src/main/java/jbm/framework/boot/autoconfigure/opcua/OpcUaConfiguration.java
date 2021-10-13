@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 //@Configuration
 @EnableConfigurationProperties(OpcUaProperties.class)
-@ConditionalOnProperty(prefix = "opc", name = "clients", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "opcua", name = "enabled", matchIfMissing = false)
 public class OpcUaConfiguration {
 
     @Bean

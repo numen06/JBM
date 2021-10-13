@@ -178,6 +178,12 @@
                 <artifactId>jbm-framework-autoconfigure-mail</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-opcua</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-baidu-ocr</artifactId>

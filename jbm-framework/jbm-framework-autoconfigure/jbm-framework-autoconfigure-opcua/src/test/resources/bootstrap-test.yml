@@ -1,0 +1,6 @@
+opcua:
+  enabled: true
+  clients:
+    junyi:
+      url: opc.tcp://127.0.0.1:48020
+      point-file: test.csv

@@ -119,6 +119,10 @@ public class OpcUaTemplate {
         } catch (Exception e) {
             log.error("get opc ua client error: {}", e.getMessage());
         }
+        if (!clientMap.containsKey(deviceId)) {
+            log.error("not found opcua client in cache");
+            return null;
+        }
         return clientMap.get(deviceId).getOpcUaClient();
     }
 
