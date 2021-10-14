@@ -133,7 +133,7 @@ public class OpcUaTemplate {
     public String readItem(String deviceId, String pointName) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
         OpcPoint point = opcUaClientBean.findPoint(pointName);
-        log.info("OPCUA读取点位:{}", JSON.toJSONString(point));
+
         return this.readItem(deviceId, point);
     }
 
@@ -144,17 +144,17 @@ public class OpcUaTemplate {
         NodeId nodeId = new NodeId(namespace, tag);
         CompletableFuture<String> value = new CompletableFuture<>();
         OpcUaClient client = getOpcUaClient(deviceId);
-
+        log.info("start read point(ns={};s={})", namespace, tag);
         client.connect().get();
         client.readValue(0.0, TimestampsToReturn.Both, nodeId).thenAccept(dataValue -> {
             try {
                 value.complete(dataValue.getValue().getValue().toString());
             } catch (Exception e) {
-                log.error("accept point(ns={};s={}) value error: {}", namespace, tag, e.getMessage());
+                log.error("accept point(ns={};s={}) value error", namespace, tag, e);
             }
         });
         String rawValue = value.get(3, TimeUnit.SECONDS);
-        log.debug("read point(ns={};s={}) value: {}", namespace, tag, rawValue);
+        log.info("end read point(ns={};s={}) value: {}", namespace, tag, rawValue);
         return rawValue;
 
     }

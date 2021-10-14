@@ -13,12 +13,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OpcPoint {
 
+    /**
+     * 命名空间
+     */
     private Integer namespace;
 
+    /**
+     * 点位名称
+     */
     private String tagName;
-
+    /**
+     * 数据类型
+     */
     private String dataType;
 
+    /**
+     * 别名
+     */
+    private String alias;
+    /**
+     * 数值
+     */
     private Object value;
 
     public OpcPoint(Integer namespace, String tagName, String dataType) {

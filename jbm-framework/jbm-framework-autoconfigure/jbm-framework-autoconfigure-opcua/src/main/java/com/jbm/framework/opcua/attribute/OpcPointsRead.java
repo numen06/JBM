@@ -30,14 +30,29 @@ public class OpcPointsRead {
             csvData.forEach(new Consumer<CsvRow>() {
                 @Override
                 public void accept(CsvRow csvRow) {
-                    Integer namespace = Integer.valueOf(csvRow.getByName("namespace"));
+                    Integer namespace = 3;
+                    if (csvData.getHeader().contains("namespace")) {
+                        String temp = csvRow.getByName("namespace");
+                        if (StrUtil.isNotBlank(temp)) {
+                            namespace = Integer.valueOf(csvRow.getByName("namespace"));
+                        }
+                    }
                     String tagName = csvRow.getByName("name");
                     String dataType = csvRow.getByName("type");
                     List<String> nameArr = StrUtil.split(tagName, ".");
-                    String simpleName = CollUtil.getLast(nameArr);
+                    //默认读取最后一个字段
+                    String alias = CollUtil.getLast(nameArr);
+                    //如果存在别名则读取
+                    if (csvData.getHeader().contains("alias")) {
+                        String temp = csvRow.getByName("alias");
+                        if (StrUtil.isNotBlank(temp)) {
+                            alias = temp;
+                        }
+                    }
                     tagName = StrUtil.concat(true, "\"", StrUtil.join("\".\"", nameArr), "\"");
                     OpcPoint attributeInfo = new OpcPoint(namespace, tagName, dataType);
-                    points.put(simpleName, attributeInfo);
+                    attributeInfo.setAlias(alias);
+                    points.put(alias, attributeInfo);
                 }
             });
         } catch (Exception e) {
