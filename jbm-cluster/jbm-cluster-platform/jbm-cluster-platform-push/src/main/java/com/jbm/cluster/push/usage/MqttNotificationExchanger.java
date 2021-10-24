@@ -60,9 +60,9 @@ public class MqttNotificationExchanger implements NotificationExchanger {
                 throw new NullPointerException("没有指定Topic");
             }
             mqttClient.publish(mqttNotification.getTopic(), message);
-            log.info("发送MQTT通知:{}", mqttNotification.getTopic());
+            log.info("发送MQTT通知成功:{}", JSON.toJSONString(notification));
         } catch (Exception e) {
-            log.error("发送MQTT通知错误", e);
+            log.error("发送MQTT通知错误:{}", JSON.toJSONString(notification), e);
             return false;
         }
         return true;

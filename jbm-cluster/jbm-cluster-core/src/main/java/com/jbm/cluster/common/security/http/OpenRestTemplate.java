@@ -24,6 +24,7 @@ public class OpenRestTemplate extends RestTemplate {
     private JbmClusterProperties common;
     private ApplicationEventPublisher publisher;
     private BusProperties busProperties;
+
     public OpenRestTemplate(JbmClusterProperties common, BusProperties busProperties, ApplicationEventPublisher publisher) {
         this.common = common;
         this.publisher = publisher;
@@ -36,6 +37,7 @@ public class OpenRestTemplate extends RestTemplate {
      * @return
      */
     public OAuth2RestTemplate buildOAuth2ClientRequest() {
+        log.info("获取到应用程序认证信息:[{}],URL:[{}]", common.getClientId(), common.getAccessTokenUri());
         return buildOAuth2ClientRequest(common.getClientId(), common.getClientSecret(), common.getAccessTokenUri());
     }
 
@@ -99,7 +101,7 @@ public class OpenRestTemplate extends RestTemplate {
      */
     public void refreshGateway() {
         try {
-            publisher.publishEvent(new RemoteRefreshRouteEvent(this,busProperties.getId(),null));
+            publisher.publishEvent(new RemoteRefreshRouteEvent(this, busProperties.getId(), null));
             log.info("refreshGateway:success");
         } catch (Exception e) {
             log.error("refreshGateway error:{}", e.getMessage());

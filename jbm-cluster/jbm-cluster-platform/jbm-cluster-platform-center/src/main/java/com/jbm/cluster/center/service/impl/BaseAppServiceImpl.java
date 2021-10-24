@@ -246,13 +246,13 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         jdbcClientDetailsService.removeClientDetails(appInfo.getApiKey());
     }
 
-    public static void main(String[] args) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String apiKey = String.valueOf(RandomValueUtils.randomAlphanumeric(24));
-        String secretKey = String.valueOf(RandomValueUtils.randomAlphanumeric(32));
-        System.out.println("apiKey=" + apiKey);
-        System.out.println("secretKey=" + secretKey);
-        System.out.println("encodeSecretKey=" + encoder.encode(secretKey));
-    }
+//    public static void main(String[] args) {
+//        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+//        String apiKey = String.valueOf(RandomValueUtils.randomAlphanumeric(24));
+//        String secretKey = String.valueOf(RandomValueUtils.randomAlphanumeric(32));
+//        System.out.println("apiKey=" + apiKey);
+//        System.out.println("secretKey=" + secretKey);
+//        System.out.println("encodeSecretKey=" + encoder.encode(secretKey));
+//    }
 
 }

@@ -51,6 +51,13 @@ public class MqAutoConfiguration {
     }
 
     @Bean
+    public Queue dicResourceQueue() {
+        Queue queue = new Queue(QueueConstants.QUEUE_SCAN_DIC_RESOURCE);
+        log.info("Query {} [{}]", QueueConstants.QUEUE_SCAN_DIC_RESOURCE, queue);
+        return queue;
+    }
+
+    @Bean
     public Queue pushEventQueue() {
         Queue queue = new Queue(QueueConstants.QUEUE_CLUSTER_EVENT + "." + appTitle);
         log.info("Query {} [{}]", queue.getName(), queue);

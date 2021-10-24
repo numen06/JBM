@@ -1,5 +1,7 @@
 package com.jbm.cluster.center;
 
+import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
+import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.model.entity.BaseDic;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
@@ -24,6 +26,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 //@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
 @EntityScan(basePackages = {"com.jbm.cluster.api.model"})
 @MapperScan(basePackageClasses = BaseMenuMapper.class)
+//@EnableJbmDictionary(basePackageClasses = OrgType.class)
 @EnableCodeAutoGeneate(entityPackageClasses = {BaseDic.class}, targetPackage = "com.jbm.cluster.center")
 public class JbmCenterApplication {
 

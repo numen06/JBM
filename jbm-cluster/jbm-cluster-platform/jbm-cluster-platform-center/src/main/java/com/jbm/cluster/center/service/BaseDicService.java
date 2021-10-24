@@ -12,4 +12,8 @@ import java.util.Map;
  */
 public interface BaseDicService extends IMasterDataTreeService<BaseDic> {
     Map<String, List<BaseDic>> getDicMap();
+
+    BaseDic getBaseDicType(String code);
+
+    BaseDic getBaseDic(Long parentId, String code);
 }

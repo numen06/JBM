@@ -31,6 +31,10 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
         </dependency>
         <dependency>
@@ -43,8 +47,13 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-dictionary</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-micro-server</artifactId>
         </dependency>
+
         <!--阿里巴巴 nacos 服务发现-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

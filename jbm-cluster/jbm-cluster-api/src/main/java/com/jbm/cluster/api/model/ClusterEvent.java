@@ -1,5 +1,6 @@
 package com.jbm.cluster.api.model;
 
+import cn.hutool.core.net.NetUtil;
 import com.alibaba.fastjson.JSON;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

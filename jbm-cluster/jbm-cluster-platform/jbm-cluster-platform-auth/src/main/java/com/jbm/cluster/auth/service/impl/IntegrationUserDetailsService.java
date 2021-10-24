@@ -8,6 +8,7 @@ import com.jbm.cluster.auth.integration.IntegrationAuthenticator;
 import com.jbm.cluster.auth.service.AccountUtils;
 import com.jbm.cluster.common.security.OpenUserDetails;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +24,7 @@ import java.util.List;
  * @date 2018-3-7
  **/
 @Service
+@Slf4j
 public class IntegrationUserDetailsService implements UserDetailsService {
 
     @Autowired
@@ -45,6 +47,7 @@ public class IntegrationUserDetailsService implements UserDetailsService {
         integrationAuthentication.setUsername(username);
         UserAccount sysUserAuthentication = this.authenticate(integrationAuthentication);
         if (sysUserAuthentication == null) {
+            log.warn("用户名密码错误");
             throw new UsernameNotFoundException("用户名或密码错误");
         }
         OpenUserDetails userDetails = AccountUtils.setAuthorize(sysUserAuthentication, username);

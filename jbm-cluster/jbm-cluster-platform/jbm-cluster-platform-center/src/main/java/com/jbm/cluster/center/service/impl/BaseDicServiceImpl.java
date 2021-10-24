@@ -1,8 +1,10 @@
 package com.jbm.cluster.center.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.model.entity.BaseDic;
 import com.jbm.cluster.center.service.BaseDicService;
+import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -37,4 +39,21 @@ public class BaseDicServiceImpl extends MasterDataTreeServiceImpl<BaseDic> imple
     public BaseDic saveEntity(BaseDic entity) {
         return super.saveEntity(entity);
     }
+
+    @Override
+    public BaseDic getBaseDicType(String code) {
+        QueryWrapper<BaseDic> queryWrapper = currentQueryWrapper();
+        queryWrapper.isNull(EntityUtils.toDbName(BaseDic::getParentId));
+        queryWrapper.eq(EntityUtils.toDbName(BaseDic::getCode), code);
+        return this.selectEntityByWapper(queryWrapper);
+    }
+
+    @Override
+    public BaseDic getBaseDic(Long parentId, String code) {
+        QueryWrapper<BaseDic> queryWrapper = currentQueryWrapper();
+        queryWrapper.eq(EntityUtils.toDbName(BaseDic::getParentId), parentId);
+        queryWrapper.eq(EntityUtils.toDbName(BaseDic::getCode), code);
+        return this.selectEntityByWapper(queryWrapper);
+    }
+
 }

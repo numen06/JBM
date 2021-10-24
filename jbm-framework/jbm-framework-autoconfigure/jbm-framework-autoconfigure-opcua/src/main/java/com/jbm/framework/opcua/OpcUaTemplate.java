@@ -1,5 +1,6 @@
 package com.jbm.framework.opcua;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -19,14 +20,12 @@ import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.UaException;
-import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
-import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
-import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
-import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
+import org.eclipse.milo.opcua.stack.core.types.builtin.*;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateRequest;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
+import org.eclipse.milo.opcua.stack.core.types.structured.Node;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -203,14 +202,14 @@ public class OpcUaTemplate {
     }
 
 
-    public <T extends ValueChanageEvent> void putEvent(String deviceId, OpcPoint point, Class<T> callBackEvent) {
-        String key = String.format("%s-%s-%s", deviceId, point.getNamespace(), point.getTagName());
-        if (this.nodeEvents.containsKey(key)) {
-            this.nodeEvents.get(key).add(callBackEvent);
-        } else {
-            this.nodeEvents.put(key, Lists.newArrayList(callBackEvent));
-        }
-    }
+//    public <T extends ValueChanageEvent> void putEvent(String deviceId, NodeId point, Class<T> callBackEvent) {
+//        String key = String.format("%s-%s-%s", deviceId, point.getNamespaceIndex(), point.getIdentifier());
+//        if (this.nodeEvents.containsKey(key)) {
+//            this.nodeEvents.get(key).add(callBackEvent);
+//        } else {
+//            this.nodeEvents.put(key, Lists.newArrayList(callBackEvent));
+//        }
+//    }
 
     public <T extends ValueChanageEvent> void putEvent(UaMonitoredItem item, Class<T> callBackEvent) {
         String key = item.getMonitoredItemId().toString();
@@ -220,6 +219,21 @@ public class OpcUaTemplate {
             this.nodeEvents.put(key, Lists.newArrayList(callBackEvent));
         }
     }
+
+
+    /**
+     * 创建监听器
+     *
+     * @param client
+     * @return
+     */
+    public UaSubscription getSubscription(OpcUaClient client) throws ExecutionException, InterruptedException {
+        UaSubscription subscription = CollUtil.getFirst(client.getSubscriptionManager().getSubscriptions());
+        if (subscription == null)
+            subscription = client.getSubscriptionManager().createSubscription(1000.0).get();
+        return subscription;
+    }
+
 
     /**
      * 订阅节点
@@ -233,24 +247,8 @@ public class OpcUaTemplate {
             NodeId nodeId = new NodeId(namespace, tag);
             client = getOpcUaClient(deviceId);
             client.connect().get();
-            //创建发布间隔1000ms的订阅对象
-            UaSubscription subscription = client.getSubscriptionManager().createSubscription(1000.0).get();
-            ReadValueId readValueId = new ReadValueId(nodeId, AttributeId.Value.uid(), null, null);
-            MonitoringParameters parameters = new MonitoringParameters(
-                    uint(1),
-                    1000.0,
-                    null,
-                    uint(10),
-                    true
-            );
-            //创建监控item, 第一个为Reporting mode
-            MonitoredItemCreateRequest request = new MonitoredItemCreateRequest(readValueId, MonitoringMode.Reporting, parameters);
-            List<UaMonitoredItem> items = subscription.createMonitoredItems(
-                    TimestampsToReturn.Both,
-                    Lists.newArrayList(request),
-                    (item, id) -> item.setValueConsumer(this::onSubscriptionValue)
-            ).get();
-            //循环设置回调事件
+            List<UaMonitoredItem> items = this.createItemMonitored(client, nodeId);
+//            //循环设置回调事件
             for (UaMonitoredItem item : items) {
                 this.putEvent(item, callBackEvent);
             }
@@ -259,8 +257,33 @@ public class OpcUaTemplate {
         }
     }
 
+    private List<UaMonitoredItem> createItemMonitored(OpcUaClient client, NodeId nodeId) throws ExecutionException, InterruptedException {
+        //创建发布间隔1000ms的订阅对象
+        UaSubscription subscription = this.getSubscription(client);
+        MonitoringParameters parameters = new MonitoringParameters(
+                uint(subscription.getMonitoredItems().size() + 1),
+                1000.0,
+                null,
+                uint(10),
+                true
+        );
+        List<MonitoredItemCreateRequest> requests = Lists.newArrayList();
+        ReadValueId readValueId = new ReadValueId(nodeId, AttributeId.Value.uid(), null, null);
+        //创建监控item, 第一个为Reporting mode
+        MonitoredItemCreateRequest request = new MonitoredItemCreateRequest(readValueId, MonitoringMode.Reporting, parameters);
+        requests.add(request);
+        List<UaMonitoredItem> items = subscription.createMonitoredItems(
+                TimestampsToReturn.Both,
+                requests,
+                (item, id) -> item.setValueConsumer(this::onSubscriptionValue)
+        ).get();
+        log.info("监听器[{}]监听数量:{}", subscription.getSubscriptionId(), subscription.getMonitoredItems().size());
+        return items;
+    }
+
+
     private void onSubscriptionValue(UaMonitoredItem item, DataValue value) {
-        log.info("回调：subscription value received: item={}, value={}",
+        log.info("OPC数据变化回调：subscription value received: item={}, value={}",
                 item.getReadValueId().getNodeId(), value.getValue());
         String key = item.getMonitoredItemId().toString();
         if (this.nodeEvents.containsKey(key)) {

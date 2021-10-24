@@ -1,10 +1,12 @@
 package com.jbm.cluster.api.constants;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.jbm.framework.dictionary.annotation.JbmDicType;
 
 /***
  * 授权类型
  */
+@JbmDicType(typeName = "授权类型")
 public enum AccountType {
 
     username("用户名密码"), mobile("手机号"), email("邮箱"), weixin("微信"), weibo("微博"), qq("QQ");

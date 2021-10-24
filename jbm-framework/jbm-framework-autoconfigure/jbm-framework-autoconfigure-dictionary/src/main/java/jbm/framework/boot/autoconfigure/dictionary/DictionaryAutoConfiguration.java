@@ -13,23 +13,12 @@ import javax.annotation.Resource;
 
 @Configuration
 @Order(-1)
-//@AutoConfigureBefore(DataSourceAutoConfiguration.class)
-//@ConditionalOnProperty(prefix = DictionaryProperties.PREFIX, name = "basepackage")
 @EnableConfigurationProperties({DictionaryProperties.class})
 public class DictionaryAutoConfiguration {
-    // private final static Logger logger =
-    // LoggerFactory.getLogger(DictionaryAutoConfiguration.class);
 
-
-    @Autowired
-    private DictionaryProperties dictionaryProperties;
 
     @Resource
     private EnumScanPackages enumScanPackages;
-
-    // private RealRestTemplate realRestTemplate =
-    // RestTemplateFactory.getInstance().createRealRestTemplate();
-
 
     /**
      * 常量发现和共享

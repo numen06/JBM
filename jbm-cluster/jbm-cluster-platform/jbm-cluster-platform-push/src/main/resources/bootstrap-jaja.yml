@@ -12,12 +12,12 @@ spring:
         #        group: ${config.group}
         server-addr: ${discovery.server-addr}
 #        ip: 10.100.50.2
-dubbo:
-  protocol:
-    name: dubbo
-    port: -1
-  registry:
-      address: spring-cloud://10.23.100.20
+#dubbo:
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#      address: spring-cloud://10.23.100.20
 
 logging:
   logstash:

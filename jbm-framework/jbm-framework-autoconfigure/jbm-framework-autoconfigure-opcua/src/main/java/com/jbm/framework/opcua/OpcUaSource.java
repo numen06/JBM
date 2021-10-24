@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class OpcUaSource {
+    private Boolean enabled  = false;
     private String url;
     private String host;
     private Integer port = 4840;

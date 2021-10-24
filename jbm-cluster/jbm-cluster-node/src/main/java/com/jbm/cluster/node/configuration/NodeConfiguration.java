@@ -1,5 +1,6 @@
 package com.jbm.cluster.node.configuration;
 
+import com.jbm.autoconfig.dic.DictionaryTemplate;
 import com.jbm.cluster.common.annotation.RequestMappingScan;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.common.configuration.JbmIdGenProperties;
@@ -11,11 +12,14 @@ import com.jbm.cluster.common.health.DbHealthIndicator;
 import com.jbm.cluster.common.security.OpenUserConverter;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
+import com.jbm.cluster.node.configuration.cluster.ClusterDicScan;
 import com.jbm.cluster.node.configuration.fegin.FeignRequestOAuth2Interceptor;
 import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -91,7 +95,7 @@ public class NodeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(OAuth2ExceptionHandler.class)
-    public OAuth2ExceptionHandler exceptionHandler() {
+    public OAuth2ExceptionHandler oAuth2ExceptionHandler() {
         OAuth2ExceptionHandler exceptionHandler = new OAuth2ExceptionHandler();
         log.info("OpenGlobalExceptionHandler [{}]", exceptionHandler);
         return exceptionHandler;
@@ -149,6 +153,14 @@ public class NodeConfiguration {
     public RequestMappingScan resourceAnnotationScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
         RequestMappingScan scan = new RequestMappingScan(amqpTemplate, scanProperties);
         log.info("RequestMappingScan [{}]", scan);
+        return scan;
+    }
+
+    @Bean
+    @ConditionalOnBean(DictionaryTemplate.class)
+    public ClusterDicScan clusterDicScan(AmqpTemplate amqpTemplate, DictionaryTemplate dictionaryTemplate) {
+        ClusterDicScan scan = new ClusterDicScan(dictionaryTemplate, amqpTemplate);
+        log.info("ClusterDicScan [{}]", scan);
         return scan;
     }
 

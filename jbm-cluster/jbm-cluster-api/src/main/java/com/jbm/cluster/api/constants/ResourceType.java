@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.constants;
 
+import com.jbm.framework.dictionary.annotation.JbmDicType;
+
 /**
  * 资源类型
  */
