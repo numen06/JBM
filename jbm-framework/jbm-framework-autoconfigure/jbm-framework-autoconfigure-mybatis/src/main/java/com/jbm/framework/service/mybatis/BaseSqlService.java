@@ -10,6 +10,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.UpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -33,7 +37,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
+
 /**
  * @author: wesley.zhang
  * @date: 2018/12/24 12:49
@@ -229,6 +236,126 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return super.updateBatchById(entityList);
     }
 
+    @Override
+    public Entity getById(Serializable id) {
+        return IService.super.getById(id);
+    }
+
+    @Override
+    public List<Entity> listByIds(Collection<? extends Serializable> idList) {
+        return IService.super.listByIds(idList);
+    }
+
+    @Override
+    public List<Entity> listByMap(Map<String, Object> columnMap) {
+        return IService.super.listByMap(columnMap);
+    }
+
+    @Override
+    public Entity getOne(Wrapper<Entity> queryWrapper) {
+        return IService.super.getOne(queryWrapper);
+    }
+
+    @Override
+    public int count() {
+        return IService.super.count();
+    }
+
+    @Override
+    public int count(Wrapper<Entity> queryWrapper) {
+        return IService.super.count(queryWrapper);
+    }
+
+    @Override
+    public List<Entity> list(Wrapper<Entity> queryWrapper) {
+        return IService.super.list(queryWrapper);
+    }
+
+    @Override
+    public List<Entity> list() {
+        return IService.super.list();
+    }
+
+    @Override
+    public <E extends IPage<Entity>> E page(E page, Wrapper<Entity> queryWrapper) {
+        return IService.super.page(page, queryWrapper);
+    }
+
+    @Override
+    public <E extends IPage<Entity>> E page(E page) {
+        return IService.super.page(page);
+    }
+
+    @Override
+    public List<Map<String, Object>> listMaps(Wrapper<Entity> queryWrapper) {
+        return IService.super.listMaps(queryWrapper);
+    }
+
+    @Override
+    public List<Map<String, Object>> listMaps() {
+        return IService.super.listMaps();
+    }
+
+    @Override
+    public List<Object> listObjs() {
+        return IService.super.listObjs();
+    }
+
+    @Override
+    public <V> List<V> listObjs(Function<? super Object, V> mapper) {
+        return IService.super.listObjs(mapper);
+    }
+
+    @Override
+    public List<Object> listObjs(Wrapper<Entity> queryWrapper) {
+        return IService.super.listObjs(queryWrapper);
+    }
+
+    @Override
+    public <V> List<V> listObjs(Wrapper<Entity> queryWrapper, Function<? super Object, V> mapper) {
+        return IService.super.listObjs(queryWrapper, mapper);
+    }
+
+    @Override
+    public <E extends IPage<Map<String, Object>>> E pageMaps(E page, Wrapper<Entity> queryWrapper) {
+        return IService.super.pageMaps(page, queryWrapper);
+    }
+
+    @Override
+    public <E extends IPage<Map<String, Object>>> E pageMaps(E page) {
+        return IService.super.pageMaps(page);
+    }
+
+    @Override
+    public QueryChainWrapper<Entity> query() {
+        return IService.super.query();
+    }
+
+    @Override
+    public LambdaQueryChainWrapper<Entity> lambdaQuery() {
+        return IService.super.lambdaQuery();
+    }
+
+    @Override
+    public UpdateChainWrapper<Entity> update() {
+        return IService.super.update();
+    }
+
+    @Override
+    public LambdaUpdateChainWrapper<Entity> lambdaUpdate() {
+        return IService.super.lambdaUpdate();
+    }
+
+    @Override
+    public boolean saveOrUpdate(Entity entity, Wrapper<Entity> updateWrapper) {
+        return IService.super.saveOrUpdate(entity, updateWrapper);
+    }
+
+    @Override
+    public boolean save(Entity entity) {
+        return IService.super.save(entity);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean saveBatch(Collection<Entity> entityList) {
@@ -239,6 +366,41 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public boolean saveOrUpdateBatch(Collection<Entity> entityList) {
         return super.saveOrUpdateBatch(entityList, 50);
+    }
+
+    @Override
+    public boolean removeById(Serializable id) {
+        return IService.super.removeById(id);
+    }
+
+    @Override
+    public boolean removeByMap(Map<String, Object> columnMap) {
+        return IService.super.removeByMap(columnMap);
+    }
+
+    @Override
+    public boolean remove(Wrapper<Entity> queryWrapper) {
+        return IService.super.remove(queryWrapper);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return IService.super.removeByIds(idList);
+    }
+
+    @Override
+    public boolean updateById(Entity entity) {
+        return IService.super.updateById(entity);
+    }
+
+    @Override
+    public boolean update(Wrapper<Entity> updateWrapper) {
+        return IService.super.update(updateWrapper);
+    }
+
+    @Override
+    public boolean update(Entity entity, Wrapper<Entity> updateWrapper) {
+        return IService.super.update(entity, updateWrapper);
     }
 
     @Override

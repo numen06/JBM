@@ -22,6 +22,7 @@ import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
@@ -164,6 +165,7 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
         queryWrapper.in(IMasterDataCodeService.CODE_COLUMN, codes);
         return queryWrapper;
     }
+
 
 
 }
