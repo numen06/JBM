@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
@@ -233,6 +234,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         return super.saveBatch(entityList);
     }
 
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean saveEntitys(Collection<Entity> entityList) {
@@ -409,7 +411,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         executeBatch(sqlSession -> {
             int i = 1;
             for (Entity entity : entityList) {
-                Object idVal = ReflectionKit.getMethodValue(cls, entity, keyProperty);
+                Object idVal = ReflectionKit.getFieldValue(entity, keyProperty);
                 if (StringUtils.checkValNull(idVal) || Objects.isNull(getById((Serializable) idVal))) {
                     sqlSession.insert(sqlStatement(SqlMethod.INSERT_ONE), entity);
                 } else {
@@ -425,6 +427,11 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
             }
         });
         return true;
+    }
+
+    @Override
+    protected Class<Entity> currentMapperClass() {
+        return (Class<Entity>) this.getResolvableType().as(BaseServiceImpl.class).getGeneric(0).getRawClass();
     }
 
 
