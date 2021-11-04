@@ -1,5 +1,8 @@
 package com.jbm.util;
 
+import cn.hutool.core.io.resource.ResourceUtil;
+import com.google.common.collect.Maps;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,9 +13,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
-
-import jodd.util.ClassLoaderUtil;
 
 public class PropertiesUtils {
 
@@ -40,7 +40,7 @@ public class PropertiesUtils {
 	 */
 	public static Properties loadClassPath(String path) throws IOException {
 		Properties pros = new Properties();
-		InputStream in = ClassLoaderUtil.getResourceAsStream(path);
+		InputStream in = ResourceUtil.getStream(path);
 		pros.load(in);
 		in.close();
 		return pros;

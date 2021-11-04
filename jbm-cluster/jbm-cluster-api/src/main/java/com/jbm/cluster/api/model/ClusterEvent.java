@@ -24,6 +24,11 @@ public class ClusterEvent extends ApplicationEvent {
 
     private Date reviceTime;
 
+    /**
+     * 是否验证锁
+     */
+    private Boolean ack = false;
+
     public ClusterEvent() {
         this("JBM Cluster Event");
     }
