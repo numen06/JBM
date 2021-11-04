@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.amqp;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.rabbitmq.client.Channel;
 import jbm.framework.boot.autoconfigure.amqp.usage.FastJsonMessageConverter;
+import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -39,6 +40,13 @@ public class AmqpAutoConfiguration {
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
+        //默认消费者数量
+        factory.setConcurrentConsumers(3);
+        //最大消费者数量
+        factory.setMaxConcurrentConsumers(15);
+        //每次给消费者发送的消息数量
+        factory.setPrefetchCount(1);
+//        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
 //        factory.setMessageConverter(new Jackson2JsonMessageConverter());
         factory.setMessageConverter(new FastJsonMessageConverter());
         return factory;

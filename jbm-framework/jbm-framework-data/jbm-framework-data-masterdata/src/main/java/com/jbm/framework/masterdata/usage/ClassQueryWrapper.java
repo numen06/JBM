@@ -15,7 +15,7 @@ public class ClassQueryWrapper<T> extends QueryWrapper<T> {
 
     public ClassQueryWrapper(Class<T> clazz) {
         super();
-        super.entityClass = clazz;
+        super.setEntityClass(clazz);
     }
 
     public ClassQueryWrapper(T entity) {

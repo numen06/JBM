@@ -14,8 +14,6 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.UpdateChainWrapper;
-import com.baomidou.mybatisplus.extension.kotlin.KtQueryChainWrapper;
-import com.baomidou.mybatisplus.extension.kotlin.KtUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -57,41 +55,6 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public Class<Entity> getEntityClass() {
         return currentModelClass();
-    }
-
-    @Override
-    public QueryChainWrapper<Entity> query() {
-        return IService.super.query();
-    }
-
-    @Override
-    public LambdaQueryChainWrapper<Entity> lambdaQuery() {
-        return IService.super.lambdaQuery();
-    }
-
-    @Override
-    public KtQueryChainWrapper<Entity> ktQuery() {
-        return IService.super.ktQuery();
-    }
-
-    @Override
-    public KtUpdateChainWrapper<Entity> ktUpdate() {
-        return IService.super.ktUpdate();
-    }
-
-    @Override
-    public UpdateChainWrapper<Entity> update() {
-        return IService.super.update();
-    }
-
-    @Override
-    public LambdaUpdateChainWrapper<Entity> lambdaUpdate() {
-        return IService.super.lambdaUpdate();
-    }
-
-    @Override
-    public boolean saveOrUpdate(Entity entity, Wrapper<Entity> updateWrapper) {
-        return IService.super.saveOrUpdate(entity, updateWrapper);
     }
 
     public BaseSqlService() {
@@ -218,7 +181,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     @Override
     public boolean deleteById(Long id) throws DataServiceException {
-        return IService.super.removeById(id);
+        return false;
     }
 
     @Override
@@ -238,7 +201,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     @Override
     public boolean delete(Entity entity) throws DataServiceException {
-        return IService.super.removeById(entity.getId());
+        return false;
     }
 
     @Override
@@ -249,7 +212,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 
     @Override
     public boolean updateByWrapper(Entity entity, Wrapper<Entity> wrapper) throws DataServiceException {
-        return IService.super.saveOrUpdate(entity, wrapper);
+        return false;
     }
 
     @Override
@@ -361,6 +324,31 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public <E extends IPage<Map<String, Object>>> E pageMaps(E page) {
         return IService.super.pageMaps(page);
+    }
+
+    @Override
+    public QueryChainWrapper<Entity> query() {
+        return IService.super.query();
+    }
+
+    @Override
+    public LambdaQueryChainWrapper<Entity> lambdaQuery() {
+        return IService.super.lambdaQuery();
+    }
+
+    @Override
+    public UpdateChainWrapper<Entity> update() {
+        return IService.super.update();
+    }
+
+    @Override
+    public LambdaUpdateChainWrapper<Entity> lambdaUpdate() {
+        return IService.super.lambdaUpdate();
+    }
+
+    @Override
+    public boolean saveOrUpdate(Entity entity, Wrapper<Entity> updateWrapper) {
+        return IService.super.saveOrUpdate(entity, updateWrapper);
     }
 
     @Override
