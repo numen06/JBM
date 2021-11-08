@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
@@ -20,10 +21,14 @@ import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.Emptys;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -216,6 +221,19 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         List<BaseUser> list = baseUserMapper.selectList(new QueryWrapper<>());
         return list;
     }
+
+
+    @Override
+    public List<BaseUser> retrievalUsers(String keyword) {
+        CriteriaQueryWrapper criteriaQueryWrapper = new CriteriaQueryWrapper();
+        criteriaQueryWrapper.like(EntityUtils.toDbName(BaseUser::getUserName), keyword).
+                or().like(EntityUtils.toDbName(BaseUser::getMobile), keyword);
+        PageForm pageForm = new PageForm(1, 10);
+        criteriaQueryWrapper.setPageParams(new PageParams(pageForm));
+        DataPaging<BaseUser> pages = this.selectEntitys(criteriaQueryWrapper);
+        return pages.getContents();
+    }
+
 
     /**
      * 依据系统用户Id查询系统用户信息

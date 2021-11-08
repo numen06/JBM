@@ -1,28 +1,26 @@
 package com.jbm.test;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.archive.Archive;
-import com.jbm.archive.ExplodedArchive;
-import com.jbm.archive.JarFileArchive;
+import com.jbm.util.archive.Archive;
+import com.jbm.util.archive.ExplodedArchive;
+import com.jbm.util.archive.JarFileArchive;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
-import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 public class JarLauncherTests extends AbstractExecutableArchiveLauncherTests {
 
     @Test
     public void explodedJarHasOnlyBootInfClassesAndContentsOfBootInfLibOnClasspath() throws Exception {
-        File jar = new File("D:\\workspaces\\pvop-platform\\pvop-platform-app\\target\\pvop-platform-app.jar");
+        File jar = new File("D:\\workspaces\\jaja-platform\\jaja-aps-platform\\target\\jaja-aps-platform.jar");
 //        Archive archive = new JarFileArchive(jar);
         Archive jarfile = findArchive(jar);
         // get the manifest for that file

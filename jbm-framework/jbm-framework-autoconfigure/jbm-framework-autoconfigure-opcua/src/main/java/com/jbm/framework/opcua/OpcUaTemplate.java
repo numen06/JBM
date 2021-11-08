@@ -12,6 +12,7 @@ import com.jbm.framework.opcua.attribute.OpcPointsRead;
 import com.jbm.framework.opcua.attribute.ValueType;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
 import com.jbm.framework.opcua.key.KeyLoader;
+import com.jbm.framework.opcua.model.NodeEventBean;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
@@ -25,7 +26,6 @@ import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateRequest;
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
-import org.eclipse.milo.opcua.stack.core.types.structured.Node;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -47,7 +47,7 @@ public class OpcUaTemplate {
 
     private Map<String, OpcUaClientBean> clientMap = new ConcurrentHashMap<>(16);
 
-    private Map<String, List<Class>> nodeEvents = new ConcurrentHashMap<>();
+    private Map<String, NodeEventBean> NODE_EVENTS = new ConcurrentHashMap<>();
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -71,12 +71,22 @@ public class OpcUaTemplate {
         }
     }
 
+
     public Map<String, OpcPoint> loadPoints(OpcUaSource opcUaSource) {
         if (StrUtil.isNotBlank(opcUaSource.getPointFile())) {
             OpcPointsRead opcPointsRead = new OpcPointsRead();
             return opcPointsRead.readPoints(opcUaSource.getPointFile());
         }
         return Maps.newConcurrentMap();
+    }
+
+    /**
+     * 获取所有配置的设备
+     *
+     * @return
+     */
+    public List<String> getDeviceIds() {
+        return Lists.newArrayList(clientMap.keySet());
     }
 
 
@@ -211,12 +221,14 @@ public class OpcUaTemplate {
 //        }
 //    }
 
-    public <T extends ValueChanageEvent> void putEvent(UaMonitoredItem item, Class<T> callBackEvent) {
+    public <T extends ValueChanageEvent> void putEvent(String deviceId, UaMonitoredItem item, Class<T> callBackEvent) {
         String key = item.getMonitoredItemId().toString();
-        if (this.nodeEvents.containsKey(key)) {
-            this.nodeEvents.get(key).add(callBackEvent);
+        if (this.NODE_EVENTS.containsKey(key)) {
+            NodeEventBean nodeEventBean = this.NODE_EVENTS.get(key);
+            nodeEventBean.getEventClassList().add(callBackEvent);
         } else {
-            this.nodeEvents.put(key, Lists.newArrayList(callBackEvent));
+            NodeEventBean nodeEventBean = new NodeEventBean(deviceId, Lists.newArrayList(callBackEvent));
+            this.NODE_EVENTS.put(key, nodeEventBean);
         }
     }
 
@@ -250,7 +262,7 @@ public class OpcUaTemplate {
             List<UaMonitoredItem> items = this.createItemMonitored(client, nodeId);
 //            //循环设置回调事件
             for (UaMonitoredItem item : items) {
-                this.putEvent(item, callBackEvent);
+                this.putEvent(deviceId, item, callBackEvent);
             }
         } catch (Exception e) {
             log.error("Opc Ua Point Write Error", e);
@@ -286,10 +298,11 @@ public class OpcUaTemplate {
         log.info("OPC数据变化回调：subscription value received: item={}, value={}",
                 item.getReadValueId().getNodeId(), value.getValue());
         String key = item.getMonitoredItemId().toString();
-        if (this.nodeEvents.containsKey(key)) {
-            List<Class> eventClassList = this.nodeEvents.get(key);
-            for (Class<ValueChanageEvent> eventClass : eventClassList) {
+        if (this.NODE_EVENTS.containsKey(key)) {
+            NodeEventBean nodeEventBean = this.NODE_EVENTS.get(key);
+            for (Class<ValueChanageEvent> eventClass : nodeEventBean.getEventClassList()) {
                 ValueChanageEvent valueChanageEvent = ReflectUtil.newInstance(eventClass, item, value);
+                valueChanageEvent.setDeviceId(nodeEventBean.getDeviceId());
                 applicationContext.publishEvent(valueChanageEvent);
             }
         }
@@ -297,7 +310,6 @@ public class OpcUaTemplate {
 
     private DataValue convertData(OpcPoint point) {
         ValueType valueType = ValueType.valueOf(point.getDataType().toUpperCase());
-
         return this.convertData(valueType, point.getValue());
     }
 

@@ -5,6 +5,7 @@ import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
@@ -64,6 +65,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      */
     List<BaseUser> findAllList();
 
+
+    List<BaseUser> retrievalUsers(String keyword);
 
     /**
      * 根据用户ID获取用户信息
