@@ -11,7 +11,6 @@ import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
-import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -174,20 +173,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         user.setStatus(status);
         baseUserService.updateUser(user);
         return ResultBody.ok();
-    }
-
-
-    /**
-     * 修改用户密码
-     *
-     * @param pageForm
-     * @return
-     */
-    @ApiOperation(value = "检索用户")
-    @PostMapping("/retrievalUsers")
-    public ResultBody retrievalUsers(@RequestBody PageForm pageForm) {
-        List<BaseUser> users = baseUserService.retrievalUsers(pageForm.getKeyword());
-        return ResultBody.ok().data(users).msg("检索用户成功");
     }
 
 

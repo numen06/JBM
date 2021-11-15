@@ -52,7 +52,7 @@
         <curator.version>4.0.1</curator.version>
         <c3p0.version>0.9.1.2</c3p0.version>
         <mqtt.client.version>1.2.1</mqtt.client.version>
-        <mybatis-plus.version>3.3.2</mybatis-plus.version>
+        <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <hutool.version>5.7.9</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>

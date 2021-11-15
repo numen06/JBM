@@ -12,8 +12,6 @@ public class ValueChanageEvent extends ApplicationEvent {
 
     private DataValue dataValue;
 
-    private String deviceId;
-
     /**
      * Create a new ApplicationEvent.
      *

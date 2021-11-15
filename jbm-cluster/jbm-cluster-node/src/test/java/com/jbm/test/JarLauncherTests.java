@@ -20,7 +20,7 @@ public class JarLauncherTests extends AbstractExecutableArchiveLauncherTests {
 
     @Test
     public void explodedJarHasOnlyBootInfClassesAndContentsOfBootInfLibOnClasspath() throws Exception {
-        File jar = new File("D:\\workspaces\\jaja-platform\\jaja-aps-platform\\target\\jaja-aps-platform.jar");
+        File jar = new File("D:\\workspaces\\pvop-platform\\pvop-platform-app\\target\\pvop-platform-app.jar");
 //        Archive archive = new JarFileArchive(jar);
         Archive jarfile = findArchive(jar);
         // get the manifest for that file
