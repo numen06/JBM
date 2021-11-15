@@ -39,6 +39,7 @@ public class IntegrationUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.info("用户开始调用认证服务:{}", username);
         IntegrationAuthentication integrationAuthentication = IntegrationAuthenticationContext.get();
         //判断是否是集成登录
         if (integrationAuthentication == null) {
@@ -53,6 +54,7 @@ public class IntegrationUserDetailsService implements UserDetailsService {
         OpenUserDetails userDetails = AccountUtils.setAuthorize(sysUserAuthentication, username);
         if (ObjectUtil.isEmpty(userDetails.getClientId()))
             userDetails.setClientId(clientProperties.getOauth2().get("admin").getClientId());
+        log.info("用户结束调用认证服务:{}", username);
         return userDetails;
     }
 

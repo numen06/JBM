@@ -111,6 +111,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        }
     }
 
+
     @Override
     public void activationEmailAccount(BaseUser baseUser) {
         BaseUser dbUser = this.getUserById(baseUser.getUserId());

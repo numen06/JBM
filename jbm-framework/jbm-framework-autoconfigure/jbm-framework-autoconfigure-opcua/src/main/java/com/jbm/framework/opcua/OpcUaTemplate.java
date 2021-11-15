@@ -153,7 +153,7 @@ public class OpcUaTemplate {
         NodeId nodeId = new NodeId(namespace, tag);
         CompletableFuture<String> value = new CompletableFuture<>();
         OpcUaClient client = getOpcUaClient(deviceId);
-        log.info("start read point(ns={};s={})", namespace, tag);
+        log.debug("start read point(ns={};s={})", namespace, tag);
         client.connect().get();
         client.readValue(0.0, TimestampsToReturn.Both, nodeId).thenAccept(dataValue -> {
             try {
@@ -163,7 +163,7 @@ public class OpcUaTemplate {
             }
         });
         String rawValue = value.get(3, TimeUnit.SECONDS);
-        log.info("end read point(ns={};s={}) value: {}", namespace, tag, rawValue);
+        log.debug("end read point(ns={};s={}) value: {}", namespace, tag, rawValue);
         return rawValue;
 
     }
@@ -188,7 +188,7 @@ public class OpcUaTemplate {
     public void writeItem(String deviceId, OpcPoint point) {
         OpcUaClient client;
         try {
-            log.info("OPCUA写入点位:{}", JSON.toJSONString(point));
+            log.debug("OPCUA写入点位:{}", JSON.toJSONString(point));
             int namespace = point.getNamespace();
             String tag = point.getTagName();
             NodeId nodeId = new NodeId(namespace, tag);
