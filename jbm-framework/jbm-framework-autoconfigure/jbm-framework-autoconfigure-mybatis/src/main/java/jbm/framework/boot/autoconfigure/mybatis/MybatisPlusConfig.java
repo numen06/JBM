@@ -1,9 +1,9 @@
 package jbm.framework.boot.autoconfigure.mybatis;
 
 import cn.hutool.core.util.ArrayUtil;
-import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusProperties;
-import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.core.parser.ISqlParser;
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.google.common.collect.Sets;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
@@ -38,10 +40,10 @@ public class MybatisPlusConfig {
      * @return
      */
     @Bean
-    public PaginationInnerInterceptor paginationInterceptor() {
-        PaginationInnerInterceptor paginationInterceptor = new PaginationInnerInterceptor();
-        paginationInterceptor.setDbType(DbType.MYSQL);
-//        List<ISqlParser> sqlParserList = new ArrayList<>();
+    public PaginationInterceptor paginationInterceptor() {
+        PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
+        paginationInterceptor.setDialectType("mysql");
+        List<ISqlParser> sqlParserList = new ArrayList<>();
 //		TenantSqlParser tenantSqlParser = new TenantSqlParser();
 //		tenantSqlParser.setTenantHandler(new TenantHandler() {
 //			@Override
@@ -63,7 +65,7 @@ public class MybatisPlusConfig {
 //				return false;
 //			}
 //		});
-//        paginationInterceptor.setSqlParserList(sqlParserList);
+        paginationInterceptor.setSqlParserList(sqlParserList);
 //      paginationInterceptor.setSqlParserFilter(new ISqlParserFilter() {
 //      @Override
 //      public boolean doFilter(MetaObject metaObject) {

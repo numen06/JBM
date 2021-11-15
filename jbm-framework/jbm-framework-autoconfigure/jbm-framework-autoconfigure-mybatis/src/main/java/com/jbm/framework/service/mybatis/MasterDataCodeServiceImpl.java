@@ -1,6 +1,5 @@
 package com.jbm.framework.service.mybatis;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
@@ -36,7 +35,7 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
 
     @Override
     public DataPaging<Entity> findListPage(PageRequestBody pageRequestBody) {
-        Entity query = pageRequestBody.tryGet(this.currentModelClass());
+        Entity query = pageRequestBody.tryGet(super.currentModelClass());
         return this.selectEntitys(query, pageRequestBody.getPageForm());
     }
 
@@ -127,8 +126,8 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
                     cls = anEntityList.getClass();
                     tableInfo = TableInfoHelper.getTableInfo(cls);
                 }
-                if (null != tableInfo && StrUtil.isNotBlank(tableInfo.getKeyProperty())) {
-                    Object codeVal = ReflectionKit.getFieldValue(anEntityList, IMasterDataCodeService.CODE_COLUMN);
+                if (null != tableInfo && StringUtils.isNotEmpty(tableInfo.getKeyProperty())) {
+                    Object codeVal = ReflectionKit.getMethodValue(cls, anEntityList, IMasterDataCodeService.CODE_COLUMN);
                     if (StringUtils.checkValNull(codeVal)) {
                         String sqlStatement = sqlStatement(SqlMethod.INSERT_ONE);
                         batchSqlSession.insert(sqlStatement, anEntityList);
