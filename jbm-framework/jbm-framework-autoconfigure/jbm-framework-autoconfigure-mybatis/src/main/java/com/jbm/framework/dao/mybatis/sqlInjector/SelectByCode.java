@@ -15,7 +15,7 @@ public class SelectByCode extends AbstractMethod {
 
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
-        SqlMethod sqlMethod = SqlMethod.LOGIC_DELETE_BY_ID;
+        SqlMethod sqlMethod = SqlMethod.LOGIC_SELECT_BY_ID;
         SqlSource sqlSource = new RawSqlSource(configuration, String.format(sqlMethod.getSql(),
                 sqlSelectColumns(tableInfo, false),
                 tableInfo.getTableName(), column, column,

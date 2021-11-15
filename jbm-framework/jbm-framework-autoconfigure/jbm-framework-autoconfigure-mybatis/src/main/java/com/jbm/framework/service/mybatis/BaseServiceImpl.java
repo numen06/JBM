@@ -2,7 +2,6 @@ package com.jbm.framework.service.mybatis;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
@@ -14,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Resource;
-import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author: wesley.zhang
@@ -31,25 +27,6 @@ public   class BaseServiceImpl<M extends SuperMapper<T>, T> extends ServiceImpl<
     @Resource
     public SqlSessionTemplate sqlSession;
 
-    @Override
-    public boolean removeById(Serializable id) {
-        return super.removeById(id);
-    }
-
-    @Override
-    public boolean removeByMap(Map<String, Object> columnMap) {
-        return super.removeByMap(columnMap);
-    }
-
-    @Override
-    public boolean removeByIds(Collection<? extends Serializable> idList) {
-        return super.removeByIds(idList);
-    }
-
-    @Override
-    public boolean updateById(T entity) {
-        return super.updateById(entity);
-    }
 
     public IPage pageList(CriteriaQueryWrapper<?> wrapper) {
         PageParams page = wrapper.getPageParams();
