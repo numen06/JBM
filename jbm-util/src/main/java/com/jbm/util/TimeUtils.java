@@ -1,5 +1,7 @@
 package com.jbm.util;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateUtil;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 
@@ -1061,6 +1063,35 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
             nTime = TimeUtils.addDays(nTime, -7);
         }
         return lists;
+    }
+
+    /**
+     * 统计运行时间
+     *
+     * @param beginDate
+     * @param endDate
+     * @return
+     */
+    public static String countRunTime(Date beginDate, Date endDate) {
+        String[] titles = new String[]{"%s天", "%s小时", "%s分", "%s秒", "%s毫秒"};
+        long between = DateUtil.betweenMs(beginDate, endDate);
+//        long week = between / (7 * 24 * 60 * 60 * 1000);
+        long day = between / (24 * 60 * 60 * 1000);
+        long hour = (between / (60 * 60 * 1000) - day * 24);
+        long min = ((between / (60 * 1000)) - day * 24 * 60 - hour * 60);
+        long s = (between / 1000 - day * 24 * 60 * 60 - hour * 60 * 60 - min * 60);
+        long ms = (between - day * 24 * 60 * 60 * 1000 - hour * 60 * 60 * 1000
+                - min * 60 * 1000 - s * 1000);
+        long[] values = new long[]{day, hour, min, s, ms};
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < titles.length; i++) {
+            String title = titles[i];
+            long val = values[i];
+            if (val <= 0)
+                continue;
+            sb.append(String.format(title, val));
+        }
+        return sb.toString();
     }
 
     /**

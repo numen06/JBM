@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Author: auto generate by jbm
  * @Create: ${time}
  */
-@Api(tags = "${entityClass.simpleName}开放接口")
+@Api(tags = "${entityDesc}开放接口")
 @RestController
 @RequestMapping("/${mapping}")
 public class ${entityClass.simpleName}Controller extends ${extClassName}<${entityClass.simpleName}, ${entityClass.simpleName}Service> {

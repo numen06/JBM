@@ -146,7 +146,7 @@ public class JbmClusterTemplate {
             countDownLatch.await(1, TimeUnit.MINUTES);
         } catch (Exception e) {
             log.error("接收到集群事件错误", e);
-            throw e;
+//            throw e;
 //            channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
         } finally {
             this.endClusterEventThread(clusterEvent.getEventId());

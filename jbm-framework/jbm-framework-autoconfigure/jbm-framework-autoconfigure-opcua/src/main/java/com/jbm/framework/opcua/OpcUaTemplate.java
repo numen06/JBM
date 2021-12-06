@@ -79,6 +79,9 @@ public class OpcUaTemplate {
         return Maps.newConcurrentMap();
     }
 
+    public List<String> getDeviceIds() {
+        return Lists.newArrayList(clientMap.keySet());
+    }
 
     public OpcUaClient getOpcUaClient(String deviceId) {
         return this.getOpcUaClient(deviceId, null);
@@ -132,7 +135,6 @@ public class OpcUaTemplate {
     public String readItem(String deviceId, String pointName) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
         OpcPoint point = opcUaClientBean.findPoint(pointName);
-
         return this.readItem(deviceId, point);
     }
 

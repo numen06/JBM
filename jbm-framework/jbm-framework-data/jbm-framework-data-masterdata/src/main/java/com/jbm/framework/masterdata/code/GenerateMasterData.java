@@ -1,14 +1,20 @@
 package com.jbm.framework.masterdata.code;
 
+import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
 import com.jbm.framework.masterdata.usage.entity.*;
+import com.jbm.util.AnnotatedUtils;
 import com.jbm.util.StringUtils;
+import io.swagger.annotations.ApiModel;
 import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
@@ -64,7 +70,7 @@ public class GenerateMasterData {
         this();
         this.entityClass = entityClass;
         this.ignore = this.entityClass.getAnnotationsByType(IgnoreGeneate.class).length > 0;
-        if(ClassUtil.isAbstract(this.entityClass)) {
+        if (ClassUtil.isAbstract(this.entityClass)) {
             this.ignore = true;
         }
         this.basePackage = ClassUtil.getPackage(entityClass);
@@ -99,6 +105,19 @@ public class GenerateMasterData {
         t.binding("mapping", toLowerCaseFirstOne(entityClass.getSimpleName()));
         t.binding("basePackage", basePackage);
         t.binding("time", DateUtil.now());
+
+        try {
+            //获取实体类上的注解
+            Object value = AnnotationUtil.getAnnotationValue(entityClass, ApiModel.class);
+            if (ObjectUtil.isNotEmpty(value)) {
+                t.binding("entityDesc", value);
+            } else {
+                t.binding("entityDesc", entityClass.getSimpleName());
+            }
+        } catch (Exception e) {
+
+        }
+
         String extClass = null;
         switch (codeType) {
             case mapper:

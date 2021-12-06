@@ -7,6 +7,17 @@ spring:
     #手动配置Bus id,
     bus:
       id: ${spring.application.name}:${server.port}
+    stream:
+      default:
+        binder: kafka
+        producer:
+          useNativeEncoding: false
+        default-binder: kafka
+      kafka:
+        binder:
+          brokers: 10.100.10.98:9092         #Kafka的消息中间件服务器
+          zk-nodes: 10.100.10.98:2181        #Zookeeper的节点，如果集群，后面加,号分隔
+          auto-create-topics: true
     nacos:
       config:
         refreshable-dataids: common.properties
