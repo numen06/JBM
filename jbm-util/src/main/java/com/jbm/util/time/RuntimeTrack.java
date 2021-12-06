@@ -15,12 +15,21 @@ public class RuntimeTrack {
     private Date endTime;
 
 
-    public void string() {
-        startTime = DateTime.now();
+    public void start() {
+        this.startTime = DateTime.now();
     }
 
+    public void start(final Date startTime) {
+        this.startTime = startTime;
+    }
+
+
     public void end() {
-        endTime = DateTime.now();
+        this.endTime = DateTime.now();
+    }
+
+    public void end(final Date endTime) {
+        this.endTime = endTime;
     }
 
     @Override
