@@ -38,6 +38,6 @@ public class RuntimeTrack {
     }
 
     public void print() {
-        System.out.println("运行了:" + this.toString());
+        System.out.println("运行了:" + this);
     }
 }
