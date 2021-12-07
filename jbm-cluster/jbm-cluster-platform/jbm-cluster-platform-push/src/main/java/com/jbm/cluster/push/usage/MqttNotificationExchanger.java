@@ -59,6 +59,9 @@ public class MqttNotificationExchanger implements NotificationExchanger {
             if (StrUtil.isBlank(mqttNotification.getTopic())) {
                 throw new NullPointerException("没有指定Topic");
             }
+            if (!mqttClient.isConnected()) {
+                mqttClient.connect();
+            }
             mqttClient.publish(mqttNotification.getTopic(), message);
             log.info("发送MQTT通知成功:{}", JSON.toJSONString(notification));
         } catch (Exception e) {
