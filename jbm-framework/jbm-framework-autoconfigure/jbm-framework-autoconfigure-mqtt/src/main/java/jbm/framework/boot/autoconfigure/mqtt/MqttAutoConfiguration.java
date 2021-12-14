@@ -8,21 +8,20 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * 默认的Mongo注入
- * 
- * @author wesley
  *
+ * @author wesley
  */
 @Configuration
 @ConditionalOnProperty(prefix = "spring.mqtt", name = "url")
 @EnableConfigurationProperties(MqttConnectProperties.class)
 public class MqttAutoConfiguration {
-	@Autowired
-	private MqttConnectProperties mqttConnectProperties;
+    @Autowired
+    private MqttConnectProperties mqttConnectProperties;
 
-	@Bean
-	public RealMqttPahoClientFactory realMqttClientFactory() {
-		RealMqttPahoClientFactory factory = new RealMqttPahoClientFactory(mqttConnectProperties);
-		return factory;
-	}
+    @Bean
+    public RealMqttPahoClientFactory realMqttClientFactory() {
+        RealMqttPahoClientFactory factory = new RealMqttPahoClientFactory(mqttConnectProperties);
+        return factory;
+    }
 
 }

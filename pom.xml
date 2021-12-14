@@ -20,7 +20,6 @@
         <module>jbm-framework</module>
         <module>jbm-util</module>
         <module>jbm-cluster</module>
-        <module>jbm-framework-autoconfigure-taskflow2</module>
     </modules>
     <scm>
         <developerConnection>scm:git:https://github.com/numen06/JBM.git</developerConnection>

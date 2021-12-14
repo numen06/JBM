@@ -15,18 +15,18 @@ import com.jbm.framework.opcua.key.KeyLoader;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
+import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
 import org.eclipse.milo.opcua.sdk.client.api.identity.AnonymousProvider;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
+import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.UaException;
 import org.eclipse.milo.opcua.stack.core.types.builtin.*;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
-import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateRequest;
-import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
-import org.eclipse.milo.opcua.stack.core.types.structured.Node;
-import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
+import org.eclipse.milo.opcua.stack.core.types.structured.*;
+import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -103,13 +103,18 @@ public class OpcUaTemplate {
             KeyLoader loader = new KeyLoader().load(Paths.get(FileUtil.getTmpDirPath()));
             if (null == opcUaClient) {
                 try {
+                    List<EndpointDescription> remoteEndpoints = DiscoveryClient.getEndpoints(driverInfo.getUrl()).get();
+                    EndpointDescription configPoint = EndpointUtil.updateUrl(remoteEndpoints.get(0), driverInfo.getHost(), driverInfo.getPort());
                     opcUaClient = OpcUaClient.create(
                             driverInfo.getUrl(),
-                            endpoints -> endpoints.stream().findFirst(),
+                            endpoints -> remoteEndpoints.stream().findFirst(),
                             configBuilder -> configBuilder
                                     .setIdentityProvider(new AnonymousProvider())
                                     .setCertificate(loader.getClientCertificate())
+//                                    .setKeepAliveFailuresAllowed(uint(0))
+                                    .setKeepAliveInterval(uint(3000))
                                     .setRequestTimeout(uint(5000))
+                                    .setEndpoint(configPoint)
                                     .build()
                     );
                     clientMap.put(deviceId, new OpcUaClientBean(deviceId, opcUaClient));

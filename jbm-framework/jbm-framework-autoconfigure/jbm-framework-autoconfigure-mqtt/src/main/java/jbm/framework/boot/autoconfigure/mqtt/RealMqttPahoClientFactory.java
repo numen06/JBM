@@ -1,92 +1,162 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
+import cn.hutool.cache.Cache;
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.jbm.util.BeanUtils;
+import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttAsyncClientCallback;
+import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttCallback;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import org.springframework.integration.mqtt.core.ConsumerStopAction;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
-import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
-import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
-import org.springframework.integration.mqtt.support.MqttHeaders;
 
-import com.alibaba.fastjson.JSON;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
+@Slf4j
 public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
-	private final static Logger logger = LoggerFactory.getLogger(RealMqttPahoClientFactory.class);
 
-	private MqttConnectProperties mqttConnectProperties;
+    private MqttConnectProperties mqttConnectProperties;
 
-	private LoadingCache<String, SimpleMqttPahoMessageHandler> mqttPahoClientCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES)
-		.build(new CacheLoader<String, SimpleMqttPahoMessageHandler>() {
-			@Override
-			public SimpleMqttPahoMessageHandler load(String key) throws Exception {
-				KeySerialization keySerialization = JSON.parseObject(key, KeySerialization.class);
-				SimpleMqttPahoMessageHandler messageHandler = new SimpleMqttPahoMessageHandler(keySerialization.getClientId(), mqttPahoClientFactory());
-				messageHandler.setAsync(false);
-				messageHandler.setDefaultTopic(keySerialization.getDefaultTopic());
-				messageHandler.setDefaultQos(0);
-				messageHandler.setConverter(new DefaultPahoMessageConverter());
-//				return  new SimpleMqttPahoMessageHandler(messageHandler);
-				return messageHandler;
-			}
-		});
+//
+//    private LoadingCache<String, SimpleMqttPahoMessageHandler> mqttPahoClientCache = CacheBuilder.newBuilder().maximumSize(100)
+//            .build(new CacheLoader<String, SimpleMqttPahoMessageHandler>() {
+//                @Override
+//                public SimpleMqttPahoMessageHandler load(String key) throws Exception {
+//                    KeySerialization keySerialization = JSON.parseObject(key, KeySerialization.class);
+//                    SimpleMqttPahoMessageHandler messageHandler = new SimpleMqttPahoMessageHandler(keySerialization.getClientId(), mqttPahoClientFactory());
+//                    messageHandler.setAsync(false);
+//                    messageHandler.setDefaultTopic(keySerialization.getDefaultTopic());
+//                    messageHandler.setDefaultQos(0);
+//                    messageHandler.setConverter(new DefaultPahoMessageConverter());
+////				return  new SimpleMqttPahoMessageHandler(messageHandler);
+//                    return messageHandler;
+//                }
+//            });
 
-	public RealMqttPahoClientFactory(MqttConnectProperties mqttConnectProperties) {
-		super();
-		this.mqttConnectProperties = mqttConnectProperties;
-	}
 
-	private MqttPahoClientFactory mqttPahoClientFactory() {
-		return this;
-	}
+    public RealMqttPahoClientFactory(MqttConnectProperties mqttConnectProperties) {
+        super();
+        this.mqttConnectProperties = mqttConnectProperties;
+        this.setConsumerStopAction(ConsumerStopAction.UNSUBSCRIBE_NEVER);
+        this.setPersistence(new MqttDefaultFilePersistence("mqtt_paho/"));
+    }
 
-	
+    private MqttPahoClientFactory mqttPahoClientFactory() {
+        return this;
+    }
 
-	@Override
-	public MqttConnectOptions getConnectionOptions() {
-		MqttConnectOptions mqttConnectOptions = super.getConnectionOptions();
-		mqttConnectOptions.setServerURIs(StringUtils.split(mqttConnectProperties.getUrl(), ","));
-		mqttConnectOptions.setUserName(mqttConnectProperties.getUsername());
-		mqttConnectOptions.setPassword(mqttConnectProperties.getPassword().toCharArray());
-		mqttConnectOptions.setConnectionTimeout(mqttConnectProperties.getConnectionTimeout());
-		mqttConnectOptions.setKeepAliveInterval(mqttConnectProperties.getKeepAliveInterval());
-		return mqttConnectOptions;
-	}
 
-	public IMqttClient getClientInstance(String clientId) throws MqttException {
-		return super.getClientInstance(mqttConnectProperties.getUrl(), clientId);
-	}
+    @Override
+    public MqttConnectOptions getConnectionOptions() {
+        return mqttConnectProperties.toMqttConnectOptions();
+    }
 
-	public IMqttAsyncClient getAsyncClientInstance(String uri, String clientId) throws MqttException {
-		return super.getAsyncClientInstance(mqttConnectProperties.getUrl(), clientId);
-	}
+    @SneakyThrows
+    public IMqttClient getClientInstance() throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        return this.getClientInstance(properties);
+    }
 
-	public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler() {
-		return cteateSimpleMqttPahoMessageHandler(mqttConnectProperties.getClientId(), MqttHeaders.TOPIC);
-	}
+    @SneakyThrows
+    public IMqttClient getClientInstance(String clientId) throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        properties.setClientId(clientId);
+        return this.getClientInstance(properties);
+    }
 
-	public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler(String defaultTopic) {
-		return cteateSimpleMqttPahoMessageHandler(mqttConnectProperties.getClientId(), defaultTopic);
-	}
+    @Override
+    @SneakyThrows
+    public IMqttClient getClientInstance(String uri, String clientId) throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        properties.setUrl(uri);
+        properties.setClientId(clientId);
+        return this.getClientInstance(properties);
+    }
 
-	public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler(String clientId, String defaultTopic) {
-		logger.info("create client:{}", clientId);
-		KeySerialization keySerialization = new KeySerialization(clientId, defaultTopic);
-		String key = JSON.toJSONString(keySerialization);
-		try {
-			return mqttPahoClientCache.get(key);
-		} catch (ExecutionException e) {
-			return null;
-		}
-	}
+
+    private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
+
+
+    /**
+     * 通过参数直接创建MQTT对象
+     *
+     * @param properties
+     * @return
+     * @throws MqttException
+     */
+    public IMqttClient getClientInstance(MqttConnectProperties properties) throws MqttException {
+        if (CLIENT_CACHE.containsKey(properties.getClientId())) {
+            return (IMqttClient) CLIENT_CACHE.get(properties.getClientId());
+        }
+        IMqttClient client = super.getClientInstance(properties.getUrl(), properties.getClientId());
+        MqttConnectOptions mqttConnectOptions = properties.toMqttConnectOptions();
+        client.setCallback(new SimpleMqttCallback(client));
+        client.connect(mqttConnectOptions);
+        return client;
+    }
+
+    @SneakyThrows
+    public IMqttAsyncClient getAsyncClientInstance() throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        return this.getAsyncClientInstance(properties);
+    }
+
+    @SneakyThrows
+    public IMqttAsyncClient getAsyncClientInstance(String clientId) throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        properties.setClientId(clientId);
+        return this.getAsyncClientInstance(properties);
+    }
+
+    @SneakyThrows
+    @Override
+    public IMqttAsyncClient getAsyncClientInstance(String uri, String clientId) throws MqttException {
+        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        properties.setUrl(uri);
+        properties.setClientId(clientId);
+        return this.getAsyncClientInstance(properties);
+    }
+
+    /**
+     * 通过参数直接创建MQTT对象
+     *
+     * @param properties
+     * @return
+     * @throws MqttException
+     */
+    public IMqttAsyncClient getAsyncClientInstance(MqttConnectProperties properties) throws MqttException {
+        if (CLIENT_CACHE.containsKey(properties.getClientId())) {
+            return (IMqttAsyncClient) CLIENT_CACHE.get(properties.getClientId());
+        }
+        IMqttAsyncClient client = super.getAsyncClientInstance(properties.getUrl(), properties.getClientId());
+        MqttConnectOptions mqttConnectOptions = properties.toMqttConnectOptions();
+        client.setCallback(new SimpleMqttAsyncClientCallback(client));
+        client.connect(mqttConnectOptions);
+        return client;
+    }
+
+//    public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler() {
+//        return cteateSimpleMqttPahoMessageHandler(mqttConnectProperties.getClientId(), MqttHeaders.TOPIC);
+//    }
+//
+//    public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler(String defaultTopic) {
+//        return cteateSimpleMqttPahoMessageHandler(mqttConnectProperties.getClientId(), defaultTopic);
+//    }
+//
+//    public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler(String clientId, String defaultTopic) {
+//        logger.info("create client:{}", clientId);
+//        KeySerialization keySerialization = new KeySerialization(clientId, defaultTopic);
+//        String key = JSON.toJSONString(keySerialization);
+//        try {
+//            return mqttPahoClientCache.get(key);
+//        } catch (ExecutionException e) {
+//            return null;
+//        }
+//    }
 }

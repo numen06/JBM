@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
+import org.eclipse.milo.opcua.sdk.client.SessionActivityListener;
+import org.eclipse.milo.opcua.sdk.client.api.UaSession;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +27,7 @@ public class OpcUaClientBean extends AbstractScheduledService {
         this.deviceId = deviceId;
         this.opcUaClient = opcUaClient;
         this.startAsync();
+        this.awaitRunning();
     }
 
     public OpcPoint findPoint(String pointName) {
@@ -36,13 +39,27 @@ public class OpcUaClientBean extends AbstractScheduledService {
     }
 
     @Override
+    protected void startUp() throws Exception {
+        log.info("OPCUA客户端[{}]开始启动执行守护线程", deviceId);
+        this.opcUaClient.addSessionActivityListener(new SessionActivityListener() {
+            @Override
+            public void onSessionActive(UaSession session) {
+                log.info("PLC[{}][{}]建立链接成功", deviceId, opcUaSource.getUrl());
+            }
+
+            @Override
+            public void onSessionInactive(UaSession session) {
+                log.info("PLC[{}][{}]断开了链接", deviceId, opcUaSource.getUrl());
+            }
+        });
+    }
+
+    @Override
     protected void runOneIteration() {
         try {
-            if (!this.isRunning()) {
-                log.info("OPCUA客户端[{}]开始启动执行守护线程", deviceId);
-            }
             // 获取OPC UA服务器的数据
-            opcUaClient.connect().get();
+//            opcUaClient.connect().get();
+//            log.warn("OPCUA客户端保持链接");
         } catch (Exception e) {
             log.warn("OPCUA客户端[{}]连接[{}]失败:{}", deviceId, opcUaSource.getUrl(), e.getMessage());
         }
@@ -51,6 +68,6 @@ public class OpcUaClientBean extends AbstractScheduledService {
     @Override
     protected Scheduler scheduler() {
         //30秒监测一次PLC状态
-        return Scheduler.newFixedRateSchedule(30, 30, TimeUnit.SECONDS);
+        return Scheduler.newFixedRateSchedule(1, 5, TimeUnit.SECONDS);
     }
 }

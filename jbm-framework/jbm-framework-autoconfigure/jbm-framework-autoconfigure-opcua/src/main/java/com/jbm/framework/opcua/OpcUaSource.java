@@ -1,11 +1,12 @@
 package com.jbm.framework.opcua;
 
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
 @Data
 public class OpcUaSource {
-    private Boolean enabled  = false;
+    private Boolean enabled = false;
     private String url;
     private String host;
     private Integer port = 4840;
@@ -14,6 +15,8 @@ public class OpcUaSource {
 
     public String getUrl() {
         if (StrUtil.isNotBlank(this.url)) {
+            this.host = StrUtil.subBetween(url, "//", ":");
+            this.port = NumberUtil.parseInt(StrUtil.subAfter(url, ":", true));
             return this.url;
         }
         return String.format("opc.tcp://%s:%s%s",
