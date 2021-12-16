@@ -12,6 +12,7 @@ import com.jbm.framework.opcua.attribute.OpcPointsRead;
 import com.jbm.framework.opcua.attribute.ValueType;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
 import com.jbm.framework.opcua.key.KeyLoader;
+import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
@@ -84,6 +85,7 @@ public class OpcUaTemplate {
     }
 
     public OpcUaClient getOpcUaClient(String deviceId) {
+
         return this.getOpcUaClient(deviceId, null);
     }
 
@@ -130,6 +132,7 @@ public class OpcUaTemplate {
             log.error("not found opcua client in cache");
             return null;
         }
+        opcUaClient.getSubscriptionManager().addSubscriptionListener(new GuardSubscriptionListener(this, clientMap.get(deviceId)));
         return clientMap.get(deviceId).getOpcUaClient();
     }
 
@@ -255,7 +258,7 @@ public class OpcUaTemplate {
             client = getOpcUaClient(deviceId);
             client.connect().get();
             List<UaMonitoredItem> items = this.createItemMonitored(client, nodeId);
-//            //循环设置回调事件
+            //循环设置回调事件
             for (UaMonitoredItem item : items) {
                 this.putEvent(item, callBackEvent);
             }
@@ -296,6 +299,7 @@ public class OpcUaTemplate {
         if (this.nodeEvents.containsKey(key)) {
             List<Class> eventClassList = this.nodeEvents.get(key);
             for (Class<ValueChanageEvent> eventClass : eventClassList) {
+                log.info("send opc value change event:{}", eventClass);
                 ValueChanageEvent valueChanageEvent = ReflectUtil.newInstance(eventClass, item, value);
                 applicationContext.publishEvent(valueChanageEvent);
             }

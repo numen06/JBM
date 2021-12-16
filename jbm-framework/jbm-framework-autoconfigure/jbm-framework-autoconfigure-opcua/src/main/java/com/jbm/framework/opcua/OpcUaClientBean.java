@@ -1,15 +1,29 @@
 package com.jbm.framework.opcua;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.jbm.framework.opcua.attribute.OpcPoint;
+import com.jbm.framework.opcua.attribute.SubscriptionPoint;
+import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.SessionActivityListener;
 import org.eclipse.milo.opcua.sdk.client.api.UaSession;
+import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
+import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscriptionManager;
+import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscriptionManager.SubscriptionListener;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedDataItem;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedSubscription;
+import org.eclipse.milo.opcua.stack.core.UaException;
+import org.eclipse.milo.opcua.stack.core.types.builtin.DateTime;
+import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
+import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +36,7 @@ public class OpcUaClientBean extends AbstractScheduledService {
     private OpcUaSource opcUaSource;
     private OpcUaClient opcUaClient;
     private Map<String, OpcPoint> points = new HashMap<>();
+    private List<SubscriptionPoint> subscriptionPoints = Lists.newArrayList();
 
     public OpcUaClientBean(String deviceId, OpcUaClient opcUaClient) {
         this.deviceId = deviceId;
@@ -40,6 +55,7 @@ public class OpcUaClientBean extends AbstractScheduledService {
 
     @Override
     protected void startUp() throws Exception {
+        //add
         log.info("OPCUA客户端[{}]开始启动执行守护线程", deviceId);
         this.opcUaClient.addSessionActivityListener(new SessionActivityListener() {
             @Override
@@ -70,4 +86,5 @@ public class OpcUaClientBean extends AbstractScheduledService {
         //30秒监测一次PLC状态
         return Scheduler.newFixedRateSchedule(1, 5, TimeUnit.SECONDS);
     }
+
 }

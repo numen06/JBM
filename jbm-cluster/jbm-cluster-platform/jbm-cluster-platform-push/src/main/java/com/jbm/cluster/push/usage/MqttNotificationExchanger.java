@@ -33,7 +33,6 @@ public class MqttNotificationExchanger implements NotificationExchanger {
         this.realMqttPahoClientFactory = realMqttPahoClientFactory;
         try {
             mqttClient = realMqttPahoClientFactory.getClientInstance(this.getClass().getSimpleName() + "_" + IdUtil.fastUUID());
-            mqttClient.connect();
             log.info("mqtt连接成功");
         } catch (Exception e) {
             log.error("mqtt连接失败", e);
