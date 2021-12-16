@@ -44,12 +44,12 @@ public class OpcUaClientBean extends AbstractScheduledService {
         this.opcUaClient.addSessionActivityListener(new SessionActivityListener() {
             @Override
             public void onSessionActive(UaSession session) {
-                log.info("PLC[{}][{}]建立链接成功", deviceId, opcUaSource.getUrl());
+                log.info("PLC[{}][{}]建立链接成功", deviceId, session.getSessionName());
             }
 
             @Override
             public void onSessionInactive(UaSession session) {
-                log.info("PLC[{}][{}]断开了链接", deviceId, opcUaSource.getUrl());
+                log.info("PLC[{}][{}]断开了链接", deviceId, session.getSessionName());
             }
         });
     }
