@@ -37,3 +37,4 @@ gradle-app.setting
 /temp
 /static
 /views
+mqtt_paho/
