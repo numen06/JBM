@@ -26,24 +26,24 @@ public class GuardSubscriptionListener implements UaSubscriptionManager.Subscrip
     }
 
     public void onKeepAlive(UaSubscription subscription, DateTime publishTime) {
-        log.info("onKeepAlive");
+//        log.info("onKeepAlive");
     }
 
     public void onStatusChanged(UaSubscription subscription, StatusCode status) {
-        log.info("onStatusChanged");
+//        log.info("onStatusChanged");
     }
 
     public void onPublishFailure(UaException exception) {
-        log.info("onPublishFailure");
+//        log.info("onPublishFailure");
     }
 
     public void onNotificationDataLost(UaSubscription subscription) {
-        log.info("onNotificationDataLost");
+//        log.info("onNotificationDataLost");
     }
 
     //重连时 尝试恢复之前的订阅失败时 会调用此方法
     public void onSubscriptionTransferFailed(UaSubscription subscription, StatusCode statusCode) {
-        log.info("订阅失效，开始重新订阅");
+        log.info("订阅失效，开始重新订阅，数量为:{}", opcUaClientBean.getSubscriptionPoints().size());
         for (SubscriptionPoint subscriptionPoint : opcUaClientBean.getSubscriptionPoints()) {
             opcUaTemplate.subscribeItem(opcUaClientBean.getDeviceId(), subscriptionPoint.getPoint(), subscriptionPoint.getCallBackEvent());
         }
