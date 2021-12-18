@@ -29,7 +29,7 @@
         </developer>
     </developers>
     <properties>
-        <log4j.version>2.16.0</log4j.version>
+        <log4j.version>2.17.0</log4j.version>
         <spring.cloud.version>Greenwich.SR5</spring.cloud.version>
         <spring.boot.version>2.1.12.RELEASE</spring.boot.version>
         <maven.compiler.source>1.8</maven.compiler.source>
