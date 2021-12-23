@@ -73,7 +73,7 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
     public void setPageParams(PageParams pageParams) {
         this.pageParams = pageParams;
         String sort = pageParams.getSort();
-        apply("1=1");
+//        apply("1=1");
         if (ObjectUtils.isNotEmpty(sort)) {
             //自动添加ordery by
             String order = pageParams.getOrder();

@@ -39,10 +39,15 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
             query.addCriteria(Criteria.where("useTime").gte(gatewayLogsForm.getGatewayLogs().getUseTime()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getMethod()))
             query.addCriteria(Criteria.where("method").is(gatewayLogsForm.getGatewayLogs().getMethod()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getBeginTime()))
-            query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getEndTime()))
-            query.addCriteria(Criteria.where("requestTime").lte(gatewayLogsForm.getEndTime()));
+        if (ObjectUtil.isAllNotEmpty(gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime())) {
+            query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()).lte(gatewayLogsForm.getEndTime()));
+        } else {
+            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getBeginTime()))
+                query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()));
+            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getEndTime()))
+                query.addCriteria(Criteria.where("requestTime").lte(gatewayLogsForm.getEndTime()));
+        }
+
 //        List<Sort.Order> orders = new ArrayList<Sort.Order>();  //排序
 //        orders.add(new Sort.Order(Sort.Direction.DESC, "requestTime"));
 //        Sort sort = new Sort(orders);
