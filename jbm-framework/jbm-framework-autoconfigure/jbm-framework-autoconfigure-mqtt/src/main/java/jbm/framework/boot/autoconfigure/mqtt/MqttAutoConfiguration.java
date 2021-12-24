@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 默认的Mongo注入
+ * 默认的Mqtt注入
  *
  * @author wesley
  */
@@ -19,7 +19,7 @@ public class MqttAutoConfiguration {
     private MqttConnectProperties mqttConnectProperties;
 
     @Bean
-    public RealMqttPahoClientFactory realMqttClientFactory() {
+    public RealMqttPahoClientFactory realMqttPahoClientFactory() {
         RealMqttPahoClientFactory factory = new RealMqttPahoClientFactory(mqttConnectProperties);
         return factory;
     }
