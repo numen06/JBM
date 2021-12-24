@@ -1,23 +1,21 @@
 package com.jbm.cluster.logs.handler;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.GatewayLogInfo;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.cluster.logs.utils.AddressUtils;
+import com.jbm.util.statistics.CountWithTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
 
-import java.util.Map;
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 
 /**
  * mq消息接收者
@@ -34,6 +32,20 @@ public class AccessLogsHandler {
     @Autowired
     private GatewayLogsService gatewayLogsService;
 
+    private CountWithTime countWithTime = new CountWithTime() {
+
+
+        @Override
+        protected Scheduler scheduler() {
+            return Scheduler.newFixedRateSchedule(0, 1, TimeUnit.MINUTES);
+        }
+
+        @Override
+        public void print() {
+            log.info("最近1分钟处理日志:{}", this.getAvg());
+        }
+    };
+
     /**
      * 接收访问日志
      *
@@ -42,6 +54,7 @@ public class AccessLogsHandler {
     @RabbitListener(queues = QueueConstants.QUEUE_ACCESS_LOGS)
     public void accessLogsQueue(@Payload String gatewayLogInfoJson) {
         try {
+            countWithTime.add();
             if (StrUtil.isNotBlank(gatewayLogInfoJson)) {
                 GatewayLogs logs = JSON.parseObject(gatewayLogInfoJson, GatewayLogs.class);
                 if (ObjectUtil.isNotEmpty(logs)) {

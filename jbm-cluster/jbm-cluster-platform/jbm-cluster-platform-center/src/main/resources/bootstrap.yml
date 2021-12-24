@@ -41,4 +41,6 @@ swagger2:
   enabled: true
   description: 平台基础服务器
   title: 平台基础服务器
-
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

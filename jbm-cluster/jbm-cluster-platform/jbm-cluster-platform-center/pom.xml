@@ -25,11 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-jpa</artifactId>
+            <artifactId>jbm-framework-micro-mysql</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
