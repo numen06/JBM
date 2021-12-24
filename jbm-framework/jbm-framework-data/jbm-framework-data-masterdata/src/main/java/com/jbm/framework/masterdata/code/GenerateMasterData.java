@@ -245,11 +245,11 @@ public class GenerateMasterData {
 //        }
         try {
             if (superclass == null) {
-                logger.info("未检测到超类跳过:{}", this.entityClass);
+                logger.debug("未检测到超类跳过:{}", this.entityClass);
                 return;
             }
             if (this.ignore) {
-                logger.info("设置为忽略生成:{}", this.entityClass);
+                logger.debug("设置为忽略生成:{}", this.entityClass);
                 return;
             }
             Template t = buildData(codeType);
