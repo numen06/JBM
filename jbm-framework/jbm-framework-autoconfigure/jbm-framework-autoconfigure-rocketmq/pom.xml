@@ -9,8 +9,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.rocketmq</groupId>
-			<artifactId>rocketmq-client</artifactId>
-			<version>4.1.0-incubating</version>
+			<artifactId>rocketmq-spring-boot-starter</artifactId>
+			<version>2.2.1</version>
 		</dependency>
 	</dependencies>
 </project>

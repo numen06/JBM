@@ -14,8 +14,9 @@ import org.apache.rocketmq.common.message.MessageExt;
 public class Consumer {
 	public static void main(String[] args) {
 		DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("PushConsumer");
-		consumer.setNamesrvAddr("192.168.14.58:9768");
+		consumer.setNamesrvAddr("10.100.10.98:9876");
 		try {
+			consumer.setVipChannelEnabled(false);
 			// 订阅PushTopic下Tag为push的消息
 			consumer.subscribe("PushTopic", "push");
 			// 程序第一次启动从消息队列头取数据

@@ -7,9 +7,10 @@ import org.apache.rocketmq.common.message.Message;
 public class Producer {
 	public static void main(String[] args) {
 		DefaultMQProducer producer = new DefaultMQProducer("Producer");
-		producer.setNamesrvAddr("192.168.14.58:9876");
+		producer.setNamesrvAddr("10.100.10.98:9876");
 		try {
 			producer.start();
+			producer.setVipChannelEnabled(false);
 //			producer.createTopic(producer.getCreateTopicKey(), "PushTopic", 1);
 			Message msg = new Message("PushTopic", "push", "1", "Just for test.".getBytes());
 			SendResult result = producer.send(msg);
