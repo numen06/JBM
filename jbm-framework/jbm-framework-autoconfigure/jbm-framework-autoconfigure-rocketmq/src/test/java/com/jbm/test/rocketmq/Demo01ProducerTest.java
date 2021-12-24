@@ -1,5 +1,6 @@
 package com.jbm.test.rocketmq;
 
+import com.jbm.test.rocketmq.demo.Demo01Consumer;
 import com.jbm.test.rocketmq.demo.Demo01Producer;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -16,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {Demo01Producer.class, RocketMQAutoConfiguration.class})
+@SpringBootTest(classes = {Demo01Producer.class, Demo01Consumer.class, RocketMQAutoConfiguration.class})
 public class Demo01ProducerTest {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
@@ -26,10 +27,11 @@ public class Demo01ProducerTest {
 
     @Test
     public void testSyncSend() throws InterruptedException {
-        int id = (int) (System.currentTimeMillis() / 1000);
-        SendResult result = producer.syncSend(id);
-        logger.info("[testSyncSend][发送编号：[{}] 发送结果：[{}]]", id, result);
-
+        for (int i = 0; i < 100; i++) {
+            int id = (int) (System.currentTimeMillis() / 1000);
+            SendResult result = producer.syncSend(id);
+            logger.info("[testSyncSend][发送编号：[{}] 发送结果：[{}]]", id, result);
+        }
         // 阻塞等待，保证消费
         new CountDownLatch(1).await();
     }
