@@ -1,5 +1,8 @@
 package org.springframework.data.influx;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.dto.QueryResult;
 import org.influxdb.dto.QueryResult.Result;
@@ -9,6 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 /**
@@ -21,8 +27,6 @@ public class InfluxDataDeserializer {
 
     @SuppressWarnings("unused")
     private Class<?> clazz = Map.class;
-
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private Map<String, Object> supplementColumns;
 
@@ -41,7 +45,10 @@ public class InfluxDataDeserializer {
         List<Map<String, Object>> list = new ArrayList<>();
         for (Result result : queryResult.getResults()) {
             if (result.getError() != null) {
-                log.error(result.getError());
+                log.error("查询influxdb发生错误:{}", result.getError());
+                return list;
+            }
+            if (CollUtil.isEmpty(result.getSeries())) {
                 return list;
             }
             for (Series series : result.getSeries()) {
@@ -74,11 +81,8 @@ public class InfluxDataDeserializer {
             String col = columns.get(j);
             Object val = row.get(j);
             if (col.equals("time")) {
-                try {
-                    relVal = fromInfluxDBTime(val.toString());
-                } catch (ParseException e) {
-                    continue;
-                }
+                relVal = DateUtil.parseUTC(val.toString()).toInstant().atOffset(ZonedDateTime.now().getOffset()).toLocalDateTime();
+//                    relVal = fromInfluxDBTime(val.toString());
             } else {
                 relVal = val;
             }
@@ -92,34 +96,10 @@ public class InfluxDataDeserializer {
         return resultMap;
     }
 
-    public static Date fromInfluxDBTime(String time) throws ParseException {
-        // 格式化时间
-        Date date = sdf.parse(time);
-        date = changeTimeZone(date, TimeZone.getTimeZone("GMT"), TimeZone.getDefault());
-        return date;
-    }
+//    public static void main(String[] args) {
+//        String str = "2021-12-30T06:17:49.011Z";
+//        System.out.println(DateUtil.parseUTC(str).toInstant().atOffset(ZonedDateTime.now().getOffset()).toLocalDateTime());
+//    }
 
-    public static String toInfluxDBTime(Date time) throws ParseException {
-        // 格式化时间
-        time = changeTimeZone(time, TimeZone.getDefault(), TimeZone.getTimeZone("GMT"));
-        return sdf.format(time);
-    }
-
-    /**
-     * 获取更改时区后的日期
-     *
-     * @param date    日期
-     * @param oldZone 旧时区对象
-     * @param newZone 新时区对象
-     * @return 日期
-     */
-    public static Date changeTimeZone(Date date, TimeZone oldZone, TimeZone newZone) {
-        Date dateTmp = null;
-        if (date != null) {
-            int timeOffset = oldZone.getRawOffset() - newZone.getRawOffset();
-            dateTmp = new Date(date.getTime() - timeOffset);
-        }
-        return dateTmp;
-    }
 
 }
