@@ -51,6 +51,7 @@ public class SwaggerAutoConfiguration implements BeanFactoryAware {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "swagger.enabled", matchIfMissing = true)
     public MapReaderForApi mapReaderForApi() {
         return new MapReaderForApi();
     }
