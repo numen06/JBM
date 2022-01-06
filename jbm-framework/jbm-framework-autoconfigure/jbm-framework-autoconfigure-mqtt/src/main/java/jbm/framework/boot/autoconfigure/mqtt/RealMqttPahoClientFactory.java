@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.mqtt;
 import cn.hutool.cache.Cache;
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.util.BeanUtils;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttAsyncClientCallback;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttCallback;
@@ -43,6 +44,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
     public RealMqttPahoClientFactory(MqttConnectProperties mqttConnectProperties) {
         super();
         this.mqttConnectProperties = mqttConnectProperties;
+        this.setConnectionOptions(mqttConnectProperties.toMqttConnectOptions());
         this.setConsumerStopAction(ConsumerStopAction.UNSUBSCRIBE_NEVER);
         this.setPersistence(new MqttDefaultFilePersistence("mqtt_paho/"));
     }
@@ -60,22 +62,28 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
     @SneakyThrows
     public IMqttClient getClientInstance() throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        return this.getClientInstance(properties);
+        IMqttClient client = this.getClientInstance(properties);
+        client.connect(properties.toMqttConnectOptions());
+        return client;
     }
 
     @SneakyThrows
     public IMqttClient getClientInstance(String clientId) throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
         properties.setClientId(clientId);
-        return this.getClientInstance(properties);
+        IMqttClient client = this.getClientInstance(properties);
+        client.connect(properties.toMqttConnectOptions());
+        return client;
     }
 
     @Override
     @SneakyThrows
     public IMqttClient getClientInstance(String uri, String clientId) throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        properties.setUrl(uri);
-        properties.setClientId(clientId);
+        if (StrUtil.isNotBlank(uri))
+            properties.setUrl(uri);
+        if (StrUtil.isNotBlank(clientId))
+            properties.setClientId(clientId);
         return this.getClientInstance(properties);
     }
 
@@ -96,30 +104,37 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         }
         IMqttClient client = super.getClientInstance(properties.getUrl(), properties.getClientId());
         MqttConnectOptions mqttConnectOptions = properties.toMqttConnectOptions();
+        log.info("{}", mqttConnectOptions);
         client.setCallback(new SimpleMqttCallback(client));
-        client.connect(mqttConnectOptions);
+//        client.connect(mqttConnectOptions);
         return client;
     }
 
     @SneakyThrows
     public IMqttAsyncClient getAsyncClientInstance() throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        return this.getAsyncClientInstance(properties);
+        IMqttAsyncClient client = this.getAsyncClientInstance(properties);
+        client.connect(properties.toMqttConnectOptions());
+        return client;
     }
 
     @SneakyThrows
     public IMqttAsyncClient getAsyncClientInstance(String clientId) throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
         properties.setClientId(clientId);
-        return this.getAsyncClientInstance(properties);
+        IMqttAsyncClient client = this.getAsyncClientInstance(properties);
+        client.connect(properties.toMqttConnectOptions());
+        return client;
     }
 
     @SneakyThrows
     @Override
     public IMqttAsyncClient getAsyncClientInstance(String uri, String clientId) throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        properties.setUrl(uri);
-        properties.setClientId(clientId);
+        if (StrUtil.isNotBlank(uri))
+            properties.setUrl(uri);
+        if (StrUtil.isNotBlank(clientId))
+            properties.setClientId(clientId);
         return this.getAsyncClientInstance(properties);
     }
 
@@ -137,7 +152,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         IMqttAsyncClient client = super.getAsyncClientInstance(properties.getUrl(), properties.getClientId());
         MqttConnectOptions mqttConnectOptions = properties.toMqttConnectOptions();
         client.setCallback(new SimpleMqttAsyncClientCallback(client));
-        client.connect(mqttConnectOptions);
+//        client.connect(mqttConnectOptions);
         return client;
     }
 
