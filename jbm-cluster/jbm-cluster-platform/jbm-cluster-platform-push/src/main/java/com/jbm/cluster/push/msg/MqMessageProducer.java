@@ -22,7 +22,7 @@ public class MqMessageProducer {
     private MessageChannel channel;
 
 
-//    @Scheduled(cron = "0/10 * *  * * ? ")
+    @Scheduled(cron = "0/10 * *  * * ? ")
     public void sendTestClusterEvent() {
         TestClusterEvent testClusterEvent = new TestClusterEvent();
         testClusterEvent.setCreateTime(DateTime.now());

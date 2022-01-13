@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>jbm-cluster</artifactId>
+        <artifactId>jbm-cluster-platform</artifactId>
         <groupId>com.jbm</groupId>
         <version>6.1.0-SNAPSHOT</version>
     </parent>
@@ -62,15 +62,17 @@
         </dependency>
         <!--阿里巴巴 nacos 服务发现-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
+            <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-            <version>${alibaba.cloud.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
         </dependency>
         <!--阿里巴巴 nacos 配置中心-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
+            <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-            <version>${alibaba.cloud.version}</version>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>io.springfox</groupId>-->

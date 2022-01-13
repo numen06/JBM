@@ -10,5 +10,5 @@ import lombok.Data;
 public class SubscriptionPoint {
 
     private OpcPoint point;
-    private Class<ValueChanageEvent> callBackEvent;
+    private ValueChanageEvent callBackEvent;
 }

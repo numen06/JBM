@@ -54,18 +54,6 @@
 <!--            <groupId>com.jbm</groupId>-->
 <!--            <artifactId>jbm-framework-autoconfigure-swagger</artifactId>-->
 <!--        </dependency>-->
-        <!--阿里巴巴 nacos 服务发现-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>-->
-<!--            <version>${alibaba.cloud.version}</version>-->
-<!--        </dependency>-->
-<!--        &lt;!&ndash;阿里巴巴 nacos 配置中心&ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>-->
-<!--            <version>${alibaba.cloud.version}</version>-->
-<!--        </dependency>-->
     </dependencies>
     <build>
         <!-- 打包名称 -->

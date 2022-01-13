@@ -7,9 +7,9 @@ import org.springframework.messaging.MessageChannel;
 public interface MqMessageSource {
 
     // BOSS生产者
-    String MESSAGE_OUTPUT = "message_output";
+    String MESSAGE_OUTPUT = "output";
     // EMC消费者
-    String Consumer = "emc-message";
+    String Consumer = "input";
 
     @Output(MESSAGE_OUTPUT)
     MessageChannel messageOutput();

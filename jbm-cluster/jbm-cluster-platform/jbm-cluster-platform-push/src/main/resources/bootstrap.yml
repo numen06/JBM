@@ -10,7 +10,7 @@ spring:
     nacos:
       config:
         refreshable-dataids: common.properties
-        shared-dataids: redis.properties,rabbitmq.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+        shared-dataids: ${jbm.cluster.nacos-confs}
         file-extension: yml
   main:
     allow-bean-definition-overriding: true
@@ -21,15 +21,15 @@ spring:
     add-mappings: false
   profiles:
     active: ${profile.name}
-
 management:
   endpoints:
     web:
       exposure:
         include: '*'
-
 jbm:
   cluster:
+    nacos-confs: common.properties,redis.properties,rabbitmq.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+#    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     token-type: redis
     permit-all:
       - /get/**

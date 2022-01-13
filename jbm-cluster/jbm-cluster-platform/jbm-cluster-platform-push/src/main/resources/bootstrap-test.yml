@@ -2,12 +2,26 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
-        group:
+        namespace: jbm
+        #        group:
         refreshable-dataids: common.properties
-        server-addr: 172.16.106.26:8848
-        shared-dataids: doc.properties,common.properties,db.properties,redis.properties,rabbitmq.properties
+        server-addr: 10.100.10.98:8848
+        shared-dataids: ${jbm.cluster.nacos-confs}
       discovery:
-        namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
-        group:
-        server-addr: 172.16.106.26:8848
+        #        namespace: jbm
+        #        group:
+        server-addr: 10.100.10.98:8848
+    stream:
+      #设置一个默认的binder
+      default-binder: rocketmq
+      rocketmq:
+        binder:
+          name-server: 10.100.10.98:9876
+      bindings:
+        output:
+          destination: test-topic
+          content-type: application/json
+        input:
+          destination: test-topic
+          content-type: application/json
+          group: test-group

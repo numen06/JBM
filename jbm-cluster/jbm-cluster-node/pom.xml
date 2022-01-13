@@ -60,9 +60,8 @@
         </dependency>
         <!--阿里巴巴 nacos 服务发现-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
+            <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-            <version>${alibaba.cloud.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.alibaba.nacos</groupId>
@@ -76,9 +75,8 @@
         </dependency>
         <!--阿里巴巴 nacos 配置中心-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
+            <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-            <version>${alibaba.cloud.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.alibaba.nacos</groupId>

@@ -6,7 +6,7 @@ spring:
         #        group: ${config.group}
         refreshable-dataids: common.properties
         server-addr: nacos:8848
-        shared-dataids: common.properties,redis.properties,rabbitmq.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+        shared-dataids: ${jbm.cluster.nacos-confs}
       discovery:
         #        namespace:
         #        group: ${config.group}

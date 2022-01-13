@@ -49,10 +49,10 @@ public class TemplateUtilsTest extends TestCase {
 	}
 
 	public void testRefRendering() {
-		Template temp = TemplateUtil.parseStringTemplate("hello $ref world");
+		Template temp = TemplateUtil.parseStringTemplate("hello ${code.split(\"[,]\")[1]} world");
 		Map<String, Object> ctxPojo = new HashMap<String, Object>();
 		StringReader stream = new StringReader("1234567890");
-		ctxPojo.put("ref", stream);
+			ctxPojo.put("code", "1,2,3");
 		StringWriter writer = new StringWriter();
 		TemplateUtil.renderTemplate(temp, ctxPojo, writer);
 		System.out.println(writer.toString());

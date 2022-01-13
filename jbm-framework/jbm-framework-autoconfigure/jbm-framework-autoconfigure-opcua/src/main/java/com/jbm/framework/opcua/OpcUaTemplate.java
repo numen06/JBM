@@ -10,13 +10,13 @@ import com.google.common.collect.Maps;
 import com.jbm.framework.opcua.attribute.OpcPoint;
 import com.jbm.framework.opcua.attribute.OpcPointsRead;
 import com.jbm.framework.opcua.attribute.ValueType;
+import com.jbm.framework.opcua.event.PointSubscribeEvent;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
 import com.jbm.framework.opcua.key.KeyLoader;
 import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
 import org.eclipse.milo.opcua.sdk.client.api.identity.AnonymousProvider;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
@@ -48,10 +48,34 @@ public class OpcUaTemplate {
 
     private Map<String, OpcUaClientBean> clientMap = new ConcurrentHashMap<>(16);
 
-    private Map<String, List<Class>> nodeEvents = new ConcurrentHashMap<>();
+//    private Map<String, List<ValueChanageEvent>> nodeEvents = new ConcurrentHashMap<>();
 
     @Autowired
     private ApplicationContext applicationContext;
+
+
+    /**
+     * tianjia
+     * @param opcUaClientBean
+     */
+    public synchronized void addClient(OpcUaClientBean opcUaClientBean) {
+        OpcUaClient opcUaClient = this.getOpcUaClient(opcUaClientBean.getDeviceId(), opcUaClientBean.getOpcUaSource());
+        opcUaClientBean.setOpcUaClient(opcUaClient);
+        this.clientMap.put(opcUaClientBean.getDeviceId(), opcUaClientBean);
+        opcUaClient.getSubscriptionManager().addSubscriptionListener(new GuardSubscriptionListener(this, opcUaClientBean));
+//        this.loadPoints(opcUaClientBean.getOpcUaSource());
+    }
+
+
+    public synchronized void removeClient(String deviceId) {
+        if (!this.clientMap.containsKey(deviceId)) {
+            return;
+        }
+        OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
+        opcUaClientBean.getOpcUaClient().disconnect();
+        this.clientMap.remove(deviceId);
+//        this.loadPoints(opcUaClientBean.getOpcUaSource());
+    }
 
 
     public void loadClients(Map<String, OpcUaSource> opcUaSourceMap) {
@@ -64,7 +88,7 @@ public class OpcUaTemplate {
                 opcUaClientBean.setPoints(this.loadPoints(source));
                 opcUaClientBean.setDeviceId(deviceId);
                 opcUaClientBean.setOpcUaClient(opcUaClient);
-                clientMap.put(deviceId, opcUaClientBean);
+                this.addClient(opcUaClientBean);
             }
         } catch (Exception e) {
             log.error("读取OPCUA设备失败", e);
@@ -85,7 +109,6 @@ public class OpcUaTemplate {
     }
 
     public OpcUaClient getOpcUaClient(String deviceId) {
-
         return this.getOpcUaClient(deviceId, null);
     }
 
@@ -119,21 +142,21 @@ public class OpcUaTemplate {
                                     .setEndpoint(configPoint)
                                     .build()
                     );
-                    clientMap.put(deviceId, new OpcUaClientBean(deviceId, opcUaClient));
+//                    clientMap.put(deviceId, new OpcUaClientBean(deviceId, opcUaClient));
                 } catch (UaException e) {
                     log.error("get opc ua client error: {}", e.getMessage());
-                    clientMap.entrySet().removeIf(next -> next.getKey().equals(deviceId));
+//                    clientMap.entrySet().removeIf(next -> next.getKey().equals(deviceId));
                 }
             }
         } catch (Exception e) {
             log.error("get opc ua client error: {}", e.getMessage());
         }
-        if (!clientMap.containsKey(deviceId)) {
-            log.error("not found opcua client in cache");
-            return null;
-        }
-        opcUaClient.getSubscriptionManager().addSubscriptionListener(new GuardSubscriptionListener(this, clientMap.get(deviceId)));
-        return clientMap.get(deviceId).getOpcUaClient();
+//        if (!clientMap.containsKey(deviceId)) {
+//            log.error("not found opcua client in cache");
+//            return null;
+//        }
+//        return clientMap.get(deviceId).getOpcUaClient();
+        return opcUaClient;
     }
 
     public <T> T readItem(String deviceId, String pointName, Class<T> dataType) throws Exception {
@@ -208,7 +231,14 @@ public class OpcUaTemplate {
     public <T extends ValueChanageEvent> void subscribeItem(String deviceId, String pointName, Class<T> callBackEvent) {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
         OpcPoint opcPoint = opcUaClientBean.findPoint(pointName);
-        this.subscribeItem(deviceId, opcPoint, callBackEvent);
+        ValueChanageEvent valueChanageEvent = ReflectUtil.newInstance(null, null, null);
+        this.subscribeItem(deviceId, opcPoint, valueChanageEvent);
+    }
+
+    public <T extends PointSubscribeEvent> void subscribeItem(String deviceId, T pointSubscribeEvent) {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        OpcPoint opcPoint = opcUaClientBean.findPoint(pointSubscribeEvent.getOpcPoint().getAlias());
+        this.subscribeItem(deviceId, opcPoint, pointSubscribeEvent);
     }
 
 
@@ -221,15 +251,11 @@ public class OpcUaTemplate {
 //        }
 //    }
 
-    public <T extends ValueChanageEvent> void putEvent(UaMonitoredItem item, Class<T> callBackEvent) {
-        String key = item.getMonitoredItemId().toString();
-        if (this.nodeEvents.containsKey(key)) {
-            this.nodeEvents.get(key).add(callBackEvent);
-        } else {
-            this.nodeEvents.put(key, Lists.newArrayList(callBackEvent));
+    public <T extends ValueChanageEvent> void putEvent(OpcUaClientBean opcUaClientBean, OpcPoint point, T callBackEvent) {
+        if (!opcUaClientBean.getSubscriptionPoints().containsKey(point.getAlias())) {
+            opcUaClientBean.getSubscriptionPoints().put(point.getAlias(), callBackEvent);
         }
     }
-
 
     /**
      * 创建监听器
@@ -248,28 +274,28 @@ public class OpcUaTemplate {
     /**
      * 订阅节点
      */
-    public <T extends ValueChanageEvent> void subscribeItem(String deviceId, OpcPoint point, Class<T> callBackEvent) {
+    public <T extends ValueChanageEvent> void subscribeItem(String deviceId, OpcPoint opcPoint, T callBackEvent) {
         OpcUaClient client;
         try {
-            log.info("OPCUA订阅点位:{}", JSON.toJSONString(point));
-            int namespace = point.getNamespace();
-            String tag = point.getTagName();
-            NodeId nodeId = new NodeId(namespace, tag);
-            client = getOpcUaClient(deviceId);
+            log.info("OPCUA订阅点位:{}", opcPoint.getAlias());
+            OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
+//            client = getOpcUaClient(deviceId);
+            client = opcUaClientBean.getOpcUaClient();
             client.connect().get();
-            List<UaMonitoredItem> items = this.createItemMonitored(client, nodeId);
+            List<UaMonitoredItem> items = this.createItemMonitored(opcUaClientBean, opcPoint);
             //循环设置回调事件
-            for (UaMonitoredItem item : items) {
-                this.putEvent(item, callBackEvent);
-            }
+            this.putEvent(opcUaClientBean, opcPoint, callBackEvent);
         } catch (Exception e) {
             log.error("Opc Ua Point Write Error", e);
         }
     }
 
-    private List<UaMonitoredItem> createItemMonitored(OpcUaClient client, NodeId nodeId) throws ExecutionException, InterruptedException {
+    private List<UaMonitoredItem> createItemMonitored(OpcUaClientBean opcUaClientBean, OpcPoint opcPoint) throws ExecutionException, InterruptedException {
+        int namespace = opcPoint.getNamespace();
+        String tag = opcPoint.getTagName();
+        NodeId nodeId = new NodeId(namespace, tag);
         //创建发布间隔1000ms的订阅对象
-        UaSubscription subscription = this.getSubscription(client);
+        UaSubscription subscription = this.getSubscription(opcUaClientBean.getOpcUaClient());
         MonitoringParameters parameters = new MonitoringParameters(
                 uint(subscription.getMonitoredItems().size() + 1),
                 1000.0,
@@ -285,26 +311,24 @@ public class OpcUaTemplate {
         List<UaMonitoredItem> items = subscription.createMonitoredItems(
                 TimestampsToReturn.Both,
                 requests,
-                (item, id) -> item.setValueConsumer(this::onSubscriptionValue)
+                (item, id) -> item.setValueConsumer(new UaMonitoredItem.ValueConsumer() {
+                    @Override
+                    public void onValueArrived(UaMonitoredItem item, DataValue value) {
+                        try {
+                            log.debug("OPC数据变化回调:subscription value received: item={}, value={}", item.getReadValueId().getNodeId(), value.getValue());
+                            ValueChanageEvent valueChanageEvent = opcUaClientBean.getSubscriptionPoints().get(opcPoint.getAlias());
+                            valueChanageEvent.putData(item, value);
+                            applicationContext.publishEvent(valueChanageEvent);
+                        } catch (Exception e) {
+
+                        }
+                    }
+                })
         ).get();
-        log.info("监听器[{}]监听数量:{}", subscription.getSubscriptionId(), subscription.getMonitoredItems().size());
+        log.info("添加监听:[{}]到监听器[{}]监听数量:{}", nodeId, subscription.getSubscriptionId(), subscription.getMonitoredItems().size());
         return items;
     }
 
-
-    private void onSubscriptionValue(UaMonitoredItem item, DataValue value) {
-        log.info("OPC数据变化回调：subscription value received: item={}, value={}",
-                item.getReadValueId().getNodeId(), value.getValue());
-        String key = item.getMonitoredItemId().toString();
-        if (this.nodeEvents.containsKey(key)) {
-            List<Class> eventClassList = this.nodeEvents.get(key);
-            for (Class<ValueChanageEvent> eventClass : eventClassList) {
-                log.info("send opc value change event:{}", eventClass);
-                ValueChanageEvent valueChanageEvent = ReflectUtil.newInstance(eventClass, item, value);
-                applicationContext.publishEvent(valueChanageEvent);
-            }
-        }
-    }
 
     private DataValue convertData(OpcPoint point) {
         ValueType valueType = ValueType.valueOf(point.getDataType().toUpperCase());
