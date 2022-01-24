@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.cluster.api.model.entitys.message.Notification;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
+import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -21,7 +22,7 @@ public class PushMessageNotificationExchanger implements NotificationExchanger {
 
     private RealMqttPahoClientFactory realMqttPahoClientFactory;
 
-    private IMqttClient mqttClient;
+    private SimpleMqttClient mqttClient;
 
     public PushMessageNotificationExchanger(RealMqttPahoClientFactory realMqttPahoClientFactory) {
         if (realMqttPahoClientFactory != null) {

@@ -2,6 +2,7 @@ package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
+import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -28,12 +29,13 @@ public class MqttTest {
     @Autowired
     private RealMqttPahoClientFactory mqttPahoClientFactory;
 
-    private IMqttClient mqttClient;
+    private SimpleMqttClient mqttClient;
 
     @Before
     public void testClient() throws Exception {
 //		messageHandler.publish("spm_alarm_in", "tewt", 1);
-        mqttClient = mqttPahoClientFactory.getClientInstance();
+        mqttClient = mqttPahoClientFactory.getClientInstance("woshiceshi");
+        mqttClient = mqttPahoClientFactory.getClientInstance("woshiceshi");
     }
 
 
