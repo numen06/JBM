@@ -17,6 +17,7 @@ import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
+import org.eclipse.milo.opcua.sdk.client.SessionActivityListener;
 import org.eclipse.milo.opcua.sdk.client.api.identity.AnonymousProvider;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
@@ -56,6 +57,7 @@ public class OpcUaTemplate {
 
     /**
      * tianjia
+     *
      * @param opcUaClientBean
      */
     public synchronized void addClient(OpcUaClientBean opcUaClientBean) {
@@ -72,8 +74,13 @@ public class OpcUaTemplate {
             return;
         }
         OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-        opcUaClientBean.getOpcUaClient().disconnect();
-        this.clientMap.remove(deviceId);
+        try {
+            opcUaClientBean.getOpcUaClient().disconnect();
+        } catch (Exception e) {
+            log.error("断开客户端[{}]连接失败", deviceId, e);
+        } finally {
+            this.clientMap.remove(deviceId);
+        }
 //        this.loadPoints(opcUaClientBean.getOpcUaSource());
     }
 

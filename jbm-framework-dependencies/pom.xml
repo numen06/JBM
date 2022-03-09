@@ -62,9 +62,9 @@
         <lombok.version>1.18.12</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <!--6.0 add-->
-        <apache.commons-lang3.version>3.3.2</apache.commons-lang3.version>
-        <apache.commons-io.version>2.5</apache.commons-io.version>
-        <apache.commons.beanutils>1.9.3</apache.commons.beanutils>
+        <apache.commons-lang3.version>3.12.0</apache.commons-lang3.version>
+        <apache.commons-io.version>2.11.0</apache.commons-io.version>
+        <apache.commons.beanutils>1.9.4</apache.commons.beanutils>
         <com.google.zxing.version>3.1.0</com.google.zxing.version>
         <swagger.version>2.9.2</swagger.version>
         <io.swagger.version>1.5.20</io.swagger.version>
@@ -74,7 +74,7 @@
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
-        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
         <maven-assembly-plugin.version>3.1.0</maven-assembly-plugin.version>
         <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
@@ -213,7 +213,11 @@
                 <artifactId>jbm-framework-autoconfigure-mail</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-nacos</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-opcua</artifactId>

@@ -1,0 +1,43 @@
+server:
+  port: 3313
+spring:
+  application:
+    name: ${artifactId}
+  cloud:
+    #手动配置Bus id,
+    bus:
+      id: ${spring.application.name}:${server.port}
+    nacos:
+      config:
+        refreshable-dataids: common.properties
+        shared-dataids: ${jbm.cluster.nacos-confs}
+        file-extension: yml
+  main:
+    allow-bean-definition-overriding: true
+  #解决restful 404错误 spring.mavc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  profiles:
+    active: ${profile.name}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+jbm:
+  cluster:
+    nacos-confs: common.properties,redis.properties,rabbitmq.properties,weixin.yml
+#    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    token-type: redis
+    permit-all:
+      - /**
+swagger2:
+  enabled: true
+  description: JBM微信服务器
+  title: JBM微信服务器
+
+
+
+

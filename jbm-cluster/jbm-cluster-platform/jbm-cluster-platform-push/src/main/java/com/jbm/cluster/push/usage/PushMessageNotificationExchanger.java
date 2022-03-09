@@ -1,6 +1,9 @@
 package com.jbm.cluster.push.usage;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.cluster.api.model.entitys.message.Notification;
@@ -10,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.util.Assert;
+
+import java.util.List;
 
 /**
  * 站内消息通知
@@ -49,8 +54,17 @@ public class PushMessageNotificationExchanger implements NotificationExchanger {
         MqttMessage message = new MqttMessage();
         message.setPayload(JSON.toJSONBytes(notification));
         String topic = "user/" + mqttNotification.getRecUserId();
+        if (ObjectUtil.isEmpty(mqttNotification.getRecUserId())) {
+            topic = "system/web";
+        }
         try {
             mqttClient.publish(topic, message);
+            if (StrUtil.isNotEmpty(mqttNotification.getTags())) {
+                List<String> tags = StrUtil.split(mqttNotification.getTags(), ",");
+                for (String tag : tags) {
+                    mqttClient.publish("tags/" + tag, message);
+                }
+            }
             log.info("发送:{}成功", topic);
         } catch (Exception e) {
             log.error("发送站内信错误", e);

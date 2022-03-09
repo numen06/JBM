@@ -14,6 +14,11 @@ public class GradeResult {
     private Student student;
 
     /**
+     * 班级
+     */
+    private ClassRoom classRoom;
+
+    /**
      * 成绩
      */
     private Double score;

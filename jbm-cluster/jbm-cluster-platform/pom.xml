@@ -19,6 +19,7 @@
         <module>jbm-cluster-platform-push</module>
         <module>jbm-cluster-platform-logs</module>
         <module>jbm-cluster-platform-bigscreen</module>
+        <module>jbm-cluster-platform-weixin</module>
     </modules>
 
 </project>

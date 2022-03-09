@@ -3,6 +3,8 @@ package org.springframework.data.influx;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
+import cn.hutool.core.date.ZoneUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.dto.QueryResult;
 import org.influxdb.dto.QueryResult.Result;
@@ -81,7 +83,8 @@ public class InfluxDataDeserializer {
             String col = columns.get(j);
             Object val = row.get(j);
             if (col.equals("time")) {
-                relVal = DateUtil.parseUTC(val.toString()).toInstant().atOffset(ZonedDateTime.now().getOffset()).toLocalDateTime();
+//                relVal = Date.from(DateUtil.parseUTC(StrUtil.toString(val)).toLocalDateTime().atZone(ZonedDateTime.now().getZone()).toInstant());
+                relVal = Date.from(DateUtil.parseUTC(StrUtil.toString(val)).toInstant().atOffset(ZonedDateTime.now().getOffset()).toInstant());
 //                    relVal = fromInfluxDBTime(val.toString());
             } else {
                 relVal = val;
@@ -97,8 +100,14 @@ public class InfluxDataDeserializer {
     }
 
 //    public static void main(String[] args) {
-//        String str = "2021-12-30T06:17:49.011Z";
-//        System.out.println(DateUtil.parseUTC(str).toInstant().atOffset(ZonedDateTime.now().getOffset()).toLocalDateTime());
+////        String str = "2021-12-30T06:17:49.011Z";
+//        String str = "2022-03-04T08:00:25Z";
+//        System.out.println(DateUtil.parseUTC(str));
+//        System.out.println(LocalDateTimeUtil.of(new Date(1646351125007l)).atZone(ZonedDateTime.now().getZone()));
+//        System.out.println(ZonedDateTime.now().getZone());
+//        System.out.println(DateUtil.parseUTC(str).getZoneId());
+//        System.out.println(DateUtil.parseUTC(str).toLocalDateTime().atZone(ZonedDateTime.now().getZone()));
+//        System.out.println(DateUtil.parseUTC(str).toInstant().atOffset(ZonedDateTime.now().getOffset()));
 //    }
 
 

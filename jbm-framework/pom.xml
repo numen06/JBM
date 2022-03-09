@@ -33,6 +33,7 @@
         <module>jbm-framework-cloud</module>
         <module>jbm-framework-aliyun</module>
         <module>jbm-framework-baidu</module>
+        <module>jbm-framework-weixin</module>
     </modules>
 
 
