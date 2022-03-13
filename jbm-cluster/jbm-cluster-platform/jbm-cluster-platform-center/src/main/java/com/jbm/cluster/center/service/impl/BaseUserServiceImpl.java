@@ -4,7 +4,6 @@ import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
@@ -16,7 +15,6 @@ import com.jbm.cluster.api.model.entity.*;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.cluster.common.security.OpenSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -24,7 +22,6 @@ import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
-import com.jbm.util.Emptys;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -176,6 +173,22 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         }
     }
 
+    @Override
+    public void bindUserThirdPartyByPhone(String phone, BaseAccount baseAccount) {
+        baseAccount.setDomain(BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+        if (baseAccountService.isExist(baseAccount)) {
+            return;
+        }
+        BaseUser baseUser = this.getUserByPhone(phone);
+        if (ObjectUtil.isEmpty(baseUser)) {
+            throw new ServiceException("没有此手机注册用户");
+        }
+        baseUser.setUserType(BaseConstants.USER_TYPE_ADMIN);
+        baseAccount.setUserId(baseUser.getUserId());
+        // 注册账号信息
+        baseAccountService.register(baseAccount);
+    }
+
 
     /**
      * 更新密码
@@ -228,6 +241,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     public BaseUser getUserById(Long userId) {
         return baseUserMapper.selectById(userId);
     }
+
+    @Override
+    public BaseUser getUserByPhone(String phone) {
+        BaseUser baseUser = new BaseUser();
+        baseUser.setMobile(phone);
+        return this.selectEntity(baseUser);
+    }
+
 
     /**
      * 根据用户ID获取用户信息和权限

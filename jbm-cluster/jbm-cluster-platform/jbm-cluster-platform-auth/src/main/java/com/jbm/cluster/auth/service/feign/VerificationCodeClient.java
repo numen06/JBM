@@ -14,7 +14,7 @@ public interface VerificationCodeClient {
     /**
      * eureka service name
      */
-    String SERVICE_ID = "common-service";
+    String SERVICE_ID = "jbm-cluster-platform-center";
     /**
      * common api prefix
      */

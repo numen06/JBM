@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.UserAccount;
+import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -46,6 +47,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      */
     void addUserThirdParty(BaseUser baseUser, String accountType);
 
+    void bindUserThirdPartyByPhone(String phone, BaseAccount baseAccount);
+
     /**
      * 更新密码
      *
@@ -72,6 +75,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      * @return
      */
     BaseUser getUserById(Long userId);
+
+    BaseUser getUserByPhone(String phone);
 
     /**
      * 获取用户权限

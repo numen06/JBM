@@ -110,4 +110,6 @@ public interface BaseAccountService extends IMasterDataService<BaseAccount> {
      * @param log
      */
     void addLoginLog(BaseAccountLogs log);
+
+    boolean isExist(BaseAccount baseAccount);
 }

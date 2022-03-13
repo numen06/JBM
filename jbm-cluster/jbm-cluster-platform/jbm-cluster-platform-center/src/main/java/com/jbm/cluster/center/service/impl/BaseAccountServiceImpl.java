@@ -116,8 +116,6 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     }
 
 
-
-
     /**
      * 检测账号是否存在
      *
@@ -136,6 +134,12 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         int count = baseAccountMapper.selectCount(queryWrapper);
         return count > 0 ? true : false;
     }
+
+    @Override
+    public boolean isExist(BaseAccount baseAccount) {
+        return this.isExist(baseAccount.getAccount(), baseAccount.getAccountType(), baseAccount.getDomain());
+    }
+
 
     /**
      * 删除账号
@@ -241,4 +245,6 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         log.setLoginNums(count + 1);
         baseAccountLogsMapper.insert(log);
     }
+
+
 }

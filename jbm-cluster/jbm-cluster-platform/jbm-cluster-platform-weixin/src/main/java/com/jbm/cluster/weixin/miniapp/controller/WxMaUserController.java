@@ -5,6 +5,7 @@ import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
 import com.jbm.cluster.weixin.miniapp.form.WxUserInfo;
+import com.jbm.framework.metadata.bean.ResultBody;
 import jbm.framework.weixin.config.WxMaConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -23,22 +24,25 @@ public class WxMaUserController {
      * 登陆接口
      */
     @GetMapping("/login")
-    public Object login(@PathVariable String appid, String code) {
+    public ResultBody<WxMaJscode2SessionResult> login(@PathVariable String appid, String code) {
+        return this.login2(appid, code);
+    }
+
+    @PostMapping("/login")
+    public ResultBody<WxMaJscode2SessionResult> login2(@PathVariable String appid, String code) {
         if (StringUtils.isBlank(code)) {
-            return "empty jscode";
+            return ResultBody.error(null, "empty jscode");
         }
-
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
-
         try {
             WxMaJscode2SessionResult session = wxService.getUserService().getSessionInfo(code);
             log.info(session.getSessionKey());
             log.info(session.getOpenid());
             //TODO 可以增加自己的逻辑，关联业务相关数据
-            return session;
+            return ResultBody.success(session, "微信登录成功");
         } catch (WxErrorException e) {
             log.error(e.getMessage(), e);
-            return e.toString();
+            return ResultBody.error(null, e.getMessage());
         }
     }
 
@@ -48,24 +52,21 @@ public class WxMaUserController {
      * </pre>
      */
     @GetMapping("/info")
-    public Object info(@PathVariable String appid, WxUserInfo wxUserInfo) {
+    public ResultBody<WxMaUserInfo> info(@PathVariable String appid, WxUserInfo wxUserInfo) {
         return this.info(appid, wxUserInfo);
     }
 
     @PostMapping("/info")
-    public Object info2(@PathVariable String appid, @RequestBody WxUserInfo wxUserInfo) {
+    public ResultBody<WxMaUserInfo> info2(@PathVariable String appid, @RequestBody WxUserInfo wxUserInfo) {
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
-
         // 用户信息校验
         if (!wxService.getUserService().checkUserInfo(wxUserInfo.getSessionKey(), wxUserInfo.getRawData(), wxUserInfo.getSignature())) {
-            return "user check failed";
+            return ResultBody.error(null, "user check failed");
         }
-
         // 解密用户信息
         WxMaUserInfo userInfo = wxService.getUserService().getUserInfo(wxUserInfo.getSessionKey(), wxUserInfo
                 .getEncryptedData(), wxUserInfo.getIv());
-
-        return userInfo;
+        return ResultBody.success(userInfo, "微信获取用户成功");
     }
 
 
@@ -75,16 +76,8 @@ public class WxMaUserController {
      * </pre>
      */
     @GetMapping("/phone")
-    public Object phone(@PathVariable String appid, WxUserInfo wxUserInfo) {
-        final WxMaService wxService = WxMaConfiguration.getMaService(appid);
-        // 用户信息校验
-        if (!wxService.getUserService().checkUserInfo(wxUserInfo.getSessionKey(), wxUserInfo.getRawData(), wxUserInfo.getSignature())) {
-            return "user check failed";
-        }
-        // 解密
-        WxMaPhoneNumberInfo phoneNoInfo = wxService.getUserService().getPhoneNoInfo(wxUserInfo.getSessionKey(), wxUserInfo
-                .getEncryptedData(), wxUserInfo.getIv());
-        return phoneNoInfo;
+    public ResultBody<WxMaPhoneNumberInfo> phone(@PathVariable String appid, WxUserInfo wxUserInfo) {
+        return this.phone2(appid, wxUserInfo);
     }
 
     /**
@@ -93,15 +86,15 @@ public class WxMaUserController {
      * </pre>
      */
     @PostMapping("/phone")
-    public Object phone2(@PathVariable String appid, @RequestBody WxUserInfo wxUserInfo) {
+    public ResultBody<WxMaPhoneNumberInfo> phone2(@PathVariable String appid, @RequestBody WxUserInfo wxUserInfo) {
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
         if (!wxService.getUserService().checkUserInfo(wxUserInfo.getSessionKey(), wxUserInfo.getRawData(), wxUserInfo.getSignature())) {
-            return "user check failed";
+            return ResultBody.error(null, "user check failed");
         }
         // 解密
         WxMaPhoneNumberInfo phoneNoInfo = wxService.getUserService().getPhoneNoInfo(wxUserInfo.getSessionKey(), wxUserInfo
                 .getEncryptedData(), wxUserInfo.getIv());
-        return phoneNoInfo;
+        return ResultBody.success(phoneNoInfo, "微信获取手机号成功");
     }
 
 }

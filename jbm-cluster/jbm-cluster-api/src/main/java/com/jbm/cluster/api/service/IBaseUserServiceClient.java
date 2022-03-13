@@ -2,6 +2,7 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -42,4 +43,12 @@ public interface IBaseUserServiceClient {
     );
 
 
+    @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
+    @PostMapping("/user/add/bindUserThirdPartyByPhone")
+    ResultBody bindUserThirdPartyByPhone(
+            @RequestParam(value = "account") String account,
+            @RequestParam(value = "password") String password,
+            @RequestParam(value = "accountType") String accountType,
+            @RequestParam(value = "phone") String phone
+    );
 }

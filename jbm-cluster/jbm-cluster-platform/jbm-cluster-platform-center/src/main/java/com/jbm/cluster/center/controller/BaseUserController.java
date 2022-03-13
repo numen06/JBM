@@ -3,6 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.UserAccount;
+import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
@@ -293,6 +294,21 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         user.setPassword(password);
         user.setAvatar(avatar);
         baseUserService.addUserThirdParty(user, accountType);
+        return ResultBody.ok();
+    }
+
+    @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
+    @PostMapping("/add/bindUserThirdPartyByPhone")
+    @Override
+    public ResultBody bindUserThirdPartyByPhone(@RequestParam(value = "account") String account,
+                                                @RequestParam(value = "password") String password,
+                                                @RequestParam(value = "accountType") String accountType,
+                                                @RequestParam(value = "phone") String phone) {
+        BaseAccount baseAccount = new BaseAccount();
+        baseAccount.setAccount(account);
+        baseAccount.setPassword(password);
+        baseAccount.setAccountType(accountType);
+        baseUserService.bindUserThirdPartyByPhone(phone, baseAccount);
         return ResultBody.ok();
     }
 

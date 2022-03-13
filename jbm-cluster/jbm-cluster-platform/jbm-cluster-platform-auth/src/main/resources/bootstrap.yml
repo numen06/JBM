@@ -43,3 +43,7 @@ jbm:
       admin:
         client-id: 7gBZcbsC7kLIWCdELIl8nxcs
         client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
+#  cluster:
+#    token-type: redis
+#    permit-all:
+#      - /**
