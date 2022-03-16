@@ -75,7 +75,8 @@ public class CurrentUserController {
     public ResultBody updateUserInfo(
             @RequestParam(value = "nickName") String nickName,
             @RequestParam(value = "userDesc", required = false) String userDesc,
-            @RequestParam(value = "avatar", required = false) String avatar
+            @RequestParam(value = "avatar", required = false) String avatar,
+            @RequestParam(value = "realName", required = false) String realName
     ) {
         OpenUserDetails openUserDetails = JbmClusterHelper.getUser();
         BaseUser user = new BaseUser();

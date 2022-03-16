@@ -26,7 +26,7 @@ public class AccountUtils {
 //        userDetails.setDomain(account.getDomain());
 //        userDetails.setAccountId(account.getAccountId());
 //        userDetails.setUserId(account.getUserId());
-//        userDetails.setUsername(username);
+        userDetails.setUsername(username);
 //        userDetails.setPassword(account.getPassword());
 //        userDetails.setNickName(account.getNickName());
 //        userDetails.setAuthorities(account.getAuthorities());
