@@ -7,9 +7,7 @@ import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 自定义认证用户信息
@@ -37,7 +35,7 @@ public class OpenUserDetails implements UserDetails {
     /**
      * 用户权限
      */
-    private Collection<? extends GrantedAuthority> authorities;
+    private Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
     /**
      * 是否已锁定
      */
@@ -103,7 +101,7 @@ public class OpenUserDetails implements UserDetails {
     /**
      * 用户附加属性
      */
-    private Map<String, Object> attrs;
+    private Map<String, Object> attrs = new HashMap<>();
 
 
     /**
