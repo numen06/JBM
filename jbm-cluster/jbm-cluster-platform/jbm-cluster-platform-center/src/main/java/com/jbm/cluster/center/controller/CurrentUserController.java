@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.entity.BaseUser;
@@ -61,7 +62,6 @@ public class CurrentUserController {
         return ResultBody.ok();
     }
 
-
     /**
      * 修改当前登录用户基本信息
      *
@@ -81,12 +81,21 @@ public class CurrentUserController {
         OpenUserDetails openUserDetails = JbmClusterHelper.getUser();
         BaseUser user = new BaseUser();
         user.setUserId(openUserDetails.getUserId());
-        user.setNickName(nickName);
-        user.setUserDesc(userDesc);
-        user.setAvatar(avatar);
+        if (StrUtil.isNotBlank(nickName))
+            user.setNickName(nickName);
+        if (StrUtil.isNotBlank(userDesc))
+            user.setUserDesc(userDesc);
+        if (StrUtil.isNotBlank(avatar))
+            user.setAvatar(avatar);
+        if (StrUtil.isNotBlank(realName))
+            user.setRealName(realName);
         baseUserService.updateUser(user);
-        openUserDetails.setNickName(nickName);
-        openUserDetails.setAvatar(avatar);
+        if (StrUtil.isNotBlank(nickName))
+            openUserDetails.setNickName(nickName);
+        if (StrUtil.isNotBlank(avatar))
+            openUserDetails.setAvatar(avatar);
+        if (StrUtil.isNotBlank(realName))
+            openUserDetails.setRealName(realName);
         JbmClusterHelper.updateOpenUser(redisTokenStore, openUserDetails);
         return ResultBody.ok();
     }

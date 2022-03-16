@@ -157,6 +157,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (baseUser.getStatus() != null) {
             baseAccountService.updateStatusByUserId(baseUser.getUserId(), ACCOUNT_DOMAIN, baseUser.getStatus());
         }
+//        this.saveEntity(baseUser);
         baseUserMapper.updateById(baseUser);
     }
 
