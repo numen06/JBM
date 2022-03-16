@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.constants.AccountType;
 import com.jbm.cluster.api.constants.BaseConstants;
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.*;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
@@ -89,6 +92,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         }
 //        baseUser.setCreateTime(new Date());
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
+        if (ObjectUtil.isEmpty(baseUser.getStatus())) {
+            baseUser.setStatus(1);
+        }
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
@@ -113,7 +119,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isEmail(dbUser.getEmail())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), null);
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), ACCOUNT_DOMAIN);
         //新建一个邮箱帐号
         userNameAccunt.setAccountId(null);
         userNameAccunt.setAccountType(AccountType.email.toString());
@@ -129,8 +135,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isMobile(dbUser.getMobile())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), null);
-        //新建一个邮箱帐号
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), ACCOUNT_DOMAIN);
+        //新建一个手机帐号
         userNameAccunt.setAccountId(null);
         userNameAccunt.setAccountType(AccountType.mobile.toString());
         baseAccountService.register(userNameAccunt);
@@ -166,8 +172,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             baseUser.setUserType(BaseConstants.USER_TYPE_ADMIN);
             baseUser.setCreateTime(new Date());
             baseUser.setUpdateTime(baseUser.getCreateTime());
-            //保存系统用户信息
-            baseUserMapper.insert(baseUser);
+//            //保存系统用户信息
+//            this.saveEntity(baseUser);
+            if (ObjectUtil.isEmpty(baseUser.getUserId())) {
+                this.insertEntity(baseUser);
+            }
             // 注册账号信息
             baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, ACCOUNT_DOMAIN, null);
         }
@@ -286,12 +295,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             authorities.addAll(userGrantedAuthority);
         }
         UserAccount userAccount = new UserAccount();
-        // 昵称
-        userAccount.setNickName(baseUser.getNickName());
-        // 头像
-        userAccount.setAvatar(baseUser.getAvatar());
-        // 权限信息
-        userAccount.setAuthorities(authorities);
+        //复制用户属性
+        BeanUtil.copyProperties(baseUser, userAccount);
+//        // 昵称
+//        userAccount.setNickName(baseUser.getNickName());
+//        // 头像
+//        userAccount.setAvatar(baseUser.getAvatar());
+//        // 权限信息
+//        userAccount.setAuthorities(authorities);
         userAccount.setRoles(roles);
         return userAccount;
     }
@@ -375,6 +386,58 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             return userAccount;
         }
         return null;
+    }
+
+    @Override
+    public List<BaseUser> retrievalUsers(String keyword) {
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda()
+                .or().like(BaseUser::getRealName, keyword)
+                .or().like(BaseUser::getMobile, keyword)
+                .or().like(BaseUser::getNickName, keyword).last("limit 10");
+        return this.selectEntitys(queryWrapper);
+    }
+
+    @Override
+    public UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm) {
+        try {
+            UserAccount userAccount = this.login(thirdPartyUserForm.getAccount(), thirdPartyUserForm.getPassword());
+            if (ObjectUtil.isNotEmpty(userAccount)) {
+                return userAccount;
+            }
+            //没有手机号不能进行注册绑定
+            if (StrUtil.isBlank(thirdPartyUserForm.getPhone())) {
+                throw new ServiceException("手机为空");
+            }
+            BaseUser user = this.getUserByPhone(thirdPartyUserForm.getPhone());
+            if (ObjectUtil.isEmpty(user)) {
+                user = new BaseUser();
+                user.setNickName(thirdPartyUserForm.getNickName());
+                user.setUserName(thirdPartyUserForm.getAccount());
+                user.setPassword(thirdPartyUserForm.getPassword());
+                user.setAvatar(thirdPartyUserForm.getAvatar());
+                user.setMobile(thirdPartyUserForm.getPhone());
+                //新增用户
+                this.addUser(user);
+            }
+            if (ObjectUtil.isEmpty(user.getPassword())) {
+                user.setPassword(thirdPartyUserForm.getPassword());
+            }
+            //如果手机号不为空自动激活手机号登录
+            if (StrUtil.isNotBlank(user.getMobile())) {
+                this.activationMobileAccount(user);
+            }
+            //如果是第三方来源增加第三方账号
+            if (StrUtil.isNotBlank(thirdPartyUserForm.getAccountType())) {
+                user.setUserName(thirdPartyUserForm.getAccount());
+                this.addUserThirdParty(user, thirdPartyUserForm.getAccountType());
+            }
+            //最后再登录一次
+            return this.login(user.getUserName(), thirdPartyUserForm.getPassword());
+        } catch (Exception e) {
+            log.error("添加登录日志失败:{}", e);
+            throw new ServiceException(e);
+        }
     }
 
 }

@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.form.BaseUserForm;
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseRole;
@@ -12,6 +14,7 @@ import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -297,7 +300,19 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.ok();
     }
 
-    @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
+    @ApiOperation(value = "注册并登录第三方系统登录账号", notes = "仅限系统内部调用")
+    @PostMapping("/loginAndRegisterMobileUser")
+    @Override
+    public ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm) {
+        try {
+            UserAccount userAccount = baseUserService.loginAndRegisterMobileUser(thirdPartyUserForm);
+            return ResultBody.ok().data(userAccount);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    @ApiOperation(value = "绑定第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/add/bindUserThirdPartyByPhone")
     @Override
     public ResultBody bindUserThirdPartyByPhone(@RequestParam(value = "account") String account,
@@ -311,5 +326,19 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         baseUserService.bindUserThirdPartyByPhone(phone, baseAccount);
         return ResultBody.ok();
     }
+
+
+    @ApiOperation(value = "模糊搜索用户")
+    @PostMapping("/retrievalUsers")
+    public ResultBody<List<BaseUser>> retrievalUsers(@RequestBody PageForm pageForm) {
+        try {
+            List<BaseUser> list = Lists.newArrayList();
+            list = baseUserService.retrievalUsers(pageForm.getKeyword());
+            return ResultBody.success(list, "模糊搜索用户成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
 
 }

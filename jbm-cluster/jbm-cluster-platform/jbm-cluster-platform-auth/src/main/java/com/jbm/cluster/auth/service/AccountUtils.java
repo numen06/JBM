@@ -1,5 +1,6 @@
 package com.jbm.cluster.auth.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.common.security.OpenUserDetails;
@@ -21,16 +22,17 @@ public class AccountUtils {
      * 设置授权信息
      */
     public static void setAuthorize(OpenUserDetails userDetails, UserAccount account, String username) {
-        userDetails.setDomain(account.getDomain());
-        userDetails.setAccountId(account.getAccountId());
-        userDetails.setUserId(account.getUserId());
-        userDetails.setUsername(username);
-        userDetails.setPassword(account.getPassword());
-        userDetails.setNickName(account.getNickName());
-        userDetails.setAuthorities(account.getAuthorities());
-        userDetails.setAvatar(account.getAvatar());
-        userDetails.setAccountId(account.getAccountId());
-        userDetails.setAccountType(account.getAccountType());
+        BeanUtil.copyProperties(account, userDetails);
+//        userDetails.setDomain(account.getDomain());
+//        userDetails.setAccountId(account.getAccountId());
+//        userDetails.setUserId(account.getUserId());
+//        userDetails.setUsername(username);
+//        userDetails.setPassword(account.getPassword());
+//        userDetails.setNickName(account.getNickName());
+//        userDetails.setAuthorities(account.getAuthorities());
+//        userDetails.setAvatar(account.getAvatar());
+//        userDetails.setAccountId(account.getAccountId());
+//        userDetails.setAccountType(account.getAccountType());
 
         boolean accountNonLocked = account.getStatus().intValue() != BaseConstants.ACCOUNT_STATUS_LOCKED;
         boolean credentialsNonExpired = true;

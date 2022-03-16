@@ -3,6 +3,7 @@ package com.jbm.cluster.common.security;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,6 +16,7 @@ import java.util.Map;
  *
  * @author wesley.zhang
  */
+@Data
 public class OpenUserDetails implements UserDetails {
     private static final long serialVersionUID = -123308657146774881L;
 
@@ -60,12 +62,29 @@ public class OpenUserDetails implements UserDetails {
      * 认证中心域,适用于区分多用户源,多认证中心域
      */
     private String domain;
+    /**
+     * 真实名字
+     */
+    private String realName;
+    /**
+     * 手机号
+     */
+    private String mobile;
+
+    /**
+     * 公司
+     */
+    private Long companyId;
+
+    /**
+     * 部门
+     */
+    private Long departmentId;
 
     /**
      * 昵称
      */
     private String nickName;
-
     /**
      * 头像
      */

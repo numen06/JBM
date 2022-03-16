@@ -69,6 +69,12 @@ public class BaseUser extends MasterDataEntity {
     private String nickName;
 
     /**
+     * 登陆名
+     */
+    @ApiModelProperty("真实姓名")
+    private String realName;
+
+    /**
      * 头像
      */
     @ApiModelProperty("头像")

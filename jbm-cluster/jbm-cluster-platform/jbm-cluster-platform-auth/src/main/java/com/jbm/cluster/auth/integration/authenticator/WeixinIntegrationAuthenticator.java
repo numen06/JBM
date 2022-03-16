@@ -1,12 +1,10 @@
 package com.jbm.cluster.auth.integration.authenticator;
 
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.AbstractPreparableIntegrationAuthenticator;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
-import com.jbm.cluster.auth.integration.authenticator.sms.event.SmsAuthenticateBeforeEvent;
-import com.jbm.cluster.auth.integration.authenticator.sms.event.SmsAuthenticateSuccessEvent;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.auth.service.feign.WeixinClient;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -44,6 +42,8 @@ public class WeixinIntegrationAuthenticator extends AbstractPreparableIntegratio
         String password = integrationAuthentication.getAuthParameter("password");
         //获取用户名，实际值是手机号
         String username = integrationAuthentication.getUsername();
+        //手机号
+        String phone = integrationAuthentication.getAuthParameter("phone");
         //发布事件，可以监听事件进行自动注册用户
         UserAccount userAccount = null;
         //通过手机号码查询用户
@@ -53,14 +53,25 @@ public class WeixinIntegrationAuthenticator extends AbstractPreparableIntegratio
             //将密码设置为验证码
             userAccount.setPassword(passwordEncoder.encode(password));
             //发布事件，可以监听事件进行消息通知
-        } else {
-            String phone = integrationAuthentication.getAuthParameter("phone");
-            userAccount.setPassword(passwordEncoder.encode(password));
-            baseUserServiceClient.bindUserThirdPartyByPhone(username, password, WEIXIN_CODE_AUTH_TYPE, phone);
+        } else if (StrUtil.isNotBlank(phone)) {
+//            if (StrUtil.isNotBlank(phone)) {
+//                baseUserServiceClient.bindUserThirdPartyByPhone(username, passwordEncoder.encode(password), WEIXIN_CODE_AUTH_TYPE, phone);
+//                //再次获取用户
+//                userAccountResultBody = baseUserServiceClient.userLoginByType(username, WEIXIN_CODE_AUTH_TYPE);
+//                if (ObjectUtil.isEmpty(userAccountResultBody)) {
+//                    throw new OAuth2Exception("系统不识别当前用户");
+//                }
+//                userAccount = userAccountResultBody.getResult();
+//                userAccount.setPassword(passwordEncoder.encode(password));
+//            }
+            ThirdPartyUserForm thirdPartyUserForm = new ThirdPartyUserForm();
+            thirdPartyUserForm.setAccount(username);
+            thirdPartyUserForm.setPassword(password);
+            thirdPartyUserForm.setPhone(phone);
+            thirdPartyUserForm.setAccountType(WEIXIN_CODE_AUTH_TYPE);
+            userAccountResultBody = baseUserServiceClient.loginAndRegisterMobileUser(thirdPartyUserForm);
+            userAccount = userAccountResultBody.getResult();
         }
-        //再次获取用户
-        userAccountResultBody = baseUserServiceClient.userLoginByType(username, WEIXIN_CODE_AUTH_TYPE);
-        userAccount = userAccountResultBody.getResult();
         return userAccount;
     }
 

@@ -1,9 +1,11 @@
 package com.jbm.cluster.api.service;
 
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -42,6 +44,10 @@ public interface IBaseUserServiceClient {
             @RequestParam(value = "avatar") String avatar
     );
 
+
+    @ApiOperation(value = "注册并登录第三方系统登录账号", notes = "仅限系统内部调用")
+    @PostMapping("/user/loginAndRegisterMobileUser")
+    ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm);
 
     @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/user/add/bindUserThirdPartyByPhone")

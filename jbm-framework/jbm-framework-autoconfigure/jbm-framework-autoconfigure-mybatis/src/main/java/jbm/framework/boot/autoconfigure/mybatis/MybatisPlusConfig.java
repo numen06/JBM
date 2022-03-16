@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.autoconfigure.MybatisPlusProperties;
 import com.baomidou.mybatisplus.core.parser.ISqlParser;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.google.common.collect.Sets;
+import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -85,6 +86,11 @@ public class MybatisPlusConfig {
         return new MasterDataSqlInjector();
     }
 
+
+    @Bean
+    public CameHumpInterceptor cameHumpInterceptor() {
+        return new CameHumpInterceptor();
+    }
 
     @Autowired
     private MybatisPlusProperties mybatisPlusProperties;

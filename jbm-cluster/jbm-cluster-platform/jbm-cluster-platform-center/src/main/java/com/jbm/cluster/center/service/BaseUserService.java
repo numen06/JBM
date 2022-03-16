@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service;
 
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
@@ -105,4 +106,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     UserAccount login(String account);
 
     UserAccount login(String account, String loginType);
+
+    List<BaseUser> retrievalUsers(String keyword);
+
+    UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm);
 }

@@ -84,13 +84,15 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
      */
     @Override
     public BaseAccount register(Long userId, String account, String password, String accountType, Integer status, String domain, String registerIp) {
-        if (isExist(account, accountType, domain)) {
+        BaseAccount baseAccount = this.getAccount(account, accountType, domain);
+        if (ObjectUtil.isNotEmpty(baseAccount)) {
             // 账号已被注册
-            throw new RuntimeException(String.format("account=[%s],domain=[%s]", account, domain));
+//            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+            return baseAccount;
         }
         //加密
         String encodePassword = passwordEncoder.encode(password);
-        BaseAccount baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
+        baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
         baseAccount.setCreateTime(new Date());
         baseAccount.setUpdateTime(baseAccount.getCreateTime());
         baseAccount.setStatus(status);
@@ -101,9 +103,11 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 
     @Override
     public BaseAccount register(BaseAccount baseAccount) {
-        if (isExist(baseAccount.getAccount(), baseAccount.getAccountType(), baseAccount.getDomain())) {
+        BaseAccount account = this.getAccount(baseAccount.getAccount(), baseAccount.getAccountType(), baseAccount.getDomain());
+        if (ObjectUtil.isNotEmpty(account)) {
             // 账号已被注册
-            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+//            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+            return account;
         }
         //加密
         String encodePassword = passwordEncoder.encode(baseAccount.getPassword());
