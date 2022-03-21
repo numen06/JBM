@@ -20,7 +20,7 @@ import java.util.*;
 public class CameHumpInterceptor implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        log.info("驼峰转换器进行拦截");
+//        log.info("驼峰转换器进行拦截");
         List<Object> list = (List<Object>) invocation.proceed();
         for (Object object : list) {
             //如果结果是Map类型，就对Map的key进行转换
@@ -39,7 +39,7 @@ public class CameHumpInterceptor implements Interceptor {
      * @param map
      */
     private void processMap(Map<String, Object> map) {
-        log.info("驼峰转换器进行拦截处理map类型");
+//        log.info("驼峰转换器进行拦截处理map类型");
         Set<String> keySet = new HashSet<>(map.keySet());
         for (String key : keySet) {
             //以大写开头的字母为小写，如果包含下划线也会处理为驼峰

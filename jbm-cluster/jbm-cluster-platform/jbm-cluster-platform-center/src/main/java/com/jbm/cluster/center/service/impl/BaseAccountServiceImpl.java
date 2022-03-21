@@ -1,7 +1,11 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jbm.cluster.api.constants.AccountStatus;
+import com.jbm.cluster.api.constants.AccountType;
 import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
@@ -9,7 +13,6 @@ import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
-import com.jbm.cluster.common.exception.OpenAlertException;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.PasswordUtils;
@@ -70,6 +73,12 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 
     }
 
+    @Override
+    public BaseAccount registerUsernameAccount(BaseUser baseUser) {
+        return this.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), AccountType.username.toString(), AccountStatus.NORMAL.getKey(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+    }
+
+
     /**
      * 注册账号
      *
@@ -90,11 +99,18 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 //            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
             return baseAccount;
         }
+        //如果没有密码随机注册一个
+        if (StrUtil.isEmpty(password)) {
+            password = IdUtil.fastSimpleUUID();
+        }
         //加密
         String encodePassword = passwordEncoder.encode(password);
         baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
         baseAccount.setCreateTime(new Date());
         baseAccount.setUpdateTime(baseAccount.getCreateTime());
+        if (ObjectUtil.isEmpty(status)) {
+            status = AccountStatus.NORMAL.getKey();
+        }
         baseAccount.setStatus(status);
         baseAccountMapper.insert(baseAccount);
         return baseAccount;

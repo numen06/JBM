@@ -59,8 +59,6 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Autowired
     private BaseAccountService baseAccountService;
 
-    private final String ACCOUNT_DOMAIN = BaseConstants.ACCOUNT_DOMAIN_ADMIN;
-
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
         if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
@@ -98,14 +96,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
-        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
+        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        if (Validator.isEmail(baseUser.getEmail())) {
 //            //注册email账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        }
 //        if (Validator.isMobile(baseUser.getMobile())) {
 //            //注册手机号账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), ACCOUNT_DOMAIN, null);
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        }
     }
 
@@ -119,9 +117,10 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isEmail(dbUser.getEmail())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), ACCOUNT_DOMAIN);
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), BaseConstants.ACCOUNT_DOMAIN_ADMIN);
         //新建一个邮箱帐号
         userNameAccunt.setAccountId(null);
+        userNameAccunt.setAccount(dbUser.getEmail());
         userNameAccunt.setAccountType(AccountType.email.toString());
         baseAccountService.register(userNameAccunt);
     }
@@ -135,9 +134,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isMobile(dbUser.getMobile())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), ACCOUNT_DOMAIN);
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+        if (userNameAccunt == null) {
+            userNameAccunt = baseAccountService.registerUsernameAccount(baseUser);
+        }
         //新建一个手机帐号
         userNameAccunt.setAccountId(null);
+        userNameAccunt.setAccount(StrUtil.toString(dbUser.getMobile()));
         userNameAccunt.setAccountType(AccountType.mobile.toString());
         baseAccountService.register(userNameAccunt);
     }
@@ -155,7 +158,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             return;
         }
         if (baseUser.getStatus() != null) {
-            baseAccountService.updateStatusByUserId(baseUser.getUserId(), ACCOUNT_DOMAIN, baseUser.getStatus());
+            baseAccountService.updateStatusByUserId(baseUser.getUserId(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, baseUser.getStatus());
         }
 //        this.saveEntity(baseUser);
         baseUserMapper.updateById(baseUser);
@@ -169,7 +172,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void addUserThirdParty(BaseUser baseUser, String accountType) {
-        if (!baseAccountService.isExist(baseUser.getUserName(), accountType, ACCOUNT_DOMAIN)) {
+        if (!baseAccountService.isExist(baseUser.getUserName(), accountType, BaseConstants.ACCOUNT_DOMAIN_ADMIN)) {
             baseUser.setUserType(BaseConstants.USER_TYPE_ADMIN);
             baseUser.setCreateTime(new Date());
             baseUser.setUpdateTime(baseUser.getCreateTime());
@@ -179,7 +182,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 this.insertEntity(baseUser);
             }
             // 注册账号信息
-            baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, ACCOUNT_DOMAIN, null);
+            baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
         }
     }
 
@@ -208,7 +211,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void updatePassword(Long userId, String password) {
-        baseAccountService.updatePasswordByUserId(userId, ACCOUNT_DOMAIN, password);
+        baseAccountService.updatePasswordByUserId(userId, BaseConstants.ACCOUNT_DOMAIN_ADMIN, password);
     }
 
     /**
@@ -303,7 +306,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        // 头像
 //        userAccount.setAvatar(baseUser.getAvatar());
 //        // 权限信息
-//        userAccount.setAuthorities(authorities);
+        userAccount.setAuthorities(authorities);
         userAccount.setRoles(roles);
         return userAccount;
     }
@@ -343,18 +346,18 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         // 第三方登录标识
         BaseAccount baseAccount = null;
         if (StringUtils.isNotBlank(loginType)) {
-            baseAccount = baseAccountService.getAccount(account, loginType, ACCOUNT_DOMAIN);
+            baseAccount = baseAccountService.getAccount(account, loginType, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
         } else {
             // 非第三方登录
             //用户名登录
-            baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, ACCOUNT_DOMAIN);
+            baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
             // 手机号登陆
             if (Validator.isMobile(account)) {
-                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, ACCOUNT_DOMAIN);
+                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
             }
             // 邮箱登陆
             if (Validator.isEmail(account)) {
-                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, ACCOUNT_DOMAIN);
+                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
             }
         }
 
@@ -365,7 +368,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 HttpServletRequest request = WebUtils.getHttpServletRequest();
                 if (request != null) {
                     BaseAccountLogs log = new BaseAccountLogs();
-                    log.setDomain(ACCOUNT_DOMAIN);
+                    log.setDomain(BaseConstants.ACCOUNT_DOMAIN_ADMIN);
                     log.setUserId(baseAccount.getUserId());
                     log.setAccount(baseAccount.getAccount());
                     log.setAccountId(String.valueOf(baseAccount.getAccountId()));

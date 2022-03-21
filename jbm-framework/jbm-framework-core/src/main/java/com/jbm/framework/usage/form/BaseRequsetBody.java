@@ -69,9 +69,9 @@ public class BaseRequsetBody extends JSONBean {
      */
     public <E> E tryGet(String name, Class<E> clazz) {
         if (StringUtils.isNotBlank(name) && this.containsKey(name)) {
-            return JSON.parseObject(this.getJSONObject(name).toJSONString(), clazz);
+            return this.getObject(name, clazz);
         }
-        return JSON.parseObject(this.toJSONString(), clazz);
+        return this.toJavaObject(clazz);
     }
 
     public Map<String, Object> tryToMap() {

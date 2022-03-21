@@ -29,7 +29,7 @@ public class AccountUtils {
         userDetails.setUsername(username);
 //        userDetails.setPassword(account.getPassword());
 //        userDetails.setNickName(account.getNickName());
-//        userDetails.setAuthorities(account.getAuthorities());
+        userDetails.setAuthorities(account.getAuthorities());
 //        userDetails.setAvatar(account.getAvatar());
 //        userDetails.setAccountId(account.getAccountId());
 //        userDetails.setAccountType(account.getAccountType());

@@ -2,6 +2,7 @@ package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
+import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**
@@ -32,6 +33,8 @@ public interface BaseAccountService extends IMasterDataService<BaseAccount> {
      */
     BaseAccount getAccount(String account, String accountType, String domain);
 
+
+    BaseAccount registerUsernameAccount(BaseUser baseUser);
 
     /**
      * 注册账号
