@@ -257,6 +257,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser getUserByPhone(String phone) {
+        if (StrUtil.isBlank(phone))
+            return null;
         BaseUser baseUser = new BaseUser();
         baseUser.setMobile(phone);
         return this.selectEntity(baseUser);

@@ -2,8 +2,10 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
+import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +28,10 @@ public interface IBaseUserServiceClient {
     @PostMapping("/user/loginByType")
     ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
                                             @RequestParam(value = "loginType") String loginType);
+
+    @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
+    @PostMapping(value = "/user/update", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    ResultBody updateUser(BaseUser user);
 
     /**
      * 注册第三方系统登录账号
@@ -57,4 +63,8 @@ public interface IBaseUserServiceClient {
             @RequestParam(value = "accountType") String accountType,
             @RequestParam(value = "phone") String phone
     );
+
+    @ApiOperation(value = "模糊搜索用户")
+    @PostMapping("/user/getUserByPhone")
+    ResultBody<BaseUser> getUserByPhone(@RequestParam(value = "phone") String phone);
 }

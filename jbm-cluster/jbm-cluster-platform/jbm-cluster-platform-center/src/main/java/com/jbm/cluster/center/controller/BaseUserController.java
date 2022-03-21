@@ -144,37 +144,21 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     /**
      * 更新系统用户
      *
-     * @param userId
-     * @param nickName
-     * @param status
-     * @param userType
-     * @param email
-     * @param mobile
-     * @param userDesc
-     * @param avatar
      * @return
      */
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/update")
-    public ResultBody updateUser(
-            @RequestParam(value = "userId") Long userId,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "status") Integer status,
-            @RequestParam(value = "userType") String userType,
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "mobile", required = false) String mobile,
-            @RequestParam(value = "userDesc", required = false) String userDesc,
-            @RequestParam(value = "avatar", required = false) String avatar
-    ) {
-        BaseUser user = new BaseUser();
-        user.setUserId(userId);
-        user.setNickName(nickName);
-        user.setUserType(userType);
-        user.setEmail(email);
-        user.setMobile(mobile);
-        user.setUserDesc(userDesc);
-        user.setAvatar(avatar);
-        user.setStatus(status);
+    @Override
+    public ResultBody updateUser(BaseUser user) {
+//        BaseUser user = new BaseUser();
+//        user.setUserId(userId);
+//        user.setNickName(nickName);
+//        user.setUserType(userType);
+//        user.setEmail(email);
+//        user.setMobile(mobile);
+//        user.setUserDesc(userDesc);
+//        user.setAvatar(avatar);
+//        user.setStatus(status);
         baseUserService.updateUser(user);
         return ResultBody.ok();
     }
@@ -220,7 +204,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @PostMapping("/activationMobileAccount")
     public ResultBody activationMobileAccount(BaseUser baseUser) {
         baseUserService.activationMobileAccount(baseUser);
-        return ResultBody.ok().msg("修改密码成功");
+        return ResultBody.ok().msg("激活用户手机帐号成功");
     }
 
     /**
@@ -335,6 +319,18 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             List<BaseUser> list = Lists.newArrayList();
             list = baseUserService.retrievalUsers(pageForm.getKeyword());
             return ResultBody.success(list, "模糊搜索用户成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    @ApiOperation(value = "模糊搜索用户")
+    @PostMapping("/getUserByPhone")
+    @Override
+    public ResultBody<BaseUser> getUserByPhone(String phone) {
+        try {
+            BaseUser user = baseUserService.getUserByPhone(phone);
+            return ResultBody.success(user, "查找用户成功");
         } catch (Exception e) {
             return ResultBody.error(e);
         }
