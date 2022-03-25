@@ -43,7 +43,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/login/**","/oauth/**").permitAll()
+                .antMatchers("/captcha/**", "/login/**", "/oauth/**").permitAll()
                 // 监控端点内部放行
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 .anyRequest().authenticated()
@@ -76,15 +76,15 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
             try {
                 // 解密请求头
-                authentication =  tokenExtractor.extract(request);
-                if(authentication!=null && authentication.getPrincipal()!=null){
+                authentication = tokenExtractor.extract(request);
+                if (authentication != null && authentication.getPrincipal() != null) {
                     String tokenValue = authentication.getPrincipal().toString();
-                    log.debug("revokeToken tokenValue:{}",tokenValue);
+                    log.debug("revokeToken tokenValue:{}", tokenValue);
                     // 移除token
                     tokenStore.removeAccessToken(tokenStore.readAccessToken(tokenValue));
                 }
-            }catch (Exception e){
-                log.error("revokeToken error:{}",e);
+            } catch (Exception e) {
+                log.error("revokeToken error:{}", e);
             }
             super.onLogoutSuccess(request, response, authentication);
         }

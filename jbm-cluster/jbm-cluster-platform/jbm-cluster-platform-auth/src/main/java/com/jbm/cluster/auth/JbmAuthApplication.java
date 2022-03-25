@@ -41,6 +41,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableDiscoveryClient
 public class JbmAuthApplication {
+    static {
+        System.setProperty("java.awt.headless", "true");
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(JbmAuthApplication.class, args);

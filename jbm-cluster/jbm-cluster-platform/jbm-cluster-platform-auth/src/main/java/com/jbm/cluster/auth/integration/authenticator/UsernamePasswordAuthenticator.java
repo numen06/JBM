@@ -8,6 +8,8 @@ import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,6 +22,9 @@ import org.springframework.stereotype.Component;
 @Primary
 public class UsernamePasswordAuthenticator extends AbstractPreparableIntegrationAuthenticator {
 
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private BaseUserServiceClient baseUserServiceClient;
 
@@ -32,7 +37,21 @@ public class UsernamePasswordAuthenticator extends AbstractPreparableIntegration
 
     @Override
     public void prepare(IntegrationAuthentication integrationAuthentication) {
+        String vcode = integrationAuthentication.getAuthParameter("vcode");
+        if (StrUtil.isBlank(vcode)) {
+            return;
+        }
+        //验证验证码
+        String checkCode = stringRedisTemplate.opsForValue().get(this.getVcodePath(null));
+        if (StrUtil.equalsIgnoreCase(vcode, checkCode)) {
+        } else {
+            throw new OAuth2Exception("验证码错误");
+        }
+    }
 
+    public String getVcodePath(String scope) {
+        String key = "/vcode/" + StrUtil.emptyToDefault(scope, "");
+        return key;
     }
 
     @Override
