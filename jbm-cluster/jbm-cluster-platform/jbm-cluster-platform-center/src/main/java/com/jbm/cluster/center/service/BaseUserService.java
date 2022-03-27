@@ -19,6 +19,8 @@ import java.util.List;
  */
 public interface BaseUserService extends IMasterDataService<BaseUser> {
 
+    void register(BaseUser baseUser, String registerIp);
+
     /**
      * 添加用户信息
      *

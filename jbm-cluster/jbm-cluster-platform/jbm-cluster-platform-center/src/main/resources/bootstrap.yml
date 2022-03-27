@@ -31,9 +31,10 @@ jbm:
       - /app/*/info
       - /app/client/*/info
       - /gateway/api/**
-      - /user/add/thirdParty
+#      - /user/add/thirdParty
       - /user/info
       - /user/login
+      - /user/register
       - /developer/add/thirdParty
       - /developer/info
       - /developer/login

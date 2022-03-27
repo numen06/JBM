@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
@@ -92,6 +94,14 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 //        return new JdbcAuthorizationCodeServices(dataSource);
 //    }
 
+    /**
+     * 设置授权码模式的授权码如何存取，暂时采用内存方式
+     */
+    @Bean
+    public AuthorizationCodeServices authorizationCodeServices() {
+        return new InMemoryAuthorizationCodeServices();
+    }
+
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
@@ -129,16 +139,23 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         tokenServices.setTokenEnhancer(tokenEnhancer());
         tokenServices.setSupportRefreshToken(true);
         tokenServices.setReuseRefreshToken(true);
+        // 令牌默认有效期2小时
+        tokenServices.setAccessTokenValiditySeconds(7200);
+        // 刷新令牌默认有效期3天
+        tokenServices.setRefreshTokenValiditySeconds(259200);
         tokenServices.setClientDetailsService(customClientDetailsService);
         return tokenServices;
     }
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security.allowFormAuthenticationForClients()
+        security
                 // 开启/oauth/check_token验证端口认证权限访问
-                .checkTokenAccess("isAuthenticated()")
+//                .checkTokenAccess("isAuthenticated()")
                 .checkTokenAccess("permitAll()")
+                // oauth/token_key 公开密钥
+                .tokenKeyAccess("permitAll()")
+                .allowFormAuthenticationForClients()
                 .addTokenEndpointAuthenticationFilter(integrationAuthenticationFilter);
     }
 

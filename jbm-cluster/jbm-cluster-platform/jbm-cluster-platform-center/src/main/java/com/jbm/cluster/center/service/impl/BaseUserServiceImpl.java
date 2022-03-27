@@ -25,6 +25,7 @@ import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -76,6 +77,26 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         return baseUser;
     }
 
+    @Override
+    public void register(BaseUser baseUser, String registerIp) {
+        if (getUserByUsername(baseUser.getUserName()) != null) {
+            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
+        }
+        PasswordUtils.checkPassword(baseUser.getPassword());
+        baseUser.setStatus(1);
+        //保存系统用户信息
+        baseUserMapper.insert(baseUser);
+        //默认注册用户名账户
+        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+        if (Validator.isEmail(baseUser.getEmail())) {
+            //注册email账号登陆
+            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+        }
+        if (Validator.isMobile(baseUser.getMobile())) {
+            //注册手机号账号登陆
+            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+        }
+    }
 
     /**
      * 添加系统用户

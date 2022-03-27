@@ -1,5 +1,8 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.exceptions.ValidateException;
+import cn.hutool.core.lang.Validator;
+import cn.hutool.extra.servlet.ServletUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.form.BaseUserForm;
@@ -11,10 +14,12 @@ import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.PageForm;
+import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -23,6 +28,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.xml.ws.Service;
 import java.util.List;
 import java.util.Map;
 
@@ -98,6 +104,42 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @PostMapping("/all")
     public ResultBody<List<BaseRole>> getUserAllList() {
         return ResultBody.ok().data(baseUserService.findAllList());
+    }
+
+    /**
+     * 添加系统用户
+     *
+     * @return
+     */
+    @ApiOperation(value = "注册账号", notes = "添加系统用户")
+    @PostMapping("/register")
+    @Override
+    public ResultBody register(@RequestParam(value = "registerIp", required = false) String registerIp,
+                               @RequestParam(value = "userName") String userName,
+                               @RequestParam(value = "nickName", required = false) String nickName,
+                               @RequestParam(value = "accountType", required = false) String accountType,
+                               @RequestParam(value = "password") String password,
+                               @RequestParam(value = "confirmPassword") String confirmPassword
+    ) {
+        try {
+//            Validator.validateEmpty(userName, "用户名为空");
+            if (userName.length() < 2) {
+                throw new ValidateException("用户名少于两个字符");
+            }
+            PasswordUtils.validatorPassword("", password, confirmPassword);
+            BaseUser user = new BaseUser();
+            user.setUserName(userName);
+            user.setPassword(password);
+            user.setNickName(nickName);
+            baseUserService.register(user, registerIp);
+            return ResultBody.ok().msg("注册账号成功");
+        } catch (ValidateException e) {
+            return ResultBody.failed().msg(e.getMessage());
+        } catch (ServiceException e) {
+            return ResultBody.failed().msg(e.getMessage());
+        } catch (Exception e) {
+            return ResultBody.failed().msg("帐号注册错误").exception(e);
+        }
     }
 
     /**

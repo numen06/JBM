@@ -3,10 +3,10 @@ package com.jbm.cluster.auth.controller;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.jbm.cluster.auth.integration.IntegrationAuthenticationFilter;
+import com.jbm.cluster.auth.service.VCoderService;
+import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientDetails;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
@@ -27,8 +27,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -36,42 +34,44 @@ import java.util.Map;
  * @date: 2018/11/9 15:43
  * @description:
  */
-@Api(tags = "用户认证中心")
+@Api(tags = "账号认证中心")
 @RestController
+@RequestMapping("/login")
 public class LoginController {
 
     private static final String LOGIN_TYPE_PARM_NAME = "login_type";
-
+    @Autowired
+    private VCoderService vCoderService;
     @Autowired
     private JbmOAuth2ClientProperties clientProperties;
     @Autowired
     private TokenStore tokenStore;
     @Autowired
     private RestTemplate restTemplate;
-
-    /**
-     * 获取用户基础信息
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取当前登录用户信息", notes = "获取当前登录用户信息")
-    @GetMapping("/current/user")
-    public ResultBody getUserProfile() {
-        return ResultBody.ok().data(JbmClusterHelper.getUser());
-    }
+    @Autowired(required = false)
+    private BaseUserServiceClient baseUserServiceClient;
 
 
     /**
-     * 获取当前登录用户信息-SSO单点登录
+     * 获取用户基础信
      *
-     * @param principal
      * @return
      */
-    @ApiOperation(value = "获取当前登录用户信息-SSO单点登录", notes = "获取当前登录用户信息-SSO单点登录")
-    @GetMapping("/current/user/sso")
-    public Principal principal(Principal principal) {
-        return principal;
+    @ApiOperation(value = "注册帐号", notes = "")
+    @PostMapping("/register")
+    public ResultBody register(HttpServletRequest request, @RequestParam(value = "vcode") String vcode,
+                               @RequestParam(value = "userName") String userName,
+                               @RequestParam(value = "nickName", required = false) String nickName,
+                               @RequestParam(value = "accountType", required = false) String accountType,
+                               @RequestParam(value = "password") String password,
+                               @RequestParam(value = "confirmPassword") String confirmPassword) {
+        if (!vCoderService.verify(vcode, null)) {
+            return ResultBody.failed().msg("验证码错误");
+        }
+        String registerIp = ServletUtil.getClientIP(request, null);
+        return baseUserServiceClient.register(registerIp, userName, nickName, accountType, password, confirmPassword);
     }
+
 
     /**
      * 获取用户访问令牌
@@ -84,9 +84,11 @@ public class LoginController {
     @ApiOperation(value = "登录获取用户访问令牌", notes = "基于oauth2密码模式登录,无需签名,返回access_token")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "form"),
-            @ApiImplicitParam(name = "password", required = true, value = "登录密码", paramType = "form")
+            @ApiImplicitParam(name = "password", required = true, value = "登录密码", paramType = "form"),
+            @ApiImplicitParam(name = "type", required = false, value = "登录类型", paramType = "form"),
+            @ApiImplicitParam(name = "vcode", required = false, value = "验证码", paramType = "form")
     })
-    @PostMapping("/login/token")
+    @PostMapping("/token")
     public Object getLoginToken(@RequestParam String username, @RequestParam String password, @RequestParam(required = false) String type, @RequestHeader HttpHeaders httpHeaders, HttpServletRequest request) throws Exception {
         Map result = getToken(username, password, type, httpHeaders, request);
         if (result.containsKey("access_token")) {
@@ -100,7 +102,7 @@ public class LoginController {
 //            @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "form"),
 //            @ApiImplicitParam(name = "password", required = true, value = "登录密码", paramType = "form")
 //    })
-//    @PostMapping("/login/token")
+//    @PostMapping("/token")
 //    public Object getLoginToken(@RequestParam String username, @RequestParam String password, @RequestHeader HttpHeaders httpHeaders) throws Exception {
 //        Map result = getToken(username, password, null, httpHeaders, null);
 //        if (result.containsKey("access_token")) {

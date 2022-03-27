@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.AbstractPreparableIntegrationAuthenticator;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
+import com.jbm.cluster.auth.service.VCoderService;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class UsernamePasswordAuthenticator extends AbstractPreparableIntegration
 
 
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    private VCoderService vCoderService;
     @Autowired
     private BaseUserServiceClient baseUserServiceClient;
 
@@ -42,17 +43,12 @@ public class UsernamePasswordAuthenticator extends AbstractPreparableIntegration
             return;
         }
         //验证验证码
-        String checkCode = stringRedisTemplate.opsForValue().get(this.getVcodePath(null));
-        if (StrUtil.equalsIgnoreCase(vcode, checkCode)) {
+        if (vCoderService.verify(vcode, null)) {
         } else {
             throw new OAuth2Exception("验证码错误");
         }
     }
 
-    public String getVcodePath(String scope) {
-        String key = "/vcode/" + StrUtil.emptyToDefault(scope, "");
-        return key;
-    }
 
     @Override
     public boolean support(IntegrationAuthentication integrationAuthentication) {
