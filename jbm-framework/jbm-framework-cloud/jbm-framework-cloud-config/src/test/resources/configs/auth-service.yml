@@ -1,9 +1,0 @@
-server:
-  servlet:
-    context-path: /uaa
-  port: 5000
-spring:
-  security:
-    oauth2:
-      resource:
-        filter-order: 3

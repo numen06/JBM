@@ -20,6 +20,7 @@
         <module>jbm-cluster-platform-logs</module>
         <module>jbm-cluster-platform-bigscreen</module>
         <module>jbm-cluster-platform-weixin</module>
+        <module>jbm-cluster-platform-job</module>
     </modules>
 
 </project>

@@ -1,4 +1,0 @@
-org.springframework.context.ApplicationListener=\
-com.jbm.framework.cloud.config.event.ApplicationEnvironmentDefaultEvent
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.jbm.framework.cloud.config.ConfigServerConfiguration

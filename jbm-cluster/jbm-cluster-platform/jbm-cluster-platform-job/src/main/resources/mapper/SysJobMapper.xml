@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbm.cluster.job.mapperSysJobMapper">
+
+	<select id="selectJobList" parameterType="map" resultType="map">
+		select * from sys_job
+		<where>
+			<if test="jobName != null and jobName != ''">
+				AND job_name like concat('%', #{jobName}, '%')
+			</if>
+			<if test="jobGroup != null and jobGroup != ''">
+				AND job_group = #{jobGroup}
+			</if>
+			<if test="status != null and status != ''">
+				AND status = #{status}
+			</if>
+			<if test="invokeTarget != null and invokeTarget != ''">
+				AND invoke_target like concat('%', #{invokeTarget}, '%')
+			</if>
+		</where>
+	</select>
+	
+
+</mapper> 

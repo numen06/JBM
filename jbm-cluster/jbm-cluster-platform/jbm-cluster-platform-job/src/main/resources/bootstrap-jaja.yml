@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: ${config.namespace}
+        #        group: ${config.group}
+        refreshable-dataids: common.properties
+        server-addr: ${config.server-addr}
+        shared-dataids: ${jbm.cluster.nacos-confs}
+      discovery:
+#        namespace:
+        #        group: ${config.group}
+        server-addr: ${discovery.server-addr}
+#        ip: 10.100.50.2

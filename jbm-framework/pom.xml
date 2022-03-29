@@ -30,7 +30,7 @@
         <!-- <module>jbm-framework-devops</module> -->
         <module>jbm-framework-data</module>
         <module>jbm-framework-spring</module>
-        <module>jbm-framework-cloud</module>
+<!--        <module>jbm-framework-cloud</module>-->
         <module>jbm-framework-aliyun</module>
         <module>jbm-framework-baidu</module>
         <module>jbm-framework-weixin</module>

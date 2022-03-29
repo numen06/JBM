@@ -25,8 +25,11 @@ public class QueueConstants {
      */
     public static final String QUEUE_PUSH_MESSAGE = "cloud.push.message";
     /**
-     * 集群时间
+     * 集群事件
      */
     public static final String QUEUE_CLUSTER_EVENT = "cluster.event";
+    /**
+     * 集群事件路由器
+     */
     public static final String QUEUE_CLUSTER_EVENT_EXCHANGE = QUEUE_CLUSTER_EVENT + ".exchange";
 }
