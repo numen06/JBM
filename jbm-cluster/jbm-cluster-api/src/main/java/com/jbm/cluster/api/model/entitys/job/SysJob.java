@@ -59,20 +59,20 @@ public class SysJob extends MasterDataEntity {
     /**
      * cron执行表达式
      */
-    @ApiModelProperty("执行表达式 ")
+    @ApiModelProperty("执行表达式")
     private String cronExpression;
 
     /**
      * cron计划策略
      */
     @ApiModelProperty("计划策略:0=默认,1=立即触发执行,2=触发一次执行,3=不触发立即执行")
-    private MisfirePolicy misfirePolicy = MisfirePolicy.DEFAULT;
+    private MisfirePolicy misfirePolicy;
 
     /**
      * 是否并发执行（0允许 1禁止）
      */
-    @ApiModelProperty("并发执行:0=允许,1=禁止")
-    private String concurrent = "1";
+    @ApiModelProperty("并发执行:1=允许,0=禁止")
+    private Boolean concurrent;
 
     /**
      * 任务状态（0正常 1暂停）

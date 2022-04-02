@@ -3,9 +3,11 @@ package com.jbm.cluster.job.util;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
 import com.jbm.cluster.api.model.entitys.job.SysJobLog;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -30,15 +32,16 @@ public abstract class AbstractQuartzJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         SysJob sysJob = new SysJob();
-        BeanUtil.copyProperties(sysJob, context.getMergedJobDataMap().get(ScheduleConstants.TASK_PROPERTIES));
+        String data = context.getMergedJobDataMap().getString(ScheduleConstants.TASK_PROPERTIES);
         try {
+            sysJob = JSON.parseObject(data, SysJob.class);
             before(context, sysJob);
             if (sysJob != null) {
                 doExecute(context, sysJob);
             }
             after(context, sysJob, null);
         } catch (Exception e) {
-            log.error("任务执行异常  - ：", e);
+            log.error("任务执行异常:{}", data, e);
             after(context, sysJob, e);
         }
     }

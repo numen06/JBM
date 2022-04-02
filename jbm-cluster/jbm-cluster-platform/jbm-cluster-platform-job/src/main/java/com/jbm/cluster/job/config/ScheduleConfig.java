@@ -3,6 +3,7 @@ package com.jbm.cluster.job.config;
 import java.util.Properties;
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -13,7 +14,9 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
  * @author wesley
  */
 @Configuration
+@Slf4j
 public class ScheduleConfig {
+
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean(DataSource dataSource) {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
@@ -41,7 +44,7 @@ public class ScheduleConfig {
         prop.put("org.quartz.jobStore.tablePrefix", "QRTZ_");
         factory.setQuartzProperties(prop);
 
-        factory.setSchedulerName("RuoyiScheduler");
+        factory.setSchedulerName("JbmScheduler");
         // 延时启动
         factory.setStartupDelay(1);
         factory.setApplicationContextSchedulerContextKey("applicationContextKey");
@@ -50,7 +53,7 @@ public class ScheduleConfig {
         factory.setOverwriteExistingJobs(true);
         // 设置自动启动，默认为true
         factory.setAutoStartup(true);
-
+        log.info("初始化JbmScheduler");
         return factory;
     }
 }

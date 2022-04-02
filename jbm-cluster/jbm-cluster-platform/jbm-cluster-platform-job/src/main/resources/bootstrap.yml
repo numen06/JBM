@@ -36,3 +36,5 @@ swagger2:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  #枚举扫描包
+  type-enums-package: com.jbm.cluster.api.constants,com.jbm.framework.masterdata.constant

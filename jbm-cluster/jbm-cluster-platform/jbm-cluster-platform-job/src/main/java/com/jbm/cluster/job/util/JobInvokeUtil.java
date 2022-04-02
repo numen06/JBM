@@ -1,9 +1,11 @@
 package com.jbm.cluster.job.util;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
-import jbm.framework.spring.config.SpringContextHolder;
+import jbm.framework.spring.config.SpringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,6 +17,7 @@ import java.util.List;
  *
  * @author wesley
  */
+@Slf4j
 public class JobInvokeUtil {
     /**
      * 执行方法
@@ -25,9 +28,10 @@ public class JobInvokeUtil {
         String invokeTarget = sysJob.getInvokeTarget();
         String beanName = getBeanName(invokeTarget);
         String methodName = getMethodName(invokeTarget);
+        log.info("调用字符串为:{},对象:{},方法:{}", invokeTarget, beanName, methodName);
         List<Object[]> methodParams = getMethodParams(invokeTarget);
         if (!isValidClassName(beanName)) {
-            Object bean = SpringContextHolder.getBean(beanName);
+            Object bean = SpringUtils.getBean(beanName);
             invokeMethod(bean, methodName, methodParams);
         } else {
             Object bean = Class.forName(beanName).newInstance();
@@ -46,11 +50,9 @@ public class JobInvokeUtil {
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException {
         if (CollUtil.isNotEmpty(methodParams)) {
-            Method method = bean.getClass().getDeclaredMethod(methodName, getMethodParamsType(methodParams));
-            method.invoke(bean, getMethodParamsValue(methodParams));
+            ReflectUtil.invoke(bean, methodName, methodParams);
         } else {
-            Method method = bean.getClass().getDeclaredMethod(methodName);
-            method.invoke(bean);
+            ReflectUtil.invoke(bean, methodName);
         }
     }
 
@@ -82,8 +84,8 @@ public class JobInvokeUtil {
      * @return method方法
      */
     public static String getMethodName(String invokeTarget) {
-        String methodName = StrUtil.subBefore(invokeTarget, "(", false);
-        return StrUtil.subBefore(methodName, ".", true);
+        String methodName = StrUtil.subBefore(invokeTarget, "(", true);
+        return StrUtil.subAfter(methodName, ".", true);
     }
 
     /**

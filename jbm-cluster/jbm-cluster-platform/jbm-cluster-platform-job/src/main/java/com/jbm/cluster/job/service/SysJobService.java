@@ -44,4 +44,6 @@ public interface SysJobService extends IMasterDataService<SysJob> {
      * @return 结果
      */
     public boolean checkCronExpressionIsValid(String cronExpression);
+
+    int insertJob(SysJob job) throws SchedulerException, TaskException;
 }

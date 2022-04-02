@@ -1,5 +1,7 @@
 package com.jbm.cluster.job.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
@@ -7,7 +9,9 @@ import com.jbm.cluster.common.exception.job.TaskException;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
 import com.jbm.cluster.job.util.ScheduleUtils;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -24,6 +28,7 @@ import java.util.List;
  *
  * @author wesley
  */
+@Slf4j
 @Service
 public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements SysJobService {
     @Autowired
@@ -34,11 +39,24 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
      */
     @PostConstruct
     public void init() throws SchedulerException, TaskException {
-        scheduler.clear();
         List<SysJob> jobList = this.selectAll();
         for (SysJob job : jobList) {
-            ScheduleUtils.createScheduleJob(scheduler, job);
+            try {
+                ScheduleUtils.createScheduleJob(scheduler, job);
+            } catch (Exception e) {
+                log.error("初始化任务失败:{}", job.getJobName(), e);
+            }
         }
+    }
+
+    @Override
+    public SysJob saveEntity(scheduler.clear();
+     SysJob entity) {
+        if (ObjectUtil.isEmpty(entity.getMisfirePolicy()))
+            entity.setMisfirePolicy(MisfirePolicy.DEFAULT);
+        if (ObjectUtil.isEmpty(entity.getConcurrent()))
+            entity.setConcurrent(false);
+        return super.saveEntity(entity);
     }
 
     /**
@@ -89,6 +107,15 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         return rows;
     }
 
+    @Override
+    public boolean deleteEntity(SysJob entity) {
+        try {
+            return this.deleteJob(entity) > 0;
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
+
     /**
      * 删除任务后，所对应的trigger也将被删除
      *
@@ -136,8 +163,8 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     @Transactional(rollbackFor = Exception.class)
     public void run(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
         SysJob properties = this.baseMapper.selectById(job.getJobId());
+        String jobGroup = properties.getJobGroup();
         // 参数
         JobDataMap dataMap = new JobDataMap();
         dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
@@ -171,5 +198,15 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     @Override
     public boolean checkCronExpressionIsValid(String cronExpression) {
         return CronUtils.isValid(cronExpression);
+    }
+
+    @Override
+    public int insertJob(SysJob job) throws SchedulerException, TaskException {
+        job.setStatus(ScheduleStauts.PAUSE);
+        int rows = this.saveEntity(job) == null ? 0 : 1;
+        if (rows > 0) {
+            ScheduleUtils.createScheduleJob(scheduler, job);
+        }
+        return rows;
     }
 }

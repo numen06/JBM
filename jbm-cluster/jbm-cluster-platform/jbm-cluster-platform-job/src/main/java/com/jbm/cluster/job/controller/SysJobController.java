@@ -14,6 +14,7 @@ import com.jbm.cluster.job.util.ScheduleUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     /**
      * 导出定时任务列表
      */
+    @ApiOperation(value = "导出定时任务列表", notes = "")
     @RequiresPermissions("monitor:job:export")
     @PostMapping("/export")
     public void export(HttpServletResponse response, SysJob sysJob) {
@@ -53,13 +55,14 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     /**
      * 新增定时任务
      */
+    @ApiOperation(value = "新增定时任务", notes = "")
     @RequiresPermissions("monitor:job:add")
-    @PostMapping
+    @PostMapping("/add")
     public ResultBody add(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         } else if (StrUtil.containsIgnoreCase(job.getInvokeTarget(), CommonConstants.LOOKUP_RMI)) {
-            return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失 败，目标字符串不允许'rmi'调用");
+            return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'rmi'调用");
         } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.LOOKUP_LDAP, CommonConstants.LOOKUP_LDAPS})) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'ldap(s)'调用");
         } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.HTTP, CommonConstants.HTTPS})) {
@@ -70,14 +73,15 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
         }
         job.setCreateBy(JbmClusterHelper.getUser().getUsername());
-        return ResultBody.success(this.service.insertEntity(job), "");
+        return ResultBody.success(this.service.insertJob(job), "");
     }
 
     /**
      * 修改定时任务
      */
+    @ApiOperation(value = "修改定时任务", notes = "")
     @RequiresPermissions("monitor:job:edit")
-    @PutMapping
+    @PostMapping("/edit")
     public ResultBody edit(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
@@ -99,6 +103,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     /**
      * 定时任务状态修改
      */
+    @ApiOperation(value = "定时任务状态修改", notes = "")
     @RequiresPermissions("monitor:job:changeStatus")
     @PutMapping("/changeStatus")
     public ResultBody changeStatus(@RequestBody SysJob job) throws SchedulerException {
@@ -110,6 +115,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     /**
      * 定时任务立即执行一次
      */
+    @ApiOperation(value = "定时任务立即执行一次", notes = "")
     @RequiresPermissions("monitor:job:changeStatus")
     @PutMapping("/run")
     public ResultBody run(@RequestBody SysJob job) throws SchedulerException {

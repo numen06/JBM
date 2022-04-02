@@ -1,6 +1,7 @@
 package com.jbm.cluster.job.util;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
@@ -23,8 +24,7 @@ public class ScheduleUtils {
      * @return 具体执行任务类
      */
     private static Class<? extends Job> getQuartzJobClass(SysJob sysJob) {
-        boolean isConcurrent = "0".equals(sysJob.getConcurrent());
-        return isConcurrent ? QuartzJobExecution.class : QuartzDisallowConcurrentExecution.class;
+        return sysJob.getConcurrent() ? QuartzJobExecution.class : QuartzDisallowConcurrentExecution.class;
     }
 
     /**
@@ -60,7 +60,7 @@ public class ScheduleUtils {
                 .withSchedule(cronScheduleBuilder).build();
 
         // 放入参数，运行时的方法可以获取
-        jobDetail.getJobDataMap().put(ScheduleConstants.TASK_PROPERTIES, job);
+        jobDetail.getJobDataMap().put(ScheduleConstants.TASK_PROPERTIES, JSON.toJSONString(job));
 
         // 判断是否存在
         if (scheduler.checkExists(getJobKey(jobId, jobGroup))) {
