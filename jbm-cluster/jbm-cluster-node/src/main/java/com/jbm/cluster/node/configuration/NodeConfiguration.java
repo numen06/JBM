@@ -1,6 +1,7 @@
 package com.jbm.cluster.node.configuration;
 
 import com.jbm.autoconfig.dic.DictionaryTemplate;
+import com.jbm.cluster.common.annotation.JbmClusterScheduled;
 import com.jbm.cluster.common.annotation.RequestMappingScan;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.common.configuration.JbmIdGenProperties;
@@ -13,13 +14,14 @@ import com.jbm.cluster.common.security.OpenUserConverter;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import com.jbm.cluster.node.configuration.cluster.ClusterDicScan;
+import com.jbm.cluster.node.configuration.cluster.JbmClusterEventRegistry;
+import com.jbm.cluster.node.configuration.cluster.JbmClusterScheduledRegistry;
 import com.jbm.cluster.node.configuration.fegin.FeignRequestOAuth2Interceptor;
 import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -176,6 +178,18 @@ public class NodeConfiguration {
         DefaultAccessTokenConverter accessTokenConverter = new DefaultAccessTokenConverter();
         accessTokenConverter.setUserTokenConverter(userAuthenticationConverter);
         return accessTokenConverter;
+    }
+
+    @Bean
+    public JbmClusterEventRegistry jbmClusterEventRegistry() {
+        JbmClusterEventRegistry jbmClusterEventRegistry = new JbmClusterEventRegistry();
+        return jbmClusterEventRegistry;
+    }
+
+    @Bean
+    public JbmClusterScheduledRegistry jbmClusterScheduledRegistry() {
+        JbmClusterScheduledRegistry clusterScheduledRegistry = new JbmClusterScheduledRegistry();
+        return clusterScheduledRegistry;
     }
 
 }

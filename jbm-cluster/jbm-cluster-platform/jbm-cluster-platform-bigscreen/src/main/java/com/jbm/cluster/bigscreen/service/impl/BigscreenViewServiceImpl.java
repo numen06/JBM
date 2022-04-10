@@ -19,12 +19,15 @@ import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.PathUtils;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -39,8 +42,32 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService {
+public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService, ApplicationListener<ApplicationReadyEvent> {
 
+    /**
+     * 系统启动之后加载所有大屏
+     *
+     * @param event
+     */
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        try {
+            List<BigscreenView> list = this.selectAll();
+            for (BigscreenView bigscreenView : list) {
+                if (this.isUpload(bigscreenView)) {
+                    //跳过已经部署的
+                    continue;
+                }
+                try {
+                    this.upload(bigscreenView);
+                } catch (Exception e) {
+                    log.error("部署大屏{}错误", bigscreenView.getViewName(), e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("部署大屏异常", e);
+        }
+    }
 
     /***
      * 是否已经上传
@@ -296,5 +323,6 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         }
         return bigscreenView;
     }
+
 
 }

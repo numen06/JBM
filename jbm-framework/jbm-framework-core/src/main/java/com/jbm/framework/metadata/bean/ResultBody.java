@@ -1,6 +1,8 @@
 package com.jbm.framework.metadata.bean;
 
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.ServiceException;
@@ -10,11 +12,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
- * @author admin
+ * @author wesley
  */
 @ApiModel(value = "响应结果")
 @Data
@@ -58,7 +61,7 @@ public class ResultBody<T> implements Serializable {
      * 响应时间
      */
     @ApiModelProperty(value = "响应时间")
-    private Long timestamp = System.currentTimeMillis();
+    private Date timestamp = DateTime.now();
 
     public ResultBody() {
         super();

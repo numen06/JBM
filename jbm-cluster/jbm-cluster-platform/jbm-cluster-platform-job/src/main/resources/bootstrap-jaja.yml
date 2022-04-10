@@ -2,13 +2,13 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: ${config.namespace}
+        namespace: jbm
         #        group: ${config.group}
         refreshable-dataids: common.properties
-        server-addr: ${config.server-addr}
+        server-addr: 10.100.10.98:8848
         shared-dataids: ${jbm.cluster.nacos-confs}
       discovery:
-#        namespace:
+        #        namespace:
         #        group: ${config.group}
-        server-addr: ${discovery.server-addr}
-#        ip: 10.100.50.2
+        server-addr: 10.100.10.98:8848
+  #        ip: 10.100.50.2

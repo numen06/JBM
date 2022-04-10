@@ -5,7 +5,7 @@ import com.jbm.framework.exceptions.ServiceException;
 /**
  * 提示消息异常
  *
- * @author admin
+ * @author wesley
  */
 public class OpenAlertException extends ServiceException {
     private static final long serialVersionUID = 4908906410210213271L;

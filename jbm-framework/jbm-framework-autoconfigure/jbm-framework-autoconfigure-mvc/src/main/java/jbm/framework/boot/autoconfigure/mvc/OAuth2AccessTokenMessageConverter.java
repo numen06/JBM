@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.mvc;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -26,7 +27,12 @@ public class OAuth2AccessTokenMessageConverter extends AbstractHttpMessageConver
 
     public OAuth2AccessTokenMessageConverter() {
         super(MediaType.APPLICATION_JSON);
-        this.delegateMessageConverter = new FastJsonHttpMessageConverter();
+        this.delegateMessageConverter = FastJsonConfiguration.getFastJsonHttpMessageConverter();
+    }
+
+    public OAuth2AccessTokenMessageConverter(FastJsonHttpMessageConverter fastJsonHttpMessageConverter) {
+        super(MediaType.APPLICATION_JSON);
+        this.delegateMessageConverter = fastJsonHttpMessageConverter;
     }
 
     @Override

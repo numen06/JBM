@@ -11,10 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * 定时任务调度表 sys_job
@@ -26,8 +23,8 @@ import javax.persistence.Id;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @ApiModel("系统任务")
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"jobName", "jobGroup"}))
 public class SysJob extends MasterDataEntity {
-    private static final long serialVersionUID = 1L;
 
     /**
      * 任务ID
@@ -86,5 +83,6 @@ public class SysJob extends MasterDataEntity {
     @ApiModelProperty("更新人")
     private String updateBy;
 
-
+    @ApiModelProperty(value = "描述")
+    private String description;
 }

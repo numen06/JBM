@@ -3,7 +3,7 @@ package com.jbm.framework.metadata.enumerate;
 /**
  * 自定义返回码
  *
- * @author admin
+ * @author wesley
  */
 
 public enum ErrorCode {

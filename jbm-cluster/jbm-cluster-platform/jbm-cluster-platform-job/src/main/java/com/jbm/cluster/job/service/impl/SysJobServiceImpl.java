@@ -12,10 +12,7 @@ import com.jbm.cluster.job.util.ScheduleUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDataMap;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
+import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +36,7 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
      */
     @PostConstruct
     public void init() throws SchedulerException, TaskException {
+        scheduler.clear();
         List<SysJob> jobList = this.selectAll();
         for (SysJob job : jobList) {
             try {
@@ -50,8 +48,7 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     }
 
     @Override
-    public SysJob saveEntity(scheduler.clear();
-     SysJob entity) {
+    public SysJob saveEntity(SysJob entity) {
         if (ObjectUtil.isEmpty(entity.getMisfirePolicy()))
             entity.setMisfirePolicy(MisfirePolicy.DEFAULT);
         if (ObjectUtil.isEmpty(entity.getConcurrent()))
@@ -75,10 +72,11 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
      * 暂停任务
      *
      * @param job 调度信息
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int pauseJob(SysJob job) throws SchedulerException {
+    public SysJob pauseJob(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();
         job.setStatus(ScheduleStauts.PAUSE);
@@ -86,25 +84,27 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         if (rows > 0) {
             scheduler.pauseJob(ScheduleUtils.getJobKey(jobId, jobGroup));
         }
-        return rows;
+        return job;
     }
 
     /**
      * 恢复任务
      *
      * @param job 调度信息
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int resumeJob(SysJob job) throws SchedulerException {
+    public SysJob resumeJob(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();
         job.setStatus(ScheduleStauts.NORMAL);
         int rows = this.baseMapper.updateById(job);
         if (rows > 0) {
+            scheduler.resetTriggerFromErrorState(ScheduleUtils.getTriggerKey(jobId, jobGroup));
             scheduler.resumeJob(ScheduleUtils.getJobKey(jobId, jobGroup));
         }
-        return rows;
+        return job;
     }
 
     @Override
@@ -138,30 +138,30 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
      * 任务调度状态修改
      *
      * @param job 调度信息
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int changeStatus(SysJob job) throws SchedulerException {
+    public SysJob changeStatus(SysJob job) throws SchedulerException {
         int rows = 0;
         switch (job.getStatus()) {
             case NORMAL:
-                rows = resumeJob(job);
-                break;
+                return resumeJob(job);
             case PAUSE:
-                rows = pauseJob(job);
-                break;
+                return pauseJob(job);
         }
-        return rows;
+        return job;
     }
 
     /**
      * 立即运行任务
      *
      * @param job 调度信息
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void run(SysJob job) throws SchedulerException {
+    public SysJob run(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
         SysJob properties = this.baseMapper.selectById(job.getJobId());
         String jobGroup = properties.getJobGroup();
@@ -169,6 +169,10 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         JobDataMap dataMap = new JobDataMap();
         dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
         scheduler.triggerJob(ScheduleUtils.getJobKey(jobId, jobGroup), dataMap);
+//        Trigger.TriggerState triggerState = scheduler.getTriggerState(ScheduleUtils.getTriggerKey(jobId, jobGroup));
+        return this.resumeJob(job);
+//        job.setStatus(Trigger.TriggerState.NORMAL.equals(triggerState) ? ScheduleStauts.NORMAL : ScheduleStauts.PAUSE);
+//        return this.saveEntity(job);
     }
 
 

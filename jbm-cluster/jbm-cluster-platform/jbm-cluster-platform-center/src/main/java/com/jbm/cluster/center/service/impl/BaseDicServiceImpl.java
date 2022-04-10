@@ -19,9 +19,10 @@ import java.util.Map;
  */
 @Service
 public class BaseDicServiceImpl extends MasterDataTreeServiceImpl<BaseDic> implements BaseDicService {
+    private final static String CACHE_KEY = "areaMap";
 
     @Override
-    @Cacheable(value = "dicMap")
+    @Cacheable(value = CACHE_KEY)
     public Map<String, List<BaseDic>> getDicMap() {
         List<BaseDic> listRoot = this.selectRootListById();
         Map<String, List<BaseDic>> result = Maps.newLinkedHashMap();
@@ -35,7 +36,7 @@ public class BaseDicServiceImpl extends MasterDataTreeServiceImpl<BaseDic> imple
     }
 
     @Override
-    @CacheEvict(value = "dicMap", allEntries = true)
+    @CacheEvict(value = CACHE_KEY, allEntries = true)
     public BaseDic saveEntity(BaseDic entity) {
         return super.saveEntity(entity);
     }

@@ -1,8 +1,8 @@
 package com.jbm.util;
 
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.util.password.PasswordGenerator;
-import sun.security.validator.ValidatorException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,16 +22,16 @@ public class PasswordUtils {
      * @param originPassword
      * @param currentPassword
      * @param confirmPassword
-     * @throws ValidatorException
+     * @throws ValidateException
      */
-    public static void validatorPassword(String originPassword, String currentPassword, String confirmPassword) throws ValidatorException {
+    public static void validatorPassword(String originPassword, String currentPassword, String confirmPassword) {
         boolean unified = StrUtil.equals(currentPassword, confirmPassword);
         if (!unified) {
-            throw new ValidatorException("重复密码错误");
+            throw new ValidateException("重复密码错误");
         }
         unified = StrUtil.equals(originPassword, currentPassword);
         if (unified) {
-            throw new ValidatorException("密码不能和原密码一致");
+            throw new ValidateException("密码不能和原密码一致");
         }
     }
 

@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.common.annotation.JbmClusterEvent;
+import com.jbm.cluster.common.annotation.JbmClusterScheduled;
 import com.jbm.cluster.common.auth.RequiresPermissions;
 import com.jbm.cluster.common.constants.CommonConstants;
 import com.jbm.cluster.common.exception.job.TaskException;
@@ -55,6 +57,8 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     /**
      * 新增定时任务
      */
+    @JbmClusterEvent(eventTypeClass = SysJob.class)
+    @JbmClusterScheduled(cron = "*/5 * * * * ?")
     @ApiOperation(value = "新增定时任务", notes = "")
     @RequiresPermissions("monitor:job:add")
     @PostMapping("/add")
@@ -119,8 +123,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     @RequiresPermissions("monitor:job:changeStatus")
     @PutMapping("/run")
     public ResultBody run(@RequestBody SysJob job) throws SchedulerException {
-        this.service.run(job);
-        return ResultBody.ok();
+        return ResultBody.ok().data(this.service.run(job));
     }
 
 }

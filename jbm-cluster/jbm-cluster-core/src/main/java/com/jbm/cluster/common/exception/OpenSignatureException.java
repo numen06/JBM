@@ -5,7 +5,7 @@ import com.jbm.framework.exceptions.ServiceException;
 /**
  * 签名异常
  *
- * @author admin
+ * @author wesley
  */
 public class OpenSignatureException extends ServiceException {
     private static final long serialVersionUID = 1L;

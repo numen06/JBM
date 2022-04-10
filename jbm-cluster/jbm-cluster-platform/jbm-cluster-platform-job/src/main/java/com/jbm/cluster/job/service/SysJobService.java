@@ -23,19 +23,19 @@ public interface SysJobService extends IMasterDataService<SysJob> {
     public List<SysJob> selectJobList(SysJob job);
 
     @Transactional(rollbackFor = Exception.class)
-    int pauseJob(SysJob job) throws SchedulerException;
+    SysJob pauseJob(SysJob job) throws SchedulerException;
 
     @Transactional(rollbackFor = Exception.class)
-    int resumeJob(SysJob job) throws SchedulerException;
+    SysJob resumeJob(SysJob job) throws SchedulerException;
 
     @Transactional(rollbackFor = Exception.class)
     int deleteJob(SysJob job) throws SchedulerException;
 
     @Transactional(rollbackFor = Exception.class)
-    int changeStatus(SysJob job) throws SchedulerException;
+    SysJob changeStatus(SysJob job) throws SchedulerException;
 
     @Transactional(rollbackFor = Exception.class)
-    void run(SysJob job) throws SchedulerException;
+    SysJob run(SysJob job) throws SchedulerException;
 
     /**
      * 校验cron表达式是否有效

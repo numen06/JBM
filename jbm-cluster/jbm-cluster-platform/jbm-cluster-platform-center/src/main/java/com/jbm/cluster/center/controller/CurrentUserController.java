@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.AuthorityMenu;
@@ -17,7 +18,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.web.bind.annotation.*;
-import sun.security.validator.ValidatorException;
 
 import java.util.List;
 
@@ -55,7 +55,7 @@ public class CurrentUserController {
         Long userId = JbmClusterHelper.getUser().getUserId();
         try {
             PasswordUtils.validatorPassword(baseUserForm.getOriginPassword(), baseUserForm.getCurrentPassword(), baseUserForm.getConfirmPassword());
-        } catch (ValidatorException e) {
+        } catch (Exception e) {
             throw new ServiceException(e);
         }
         baseUserService.updatePassword(userId, baseUserForm.getCurrentPassword());

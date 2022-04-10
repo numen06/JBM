@@ -31,13 +31,14 @@ jbm:
       - /app/*/info
       - /app/client/*/info
       - /gateway/api/**
-#      - /user/add/thirdParty
+      #      - /user/add/thirdParty
       - /user/info
       - /user/login
       - /user/register
       - /developer/add/thirdParty
       - /developer/info
       - /developer/login
+      - /baseArea/getChinaAreaMap
 swagger2:
   enabled: true
   description: 平台基础服务器
@@ -45,3 +46,5 @@ swagger2:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    #枚举扫描包
+  type-enums-package: com.jbm.cluster.api.constants,com.jbm.framework.masterdata.constant

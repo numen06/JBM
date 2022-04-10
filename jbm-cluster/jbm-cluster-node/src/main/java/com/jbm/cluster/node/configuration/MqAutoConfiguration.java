@@ -58,11 +58,20 @@ public class MqAutoConfiguration {
     }
 
     @Bean
+    public Queue scheduledResourceQueue() {
+        Queue queue = new Queue(QueueConstants.QUEUE_SCAN_SCHEDULED);
+        log.info("Query {} [{}]", QueueConstants.QUEUE_SCAN_SCHEDULED, queue);
+        return queue;
+    }
+
+
+    @Bean
     public Queue pushEventQueue() {
         Queue queue = new Queue(QueueConstants.QUEUE_CLUSTER_EVENT + "." + appTitle);
         log.info("Query {} [{}]", queue.getName(), queue);
         return queue;
     }
+
 
     //创建Fanout交换器
     @Bean
@@ -81,12 +90,9 @@ public class MqAutoConfiguration {
 //    }
 
     @Bean
-    public JbmClusterTemplate jbmClusterTemplate(RabbitTemplate rabbitTemplate,ApplicationContext applicationContext) {
-        return new JbmClusterTemplate(rabbitTemplate,applicationContext);
+    public JbmClusterTemplate jbmClusterTemplate(RabbitTemplate rabbitTemplate, ApplicationContext applicationContext) {
+        return new JbmClusterTemplate(rabbitTemplate, applicationContext);
     }
-
-
-
 
 
 }

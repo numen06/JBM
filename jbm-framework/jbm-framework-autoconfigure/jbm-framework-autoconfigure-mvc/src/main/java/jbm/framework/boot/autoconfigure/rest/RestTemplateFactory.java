@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.rest;
 import java.nio.charset.Charset;
 import java.util.function.Predicate;
 
+import jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -21,7 +22,7 @@ public class RestTemplateFactory {
 //		}
 //	};
 
-	private static final FastJsonHttpMessageConverter fastJsonHttpMessageConverter = new FastJsonHttpMessageConverter();
+	private static final FastJsonHttpMessageConverter fastJsonHttpMessageConverter = FastJsonConfiguration.getFastJsonHttpMessageConverter();
 	private static final FileFormHttpMessageConverter fileFormHttpMessageConverter = new FileFormHttpMessageConverter();
 
 	private RestTemplateFactory() {

@@ -16,6 +16,15 @@ public class QueueConstants {
      * 扫描字典
      */
     public static final String QUEUE_SCAN_DIC_RESOURCE = "cluster.scan.dic";
+
+    /**
+     * 扫描事件方法
+     */
+    public static final String QUEUE_SCAN_EVENT = "cluster.scan.event";
+    /**
+     * 扫描事件方法
+     */
+    public static final String QUEUE_SCAN_SCHEDULED = "cluster.scan.scheduled";
     /**
      * 访问日志
      */
