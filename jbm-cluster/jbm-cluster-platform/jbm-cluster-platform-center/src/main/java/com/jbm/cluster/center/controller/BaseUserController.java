@@ -46,6 +46,15 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Autowired
     private BaseRoleService baseRoleService;
 
+    @ApiOperation(value = "通过id获取用户信息", notes = "仅限系统内部调用")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", required = true, value = "userId")
+    })
+    @GetMapping("/getUserInfoById")
+    @Override
+    public ResultBody<BaseUser> getUserInfo(Long userId) {
+        return ResultBody.ok().data(this.service.selectById(userId));
+    }
 
     /**
      * 获取登录账号信息

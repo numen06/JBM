@@ -3,19 +3,26 @@ package com.jbm.cluster.api.service;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author wesley.zhang
  */
 @RequestMapping("/user")
 public interface IBaseUserServiceClient {
+
+
+    /**
+     * 查询实体
+     *
+     * @return
+     */
+    @GetMapping("/getUserInfoById")
+    ResultBody<BaseUser> getUserInfo(@RequestParam(value = "userId") Long userId);
 
     /**
      * 系统用户登录

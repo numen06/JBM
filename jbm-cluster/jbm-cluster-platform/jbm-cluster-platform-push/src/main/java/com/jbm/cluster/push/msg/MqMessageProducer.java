@@ -5,6 +5,7 @@ import com.jbm.cluster.api.TestClusterEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Output;
+import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import com.alibaba.fastjson.JSON;

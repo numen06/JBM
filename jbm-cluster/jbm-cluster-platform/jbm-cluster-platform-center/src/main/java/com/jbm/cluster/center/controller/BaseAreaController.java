@@ -27,7 +27,7 @@ public class BaseAreaController extends MasterDataCollection<BaseArea, BaseAreaS
     @GetMapping("/getChinaAreaMap")
     public ResultBody<Map<String, List<BaseArea>>> getChinaAreaMap() {
         Map<String, List<BaseArea>> result = this.service.getChinaAreaMap();
-        return ResultBody.success(result, "获取数据字典成功");
+        return ResultBody.success(result, "获取地区字典成功");
     }
 
 }
