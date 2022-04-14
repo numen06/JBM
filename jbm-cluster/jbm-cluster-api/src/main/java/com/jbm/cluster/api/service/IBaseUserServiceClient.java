@@ -22,7 +22,7 @@ public interface IBaseUserServiceClient {
      * @return
      */
     @GetMapping("/getUserInfoById")
-    ResultBody<BaseUser> getUserInfo(@RequestParam(value = "userId") Long userId);
+    ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId);
 
     /**
      * 系统用户登录

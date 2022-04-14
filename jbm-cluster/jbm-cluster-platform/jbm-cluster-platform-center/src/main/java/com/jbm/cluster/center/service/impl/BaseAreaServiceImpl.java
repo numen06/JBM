@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -22,6 +23,7 @@ import org.springframework.util.ResourceUtils;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,22 +35,28 @@ import java.util.Map;
 @Service
 public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> implements BaseAreaService, ApplicationListener<ApplicationReadyEvent> {
 
-    private final static String CACHE_KEY = "areaMap";
+    private final static String CACHE_KEY = "areaList";
 
     @Resource
     private BaseAreaMapper baseAreaMapper;
 
     @Override
     @Cacheable(value = CACHE_KEY)
-    public Map<String, List<BaseArea>> getChinaAreaMap() {
-        List<BaseArea> listRoot = baseAreaMapper.selectByParentCode("86");
-        Map<String, List<BaseArea>> result = Maps.newLinkedHashMap();
-        for (int i = 0; i < listRoot.size(); i++) {
-            String code = listRoot.get(i).getAreaCode();
-            List<BaseArea> listDic = baseAreaMapper.selectByParentCode(code);
-            result.put(code, listDic);
+    public List<BaseArea> getChinaAreaList() {
+        List<BaseArea> areas = new ArrayList<>();
+        this.loadAreaTree(areas, "86");
+        return areas;
+    }
+
+    private void loadAreaTree(List<BaseArea> result, String pcode) {
+        List<BaseArea> listDic = baseAreaMapper.selectByParentCode(pcode);
+        if (CollUtil.isEmpty(listDic)) {
+            return;
         }
-        return result;
+        for (BaseArea area : listDic) {
+            result.add(area);
+            this.loadAreaTree(result, area.getAreaCode());
+        }
     }
 
 

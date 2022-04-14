@@ -38,7 +38,7 @@ jbm:
       - /developer/add/thirdParty
       - /developer/info
       - /developer/login
-      - /baseArea/getChinaAreaMap
+      - /baseArea/getChinaAreaList
 swagger2:
   enabled: true
   description: 平台基础服务器

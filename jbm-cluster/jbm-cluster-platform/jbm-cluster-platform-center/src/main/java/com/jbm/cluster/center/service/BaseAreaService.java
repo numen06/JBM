@@ -13,5 +13,5 @@ import java.util.Map;
  * @Create: 2022-04-07 21:44:18
  */
 public interface BaseAreaService extends IMasterDataService<BaseArea> {
-    Map<String, List<BaseArea>> getChinaAreaMap();
+    List<BaseArea> getChinaAreaList();
 }
