@@ -9,8 +9,8 @@ spring:
       refresh:
         enabled: true
       id: ${spring.application.name}:${server.port}
-    stream:
-      default-binder: kafka
+#    stream:
+#      default-binder: kafka
     nacos:
       config:
         refreshable-dataids: common.properties
@@ -32,7 +32,8 @@ management:
         include: '*'
 jbm:
   cluster:
-    nacos-confs: common.properties,rabbitmq.properties,kafka.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    nacos-confs: common.properties,rabbitmq.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+#    nacos-confs: common.properties,rabbitmq.properties,kafka.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
 #    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     token-type: redis
     permit-all:
