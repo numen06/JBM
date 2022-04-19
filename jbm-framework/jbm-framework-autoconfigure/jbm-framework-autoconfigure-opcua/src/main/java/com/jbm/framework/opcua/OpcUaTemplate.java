@@ -2,6 +2,7 @@ package com.jbm.framework.opcua;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -187,7 +188,10 @@ public class OpcUaTemplate {
         client.connect().get();
         client.readValue(0.0, TimestampsToReturn.Both, nodeId).thenAccept(dataValue -> {
             try {
-                value.complete(dataValue.getValue().getValue().toString());
+                if (ArrayUtil.isArray(dataValue.getValue().getValue())) {
+                    value.complete(ArrayUtil.toString(dataValue.getValue().getValue()));
+                }
+                value.complete(StrUtil.toStringOrNull(dataValue.getValue().getValue()));
             } catch (Exception e) {
                 log.error("accept point(ns={};s={}) value error", namespace, tag, e);
             }
