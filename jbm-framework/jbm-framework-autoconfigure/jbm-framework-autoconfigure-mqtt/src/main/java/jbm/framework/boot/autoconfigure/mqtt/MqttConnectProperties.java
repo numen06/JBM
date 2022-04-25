@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 public class MqttConnectProperties {
 
-    private Integer keepAliveInterval = 10;
+    private Integer keepAliveInterval = MqttConnectOptions.KEEP_ALIVE_INTERVAL_DEFAULT;
     private Integer maxInflight = MqttConnectOptions.MAX_INFLIGHT_DEFAULT;
     private String willDestination = null;
     private String username = MqttClient.generateClientId();
