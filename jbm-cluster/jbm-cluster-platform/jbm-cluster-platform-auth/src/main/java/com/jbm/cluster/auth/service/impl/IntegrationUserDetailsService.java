@@ -1,7 +1,6 @@
 package com.jbm.cluster.auth.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
 import com.jbm.cluster.auth.integration.IntegrationAuthenticationContext;
 import com.jbm.cluster.auth.integration.IntegrationAuthenticator;

@@ -107,7 +107,7 @@ public class CommonConstants {
     public static final String HTTPS = "https://";
 
     public static final String[] JOB_ERROR_STR = {"java.net.URL", "javax.naming.InitialContext", "org.yaml.snakeyaml",
-            "org.springframework", "org.apache", "com.ruoyi.common.core.utils.file"};
+            "org.springframework", "org.apache", "com.jbm.cluster.common.core.utils.file"};
 
 
 }

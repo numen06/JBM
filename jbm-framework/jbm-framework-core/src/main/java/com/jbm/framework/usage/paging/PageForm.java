@@ -54,6 +54,11 @@ public class PageForm implements IBaseForm {
     @ApiModelProperty(value = "匹配规则")
     private MatchRule matchRule;
 
+    /**
+     * 分页参数合理化
+     */
+    private Boolean reasonable = true;
+
     public PageForm() {
         this(1, Integer.MAX_VALUE);
     }

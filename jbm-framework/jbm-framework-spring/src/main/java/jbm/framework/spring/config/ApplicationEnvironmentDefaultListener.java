@@ -1,8 +1,8 @@
 package jbm.framework.spring.config;
 
+import cn.hutool.core.io.file.FileNameUtil;
 import com.jbm.util.MapUtils;
 import com.jbm.util.StringUtils;
-import jodd.io.FileNameUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -70,7 +70,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 //            Resource resource = resourceLoader.getResource(path);
 //            defaultProperties.load(resource.getInputStream());
 //            PropertiesPropertySource propertySource = new PropertiesPropertySource(resource.getFilename(), defaultProperties);
-            if ("yml".equalsIgnoreCase(FileNameUtil.getExtension(path))) {
+            if ("yml".equalsIgnoreCase(FileNameUtil.extName(path))) {
                 this.loadYaml(path);
             } else {
                 ResourcePropertySource resourcePropertySource = new ResourcePropertySource(path);

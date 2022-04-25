@@ -1,6 +1,5 @@
 package com.jbm.cluster.auth.integration.authenticator.sms;
 
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.AbstractPreparableIntegrationAuthenticator;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
 import com.jbm.cluster.auth.integration.authenticator.sms.event.SmsAuthenticateBeforeEvent;

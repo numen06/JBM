@@ -5,7 +5,7 @@ import com.jbm.test.rest.bean.DicEnumTest;
 import com.jbm.test.rest.bean.TestBaan;
 import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumParserConfig;
 import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumSerializeConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @program: JBM6

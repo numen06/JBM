@@ -102,7 +102,7 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
         pushMessage.setSendUserId(null);
         pushMessage.setReadFlag(0);
         this.save(pushMessage);
-        dispatcher.dispatch( pushMessage);
+//        dispatcher.dispatch( pushMessage);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class PushMessageServiceImpl extends MasterDataServiceImpl<PushMessage> i
         pushMessage.setLevel(1);
         pushMessage.setReadFlag(0);
         this.save(pushMessage);
-        dispatcher.dispatch( pushMessage);
+//        dispatcher.dispatch( pushMessage);
 
     }
 

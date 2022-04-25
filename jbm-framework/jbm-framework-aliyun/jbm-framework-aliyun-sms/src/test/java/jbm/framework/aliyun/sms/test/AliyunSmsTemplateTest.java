@@ -1,26 +1,9 @@
 package jbm.framework.aliyun.sms.test;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.aliyuncs.CommonRequest;
-import com.aliyuncs.CommonResponse;
-import com.aliyuncs.DefaultAcsClient;
-import com.aliyuncs.IAcsClient;
-import com.aliyuncs.exceptions.ClientException;
-import com.aliyuncs.exceptions.ServerException;
-import com.aliyuncs.http.MethodType;
-import com.aliyuncs.profile.DefaultProfile;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
-import com.jbm.util.StringUtils;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.aliyun.sms.autoconfigure.AliyunSmsProperties;
-import jbm.framework.aliyun.sms.model.AliyunSms;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-import javax.annotation.PostConstruct;
+import org.junit.jupiter.api.Test;
 
 /**
  * @program: JBM6

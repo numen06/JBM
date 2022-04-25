@@ -9,7 +9,7 @@ import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
  * @author LIQIU
  * @date 2018-3-27
  **/
-public class EmailNoficationExchanger implements NotificationExchanger {
+public class EmailNoficationExchanger extends BaseNotificationExchanger<EmailNotification> {
 
     private final MailSendTemplate mailSender;
 
@@ -18,13 +18,7 @@ public class EmailNoficationExchanger implements NotificationExchanger {
     }
 
     @Override
-    public boolean support(Object notification) {
-        return notification.getClass().equals(EmailNotification.class);
-    }
-
-    @Override
-    public boolean exchange(Notification notification) {
-        EmailNotification emailNotification = (EmailNotification) notification;
+    public boolean process(EmailNotification emailNotification) {
         MailRequest mailRequest = new MailRequest();
         mailRequest.setTitle(emailNotification.getTitle());
         mailRequest.setContent(emailNotification.getContent());

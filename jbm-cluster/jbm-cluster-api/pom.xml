@@ -5,45 +5,21 @@
     <parent>
         <artifactId>jbm-cluster</artifactId>
         <groupId>com.jbm</groupId>
-        <version>6.1.0-SNAPSHOT</version>
+        <version>7.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbm-cluster-api</artifactId>
-    <description>平台节点服务接口包</description>
-    <dependencies>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-data-masterdata</artifactId>
-        </dependency>
+    <packaging>pom</packaging>
+    <modules>
+        <module>jbm-cluster-api-basic</module>
+        <module>jbm-cluster-api-oauth</module>
+        <module>jbm-cluster-api-core</module>
+    </modules>
 
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>${maven-source-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
 
 </project>

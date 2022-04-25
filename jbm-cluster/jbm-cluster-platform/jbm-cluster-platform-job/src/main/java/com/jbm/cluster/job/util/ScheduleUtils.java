@@ -2,14 +2,11 @@ package com.jbm.cluster.job.util;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
-import com.jbm.cluster.common.exception.job.TaskException;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.framework.exceptions.job.TaskException;
 import org.quartz.*;
-
-import static com.jbm.cluster.api.constants.job.MisfirePolicy.DEFAULT;
 
 /**
  * 定时任务工具类

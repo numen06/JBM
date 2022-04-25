@@ -1,8 +1,7 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 jbm.framework.boot.autoconfigure.mvc.WebMvcConfiguration,\
-jbm.framework.boot.autoconfigure.WebConfiguration,\
-jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration
-
+jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration,\
+jbm.framework.boot.autoconfigure.GlobalDefaultExceptionHandler
 
 org.springframework.context.ApplicationListener=\
 jbm.framework.boot.autoconfigure.mvc.event.ApplicationEnvironmentDefaultEvent

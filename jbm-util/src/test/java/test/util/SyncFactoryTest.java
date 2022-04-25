@@ -1,9 +1,9 @@
 package test.util;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.jbm.util.thread.SyncBean;
 import com.jbm.util.thread.SyncFactory;
 
-import jodd.util.ThreadUtil;
 import junit.framework.TestCase;
 
 public class SyncFactoryTest  {

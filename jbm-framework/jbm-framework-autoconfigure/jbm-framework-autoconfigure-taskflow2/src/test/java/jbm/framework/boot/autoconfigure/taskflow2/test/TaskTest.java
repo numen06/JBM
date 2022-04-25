@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.taskflow2.test;
 
 import com.ebay.bascomtask.core.Orchestrator;
 import com.ebay.bascomtask.core.TaskInterface;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;

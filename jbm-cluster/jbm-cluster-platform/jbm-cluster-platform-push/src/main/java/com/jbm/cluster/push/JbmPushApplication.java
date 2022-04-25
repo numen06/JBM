@@ -1,9 +1,10 @@
 package com.jbm.cluster.push;
 
-import com.jbm.cluster.api.TestRemoteApplicationEvent;
+import com.jbm.cluster.api.event.UserLoginEvent;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
 import com.jbm.cluster.push.mapper.PushConfigInfoMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
+import jbm.framework.boot.autoconfigure.eventbus.annotation.EnableClusterEventBus;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  *
  * @author wesley.zhang
  */
+@EnableClusterEventBus(basePackages = {"com.jbm.cluster.push"})
 @EnableFeignClients("com.jbm.cluster.push.fegin")
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -28,7 +30,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EntityScan(basePackageClasses = {PushMessage.class})
 @EnableTransactionManagement
 @MapperScan(basePackageClasses = {PushConfigInfoMapper.class})
-@RemoteApplicationEventScan(basePackageClasses = TestRemoteApplicationEvent.class)
+@RemoteApplicationEventScan(basePackageClasses = UserLoginEvent.class)
 @EnableCodeAutoGeneate(entityPackageClasses = {PushMessage.class}, targetPackage = "com.jbm.cluster.push")
 public class JbmPushApplication {
 

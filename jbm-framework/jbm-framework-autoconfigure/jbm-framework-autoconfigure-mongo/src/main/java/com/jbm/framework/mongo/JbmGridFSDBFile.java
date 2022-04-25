@@ -1,16 +1,15 @@
 package com.jbm.framework.mongo;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Date;
-
+import cn.hutool.core.io.FileUtil;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.apache.commons.io.IOUtils;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 
-import com.mongodb.MongoGridFSException;
-import com.mongodb.client.gridfs.model.GridFSFile;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
 
 public class JbmGridFSDBFile {
 
@@ -21,13 +20,13 @@ public class JbmGridFSDBFile {
 	private final long length;
 	private final long chunkSize;
 	private final Date uploadDate;
-	private final String md5;
+//	private final String md5;
 
 	// Optional values
 	private final Document metadata;
 
 	// Deprecated values
-	private final Document extraElements;
+//	private final Document extraElements;
 
 	@SuppressWarnings("deprecation")
 	public JbmGridFSDBFile(GridFSFile gridFSFile, GridFsResource gridFsResource) {
@@ -38,9 +37,9 @@ public class JbmGridFSDBFile {
 		this.length = gridFSFile.getLength();
 		this.chunkSize = gridFSFile.getChunkSize();
 		this.uploadDate = gridFSFile.getUploadDate();
-		this.md5 = gridFSFile.getMD5();
+//		this.md5 = gridFSFile.getMD5();
 		this.metadata = gridFSFile.getMetadata();
-		this.extraElements = gridFSFile.getExtraElements();
+//		this.extraElements = gridFSFile.getExtraElements();
 	}
 
 	public GridFsResource getGridFsResource() {
@@ -71,24 +70,25 @@ public class JbmGridFSDBFile {
 		return uploadDate;
 	}
 
-	public String getMD5() {
-		return md5;
-	}
+//	public String getMD5() {
+//		return md5;
+//	}
 
 	public Document getMetaData() {
 		return metadata;
 	}
 
-	public Document getExtraElements() {
-		return extraElements;
-	}
+//	public Document getExtraElements() {
+//		return extraElements;
+//	}
 
 	public String getContentType() {
-		if (extraElements != null && extraElements.containsKey("contentType")) {
-			return extraElements.getString("contentType");
-		} else {
-			throw new MongoGridFSException("No contentType result for this GridFS file");
-		}
+//		if (extraElements != null && extraElements.containsKey("contentType")) {
+//			return extraElements.getString("contentType");
+//		} else {
+//			throw new MongoGridFSException("No contentType result for this GridFS file");
+//		}
+		return FileUtil.getMimeType(this.filename);
 	}
 
 	public Long writeTo(OutputStream outputStream) throws IllegalStateException, IOException {

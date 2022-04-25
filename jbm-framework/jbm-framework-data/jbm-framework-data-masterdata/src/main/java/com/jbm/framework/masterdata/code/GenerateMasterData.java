@@ -5,17 +5,14 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
 import com.jbm.framework.masterdata.usage.entity.*;
-import com.jbm.util.AnnotatedUtils;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.ApiModel;
-import jodd.util.StringUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
@@ -196,7 +193,7 @@ public class GenerateMasterData {
                 }
                 break;
         }
-        if (StringUtil.isBlank(extClass))
+        if (StrUtil.isBlank(extClass))
             throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
         t.binding("extClass", extClass);
         t.binding("extClassName", StringUtils.substringAfterLast(extClass, "."));

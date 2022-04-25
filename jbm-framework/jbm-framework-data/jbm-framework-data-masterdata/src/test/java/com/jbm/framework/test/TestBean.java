@@ -7,7 +7,7 @@ import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.test.bean.AXB;
 import com.jbm.framework.test.bean.BasicBean;
 import com.jbm.framework.test.bean.SelfRefData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author: create by wesley

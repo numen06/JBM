@@ -1,0 +1,33 @@
+server:
+  port: ${random.int[2000,8000]}
+spring:
+  application:
+    name: EventBusApp
+  cloud:
+    stream:
+      bindings:
+        jbmEventBusIn:
+          destination: jbm
+          group: ${spring.application.name}
+        jbmEventBusOut:
+          destination: jbm
+          group: ${spring.application.name}
+    bus:
+      destination: test
+      id: ${spring.application.name}
+      enabled: true
+      trace:
+        enabled: true
+  #      refresh:
+  #        enabled: true
+  main:
+    allow-bean-definition-overriding: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  rabbitmq:
+    host: 10.100.10.98
+    port: 5672
+    username: admin
+    password: admin

@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.model.entity.GatewayRoute;
 import com.jbm.cluster.center.service.GatewayRouteService;

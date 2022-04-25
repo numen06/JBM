@@ -41,7 +41,7 @@ public class JbmClusterHelper {
                     return (OpenUserDetails) authentication.getPrincipal();
                 }
                 if (authentication.getPrincipal() instanceof Map) {
-                    return BeanUtil.mapToBean((Map) authentication.getPrincipal(), OpenUserDetails.class, true);
+                    return BeanUtil.toBeanIgnoreError( authentication.getPrincipal(), OpenUserDetails.class);
                 }
             } else {
                 OpenUserDetails openUser = new OpenUserDetails();

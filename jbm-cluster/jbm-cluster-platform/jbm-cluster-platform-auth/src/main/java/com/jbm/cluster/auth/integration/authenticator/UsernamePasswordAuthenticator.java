@@ -1,7 +1,6 @@
 package com.jbm.cluster.auth.integration.authenticator;
 
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.AbstractPreparableIntegrationAuthenticator;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
 import com.jbm.cluster.auth.service.VCoderService;
@@ -9,7 +8,6 @@ import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.stereotype.Component;
 

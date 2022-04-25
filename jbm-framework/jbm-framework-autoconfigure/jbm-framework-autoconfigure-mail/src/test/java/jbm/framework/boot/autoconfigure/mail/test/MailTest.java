@@ -1,6 +1,6 @@
 package jbm.framework.boot.autoconfigure.mail.test;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 

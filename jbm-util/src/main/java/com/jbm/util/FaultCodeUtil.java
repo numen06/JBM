@@ -20,10 +20,5 @@ public final class FaultCodeUtil {
         return ret;
     }
 
-    public static void main(String[] args) {
-        String ret = makeFaultCode("1", "0000", "1", "0100");
-
-        System.out.println(ret);
-    }
 
 }

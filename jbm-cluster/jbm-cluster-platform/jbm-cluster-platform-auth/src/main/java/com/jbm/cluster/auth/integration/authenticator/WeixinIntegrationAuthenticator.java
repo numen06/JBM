@@ -2,7 +2,6 @@ package com.jbm.cluster.auth.integration.authenticator;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.auth.integration.AbstractPreparableIntegrationAuthenticator;
 import com.jbm.cluster.auth.integration.IntegrationAuthentication;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;

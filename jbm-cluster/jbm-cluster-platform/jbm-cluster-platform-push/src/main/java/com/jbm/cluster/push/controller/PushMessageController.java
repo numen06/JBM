@@ -1,8 +1,8 @@
 package com.jbm.cluster.push.controller;
 
+import com.jbm.cluster.api.model.JbmLoginUser;
 import com.jbm.cluster.api.model.entitys.message.PushMessage;
-import com.jbm.cluster.common.security.JbmClusterHelper;
-import com.jbm.cluster.common.security.OpenUserDetails;
+import com.jbm.cluster.common.security.utils.SecurityUtils;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.service.PushMessageService;
 import com.jbm.framework.form.IdsForm;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/pushMessage")
 public class PushMessageController extends MasterDataCollection<PushMessage, PushMessageService> {
+
 
 
     @ApiOperation("阅读")
@@ -61,8 +62,8 @@ public class PushMessageController extends MasterDataCollection<PushMessage, Pus
     @ApiOperation("获取登录人的消息列表")
     @PostMapping("/findCurrMessagePage")
     public ResultBody<DataPaging<PushMessage>> findCurrMessagePage(@RequestBody PushMessageForm pushMessageform) {
-        OpenUserDetails openUserDetails = JbmClusterHelper.getUser();
-        pushMessageform.getPushMessage().setRecUserId(openUserDetails.getUserId());
+        JbmLoginUser openUserDetails = SecurityUtils.getLoginUser();
+        pushMessageform.getPushMessage().setRecUserId(openUserDetails.getUserid());
         pushMessageform.getPageForm().setSortRule("createTime:desc");
         DataPaging<PushMessage> dataPaging = this.service.selectEntitys(pushMessageform.getPushMessage(), pushMessageform.getPageForm());
         return ResultBody.success(dataPaging, "获取登录人的消息列表成功");

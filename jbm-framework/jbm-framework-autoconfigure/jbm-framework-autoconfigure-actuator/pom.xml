@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.jbm</groupId>
 		<artifactId>jbm-framework-autoconfigure</artifactId>
-		<version>6.1.0-SNAPSHOT</version>
+		<version>7.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>jbm-framework-autoconfigure-actuator</artifactId>
 	<dependencies>

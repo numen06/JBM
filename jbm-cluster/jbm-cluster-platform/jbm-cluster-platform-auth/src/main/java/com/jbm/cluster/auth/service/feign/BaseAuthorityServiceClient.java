@@ -1,6 +1,5 @@
 package com.jbm.cluster.auth.service.feign;
 
-import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;

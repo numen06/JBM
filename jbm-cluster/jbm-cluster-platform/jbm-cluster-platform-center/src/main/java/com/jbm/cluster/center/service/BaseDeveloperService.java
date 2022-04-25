@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

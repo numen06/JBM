@@ -4,7 +4,6 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.model.entity.BaseMenu;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
@@ -33,6 +32,9 @@ import java.util.List;
 public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> implements BaseMenuService {
     @Autowired
     private BaseMenuMapper baseMenuMapper;
+
+//    @Autowired
+//    private BaseAuthorityMapper baseAuthorityMapper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
 
@@ -147,7 +149,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         super.saveEntity(menu);
         // 同步权限表里的信息
         baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
-
+//        applicationContext.publishEvent(new NewMenuEvent(this, menu));
         return menu;
     }
 

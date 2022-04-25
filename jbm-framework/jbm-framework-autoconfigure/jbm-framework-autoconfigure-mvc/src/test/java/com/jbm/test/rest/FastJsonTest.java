@@ -1,7 +1,7 @@
 package com.jbm.test.rest;
 
 import com.alibaba.fastjson.JSON;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @program: JBM

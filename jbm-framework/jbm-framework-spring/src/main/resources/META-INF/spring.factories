@@ -1,4 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.spring.config.SpringUtils
+jbm.framework.spring.config.SpringUtils,\
+jbm.framework.spring.config.SpringContextHolder
 
   

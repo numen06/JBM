@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseDeveloper;
 import com.jbm.cluster.api.model.entity.BaseRole;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;

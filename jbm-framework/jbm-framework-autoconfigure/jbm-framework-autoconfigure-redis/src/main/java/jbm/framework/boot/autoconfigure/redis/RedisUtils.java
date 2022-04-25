@@ -1,8 +1,8 @@
 package jbm.framework.boot.autoconfigure.redis;
 
+import cn.hutool.core.collection.CollUtil;
 import com.jbm.util.ObjectUtils;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class RedisUtils<T> {
             if (key.length == 0) {
                 redisTemplate.delete(key[0]);
             } else {
-                redisTemplate.delete(CollectionUtils.arrayToList(key));
+                redisTemplate.delete(CollUtil.newArrayList(key));
             }
         }
     }
@@ -90,6 +90,7 @@ public class RedisUtils<T> {
     public <T> T get(String key) {
         return key == null ? null : (T) redisTemplate.opsForValue().get(key);
     }
+
     /**
      * 普通缓存获取
      *
@@ -97,12 +98,12 @@ public class RedisUtils<T> {
      * @return 值
      */
     public String getString(String key) {
-        String str="";
-        Object obj=redisTemplate.opsForValue().get(key);
-        if(ObjectUtils.isNotNull(obj)){
-            str=obj.toString();
+        String str = "";
+        Object obj = redisTemplate.opsForValue().get(key);
+        if (ObjectUtils.isNotNull(obj)) {
+            str = obj.toString();
         }
-        return key == null ? null :str;
+        return key == null ? null : str;
     }
 
     /**
@@ -440,7 +441,7 @@ public class RedisUtils<T> {
     /**
      * 获取list缓存的内容
      *
-     * @param key   键
+     * @param key 键
      * @return
      */
     public List<T> getList(String key) {

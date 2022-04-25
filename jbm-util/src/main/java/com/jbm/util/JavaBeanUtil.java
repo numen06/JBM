@@ -172,14 +172,5 @@ public class JavaBeanUtil {
 		return sb.toString();
 	}
 
-	public static void main(String[] args) {
-		System.out.println(JavaBeanUtil.toUnderlineString("ISOCertifiedStaff"));
-		System.out.println(JavaBeanUtil.getValidPropertyName("CertifiedStaff"));
-		System.out.println(JavaBeanUtil.getSetterMethodName("userID"));
-		System.out.println(JavaBeanUtil.getGetterMethodName("userID"));
-		System.out.println(JavaBeanUtil.toCamelCaseString("iso_certified_staff", true));
-		System.out.println(JavaBeanUtil.getValidPropertyName("certified_staff"));
-		System.out.println(JavaBeanUtil.toCamelCaseString("site_Id"));
-	}
 
 }

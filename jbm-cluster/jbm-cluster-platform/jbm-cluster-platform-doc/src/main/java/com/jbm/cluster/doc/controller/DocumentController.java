@@ -42,7 +42,7 @@ public class DocumentController {
     private MinioService minioService;
 
     @ApiOperation(value = "获取文档列表")
-    @GetMapping("/list/**")
+    @GetMapping("/list")
     public ResultBody list(HttpServletRequest request) throws MinioException {
         final String filePath = getExtractPath(request);
         return ResultBody.ok().data(minioService.getFullList(Paths.get(filePath)));
@@ -56,7 +56,7 @@ public class DocumentController {
 
 
     @ApiOperation(value = "上传随机文档")
-    @PostMapping("/put/**")
+    @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
         try {
             if (file == null) {
@@ -79,7 +79,7 @@ public class DocumentController {
     }
 
     @ApiOperation(value = "上传特定文档")
-    @PostMapping("/upload/**")
+    @PostMapping("/upload")
     public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
         try {
             if (file == null) {
@@ -100,7 +100,7 @@ public class DocumentController {
 
 
     @ApiOperation(value = "删除文档")
-    @GetMapping("/remove/**")
+    @GetMapping("/remove")
     public ResultBody remove(HttpServletRequest request) {
         try {
             final String filePath = getExtractPath(request);
@@ -112,7 +112,7 @@ public class DocumentController {
     }
 
     @ApiOperation(value = "获取一个文档")
-    @GetMapping("/get/**")
+    @GetMapping("/get")
     public void get(HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
         final String filePath = getExtractPath(request);
         InputStream inputStream = minioService.get(Paths.get(filePath));
@@ -130,7 +130,7 @@ public class DocumentController {
 
 
     @ApiOperation(value = "下载一个文档")
-    @GetMapping("/download/**")
+    @GetMapping("/download")
     public void download(HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
         final String filePath = getExtractPath(request);
         InputStream inputStream = minioService.get(Paths.get(filePath));

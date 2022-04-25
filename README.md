@@ -51,7 +51,7 @@
 <parent>
     <groupId>com.jbm</groupId>
     <artifactId>jbm-framework-dependencies</artifactId>
-    <version>6.1.0-SNAPSHOT</version>
+    <version>7.0.1-SNAPSHOT</version>
 </parent>
 ```
 基础核心工具类，结合多重工具包和JBM针对解决Util

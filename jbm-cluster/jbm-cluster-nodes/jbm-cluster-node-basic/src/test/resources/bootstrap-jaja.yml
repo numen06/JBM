@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: jbm
+        refreshable-dataids: common.properties
+        server-addr: 10.100.10.98:8848
+        shared-dataids: common.properties,redis.properties,rabbitmq.properties
+      discovery:
+        server-addr: 10.100.10.98:8848

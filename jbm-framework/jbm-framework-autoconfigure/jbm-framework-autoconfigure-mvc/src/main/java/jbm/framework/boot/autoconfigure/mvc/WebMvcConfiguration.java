@@ -10,11 +10,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -38,26 +34,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
             fastJsonHttpMessageConverter = FastJsonConfiguration.getFastJsonHttpMessageConverter();
         }
         converters.add(0, fastJsonHttpMessageConverter);
-        converters.add(0, new OAuth2AccessTokenMessageConverter(fastJsonHttpMessageConverter));
-    }
-
-    /**
-     * 多个WebSecurityConfigurerAdapter
-     */
-    @Configuration
-    @Order(101)
-    @ConditionalOnClass(javax.servlet.Filter.class)
-    public static class ApiWebSecurityConfiguration extends WebSecurityConfigurerAdapter {
-        @Override
-        public void configure(WebSecurity web) throws Exception {
-            web.ignoring().antMatchers(
-                    "/error",
-                    "/static/**",
-                    "/v2/api-docs/**",
-                    "/swagger-resources/**",
-                    "/webjars/**",
-                    "/favicon.ico");
-        }
+//        converters.add(0, new OAuth2AccessTokenMessageConverter(fastJsonHttpMessageConverter));
     }
 
 

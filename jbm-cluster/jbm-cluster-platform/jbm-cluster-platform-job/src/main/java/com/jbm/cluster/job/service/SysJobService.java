@@ -1,7 +1,7 @@
 package com.jbm.cluster.job.service;
 
 import com.jbm.cluster.api.model.entitys.job.SysJob;
-import com.jbm.cluster.common.exception.job.TaskException;
+import com.jbm.framework.exceptions.job.TaskException;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import org.quartz.SchedulerException;
 import org.springframework.transaction.annotation.Transactional;

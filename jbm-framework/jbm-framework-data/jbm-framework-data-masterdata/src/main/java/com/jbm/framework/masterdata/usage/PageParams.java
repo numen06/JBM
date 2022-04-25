@@ -174,7 +174,7 @@ public class PageParams extends Page implements Serializable {
     }
 
     public <T> T mapToObject(Class<T> t) {
-        return BeanUtil.mapToBean(this.requestMap, t, true);
+        return BeanUtil.toBeanIgnoreError(this.requestMap, t);
     }
 
 //    public Map<String, Object> getRequestMap() {

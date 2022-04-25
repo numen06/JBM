@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
-import com.jbm.cluster.api.model.UserAccount;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;

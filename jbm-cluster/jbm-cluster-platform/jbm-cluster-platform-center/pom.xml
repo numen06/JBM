@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jbm-cluster-platform</artifactId>
         <groupId>com.jbm</groupId>
-        <version>6.1.0-SNAPSHOT</version>
+        <version>7.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,13 +14,8 @@
     <description>平台基础服务器</description>
     <dependencies>
         <dependency>
-            <groupId>org.lionsoul</groupId>
-            <artifactId>ip2region</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-        <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node</artifactId>
+            <artifactId>jbm-cluster-node-oauth</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -42,7 +37,6 @@
         <dependency>
             <groupId>io.github.tokenjan</groupId>
             <artifactId>pinyin4j</artifactId>
-            <version>2.6.1</version>
         </dependency>
     </dependencies>
 

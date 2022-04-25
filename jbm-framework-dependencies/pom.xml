@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>6.1.0-SNAPSHOT</version>
+    <version>7.0.1-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -30,10 +30,14 @@
     </developers>
     <properties>
         <log4j.version>2.17.1</log4j.version>
-        <spring.cloud.version>Greenwich.SR5</spring.cloud.version>
-        <spring.boot.version>2.1.12.RELEASE</spring.boot.version>
+        <spring.cloud.version>2021.0.1</spring.cloud.version>
+        <spring.boot.version>2.6.4</spring.boot.version>
+        <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <!--加入alibaba cloud-->
-        <spring.cloud.alibaba.version>2.0.4.RELEASE</spring.cloud.alibaba.version>
+        <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
+        <alibaba.nacos.version>1.4.3</alibaba.nacos.version>
+        <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
+
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
@@ -41,34 +45,33 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <jdk.version>1.8</jdk.version>
-        <jbm.framework.version>6.1.0-SNAPSHOT</jbm.framework.version>
-        <druid.version>1.2.8</druid.version>
+        <jbm.framework.version>7.0.1-SNAPSHOT</jbm.framework.version>
+        <druid.version>1.2.9</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.79</fastjson.version>
         <minio.version>8.3.0</minio.version>
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>
         <camel.version>2.17.1</camel.version>
-        <guava.version>23.0</guava.version>
+        <guava.version>25.1-jre</guava.version>
         <kryo.version>0.42</kryo.version>
         <hessian.version>4.0.51</hessian.version>
         <curator.version>4.0.1</curator.version>
-        <c3p0.version>0.9.1.2</c3p0.version>
+        <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis-plus.version>3.3.0</mybatis-plus.version>
-        <hutool.version>5.7.20</hutool.version>
+        <hutool.version>5.8.0.M3</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
-        <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <lombok.version>1.18.12</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
+        <jjwt.version>0.9.1</jjwt.version>
         <!--6.0 add-->
         <apache.commons-lang3.version>3.12.0</apache.commons-lang3.version>
         <apache.commons-io.version>2.11.0</apache.commons-io.version>
         <apache.commons.beanutils>1.9.4</apache.commons.beanutils>
         <com.google.zxing.version>3.1.0</com.google.zxing.version>
-        <swagger.version>2.9.2</swagger.version>
-        <io.swagger.version>1.5.20</io.swagger.version>
-        <swagger-bootstrap-ui.version>1.9.5</swagger-bootstrap-ui.version>
+        <swagger.version>3.0.0</swagger.version>
+        <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
@@ -93,13 +96,16 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- SpringBoot 依赖配置 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring.boot.version}</version>
-                <scope>import</scope>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
+            <!-- SpringCloud Alibaba 微服务 -->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
@@ -107,6 +113,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Alibaba Nacos 配置 -->
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${alibaba.nacos.version}</version>
+            </dependency>
+
             <!--lof4j-->
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
@@ -144,6 +158,18 @@
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>${io.swagger.version}</version>
+            </dependency>
+            <!-- JWT -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <!-- 线程传递值 -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>transmittable-thread-local</artifactId>
+                <version>${transmittable-thread-local.version}</version>
             </dependency>
             <!-- spring admin -->
             <dependency>
@@ -281,6 +307,11 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>
@@ -471,7 +502,7 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-cluster-node</artifactId>
+                <artifactId>jbm-cluster-node-oauth</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>
@@ -571,7 +602,7 @@
             <dependency>
                 <groupId>commons-fileupload</groupId>
                 <artifactId>commons-fileupload</artifactId>
-                <version>1.3.1</version>
+                <version>1.4</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -681,16 +712,24 @@
             <!-- <version>1.0.0.Final</version> -->
             <!-- </dependency> -->
             <!-- mysql -->
-            <dependency>
-                <groupId>c3p0</groupId>
-                <artifactId>c3p0</artifactId>
-                <version>${c3p0.version}</version>
-            </dependency>
+            <!--            7.0 去处c3p0-->
+            <!--            <dependency>-->
+            <!--                <groupId>c3p0</groupId>-->
+            <!--                <artifactId>c3p0</artifactId>-->
+            <!--                <version>${c3p0.version}</version>-->
+            <!--            </dependency>-->
             <!--<dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
             </dependency>-->
+            <!--拼音-->
+            <dependency>
+                <groupId>io.github.tokenjan</groupId>
+                <artifactId>pinyin4j</artifactId>
+                <version>2.6.1</version>
+            </dependency>
+
             <!-- mybatis -->
             <dependency>
                 <groupId>com.baomidou</groupId>

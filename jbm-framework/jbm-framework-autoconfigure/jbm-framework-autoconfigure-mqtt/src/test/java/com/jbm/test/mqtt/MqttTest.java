@@ -2,26 +2,22 @@ package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
+import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
+import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.fusesource.mqtt.client.QoS;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
-import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
-import jbm.framework.boot.autoconfigure.mqtt.SimpleMqttPahoMessageHandler;
-
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
 @SpringBootTest(classes = {MqttAutoConfiguration.class})
 @Slf4j
@@ -31,7 +27,7 @@ public class MqttTest {
 
     private SimpleMqttClient mqttClient;
 
-    @Before
+    @BeforeEach
     public void testClient() throws Exception {
 //		messageHandler.publish("spm_alarm_in", "tewt", 1);
         mqttClient = mqttPahoClientFactory.getClientInstance("woshiceshi");

@@ -1,0 +1,6 @@
+# AutoConfiguration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+jbm.framework.boot.autoconfigure.eventbus.autoconfigure.ClusterEventBusAutoConfigure
+#Environment PostProcessors
+org.springframework.boot.env.EnvironmentPostProcessor=\
+jbm.framework.boot.autoconfigure.eventbus.EventBusEnvironmentPostProcessor

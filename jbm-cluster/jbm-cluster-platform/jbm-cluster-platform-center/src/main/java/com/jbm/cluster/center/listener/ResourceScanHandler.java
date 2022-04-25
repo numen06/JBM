@@ -59,7 +59,7 @@ public class ResourceScanHandler {
             while (iterator.hasNext()) {
                 Map map = (Map) iterator.next();
                 try {
-                    BaseApi api = BeanUtil.mapToBean(map, BaseApi.class,true);
+                    BaseApi api = BeanUtil.toBeanIgnoreError(map, BaseApi.class);
                     codes.add(api.getApiCode());
                     BaseApi save = baseApiService.getApi(api.getApiCode());
                     if (save == null) {

@@ -1,7 +1,6 @@
 package com.jbm.cluster.push.usage;
 
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.api.model.entitys.message.Notification;
 import com.jbm.cluster.api.model.entitys.message.SmsNotification;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.aliyun.sms.model.AliyunSms;
@@ -16,7 +15,7 @@ import org.springframework.util.Assert;
  * @date 2018-3-27
  **/
 @Slf4j
-public class SmsNotificationExchanger implements NotificationExchanger {
+public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotification> {
 
     private AliyunSmsTemplate aliyunSmsTemplate;
 
@@ -31,12 +30,7 @@ public class SmsNotificationExchanger implements NotificationExchanger {
 
 
     @Override
-    public boolean support(Object notification) {
-        return notification.getClass().equals(SmsNotification.class);
-    }
-
-    @Override
-    public boolean exchange(Notification notification) {
+    public boolean process(SmsNotification notification) {
         Assert.notNull(aliyunSmsTemplate, "短信接口没有初始化");
         SmsNotification smsNotification = (SmsNotification) notification;
         AliyunSms aliyunSms = new AliyunSms();

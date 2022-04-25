@@ -480,19 +480,5 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 		return true;
 	}
 
-	public static void main(String[] args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		// System.out.print(StringUtils.exchangeType("20141112", Date.class) +
-		// "");
-		System.out.println(System.nanoTime());
-		System.out.println("tes" + "123123213");
-		System.out.println(System.nanoTime());
-		System.out.println(StringUtils.bond("tes", "123123213"));
-		System.out.println(System.nanoTime());
 
-		System.out.println(splitToEmpty("1").toString());
-
-		System.out.println(Arrays.toString(StringUtils.splitToArray("201501,201511", Date.class)));
-		System.out.println(collectionToDelimitedString(Lists.newArrayList("1", "2"), ";"));
-		System.out.println(toString(MapUtils.newHashMap("1", "2")));
-	}
 }

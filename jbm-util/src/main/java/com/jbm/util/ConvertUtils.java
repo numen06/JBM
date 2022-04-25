@@ -187,8 +187,6 @@ public class ConvertUtils extends org.apache.commons.beanutils.ConvertUtils {
 		}
 	}
 
-	public static void main(String[] args) {
-		System.out.println(ConvertUtils.converts("2013-01-01", Date.class, TimeUtils.now()));
-	}
+
 
 }

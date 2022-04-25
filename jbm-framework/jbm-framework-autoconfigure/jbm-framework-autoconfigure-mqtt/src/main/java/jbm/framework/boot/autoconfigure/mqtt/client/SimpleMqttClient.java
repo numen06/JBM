@@ -68,7 +68,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         MqttMessage mqttMessage = new MqttMessage();
         mqttMessage.setPayload(JSON.toJSONBytes(message));
         mqttMessage.setQos(1);
-        this.mqttClient.publish(topic, mqttMessage);
+        this.publish(topic, mqttMessage);
     }
 
 

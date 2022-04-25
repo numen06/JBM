@@ -1,7 +1,9 @@
+
 package com.jbm.cluster.push.handler;
 
 import com.jbm.cluster.api.model.entitys.message.Notification;
 import com.jbm.cluster.push.usage.NotificationExchanger;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Callable;
 
@@ -9,6 +11,7 @@ import java.util.concurrent.Callable;
  * @author wesley.zhang
  * @date 2018-3-31
  **/
+@Slf4j
 public class NotificationTask implements Callable<Boolean> {
 
     private NotificationExchanger notificationExchanger;
@@ -22,6 +25,12 @@ public class NotificationTask implements Callable<Boolean> {
 
     @Override
     public Boolean call() throws Exception {
-        return notificationExchanger.exchange(notification);
+        try {
+            notificationExchanger.exchange(notification);
+        } catch (Exception e) {
+            log.error("处理消息错误", e);
+            return false;
+        }
+        return true;
     }
 }

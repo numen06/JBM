@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.AccountStatus;
 import com.jbm.cluster.api.constants.AccountType;
-import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entity.BaseAccount;
 import com.jbm.cluster.api.model.entity.BaseAccountLogs;
 import com.jbm.cluster.api.model.entity.BaseUser;

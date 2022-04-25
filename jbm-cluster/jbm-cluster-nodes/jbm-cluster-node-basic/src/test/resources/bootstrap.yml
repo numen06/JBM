@@ -1,0 +1,36 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: jbm-cluster-node-basic
+  cloud:
+    #手动配置Bus id,
+    bus:
+      id: jbm-cluster-node-basic}:${server.port}
+  main:
+    allow-bean-definition-overriding: true
+    #2.6版本后增加循环引用判断
+    allow-circular-references: true
+  #解决restful 404错误 spring.mavc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
+  mvc:
+    throw-exception-if-no-handler-found: true
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  resources:
+    add-mappings: false
+  profiles:
+    active: ${profile.name}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+jbm:
+  cluster:
+    token-type: redis
+swagger2:
+  enabled: false
+  description: 测试基础服务器
+  title: 测试基础服务器
+

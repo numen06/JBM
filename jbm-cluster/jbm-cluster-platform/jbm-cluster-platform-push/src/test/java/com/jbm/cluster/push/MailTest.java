@@ -2,7 +2,7 @@ package com.jbm.cluster.push;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.extra.mail.MailUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @program: JBM6

@@ -48,7 +48,7 @@ public class SimpleMqttAsyncClient extends SimpleMqttAsyncClientCallback {
         MqttMessage mqttMessage = new MqttMessage();
         mqttMessage.setPayload(JSON.toJSONBytes(message));
         mqttMessage.setQos(1);
-        this.mqttClient.publish(topic, mqttMessage);
+        this.publish(topic, mqttMessage);
     }
 
     public boolean isConnected() {

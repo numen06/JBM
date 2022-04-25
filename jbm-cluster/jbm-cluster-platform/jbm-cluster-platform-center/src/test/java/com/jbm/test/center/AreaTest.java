@@ -6,23 +6,21 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.pinyin.PinyinUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.constants.AreaType;
 import com.jbm.cluster.api.model.entity.BaseArea;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.List;
 import java.util.Map;
 
 public class AreaTest {
 //    private Map<String, String> MAP_DATA = Maps.newHashMap();
 
-    @Before
+    @BeforeEach
     public void init() {
         Map<String, BaseArea> baseAreaMap = Maps.newHashMap();
         try {

@@ -1,6 +1,6 @@
 package com.jbm.util;
 
-import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -8,8 +8,6 @@ import org.apache.commons.lang.time.DateUtils;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -320,7 +318,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
      * @return
      */
     public static Date today() {
-        return jodd.time.TimeUtil.toDate(LocalDate.now());
+        return DateUtil.parseDate(DateUtil.today());
     }
 
     /**
@@ -329,7 +327,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
      * @return
      */
     public static Date tomorrow() {
-        return jodd.time.TimeUtil.toDate(LocalDate.now().plusDays(1));
+        return DateUtil.tomorrow();
     }
 
     /**
@@ -338,7 +336,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
      * @return
      */
     public static Date yesterday() {
-        return jodd.time.TimeUtil.toDate(LocalDate.now().plusDays(-1));
+        return DateUtil.yesterday();
     }
 
     /**
@@ -347,7 +345,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
      * @return
      */
     public static Date now() {
-        return jodd.time.TimeUtil.toDate(LocalDateTime.now());
+        return DateTime.now();
     }
 
     /**
@@ -1094,45 +1092,4 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
         return sb.toString();
     }
 
-    /**
-     * @param args
-     * @throws ParseException
-     */
-    public static void main(String[] args) throws ParseException {
-        String date = "2001-07-04T12:08:56.235-0700";
-        // // String cats[] = new String[] { FORMAT_LONG };
-        Calendar calendar = calendar(date);
-        // calendar.clear(Calendar.DAY_OF_WEEK);
-        // // calendar.setFirstDayOfWeek(Calendar.SUNDAY);
-        //
-        // Calendar changeDate = calendar;
-
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.tomorrow()));
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.tomorrow(), TimeUtils.today()));
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.today()));
-
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.tomorrow(), -1));
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.tomorrow(), TimeUtils.today(), -1));
-        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.today(), -1));
-
-        System.out.println("现在时间" + TimeUtils.format(calendar(), FORMAT_FULL_CN));
-        System.out.println("转换时间" + TimeUtils.format(calendar, FORMAT_FULL_CN));
-        System.out.println("---------");
-        System.out.println("当天开始时间" + DateFormatUtils.format(firstTimeOfDay(calendar), FORMAT_LONG));
-        System.out.println("当天结束时间" + DateFormatUtils.format(lastTimeOfDay(calendar), FORMAT_LONG));
-        System.out.println("---------");
-        System.out.println("本周第一天" + DateFormatUtils.format(firstDayOfWeek(calendar, Calendar.MONDAY), FORMAT_LONG));
-        System.out.println("本周最后天" + DateFormatUtils.format(lastDayOfWeek(calendar, Calendar.MONDAY), FORMAT_LONG));
-        System.out.println("---------");
-        System.out.println("当月开始时间" + DateFormatUtils.format(firstDayOfMonth(calendar), FORMAT_LONG));
-        System.out.println("当月结束时间" + DateFormatUtils.format(lastDayOfMonth(calendar), FORMAT_LONG));
-        System.out.println("---------");
-        System.out.println("本年第一天" + DateFormatUtils.format(firstDayOfYear(calendar), FORMAT_LONG));
-        System.out.println("本年最后天" + DateFormatUtils.format(lastDayOfYear(calendar), FORMAT_LONG));
-
-        // String dateTime =
-        // MessageFormat.format("{0,date,yyyy-MM-dd-HH-mm:ss:ms}", new Object[]
-        // { new java.sql.Date(System.currentTimeMillis()) });
-        // System.out.println(dateTime);
-    }
 }

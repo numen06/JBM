@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
  * @date 2018-3-27
  **/
 @Slf4j
-public class MqttNotificationExchanger implements NotificationExchanger {
+public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNotification> {
 
     private RealMqttPahoClientFactory realMqttPahoClientFactory;
 
@@ -41,14 +41,8 @@ public class MqttNotificationExchanger implements NotificationExchanger {
     }
 
     @Override
-    public boolean support(Object notification) {
-        return notification.getClass().equals(MqttNotification.class);
-    }
-
-    @Override
-    public boolean exchange(Notification notification) {
+    public boolean process(MqttNotification mqttNotification) {
         Assert.notNull(realMqttPahoClientFactory, "MQTT链接未初始化");
-        MqttNotification mqttNotification = (MqttNotification) notification;
         MqttMessage message = new MqttMessage();
         if (ObjectUtil.isEmpty(mqttNotification)) {
             mqttNotification.setBody("");
@@ -59,13 +53,10 @@ public class MqttNotificationExchanger implements NotificationExchanger {
             if (StrUtil.isBlank(mqttNotification.getTopic())) {
                 throw new NullPointerException("没有指定Topic");
             }
-            if (!mqttClient.isConnected()) {
-                mqttClient.connect();
-            }
             mqttClient.publish(mqttNotification.getTopic(), message);
-            log.info("发送MQTT通知成功:{}", JSON.toJSONString(notification));
+            log.info("发送MQTT通知成功:{}", JSON.toJSONString(mqttNotification));
         } catch (Exception e) {
-            log.error("发送MQTT通知错误:{}", JSON.toJSONString(notification), e);
+            log.error("发送MQTT通知错误:{}", JSON.toJSONString(mqttNotification), e);
             return false;
         }
         return true;

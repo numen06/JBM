@@ -48,7 +48,7 @@ public class OpenUserConverter extends DefaultUserAuthenticationConverter {
                 params.put(key, map.get(key));
             }
         }
-        OpenUserDetails auth = BeanUtil.mapToBean(params, OpenUserDetails.class, true);
+        OpenUserDetails auth = BeanUtil.toBeanIgnoreError(params, OpenUserDetails.class);
         if (params.get(USERNAME) != null) {
             auth.setUsername(params.get(USERNAME).toString());
         }

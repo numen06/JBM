@@ -153,6 +153,14 @@ public class ResultBody<T> implements Serializable {
         return this;
     }
 
+    public static <T> ResultBody<T> success() {
+        return ResultBody.ok();
+    }
+
+    public static <T> ResultBody<T> error() {
+        return ResultBody.failed();
+    }
+
     public static <T> ResultBody<T> success(T data, String msg) {
         return ResultBody.ok().data(data).msg(msg);
     }
@@ -163,6 +171,10 @@ public class ResultBody<T> implements Serializable {
 
     public static <T> ResultBody<T> error(T data, String msg) {
         return ResultBody.failed().data(data).msg(msg);
+    }
+
+    public static <T> ResultBody<T> error(String e) {
+        return ResultBody.failed().msg(e);
     }
 
     public static <T> ResultBody<T> error(Exception e) {

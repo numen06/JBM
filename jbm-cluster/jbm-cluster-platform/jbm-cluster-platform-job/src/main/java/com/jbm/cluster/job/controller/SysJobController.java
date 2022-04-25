@@ -4,15 +4,15 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
-import com.jbm.cluster.common.annotation.JbmClusterEvent;
-import com.jbm.cluster.common.annotation.JbmClusterScheduled;
-import com.jbm.cluster.common.auth.RequiresPermissions;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.exception.job.TaskException;
-import com.jbm.cluster.common.security.JbmClusterHelper;
+import com.jbm.cluster.common.core.annotation.JbmClusterEvent;
+import com.jbm.cluster.common.core.annotation.JbmClusterScheduled;
+import com.jbm.cluster.common.security.annotation.RequiresPermissions;
+import com.jbm.cluster.common.security.utils.SecurityUtils;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
 import com.jbm.cluster.job.util.ScheduleUtils;
+import com.jbm.framework.exceptions.job.TaskException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -65,18 +65,19 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     public ResultBody add(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
-        } else if (StrUtil.containsIgnoreCase(job.getInvokeTarget(), CommonConstants.LOOKUP_RMI)) {
+        } else if (StrUtil.containsIgnoreCase(job.getInvokeTarget(), JbmConstants.LOOKUP_RMI)) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'rmi'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.LOOKUP_LDAP, CommonConstants.LOOKUP_LDAPS})) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{JbmConstants.LOOKUP_LDAP, JbmConstants.LOOKUP_LDAPS})) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'ldap(s)'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.HTTP, CommonConstants.HTTPS})) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{JbmConstants.HTTP, JbmConstants.HTTPS})) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不允许'http(s)'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), CommonConstants.JOB_ERROR_STR)) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), JbmConstants.JOB_ERROR_STR)) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串存在违规");
         } else if (!ScheduleUtils.whiteList(job.getInvokeTarget())) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
         }
-        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
+        job.setCreateBy(SecurityUtils.getUsername());
+//        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
         return ResultBody.success(this.service.insertJob(job), "");
     }
 
@@ -89,18 +90,19 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     public ResultBody edit(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
-        } else if (StrUtil.containsIgnoreCase(job.getInvokeTarget(), CommonConstants.LOOKUP_RMI)) {
+        } else if (StrUtil.containsIgnoreCase(job.getInvokeTarget(), JbmConstants.LOOKUP_RMI)) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串不允许'rmi'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.LOOKUP_LDAP, CommonConstants.LOOKUP_LDAPS})) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{JbmConstants.LOOKUP_LDAP, JbmConstants.LOOKUP_LDAPS})) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串不允许'ldap(s)'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{CommonConstants.HTTP, CommonConstants.HTTPS})) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), new String[]{JbmConstants.HTTP, JbmConstants.HTTPS})) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串不允许'http(s)'调用");
-        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), CommonConstants.JOB_ERROR_STR)) {
+        } else if (StrUtil.containsAnyIgnoreCase(job.getInvokeTarget(), JbmConstants.JOB_ERROR_STR)) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串存在违规");
         } else if (!ScheduleUtils.whiteList(job.getInvokeTarget())) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
         }
-        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
+        job.setCreateBy(SecurityUtils.getUsername());
+//        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
         return ResultBody.ok().data(this.service.updateById(job));
     }
 

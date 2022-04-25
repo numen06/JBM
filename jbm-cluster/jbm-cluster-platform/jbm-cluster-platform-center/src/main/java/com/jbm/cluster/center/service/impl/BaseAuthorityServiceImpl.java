@@ -8,6 +8,7 @@ import com.jbm.cluster.api.model.AuthorityApi;
 import com.jbm.cluster.api.model.AuthorityMenu;
 import com.jbm.cluster.api.model.AuthorityResource;
 import com.jbm.cluster.api.model.entity.*;
+import com.jbm.cluster.center.event.NewMenuEvent;
 import com.jbm.cluster.center.mapper.*;
 import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.constants.CommonConstants;
@@ -21,6 +22,7 @@ import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,10 +50,15 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     private BaseAuthorityAppMapper baseAuthorityAppMapper;
     @Autowired
     private BaseAuthorityActionMapper baseAuthorityActionMapper;
+
     @Autowired
-    private BaseMenuService baseMenuService;
+    private BaseMenuMapper baseMenuMapper;
     @Autowired
-    private BaseActionService baseActionService;
+    private BaseActionMapper baseActionMapper;
+    //    @Autowired
+//    private BaseMenuService baseMenuService;
+//    @Autowired
+//    private BaseActionService baseActionService;
     @Autowired
     private BaseApiService baseApiService;
     @Autowired
@@ -121,6 +128,12 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     }
 
 
+    @EventListener
+    public void pushNewAuthority(NewMenuEvent newMenuEvent) {
+        this.saveOrUpdateAuthority(newMenuEvent.getBaseMenu().getMenuId(), ResourceType.menu);
+    }
+
+
     /**
      * 保存或修改权限
      *
@@ -136,7 +149,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
             baseAuthority = new BaseAuthority();
         }
         if (ResourceType.menu.equals(resourceType)) {
-            BaseMenu menu = baseMenuService.getMenu(resourceId);
+            BaseMenu menu = baseMenuMapper.selectById(resourceId);
             authority = OpenSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
             //菜单保持authID和MenuId一致
             baseAuthority.setAuthorityId(resourceId);
@@ -150,7 +163,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
             }
         }
         if (ResourceType.action.equals(resourceType)) {
-            BaseAction operation = baseActionService.getAction(resourceId);
+            BaseAction operation = baseActionMapper.selectById(resourceId);
             authority = OpenSecurityConstants.AUTHORITY_PREFIX_ACTION + operation.getActionCode();
             baseAuthority.setActionId(resourceId);
             baseAuthority.setStatus(operation.getStatus());

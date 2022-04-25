@@ -32,7 +32,7 @@ public class QueueConstants {
     /**
      * 推送消息
      */
-    public static final String QUEUE_PUSH_MESSAGE = "cloud.push.message";
+    public static final String QUEUE_PUSH_MESSAGE = "cloud.push.message.test";
     /**
      * 集群事件
      */

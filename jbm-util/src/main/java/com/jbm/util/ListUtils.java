@@ -189,21 +189,4 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
 		return list;
 	}
 
-	public static void main(String[] args) {
-		System.out.println(newArrayList("12312"));
-		Map<String, Object> map1 = new HashMap<String, Object>();
-		Map<String, Object> map2 = new HashMap<String, Object>();
-		Map<String, Object> map3 = new HashMap<String, Object>();
-		map1.put("name", 12d);
-		map2.put("name", 10d);
-		map3.put("name", 11d);
-		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
-		list.add(map1);
-		list.add(map2);
-		list.add(map3);
-		sort(list, "name", MapComparator.ASC);
-		System.out.println(list.get(0).get("name"));
-		System.out.println(JSON.toJSONString(ListUtils.push(Lists.newArrayList("ad"), "123123")));
-	}
-
 }

@@ -1,7 +1,5 @@
 package com.jbm.cluster.auth.integration;
 
-import com.jbm.cluster.api.model.UserAccount;
-
 /**
  * @author wesley.zhang
  * @date 2018-3-31

@@ -1,18 +1,10 @@
 package com.jbm.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import org.apache.commons.lang.SerializationUtils;
+
+import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import org.apache.commons.lang.SerializationUtils;
 
 /**
  * 
@@ -245,24 +237,6 @@ public class GZipUtils {
 		decompress(file, delete);
 	}
 
-	private static String inputStr = "zlex@zlex.org,snowolf@zlex.org,zlex.snowolf@zlex.org";
 
-	public static void main(String[] args) throws IOException {
-		System.err.println("原文:\t" + inputStr);
-
-		byte[] input = inputStr.getBytes();
-		System.err.println("长度:\t" + input.length);
-
-		byte[] data = GZipUtils.compress(input);
-		System.err.println("压缩后:\t");
-		System.err.println("长度:\t" + data.length);
-
-		byte[] output = GZipUtils.decompress(data);
-		String outputStr = new String(output);
-		System.err.println("解压缩后:\t" + outputStr);
-		System.err.println("长度:\t" + output.length);
-
-		// assertEquals(inputStr, outputStr);
-	}
 
 }

@@ -2,9 +2,7 @@ package jbm.framework.boot.autoconfigure.mail.configuration;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.mail.MailAccount;
-import cn.hutool.extra.mail.MailUtil;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
-import jodd.util.StringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.annotation.Bean;

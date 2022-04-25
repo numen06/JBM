@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.jbm</groupId>
         <artifactId>jbm-framework</artifactId>
-        <version>6.1.0-SNAPSHOT</version>
+        <version>7.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>jbm-framework-autoconfigure</artifactId>
     <packaging>pom</packaging>
@@ -49,6 +49,7 @@
         <module>jbm-framework-autoconfigure-mail</module>
         <module>jbm-framework-autoconfigure-opcua</module>
         <module>jbm-framework-autoconfigure-nacos</module>
+        <module>jbm-framework-autoconfigure-eventbus</module>
     </modules>
     <dependencies>
         <dependency>

@@ -3,7 +3,7 @@ package com.jbm.cluster.push.service.impl;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.common.constants.CommonConstants;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.push.service.PinService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.util.StringUtils;
@@ -30,7 +30,7 @@ public class PinServiceImpl implements PinService {
 
 
     public String buildCode(String phoneNumber) {
-        final String key = CommonConstants.QR_PREFIX + phoneNumber;
+        final String key = JbmConstants.QR_PREFIX + phoneNumber;
         String code = stringRedisTemplate.opsForValue().get(key);
         if (StringUtils.isNotBlank(code)) {
             return code;
@@ -50,7 +50,7 @@ public class PinServiceImpl implements PinService {
     @Override
 //    @Cacheable(value = "pin#3#0", key = "#phoneNumber")
     public JSONObject sendPinCode(String phoneNumber) throws Exception {
-        final String key = CommonConstants.PIN_PREFIX + phoneNumber;
+        final String key = JbmConstants.PIN_PREFIX + phoneNumber;
         Integer count = NumberUtil.parseInt(stringRedisTemplate.opsForValue().get(key));
         if (count > 3)
             throw new ServiceException("短信数量超限请稍后重试");

@@ -1,19 +1,11 @@
 package com.jbm.test;
 
 import cn.hutool.core.util.ClassUtil;
-import cn.hutool.extra.template.TemplateEngine;
-import cn.hutool.extra.template.TemplateUtil;
-import jbm.framework.boot.autoconfigure.beetl.BeetlAutoConfiguration;
 import jbm.framework.boot.autoconfigure.beetl.BeetlProperties;
 import jbm.framework.boot.autoconfigure.beetl.util.BeetlUtil;
-import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
-import org.beetl.core.resource.ClasspathResourceLoader;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.HashMap;

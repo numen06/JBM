@@ -3,10 +3,10 @@ package com.jbm.cluster.logs.handler;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.common.constants.QueueConstants;
+import com.jbm.cluster.core.constant.QueueConstants;
+import com.jbm.cluster.common.core.utils.AddressUtils;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.service.GatewayLogsService;
-import com.jbm.cluster.logs.utils.AddressUtils;
 import com.jbm.util.statistics.CountWithTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.util.concurrent.TimeUnit;
 
 /**
