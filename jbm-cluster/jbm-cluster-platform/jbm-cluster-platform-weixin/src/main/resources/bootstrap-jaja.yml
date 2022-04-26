@@ -2,7 +2,7 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: jbm
+        namespace: jaja
         #        group: ${config.group}
         refreshable-dataids: common.properties
         server-addr: 10.100.10.98:8848
