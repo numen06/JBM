@@ -3,138 +3,23 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>jbm-cluster</artifactId>
+        <artifactId>jbm-cluster-apis</artifactId>
         <groupId>com.jbm</groupId>
         <version>7.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-cluster-core</artifactId>
+    <artifactId>jbm-cluster-api-core</artifactId>
 
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
     <dependencies>
-        <!--        &lt;!&ndash;负载均衡&ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework.cloud</groupId>-->
-        <!--            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>-->
-        <!--        </dependency>-->
-        <!--        &lt;!&ndash;熔断&ndash;&gt;-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework.cloud</groupId>-->
-        <!--            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>-->
-        <!--        </dependency>-->
-        <!--声明式接口调用-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-        <!--spring security 6.0-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework.cloud</groupId>-->
-        <!--            <artifactId>spring-cloud-starter-security</artifactId>-->
-        <!--        </dependency>-->
-        <!-- spring oauth2 6.0-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.springframework.cloud</groupId>-->
-        <!--            <artifactId>spring-cloud-starter-oauth2</artifactId>-->
-        <!--        </dependency>-->
-        <!--spring security 7.0-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security.oauth.boot</groupId>
-            <artifactId>spring-security-oauth2-autoconfigure</artifactId>
-        </dependency>
-        <!--fegin-->
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-fegin</artifactId>
-            <version>${project.version}</version>
+            <artifactId>jbm-framework-core</artifactId>
         </dependency>
-        <!--mvc-->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--Redis-->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!-- Transmittable ThreadLocal -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>transmittable-thread-local</artifactId>
-        </dependency>
-        <!-- Jwt -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt</artifactId>
-        </dependency>
-        <!-- 消息总线rabbitMQ -->
-        <!--        <dependency>-->
-        <!--            <groupId>com.jbm</groupId>-->
-        <!--            <artifactId>jbm-framework-autoconfigure-amqp</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-bus</artifactId>
-        </dependency>
-        <!--监控-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <!--Cloud基础配置-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bootstrap</artifactId>
-        </dependency>
-        <!--测试依赖-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-        </dependency>
-        <!--自定义配置处理器,配置项提示-->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <!--二维码-->
-        <!--        <dependency>-->
-        <!--            <groupId>com.google.zxing</groupId>-->
-        <!--            <artifactId>core</artifactId>-->
-        <!--            <version>${com.google.zxing.version}</version>-->
-        <!--        </dependency>-->
-        <!--swagger-->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--工具类-->
-        <!--        <dependency>-->
-        <!--            <groupId>cn.hutool</groupId>-->
-        <!--            <artifactId>hutool-all</artifactId>-->
-        <!--            <version>${hutool.version}</version>-->
-        <!--        </dependency>-->
-        <!-- jbm基础包-->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-data-masterdata</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-
     </dependencies>
+
 </project>

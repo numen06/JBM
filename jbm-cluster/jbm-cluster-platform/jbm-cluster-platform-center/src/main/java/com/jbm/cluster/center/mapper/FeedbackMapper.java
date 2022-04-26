@@ -2,7 +2,7 @@ package com.jbm.cluster.center.mapper;
 
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
-import com.jbm.cluster.api.model.entity.Feedback;
+import com.jbm.cluster.api.entitys.basic.Feedback;
 
 /**
  * @Author: auto generate by jbm

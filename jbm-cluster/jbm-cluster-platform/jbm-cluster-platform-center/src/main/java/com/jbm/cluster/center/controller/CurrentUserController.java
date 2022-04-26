@@ -1,10 +1,9 @@
 package com.jbm.cluster.center.controller;
 
-import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.BaseUserForm;
-import com.jbm.cluster.api.model.AuthorityMenu;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.constants.CommonConstants;

@@ -14,7 +14,6 @@
     <modules>
         <module>jbm-cluster-api-basic</module>
         <module>jbm-cluster-api-oauth</module>
-        <module>jbm-cluster-api-core</module>
     </modules>
 
     <properties>

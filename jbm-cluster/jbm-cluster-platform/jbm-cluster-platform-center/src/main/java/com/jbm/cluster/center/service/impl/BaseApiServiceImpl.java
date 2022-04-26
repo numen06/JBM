@@ -3,7 +3,7 @@ package com.jbm.cluster.center.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.mapper.BaseApiMapper;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;

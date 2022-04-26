@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.service;
 
-import com.jbm.cluster.api.model.AuthorityMenu;
-import com.jbm.cluster.api.model.AuthorityResource;
+import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.GetMapping;
 

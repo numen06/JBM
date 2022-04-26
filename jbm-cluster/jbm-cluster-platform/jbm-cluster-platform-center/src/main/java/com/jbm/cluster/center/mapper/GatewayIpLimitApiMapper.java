@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.IpLimitApi;
-import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;

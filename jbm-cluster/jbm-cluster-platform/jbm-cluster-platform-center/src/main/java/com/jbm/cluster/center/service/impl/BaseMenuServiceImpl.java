@@ -5,7 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
-import com.jbm.cluster.api.model.entity.BaseMenu;
+import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;

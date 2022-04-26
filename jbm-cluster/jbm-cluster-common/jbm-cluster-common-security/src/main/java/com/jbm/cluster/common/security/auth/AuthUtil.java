@@ -1,6 +1,6 @@
 package com.jbm.cluster.common.security.auth;
 
-import com.jbm.cluster.api.model.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;
 import com.jbm.cluster.common.security.annotation.RequiresRoles;
 

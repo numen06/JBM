@@ -2,7 +2,7 @@ package com.jbm.cluster.common.security.interceptor;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.api.model.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.common.core.context.SecurityContextHolder;
 import com.jbm.cluster.common.security.auth.AuthUtil;

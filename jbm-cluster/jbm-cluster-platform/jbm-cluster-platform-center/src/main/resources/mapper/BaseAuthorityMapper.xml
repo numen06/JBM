@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.center.mapper.BaseAuthorityMapper">
-    <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseAuthority">
+    <resultMap id="BaseResultMap" type="com.jbm.cluster.api.entitys.basic.BaseAuthority">
         <!--
           WARNING - @mbg.generated
         -->
@@ -13,7 +13,7 @@
         <result column="status" property="status" jdbcType="TINYINT"/>
     </resultMap>
 
-    <resultMap id="AuthorityResource" type="com.jbm.cluster.api.model.AuthorityResource">
+    <resultMap id="AuthorityResource" type="com.jbm.cluster.api.entitys.auth.AuthorityResource">
         <result column="path" jdbcType="VARCHAR" property="path"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="service_id" jdbcType="VARCHAR" property="serviceId"/>
@@ -30,21 +30,21 @@
         <result column="owner" jdbcType="VARCHAR" property="owner"/>
     </resultMap>
 
-    <resultMap id="AuthorityMenu" type="com.jbm.cluster.api.model.AuthorityMenu"
+    <resultMap id="AuthorityMenu" type="com.jbm.cluster.api.entitys.auth.AuthorityMenu"
                extends="com.jbm.cluster.center.mapper.BaseMenuMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <collection property="actionList" column="{menuId=menu_id,status=status}" select="selectAuthorityAction"/>
     </resultMap>
 
-    <resultMap id="AuthorityAction" type="com.jbm.cluster.api.model.AuthorityAction"
+    <resultMap id="AuthorityAction" type="com.jbm.cluster.api.entitys.auth.AuthorityAction"
                extends="com.jbm.cluster.center.mapper.BaseActionMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="service_id" jdbcType="VARCHAR" property="serviceId"/>
     </resultMap>
 
-    <resultMap id="AuthorityApi" type="com.jbm.cluster.api.model.AuthorityApi"
+    <resultMap id="AuthorityApi" type="com.jbm.cluster.api.entitys.auth.AuthorityApi"
                extends="com.jbm.cluster.center.mapper.BaseApiMapper.BaseResultMap">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>

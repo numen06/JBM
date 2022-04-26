@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.handler;
 
-import com.jbm.cluster.api.model.entitys.message.Notification;
+import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.push.usage.NotificationExchanger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;

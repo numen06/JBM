@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.service.impl;
 
-import com.jbm.cluster.api.model.entitys.message.PushItem;
+import com.jbm.cluster.api.entitys.message.PushItem;
 import com.jbm.cluster.push.service.PushItemService;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import org.springframework.stereotype.Service;

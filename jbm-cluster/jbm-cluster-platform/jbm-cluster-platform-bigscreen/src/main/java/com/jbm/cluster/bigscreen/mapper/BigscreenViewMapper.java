@@ -1,6 +1,6 @@
 package com.jbm.cluster.bigscreen.mapper;
 
-import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
+import com.jbm.cluster.api.entitys.bigscreen.BigscreenView;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 

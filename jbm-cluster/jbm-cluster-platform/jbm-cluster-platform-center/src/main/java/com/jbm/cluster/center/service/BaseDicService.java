@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseDic;
+import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 
 import java.util.List;

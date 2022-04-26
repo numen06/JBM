@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
 import com.jbm.cluster.job.util.ScheduleUtils;

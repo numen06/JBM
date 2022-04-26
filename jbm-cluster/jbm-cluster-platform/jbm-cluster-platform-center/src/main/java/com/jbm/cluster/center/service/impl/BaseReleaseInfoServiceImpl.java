@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.entity.BaseReleaseInfo;
+import com.jbm.cluster.api.entitys.basic.BaseReleaseInfo;
 import com.jbm.cluster.center.service.BaseReleaseInfoService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;

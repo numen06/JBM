@@ -1,14 +1,13 @@
 package com.jbm.cluster.push.controller;
 
-import com.jbm.cluster.api.model.entitys.message.EmailNotification;
-import com.jbm.cluster.api.model.entitys.message.MqttNotification;
-import com.jbm.cluster.api.model.entitys.message.SmsNotification;
+import com.jbm.cluster.api.entitys.message.EmailNotification;
+import com.jbm.cluster.api.entitys.message.MqttNotification;
+import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.integration.support.MessageBuilder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

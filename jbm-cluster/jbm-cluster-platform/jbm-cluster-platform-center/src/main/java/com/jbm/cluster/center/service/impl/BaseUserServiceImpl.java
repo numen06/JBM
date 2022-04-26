@@ -10,13 +10,15 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.jbm.cluster.api.auth.OpenAuthority;
+import com.jbm.cluster.api.auth.OpenSecurityConstants;
+import com.jbm.cluster.api.auth.model.UserAccount;
 import com.jbm.cluster.api.constants.AccountType;
+import com.jbm.cluster.api.entitys.basic.*;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.security.OpenAuthority;
-import com.jbm.cluster.common.security.OpenSecurityConstants;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
@@ -84,14 +86,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
-        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         if (Validator.isEmail(baseUser.getEmail())) {
             //注册email账号登陆
-            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         }
         if (Validator.isMobile(baseUser.getMobile())) {
             //注册手机号账号登陆
-            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
+            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         }
     }
 
@@ -114,14 +116,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
         //默认注册用户名账户
-        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+        baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        if (Validator.isEmail(baseUser.getEmail())) {
 //            //注册email账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        }
 //        if (Validator.isMobile(baseUser.getMobile())) {
 //            //注册手机号账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), BaseConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        }
     }
 
@@ -135,7 +137,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isEmail(dbUser.getEmail())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
         //新建一个邮箱帐号
         userNameAccunt.setAccountId(null);
         userNameAccunt.setAccount(dbUser.getEmail());
@@ -152,7 +154,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isMobile(dbUser.getMobile())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
         if (userNameAccunt == null) {
             userNameAccunt = baseAccountService.registerUsernameAccount(baseUser);
         }
@@ -176,7 +178,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             return;
         }
         if (baseUser.getStatus() != null) {
-            baseAccountService.updateStatusByUserId(baseUser.getUserId(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, baseUser.getStatus());
+            baseAccountService.updateStatusByUserId(baseUser.getUserId(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, baseUser.getStatus());
         }
 //        this.saveEntity(baseUser);
         baseUserMapper.updateById(baseUser);
@@ -190,8 +192,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void addUserThirdParty(BaseUser baseUser, String accountType) {
-        if (!baseAccountService.isExist(baseUser.getUserName(), accountType, BaseConstants.ACCOUNT_DOMAIN_ADMIN)) {
-            baseUser.setUserType(BaseConstants.USER_TYPE_ADMIN);
+        if (!baseAccountService.isExist(baseUser.getUserName(), accountType, JbmConstants.ACCOUNT_DOMAIN_ADMIN)) {
+            baseUser.setUserType(JbmConstants.USER_TYPE_ADMIN);
             baseUser.setCreateTime(new Date());
             baseUser.setUpdateTime(baseUser.getCreateTime());
 //            //保存系统用户信息
@@ -200,13 +202,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 this.insertEntity(baseUser);
             }
             // 注册账号信息
-            baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, BaseConstants.ACCOUNT_STATUS_NORMAL, BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+            baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, JbmConstants.ACCOUNT_STATUS_NORMAL, JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
         }
     }
 
     @Override
     public void bindUserThirdPartyByPhone(String phone, BaseAccount baseAccount) {
-        baseAccount.setDomain(BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+        baseAccount.setDomain(JbmConstants.ACCOUNT_DOMAIN_ADMIN);
         if (baseAccountService.isExist(baseAccount)) {
             return;
         }
@@ -214,7 +216,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (ObjectUtil.isEmpty(baseUser)) {
             throw new ServiceException("没有此手机注册用户");
         }
-        baseUser.setUserType(BaseConstants.USER_TYPE_ADMIN);
+        baseUser.setUserType(JbmConstants.USER_TYPE_ADMIN);
         baseAccount.setUserId(baseUser.getUserId());
         // 注册账号信息
         baseAccountService.register(baseAccount);
@@ -229,7 +231,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void updatePassword(Long userId, String password) {
-        baseAccountService.updatePasswordByUserId(userId, BaseConstants.ACCOUNT_DOMAIN_ADMIN, password);
+        baseAccountService.updatePasswordByUserId(userId, JbmConstants.ACCOUNT_DOMAIN_ADMIN, password);
     }
 
     /**
@@ -314,7 +316,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         BaseUser baseUser = getUserById(userId);
 
         // 加入用户权限
-        List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId, CommonConstants.ROOT.equals(baseUser.getUserName()));
+        List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(baseUser.getUserName()));
         if (userGrantedAuthority != null && userGrantedAuthority.size() > 0) {
             authorities.addAll(userGrantedAuthority);
         }
@@ -366,18 +368,18 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         // 第三方登录标识
         BaseAccount baseAccount = null;
         if (StringUtils.isNotBlank(loginType)) {
-            baseAccount = baseAccountService.getAccount(account, loginType, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+            baseAccount = baseAccountService.getAccount(account, loginType, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
         } else {
             // 非第三方登录
             //用户名登录
-            baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_USERNAME, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+            baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_USERNAME, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             // 手机号登陆
             if (Validator.isMobile(account)) {
-                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_MOBILE, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+                baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             }
             // 邮箱登陆
             if (Validator.isEmail(account)) {
-                baseAccount = baseAccountService.getAccount(account, BaseConstants.ACCOUNT_TYPE_EMAIL, BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+                baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             }
         }
 
@@ -388,7 +390,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 HttpServletRequest request = WebUtils.getHttpServletRequest();
                 if (request != null) {
                     BaseAccountLogs log = new BaseAccountLogs();
-                    log.setDomain(BaseConstants.ACCOUNT_DOMAIN_ADMIN);
+                    log.setDomain(JbmConstants.ACCOUNT_DOMAIN_ADMIN);
                     log.setUserId(baseAccount.getUserId());
                     log.setAccount(baseAccount.getAccount());
                     log.setAccountId(String.valueOf(baseAccount.getAccountId()));

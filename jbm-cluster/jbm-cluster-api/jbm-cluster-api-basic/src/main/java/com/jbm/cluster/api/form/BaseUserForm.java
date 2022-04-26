@@ -1,6 +1,6 @@
 package com.jbm.cluster.api.form;
 
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

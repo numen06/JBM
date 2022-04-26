@@ -1,11 +1,9 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.BaseOrg;
-import com.jbm.cluster.api.model.entity.BaseRole;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseOrg;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataTreeCollection;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

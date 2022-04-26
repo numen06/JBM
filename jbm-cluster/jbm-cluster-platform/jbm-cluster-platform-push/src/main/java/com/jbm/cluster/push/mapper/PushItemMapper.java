@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.mapper;
 
-import com.jbm.cluster.api.model.entitys.message.PushItem;
+import com.jbm.cluster.api.entitys.message.PushItem;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 

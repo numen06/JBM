@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
-import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.center.service.GatewayIpLimitApiService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;

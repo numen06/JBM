@@ -2,7 +2,7 @@ package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Maps;
-import com.jbm.cluster.api.model.entity.BaseDic;
+import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.center.service.BaseDicService;
 import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl;

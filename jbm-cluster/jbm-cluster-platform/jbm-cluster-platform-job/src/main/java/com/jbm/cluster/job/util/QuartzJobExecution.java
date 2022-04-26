@@ -2,7 +2,7 @@ package com.jbm.cluster.job.util;
 
 import org.quartz.JobExecutionContext;
 
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 
 /**
  * 定时任务处理（允许并发执行）

@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
-import com.jbm.cluster.api.model.entity.GatewayRoute;
+import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.center.service.GatewayRouteService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.mapper;
 
-import com.jbm.cluster.api.model.entity.BaseArea;
+import com.jbm.cluster.api.entitys.basic.BaseArea;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Select;

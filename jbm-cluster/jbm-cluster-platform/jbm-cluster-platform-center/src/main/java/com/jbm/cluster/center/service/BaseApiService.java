@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;

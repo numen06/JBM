@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;

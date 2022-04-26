@@ -3,7 +3,7 @@ package com.jbm.cluster.common.security.service;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.api.model.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.common.core.utils.IpUtils;

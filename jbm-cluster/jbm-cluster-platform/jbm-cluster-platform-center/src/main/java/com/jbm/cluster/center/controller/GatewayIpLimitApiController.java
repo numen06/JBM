@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.center.service.GatewayIpLimitApiService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import org.springframework.web.bind.annotation.RequestMapping;

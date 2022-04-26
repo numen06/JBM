@@ -1,6 +1,6 @@
 package com.jbm.cluster.bigscreen;
 
-import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
+import com.jbm.cluster.api.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.mapper.BigscreenViewMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;

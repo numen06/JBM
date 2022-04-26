@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.mapper;
 
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.controller;
 
-import com.jbm.cluster.api.model.entitys.message.PushItem;
+import com.jbm.cluster.api.entitys.message.PushItem;
 import com.jbm.cluster.push.service.PushItemService;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
 import io.swagger.annotations.Api;

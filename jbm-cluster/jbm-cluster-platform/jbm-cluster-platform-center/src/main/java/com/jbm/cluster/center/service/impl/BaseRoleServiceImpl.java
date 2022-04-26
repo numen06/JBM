@@ -2,9 +2,9 @@ package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.jbm.cluster.api.model.entity.BaseRole;
-import com.jbm.cluster.api.model.entity.BaseRoleUser;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.center.mapper.BaseRoleMapper;
 import com.jbm.cluster.center.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.center.service.BaseRoleService;

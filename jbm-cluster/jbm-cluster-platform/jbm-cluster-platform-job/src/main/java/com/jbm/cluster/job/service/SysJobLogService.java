@@ -1,6 +1,6 @@
 package com.jbm.cluster.job.service;
 
-import com.jbm.cluster.api.model.entitys.job.SysJobLog;
+import com.jbm.cluster.api.entitys.job.SysJobLog;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 import java.util.List;

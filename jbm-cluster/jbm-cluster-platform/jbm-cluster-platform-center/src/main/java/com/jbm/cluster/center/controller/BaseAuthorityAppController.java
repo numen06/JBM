@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.BaseAuthorityApp;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityApp;
 import com.jbm.cluster.center.service.BaseAuthorityAppService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import org.springframework.web.bind.annotation.RequestMapping;

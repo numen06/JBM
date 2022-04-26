@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
-import com.jbm.cluster.api.model.entity.BaseAction;
+import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.center.mapper.BaseActionMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;

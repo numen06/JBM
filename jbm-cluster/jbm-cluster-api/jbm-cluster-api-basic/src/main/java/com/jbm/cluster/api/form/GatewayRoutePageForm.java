@@ -1,6 +1,6 @@
 package com.jbm.cluster.api.form;
 
-import com.jbm.cluster.api.model.entity.GatewayRoute;
+import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.framework.usage.form.PageSearchForm;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;

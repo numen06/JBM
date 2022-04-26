@@ -2,12 +2,12 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
 import com.jbm.cluster.api.form.BaseAuthorityUserForm;
-import com.jbm.cluster.api.model.AuthorityApi;
-import com.jbm.cluster.api.model.AuthorityMenu;
-import com.jbm.cluster.api.model.AuthorityResource;
-import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
-import com.jbm.cluster.api.model.entity.BaseAuthorityApp;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.auth.AuthorityApi;
+import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.auth.AuthorityResource;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityApp;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;

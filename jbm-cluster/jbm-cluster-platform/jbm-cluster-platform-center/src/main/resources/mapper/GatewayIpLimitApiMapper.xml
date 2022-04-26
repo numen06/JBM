@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.center.mapper.GatewayIpLimitApiMapper">
-  <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.GatewayIpLimitApi">
+  <resultMap id="BaseResultMap" type="com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi">
     <!--
       WARNING - @mbg.generated
     -->
@@ -9,7 +9,7 @@
     <result column="api_id" jdbcType="BIGINT" property="apiId" />
   </resultMap>
 
-  <resultMap id="ApiResultMap" type="com.jbm.cluster.api.model.entity.BaseApi">
+  <resultMap id="ApiResultMap" type="com.jbm.cluster.api.entitys.basic.BaseApi">
     <!--
       WARNING - @mbg.generated
     -->

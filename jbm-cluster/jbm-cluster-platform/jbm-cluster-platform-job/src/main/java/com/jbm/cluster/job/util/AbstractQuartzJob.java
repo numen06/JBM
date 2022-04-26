@@ -1,13 +1,11 @@
 package com.jbm.cluster.job.util;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
-import com.jbm.cluster.api.model.entitys.job.SysJobLog;
-import lombok.extern.slf4j.Slf4j;
+import com.jbm.cluster.api.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJobLog;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;

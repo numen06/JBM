@@ -2,7 +2,7 @@ package com.jbm.cluster.job;
 
 import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.job.mapper.SysJobMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import org.mybatis.spring.annotation.MapperScan;

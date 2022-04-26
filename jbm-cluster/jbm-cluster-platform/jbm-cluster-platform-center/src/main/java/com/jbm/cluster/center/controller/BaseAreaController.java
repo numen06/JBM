@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.BaseArea;
+import com.jbm.cluster.api.entitys.basic.BaseArea;
 import com.jbm.cluster.api.service.IBaseAreaServiceClient;
 import com.jbm.cluster.center.service.BaseAreaService;
 import com.jbm.framework.metadata.bean.ResultBody;

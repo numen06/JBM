@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.GatewayIpLimitApi;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

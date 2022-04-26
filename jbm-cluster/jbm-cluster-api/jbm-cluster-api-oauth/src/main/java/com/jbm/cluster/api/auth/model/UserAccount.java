@@ -2,7 +2,7 @@ package com.jbm.cluster.api.auth.model;
 
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.auth.OpenAuthority;
-import com.jbm.cluster.api.model.entity.BaseAccount;
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import lombok.Data;
 
 import java.io.Serializable;

@@ -3,12 +3,11 @@ package com.jbm.cluster.job.util;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import jbm.framework.spring.config.SpringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 

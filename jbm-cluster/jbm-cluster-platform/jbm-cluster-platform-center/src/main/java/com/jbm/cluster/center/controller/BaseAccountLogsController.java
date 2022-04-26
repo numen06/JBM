@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.BaseAccountLogs;
+import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.center.service.BaseAccountLogsService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;

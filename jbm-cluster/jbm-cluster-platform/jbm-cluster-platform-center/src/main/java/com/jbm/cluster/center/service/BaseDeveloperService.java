@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseDeveloper;
+import com.jbm.cluster.api.auth.model.UserAccount;
+import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -18,6 +19,7 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
 
     /**
      * 添加用户信息
+     *
      * @param baseDeveloper
      * @return
      */

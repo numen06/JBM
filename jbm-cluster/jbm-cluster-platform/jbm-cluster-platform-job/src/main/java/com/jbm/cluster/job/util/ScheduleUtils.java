@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.framework.exceptions.job.TaskException;
 import org.quartz.*;
 

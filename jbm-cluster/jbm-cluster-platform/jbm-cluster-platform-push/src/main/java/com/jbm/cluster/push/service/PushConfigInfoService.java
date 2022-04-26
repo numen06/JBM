@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.service;
 
-import com.jbm.cluster.api.model.entitys.message.PushConfigInfo;
+import com.jbm.cluster.api.entitys.message.PushConfigInfo;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

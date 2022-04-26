@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseRole;
-import com.jbm.cluster.api.model.entity.BaseRoleUser;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;

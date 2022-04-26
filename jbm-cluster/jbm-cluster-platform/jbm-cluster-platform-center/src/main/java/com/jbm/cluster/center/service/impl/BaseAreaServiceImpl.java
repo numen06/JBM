@@ -8,7 +8,7 @@ import cn.hutool.extra.pinyin.PinyinUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.constants.AreaType;
-import com.jbm.cluster.api.model.entity.BaseArea;
+import com.jbm.cluster.api.entitys.basic.BaseArea;
 import com.jbm.cluster.center.mapper.BaseAreaMapper;
 import com.jbm.cluster.center.service.BaseAreaService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;

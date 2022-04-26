@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
-import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
 import com.jbm.cluster.center.service.BaseAuthorityActionService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;

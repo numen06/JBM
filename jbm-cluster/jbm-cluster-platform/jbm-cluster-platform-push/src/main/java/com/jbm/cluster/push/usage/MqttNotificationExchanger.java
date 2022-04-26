@@ -4,13 +4,10 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.entitys.message.MqttNotification;
-import com.jbm.cluster.api.model.entitys.message.Notification;
-import com.jbm.cluster.api.model.entitys.message.PushMessage;
+import com.jbm.cluster.api.entitys.message.MqttNotification;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.util.Assert;
 

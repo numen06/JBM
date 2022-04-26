@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.RateLimitApi;
-import com.jbm.cluster.api.model.entity.GatewayRoute;
+import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.service.IGatewayServiceClient;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
 import com.jbm.cluster.center.service.GatewayRateLimitService;

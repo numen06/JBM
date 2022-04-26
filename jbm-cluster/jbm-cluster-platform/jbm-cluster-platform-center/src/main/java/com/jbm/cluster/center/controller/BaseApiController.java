@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.event;
 
-import com.jbm.cluster.api.model.entity.BaseMenu;
+import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

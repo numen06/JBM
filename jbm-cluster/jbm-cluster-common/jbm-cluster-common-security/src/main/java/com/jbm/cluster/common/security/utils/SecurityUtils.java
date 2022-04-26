@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.security.utils;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.jbm.cluster.api.model.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import com.jbm.cluster.common.core.context.SecurityContextHolder;

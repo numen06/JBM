@@ -1,7 +1,8 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.model.entity.BaseDeveloper;
-import com.jbm.cluster.api.model.entity.BaseRole;
+import com.jbm.cluster.api.auth.model.UserAccount;
+import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
 import com.jbm.cluster.center.service.BaseDeveloperService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 @Api(tags = "系统开发者管理")
 @RestController
-public class BaseDeveloperController implements IBaseDeveloperServiceClient {
+public class BaseDeveloperController implements IBaseDeveloperServiceClient{
     @Autowired
     private BaseDeveloperService baseDeveloperService;
 

@@ -3,7 +3,7 @@ package com.jbm.cluster.job.controller;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.common.core.annotation.JbmClusterEvent;
 import com.jbm.cluster.common.core.annotation.JbmClusterScheduled;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;

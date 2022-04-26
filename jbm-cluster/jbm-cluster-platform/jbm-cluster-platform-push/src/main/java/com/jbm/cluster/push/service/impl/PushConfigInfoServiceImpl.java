@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.service.impl;
 
-import com.jbm.cluster.api.model.entitys.message.PushConfigInfo;
+import com.jbm.cluster.api.entitys.message.PushConfigInfo;
 import com.jbm.cluster.push.service.PushConfigInfoService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;

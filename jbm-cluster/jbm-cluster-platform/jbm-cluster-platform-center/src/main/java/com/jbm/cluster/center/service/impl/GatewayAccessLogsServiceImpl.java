@@ -3,7 +3,6 @@ package com.jbm.cluster.center.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.jbm.cluster.api.model.entity.GatewayAccessLogs;
 import com.jbm.cluster.center.mapper.GatewayLogsMapper;
 import com.jbm.cluster.center.service.GatewayAccessLogsService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

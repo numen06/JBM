@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.jbm.cluster.center.mapper.BaseRoleUserMapper">
-    <resultMap id="BaseResultMap" type="com.jbm.cluster.api.model.entity.BaseRoleUser">
+    <resultMap id="BaseResultMap" type="com.jbm.cluster.api.entitys.basic.BaseRoleUser">
         <!--
           WARNING - @mbg.generated
         -->
         <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="role_id" property="roleId" jdbcType="BIGINT"/>
     </resultMap>
-    <select id="selectRoleUserList" resultType="com.jbm.cluster.api.model.entity.BaseRole">
+    <select id="selectRoleUserList" resultType="com.jbm.cluster.api.entitys.basic.BaseRole">
         SELECT
         base_role_user.user_id,
         base_role.role_id,

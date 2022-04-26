@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

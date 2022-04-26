@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
-import com.jbm.cluster.api.model.entity.BaseUserConfig;
+import com.jbm.cluster.api.entitys.basic.BaseUserConfig;
 import com.jbm.cluster.center.service.BaseUserConfigService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;

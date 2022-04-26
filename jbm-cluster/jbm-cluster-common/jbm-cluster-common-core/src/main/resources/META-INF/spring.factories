@@ -1,4 +1,0 @@
-#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.boot.env.EnvironmentPostProcessor=\
-com.jbm.cluster.common.core.env.JbmNodeDefaultEnvProcessor
-  

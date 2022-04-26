@@ -1,15 +1,10 @@
 package com.jbm.cluster.logs.entity;
 
-import com.jbm.cluster.api.model.GatewayLogInfo;
-import io.swagger.annotations.ApiModelProperty;
+import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @program: JBM6

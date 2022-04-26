@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node-oauth</artifactId>
+            <artifactId>jbm-cluster-node-basic</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.model;
 
 
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 
 import java.io.Serializable;
 

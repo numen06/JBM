@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.mapper;
 
-import com.jbm.cluster.api.model.AuthorityMenu;
-import com.jbm.cluster.api.model.entity.BaseAuthorityUser;
+import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityUser;
 import com.jbm.cluster.common.security.OpenAuthority;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;

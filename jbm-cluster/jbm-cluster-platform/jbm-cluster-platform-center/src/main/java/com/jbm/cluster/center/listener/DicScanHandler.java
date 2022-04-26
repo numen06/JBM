@@ -1,14 +1,7 @@
 package com.jbm.cluster.center.listener;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
-import com.jbm.cluster.api.model.entity.BaseApi;
-import com.jbm.cluster.api.model.entity.BaseDic;
-import com.jbm.cluster.center.service.BaseApiService;
-import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.center.service.BaseDicService;
 import com.jbm.cluster.common.constants.QueueConstants;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
@@ -17,13 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
 
-import java.time.Duration;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * mq消息接收者

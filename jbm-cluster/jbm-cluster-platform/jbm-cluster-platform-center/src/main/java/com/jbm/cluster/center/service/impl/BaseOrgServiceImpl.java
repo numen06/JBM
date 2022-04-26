@@ -2,7 +2,7 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.constants.OrgType;
-import com.jbm.cluster.api.model.entity.BaseOrg;
+import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;

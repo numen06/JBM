@@ -1,8 +1,8 @@
 package com.jbm.cluster.api.service.fegin;
 
 import com.jbm.cluster.api.factory.RemoteUserFallbackFactory;
-import com.jbm.cluster.api.model.JbmLoginUser;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.metadata.bean.ResultBody;

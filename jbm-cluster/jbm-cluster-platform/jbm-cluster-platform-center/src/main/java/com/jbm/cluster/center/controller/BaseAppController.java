@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.jbm.cluster.api.model.entity.BaseApp;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.common.security.OpenClientDetails;

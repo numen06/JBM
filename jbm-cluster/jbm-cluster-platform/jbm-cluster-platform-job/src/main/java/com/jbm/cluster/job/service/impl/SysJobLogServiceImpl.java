@@ -1,6 +1,6 @@
 package com.jbm.cluster.job.service.impl;
 
-import com.jbm.cluster.api.model.entitys.job.SysJobLog;
+import com.jbm.cluster.api.entitys.job.SysJobLog;
 import com.jbm.cluster.job.mapper.SysJobLogMapper;
 import com.jbm.cluster.job.service.SysJobLogService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;

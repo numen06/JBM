@@ -1,6 +1,6 @@
 package com.jbm.cluster.job.mapper;
 
-import com.jbm.cluster.api.model.entitys.job.SysJobLog;
+import com.jbm.cluster.api.entitys.job.SysJobLog;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Update;
 

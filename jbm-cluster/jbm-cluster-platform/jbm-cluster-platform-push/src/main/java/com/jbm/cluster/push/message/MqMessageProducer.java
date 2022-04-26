@@ -1,7 +1,7 @@
 package com.jbm.cluster.push.message;
 
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.api.model.entitys.message.MqttNotification;
+import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;

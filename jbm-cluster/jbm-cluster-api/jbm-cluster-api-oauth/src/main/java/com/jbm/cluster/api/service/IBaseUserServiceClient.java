@@ -2,7 +2,7 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.auth.model.UserAccount;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;

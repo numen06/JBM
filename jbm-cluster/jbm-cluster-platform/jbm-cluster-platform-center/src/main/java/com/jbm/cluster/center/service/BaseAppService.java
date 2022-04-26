@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseApp;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

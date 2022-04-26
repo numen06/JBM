@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.jbm.cluster.api.model.entity.GatewayIpLimit;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
 import com.jbm.cluster.common.security.http.OpenRestTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

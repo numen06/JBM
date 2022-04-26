@@ -1,12 +1,12 @@
 package com.jbm.cluster.center.service;
 
+import com.jbm.cluster.api.auth.OpenAuthority;
 import com.jbm.cluster.api.constants.ResourceType;
-import com.jbm.cluster.api.model.AuthorityApi;
-import com.jbm.cluster.api.model.AuthorityMenu;
-import com.jbm.cluster.api.model.AuthorityResource;
-import com.jbm.cluster.api.model.entity.BaseAuthority;
-import com.jbm.cluster.api.model.entity.BaseAuthorityAction;
-import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.cluster.api.entitys.auth.AuthorityApi;
+import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.auth.AuthorityResource;
+import com.jbm.cluster.api.entitys.basic.BaseAuthority;
+import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 import java.util.Collection;

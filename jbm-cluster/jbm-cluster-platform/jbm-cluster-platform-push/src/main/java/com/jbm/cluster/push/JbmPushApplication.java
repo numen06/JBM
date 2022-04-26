@@ -1,7 +1,7 @@
 package com.jbm.cluster.push;
 
 import com.jbm.cluster.api.event.UserLoginEvent;
-import com.jbm.cluster.api.model.entitys.message.PushMessage;
+import com.jbm.cluster.api.entitys.message.PushMessage;
 import com.jbm.cluster.push.mapper.PushConfigInfoMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import jbm.framework.boot.autoconfigure.eventbus.annotation.EnableClusterEventBus;

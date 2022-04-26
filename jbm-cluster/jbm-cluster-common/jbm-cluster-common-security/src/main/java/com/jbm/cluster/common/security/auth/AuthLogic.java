@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.security.auth;
 
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.api.model.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.security.annotation.Logical;
 import com.jbm.cluster.common.security.annotation.RequiresLogin;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;

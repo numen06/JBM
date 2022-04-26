@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.common.constants.QueueConstants;

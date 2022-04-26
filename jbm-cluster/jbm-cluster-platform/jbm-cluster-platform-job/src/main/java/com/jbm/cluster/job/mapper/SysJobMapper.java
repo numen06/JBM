@@ -1,6 +1,6 @@
 package com.jbm.cluster.job.mapper;
 
-import com.jbm.cluster.api.model.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 
 import java.util.List;

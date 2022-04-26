@@ -2,7 +2,7 @@ package com.jbm.cluster.job.controller;
 
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
-import com.jbm.cluster.api.model.entitys.job.SysJobLog;
+import com.jbm.cluster.api.entitys.job.SysJobLog;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;
 import com.jbm.cluster.job.service.SysJobLogService;
 import com.jbm.framework.metadata.bean.ResultBody;

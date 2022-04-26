@@ -1,8 +1,8 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseAccount;
-import com.jbm.cluster.api.model.entity.BaseAccountLogs;
-import com.jbm.cluster.api.model.entity.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
+import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

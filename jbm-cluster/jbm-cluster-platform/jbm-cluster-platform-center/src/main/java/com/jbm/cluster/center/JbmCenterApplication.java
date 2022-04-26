@@ -2,7 +2,7 @@ package com.jbm.cluster.center;
 
 import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.OrgType;
-import com.jbm.cluster.api.model.entity.BaseDic;
+import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import org.mybatis.spring.annotation.MapperScan;

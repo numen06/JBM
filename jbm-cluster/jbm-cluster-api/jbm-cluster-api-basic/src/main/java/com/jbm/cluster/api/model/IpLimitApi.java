@@ -2,7 +2,7 @@ package com.jbm.cluster.api.model;
 
 //import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.jbm.cluster.api.model.entity.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.util.StringUtils;
 import lombok.Data;
 

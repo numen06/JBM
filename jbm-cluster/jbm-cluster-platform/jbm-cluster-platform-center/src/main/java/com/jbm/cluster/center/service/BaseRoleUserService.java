@@ -1,6 +1,6 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.model.entity.BaseRoleUser;
+import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

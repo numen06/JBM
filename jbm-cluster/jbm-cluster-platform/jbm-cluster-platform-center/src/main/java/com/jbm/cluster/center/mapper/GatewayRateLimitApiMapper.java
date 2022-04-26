@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.model.RateLimitApi;
-import com.jbm.cluster.api.model.entity.GatewayRateLimitApi;
+import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 
