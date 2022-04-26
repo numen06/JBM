@@ -3,7 +3,7 @@ package cn.binarywang.wx.miniapp.demo.miniapp.controller;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaMessage;
 import cn.binarywang.wx.miniapp.constant.WxMaConstants;
-import cn.binarywang.wx.miniapp.demo.miniapp.config.WxMaConfiguration;
+import jbm.framework.weixin.config.WxMaConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class WxPortalController {
                           @RequestParam(name = "nonce", required = false) String nonce,
                           @RequestParam(name = "echostr", required = false) String echostr) {
         this.logger.info("\n接收到来自微信服务器的认证消息：signature = [{}], timestamp = [{}], nonce = [{}], echostr = [{}]",
-            signature, timestamp, nonce, echostr);
+                signature, timestamp, nonce, echostr);
 
         if (StringUtils.isAnyBlank(signature, timestamp, nonce, echostr)) {
             throw new IllegalArgumentException("请求参数非法，请核实!");
@@ -50,13 +50,13 @@ public class WxPortalController {
                        @RequestParam("timestamp") String timestamp,
                        @RequestParam("nonce") String nonce) {
         this.logger.info("\n接收微信请求：[msg_signature=[{}], encrypt_type=[{}], signature=[{}]," +
-                " timestamp=[{}], nonce=[{}], requestBody=[\n{}\n] ",
-            msgSignature, encryptType, signature, timestamp, nonce, requestBody);
+                        " timestamp=[{}], nonce=[{}], requestBody=[\n{}\n] ",
+                msgSignature, encryptType, signature, timestamp, nonce, requestBody);
 
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
 
         final boolean isJson = Objects.equals(wxService.getWxMaConfig().getMsgDataFormat(),
-            WxMaConstants.MsgDataFormat.JSON);
+                WxMaConstants.MsgDataFormat.JSON);
         if (StringUtils.isBlank(encryptType)) {
             // 明文传输的消息
             WxMaMessage inMessage;
@@ -77,7 +77,7 @@ public class WxPortalController {
                 inMessage = WxMaMessage.fromEncryptedJson(requestBody, wxService.getWxMaConfig());
             } else {//xml
                 inMessage = WxMaMessage.fromEncryptedXml(requestBody, wxService.getWxMaConfig(),
-                    timestamp, nonce, msgSignature);
+                        timestamp, nonce, msgSignature);
             }
 
             this.route(inMessage, appid);

@@ -16,6 +16,7 @@ import java.util.Objects;
 public class WxPortalController {
 
     @GetMapping(produces = "text/plain;charset=utf-8")
+    @ResponseBody
     public String authGet(@PathVariable String appid,
                           @RequestParam(name = "signature", required = false) String signature,
                           @RequestParam(name = "timestamp", required = false) String timestamp,
