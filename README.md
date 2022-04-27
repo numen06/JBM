@@ -1,6 +1,8 @@
 # JBM 
 [![输开源协议](https://img.shields.io/badge/License-Apache--2.0-brightgreen.svg "Apache")](https://www.apache.org/licenses/LICENSE-2.0)
 
+国内访问地址:https://gitee.com/numen06/JBM
+
 
 ```
 2021年9月开放独立的web管理界面
