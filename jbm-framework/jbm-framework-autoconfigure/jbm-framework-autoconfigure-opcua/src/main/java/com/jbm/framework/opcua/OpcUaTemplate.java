@@ -207,34 +207,25 @@ public class OpcUaTemplate {
 
     }
 
-    public void writeItem(String deviceId, String pointName, Object value) {
+    public void writeItem(String deviceId, String pointName, Object value) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        OpcPoint opcPoint = opcUaClientBean.findPoint(pointName);
-        opcPoint.setValue(value);
-        this.writeItem(deviceId, opcPoint);
+        OpcPoint point = opcUaClientBean.findPoint(pointName);
+        point.setValue(value);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getTagName()), this.convertData(point));
     }
 
+    public void writeItem(String deviceId, OpcPoint point) throws Exception {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getTagName()), this.convertData(point));
+    }
 
-    /**
-     * Write Opc Ua Point Value
-     *
-     * @param deviceId Device Id
-     * @param point    OpcPoint Info
-     * @throws UaException          UaException
-     * @throws ExecutionException   ExecutionException
-     * @throws InterruptedException InterruptedException
-     */
-    public void writeItem(String deviceId, OpcPoint point) {
+    public void writeItem(String deviceId, NodeId nodeId, DataValue dataValue) {
         OpcUaClient client;
         try {
-            log.debug("OPCUA写入点位:{}", JSON.toJSONString(point));
-            int namespace = point.getNamespace();
-            String tag = point.getTagName();
-            NodeId nodeId = new NodeId(namespace, tag);
+            log.debug("write point(ns={};s={})", nodeId.getNamespaceIndex(), nodeId.getIdentifier());
             client = getOpcUaClient(deviceId);
             client.connect().get();
             StatusCode statusCode = StatusCode.GOOD;
-            DataValue dataValue = this.convertData(point);
             statusCode = client.writeValue(nodeId, dataValue).get();
             if (!statusCode.isGood()) {
                 throw new RuntimeException(statusCode.toString());
@@ -348,7 +339,6 @@ public class OpcUaTemplate {
 
     private DataValue convertData(OpcPoint point) {
         ValueType valueType = ValueType.valueOf(point.getDataType().toUpperCase());
-
         return this.convertData(valueType, point.getValue());
     }
 
