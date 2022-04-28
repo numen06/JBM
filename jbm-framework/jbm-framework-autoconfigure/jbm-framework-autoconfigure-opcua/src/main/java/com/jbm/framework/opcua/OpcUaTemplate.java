@@ -211,12 +211,12 @@ public class OpcUaTemplate {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
         OpcPoint point = opcUaClientBean.findPoint(pointName);
         point.setValue(value);
-        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getTagName()), this.convertData(point));
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
     }
 
     public void writeItem(String deviceId, OpcPoint point) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getTagName()), this.convertData(point));
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
     }
 
     public void writeItem(String deviceId, NodeId nodeId, DataValue dataValue) {
