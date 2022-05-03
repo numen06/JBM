@@ -1,7 +1,13 @@
 # JBM 
 [![输开源协议](https://img.shields.io/badge/License-Apache--2.0-brightgreen.svg "Apache")](https://www.apache.org/licenses/LICENSE-2.0)
-
-国内访问地址:https://gitee.com/numen06/JBM
+[![码云Gitee](https://gitee.com/numen06/JBM/badge/star.svg?theme=blue)](https://gitee.com/numen06/JBM)
+[![GitHub](https://img.shields.io/github/stars/numen06/JBM.svg?style=social&label=Stars)](https://github.com/numen06/JBM)
+[![使用IntelliJ IDEA开发维护](https://img.shields.io/badge/IntelliJ%20IDEA-提供支持-blue.svg)](https://www.jetbrains.com/?from=RuoYi-Cloud-Plus)
+<br>
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.6.4-green.svg)]()
+[![Spring Boot](https://img.shields.io/badge/Spring%20Cloud-2021.0.1-green.svg)]()
+[![JDK-8+](https://img.shields.io/badge/JDK-8-blue.svg)]()
+[![JDK-11](https://img.shields.io/badge/JDK-11-blue.svg)]()
 
 
 ```
