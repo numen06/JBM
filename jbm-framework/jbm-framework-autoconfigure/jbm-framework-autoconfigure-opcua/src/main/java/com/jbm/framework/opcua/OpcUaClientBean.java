@@ -1,34 +1,23 @@
 package com.jbm.framework.opcua;
 
-import com.google.common.collect.Lists;
+import cn.hutool.core.util.NumberUtil;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.jbm.framework.opcua.attribute.OpcPoint;
-import com.jbm.framework.opcua.attribute.SubscriptionPoint;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
-import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.SessionActivityListener;
 import org.eclipse.milo.opcua.sdk.client.api.UaSession;
-import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
-import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
-import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscriptionManager;
-import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscriptionManager.SubscriptionListener;
-import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedDataItem;
-import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedSubscription;
-import org.eclipse.milo.opcua.stack.core.UaException;
-import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
-import org.eclipse.milo.opcua.stack.core.types.builtin.DateTime;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
-import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -55,6 +44,27 @@ public class OpcUaClientBean extends AbstractScheduledService {
             return null;
         }
         return this.points.get(pointName);
+    }
+
+    private LoadingCache<String, NodeId> nodeIdLoadingCache = CacheBuilder.newBuilder()
+            .build(new CacheLoader<String, NodeId>() {
+                @Override
+                public NodeId load(String pointName) throws Exception {
+                    OpcPoint point = findPoint(pointName);
+                    int namespace = point.getNamespace();
+                    String tag = point.getTagName();
+                    NodeId nodeId;
+                    if (NumberUtil.isInteger(tag)) {
+                        nodeId = new NodeId(namespace, NumberUtil.parseInt(tag));
+                    } else {
+                        nodeId = new NodeId(namespace, tag);
+                    }
+                    return nodeId;
+                }
+            });
+
+    public NodeId getNodeId(String pointName) throws ExecutionException {
+        return this.nodeIdLoadingCache.get(pointName);
     }
 
     @Override

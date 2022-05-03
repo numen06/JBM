@@ -18,17 +18,22 @@ import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.sdk.client.SessionActivityListener;
 import org.eclipse.milo.opcua.sdk.client.api.identity.AnonymousProvider;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
 import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.UaException;
-import org.eclipse.milo.opcua.stack.core.types.builtin.*;
+import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
+import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
+import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
+import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
-import org.eclipse.milo.opcua.stack.core.types.structured.*;
+import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
+import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateRequest;
+import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
+import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.eclipse.milo.opcua.stack.core.util.EndpointUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -173,18 +178,18 @@ public class OpcUaTemplate {
 
     public String readItem(String deviceId, String pointName) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        OpcPoint point = opcUaClientBean.findPoint(pointName);
-        return this.readItem(deviceId, point);
+        return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName));
     }
 
     public String readItem(String deviceId, OpcPoint point) throws Exception {
-        int namespace = point.getNamespace();
-        String tag = point.getTagName();
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        return this.readItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()));
+    }
 
-        NodeId nodeId = new NodeId(namespace, tag);
+    public String readItem(String deviceId, NodeId nodeId) throws Exception {
         CompletableFuture<String> value = new CompletableFuture<>();
         OpcUaClient client = getOpcUaClient(deviceId);
-        log.debug("start read point(ns={};s={})", namespace, tag);
+        log.debug("start read point(ns={};s={})", nodeId.getNamespaceIndex(), nodeId.getIdentifier());
         client.connect().get();
         client.readValue(0.0, TimestampsToReturn.Both, nodeId).thenAccept(dataValue -> {
             try {
@@ -193,43 +198,34 @@ public class OpcUaTemplate {
                 }
                 value.complete(StrUtil.toStringOrNull(dataValue.getValue().getValue()));
             } catch (Exception e) {
-                log.error("accept point(ns={};s={}) value error", namespace, tag, e);
+                log.error("accept point(ns={};s={}) value error", nodeId.getNamespaceIndex(), nodeId.getIdentifier(), e);
             }
         });
         String rawValue = value.get(3, TimeUnit.SECONDS);
-        log.debug("end read point(ns={};s={}) value: {}", namespace, tag, rawValue);
+        log.debug("end read point(ns={};s={}) value: {}", nodeId.getNamespaceIndex(), nodeId.getIdentifier(), rawValue);
         return rawValue;
 
     }
 
-    public void writeItem(String deviceId, String pointName, Object value) {
+    public void writeItem(String deviceId, String pointName, Object value) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        OpcPoint opcPoint = opcUaClientBean.findPoint(pointName);
-        opcPoint.setValue(value);
-        this.writeItem(deviceId, opcPoint);
+        OpcPoint point = opcUaClientBean.findPoint(pointName);
+        point.setValue(value);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
     }
 
+    public void writeItem(String deviceId, OpcPoint point) throws Exception {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
+    }
 
-    /**
-     * Write Opc Ua Point Value
-     *
-     * @param deviceId Device Id
-     * @param point    OpcPoint Info
-     * @throws UaException          UaException
-     * @throws ExecutionException   ExecutionException
-     * @throws InterruptedException InterruptedException
-     */
-    public void writeItem(String deviceId, OpcPoint point) {
+    public void writeItem(String deviceId, NodeId nodeId, DataValue dataValue) {
         OpcUaClient client;
         try {
-            log.debug("OPCUA写入点位:{}", JSON.toJSONString(point));
-            int namespace = point.getNamespace();
-            String tag = point.getTagName();
-            NodeId nodeId = new NodeId(namespace, tag);
+            log.debug("write point(ns={};s={})", nodeId.getNamespaceIndex(), nodeId.getIdentifier());
             client = getOpcUaClient(deviceId);
             client.connect().get();
             StatusCode statusCode = StatusCode.GOOD;
-            DataValue dataValue = this.convertData(point);
             statusCode = client.writeValue(nodeId, dataValue).get();
             if (!statusCode.isGood()) {
                 throw new RuntimeException(statusCode.toString());
@@ -343,7 +339,6 @@ public class OpcUaTemplate {
 
     private DataValue convertData(OpcPoint point) {
         ValueType valueType = ValueType.valueOf(point.getDataType().toUpperCase());
-
         return this.convertData(valueType, point.getValue());
     }
 

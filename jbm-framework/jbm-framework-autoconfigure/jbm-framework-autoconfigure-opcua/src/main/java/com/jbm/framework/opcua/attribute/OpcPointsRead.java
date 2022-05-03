@@ -39,17 +39,23 @@ public class OpcPointsRead {
                     }
                     String tagName = csvRow.getByName("name");
                     String dataType = csvRow.getByName("type");
-                    List<String> nameArr = StrUtil.split(tagName, ".");
-                    //默认读取最后一个字段
-                    String alias = CollUtil.getLast(nameArr);
-                    //如果存在别名则读取
+                    String alias = null;
                     if (csvData.getHeader().contains("alias")) {
                         String temp = csvRow.getByName("alias");
                         if (StrUtil.isNotBlank(temp)) {
                             alias = temp;
                         }
                     }
-                    tagName = StrUtil.concat(true, "\"", StrUtil.join("\".\"", nameArr), "\"");
+                    if (StrUtil.contains(tagName, ".")) {
+                        List<String> nameArr = StrUtil.split(tagName, ".");
+                        //默认读取最后一个字段
+                        if (StrUtil.isBlank(alias))
+                            alias = CollUtil.getLast(nameArr);
+                        //如果存在别名则读取
+                        tagName = StrUtil.concat(true, "\"", StrUtil.join("\".\"", nameArr), "\"");
+                    }
+                    if (StrUtil.isBlank(alias))
+                        alias = tagName;
                     OpcPoint attributeInfo = new OpcPoint(namespace, tagName, dataType);
                     attributeInfo.setAlias(alias);
                     points.put(alias, attributeInfo);
