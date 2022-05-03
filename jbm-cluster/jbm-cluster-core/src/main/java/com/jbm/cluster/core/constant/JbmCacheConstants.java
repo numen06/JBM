@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * 缓存的key 常量
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class JbmCacheConstants
 {

@@ -7,7 +7,8 @@ import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.mapper.BaseApiMapper;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -100,22 +101,22 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Override
     public void addApi(BaseApi api) {
         if (isExist(api.getApiCode())) {
-            throw new OpenAlertException(String.format("%s编码已存在!", api.getApiCode()));
+            throw new ServiceException(String.format("%s编码已存在!", api.getApiCode()));
         }
         if (api.getPriority() == null) {
             api.setPriority(0);
         }
         if (api.getStatus() == null) {
-            api.setStatus(BaseConstants.ENABLED);
+            api.setStatus(JbmConstants.ENABLED);
         }
         if (api.getApiCategory() == null) {
-            api.setApiCategory(BaseConstants.DEFAULT_API_CATEGORY);
+            api.setApiCategory(JbmConstants.DEFAULT_API_CATEGORY);
         }
         if (api.getIsPersist() == null) {
-            api.setIsPersist(0);
+            api.setIsPersist(false);
         }
         if (api.getIsAuth() == null) {
-            api.setIsAuth(0);
+            api.setIsAuth(false);
         }
         api.setCreateTime(new Date());
         api.setUpdateTime(api.getCreateTime());
@@ -134,19 +135,19 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     public void updateApi(BaseApi api) {
         BaseApi saved = getApi(api.getApiId());
         if (saved == null) {
-            throw new OpenAlertException("信息不存在!");
+            throw new ServiceException("信息不存在!");
         }
         if (!saved.getApiCode().equals(api.getApiCode())) {
             // 和原来不一致重新检查唯一性
             if (isExist(api.getApiCode())) {
-                throw new OpenAlertException(String.format("%s编码已存在!", api.getApiCode()));
+                throw new ServiceException(String.format("%s编码已存在!", api.getApiCode()));
             }
         }
         if (api.getPriority() == null) {
             api.setPriority(0);
         }
         if (api.getApiCategory() == null) {
-            api.setApiCategory(BaseConstants.DEFAULT_API_CATEGORY);
+            api.setApiCategory(JbmConstants.DEFAULT_API_CATEGORY);
         }
         api.setUpdateTime(new Date());
         baseApiMapper.updateById(api);
@@ -177,8 +178,8 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Override
     public void removeApi(Long apiId) {
         BaseApi api = getApi(apiId);
-        if (api != null && api.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除"));
+        if (api != null && api.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除"));
         }
         baseAuthorityService.removeAuthority(apiId, ResourceType.api);
         baseApiMapper.deleteById(apiId);

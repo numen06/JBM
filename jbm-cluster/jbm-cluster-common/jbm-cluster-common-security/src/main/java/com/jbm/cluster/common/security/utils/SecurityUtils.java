@@ -6,14 +6,16 @@ import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import com.jbm.cluster.common.core.context.SecurityContextHolder;
 import com.jbm.framework.mvc.ServletUtils;
+import com.jbm.util.PasswordUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
  * 权限获取工具类
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class SecurityUtils {
     /**
@@ -81,6 +83,13 @@ public class SecurityUtils {
         return userId != null && 1L == userId;
     }
 
+
+    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public static PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
     /**
      * 生成BCryptPasswordEncoder密码
      *
@@ -88,7 +97,6 @@ public class SecurityUtils {
      * @return 加密字符串
      */
     public static String encryptPassword(String password) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.encode(password);
     }
 
@@ -100,7 +108,6 @@ public class SecurityUtils {
      * @return 结果
      */
     public static boolean matchesPassword(String rawPassword, String encodedPassword) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }

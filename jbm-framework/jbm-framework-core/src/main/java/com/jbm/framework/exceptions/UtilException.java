@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions;
 /**
  * 工具类异常
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class UtilException extends RuntimeException {
 

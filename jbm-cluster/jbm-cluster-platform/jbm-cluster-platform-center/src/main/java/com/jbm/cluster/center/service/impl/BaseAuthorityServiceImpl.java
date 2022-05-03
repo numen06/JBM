@@ -8,14 +8,12 @@ import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.*;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.center.event.NewMenuEvent;
 import com.jbm.cluster.center.mapper.*;
 import com.jbm.cluster.center.service.*;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.security.JbmClusterHelper;
-import com.jbm.cluster.common.security.OpenAuthority;
-import com.jbm.cluster.common.security.OpenSecurityConstants;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.StringUtils;
@@ -23,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,8 +64,8 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     private BaseUserService baseUserService;
     @Autowired
     private BaseAppService baseAppService;
-    @Autowired
-    private RedisTokenStore redisTokenStore;
+//    @Autowired
+//    private RedisTokenStore redisTokenStore;
 
     @Value("${spring.application.name}")
     private String DEFAULT_SERVICE_ID;
@@ -150,7 +147,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         if (ResourceType.menu.equals(resourceType)) {
             BaseMenu menu = baseMenuMapper.selectById(resourceId);
-            authority = OpenSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
+            authority = JbmSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
             //菜单保持authID和MenuId一致
             baseAuthority.setAuthorityId(resourceId);
             baseAuthority.setMenuId(resourceId);
@@ -164,13 +161,13 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         if (ResourceType.action.equals(resourceType)) {
             BaseAction operation = baseActionMapper.selectById(resourceId);
-            authority = OpenSecurityConstants.AUTHORITY_PREFIX_ACTION + operation.getActionCode();
+            authority = JbmSecurityConstants.AUTHORITY_PREFIX_ACTION + operation.getActionCode();
             baseAuthority.setActionId(resourceId);
             baseAuthority.setStatus(operation.getStatus());
         }
         if (ResourceType.api.equals(resourceType)) {
             BaseApi api = baseApiService.getApi(resourceId);
-            authority = OpenSecurityConstants.AUTHORITY_PREFIX_API + api.getApiCode();
+            authority = JbmSecurityConstants.AUTHORITY_PREFIX_API + api.getApiCode();
             baseAuthority.setApiId(resourceId);
             baseAuthority.setStatus(api.getStatus());
         }
@@ -202,7 +199,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     @Override
     public void removeAuthority(Long resourceId, ResourceType resourceType) {
         if (isGranted(resourceId, resourceType)) {
-            throw new OpenAlertException(String.format("资源已被授权,不允许删除!取消授权后,再次尝试!"));
+            throw new ServiceException(String.format("资源已被授权,不允许删除!取消授权后,再次尝试!"));
         }
         QueryWrapper<BaseAuthority> queryWrapper = buildQueryWrapper(resourceId, resourceType);
         baseAuthorityMapper.delete(queryWrapper);
@@ -345,8 +342,8 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         if (user == null) {
             return;
         }
-        if (CommonConstants.ROOT.equals(user.getUserName())) {
-            throw new OpenAlertException("默认用户无需授权!");
+        if (JbmConstants.ROOT.equals(user.getUserName())) {
+            throw new ServiceException("默认用户无需授权!");
         }
         // 获取用户角色列表
         List<Long> roleIds = baseRoleService.getUserRoleIds(userId);
@@ -413,7 +410,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         // 获取应用最新的权限列表
         List<OpenAuthority> authorities = findAuthorityByApp(appId);
         // 动态更新tokenStore客户端
-        JbmClusterHelper.updateOpenClientAuthorities(redisTokenStore, baseApp.getApiKey(), authorities);
+        // JbmClusterHelper.updateOpenClientAuthorities(redisTokenStore, baseApp.getApiKey(), authorities);
     }
 
     /**

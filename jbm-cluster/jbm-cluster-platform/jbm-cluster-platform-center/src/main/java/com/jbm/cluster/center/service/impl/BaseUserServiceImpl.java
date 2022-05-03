@@ -10,15 +10,15 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.jbm.cluster.api.auth.OpenAuthority;
-import com.jbm.cluster.api.auth.OpenSecurityConstants;
-import com.jbm.cluster.api.auth.model.UserAccount;
 import com.jbm.cluster.api.constants.AccountType;
 import com.jbm.cluster.api.entitys.basic.*;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
+import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.mvc.WebUtils;
@@ -307,7 +307,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 // 用户角色详情
                 roles.add(roleMap);
                 // 加入角色标识
-                OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), OpenSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
+                OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), JbmSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
                 authorities.add(authority);
             }
         }

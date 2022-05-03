@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * 用户信息
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 @Data
 public class JbmLoginUser implements Serializable {
@@ -25,7 +25,7 @@ public class JbmLoginUser implements Serializable {
     /**
      * 用户名id
      */
-    private Long userid;
+    private Long userId;
 
     /**
      * 用户名

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * token验证处理
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 @Component
 public class TokenService {
@@ -47,7 +47,7 @@ public class TokenService {
         Long userId = loginUser.getBaseUser().getUserId();
         String userName = loginUser.getBaseUser().getUserName();
         loginUser.setToken(token);
-        loginUser.setUserid(userId);
+        loginUser.setUserId(userId);
         loginUser.setUsername(userName);
         loginUser.setIpaddr(IpUtils.getIpAddr(ServletUtils.getRequest()));
         refreshToken(loginUser);

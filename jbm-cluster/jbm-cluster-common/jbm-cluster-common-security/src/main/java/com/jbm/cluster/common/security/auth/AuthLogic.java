@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.security.auth;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.security.annotation.Logical;
 import com.jbm.cluster.common.security.annotation.RequiresLogin;
@@ -11,7 +12,6 @@ import com.jbm.cluster.common.security.utils.SecurityUtils;
 import com.jbm.framework.exceptions.auth.NotLoginException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
 import com.jbm.framework.exceptions.auth.NotRoleException;
-import jbm.framework.spring.config.SpringUtils;
 import org.springframework.util.PatternMatchUtils;
 
 import java.util.Collection;
@@ -21,7 +21,7 @@ import java.util.Set;
 /**
  * Token 权限验证，逻辑实现类
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class AuthLogic {
     /**
@@ -34,7 +34,7 @@ public class AuthLogic {
      */
     private static final String SUPER_ADMIN = "admin";
 
-    public TokenService tokenService = SpringUtils.getBean(TokenService.class);
+    public TokenService tokenService = SpringUtil.getBean(TokenService.class);
 
     /**
      * 会话注销

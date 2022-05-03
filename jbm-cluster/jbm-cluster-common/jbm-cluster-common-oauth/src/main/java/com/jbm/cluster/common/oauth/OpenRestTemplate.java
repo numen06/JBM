@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.oauth;
 
-import com.jbm.cluster.common.core.configuration.JbmClusterProperties;
-import com.jbm.cluster.common.event.RemoteRefreshRouteEvent;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.bus.BusProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -90,29 +89,4 @@ public class OpenRestTemplate extends RestTemplate {
         return restTemplate;
     }
 
-
-    /**
-     * 刷新网关
-     * 注:不要频繁调用!
-     * 1.资源权限发生变化时可以调用
-     * 2.流量限制变化时可以调用
-     * 3.IP访问发生变化时可以调用
-     * 4.智能路由发生变化时可以调用
-     */
-    public void refreshGateway() {
-        try {
-            publisher.publishEvent(new RemoteRefreshRouteEvent(this, busProperties.getId(), null));
-            log.info("refreshGateway:success");
-        } catch (Exception e) {
-            log.error("refreshGateway error:{}", e.getMessage());
-        }
-    }
-
-    public JbmClusterProperties getCommon() {
-        return common;
-    }
-
-    public void setCommon(JbmClusterProperties common) {
-        this.common = common;
-    }
 }

@@ -1,19 +1,19 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
-import com.jbm.cluster.api.form.BaseAuthorityUserForm;
 import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityApp;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
+import com.jbm.cluster.api.form.BaseAuthorityUserForm;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.security.OpenAuthority;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.StringUtils;
@@ -43,7 +43,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @Autowired
     private BaseUserService baseUserService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取所有访问权限列表
@@ -159,7 +159,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @PostMapping("/authority/byUser")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
         BaseUser user = baseUserService.getUserById(baseAuthorityUserForm.getUserId());
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), CommonConstants.ROOT.equals(user.getUserName()));
+        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), JbmConstants.ROOT.equals(user.getUserName()));
         return ResultBody.ok().data(result);
     }
 
@@ -178,7 +178,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "userId") Long userId
     ) {
         BaseUser user = baseUserService.getUserById(userId);
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, CommonConstants.ROOT.equals(user.getUserName()));
+        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(user.getUserName()));
         return ResultBody.ok().data(result);
     }
 
@@ -238,7 +238,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityRole(roleId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -252,7 +252,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @PostMapping("/authority/grant/role")
     public ResultBody grantAuthorityRole(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
         baseAuthorityService.addAuthorityRole(baseAuthorityRoleForm.getRoleId(), baseAuthorityRoleForm.getExpireTime(), baseAuthorityRoleForm.getAuthorityIds());
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -278,7 +278,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityUser(userId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -286,7 +286,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @PostMapping("/authority/grant/user")
     public ResultBody grantAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
         baseAuthorityService.addAuthorityUser(baseAuthorityUserForm.getUserId(), baseAuthorityUserForm.getExpireTime(), baseAuthorityUserForm.getAuthorityIds());
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -312,7 +312,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityApp(appId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -334,7 +334,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {
         baseAuthorityService.addAuthorityAction(actionId, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 

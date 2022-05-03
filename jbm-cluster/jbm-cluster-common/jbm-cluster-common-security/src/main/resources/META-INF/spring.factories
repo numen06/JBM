@@ -1,4 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.jbm.cluster.common.security.configuration.JbmSecurityConfiguration,\
 com.jbm.cluster.common.security.config.JbmClusterWebMvcConfig,\
 com.jbm.cluster.common.security.service.TokenService,\
 com.jbm.cluster.common.security.aspect.PreAuthorizeAspect,\

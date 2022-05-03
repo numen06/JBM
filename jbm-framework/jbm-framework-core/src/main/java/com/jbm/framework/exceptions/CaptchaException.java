@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions;
 /**
  * 验证码错误异常类
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class CaptchaException extends RuntimeException
 {

@@ -77,7 +77,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
         }
         job.setCreateBy(SecurityUtils.getUsername());
-//        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
+//        job.setCreateBy(SecurityUtils.getLoginUser().getUsername());
         return ResultBody.success(this.service.insertJob(job), "");
     }
 
@@ -102,7 +102,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，目标字符串不在白名单内");
         }
         job.setCreateBy(SecurityUtils.getUsername());
-//        job.setCreateBy(JbmClusterHelper.getUser().getUsername());
+//        job.setCreateBy(SecurityUtils.getLoginUser().getUsername());
         return ResultBody.ok().data(this.service.updateById(job));
     }
 

@@ -5,7 +5,7 @@ import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.BaseAuthority;
-import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.springframework.stereotype.Repository;
 

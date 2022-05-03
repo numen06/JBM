@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.common.security.OpenClientDetails;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -29,21 +28,21 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      */
     BaseApp getAppInfo(String appId);
 
-    /**
-     * 获取app和应用信息
-     *
-     * @param clientId
-     * @return
-     */
-    OpenClientDetails getAppClientInfo(String clientId);
+//    /**
+//     * 获取app和应用信息
+//     *
+//     * @param clientId
+//     * @return
+//     */
+//    OpenClientDetails getAppClientInfo(String clientId);
 
 
-    /**
-     * 更新应用开发新型
-     *
-     * @param client
-     */
-    void updateAppClientInfo(OpenClientDetails client);
+//    /**
+//     * 更新应用开发新型
+//     *
+//     * @param client
+//     */
+//    void updateAppClientInfo(OpenClientDetails client);
 
     /**
      * 添加应用

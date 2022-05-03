@@ -3,8 +3,8 @@ package com.jbm.cluster.job.util;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.api.entitys.job.SysJob;
-import jbm.framework.spring.config.SpringUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +30,7 @@ public class JobInvokeUtil {
         log.info("调用字符串为:{},对象:{},方法:{}", invokeTarget, beanName, methodName);
         List<Object[]> methodParams = getMethodParams(invokeTarget);
         if (!isValidClassName(beanName)) {
-            Object bean = SpringUtils.getBean(beanName);
+            Object bean = SpringUtil.getBean(beanName);
             invokeMethod(bean, methodName, methodParams);
         } else {
             Object bean = Class.forName(beanName).newInstance();

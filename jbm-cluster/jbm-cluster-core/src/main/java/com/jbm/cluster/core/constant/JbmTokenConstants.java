@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * Token的Key常量
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class JbmTokenConstants
 {

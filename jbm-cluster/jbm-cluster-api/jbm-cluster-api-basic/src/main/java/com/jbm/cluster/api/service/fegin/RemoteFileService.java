@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * 文件服务
  *
- * @author ruoyi
+ * @author wesley.zhang
  */
 @FeignClient(contextId = "remoteFileService", value = JbmClusterConstants.DOC_SERVER, fallbackFactory = RemoteFileFallbackFactory.class)
 public interface RemoteFileService {

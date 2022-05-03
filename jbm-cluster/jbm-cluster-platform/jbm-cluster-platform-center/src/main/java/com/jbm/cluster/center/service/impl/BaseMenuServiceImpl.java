@@ -10,7 +10,8 @@ import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -112,17 +113,17 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         if (ObjectUtil.isNotEmpty(menu.getMenuId())) {
             BaseMenu saved = getMenu(menu.getMenuId());
             if (saved == null) {
-                throw new OpenAlertException(String.format("%s信息不存在!", menu.getMenuId()));
+                throw new ServiceException(String.format("%s信息不存在!", menu.getMenuId()));
             }
             if (!saved.getMenuCode().equals(menu.getMenuCode())) {
                 // 和原来不一致重新检查唯一性
                 if (isExist(menu.getMenuCode())) {
-                    throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
+                    throw new ServiceException(String.format("%s编码已存在!", menu.getMenuCode()));
                 }
             }
         } else {
             if (isExist(menu.getMenuCode())) {
-                throw new OpenAlertException(String.format("%s编码已存在!", menu.getMenuCode()));
+                throw new ServiceException(String.format("%s编码已存在!", menu.getMenuCode()));
             }
         }
         if (StrUtil.isEmpty(menu.getScheme())) {
@@ -195,8 +196,8 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Override
     public void removeMenu(Long menuId) {
         BaseMenu menu = getMenu(menuId);
-        if (menu != null && menu.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除!"));
+        if (menu != null && menu.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除!"));
         }
         // 移除菜单权限
         baseAuthorityService.removeAuthority(menuId, ResourceType.menu);

@@ -1,8 +1,9 @@
 package com.jbm.cluster.common.oauth;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.jbm.cluster.api.auth.OpenSecurityConstants;
-import com.jbm.cluster.api.auth.OpenUserDetails;
+import com.jbm.cluster.api.model.auth.OpenUserDetails;
+import com.jbm.cluster.common.security.OpenSecurityConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -54,11 +55,11 @@ public class OpenUserConverter extends DefaultUserAuthenticationConverter {
         if (params.get(USERNAME) != null) {
             auth.setUsername(params.get(USERNAME).toString());
         }
-        if (params.get(OpenSecurityConstants.OPEN_ID) != null) {
-            auth.setUserId(Long.parseLong(params.get(OpenSecurityConstants.OPEN_ID).toString()));
+        if (params.get(JbmSecurityConstants.OPEN_ID) != null) {
+            auth.setUserId(Long.parseLong(params.get(JbmSecurityConstants.OPEN_ID).toString()));
         }
-        if (params.get(OpenSecurityConstants.DOMAIN) != null) {
-            auth.setDomain(params.get(OpenSecurityConstants.DOMAIN).toString());
+        if (params.get(JbmSecurityConstants.DOMAIN) != null) {
+            auth.setDomain(params.get(JbmSecurityConstants.DOMAIN).toString());
         }
         auth.setClientId(params.get(AccessTokenConverter.CLIENT_ID).toString());
         auth.setAuthorities(getAuthorities(map));

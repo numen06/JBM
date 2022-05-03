@@ -1,7 +1,7 @@
 package com.jbm.cluster.node.configuration;
 
 import com.jbm.autoconfig.dic.DictionaryTemplate;
-import com.jbm.cluster.common.core.configuration.JbmClusterProperties;
+import com.jbm.cluster.common.configuration.JbmClusterProperties;
 import com.jbm.cluster.common.core.configuration.JbmIdGenProperties;
 import com.jbm.cluster.common.core.configuration.JbmScanProperties;
 import com.jbm.cluster.common.exception.OAuth2ExceptionHandler;
@@ -144,18 +144,18 @@ public class NodeConfiguration {
     }
 
 
-    /**
-     * 自定义注解扫描
-     *
-     * @return
-     */
-    @Bean
-    @ConditionalOnMissingBean(RequestMappingScan.class)
-    public RequestMappingScan resourceAnnotationScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
-        RequestMappingScan scan = new RequestMappingScan(amqpTemplate, scanProperties);
-        log.info("RequestMappingScan [{}]", scan);
-        return scan;
-    }
+//    /**
+//     * 自定义注解扫描
+//     *
+//     * @return
+//     */
+//    @Bean
+//    @ConditionalOnMissingBean(RequestMappingScan.class)
+//    public RequestMappingScan resourceAnnotationScan(AmqpTemplate amqpTemplate, JbmScanProperties scanProperties) {
+//        RequestMappingScan scan = new RequestMappingScan(amqpTemplate, scanProperties);
+//        log.info("RequestMappingScan [{}]", scan);
+//        return scan;
+//    }
 
     @Bean
     @ConditionalOnBean(DictionaryTemplate.class)

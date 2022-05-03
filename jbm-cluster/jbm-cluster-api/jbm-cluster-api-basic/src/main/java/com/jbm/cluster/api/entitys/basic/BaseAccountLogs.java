@@ -1,6 +1,5 @@
 package com.jbm.cluster.api.entitys.basic;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -19,7 +18,6 @@ import java.util.Date;
 @Data
 @Entity
 @NoArgsConstructor
-@TableName("base_account_logs")
 @ApiModel("登录日志")
 @EqualsAndHashCode(callSuper = true)
 public class BaseAccountLogs extends MasterDataIdEntity {

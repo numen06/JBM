@@ -45,6 +45,11 @@
             <artifactId>jbm-cluster-api-basic</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-basic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

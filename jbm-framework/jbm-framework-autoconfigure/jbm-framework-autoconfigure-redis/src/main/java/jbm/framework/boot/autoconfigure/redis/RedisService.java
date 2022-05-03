@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * spring redis 工具类
  *
- * @author ruoyi
+ * @author wesley.zhang
  **/
 @SuppressWarnings(value = {"unchecked", "rawtypes"})
 public class RedisService {

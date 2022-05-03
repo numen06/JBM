@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * 权限相关通用常量
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class JbmSecurityConstants
 {
@@ -41,4 +41,12 @@ public class JbmSecurityConstants
      * 登录用户
      */
     public static final String LOGIN_USER = "login_user";
+
+
+    public final static String OPEN_ID = "openid";
+    public final static String DOMAIN = "domain";
+    public final static String AUTHORITY_PREFIX_MENU = "MENU_";
+    public final static String AUTHORITY_PREFIX_ROLE = "ROLE_";
+    public final static String AUTHORITY_PREFIX_API = "API_";
+    public final static String AUTHORITY_PREFIX_ACTION = "ACTION_";
 }

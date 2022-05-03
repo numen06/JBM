@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions;
 /**
  * 检查异常
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class CheckedException extends RuntimeException
 {

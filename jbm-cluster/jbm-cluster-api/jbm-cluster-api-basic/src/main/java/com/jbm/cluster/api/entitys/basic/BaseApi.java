@@ -73,12 +73,12 @@ public class BaseApi extends MasterDataEntity {
     /**
      * 保留数据0-否 1-是 不允许删除
      */
-    private Integer isPersist;
+    private Boolean isPersist;
 
     /**
      * 安全认证:0-否 1-是 默认:1
      */
-    private Integer isAuth;
+    private Boolean isAuth;
 
     /**
      * 是否公开访问: 0-内部的 1-公开的

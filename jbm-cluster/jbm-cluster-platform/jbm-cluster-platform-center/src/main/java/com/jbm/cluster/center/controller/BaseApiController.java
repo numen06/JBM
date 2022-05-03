@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.service.BaseApiService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -27,7 +27,7 @@ public class BaseApiController {
     @Autowired
     private BaseApiService apiService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页接口列表
@@ -102,7 +102,7 @@ public class BaseApiController {
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "apiDesc", required = false, defaultValue = "") String apiDesc,
-            @RequestParam(value = "isAuth", required = false, defaultValue = "1") Integer isAuth,
+            @RequestParam(value = "isAuth", required = false, defaultValue = "true") Boolean isAuth,
             @RequestParam(value = "isOpen", required = false, defaultValue = "0") Integer isOpen
     ) {
         BaseApi api = new BaseApi();
@@ -118,7 +118,7 @@ public class BaseApiController {
         api.setIsOpen(isOpen);
         Long apiId = null;
         apiService.addApi(api);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok().data(apiId);
     }
 
@@ -160,7 +160,7 @@ public class BaseApiController {
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "apiDesc", required = false, defaultValue = "") String apiDesc,
-            @RequestParam(value = "isAuth", required = false, defaultValue = "1") Integer isAuth,
+            @RequestParam(value = "isAuth", required = false, defaultValue = "true") Boolean isAuth,
             @RequestParam(value = "isOpen", required = false, defaultValue = "0") Integer isOpen
     ) {
         BaseApi api = new BaseApi();
@@ -177,7 +177,7 @@ public class BaseApiController {
         api.setIsOpen(isOpen);
         apiService.updateApi(api);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -198,7 +198,7 @@ public class BaseApiController {
     ) {
         apiService.removeApi(apiId);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -218,7 +218,7 @@ public class BaseApiController {
         wrapper.lambda().in(BaseApi::getApiId, ids.split(",")).eq(BaseApi::getIsPersist, 0);
         apiService.remove(wrapper);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -244,7 +244,7 @@ public class BaseApiController {
         entity.setIsOpen(open);
         apiService.update(entity, wrapper);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -270,7 +270,7 @@ public class BaseApiController {
         entity.setStatus(status);
         apiService.update(entity, wrapper);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -296,7 +296,7 @@ public class BaseApiController {
         entity.setStatus(auth);
         apiService.update(entity, wrapper);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

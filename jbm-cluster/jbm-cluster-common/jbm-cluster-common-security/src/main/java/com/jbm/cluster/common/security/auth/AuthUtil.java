@@ -7,7 +7,7 @@ import com.jbm.cluster.common.security.annotation.RequiresRoles;
 /**
  * Token 权限验证工具类
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class AuthUtil
 {

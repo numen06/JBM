@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * 任务调度通用常量
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class ScheduleConstants
 {

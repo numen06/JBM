@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -31,7 +31,7 @@ public class GatewayIpLimitController {
     @Autowired
     private GatewayIpLimitService gatewayIpLimitService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页接口列表
@@ -79,7 +79,7 @@ public class GatewayIpLimitController {
             @RequestParam(value = "apiIds", required = false) String apiIds
     ) {
         gatewayIpLimitService.addIpLimitApis(policyId, StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -159,7 +159,7 @@ public class GatewayIpLimitController {
         ipLimit.setPolicyType(policyType);
         ipLimit.setIpAddress(ipAddress);
         gatewayIpLimitService.updateIpLimitPolicy(ipLimit);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -180,7 +180,7 @@ public class GatewayIpLimitController {
     ) {
         gatewayIpLimitService.removeIpLimitPolicy(policyId);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

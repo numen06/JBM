@@ -1,153 +1,43 @@
 package com.jbm.cluster.common.basic;
 
-import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.net.NetUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
-import com.github.pfmiles.minvelocity.TemplateUtil;
-import com.google.common.collect.Maps;
-import com.jbm.cluster.api.entitys.message.MqttNotification;
-import com.jbm.cluster.api.entitys.message.Notification;
-import com.jbm.cluster.api.entitys.message.PushMessage;
-import com.jbm.util.archive.Archive;
-import com.jbm.util.archive.JarLoader;
-import lombok.AllArgsConstructor;
+import com.jbm.cluster.common.basic.bus.event.RemoteRefreshRouteEvent;
+import jbm.framework.boot.autoconfigure.eventbus.publisher.ClusterEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.jar.Manifest;
-
+/**
+ * 自定义RestTemplate请求工具类
+ *
+ * @author: wesley.zhang
+ * @date: 2018/12/11 15:51
+ * @description:
+ */
 @Slf4j
-@AllArgsConstructor
 public class JbmClusterTemplate {
 
-        @Autowired
-    private ApplicationContext applicationContext;
 
     @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
-    @Autowired
-    private StreamBridge streamBridge;
+    private ClusterEventPublisher clusterEventPublisher;
 
     public JbmClusterTemplate() {
     }
 
-    @Value("${spring.application.name:}")
-    private String microServiceName;
 
-    private Integer microServicePort;
-
-    private String microServiceNode;
-
-    private void loadNodeInfo() {
-        String ip = NetUtil.getLocalhostStr();
-        this.microServiceNode = String.format("%s:%s", ip, this.microServicePort);
-        log.info("集群节点启动成功[{}]:{},编译时间:{}", this.microServiceName, this.microServiceNode, "");
-        this.printBanner(this.microServiceName);
-    }
-
-    public void printBanner(String serviceName) {
+    /**
+     * 刷新网关
+     * 注:不要频繁调用!
+     * 1.资源权限发生变化时可以调用
+     * 2.流量限制变化时可以调用
+     * 3.IP访问发生变化时可以调用
+     * 4.智能路由发生变化时可以调用
+     */
+    public void refreshGateway() {
         try {
-            Map<String, Object> data = Maps.newHashMap();
-//            ExpressionParser parser = new SpelExpressionParser();
-//            StandardEvaluationContext standardEvaluationContext = new StandardEvaluationContext(applicationContext);
-            data.put("name", serviceName);
-            data.put("build-time", "run in local");
-            Archive archive = new JarLoader().findArchive();
-            if (ObjectUtil.isNotEmpty(archive)) {
-                Manifest manifest = archive.getManifest();
-                if (ObjectUtil.isNotEmpty(manifest)) {
-                    String buildTime = manifest.getMainAttributes().getValue("Build-Time");
-                    if (StrUtil.isNotBlank(buildTime)) {
-                        data.put("build-time", buildTime);
-                    }
-                }
-            }
-            String banner = TemplateUtil.render("jbm.banner", data);
-//            InputStream inputStream = ResourceUtil.getStream("jbm.banner");
-//            String txt = IoUtil.readUtf8(inputStream);
-//            IoUtil.close(inputStream);
-//            Expression expression = parser.parseExpression(txt);
-//            String banner = expression.getValue(standardEvaluationContext, String.class);
-            System.out.println(banner);
+            clusterEventPublisher.publishEvent(new RemoteRefreshRouteEvent());
+            log.info("发送刷新网关事件");
         } catch (Exception e) {
-            log.error("打印节点信息错误", e);
+            log.info("发送刷新网关事件失败", e);
         }
-    }
-
-
-    @EventListener(WebServerInitializedEvent.class)
-    public void onWebServerInitializedEvent(WebServerInitializedEvent event) {
-        microServicePort = event.getWebServer().getPort();
-        this.loadNodeInfo();
-    }
-
-
-    private Map<String, CountDownLatch> clusterEventThreadMap = Maps.newConcurrentMap();
-
-    private CountDownLatch getClusterEventThread(String key) {
-        if (clusterEventThreadMap.containsKey(key))
-            return clusterEventThreadMap.get(key);
-        CountDownLatch countDownLatch = ThreadUtil.newCountDownLatch(1);
-        clusterEventThreadMap.put(key, countDownLatch);
-        return countDownLatch;
-    }
-
-    private void endClusterEventThread(String key) {
-        MapUtil.removeAny(clusterEventThreadMap, key);
-    }
-
-
-//    /**
-//     * 释放集群事件
-//     *
-//     * @param clusterEvent
-//     */
-//    public void ackClusterEnvent(ClusterEvent clusterEvent) {
-//        if (ObjectUtil.isEmpty(clusterEvent)) {
-//            return;
-//        }
-//        String clazz = ClassUtil.getClassName(clusterEvent, false);
-//        this.stringRedisTemplate.delete(clusterEvent.getEventId());
-//    }
-
-    /**
-     * 发送MQTT通知
-     *
-     * @param mqttNotification
-     */
-    public void sendMqttNotification(MqttNotification mqttNotification) {
-        mqttNotification.sendBuild(this.microServiceName);
-        rabbitTemplate.convertAndSend(QueueConstants.QUEUE_PUSH_MESSAGE, mqttNotification);
-    }
-
-    /**
-     * 发送集群通知
-     *
-     * @param notification
-     */
-    public void sendClusterNotification(Notification notification) {
-        rabbitTemplate.convertAndSend(QueueConstants.QUEUE_PUSH_MESSAGE, notification);
-    }
-
-
-    /**
-     * 发送站内信
-     *
-     * @param pushMessage
-     */
-    public void sendPushMessage(PushMessage pushMessage) {
-        rabbitTemplate.convertAndSend(QueueConstants.QUEUE_PUSH_MESSAGE, pushMessage);
     }
 
 }

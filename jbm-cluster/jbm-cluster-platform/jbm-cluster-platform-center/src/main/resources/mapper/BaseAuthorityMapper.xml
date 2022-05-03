@@ -23,7 +23,7 @@
         <result column="status" jdbcType="INTEGER" property="status"/>
     </resultMap>
 
-    <resultMap id="Authority" type="com.jbm.cluster.common.security.OpenAuthority">
+    <resultMap id="Authority" type="com.jbm.cluster.api.model.auth.OpenAuthority">
         <result column="authority_id" jdbcType="BIGINT" property="authorityId"/>
         <result column="authority" jdbcType="VARCHAR" property="authority"/>
         <result column="expire_time" jdbcType="TIMESTAMP" property="expireTime"/>

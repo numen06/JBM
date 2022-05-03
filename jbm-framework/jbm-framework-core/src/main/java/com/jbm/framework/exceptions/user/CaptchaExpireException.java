@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions.user;
 /**
  * 验证码失效异常类
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class CaptchaExpireException extends UserException
 {

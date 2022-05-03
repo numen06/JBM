@@ -5,7 +5,7 @@ import com.jbm.framework.exceptions.base.BaseException;
 /**
  * 用户信息异常类
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class UserException extends BaseException
 {

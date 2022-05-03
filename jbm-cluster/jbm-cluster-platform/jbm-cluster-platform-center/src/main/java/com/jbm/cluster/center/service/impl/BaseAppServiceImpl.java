@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
@@ -8,28 +7,23 @@ import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.center.mapper.BaseAppMapper;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
-import com.jbm.cluster.common.exception.OpenAlertException;
-import com.jbm.cluster.common.security.OpenClientDetails;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.RandomValueUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.security.oauth2.provider.client.BaseClientDetails;
-import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * @author: wesley.zhang
@@ -45,8 +39,8 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     private BaseAppMapper baseAppMapper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
-    @Autowired
-    private JdbcClientDetailsService jdbcClientDetailsService;
+//    @Autowired
+//    private JdbcClientDetailsService jdbcClientDetailsService;
     /**
      * token有效期，默认12小时
      */
@@ -106,32 +100,32 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      *
      * @return
      */
-    @Override
-    @Cacheable(value = "apps", key = "'client:'+#clientId")
-    public OpenClientDetails getAppClientInfo(String clientId) {
-        BaseClientDetails baseClientDetails = null;
-        try {
-            baseClientDetails = (BaseClientDetails) jdbcClientDetailsService.loadClientByClientId(clientId);
-        } catch (Exception e) {
-            return null;
-        }
-        String appId = baseClientDetails.getAdditionalInformation().get("appId").toString();
-        OpenClientDetails openClient = new OpenClientDetails();
-        BeanUtils.copyProperties(baseClientDetails, openClient);
-        openClient.setAuthorities(baseAuthorityService.findAuthorityByApp(appId));
-        return openClient;
-    }
+//    @Override
+//    @Cacheable(value = "apps", key = "'client:'+#clientId")
+//    public OpenClientDetails getAppClientInfo(String clientId) {
+////        BaseClientDetails baseClientDetails = null;
+////        try {
+////            baseClientDetails = (BaseClientDetails) jdbcClientDetailsService.loadClientByClientId(clientId);
+////        } catch (Exception e) {
+////            return null;
+////        }
+////        String appId = baseClientDetails.getAdditionalInformation().get("appId").toString();
+//        OpenClientDetails openClient = new OpenClientDetails();
+//        BeanUtils.copyProperties(baseClientDetails, openClient);
+//        openClient.setAuthorities(baseAuthorityService.findAuthorityByApp(appId));
+//        return openClient;
+//    }
 
-    /**
-     * 更新应用开发新型
-     *
-     * @param client
-     */
-    @CacheEvict(value = {"apps"}, key = "'client:'+#client.clientId")
-    @Override
-    public void updateAppClientInfo(OpenClientDetails client) {
-        jdbcClientDetailsService.updateClientDetails(client);
-    }
+//    /**
+//     * 更新应用开发新型
+//     *
+//     * @param client
+//     */
+//    @CacheEvict(value = {"apps"}, key = "'client:'+#client.clientId")
+//    @Override
+//    public void updateAppClientInfo(OpenClientDetails client) {
+//        jdbcClientDetailsService.updateClientDetails(client);
+//    }
 
     /**
      * 添加应用
@@ -154,16 +148,16 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
             app.setIsPersist(0);
         }
         baseAppMapper.insert(app);
-        Map info = BeanUtil.beanToMap(app);
+//        Map info = BeanUtil.beanToMap(app);
         // 功能授权
-        BaseClientDetails client = new BaseClientDetails();
-        client.setClientId(app.getApiKey());
-        client.setClientSecret(app.getSecretKey());
-        client.setAdditionalInformation(info);
-        client.setAuthorizedGrantTypes(Arrays.asList("authorization_code", "client_credentials", "implicit", "refresh_token"));
-        client.setAccessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS);
-        client.setRefreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
-        jdbcClientDetailsService.addClientDetails(client);
+//        BaseClientDetails client = new BaseClientDetails();
+//        client.setClientId(app.getApiKey());
+//        client.setClientSecret(app.getSecretKey());
+//        client.setAdditionalInformation(info);
+//        client.setAuthorizedGrantTypes(Arrays.asList("authorization_code", "client_credentials", "implicit", "refresh_token"));
+//        client.setAccessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS);
+//        client.setRefreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS);
+//        jdbcClientDetailsService.addClientDetails(client);
         return app;
     }
 
@@ -182,11 +176,11 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         app.setUpdateTime(new Date());
         baseAppMapper.updateById(app);
         // 修改客户端附加信息
-        BaseApp appInfo = getAppInfo(app.getAppId());
-        Map info = BeanUtil.beanToMap(appInfo);
-        BaseClientDetails client = (BaseClientDetails) jdbcClientDetailsService.loadClientByClientId(appInfo.getApiKey());
-        client.setAdditionalInformation(info);
-        jdbcClientDetailsService.updateClientDetails(client);
+//        BaseApp appInfo = getAppInfo(app.getAppId());
+//        Map info = BeanUtil.beanToMap(appInfo);
+//        BaseClientDetails client = (BaseClientDetails) jdbcClientDetailsService.loadClientByClientId(appInfo.getApiKey());
+//        client.setAdditionalInformation(info);
+//        jdbcClientDetailsService.updateClientDetails(client);
         return app;
     }
 
@@ -204,17 +198,17 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     public String restSecret(String appId) {
         BaseApp appInfo = getAppInfo(appId);
         if (appInfo == null) {
-            throw new OpenAlertException(appId + "应用不存在!");
+            throw new ServiceException(appId + "应用不存在!");
         }
-        if (appInfo.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许修改"));
+        if (appInfo.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许修改"));
         }
         // 生成新的密钥
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
         appInfo.setSecretKey(secretKey);
         appInfo.setUpdateTime(new Date());
         baseAppMapper.updateById(appInfo);
-        jdbcClientDetailsService.updateClientSecret(appInfo.getApiKey(), secretKey);
+//        jdbcClientDetailsService.updateClientSecret(appInfo.getApiKey(), secretKey);
         return secretKey;
     }
 
@@ -232,15 +226,15 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     public void removeApp(String appId) {
         BaseApp appInfo = getAppInfo(appId);
         if (appInfo == null) {
-            throw new OpenAlertException(appId + "应用不存在!");
+            throw new ServiceException(appId + "应用不存在!");
         }
-        if (appInfo.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除"));
+        if (appInfo.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除"));
         }
         // 移除应用权限
         baseAuthorityService.removeAuthorityApp(appId);
         baseAppMapper.deleteById(appInfo.getAppId());
-        jdbcClientDetailsService.removeClientDetails(appInfo.getApiKey());
+//        jdbcClientDetailsService.removeClientDetails(appInfo.getApiKey());
     }
 
 //    public static void main(String[] args) {

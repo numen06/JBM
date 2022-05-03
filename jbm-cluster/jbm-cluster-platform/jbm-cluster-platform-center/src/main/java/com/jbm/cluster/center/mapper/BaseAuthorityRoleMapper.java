@@ -2,7 +2,7 @@ package com.jbm.cluster.center.mapper;
 
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityRole;
-import com.jbm.cluster.common.security.OpenAuthority;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;

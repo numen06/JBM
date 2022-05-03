@@ -63,7 +63,7 @@ public class PushMessageController extends MasterDataCollection<PushMessage, Pus
     @PostMapping("/findCurrMessagePage")
     public ResultBody<DataPaging<PushMessage>> findCurrMessagePage(@RequestBody PushMessageForm pushMessageform) {
         JbmLoginUser openUserDetails = SecurityUtils.getLoginUser();
-        pushMessageform.getPushMessage().setRecUserId(openUserDetails.getUserid());
+        pushMessageform.getPushMessage().setRecUserId(openUserDetails.getUserId());
         pushMessageform.getPageForm().setSortRule("createTime:desc");
         DataPaging<PushMessage> dataPaging = this.service.selectEntitys(pushMessageform.getPushMessage(), pushMessageform.getPageForm());
         return ResultBody.success(dataPaging, "获取登录人的消息列表成功");

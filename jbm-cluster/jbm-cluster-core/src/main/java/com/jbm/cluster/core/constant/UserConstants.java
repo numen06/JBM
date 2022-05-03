@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * 用户常量信息
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class UserConstants
 {

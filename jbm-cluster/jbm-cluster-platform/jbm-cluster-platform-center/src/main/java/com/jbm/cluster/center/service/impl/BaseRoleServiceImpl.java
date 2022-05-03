@@ -9,8 +9,8 @@ import com.jbm.cluster.center.mapper.BaseRoleMapper;
 import com.jbm.cluster.center.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.cluster.common.constants.CommonConstants;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -84,13 +84,13 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     @Override
     public BaseRole addRole(BaseRole role) {
 //        if (isExist(role.getRoleCode())) {
-//            throw new OpenAlertException(String.format("%s编码已存在!", role.getRoleCode()));
+//            throw new ServiceException(String.format("%s编码已存在!", role.getRoleCode()));
 //        }
         if (role.getStatus() == null) {
-            role.setStatus(BaseConstants.ENABLED);
+            role.setStatus(JbmConstants.ENABLED);
         }
         if (role.getIsPersist() == null) {
-            role.setIsPersist(BaseConstants.DISABLED);
+            role.setIsPersist(JbmConstants.DISABLED);
         }
         this.saveEntity(role);
         return role;
@@ -106,12 +106,12 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     public BaseRole updateRole(BaseRole role) {
         BaseRole saved = getRole(role.getRoleId());
         if (role == null) {
-            throw new OpenAlertException("信息不存在!");
+            throw new ServiceException("信息不存在!");
         }
         if (!saved.getRoleCode().equals(role.getRoleCode())) {
             // 和原来不一致重新检查唯一性
             if (isExist(role.getRoleCode())) {
-                throw new OpenAlertException(String.format("%s编码已存在!", role.getRoleCode()));
+                throw new ServiceException(String.format("%s编码已存在!", role.getRoleCode()));
             }
         }
         role.setUpdateTime(new Date());
@@ -131,12 +131,12 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
             return;
         }
         BaseRole role = getRole(roleId);
-        if (role != null && role.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除"));
+        if (role != null && role.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除"));
         }
         int count = getCountByRole(roleId);
         if (count > 0) {
-            throw new OpenAlertException("该角色下存在授权人员,不允许删除!");
+            throw new ServiceException("该角色下存在授权人员,不允许删除!");
         }
         baseRoleMapper.deleteById(roleId);
     }
@@ -150,7 +150,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     @Override
     public Boolean isExist(String roleCode) {
         if (StringUtils.isBlank(roleCode)) {
-            throw new OpenAlertException("roleCode不能为空!");
+            throw new ServiceException("roleCode不能为空!");
         }
         QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseRole::getRoleCode, roleCode);
@@ -173,8 +173,8 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         if (user == null) {
             return;
         }
-        if (CommonConstants.ROOT.equals(user.getUserName())) {
-            throw new OpenAlertException("默认用户无需分配!");
+        if (JbmConstants.ROOT.equals(user.getUserName())) {
+            throw new ServiceException("默认用户无需分配!");
         }
         // 先清空,在添加
         removeUserRoles(userId);

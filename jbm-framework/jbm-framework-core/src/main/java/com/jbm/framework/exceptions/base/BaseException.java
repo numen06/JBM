@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions.base;
 /**
  * 基础异常
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class BaseException extends RuntimeException
 {

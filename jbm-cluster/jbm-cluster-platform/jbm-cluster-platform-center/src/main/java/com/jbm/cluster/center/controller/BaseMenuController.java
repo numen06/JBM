@@ -4,7 +4,7 @@ import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -33,7 +33,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     private BaseActionService baseResourceOperationService;
 
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页菜单资源列表
@@ -217,7 +217,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
         menu.setPriority(priority);
         menu.setMenuDesc(menuDesc);
         baseResourceMenuService.updateMenu(menu);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -259,7 +259,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @RequestParam("menuId") Long menuId
     ) {
         baseResourceMenuService.removeMenu(menuId);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

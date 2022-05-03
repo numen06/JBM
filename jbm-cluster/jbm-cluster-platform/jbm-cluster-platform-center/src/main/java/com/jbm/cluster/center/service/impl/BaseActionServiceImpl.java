@@ -8,7 +8,8 @@ import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.center.mapper.BaseActionMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -119,7 +120,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
     @Override
     public BaseAction addAction(BaseAction aciton) {
         if (isExist(aciton.getActionCode())) {
-            throw new OpenAlertException(String.format("%s编码已存在!", aciton.getActionCode()));
+            throw new ServiceException(String.format("%s编码已存在!", aciton.getActionCode()));
         }
         if (aciton.getMenuId() == null) {
             aciton.setMenuId(0L);
@@ -128,10 +129,10 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
             aciton.setPriority(0);
         }
         if (aciton.getStatus() == null) {
-            aciton.setStatus(BaseConstants.ENABLED);
+            aciton.setStatus(JbmConstants.ENABLED);
         }
         if (aciton.getIsPersist() == null) {
-            aciton.setIsPersist(BaseConstants.DISABLED);
+            aciton.setIsPersist(JbmConstants.DISABLED);
         }
         aciton.setCreateTime(new Date());
         aciton.setServiceId(DEFAULT_SERVICE_ID);
@@ -152,12 +153,12 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
     public BaseAction updateAction(BaseAction aciton) {
         BaseAction saved = getAction(aciton.getActionId());
         if (saved == null) {
-            throw new OpenAlertException(String.format("%s信息不存在", aciton.getActionId()));
+            throw new ServiceException(String.format("%s信息不存在", aciton.getActionId()));
         }
         if (!saved.getActionCode().equals(aciton.getActionCode())) {
             // 和原来不一致重新检查唯一性
             if (isExist(aciton.getActionCode())) {
-                throw new OpenAlertException(String.format("%s编码已存在!", aciton.getActionCode()));
+                throw new ServiceException(String.format("%s编码已存在!", aciton.getActionCode()));
             }
         }
         if (aciton.getMenuId() == null) {
@@ -182,8 +183,8 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
     @Override
     public void removeAction(Long actionId) {
         BaseAction aciton = getAction(actionId);
-        if (aciton != null && aciton.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除"));
+        if (aciton != null && aciton.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除"));
         }
         baseAuthorityService.removeAuthorityAction(actionId);
         baseAuthorityService.removeAuthority(actionId, ResourceType.action);

@@ -5,7 +5,7 @@ import com.jbm.framework.exceptions.base.BaseException;
 /**
  * 文件信息异常类
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class FileException extends BaseException
 {

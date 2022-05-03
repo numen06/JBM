@@ -13,11 +13,11 @@
 
     <description>平台基础服务器</description>
     <dependencies>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api-oauth</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-api-oauth</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-node-basic</artifactId>
@@ -39,6 +39,7 @@
             <groupId>io.github.tokenjan</groupId>
             <artifactId>pinyin4j</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>

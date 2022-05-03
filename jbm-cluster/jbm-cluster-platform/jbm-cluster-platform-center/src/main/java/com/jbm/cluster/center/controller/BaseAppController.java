@@ -1,11 +1,10 @@
 package com.jbm.cluster.center.controller;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.api.model.auth.OpenClientDetails;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseAppService;
-import com.jbm.cluster.common.security.OpenClientDetails;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -32,7 +31,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     @Autowired
     private BaseAppService baseAppService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页应用列表
@@ -65,24 +64,24 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
         return ResultBody.ok().data(appInfo);
     }
 
-    /**
-     * 获取应用开发配置信息
-     *
-     * @param clientId
-     * @return
-     */
-    @ApiOperation(value = "获取应用开发配置信息", notes = "获取应用开发配置信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clientId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
-    })
-    @GetMapping("/client/{clientId}/info")
-    @Override
-    public ResultBody<OpenClientDetails> getAppClientInfo(
-            @PathVariable("clientId") String clientId
-    ) {
-        OpenClientDetails clientInfo = baseAppService.getAppClientInfo(clientId);
-        return ResultBody.ok().data(clientInfo);
-    }
+//    /**
+//     * 获取应用开发配置信息
+//     *
+//     * @param clientId
+//     * @return
+//     */
+//    @ApiOperation(value = "获取应用开发配置信息", notes = "获取应用开发配置信息")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "clientId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
+//    })
+//    @GetMapping("/client/{clientId}/info")
+//    @Override
+//    public ResultBody<OpenClientDetails> getAppClientInfo(
+//            @PathVariable("clientId") String clientId
+//    ) {
+//        OpenClientDetails clientInfo = baseAppService.getAppClientInfo(clientId);
+//        return ResultBody.ok().data(clientInfo);
+//    }
 
     /**
      * 添加应用信息
@@ -194,7 +193,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
         app.setWebsite(website);
         app.setDeveloperId(developerId);
         baseAppService.updateInfo(app);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -232,13 +231,14 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @RequestParam(value = "autoApproveScopes", required = false) String autoApproveScopes
     ) {
         BaseApp app = baseAppService.getAppInfo(appId);
-        OpenClientDetails client = new OpenClientDetails(app.getApiKey(), "", scopes, grantTypes, "", redirectUrls);
-        client.setAccessTokenValiditySeconds(accessTokenValidity);
-        client.setRefreshTokenValiditySeconds(refreshTokenValidity);
-        client.setAutoApproveScopes(autoApproveScopes != null ? Arrays.asList(autoApproveScopes.split(",")) : null);
-        Map info = BeanUtil.beanToMap(app);
-        client.setAdditionalInformation(info);
-        baseAppService.updateAppClientInfo(client);
+//        OpenClientDetails client = new OpenClientDetails(app.getApiKey(), "", scopes, grantTypes, "", redirectUrls);
+//        client.setAccessTokenValiditySeconds(accessTokenValidity);
+//        client.setRefreshTokenValiditySeconds(refreshTokenValidity);
+//        client.setAutoApproveScopes(autoApproveScopes != null ? Arrays.asList(autoApproveScopes.split(",")) : null);
+//        Map info = BeanUtil.beanToMap(app);
+//        client.setAdditionalInformation(info);
+        baseAppService.updateInfo(app);
+//        baseAppService.updateAppClientInfo(client);
         return ResultBody.ok();
     }
 
@@ -276,7 +276,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @RequestParam("appId") String appId
     ) {
         baseAppService.removeApp(appId);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

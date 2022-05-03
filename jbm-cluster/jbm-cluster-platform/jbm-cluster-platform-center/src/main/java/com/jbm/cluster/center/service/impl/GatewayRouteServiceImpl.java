@@ -1,10 +1,11 @@
 package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.center.service.GatewayRouteService;
-import com.jbm.cluster.common.exception.OpenAlertException;
+import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
@@ -59,7 +60,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public List<GatewayRoute> findRouteList() {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda().eq(GatewayRoute::getStatus, BaseConstants.ENABLED);
+        queryWrapper.lambda().eq(GatewayRoute::getStatus, JbmConstants.ENABLED);
         List<GatewayRoute> list = list(queryWrapper);
         return list;
     }
@@ -83,10 +84,10 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public void addRoute(GatewayRoute route) {
         if (StringUtils.isBlank(route.getPath())) {
-            throw new OpenAlertException(String.format("path不能为空!"));
+            throw new ServiceException(String.format("path不能为空!"));
         }
         if (isExist(route.getRouteName())) {
-            throw new OpenAlertException(String.format("路由名称已存在!"));
+            throw new ServiceException(String.format("路由名称已存在!"));
         }
         route.setIsPersist(0);
         save(route);
@@ -100,19 +101,19 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public void updateRoute(GatewayRoute route) {
         if (StringUtils.isBlank(route.getPath())) {
-            throw new OpenAlertException(String.format("path不能为空"));
+            throw new ServiceException(String.format("path不能为空"));
         }
         GatewayRoute saved = getRoute(route.getRouteId());
         if (saved == null) {
-            throw new OpenAlertException("路由信息不存在!");
+            throw new ServiceException("路由信息不存在!");
         }
-        if (saved != null && saved.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许修改"));
+        if (saved != null && saved.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许修改"));
         }
         if (!saved.getRouteName().equals(route.getRouteName())) {
             // 和原来不一致重新检查唯一性
             if (isExist(route.getRouteName())) {
-                throw new OpenAlertException("路由名称已存在!");
+                throw new ServiceException("路由名称已存在!");
             }
         }
         updateById(route);
@@ -126,8 +127,8 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public void removeRoute(Long routeId) {
         GatewayRoute saved = getRoute(routeId);
-        if (saved != null && saved.getIsPersist().equals(BaseConstants.ENABLED)) {
-            throw new OpenAlertException(String.format("保留数据,不允许删除"));
+        if (saved != null && saved.getIsPersist().equals(JbmConstants.ENABLED)) {
+            throw new ServiceException(String.format("保留数据,不允许删除"));
         }
         removeById(routeId);
     }

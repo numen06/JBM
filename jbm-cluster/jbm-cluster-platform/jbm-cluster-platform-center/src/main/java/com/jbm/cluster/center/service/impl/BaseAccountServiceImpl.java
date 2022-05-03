@@ -12,6 +12,8 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
+import com.jbm.cluster.common.security.utils.SecurityUtils;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.PasswordUtils;
@@ -37,10 +39,6 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     private BaseAccountMapper baseAccountMapper;
     @Autowired
     private BaseAccountLogsMapper baseAccountLogsMapper;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
 
     /**
      * 根据主键获取账号信息
@@ -74,7 +72,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 
     @Override
     public BaseAccount registerUsernameAccount(BaseUser baseUser) {
-        return this.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), AccountType.username.toString(), AccountStatus.NORMAL.getKey(), BaseConstants.ACCOUNT_DOMAIN_ADMIN, null);
+        return this.register(baseUser.getUserId(), baseUser.getUserName(),
+                baseUser.getPassword(), AccountType.username.toString(),
+                AccountStatus.NORMAL.getKey(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
     }
 
 
@@ -103,7 +103,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
             password = IdUtil.fastSimpleUUID();
         }
         //加密
-        String encodePassword = passwordEncoder.encode(password);
+        String encodePassword = SecurityUtils.encryptPassword(password);
         baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
         baseAccount.setCreateTime(new Date());
         baseAccount.setUpdateTime(baseAccount.getCreateTime());
@@ -125,7 +125,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
             return account;
         }
         //加密
-        String encodePassword = passwordEncoder.encode(baseAccount.getPassword());
+        String encodePassword = SecurityUtils.encryptPassword(baseAccount.getPassword());
 //        BaseAccount baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
 //        baseAccount.setCreateTime(new Date());
 //        baseAccount.setUpdateTime(baseAccount.getCreateTime());
@@ -222,10 +222,10 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
             throw new ServiceException("密码强度不够,请重新设置");
         BaseAccount baseAccount = new BaseAccount();
 //        baseAccount.setUpdateTime(new Date());
-        baseAccount.setPassword(passwordEncoder.encode(password));
+        baseAccount.setPassword(SecurityUtils.encryptPassword(password));
         QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
         wrapper.lambda()
-                .in(BaseAccount::getAccountType, BaseConstants.ACCOUNT_TYPE_USERNAME, BaseConstants.ACCOUNT_TYPE_EMAIL, BaseConstants.ACCOUNT_TYPE_MOBILE)
+                .in(BaseAccount::getAccountType, JbmConstants.ACCOUNT_TYPE_USERNAME, JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_TYPE_MOBILE)
                 .eq(BaseAccount::getUserId, userId)
                 .eq(BaseAccount::getDomain, domain);
         return baseAccountMapper.update(baseAccount, wrapper);

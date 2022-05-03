@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.api.entitys.auth.AuthorityAction;
 import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.center.service.BaseActionService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -27,7 +27,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
     @Autowired
     private BaseActionService baseActionService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页功能按钮列表
@@ -108,7 +108,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
         BaseAction result = baseActionService.addAction(action);
         if (result != null) {
             actionId = result.getActionId();
-            openRestTemplate.refreshGateway();
+            jbmClusterTemplate.refreshGateway();
         }
         return ResultBody.ok().data(actionId);
     }
@@ -155,7 +155,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
         action.setActionDesc(actionDesc);
         baseActionService.updateAction(action);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -176,7 +176,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
     ) {
         baseActionService.removeAction(actionId);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

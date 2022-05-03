@@ -1,8 +1,8 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.auth.model.UserAccount;
 import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
 import com.jbm.cluster.center.service.BaseDeveloperService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;

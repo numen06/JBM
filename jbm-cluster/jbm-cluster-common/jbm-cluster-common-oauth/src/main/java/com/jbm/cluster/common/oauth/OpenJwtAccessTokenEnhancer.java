@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.oauth;
 
-import com.jbm.cluster.api.auth.OpenSecurityConstants;
-import com.jbm.cluster.api.auth.OpenUserDetails;
+import com.jbm.cluster.api.model.auth.OpenUserDetails;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -31,8 +31,8 @@ public class OpenJwtAccessTokenEnhancer extends JwtAccessTokenConverter {
             // 设置额外用户信息
             OpenUserDetails baseUser = ((OpenUserDetails) authentication.getPrincipal());
             final Map<String, Object> additionalInfo = new HashMap<>(8);
-            additionalInfo.put(OpenSecurityConstants.OPEN_ID, baseUser.getUserId());
-            additionalInfo.put(OpenSecurityConstants.DOMAIN, baseUser.getDomain());
+            additionalInfo.put(JbmSecurityConstants.OPEN_ID, baseUser.getUserId());
+            additionalInfo.put(JbmSecurityConstants.DOMAIN, baseUser.getDomain());
             defaultOAuth2AccessToken.setAdditionalInformation(additionalInfo);
         }
 

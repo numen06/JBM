@@ -3,7 +3,7 @@ package com.jbm.cluster.core.constant;
 /**
  * 服务名称
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class ServiceNameConstants
 {

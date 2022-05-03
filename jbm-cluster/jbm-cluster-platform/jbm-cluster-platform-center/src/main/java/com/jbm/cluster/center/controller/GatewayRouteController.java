@@ -1,10 +1,10 @@
 package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.center.service.GatewayRouteService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -31,7 +31,7 @@ public class GatewayRouteController {
     @Autowired
     private GatewayRouteService gatewayRouteService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页路由列表
@@ -133,7 +133,7 @@ public class GatewayRouteController {
         }
         gatewayRouteService.addRoute(route);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -189,7 +189,7 @@ public class GatewayRouteController {
         }
         gatewayRouteService.updateRoute(route);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -210,7 +210,7 @@ public class GatewayRouteController {
     ) {
         gatewayRouteService.removeRoute(routeId);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

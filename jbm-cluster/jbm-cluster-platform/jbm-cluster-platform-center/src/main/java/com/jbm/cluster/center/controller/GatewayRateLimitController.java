@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
-import com.jbm.cluster.common.security.http.OpenRestTemplate;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -31,7 +31,7 @@ public class GatewayRateLimitController {
     @Autowired
     private GatewayRateLimitService gatewayRateLimitService;
     @Autowired
-    private OpenRestTemplate openRestTemplate;
+    private JbmClusterTemplate jbmClusterTemplate;
 
     /**
      * 获取分页接口列表
@@ -79,7 +79,7 @@ public class GatewayRateLimitController {
             @RequestParam(value = "apiIds", required = false) String apiIds
     ) {
         gatewayRateLimitService.addRateLimitApis(policyId, StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -168,7 +168,7 @@ public class GatewayRateLimitController {
         rateLimit.setIntervalUnit(intervalUnit);
         rateLimit.setPolicyType(policyType);
         gatewayRateLimitService.updateRateLimitPolicy(rateLimit);
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
@@ -189,7 +189,7 @@ public class GatewayRateLimitController {
     ) {
         gatewayRateLimitService.removeRateLimitPolicy(policyId);
         // 刷新网关
-        openRestTemplate.refreshGateway();
+        jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 }

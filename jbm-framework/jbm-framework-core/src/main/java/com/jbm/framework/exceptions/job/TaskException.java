@@ -3,7 +3,7 @@ package com.jbm.framework.exceptions.job;
 /**
  * 计划策略异常
  * 
- * @author ruoyi
+ * @author wesley.zhang
  */
 public class TaskException extends Exception
 {
