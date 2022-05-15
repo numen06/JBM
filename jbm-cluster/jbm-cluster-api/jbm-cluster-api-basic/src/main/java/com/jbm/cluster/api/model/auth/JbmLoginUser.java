@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.model.auth;
 
 
-import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.core.constant.JbmCacheConstants;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -17,6 +17,7 @@ public class JbmLoginUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+
     /**
      * 用户唯一标识
      */
@@ -26,6 +27,11 @@ public class JbmLoginUser implements Serializable {
      * 用户名id
      */
     private Long userId;
+
+    /**
+     * 用户类型
+     */
+    private String userType;
 
     /**
      * 用户名
@@ -53,14 +59,46 @@ public class JbmLoginUser implements Serializable {
     private Set<String> permissions;
 
     /**
+     * 菜单权限
+     */
+    private Set<String> menuPermission;
+
+
+    /**
+     * 角色权限
+     */
+    private Set<String> rolePermission;
+
+    /**
      * 角色列表
      */
     private Set<String> roles;
 
     /**
-     * 用户信息
+     * 数据权限 当前角色ID
      */
-    private BaseUser baseUser;
+    private Long roleId;
 
+//    /**
+//     * 用户信息
+//     */
+//    private BaseUser baseUser;
+
+    /**
+     * 部门ID
+     */
+    private Long deptId;
+
+    /**
+     * 部门名
+     */
+    private String deptName;
+
+    /**
+     * 获取登录id
+     */
+    public String getLoginId() {
+        return userType + JbmCacheConstants.LOGINID_JOIN_CODE + userId;
+    }
 
 }

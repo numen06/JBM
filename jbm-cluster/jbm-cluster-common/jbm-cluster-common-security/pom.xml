@@ -16,40 +16,13 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
     <dependencies>
-        <!-- Spring Web -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-        </dependency>
-        <!-- Jbm Cluster Api -->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <!-- Jbm Cluster Common -->
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-core</artifactId>
+            <artifactId>jbm-cluster-common-satoken</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- Jbm Redis-->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!-- Jbm Api -->
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api-basic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-basic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
     </dependencies>
 
 </project>

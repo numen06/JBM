@@ -5,8 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.model.BucketInfo;
+import com.jbm.util.FileNameUtils;
 import com.jbm.util.PathUtils;
-import jodd.io.FileNameUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.PostConstruct;
@@ -136,7 +136,7 @@ public class AliyunOSSTemplate {
         String fileName = originalFilename;
         String extend = PathUtils.getExtension(fileName);// 获取文件扩展名
         String newFileName = IdUtil.objectId() + "." + extend;
-        return FileNameUtil.concat(StrUtil.trimToEmpty(group), newFileName, true);
+        return FileNameUtils.concat(StrUtil.trimToEmpty(group), newFileName, true);
 
     }
 

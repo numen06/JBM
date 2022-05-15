@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>jbm-cluster-common</artifactId>
+        <groupId>com.jbm</groupId>
+        <version>7.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>jbm-cluster-common-satoken</artifactId>
+
+    <dependencies>
+
+        <!-- Jbm Cluster Common -->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-basic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Jbm Redis-->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Sa-Token 权限认证（core核心包）, 在线文档：http://sa-token.dev33.cn/ -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-core</artifactId>
+        </dependency>
+        <!-- Sa-Token 整合 jwt -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-jwt</artifactId>
+        </dependency>
+        <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot-starter</artifactId>
+            <version>${satoken.version}</version>
+        </dependency>
+
+    </dependencies>
+
+</project>

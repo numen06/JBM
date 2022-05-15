@@ -1,0 +1,70 @@
+server:
+  port: 5555
+  servlet:
+    session:
+      cookie:
+        name: OAUTH2SESSION
+spring:
+  application:
+    name: ${artifactId}
+  cloud:
+    #手动配置Bus id,
+    bus:
+      id: ${spring.application.name}:${server.port}
+  main:
+    allow-bean-definition-overriding: true
+  # 解决restful 404错误 spring.mvc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
+  profiles:
+    active: ${profile.name}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+swagger2:
+  enabled: true
+  description: 平台用户认证服务器
+  title: 平台用户认证服务器
+jbm:
+  client:
+    oauth2:
+      admin:
+        client-id: 7gBZcbsC7kLIWCdELIl8nxcs
+        client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
+#  cluster:
+#    token-type: redis
+#    permit-all:
+#      - /**
+
+# Sa-Token配置
+sa-token:
+  # token名称 (同时也是cookie名称)
+  token-name: Authorization
+  # token有效期 设为一天 (必定过期) 单位: 秒
+  timeout: 86400
+  # token临时有效期 (指定时间无操作就过期) 单位: 秒
+  activity-timeout: 1800
+  # 开启内网服务调用鉴权
+  check-id-token: true
+  # Id-Token的有效期 (单位: 秒)
+  id-token-timeout: 600
+  # 是否允许同一账号并发登录 (为true时允许一起登录, 为false时新登录挤掉旧登录)
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
+  is-share: false
+  # 是否尝试从header里读取token
+  is-read-head: true
+  # 是否尝试从cookie里读取token
+  is-read-cookie: false
+  # token前缀
+  token-prefix: "Bearer"
+  # jwt秘钥
+  jwt-secret-key: abcdefghijklmnopqrstuvwxyz
+  # 是否输出操作日志
+  is-log: true

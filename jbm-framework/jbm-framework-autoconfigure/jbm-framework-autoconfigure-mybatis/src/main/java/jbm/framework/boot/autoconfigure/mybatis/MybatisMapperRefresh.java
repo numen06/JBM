@@ -166,7 +166,7 @@ public class MybatisMapperRefresh implements Runnable {
 
                     } while (true);
                 }
-            }, "mybatis-plus MapperRefresh").start();
+            }, "Mybatis-plus MapperRefresh").start();
         }
     }
 

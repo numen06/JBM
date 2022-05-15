@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 /**
  * @author wesley.zhang
  */
-@RequestMapping("/user")
 public interface IBaseUserServiceClient {
 
 

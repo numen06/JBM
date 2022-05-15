@@ -14,7 +14,9 @@
     <modules>
         <module>jbm-cluster-common-basic</module>
         <module>jbm-cluster-common-security</module>
-<!--        <module>jbm-cluster-common-oauth</module>-->
+        <module>jbm-cluster-common-idempotent</module>
+        <module>jbm-cluster-common-satoken</module>
+        <!--        <module>jbm-cluster-common-oauth</module>-->
     </modules>
 
     <properties>

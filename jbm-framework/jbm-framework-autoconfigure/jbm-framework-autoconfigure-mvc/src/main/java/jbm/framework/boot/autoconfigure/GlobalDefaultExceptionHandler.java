@@ -62,10 +62,11 @@ public class GlobalDefaultExceptionHandler {
      * 拦截未知的运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResultBody handleRuntimeException(RuntimeException e, HttpServletRequest request) {
+    public ResultBody handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        log.error("请求地址'{}',发生未知异常.", requestURI, e);
-        return ResultBody.error(e);
+        log.error("请求地址'{}',发生未知异常.", requestURI, ex);
+        ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
+        return resultBody;
     }
 
 

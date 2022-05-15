@@ -4,41 +4,21 @@ package com.jbm.opcua.test;
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.framework.opcua.OpcUaTemplate;
-import jbm.framework.boot.autoconfigure.opcua.OpcUaConfiguration;
-import jbm.framework.boot.autoconfigure.opcua.OpcUaProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.stack.core.Identifiers;
-import org.eclipse.milo.opcua.stack.core.NamespaceTable;
-import org.eclipse.milo.opcua.stack.core.UaException;
-import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
-import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
-import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
-import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
-import org.eclipse.milo.opcua.stack.core.types.structured.AddNodesItem;
-import org.eclipse.milo.opcua.stack.core.types.structured.Node;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReferenceDescription;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ContextLoader;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.AbstractTestContextBootstrapper;
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
 @SpringBootTest(classes = {ApplicationTest.class})
 @Slf4j

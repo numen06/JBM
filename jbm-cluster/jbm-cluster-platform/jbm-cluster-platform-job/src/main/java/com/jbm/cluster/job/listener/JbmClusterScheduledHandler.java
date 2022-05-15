@@ -6,7 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
 import com.jbm.cluster.api.entitys.job.SysJob;
-import com.jbm.cluster.common.core.bus.JbmClusterEventBean;
+import com.jbm.cluster.api.bus.JbmClusterEventBean;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.job.service.SysJobService;
 import lombok.extern.slf4j.Slf4j;

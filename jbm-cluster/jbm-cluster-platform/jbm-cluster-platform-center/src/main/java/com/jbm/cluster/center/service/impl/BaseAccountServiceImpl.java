@@ -12,14 +12,13 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
-import com.jbm.cluster.common.security.utils.SecurityUtils;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.PasswordUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

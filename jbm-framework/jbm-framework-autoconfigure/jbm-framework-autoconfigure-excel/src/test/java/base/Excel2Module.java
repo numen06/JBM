@@ -4,7 +4,7 @@ import jbm.framework.excel.ExcelTemplate;
 import jbm.framework.excel.model.ReadParam;
 import moudles.Student1;
 import moudles.Student2;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

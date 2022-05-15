@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>jbm-cluster-apis</artifactId>
+        <artifactId>jbm-cluster-api</artifactId>
         <groupId>com.jbm</groupId>
         <version>7.0.1-SNAPSHOT</version>
     </parent>
@@ -11,14 +11,10 @@
 
     <artifactId>jbm-cluster-api-basic</artifactId>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-api-core</artifactId>
+            <artifactId>jbm-cluster-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -29,7 +25,7 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-data-masterdata</artifactId>
-<!--            <scope>provided</scope>-->
+            <!--            <scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>

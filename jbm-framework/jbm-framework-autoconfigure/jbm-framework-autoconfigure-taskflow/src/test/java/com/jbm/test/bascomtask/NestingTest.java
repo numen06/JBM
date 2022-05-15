@@ -1,11 +1,11 @@
 package com.jbm.test.bascomtask;
 
 import com.ebay.bascomtask.annotations.Work;
-import com.jbm.test.bascomtask.PathTaskTestBase;
 import jbm.framework.boot.autoconfigure.taskflow.useage.PathTask;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class NestingTest extends PathTaskTestBase {
 

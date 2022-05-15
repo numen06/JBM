@@ -1,21 +1,19 @@
 package com.jbm.level.test;
 
-import java.util.Date;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import com.alibaba.fastjson.JSON;
+import jbm.framework.boot.autoconfigure.level.LevelAutoConfiguration;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.level.LevelKeyValueTemplate;
 import org.springframework.data.level.LevelTemplate;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.alibaba.fastjson.JSON;
+import java.util.Date;
 
-import jbm.framework.boot.autoconfigure.level.LevelAutoConfiguration;
-
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
 @SpringBootTest(classes = { LevelAutoConfiguration.class })
 public class LevelWriteTest {

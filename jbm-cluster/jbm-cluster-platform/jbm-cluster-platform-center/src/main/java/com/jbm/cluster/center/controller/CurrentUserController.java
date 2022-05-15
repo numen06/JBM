@@ -7,7 +7,7 @@ import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.cluster.common.security.utils.SecurityUtils;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;

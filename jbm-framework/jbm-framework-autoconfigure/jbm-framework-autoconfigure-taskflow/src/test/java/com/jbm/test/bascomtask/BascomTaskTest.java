@@ -2,7 +2,7 @@ package com.jbm.test.bascomtask;
 
 import com.ebay.bascomtask.annotations.Work;
 import com.ebay.bascomtask.main.Orchestrator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicReference;
 

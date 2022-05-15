@@ -15,7 +15,6 @@ package com.jbm.framework.opcua.util;
 
 import cn.hutool.core.convert.Convert;
 import com.jbm.framework.opcua.attribute.ValueType;
-import jodd.typeconverter.TypeConversionException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.UnsupportedEncodingException;
@@ -213,7 +212,7 @@ public class DriverUtils {
         try {
             valueType = ValueType.valueOf(type.toUpperCase());
         } catch (Exception e) {
-            throw new TypeConversionException(String.format("没有找到对应的类型:{}", type), e);
+            throw new TypeNotPresentException(String.format("没有找到对应的类型:{}", type), e);
         }
         return getTypeClassName(valueType);
     }

@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.util.HashMap;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 //@Import(BaiduOcrProperties.class)
 @SpringBootTest(classes = BaiduOcrAutoConfiguration.class)
 public class BaiduOcrTest {

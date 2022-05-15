@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-//@RunWith(SpringRunner.class)
+//@ExtendWith(SpringExtension.class)
 // @Import(BeetlProperties.class)
 //@SpringBootTest(classes = BeetlAutoConfiguration.class)
 public class BeetlTest {

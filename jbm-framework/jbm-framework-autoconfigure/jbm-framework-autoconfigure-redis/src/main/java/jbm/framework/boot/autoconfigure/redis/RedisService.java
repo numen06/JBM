@@ -76,6 +76,16 @@ public class RedisService {
     }
 
     /**
+     * 获取有效时间
+     *
+     * @param key Redis键
+     * @return 有效时间
+     */
+    public Long getExpire(final String key, final TimeUnit timeUnit) {
+        return redisTemplate.getExpire(key, timeUnit);
+    }
+
+    /**
      * 判断 key是否存在
      *
      * @param key 键
@@ -228,4 +238,6 @@ public class RedisService {
     public Collection<String> keys(final String pattern) {
         return redisTemplate.keys(pattern);
     }
+
+
 }

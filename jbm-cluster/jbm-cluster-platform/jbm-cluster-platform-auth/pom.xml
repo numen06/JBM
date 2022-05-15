@@ -11,9 +11,27 @@
 
     <artifactId>jbm-cluster-platform-auth2</artifactId>
 
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
-
+    <dependencies>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-node-basic</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jbm</groupId>
+                    <artifactId>jbm-cluster-common-security</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-common-basic</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-common-security</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+    </dependencies>
 </project>

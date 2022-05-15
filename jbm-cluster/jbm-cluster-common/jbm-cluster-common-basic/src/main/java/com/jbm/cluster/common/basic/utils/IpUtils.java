@@ -1,6 +1,14 @@
 package com.jbm.cluster.common.basic.utils;
 
+import cn.hutool.core.lang.Dict;
+import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HtmlUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -11,39 +19,126 @@ import java.net.UnknownHostException;
  *
  * @author wesley.zhang
  */
+@Slf4j
 public class IpUtils {
+    // IP地址查询
+    public static final String IP_URL = "http://whois.pconline.com.cn/ipJson.jsp";
+
+    // 未知地址
+    public static final String UNKNOWN = "未知";
+
+    // 未知地址
+    public static final String LOCALHOST = "127.0.0.1";
+
+    //IPV6
+    public static final String LOCALHOST_V6 = "0:0:0:0:0:0:0:1";
 
 
-    public static String getIpAddr(HttpServletRequest request)
-    {
-        if (request == null)
-        {
+    /**
+     * 获取真实IP地址
+     *
+     * @param request
+     * @return
+     */
+    public static String getRequestIp(HttpServletRequest request) {
+        String unknown = "unknown";
+        String forwarded = request.getHeader("X-Forwarded-For");
+        String ip = null;
+        if (StrUtil.isNotBlank(forwarded)) {
+            String realIp = request.getHeader("X-Real-IP");
+            if (realIp.equalsIgnoreCase(forwarded)) {
+                ip = realIp;
+            } else {
+                ip = StrUtil.split(forwarded, ",").get(0);
+            }
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        //对于通过多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
+        if (ip != null && ip.length() > 0) {
+            String[] ips = ip.split(",");
+            if (ips.length > 0) {
+                ip = ips[0];
+            }
+        }
+        return LOCALHOST_V6.equals(ip) ? LOCALHOST : ip;
+    }
+
+    public static String getIpAddr(HttpServletRequest request) {
+        if (request == null) {
             return "unknown";
         }
         String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
-        {
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
-        {
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("X-Forwarded-For");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
-        {
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("WL-Proxy-Client-IP");
         }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
-        {
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("X-Real-IP");
         }
 
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip))
-        {
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
+        //当监测到IPV6的时候返回V4的信息
+        return LOCALHOST_V6.equals(ip) ? LOCALHOST : ip;
+    }
 
-        return "0:0:0:0:0:0:0:1".equals(ip) ? "127.0.0.1" : ip;
+    /***
+     * 获取地址信息
+     * @param ip
+     * @return
+     */
+    public static String getAddressByIP(String ip) {
+        String address = UNKNOWN;
+        if (StrUtil.isBlank(ip)) {
+            return address;
+        }
+        // 内网不查询
+        ip = LOCALHOST_V6.equals(ip) ? LOCALHOST : HtmlUtil.cleanHtmlTag(ip);
+        if (NetUtil.isInnerIP(ip)) {
+            return "内网IP";
+        }
+//        if (RuoYiConfig.isAddressEnabled()) {
+        try {
+            String rspStr = HttpUtil.createGet(IP_URL)
+                    .body("ip=" + ip + "&json=true", CharsetUtil.GBK)
+                    .execute()
+                    .body();
+            if (StrUtil.isEmpty(rspStr)) {
+                log.error("获取地理位置异常 {}", ip);
+                return UNKNOWN;
+            }
+            Dict obj = JSON.parseObject(rspStr, Dict.class);
+            String region = obj.getStr("pro");
+            String city = obj.getStr("city");
+            return String.format("%s %s", region, city);
+        } catch (Exception e) {
+            log.error("获取地理位置异常 {}", ip);
+        }
+//        }
+        return address;
     }
 
     /***
@@ -162,12 +257,12 @@ public class IpUtils {
         return bytes;
     }
 
-    public static String getHostIp() {
+    public static String getLocalHostIp() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
         }
-        return "127.0.0.1";
+        return LOCALHOST;
     }
 
     public static String getHostName() {
@@ -175,6 +270,6 @@ public class IpUtils {
             return InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
         }
-        return "未知";
+        return UNKNOWN;
     }
 }

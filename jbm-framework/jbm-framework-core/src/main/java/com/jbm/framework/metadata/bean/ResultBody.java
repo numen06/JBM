@@ -2,26 +2,33 @@ package com.jbm.framework.metadata.bean;
 
 
 import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.annotation.JSONField;
-import com.google.common.collect.Maps;
+import cn.hutool.http.HttpStatus;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 /**
  * @author wesley
  */
-@ApiModel(value = "响应结果")
+@ApiModel(value = "JSON响应结果")
 @Data
+@NoArgsConstructor
 public class ResultBody<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public static final Integer SUCCESS = HttpStatus.HTTP_INTERNAL_ERROR;
+
+    public static final Integer FAIL = HttpStatus.HTTP_OK;
+
+
     /**
      * 响应编码
      */
@@ -63,13 +70,17 @@ public class ResultBody<T> implements Serializable {
     @ApiModelProperty(value = "响应时间")
     private Date timestamp = DateTime.now();
 
-    public ResultBody() {
-        super();
-    }
+//    public ResultBody() {
+//        super();
+//    }
 
 
     public static ResultBody ok() {
         return new ResultBody().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
+    }
+
+    public static ResultBody ok(Object data) {
+        return new ResultBody().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage()).data(data);
     }
 
     public static ResultBody failed() {
@@ -82,7 +93,7 @@ public class ResultBody<T> implements Serializable {
     }
 
     public ResultBody msg(String message) {
-        this.message = i18n(ErrorCode.getResultEnum(this.code).getMessage(), message);
+        this.message = message;
         return this;
     }
 
@@ -103,7 +114,7 @@ public class ResultBody<T> implements Serializable {
 
     public ResultBody put(String key, Object value) {
         if (this.extra == null) {
-            this.extra = Maps.newHashMap();
+            this.extra = new HashMap<>();
         }
         this.extra.put(key, value);
         return this;
@@ -122,23 +133,21 @@ public class ResultBody<T> implements Serializable {
                 '}';
     }
 
-    /**
-     * 错误信息配置
-     */
-    @JSONField(serialize = false, deserialize = false)
-    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("error");
-
-    /**
-     * 提示信息国际化
-     *
-     * @param message
-     * @param defaultMessage
-     * @return
-     */
-    @JSONField(serialize = false, deserialize = false)
-    private static String i18n(String message, String defaultMessage) {
-        return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
-    }
+//    /**
+//     * 错误信息配置
+//     */
+//    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("error");
+//
+//    /**
+//     * 提示信息国际化
+//     *
+//     * @param message
+//     * @param defaultMessage
+//     * @return
+//     */
+//    private static String i18n(String message, String defaultMessage) {
+//        return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
+//    }
 
     @ApiModelProperty(value = "错误信息")
     private String exception;

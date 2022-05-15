@@ -3,6 +3,7 @@ package com.jbm.framework.mvc;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -193,6 +194,10 @@ public class ServletUtils {
         } catch (UnsupportedEncodingException e) {
             return StrUtil.EMPTY;
         }
+    }
+
+    public static String getClientIP() {
+        return ServletUtil.getClientIP(getRequest());
     }
 
 //    /**

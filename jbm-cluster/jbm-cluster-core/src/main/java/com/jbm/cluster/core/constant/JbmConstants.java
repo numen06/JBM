@@ -123,6 +123,11 @@ public class JbmConstants {
     public static final String SYS_DICT_KEY = "sys_dict:";
 
     /**
+     * 防重提交 redis key
+     */
+    public static final String REPEAT_SUBMIT_KEY = "repeat_submit:";
+
+    /**
      * 资源映射路径 前缀
      */
     public static final String RESOURCE_PREFIX = "/profile";

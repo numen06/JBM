@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import com.jbm.test.model.ClassRoom;
 import com.jbm.test.model.Student;
 import jbm.framework.boot.autoconfigure.taskflow.useage.PathTask;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

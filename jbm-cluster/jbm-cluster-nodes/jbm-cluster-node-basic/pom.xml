@@ -29,6 +29,11 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-satoken</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-security</artifactId>
             <version>${project.version}</version>
         </dependency>

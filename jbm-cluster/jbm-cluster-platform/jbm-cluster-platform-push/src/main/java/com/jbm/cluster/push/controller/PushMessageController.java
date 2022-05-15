@@ -2,7 +2,7 @@ package com.jbm.cluster.push.controller;
 
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.entitys.message.PushMessage;
-import com.jbm.cluster.common.security.utils.SecurityUtils;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.service.PushMessageService;
 import com.jbm.framework.form.IdsForm;

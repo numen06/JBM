@@ -19,14 +19,14 @@ package com.jbm.test.bascomtask;
 
 import com.ebay.bascomtask.main.Orchestrator;
 import jbm.framework.boot.autoconfigure.taskflow.useage.PathTask;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 public abstract class PathTaskTestBase {
 
@@ -110,7 +110,7 @@ public abstract class PathTaskTestBase {
 
     protected TaskTestWrapper track;
 
-    @Before
+    @BeforeEach
     public void init() {
         track = new TaskTestWrapper();
     }

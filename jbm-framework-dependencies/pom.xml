@@ -65,6 +65,8 @@
         <lombok.version>1.18.12</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <jjwt.version>0.9.1</jjwt.version>
+        <redisson.version>3.17.0</redisson.version>
+        <lock4j.version>2.2.1</lock4j.version>
         <!--6.0 add-->
         <apache.commons-lang3.version>3.12.0</apache.commons-lang3.version>
         <apache.commons-io.version>2.11.0</apache.commons-io.version>
@@ -73,6 +75,7 @@
         <swagger.version>3.0.0</swagger.version>
         <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
+        <satoken.version>1.30.0.RC</satoken.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
@@ -414,30 +417,9 @@
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
-            <!--    cloud-->
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-cloud-auth</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-cloud-config</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-cloud-geteway</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-cloud-node</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-cloud-registry</artifactId>
+                <artifactId>jbm-framework-autoconfigure-i18n</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <!-- webjars -->
@@ -734,7 +716,30 @@
                 <artifactId>pinyin4j</artifactId>
                 <version>2.6.1</version>
             </dependency>
+            <!-- Sa-Token 权限认证（core核心包）, 在线文档：http://sa-token.dev33.cn/ -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-core</artifactId>
+                <version>${satoken.version}</version>
+            </dependency>
+            <!-- Sa-Token 整合 jwt -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-jwt</artifactId>
+                <version>${satoken.version}</version>
+            </dependency>
 
+            <!--redisson-->
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>lock4j-redisson-spring-boot-starter</artifactId>
+                <version>${lock4j.version}</version>
+            </dependency>
             <!-- mybatis -->
             <dependency>
                 <groupId>com.baomidou</groupId>

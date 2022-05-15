@@ -1,6 +1,6 @@
 package com.jbm.cluster.common.basic;
 
-import com.jbm.cluster.common.basic.bus.event.RemoteRefreshRouteEvent;
+import com.jbm.cluster.api.bus.event.RemoteRefreshRouteEvent;
 import jbm.framework.boot.autoconfigure.eventbus.publisher.ClusterEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

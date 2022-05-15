@@ -6,7 +6,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PoolTest {
 

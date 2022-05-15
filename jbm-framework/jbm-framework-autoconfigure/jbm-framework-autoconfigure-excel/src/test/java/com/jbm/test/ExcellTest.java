@@ -1,22 +1,21 @@
 package com.jbm.test;
 
+import jbm.framework.boot.autoconfigure.excel.ExcelAutoConfiguration;
+import jbm.framework.excel.ExcelTemplate;
+import moudles.Student;
+import moudles.Student1;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import moudles.Student;
-import moudles.Student1;
-import jbm.framework.boot.autoconfigure.excel.ExcelAutoConfiguration;
-import jbm.framework.excel.ExcelTemplate;
-
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 // @Import(BeetlProperties.class)
 @SpringBootTest(classes = ExcelAutoConfiguration.class)
 public class ExcellTest {

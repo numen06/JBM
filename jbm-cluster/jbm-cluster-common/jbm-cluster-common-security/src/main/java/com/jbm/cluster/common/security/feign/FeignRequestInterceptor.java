@@ -2,8 +2,8 @@ package com.jbm.cluster.common.security.feign;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
-import com.jbm.cluster.common.core.utils.IpUtils;
 import com.jbm.framework.mvc.ServletUtils;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -19,6 +19,7 @@ import java.util.Map;
  */
 @Component
 public class FeignRequestInterceptor implements RequestInterceptor {
+
     @Override
     public void apply(RequestTemplate requestTemplate) {
         HttpServletRequest httpServletRequest = ServletUtils.getRequest();
@@ -37,9 +38,8 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             if (StrUtil.isNotEmpty(authentication)) {
                 requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
             }
-
             // 配置客户端IP
-            requestTemplate.header("X-Forwarded-For", IpUtils.getIpAddr(ServletUtils.getRequest()));
+            requestTemplate.header("X-Forwarded-For", IpUtils.getRequestIp(ServletUtils.getRequest()));
         }
     }
 }

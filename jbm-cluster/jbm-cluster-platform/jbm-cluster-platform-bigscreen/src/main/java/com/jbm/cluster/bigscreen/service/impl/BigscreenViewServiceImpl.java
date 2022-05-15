@@ -114,8 +114,8 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             }
 
             @Override
-            public void progress(long l) {
-                log.debug("已下载[{}]bytes", l);
+            public void progress(long total, long progressSize) {
+                log.debug("已下载[{}]bytes", progressSize);
             }
 
             @Override

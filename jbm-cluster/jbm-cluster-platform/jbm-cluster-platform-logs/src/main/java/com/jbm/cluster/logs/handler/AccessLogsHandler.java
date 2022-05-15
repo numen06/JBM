@@ -4,7 +4,6 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.common.core.utils.AddressUtils;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.service.GatewayLogsService;
@@ -39,8 +38,6 @@ public class AccessLogsHandler {
     private GatewayLogsService gatewayLogsService;
 
     private CountWithTime countWithTime = new CountWithTime() {
-
-
         @Override
         protected Scheduler scheduler() {
             return Scheduler.newFixedRateSchedule(0, 1, TimeUnit.MINUTES);
@@ -52,7 +49,6 @@ public class AccessLogsHandler {
         }
     };
 
-
     @Autowired
     private StreamBridge streamBridge;
 
@@ -62,7 +58,8 @@ public class AccessLogsHandler {
             GatewayLogs logs = message.getPayload();
             if (ObjectUtil.isNotEmpty(logs)) {
                 if (StrUtil.isNotBlank(logs.getIp())) {
-                    logs.setRegion(AddressUtils.getIPRegion(logs.getIp()));
+                    //设置IP属地
+//                    logs.setRegion(AddressUtils.getIPRegion(logs.getIp()));
                 }
                 gatewayLogsService.save(logs);
             }
