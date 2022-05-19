@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author wesley.zhang
  */
-@FeignClient(contextId = "remoteUserService", value = JbmClusterConstants.BASE_SERVER, fallbackFactory = RemoteUserFallbackFactory.class)
+@FeignClient(contextId = "remoteUserService", value = JbmClusterConstants.BASE_SERVER,
+        fallbackFactory = RemoteUserFallbackFactory.class)
 public interface RemoteUserService {
     /**
      * 通过用户名查询用户信息

@@ -23,9 +23,14 @@ public enum LoginType {
     SMS("sms.code.retry.limit.exceed", "sms.code.retry.limit.count"),
 
     /**
-     * 小程序登录
+     * 扫码登录
      */
-    XCX("", "");
+    SCAN("", ""),
+
+    /**
+     * 微信登录
+     */
+    WECHAT("", "");
 
     /**
      * 登录重试超出限制提示

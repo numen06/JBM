@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.model.auth;
 
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import lombok.Data;
 
@@ -98,6 +99,9 @@ public class JbmLoginUser implements Serializable {
      * 获取登录id
      */
     public String getLoginId() {
+        if (StrUtil.isEmpty(userType)) {
+            userType = "user";
+        }
         return userType + JbmCacheConstants.LOGINID_JOIN_CODE + userId;
     }
 

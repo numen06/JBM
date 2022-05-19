@@ -8,6 +8,11 @@ public class JbmClusterConstants {
     public static final String BASE_SERVER = "jbm-cluster-platform-center";
 
     /**
+     * 服务名称
+     */
+    public static final String AUTH_SERVER = "jbm-cluster-platform-auth2";
+
+    /**
      * 文档服务
      */
     public static final String DOC_SERVER = "jbm-cluster-platform-doc";

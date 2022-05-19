@@ -88,7 +88,6 @@ public class GlobalDefaultExceptionHandler {
         return resultBody;
     }
 
-
     /**
      * 系统异常
      */

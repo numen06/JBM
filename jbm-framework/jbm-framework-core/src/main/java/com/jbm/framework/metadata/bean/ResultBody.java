@@ -1,6 +1,7 @@
 package com.jbm.framework.metadata.bean;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.http.HttpStatus;
 import com.jbm.framework.exceptions.ServiceException;
@@ -33,7 +34,7 @@ public class ResultBody<T> implements Serializable {
      * 响应编码
      */
     @ApiModelProperty(value = "响应编码:0-请求处理成功")
-    private Integer code = 0;
+    private Integer code = ErrorCode.OK.getCode();
     /**
      * 提示消息
      */
@@ -70,6 +71,9 @@ public class ResultBody<T> implements Serializable {
     @ApiModelProperty(value = "响应时间")
     private Date timestamp = DateTime.now();
 
+    @ApiModelProperty(value = "是否成功")
+    private Boolean success = true;
+
 //    public ResultBody() {
 //        super();
 //    }
@@ -89,6 +93,7 @@ public class ResultBody<T> implements Serializable {
 
     public ResultBody code(int code) {
         this.code = code;
+        this.success = this.code == ErrorCode.OK.getCode();
         return this;
     }
 
@@ -152,10 +157,6 @@ public class ResultBody<T> implements Serializable {
     @ApiModelProperty(value = "错误信息")
     private String exception;
 
-    @ApiModelProperty(value = "是否成功")
-    public Boolean getSuccess() {
-        return this.code == ErrorCode.OK.getCode();
-    }
 
     public ResultBody exception(Exception e) {
         this.exception = e.getMessage();
@@ -198,6 +199,11 @@ public class ResultBody<T> implements Serializable {
             return ResultBody.failed().data(data).msg(e.getMessage()).exception(e);
         }
         return ResultBody.failed().data(data).msg(msg).exception(e);
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = BeanUtil.beanToMap(this, false, true);
+        return result;
     }
 
 

@@ -6,7 +6,6 @@ import cn.dev33.satoken.stp.SaLoginModel;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
-import com.jbm.cluster.api.constants.UserType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.SysUserOnline;
 import com.jbm.cluster.common.basic.utils.IpUtils;
@@ -41,29 +40,24 @@ public class UserActionListener implements SaTokenListener {
      */
     @Override
     public void doLogin(String loginType, Object loginId, String tokenValue, SaLoginModel loginModel) {
-        UserType userType = UserType.getUserType(loginId.toString());
-        if (userType == UserType.SYS_USER) {
-            UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));
-            String ip = ServletUtils.getClientIP();
-            JbmLoginUser user = LoginHelper.getLoginUser();
-            //新版本直接传入
-            // String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
-            SysUserOnline userOnline = new SysUserOnline();
-            userOnline.setIpaddr(ip);
-            userOnline.setLoginLocation(IpUtils.getAddressByIP(ip));
-            userOnline.setBrowser(userAgent.getBrowser().getName());
-            userOnline.setOs(userAgent.getOs().getName());
-            userOnline.setLoginTime(System.currentTimeMillis());
-            userOnline.setTokenId(tokenValue);
-            userOnline.setUserName(user.getUsername());
-            if (ObjectUtil.isNotNull(user.getDeptName())) {
-                userOnline.setDeptName(user.getDeptName());
-            }
-            redisService.setCacheObject(JbmCacheConstants.ONLINE_TOKEN_KEY + tokenValue, userOnline, tokenConfig.getTimeout(), TimeUnit.SECONDS);
-            log.info("user doLogin, useId:{}, token:{}", loginId, tokenValue);
-        } else if (userType == UserType.APP_USER) {
-            // app端 自行根据业务编写
+        UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));
+        String ip = ServletUtils.getClientIP();
+        JbmLoginUser user = LoginHelper.getLoginUser();
+        //新版本直接传入
+        // String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+        SysUserOnline userOnline = new SysUserOnline();
+        userOnline.setIpaddr(ip);
+        userOnline.setLoginLocation(IpUtils.getAddressByIP(ip));
+        userOnline.setBrowser(userAgent.getBrowser().getName());
+        userOnline.setOs(userAgent.getOs().getName());
+        userOnline.setLoginTime(System.currentTimeMillis());
+        userOnline.setTokenId(tokenValue);
+        userOnline.setUserName(user.getUsername());
+        if (ObjectUtil.isNotNull(user.getDeptName())) {
+            userOnline.setDeptName(user.getDeptName());
         }
+        redisService.setCacheObject(JbmCacheConstants.ONLINE_TOKEN_KEY + tokenValue, userOnline, tokenConfig.getTimeout(), TimeUnit.SECONDS);
+        log.info("user doLogin, useId:{}, token:{}", loginId, tokenValue);
     }
 
     /**

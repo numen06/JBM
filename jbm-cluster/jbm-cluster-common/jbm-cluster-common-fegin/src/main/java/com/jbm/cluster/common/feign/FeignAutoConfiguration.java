@@ -1,4 +1,4 @@
-package com.jbm.cluster.common.security.feign;
+package com.jbm.cluster.common.feign;
 
 import feign.RequestInterceptor;
 import org.springframework.context.annotation.Bean;

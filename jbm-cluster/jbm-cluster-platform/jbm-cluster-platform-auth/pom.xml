@@ -23,15 +23,28 @@
                 </exclusion>
             </exclusions>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-cluster-common-basic</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-cluster-common-security</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot-starter</artifactId>
+            <version>${satoken.version}</version>
+        </dependency>
+
+        <!-- Sa-Token-OAuth2.0 模块 -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-oauth2</artifactId>
+            <version>${satoken.version}</version>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>com.jbm</groupId>-->
+        <!--            <artifactId>jbm-cluster-common-basic</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.jbm</groupId>-->
+        <!--            <artifactId>jbm-cluster-common-security</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
     </dependencies>
 </project>

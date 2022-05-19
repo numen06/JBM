@@ -1,12 +1,12 @@
 package com.jbm.cluster.auth.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.constants.UserType;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.LoginBody;
@@ -43,7 +43,7 @@ public class TokenController {
     public ResultBody<Map<String, Object>> login(@Validated LoginBody form) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(1l);
-        jbmLoginUser.setUserType(UserType.SYS_USER.getUserType());
+//        jbmLoginUser.setUserType(UserType.SYS_USER.getUserType());
         jbmLoginUser.setUsername("test");
         // 获取登录token
         LoginHelper.loginByDevice(jbmLoginUser, RequestDeviceType.PC);
@@ -61,9 +61,17 @@ public class TokenController {
 //        return ResultBody.ok().data(rspMap);
     }
 
-    @ApiOperation("登录方法")
+    @SaCheckLogin
+    @ApiOperation("获取用户信息")
     @GetMapping("userInfo")
     public ResultBody<JbmLoginUser> userInfo() {
+        return ResultBody.ok().data(LoginHelper.getLoginUser());
+    }
+
+    @SaCheckRole("test")
+    @ApiOperation("获取角色信息")
+    @GetMapping("role")
+    public ResultBody<JbmLoginUser> testRole() {
         return ResultBody.ok().data(LoginHelper.getLoginUser());
     }
 
@@ -104,7 +112,6 @@ public class TokenController {
     public ResultBody<Void> logout() {
         try {
             sysLoginService.logout(LoginHelper.getUsername());
-            StpUtil.logout();
         } catch (NotLoginException e) {
             return ResultBody.failed().msg("还没有登录");
         }

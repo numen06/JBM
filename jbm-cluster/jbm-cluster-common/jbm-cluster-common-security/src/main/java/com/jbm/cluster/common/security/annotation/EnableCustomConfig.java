@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.security.annotation;
 
 import com.jbm.cluster.common.security.config.ApplicationConfig;
-import com.jbm.cluster.common.security.feign.FeignAutoConfiguration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -18,7 +17,7 @@ import java.lang.annotation.*;
 // 开启线程异步执行
 @EnableAsync
 // 自动加载类
-@Import({ApplicationConfig.class, FeignAutoConfiguration.class})
+@Import({ApplicationConfig.class})
 public @interface EnableCustomConfig {
 
 }

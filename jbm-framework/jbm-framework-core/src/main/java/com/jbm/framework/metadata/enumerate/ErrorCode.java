@@ -10,7 +10,7 @@ public enum ErrorCode {
     /**
      * 成功
      */
-    OK(0, "success"),
+    OK(200, "success"),
     FAIL(1000, "fail"),
     ALERT(1001, "alert"),
 

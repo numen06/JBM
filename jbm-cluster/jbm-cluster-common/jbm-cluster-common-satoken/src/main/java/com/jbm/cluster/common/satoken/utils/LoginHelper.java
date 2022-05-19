@@ -4,12 +4,13 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.constants.UserType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.UserConstants;
 import com.jbm.framework.exceptions.UtilException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * 登录鉴权助手
@@ -73,6 +74,14 @@ public class LoginHelper {
     }
 
     /**
+     * 获取用户(多级缓存)
+     */
+    public static JbmLoginUser getLoginUser(String tokenValue) {
+        return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+    }
+
+
+    /**
      * 清除一级缓存 防止内存问题
      */
     public static void clearCache() {
@@ -86,14 +95,14 @@ public class LoginHelper {
         JbmLoginUser loginUser = getLoginUser();
         if (ObjectUtil.isNull(loginUser)) {
             String loginId = StpUtil.getLoginIdAsString();
-            String userId = null;
-            for (UserType value : UserType.values()) {
-                if (StrUtil.contains(loginId, value.getUserType())) {
-                    String[] strs = (StrUtil.splitToArray(loginId, JOIN_CODE));
-                    // 用户id在总是在最后
-                    userId = strs[strs.length - 1];
-                }
-            }
+            String userId = StrUtil.subAfter(loginId, JOIN_CODE, true);
+//            for (UserType value : UserType.values()) {
+//            if (StrUtil.contains(loginId, value.getUserType())) {
+//                String[] strs = (StrUtil.splitToArray(loginId, JOIN_CODE));
+//                // 用户id在总是在最后
+//                userId = strs[strs.length - 1];
+//            }
+//            }
             if (StrUtil.isBlank(userId)) {
                 throw new UtilException("登录用户: LoginId异常 => " + loginId);
             }
@@ -116,13 +125,13 @@ public class LoginHelper {
         return getLoginUser().getUsername();
     }
 
-    /**
-     * 获取用户类型
-     */
-    public static UserType getUserType() {
-        String loginId = StpUtil.getLoginIdAsString();
-        return UserType.getUserType(loginId);
-    }
+//    /**
+//     * 获取用户类型
+//     */
+//    public static UserType getUserType() {
+//        String loginId = StpUtil.getLoginIdAsString();
+//        return UserType.getUserType(loginId);
+//    }
 
     /**
      * 是否为超级管理员
@@ -136,6 +145,33 @@ public class LoginHelper {
 
     public static boolean isAdmin() {
         return isAdmin(getUserId());
+    }
+
+    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public static PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
+    /**
+     * 生成BCryptPasswordEncoder密码
+     *
+     * @param password 密码
+     * @return 加密字符串
+     */
+    public static String encryptPassword(String password) {
+        return passwordEncoder.encode(password);
+    }
+
+    /**
+     * 判断密码是否相同
+     *
+     * @param rawPassword     真实密码
+     * @param encodedPassword 加密后字符
+     * @return 结果
+     */
+    public static boolean matchesPassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
 }

@@ -44,6 +44,12 @@ jbm:
 
 # Sa-Token配置
 sa-token:
+  # OAuth2.0 配置
+  oauth2:
+    is-code: true
+    is-implicit: true
+    is-password: true
+    is-client: true
   # token名称 (同时也是cookie名称)
   token-name: Authorization
   # token有效期 设为一天 (必定过期) 单位: 秒

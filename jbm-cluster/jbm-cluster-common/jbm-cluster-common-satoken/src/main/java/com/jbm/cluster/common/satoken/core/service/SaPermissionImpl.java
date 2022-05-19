@@ -1,10 +1,9 @@
 package com.jbm.cluster.common.satoken.core.service;
 
 import cn.dev33.satoken.stp.StpInterface;
-import com.jbm.cluster.api.constants.UserType;
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +22,13 @@ public class SaPermissionImpl implements StpInterface {
     @Override
     public List<String> getPermissionList(Object loginId, String loginType) {
         JbmLoginUser loginUser = LoginHelper.getLoginUser();
-        UserType userType = UserType.getUserType(loginUser.getUserType());
-        if (userType == UserType.SYS_USER) {
-            return new ArrayList<>(loginUser.getMenuPermission());
-        } else if (userType == UserType.APP_USER) {
-            // 其他端 自行根据业务编写
-        }
-        return new ArrayList<>();
+//        UserType userType = UserType.getUserType(loginUser.getUserType());
+//        if (userType == UserType.SYS_USER) {
+        return Lists.newArrayList(loginUser.getMenuPermission());
+//        } else if (userType == UserType.APP_USER) {
+//             其他端 自行根据业务编写
+//        }
+//        return new ArrayList<>();
     }
 
     /**
@@ -38,12 +37,12 @@ public class SaPermissionImpl implements StpInterface {
     @Override
     public List<String> getRoleList(Object loginId, String loginType) {
         JbmLoginUser loginUser = LoginHelper.getLoginUser();
-        UserType userType = UserType.getUserType(loginUser.getUserType());
-        if (userType == UserType.SYS_USER) {
-            return new ArrayList<>(loginUser.getRolePermission());
-        } else if (userType == UserType.APP_USER) {
-            // 其他端 自行根据业务编写
-        }
-        return new ArrayList<>();
+//        UserType userType = UserType.getUserType(loginUser.getUserType());
+//        if (userType == UserType.SYS_USER) {
+        return Lists.newArrayList(loginUser.getRoles());
+//        } else if (userType == UserType.APP_USER) {
+        // 其他端 自行根据业务编写
+//        }
+//        return new ArrayList<>();
     }
 }

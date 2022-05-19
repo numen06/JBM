@@ -1,21 +1,24 @@
 package com.jbm.cluster.auth.service;
 
+import cn.dev33.satoken.context.SaHolder;
+import cn.dev33.satoken.oauth2.config.SaOAuth2Config;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.constants.UserType;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.auth.form.RegisterBody;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
+import com.jbm.cluster.auth.service.feign.DynamicLoginFeignClient;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
-import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.user.UserException;
@@ -24,6 +27,8 @@ import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -48,6 +53,46 @@ public class SysLoginService {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         BeanUtil.copyProperties(baseUser, jbmLoginUser);
         return jbmLoginUser;
+    }
+
+    // Sa-OAuth2 定制化配置
+    @Autowired
+    public void setSaOAuth2Config(SaOAuth2Config cfg) {
+        cfg.
+                // 未登录的视图
+                        setNotLoginView(() -> {
+                    return SaResult.error("你还没有登录");
+                }).
+                // 登录处理函数
+                        setDoLoginHandle((username, password) -> {
+                    String loginTypeValue = SaHolder.getRequest().getParam("loginType");
+                    LoginType loginType = LoginType.PASSWORD;
+                    if (StrUtil.isNotEmpty(loginTypeValue)) {
+                        loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
+                    }
+                    ResultBody<JbmLoginUser> resultBody = this.login(username, password, loginType);
+                    //如果获取成功则直接登录，失败则返回错误信息
+                    if (resultBody.getSuccess()) {
+                        LoginHelper.login(resultBody.getResult());
+                    }
+                    return resultBody;
+                }).
+                // 授权确认视图
+                        setConfirmView((clientId, scope) -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("clientId", clientId);
+                    map.put("scope", scope);
+                    return SaResult.error("确认登录");
+                })
+        ;
+    }
+
+    @Autowired
+    private DynamicLoginFeignClient dynamicLoginFeignClient;
+
+    public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
+        LoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
+        return loginAuthenticate.login(username, password, loginType.toString());
     }
 
     /**
@@ -110,13 +155,13 @@ public class SysLoginService {
         String username = registerBody.getUsername();
         String password = registerBody.getPassword();
         // 校验用户类型是否存在
-        String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
+//        String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
         // 注册用户信息
         BaseUser sysUser = new BaseUser();
         sysUser.setUserName(username);
         sysUser.setNickName(username);
-        sysUser.setPassword(SecurityUtils.encryptPassword(password));
-        sysUser.setUserType(userType);
+        sysUser.setPassword(LoginHelper.encryptPassword(password));
+//        sysUser.setUserType(userType);
 //        boolean regFlag = remoteUserService.registerUserInfo(sysUser);
 //        if (!regFlag) {
 //            throw new UserException("user.register.error");
