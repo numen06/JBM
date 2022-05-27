@@ -3,11 +3,11 @@ package com.jbm.cluster.center.controller;
 import cn.hutool.core.exceptions.ValidateException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
-import com.jbm.cluster.api.form.BaseUserForm;
-import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseUserForm;
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseRoleService;
@@ -380,6 +380,5 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             return ResultBody.error(e);
         }
     }
-
 
 }

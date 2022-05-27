@@ -5,8 +5,8 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.SaClientModel;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +43,8 @@ public class SaOAuth2TemplateImpl extends SaOAuth2Template {
     @Override
     public String getOpenid(String clientId, Object loginId) {
         // 此为模拟数据，真实环境需要从数据库查询
-        return Base64.encode(clientId + StrUtil.COLON + loginId);
+        log.info("登录过程中，获取OPENID");
+        return LoginHelper.getLoginUser(loginId).getOpenId();
     }
 
     @Override
@@ -58,7 +59,7 @@ public class SaOAuth2TemplateImpl extends SaOAuth2Template {
     public String randomAccessToken(String clientId, Object loginId, String scope) {
         String token = super.randomAccessToken(clientId, loginId, scope);
         try {
-            String tmp = StpUtil.getTokenValue();
+            String tmp = StpUtil.getTokenValueByLoginId(loginId);
             if (StrUtil.isNotEmpty(tmp)) {
                 return tmp;
             }

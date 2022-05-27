@@ -45,6 +45,9 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         if (StrUtil.isNotEmpty(authentication)) {
             requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
         }
+        // 配置客户端IP
+        requestTemplate.header(IpUtils.X_FORWARDED_FOR, IpUtils.getRequestIp(ServletUtils.getRequest()));
+        //以上标准内容注入完成之后，搜索自定义配置
         Map<String, PreRequestInterceptor> preRequestInterceptorMap = applicationContext.getBeansOfType(PreRequestInterceptor.class);
         preRequestInterceptorMap.forEach(new BiConsumer<String, PreRequestInterceptor>() {
             @Override
@@ -57,7 +60,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             }
         });
 
-        // 配置客户端IP
-        requestTemplate.header("X-Forwarded-For", IpUtils.getRequestIp(ServletUtils.getRequest()));
+
     }
+
 }

@@ -33,6 +33,8 @@ public class IpUtils {
     //IPV6
     public static final String LOCALHOST_V6 = "0:0:0:0:0:0:0:1";
 
+    public static final String X_FORWARDED_FOR = "X-Forwarded-For";
+
 
     /**
      * 获取真实IP地址
@@ -42,7 +44,7 @@ public class IpUtils {
      */
     public static String getRequestIp(HttpServletRequest request) {
         String unknown = "unknown";
-        String forwarded = request.getHeader("X-Forwarded-For");
+        String forwarded = request.getHeader(X_FORWARDED_FOR);
         String ip = null;
         if (StrUtil.isNotBlank(forwarded)) {
             String realIp = request.getHeader("X-Real-IP");
@@ -89,7 +91,7 @@ public class IpUtils {
             ip = request.getHeader("Proxy-Client-IP");
         }
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Forwarded-For");
+            ip = request.getHeader(X_FORWARDED_FOR);
         }
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("WL-Proxy-Client-IP");

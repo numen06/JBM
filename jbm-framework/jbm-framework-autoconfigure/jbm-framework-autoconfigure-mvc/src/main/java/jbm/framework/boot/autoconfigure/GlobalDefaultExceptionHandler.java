@@ -7,7 +7,10 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.WebExceptionResolve;
+import jbm.framework.boot.autoconfigure.filter.UnknownRuntimeExceptionFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,8 +21,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
+ * 全局异常
  * 统一异常处理器
  *
  * @author wesley.zhang
@@ -30,6 +36,9 @@ import javax.servlet.http.HttpServletResponse;
 @ResponseBody
 @Slf4j
 public class GlobalDefaultExceptionHandler {
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
 
     /**
@@ -62,10 +71,22 @@ public class GlobalDefaultExceptionHandler {
      * 拦截未知的运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResultBody handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
-        String requestURI = request.getRequestURI();
-        log.error("请求地址'{}',发生未知异常.", requestURI, ex);
-        ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
+    public ResultBody handleRuntimeException(RuntimeException runtimeException, HttpServletRequest httpServletRequest) {
+        String requestURI = httpServletRequest.getRequestURI();
+        log.error("请求地址'{}',发生未知异常.", requestURI, runtimeException);
+        //以上标准内容注入完成之后，搜索自定义配置
+        ResultBody resultBody = WebExceptionResolve.resolveException(runtimeException, httpServletRequest.getRequestURI());
+        Map<String, UnknownRuntimeExceptionFilter> unknownRuntimeExceptionFilterMap = applicationContext.getBeansOfType(UnknownRuntimeExceptionFilter.class);
+        unknownRuntimeExceptionFilterMap.forEach(new BiConsumer<String, UnknownRuntimeExceptionFilter>() {
+            @Override
+            public void accept(String s, UnknownRuntimeExceptionFilter preRequestInterceptor) {
+                try {
+                    preRequestInterceptor.apply(resultBody, runtimeException, httpServletRequest);
+                } catch (Exception e) {
+                    log.error("异常解析器[{}]失败", s, e);
+                }
+            }
+        });
         return resultBody;
     }
 

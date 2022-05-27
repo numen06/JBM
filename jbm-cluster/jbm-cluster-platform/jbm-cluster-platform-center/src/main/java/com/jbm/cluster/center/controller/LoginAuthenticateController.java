@@ -1,10 +1,14 @@
-package com.jbm.cluster.auth.controller;
+package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Sets;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.framework.metadata.bean.ResultBody;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,21 +21,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class LoginAuthenticateController implements ILoginAuthenticate {
 
+    @Autowired
+    private BaseUserService baseUserService;
+
     @Override
     @PostMapping(value = {"/authenticate/{loginType}/login"})
     public ResultBody<JbmLoginUser> login(String username, String password, @PathVariable("loginType") String loginType) {
-        if ("sa".equals(username) && "123456".equals(password)) {
-            JbmLoginUser jbmLoginUser = new JbmLoginUser();
-            jbmLoginUser.setRoles(Sets.newHashSet("user"));
-            jbmLoginUser.setUsername("sa");
-            jbmLoginUser.setUserId(1l);
-            return ResultBody.ok().data(jbmLoginUser);
+        UserAccount account = baseUserService.login(username);
+        if (account == null) {
+            return ResultBody.error("没有找到此用户");
         }
-        return ResultBody.error("账号名密码错误");
+        JbmLoginUser jbmLoginUser = null;
+        if (StrUtil.equals(password, account.getPassword())) {
+            jbmLoginUser = new JbmLoginUser();
+            jbmLoginUser.setUserId(account.getUserId());
+            return ResultBody.ok().data(jbmLoginUser);
+        } else {
+            return ResultBody.error("密码错误");
+        }
     }
 
     @Override
     public LoginType getLoginType() {
-        return LoginType.SMS;
+        return LoginType.PASSWORD;
     }
 }

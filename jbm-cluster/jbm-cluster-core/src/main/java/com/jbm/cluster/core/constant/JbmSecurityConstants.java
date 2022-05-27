@@ -49,4 +49,6 @@ public class JbmSecurityConstants
     public final static String AUTHORITY_PREFIX_ROLE = "ROLE_";
     public final static String AUTHORITY_PREFIX_API = "API_";
     public final static String AUTHORITY_PREFIX_ACTION = "ACTION_";
+
+    public final static String LOGIN_AUTHENTICATE_KEY = "LoginAuthenticate:";
 }

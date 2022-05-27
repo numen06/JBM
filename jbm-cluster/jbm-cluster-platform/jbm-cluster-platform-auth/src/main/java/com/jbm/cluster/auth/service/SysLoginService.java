@@ -15,6 +15,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.form.RegisterBody;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.auth.service.feign.DynamicLoginFeignClient;
@@ -24,6 +25,7 @@ import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,7 @@ import java.util.function.Supplier;
  *
  * @author wesley.zhang
  */
+@Slf4j
 @Service
 public class SysLoginService {
     @Autowired(required = false)
@@ -73,6 +76,7 @@ public class SysLoginService {
                     ResultBody<JbmLoginUser> resultBody = this.login(username, password, loginType);
                     //如果获取成功则直接登录，失败则返回错误信息
                     if (resultBody.getSuccess()) {
+                        log.info("获取到了用户信息,触发登录");
                         LoginHelper.login(resultBody.getResult());
                     }
                     return resultBody;
@@ -91,8 +95,10 @@ public class SysLoginService {
     private DynamicLoginFeignClient dynamicLoginFeignClient;
 
     public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
-        LoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
-        return loginAuthenticate.login(username, password, loginType.toString());
+        ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
+        //将密码加密传入服务
+        String encryptPassword = LoginHelper.encryptPassword(password);
+        return ILoginAuthenticate.login(username, encryptPassword, loginType.toString());
     }
 
     /**
@@ -104,7 +110,7 @@ public class SysLoginService {
 
         checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, baseUserResultBody.getResult().getPassword()));
         // 获取登录token
-        LoginHelper.loginByDevice(conventJbmLoginUser(baseUserResultBody.getResult()), RequestDeviceType.PC);
+        LoginHelper.loginByDevice(conventJbmLoginUser(baseUserResultBody.getResult()), RequestDeviceType.PC.getDevice());
 
 //        recordLogininfor(username, JbmConstants.LOGIN_SUCCESS, MessageUtils.message("user.login.success"));
 //        return StpUtil.getTokenValue();
@@ -143,8 +149,8 @@ public class SysLoginService {
 //        return StpUtil.getTokenValue();
 //    }
 
-    public void logout(String loginName) {
-        StpUtil.logout();
+    public void logout(Object loginId) {
+        LoginHelper.loginout(loginId);
 //        recordLogininfor(loginName, JbmConstants.LOGOUT, MessageUtils.message("user.logout.success"));
     }
 

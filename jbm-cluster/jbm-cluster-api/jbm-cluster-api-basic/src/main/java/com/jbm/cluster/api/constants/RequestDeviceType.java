@@ -11,7 +11,7 @@ import lombok.Getter;
  *
  * @author Lion Li
  */
-@JbmDicType(typeName = "区域类型")
+@JbmDicType(typeName = "设备终端")
 public enum RequestDeviceType {
 
     /**

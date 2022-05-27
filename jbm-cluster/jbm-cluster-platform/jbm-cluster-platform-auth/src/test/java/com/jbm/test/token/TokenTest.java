@@ -1,6 +1,10 @@
 package com.jbm.test.token;
 
 import cn.dev33.satoken.session.SaSession;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.jwt.JWTUtil;
+import cn.hutool.jwt.signers.JWTSigner;
+import cn.hutool.jwt.signers.JWTSignerUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.parser.Feature;
@@ -19,5 +23,14 @@ public class TokenTest {
         SaSession saSession = JSON.parseObject(data, new TypeReference<SaSession>() {
         }.getType(), Feature.SupportNonPublicField);
         System.out.println(saSession);
+    }
+
+    @Test
+    public void testJwt() {
+        byte[] key = "123".getBytes();
+        String jwt = JWTUtil.createToken(MapUtil.of("test", "1"), JWTSignerUtil.hs256(key));
+        System.out.println(jwt);
+        String body = JSON.toJSONString(JWTUtil.parseToken(jwt).setKey(key).getPayloads());
+        System.out.println(body);
     }
 }

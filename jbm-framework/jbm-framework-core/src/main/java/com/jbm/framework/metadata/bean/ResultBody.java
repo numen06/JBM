@@ -159,7 +159,11 @@ public class ResultBody<T> implements Serializable {
 
 
     public ResultBody exception(Exception e) {
-        this.exception = e.getMessage();
+        if (e == null) {
+            exception = null;
+        } else {
+            this.exception = e.getMessage();
+        }
         return this;
     }
 

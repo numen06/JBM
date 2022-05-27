@@ -1,5 +1,7 @@
 package com.jbm.cluster.common.satoken.utils;
 
+import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -11,6 +13,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 登录鉴权助手
@@ -32,16 +37,24 @@ public class LoginHelper {
 
     private static final ThreadLocal<JbmLoginUser> LOGIN_CACHE = new ThreadLocal<>();
 
+    private Map<String, StpLogic> userTypes = new HashMap<>();
+
     /**
      * 登录系统
      *
      * @param loginUser 登录用户信息
      */
     public static void login(JbmLoginUser loginUser) {
-        LOGIN_CACHE.set(loginUser);
-        StpUtil.login(loginUser.getLoginId());
-        setLoginUser(loginUser);
+        String device = ObjectUtil.isNull(loginUser.getDevice()) ? RequestDeviceType.PC.getDevice() : loginUser.getDevice();
+        loginByDevice(loginUser, device);
     }
+
+
+    public static void loginout(Object loginId) {
+        StpUtil.logout(loginId);
+        clearCache();
+    }
+
 
     /**
      * 登录系统 基于 设备类型
@@ -49,9 +62,12 @@ public class LoginHelper {
      *
      * @param loginUser 登录用户信息
      */
-    public static void loginByDevice(JbmLoginUser loginUser, RequestDeviceType deviceType) {
+    public static void loginByDevice(JbmLoginUser loginUser, String device) {
+        if (StrUtil.isNotEmpty(loginUser.getUserType())) {
+            StpUtil.setStpLogic(SaManager.getStpLogic(loginUser.getUserType()));
+        }
         LOGIN_CACHE.set(loginUser);
-        StpUtil.login(loginUser.getLoginId(), deviceType.getDevice());
+        StpUtil.login(loginUser.getLoginId(), device);
         setLoginUser(loginUser);
     }
 
@@ -72,6 +88,16 @@ public class LoginHelper {
         }
         return (JbmLoginUser) StpUtil.getTokenSession().get(LOGIN_USER_KEY);
     }
+
+
+    /**
+     * 获取用户(多级缓存)
+     */
+    public static JbmLoginUser getLoginUser(Object loginId) {
+        String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+        return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+    }
+
 
     /**
      * 获取用户(多级缓存)

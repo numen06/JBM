@@ -1,15 +1,15 @@
 package com.jbm.cluster.common.satoken.config;
 
-import cn.dev33.satoken.jwt.StpLogicJwtForMixin;
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
-import cn.dev33.satoken.stp.StpLogic;
+import com.jbm.cluster.common.satoken.core.AdminLogicJwt;
+import com.jbm.cluster.common.satoken.core.UserLogicJwt;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- *
  * 功能点	Simple 简单模式	Mixin 混入模式	Stateless 无状态模式
  * Token风格	jwt风格	jwt风格	jwt风格
  * 登录数据存储	Redis中	Token中	Token中
@@ -38,9 +38,22 @@ public class SaTokenConfiguration {
 
     // Sa-Token 整合 jwt (Simple 简单模式)
     @Bean
-    public StpLogic getStpLogicJwt() {
-        return new StpLogicJwtForSimple();
+    public StpLogicJwtForSimple getStpLogicJwt() {
+        SaManager.putStpLogic(new UserLogicJwt());
+        SaManager.putStpLogic(new AdminLogicJwt());
+        StpLogicJwtForSimple stpLogicJwtForSimple = new StpLogicJwtForSimple();
+        return stpLogicJwtForSimple;
     }
+
+//    @Bean
+//    public UserLogicJwt getUserLogicJwt() {
+//        return new UserLogicJwt();
+//    }
+//
+//    @Bean
+//    public AdminLogicJwt getAdminLogicJwt() {
+//        return new AdminLogicJwt();
+//    }
 
     @Bean
     public RedisSaTokenDao redisSaTokenDao() {

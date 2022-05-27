@@ -2,24 +2,33 @@ package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.id.SaIdUtil;
+import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
+import cn.dev33.satoken.interceptor.SaRouteInterceptor;
+import cn.dev33.satoken.router.SaRouter;
 import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
+import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
-import com.jbm.framework.metadata.bean.ResultBody;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @Created wesley.zhang
  * @Date 2022/4/27 2:46
  * @Description TODO
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties({JbmClusterProperties.class, JbmApiScanProperties.class})
 public class JbmSecurityConfiguration implements WebMvcConfigurer {
@@ -35,6 +44,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
 
     /**
      * 注册sa-token的拦截器
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册路由拦截器，自定义验证规则
@@ -58,11 +68,10 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
      */
     @Bean
     public SaServletFilter getSaServletFilter() {
-        return new SaServletFilter()
+        return new SaServletSuperFilter()
                 .addInclude("/**")
                 .addExclude("/actuator/**", "/v2/api-docs/**")
-                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken())
-                .setError(e -> ResultBody.failed().msg("服务认证失败，无法访问系统资源").httpStatus(HttpStatus.UNAUTHORIZED.value()).code(HttpStatus.UNAUTHORIZED.value()));
+                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 
 //    @Autowired

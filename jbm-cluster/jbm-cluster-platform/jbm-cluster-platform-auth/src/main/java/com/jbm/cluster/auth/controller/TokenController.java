@@ -3,6 +3,7 @@ package com.jbm.cluster.auth.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
@@ -46,7 +47,7 @@ public class TokenController {
 //        jbmLoginUser.setUserType(UserType.SYS_USER.getUserType());
         jbmLoginUser.setUsername("test");
         // 获取登录token
-        LoginHelper.loginByDevice(jbmLoginUser, RequestDeviceType.PC);
+        LoginHelper.loginByDevice(jbmLoginUser, RequestDeviceType.PC.getDevice());
         SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
         AccessTokenResult accessTokenResult = new AccessTokenResult();
         accessTokenResult.setAccessToken(tokenInfo.getTokenValue());
@@ -111,7 +112,7 @@ public class TokenController {
     @DeleteMapping("logout")
     public ResultBody<Void> logout() {
         try {
-            sysLoginService.logout(LoginHelper.getUsername());
+            sysLoginService.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
         } catch (NotLoginException e) {
             return ResultBody.failed().msg("还没有登录");
         }
