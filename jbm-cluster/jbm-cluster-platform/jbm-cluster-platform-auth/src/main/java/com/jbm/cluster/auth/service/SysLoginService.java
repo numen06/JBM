@@ -97,8 +97,8 @@ public class SysLoginService {
     public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
         ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
         //将密码加密传入服务
-        String encryptPassword = LoginHelper.encryptPassword(password);
-        return ILoginAuthenticate.login(username, encryptPassword, loginType.toString());
+//        String encryptPassword = LoginHelper.encryptPassword(password);
+        return ILoginAuthenticate.login(username, password, loginType.toString());
     }
 
     /**

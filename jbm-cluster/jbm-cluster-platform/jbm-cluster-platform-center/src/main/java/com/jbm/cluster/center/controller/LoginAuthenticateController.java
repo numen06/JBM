@@ -1,12 +1,11 @@
 package com.jbm.cluster.center.controller;
 
-import cn.hutool.core.util.StrUtil;
-import com.google.common.collect.Sets;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +31,7 @@ public class LoginAuthenticateController implements ILoginAuthenticate {
             return ResultBody.error("没有找到此用户");
         }
         JbmLoginUser jbmLoginUser = null;
-        if (StrUtil.equals(password, account.getPassword())) {
+        if (SecurityUtils.getPasswordEncoder().matches(password, account.getPassword())) {
             jbmLoginUser = new JbmLoginUser();
             jbmLoginUser.setUserId(account.getUserId());
             return ResultBody.ok().data(jbmLoginUser);
