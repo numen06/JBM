@@ -48,7 +48,7 @@ public class IpUtils {
         String ip = null;
         if (StrUtil.isNotBlank(forwarded)) {
             String realIp = request.getHeader("X-Real-IP");
-            if (realIp.equalsIgnoreCase(forwarded)) {
+            if (StrUtil.equalsIgnoreCase(realIp, forwarded)) {
                 ip = realIp;
             } else {
                 ip = StrUtil.split(forwarded, ",").get(0);

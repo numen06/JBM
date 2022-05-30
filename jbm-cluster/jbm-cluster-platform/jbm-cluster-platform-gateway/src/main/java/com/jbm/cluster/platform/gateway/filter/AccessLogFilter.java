@@ -40,7 +40,6 @@ public class AccessLogFilter implements WebFilter {
         DataBufferFactory bufferFactory = response.bufferFactory();
         StringBuffer responseBodys = new StringBuffer();
         ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(response) {
-
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 if (body instanceof Flux) {

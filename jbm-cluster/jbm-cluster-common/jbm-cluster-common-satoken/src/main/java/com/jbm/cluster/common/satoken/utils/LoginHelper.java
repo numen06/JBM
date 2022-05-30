@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.satoken.utils;
 
 import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -47,6 +48,14 @@ public class LoginHelper {
     public static void login(JbmLoginUser loginUser) {
         String device = ObjectUtil.isNull(loginUser.getDevice()) ? RequestDeviceType.PC.getDevice() : loginUser.getDevice();
         loginByDevice(loginUser, device);
+    }
+
+    /**
+     * 获取当前OAuthToken,登出
+     */
+    public static void loginout() {
+        StpUtil.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
+        clearCache();
     }
 
 

@@ -34,7 +34,7 @@ public class WebExceptionResolve {
      * @param ex
      * @return
      */
-    public ResultBody resolveException(Exception ex, String path) {
+    public ResultBody resolveException(Throwable ex, String path) {
         ErrorCode code = null;
         int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
         String message = ex.getMessage();
@@ -153,7 +153,7 @@ public class WebExceptionResolve {
      * @param exception
      * @return
      */
-    private ResultBody buildBody(Exception exception, ErrorCode errorCode, String path, int httpStatus) {
+    public ResultBody buildBody(Throwable exception, ErrorCode errorCode, String path, int httpStatus) {
         String errorMsg = null;
         if (errorCode == null) {
             HttpStatus status = HttpStatus.valueOf(httpStatus);

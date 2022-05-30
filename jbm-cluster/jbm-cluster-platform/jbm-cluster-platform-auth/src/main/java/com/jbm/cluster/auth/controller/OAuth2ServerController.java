@@ -113,7 +113,7 @@ public class OAuth2ServerController {
     @DeleteMapping("logout")
     public ResultBody<Void> logout() {
         try {
-            sysLoginService.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
+            sysLoginService.logout(null);
         } catch (NotLoginException e) {
             return ResultBody.failed().msg("还没有登录");
         }

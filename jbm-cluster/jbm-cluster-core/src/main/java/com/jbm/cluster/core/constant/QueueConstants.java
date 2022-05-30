@@ -41,4 +41,10 @@ public class QueueConstants {
      * 集群事件路由器
      */
     public static final String QUEUE_CLUSTER_EVENT_EXCHANGE = QUEUE_CLUSTER_EVENT + ".exchange";
+
+    /**
+     * 访问日志
+     */
+    public static final String ACCESS_LOGS_STEAMM = "accessLogs-in-0";
+
 }

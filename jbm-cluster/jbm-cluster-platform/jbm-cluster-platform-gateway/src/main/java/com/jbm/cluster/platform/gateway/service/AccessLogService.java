@@ -8,7 +8,7 @@ import org.springframework.web.server.ServerWebExchange;
  * @Description TODO
  */
 public interface AccessLogService {
-    void sendLog(ServerWebExchange exchange, Exception ex);
+    void sendLog(ServerWebExchange exchange, Throwable ex);
 
-    void sendLog(ServerWebExchange exchange, String toString, Exception ex);
+    void sendLog(ServerWebExchange exchange, String toString, Throwable ex);
 }

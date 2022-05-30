@@ -150,7 +150,7 @@ public class SysLoginService {
 //    }
 
     public void logout(Object loginId) {
-        LoginHelper.loginout(loginId);
+        LoginHelper.loginout();
 //        recordLogininfor(loginName, JbmConstants.LOGOUT, MessageUtils.message("user.logout.success"));
     }
 

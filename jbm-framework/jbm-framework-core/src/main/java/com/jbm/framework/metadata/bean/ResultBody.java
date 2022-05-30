@@ -158,7 +158,7 @@ public class ResultBody<T> implements Serializable {
     private String exception;
 
 
-    public ResultBody exception(Exception e) {
+    public ResultBody exception(Throwable e) {
         if (e == null) {
             exception = null;
         } else {

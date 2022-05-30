@@ -1,9 +1,11 @@
 package com.jbm.cluster.platform.gateway.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.platform.gateway.service.AccessLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.Charsets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.gateway.support.NotFoundException;
@@ -30,6 +32,8 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
 
     @Autowired
     private WebExceptionResolve webExceptionResolve;
+    @Autowired
+    private AccessLogService accessLogService;
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
@@ -45,11 +49,10 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
             return Mono.empty();
         }
         if (ex instanceof NotFoundException) {
-            resultBody = ResultBody.failed().code(ErrorCode.SERVICE_UNAVAILABLE.getCode()).msg(ErrorCode.SERVICE_UNAVAILABLE.getMessage())
-                    .httpStatus(HttpStatus.SERVICE_UNAVAILABLE.value()).path(request.getURI().getPath());
-            log.error("==> 错误解析:{}", resultBody);
+            resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, exchange.getRequest().getURI().getPath(), HttpStatus.SERVICE_UNAVAILABLE.value());
+//            log.error("==> 错误解析:{}", resultBody);
         } else {
-            resultBody = webExceptionResolve.resolveException((Exception) ex, exchange.getRequest().getURI().getPath());
+            resultBody = webExceptionResolve.resolveException(ex, exchange.getRequest().getURI().getPath());
         }
         /**
          * 参考AbstractErrorWebExceptionHandler
@@ -57,8 +60,9 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
-
         log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
+        //保存错误日志
+        accessLogService.sendLog(exchange, ex);
         response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         DataBuffer dataBuffer = response.bufferFactory().wrap(JSON.toJSONBytes(resultBody));

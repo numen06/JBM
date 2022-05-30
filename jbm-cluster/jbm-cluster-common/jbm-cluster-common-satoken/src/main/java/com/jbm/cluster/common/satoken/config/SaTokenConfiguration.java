@@ -6,6 +6,8 @@ import com.jbm.cluster.common.satoken.core.AdminLogicJwt;
 import com.jbm.cluster.common.satoken.core.UserLogicJwt;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
+import jbm.framework.boot.autoconfigure.filter.UnknownRuntimeExceptionFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Lion Li
  */
 @Configuration
+@ConditionalOnClass(UnknownRuntimeExceptionFilter.class)
 public class SaTokenConfiguration {
 
     // Sa-Token 整合 jwt (Simple 简单模式)
@@ -63,6 +66,13 @@ public class SaTokenConfiguration {
     @Bean
     public SaPermissionImpl saPermissionImpl() {
         return new SaPermissionImpl();
+    }
+
+
+    @Bean
+    @ConditionalOnClass(UnknownRuntimeExceptionFilter.class)
+    public SaUnknownRuntimeExceptionFilter saUnknownRuntimeExceptionFilter() {
+        return new SaUnknownRuntimeExceptionFilter();
     }
 
 

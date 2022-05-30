@@ -3,17 +3,21 @@ package com.jbm.cluster.platform.gateway.service.impl;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
+import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
 import com.jbm.cluster.platform.gateway.service.AccessLogService;
 import com.jbm.cluster.platform.gateway.utils.ReactiveWebUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -68,12 +72,15 @@ public class StreamAccessLogService implements AccessLogService {
     }
 
     @Override
-    public void sendLog(ServerWebExchange exchange, Exception ex) {
+    public void sendLog(ServerWebExchange exchange, Throwable ex) {
         this.sendLog(exchange, null, ex);
     }
 
+    @Autowired
+    private StreamBridge streamBridge;
+
     @Override
-    public void sendLog(ServerWebExchange exchange, String responseBody, Exception ex) {
+    public void sendLog(ServerWebExchange exchange, String responseBody, Throwable ex) {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
         try {
@@ -93,7 +100,10 @@ public class StreamAccessLogService implements AccessLogService {
             }
             String ip = ReactiveWebUtils.getRemoteAddress(exchange);
             String userAgent = headers.get(HttpHeaders.USER_AGENT);
-            Object requestTime = exchange.getAttribute(GatewayContext.REQUEST_TIME_HEAD);
+            String requestTime = exchange.getAttribute(GatewayContext.REQUEST_TIME_HEAD);
+            if (StrUtil.isBlank(requestTime)) {
+                requestTime = DateUtil.now();
+            }
             String error = null;
             if (ex != null) {
                 error = ex.getMessage();
@@ -103,7 +113,7 @@ public class StreamAccessLogService implements AccessLogService {
             }
             GatewayLogInfo gatewayLogs = new GatewayLogInfo();
             gatewayLogs.setServiceId(serviceId == null ? defaultServiceId : serviceId);
-            gatewayLogs.setRequestTime(DateUtil.parseDateTime(requestTime.toString()));
+            gatewayLogs.setRequestTime(DateUtil.parseDateTime(requestTime));
             gatewayLogs.setHttpStatus(httpStatus);
             gatewayLogs.setHeaders(JSONObject.toJSONString(headers));
             gatewayLogs.setPath(requestPath);
@@ -127,7 +137,8 @@ public class StreamAccessLogService implements AccessLogService {
 //                }
 //            });
             //发送数据
-            log.info("假装发送了数据:{}", JSON.toJSONString(gatewayLogs));
+            streamBridge.send(QueueConstants.ACCESS_LOGS_STEAMM, JSON.toJSONString(gatewayLogs));
+//            log.info("假装发送了数据:{}", JSON.toJSONString(gatewayLogs));
 //            amqpTemplate.convertAndSend(QueueConstants.QUEUE_ACCESS_LOGS, JSON.toJSONString(gatewayLogs));
         } catch (Exception e) {
             log.error("access logs save error:{}", e);

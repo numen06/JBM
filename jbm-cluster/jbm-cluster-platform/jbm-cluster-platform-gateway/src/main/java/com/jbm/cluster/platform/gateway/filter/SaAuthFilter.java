@@ -2,13 +2,18 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.router.SaRouter;
-import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.platform.gateway.config.properties.IgnoreWhiteProperties;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * [Sa-Token 权限认证] 拦截器
@@ -17,15 +22,28 @@ import org.springframework.http.HttpStatus;
  */
 @Configuration
 public class SaAuthFilter {
+
+    /**
+     * 不需要拦截地址
+     */
+    private static final String[] excludeUrls = {"/favicon.ico", "/static/favicon.ico", "/actuator/**"};
+
+    @Bean
+    public RedisSaTokenDao redisSaTokenDao() {
+        return new RedisSaTokenDao();
+    }
+
     // 注册 Sa-Token全局过滤器
     @Bean
     public SaReactorFilter getSaReactorFilter(IgnoreWhiteProperties ignoreWhite) {
+        Set<String> whiteList = new HashSet<>();
+        CollUtil.addAll(whiteList, excludeUrls);
+        CollUtil.addAll(whiteList, ignoreWhite.getWhites());
         return new SaReactorFilter()
                 // 拦截地址
                 .addInclude("/**")
                 // 开放地址
-                .setExcludeList(ignoreWhite.getWhites())
-                .addExclude("/favicon.ico", "/static/favicon.ico", "/actuator/**")
+                .addExclude(ArrayUtil.toArray(whiteList, String.class))
                 // 鉴权方法：每次访问进入
                 .setAuth(obj -> {
                     // 登录校验 -- 拦截所有路由

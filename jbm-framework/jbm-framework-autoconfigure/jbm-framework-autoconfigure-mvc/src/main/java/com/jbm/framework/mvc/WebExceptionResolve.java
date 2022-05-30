@@ -144,7 +144,7 @@ public class WebExceptionResolve {
         }
         ResultBody resultBody = ResultBody.failed().code(resultCode.getCode())
                 .msg("服务器发生错误,请联系管理员你处理。").path(path).httpStatus(httpStatus).exception(exception);
-        log.error("==> error:{}", resultBody, exception);
+//        log.error("==> error:{}", resultBody, exception);
         return resultBody;
     }
 
