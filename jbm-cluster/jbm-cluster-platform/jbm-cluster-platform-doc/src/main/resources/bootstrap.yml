@@ -38,6 +38,8 @@ jbm:
     permit-all:
       - /get/**
       - /download/**
+      - /getViewUrl/**
+      - /v1/3rd/file/**
 swagger2:
   enabled: true
   description: 平台文档服务器

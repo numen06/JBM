@@ -21,7 +21,7 @@ public class VCoderService {
     }
 
     public LineCaptcha build(String scope, Integer width, Integer height, Integer codeCount) {
-        LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(ObjectUtil.defaultIfNull(width, 200), ObjectUtil.defaultIfNull(height, 100), ObjectUtil.defaultIfNull(codeCount, 5), 100);
+        LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(ObjectUtil.defaultIfNull(width, 200), ObjectUtil.defaultIfNull(height, 100), ObjectUtil.defaultIfNull(codeCount, 5), 150);
 //        request.getSession().setAttribute("vcode", lineCaptcha.getCode());
         String key = this.getVcodePath(scope, lineCaptcha.getCode());
         stringRedisTemplate.opsForValue().set(key, lineCaptcha.getCode(), 1, TimeUnit.MINUTES);
