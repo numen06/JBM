@@ -1,6 +1,7 @@
 package com.jbm.cluster.auth.service.impl;
 
 import com.jbm.cluster.auth.service.ClientCache;
+import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.ClientDetails;
@@ -8,6 +9,8 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author: wesley.zhang
@@ -22,6 +25,18 @@ public class ClientDetailsServiceImpl implements ClientDetailsService {
     @Autowired
     private ClientCache clientCache;
 
+
+    @Autowired
+    private JbmOAuth2ClientProperties clientProperties;
+
+    @PostConstruct
+    public void loadDefClient() {
+        try {
+            this.clientCache.getAppClientInfo(clientProperties.getOauth2().get("admin").getClientId());
+        } catch (Exception e) {
+            log.warn("初始化加载客户端失败");
+        }
+    }
 
     @Override
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
