@@ -3,10 +3,14 @@ package com.jbm.cluster.center.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseApiService;
+import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -23,7 +27,7 @@ import java.util.Map;
  */
 @Api(tags = "系统接口资源管理")
 @RestController
-public class BaseApiController {
+public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiService> {
     @Autowired
     private BaseApiService apiService;
     @Autowired

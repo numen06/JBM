@@ -43,6 +43,10 @@ public class BaseAccountLogs extends MasterDataIdEntity {
     private String accountType;
     @ApiModelProperty(value = "登录帐户ID")
     private String accountId;
+    @ApiModelProperty(value = "登录成功与否")
+    private Boolean loginStatus;
     @ApiModelProperty(value = "登录域名")
     private String domain;
+    @ApiModelProperty(value = "消息")
+    private String message;
 }

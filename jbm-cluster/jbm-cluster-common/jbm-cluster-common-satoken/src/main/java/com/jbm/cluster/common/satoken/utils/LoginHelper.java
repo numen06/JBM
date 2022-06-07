@@ -1,11 +1,13 @@
 package com.jbm.cluster.common.satoken.utils;
 
 import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.jwt.SaJwtUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.jwt.JWTUtil;
 import com.jbm.cluster.api.constants.RequestDeviceType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.UserConstants;
@@ -72,9 +74,9 @@ public class LoginHelper {
      * @param loginUser 登录用户信息
      */
     public static void loginByDevice(JbmLoginUser loginUser, String device) {
-        if (StrUtil.isNotEmpty(loginUser.getUserType())) {
-            StpUtil.setStpLogic(SaManager.getStpLogic(loginUser.getUserType()));
-        }
+//        if (StrUtil.isNotEmpty(loginUser.getUserType())) {
+//            StpUtil.setStpLogic(SaManager.getStpLogic(loginUser.getUserType()));
+//        }
         LOGIN_CACHE.set(loginUser);
         StpUtil.login(loginUser.getLoginId(), device);
         setLoginUser(loginUser);

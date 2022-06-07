@@ -256,7 +256,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     public void addLoginLog(BaseAccountLogs log) {
         QueryWrapper<BaseAccountLogs> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .eq(BaseAccountLogs::getAccountId, log.getAccountId())
+//                .eq(BaseAccountLogs::getAccountId, log.getAccountId())
                 .eq(BaseAccountLogs::getUserId, log.getUserId());
         int count = baseAccountLogsMapper.selectCount(queryWrapper);
         log.setLoginTime(new Date());

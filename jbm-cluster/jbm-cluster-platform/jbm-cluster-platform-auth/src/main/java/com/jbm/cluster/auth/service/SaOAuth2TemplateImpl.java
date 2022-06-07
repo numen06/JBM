@@ -23,15 +23,12 @@ public class SaOAuth2TemplateImpl extends SaOAuth2Template {
     @Override
     public SaClientModel getClientModel(String clientId) {
         // 此为模拟数据，真实环境需要从数据库查询
-        if ("1001".equals(clientId)) {
-            return new SaClientModel()
-                    .setClientId("10001")
-                    .setClientSecret("aaaa-bbbb-cccc-dddd-eeee")
-                    .setAllowUrl("*")
-                    .setContractScope("userinfo")
-                    .setIsAutoMode(true);
-        }
-        return null;
+        return new SaClientModel()
+                .setClientId(clientId)
+                .setClientSecret("aaaa-bbbb-cccc-dddd-eeee")
+                .setAllowUrl("*")
+                .setContractScope("userinfo")
+                .setIsAutoMode(true);
     }
 
     @Override

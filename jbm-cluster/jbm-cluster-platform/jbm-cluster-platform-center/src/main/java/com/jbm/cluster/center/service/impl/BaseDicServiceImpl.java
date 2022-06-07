@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Service
 public class BaseDicServiceImpl extends MasterDataTreeServiceImpl<BaseDic> implements BaseDicService {
-    private final static String CACHE_KEY = "dicMap";
+    private final static String CACHE_KEY = "BaseDic";
 
     @Override
     @Cacheable(value = CACHE_KEY)

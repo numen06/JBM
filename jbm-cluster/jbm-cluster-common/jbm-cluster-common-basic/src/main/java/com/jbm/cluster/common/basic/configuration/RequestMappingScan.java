@@ -4,6 +4,7 @@ import cn.hutool.core.util.BooleanUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.api.JbmApi;
 import com.jbm.cluster.api.model.api.JbmApiResource;
+import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.configuration.apis.ApiBuild;
 import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.util.ClassUtils;
@@ -67,9 +68,8 @@ public class RequestMappingScan implements ApplicationListener<ApplicationReadyE
             public void run() {
                 try {
                     // 获取发送器
-                    final StreamBridge streamBridge = SpringContextHolder.getBean(StreamBridge.class);
-                    final Message<JbmApiResource> message = MessageBuilder.withPayload(jbmApiResource).build();
-                    streamBridge.send(ClassUtils.getShortBeanName(JbmApiResource.class) + "-in-0", message);
+                    final JbmClusterStreamTemplate streamTemplate = SpringContextHolder.getBean(JbmClusterStreamTemplate.class);
+                    streamTemplate.sendApiResource(jbmApiResource);
                 } catch (Exception e) {
                     log.error("发送Api资源失败:{}", e);
                 }

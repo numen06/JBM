@@ -1,14 +1,16 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
-import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.PasswordUtils;
@@ -26,29 +28,30 @@ import java.util.List;
  */
 @Api(tags = "当前登陆用户")
 @RestController
+@RequestMapping("/current")
 public class CurrentUserController {
 
     @Autowired
     private BaseUserService baseUserService;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
-//    @Autowired
-//    private RedisTokenStore redisTokenStore;
 
     /**
      * 修改当前登录用户密码
      *
      * @return
      */
+    @SaCheckLogin
     @ApiOperation(value = "修改当前登录用户密码", notes = "修改当前登录用户密码")
-    @GetMapping("/current/user/rest/password")
+    @GetMapping("/user/rest/password")
     public ResultBody restPassword(@RequestParam(value = "password") String password) {
         baseUserService.updatePassword(SecurityUtils.getLoginUser().getUserId(), password);
         return ResultBody.ok();
     }
 
+    @SaCheckLogin
     @ApiOperation(value = "修改当前用户密码2", notes = "修改用户密码")
-    @PostMapping("/current/user/update/password")
+    @PostMapping("/user/update/password")
     public ResultBody updatePassword(@RequestBody BaseUserForm baseUserForm) {
         Long userId = SecurityUtils.getLoginUser().getUserId();
         try {
@@ -60,6 +63,14 @@ public class CurrentUserController {
         return ResultBody.ok();
     }
 
+    @SaCheckLogin
+    @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
+    @GetMapping("/user/account")
+    public ResultBody<UserAccount> userAccount() {
+        UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
+        return ResultBody.ok().data(userAccount);
+    }
+
     /**
      * 修改当前登录用户基本信息
      *
@@ -68,8 +79,9 @@ public class CurrentUserController {
      * @param avatar
      * @return
      */
+    @SaCheckLogin
     @ApiOperation(value = "修改当前登录用户基本信息", notes = "修改当前登录用户基本信息")
-    @PostMapping("/current/user/update")
+    @PostMapping("/user/update")
     public ResultBody updateUserInfo(
             @RequestParam(value = "nickName") String nickName,
             @RequestParam(value = "userDesc", required = false) String userDesc,
@@ -103,10 +115,12 @@ public class CurrentUserController {
      *
      * @return
      */
+//    @SaCheckLogin
     @ApiOperation(value = "获取当前登录用户已分配菜单权限", notes = "获取当前登录用户已分配菜单权限")
-    @GetMapping("/current/user/menu")
+    @GetMapping("/user/menu")
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(), JbmConstants.ROOT.equals(SecurityUtils.getLoginUser().getUsername()));
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(),
+                LoginHelper.isAdmin());
         return ResultBody.ok().data(result);
     }
 }

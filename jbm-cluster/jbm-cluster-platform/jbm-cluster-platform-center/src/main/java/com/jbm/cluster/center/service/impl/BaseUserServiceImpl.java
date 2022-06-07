@@ -17,6 +17,7 @@ import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
+import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -300,12 +301,8 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         List<BaseRole> rolesList = roleService.getUserRoles(userId);
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
-                Map roleMap = Maps.newHashMap();
-                roleMap.put("roleId", role.getRoleId());
-                roleMap.put("roleCode", role.getRoleCode());
-                roleMap.put("roleName", role.getRoleName());
                 // 用户角色详情
-                roles.add(roleMap);
+                roles.add(BeanUtil.beanToMap(role));
                 // 加入角色标识
                 OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), JbmSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
                 authorities.add(authority);
@@ -386,25 +383,25 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         // 获取用户详细信息
         if (baseAccount != null) {
             //添加登录日志
-            try {
-                HttpServletRequest request = WebUtils.getHttpServletRequest();
-                if (request != null) {
-                    BaseAccountLogs log = new BaseAccountLogs();
-                    log.setDomain(JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-                    log.setUserId(baseAccount.getUserId());
-                    log.setAccount(baseAccount.getAccount());
-                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
-                    log.setAccountType(baseAccount.getAccountType());
-                    log.setLoginIp(WebUtils.getRemoteAddress(request));
-                    log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
-                    UserAgent userAgent = UserAgentUtil.parse(log.getLoginAgent());
-                    log.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
-                    log.setOs(userAgent.getOs().getName());
-                    baseAccountService.addLoginLog(log);
-                }
-            } catch (Exception e) {
-                log.error("添加登录日志失败:{}", e);
-            }
+//            try {
+//                HttpServletRequest request = WebUtils.getHttpServletRequest();
+//                if (request != null) {
+//                    BaseAccountLogs log = new BaseAccountLogs();
+//                    log.setDomain(JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+//                    log.setUserId(baseAccount.getUserId());
+//                    log.setAccount(baseAccount.getAccount());
+////                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
+//                    log.setAccountType(baseAccount.getAccountType());
+//                    log.setLoginIp(IpUtils.getRequestIp(request));
+//                    log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
+//                    UserAgent userAgent = UserAgentUtil.parse(log.getLoginAgent());
+//                    log.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
+//                    log.setOs(userAgent.getOs().getName());
+//                    baseAccountService.addLoginLog(log);
+//                }
+//            } catch (Exception e) {
+//                log.error("添加登录日志失败:{}", e);
+//            }
             // 用户权限信息
             UserAccount userAccount = getUserAccount(baseAccount.getUserId());
             // 复制账号信息

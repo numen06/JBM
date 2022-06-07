@@ -25,9 +25,9 @@ import java.util.Map;
  * @Date 2022/5/4 13:36
  * @Description TODO
  */
-@Api(tags = "账号认证中心")
-@RestController
-@RequestMapping("/login")
+//@Api(tags = "账号认证中心")
+//@RestController
+//@RequestMapping("/login")
 public class LoginController {
 
     @Autowired(required = false)

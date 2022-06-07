@@ -7,6 +7,13 @@ spring:
     #手动配置Bus id,
     bus:
       id: ${spring.application.name}:${server.port}
+    function:
+      definition: accountLogs
+    stream:
+      #      default-binder: kafka
+      bindings:
+        accountLogs-in-0:
+          group: ${spring.application.name}
   main:
     allow-bean-definition-overriding: true
     #2.6版本后增加循环引用判断

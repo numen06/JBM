@@ -45,6 +45,17 @@ public class QueueConstants {
     /**
      * 访问日志
      */
-    public static final String ACCESS_LOGS_STEAMM = "accessLogs-in-0";
+    public static final String ACCESS_LOGS_STREAM = "accessLogs-in-0";
+
+    /**
+     * 访问日志
+     */
+    public static final String ACCOUNT_LOGS_STREAM = "accountLogs-in-0";
+
+    /**
+     * 访问日志
+     */
+    public static final String API_RESOURCE_STREAM = "apiResource-in-0";
+
 
 }

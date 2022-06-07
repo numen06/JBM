@@ -42,9 +42,9 @@ public class DocumentController {
     private MinioService minioService;
 
     @ApiOperation(value = "获取文档列表")
-    @GetMapping("/list")
-    public ResultBody list(HttpServletRequest request) throws MinioException {
-        final String filePath = getExtractPath(request);
+    @GetMapping("/list/{filePath}")
+    public ResultBody list(@PathVariable("filePath") String filePath, HttpServletRequest request) throws MinioException {
+//        final String filePath = getExtractPath(request);
         return ResultBody.ok().data(minioService.getFullList(Paths.get(filePath)));
     }
 
@@ -100,10 +100,10 @@ public class DocumentController {
 
 
     @ApiOperation(value = "删除文档")
-    @GetMapping("/remove")
-    public ResultBody remove(HttpServletRequest request) {
+    @GetMapping("/remove/{filePath}")
+    public ResultBody remove(@PathVariable("filePath") String filePath, HttpServletRequest request) {
         try {
-            final String filePath = getExtractPath(request);
+//            final String filePath = getExtractPath(request);
             minioService.remove(Paths.get(filePath));
             return ResultBody.ok().data(FileNameUtil.normalize(filePath, true)).msg("删除文档成功");
         } catch (Exception e) {
@@ -112,9 +112,9 @@ public class DocumentController {
     }
 
     @ApiOperation(value = "获取一个文档")
-    @GetMapping("/get")
-    public void get(HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
-        final String filePath = getExtractPath(request);
+    @GetMapping("/get/{filePath}")
+    public void get(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
+//        filePath = getExtractPath(request);
         InputStream inputStream = minioService.get(Paths.get(filePath));
         // Set the content type and attachment header.
         String fileName = FileNameUtil.getName(filePath);
@@ -130,9 +130,9 @@ public class DocumentController {
 
 
     @ApiOperation(value = "下载一个文档")
-    @GetMapping("/download")
-    public void download(HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
-        final String filePath = getExtractPath(request);
+    @GetMapping("/download/{filePath}")
+    public void download(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
+//        final String filePath = getExtractPath(request);
         InputStream inputStream = minioService.get(Paths.get(filePath));
         // Set the content type and attachment header.
         String fileName = FileNameUtil.getName(filePath);

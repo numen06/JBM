@@ -9,7 +9,7 @@ import com.jbm.framework.dictionary.annotation.JbmDicType;
 @JbmDicType(typeName = "授权类型")
 public enum AccountType {
 
-    username("用户名密码"), mobile("手机号"), email("邮箱"), weixin("微信"), weibo("微博"), qq("QQ");
+    username("用户名密码"), mobile("手机号"), email("邮箱"), sms("短信"), weixin("微信"), weibo("微博"), qq("QQ");
 
     @EnumValue
     private final String key;

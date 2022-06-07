@@ -27,13 +27,13 @@ swagger2:
   description: 平台用户认证服务器
   title: 平台用户认证服务器
 jbm:
-  client:
-    oauth2:
-      admin:
-        client-id: 7gBZcbsC7kLIWCdELIl8nxcs
-        client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
-#  cluster:
+#  client:
+#    oauth2:
+#      admin:
+#        client-id: 7gBZcbsC7kLIWCdELIl8nxcs
+#        client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
+  cluster:
 #    token-type: redis
-#    permit-all:
-#      - /**
+    permit-all:
+      - /oauth2/**
 

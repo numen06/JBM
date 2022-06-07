@@ -10,6 +10,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.mapper.BaseDeveloperMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseDeveloperService;
+import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -213,22 +214,22 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
         // 获取用户详细信息
         if (baseAccount != null) {
             //添加登录日志
-            try {
-                HttpServletRequest request = WebUtils.getHttpServletRequest();
-                if (request != null) {
-                    BaseAccountLogs log = new BaseAccountLogs();
-                    log.setDomain(ACCOUNT_DOMAIN);
-                    log.setUserId(baseAccount.getUserId());
-                    log.setAccount(baseAccount.getAccount());
-                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
-                    log.setAccountType(baseAccount.getAccountType());
-                    log.setLoginIp(WebUtils.getRemoteAddress(request));
-                    log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
-                    baseAccountService.addLoginLog(log);
-                }
-            } catch (Exception e) {
-                log.error("添加登录日志失败:{}", e);
-            }
+//            try {
+//                HttpServletRequest request = WebUtils.getHttpServletRequest();
+//                if (request != null) {
+//                    BaseAccountLogs log = new BaseAccountLogs();
+//                    log.setDomain(ACCOUNT_DOMAIN);
+//                    log.setUserId(baseAccount.getUserId());
+//                    log.setAccount(baseAccount.getAccount());
+//                    log.setAccountId(String.valueOf(baseAccount.getAccountId()));
+//                    log.setAccountType(baseAccount.getAccountType());
+//                    log.setLoginIp(IpUtils.getRequestIp(request));
+//                    log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
+//                    baseAccountService.addLoginLog(log);
+//                }
+//            } catch (Exception e) {
+//                log.error("添加登录日志失败:{}", e);
+//            }
             // 用户权限信息
             // 复制账号信息
             UserAccount userAccount = new UserAccount();

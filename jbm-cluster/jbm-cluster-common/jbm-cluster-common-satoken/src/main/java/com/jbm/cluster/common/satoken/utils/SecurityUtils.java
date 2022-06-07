@@ -43,7 +43,8 @@ public class SecurityUtils {
      * 获取登录用户信息
      */
     public static JbmLoginUser getLoginUser() {
-        return SecurityContextHolder.get(JbmSecurityConstants.LOGIN_USER, JbmLoginUser.class);
+        return LoginHelper.getLoginUser();
+//        return SecurityContextHolder.get(JbmSecurityConstants.LOGIN_USER, JbmLoginUser.class);
     }
 
     /**

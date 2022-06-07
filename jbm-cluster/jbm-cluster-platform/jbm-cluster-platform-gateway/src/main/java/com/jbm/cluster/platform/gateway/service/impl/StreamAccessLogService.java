@@ -137,7 +137,7 @@ public class StreamAccessLogService implements AccessLogService {
 //                }
 //            });
             //发送数据
-            streamBridge.send(QueueConstants.ACCESS_LOGS_STEAMM, JSON.toJSONString(gatewayLogs));
+            streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
 //            log.info("假装发送了数据:{}", JSON.toJSONString(gatewayLogs));
 //            amqpTemplate.convertAndSend(QueueConstants.QUEUE_ACCESS_LOGS, JSON.toJSONString(gatewayLogs));
         } catch (Exception e) {

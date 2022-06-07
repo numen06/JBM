@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
@@ -11,6 +10,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
+import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -80,7 +80,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         return new SaServletSuperFilter()
                 .addInclude("/**")
                 .addExclude(ArrayUtil.toArray(whiteList, String.class))
-                .setAuth(obj -> SaOAuth2Util.checkAccessToken(StpUtil.getTokenValue()));
+                .setAuth(new SaOAuthFilterAuthStrategy());
 //                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 

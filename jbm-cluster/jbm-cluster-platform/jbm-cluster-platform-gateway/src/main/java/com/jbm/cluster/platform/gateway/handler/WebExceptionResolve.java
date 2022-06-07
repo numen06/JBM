@@ -165,7 +165,7 @@ public class WebExceptionResolve {
             errorMsg = messageSource.getMessage(errorCode.getMessage(), ArrayUtil.newArray(0), LocaleContextHolder.getLocale());
         }
         if (StrUtil.isBlank(errorMsg)) {
-            errorMsg = "服务器发生错误,请联系管理员你处理。";
+            errorMsg = "服务器发生错误,请联系管理员处理。";
         }
         ResultBody resultBody = ResultBody.failed().code(errorCode.getCode()).msg(errorMsg)
                 .path(path).httpStatus(httpStatus).exception(exception);

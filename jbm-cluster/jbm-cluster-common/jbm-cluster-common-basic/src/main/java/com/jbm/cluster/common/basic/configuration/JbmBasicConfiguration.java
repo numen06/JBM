@@ -1,5 +1,6 @@
 package com.jbm.cluster.common.basic.configuration;
 
+import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
@@ -38,5 +39,12 @@ public class JbmBasicConfiguration {
     public JbmClusterTemplate jbmClusterTemplate() {
         return new JbmClusterTemplate();
     }
+
+    @Bean
+    public JbmClusterStreamTemplate jbmClusterStreamTemplate() {
+        JbmClusterStreamTemplate jbmClusterStreamTemplate = new JbmClusterStreamTemplate();
+        return jbmClusterStreamTemplate;
+    }
+
 
 }

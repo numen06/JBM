@@ -86,7 +86,7 @@ public class AccessLogsHandler {
 ////                    logs.setUseTime(logs.getResponseTime().getTime() - logs.getRequestTime().getTime());
 //                    gatewayLogsService.save(logs);
 //                }
-                streamBridge.send(QueueConstants.ACCESS_LOGS_STEAMM, logs);
+                streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, logs);
             }
         } catch (Exception e) {
             log.error("日志接收错误:", e);

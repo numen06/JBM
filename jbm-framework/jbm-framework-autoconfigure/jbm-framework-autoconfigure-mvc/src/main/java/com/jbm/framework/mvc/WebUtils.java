@@ -459,52 +459,6 @@ public class WebUtils {
         return (request.getHeader("X-Requested-With") != null && "XMLHttpRequest".equals(request.getHeader("X-Requested-With").toString())) || (request.getHeader("Content-Type") != null && request.getHeader("Content-Type").startsWith("application/json"));
     }
 
-    /**
-     * 获取IP地址
-     *
-     * @param request
-     * @return
-     */
-    public static String getRemoteAddress(HttpServletRequest request) {
-        String unknown = "unknown";
-        String forwarded = request.getHeader("X-Forwarded-For");
-        String ip = null;
-        if (StrUtil.isNotBlank(forwarded)) {
-            String realIp = request.getHeader("X-Real-IP");
-            if (realIp.equalsIgnoreCase(forwarded)) {
-                ip = realIp;
-            } else {
-                ip = StrUtil.split(forwarded, ",").get(0);
-            }
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        //对于通过多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
-        if (ip != null && ip.length() > 0) {
-            String[] ips = ip.split(",");
-            if (ips.length > 0) {
-                ip = ips[0];
-            }
-        }
-        return ip;
-    }
-
 
     /**
      * 判断访问URI是否是静态文件请求

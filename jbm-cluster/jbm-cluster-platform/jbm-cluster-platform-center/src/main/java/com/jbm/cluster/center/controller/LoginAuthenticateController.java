@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.constants.LoginType;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
@@ -34,6 +35,11 @@ public class LoginAuthenticateController implements ILoginAuthenticate {
         if (SecurityUtils.getPasswordEncoder().matches(password, account.getPassword())) {
             jbmLoginUser = new JbmLoginUser();
             jbmLoginUser.setUserId(account.getUserId());
+            BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+            jbmLoginUser.setUsername(baseUser.getUserName());
+            jbmLoginUser.setAccount(account.getAccount());
+            jbmLoginUser.setAccountType(account.getAccountType());
+            jbmLoginUser.setDeptId(account.getDepartmentId());
             return ResultBody.ok().data(jbmLoginUser);
         } else {
             return ResultBody.error("密码错误");

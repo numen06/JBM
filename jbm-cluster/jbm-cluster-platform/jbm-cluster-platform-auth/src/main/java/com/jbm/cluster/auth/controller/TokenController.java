@@ -1,17 +1,13 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
-import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.bean.BeanUtil;
-import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.model.auth.AccessTokenResult;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.auth.form.LoginBody;
-import com.jbm.cluster.auth.form.RegisterBody;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -20,9 +16,10 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * token 控制
@@ -39,37 +36,6 @@ public class TokenController {
     @Autowired
     private SysLoginService sysLoginService;
 
-    @ApiOperation("登录方法")
-    @PostMapping("login")
-    public ResultBody<Map<String, Object>> login(@Validated LoginBody form) {
-        JbmLoginUser jbmLoginUser = new JbmLoginUser();
-        jbmLoginUser.setUserId(1l);
-//        jbmLoginUser.setUserType(UserType.SYS_USER.getUserType());
-        jbmLoginUser.setUsername("test");
-        // 获取登录token
-        LoginHelper.loginByDevice(jbmLoginUser, RequestDeviceType.PC.getDevice());
-        SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-        AccessTokenResult accessTokenResult = new AccessTokenResult();
-        accessTokenResult.setAccessToken(tokenInfo.getTokenValue());
-        accessTokenResult.setExpiresIn(tokenInfo.getTokenActivityTimeout());
-        // 接口返回信息
-        Map<String, Object> rspMap = BeanUtil.beanToMap(accessTokenResult, true, false);
-        return ResultBody.ok().data(rspMap);
-//        // 用户登录
-//        AccessTokenResult accessTokenResult = sysLoginService.login(form.getUsername(), form.getPassword());
-//        // 接口返回信息
-//        Map<String, Object> rspMap = BeanUtil.beanToMap(accessTokenResult, true, false);
-//        return ResultBody.ok().data(rspMap);
-    }
-
-    @SaCheckLogin
-    @ApiOperation("获取用户信息")
-    @GetMapping("userInfo")
-    public ResultBody<JbmLoginUser> userInfo() {
-        return ResultBody.ok().data(LoginHelper.getLoginUser());
-    }
-
-    @SaCheckRole("test")
     @ApiOperation("获取角色信息")
     @GetMapping("role")
     public ResultBody<JbmLoginUser> testRole() {
@@ -108,23 +74,5 @@ public class TokenController {
 //        return ResultBody.ok().data(ajax);
 //    }
 
-    @ApiOperation("登出方法")
-    @DeleteMapping("logout")
-    public ResultBody<Void> logout() {
-        try {
-            sysLoginService.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
-        } catch (NotLoginException e) {
-            return ResultBody.failed().msg("还没有登录");
-        }
-        return ResultBody.ok();
-    }
-
-    @ApiOperation("用户注册")
-    @PostMapping("register")
-    public ResultBody<Void> register(@RequestBody RegisterBody registerBody) {
-        // 用户注册
-        sysLoginService.register(registerBody);
-        return ResultBody.ok();
-    }
 
 }

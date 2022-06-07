@@ -62,7 +62,7 @@
         <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <hutool.version>5.8.0.M3</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
-        <lombok.version>1.18.12</lombok.version>
+        <lombok.version>1.18.24</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <jjwt.version>0.9.1</jjwt.version>
         <redisson.version>3.17.0</redisson.version>
@@ -76,6 +76,7 @@
         <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
         <satoken.version>1.30.0.RC</satoken.version>
+        <mapstruct.version>1.5.0.RC1</mapstruct.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
@@ -123,7 +124,19 @@
                 <artifactId>nacos-client</artifactId>
                 <version>${alibaba.nacos.version}</version>
             </dependency>
-
+            <!--mapStruct依赖 高性能对象映射-->
+            <!--mapstruct核心-->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <!--mapstruct编译-->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
             <!--lof4j-->
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>

@@ -42,8 +42,10 @@ public class SaTokenConfiguration {
     // Sa-Token 整合 jwt (Simple 简单模式)
     @Bean
     public StpLogicJwtForSimple getStpLogicJwt() {
-        SaManager.putStpLogic(new UserLogicJwt());
-        SaManager.putStpLogic(new AdminLogicJwt());
+//        UserLogicJwt userLogicJwt = new UserLogicJwt();
+//        SaManager.putStpLogic(userLogicJwt);
+//        SaManager.putStpLogic(new AdminLogicJwt());
+//        return userLogicJwt;
         StpLogicJwtForSimple stpLogicJwtForSimple = new StpLogicJwtForSimple();
         return stpLogicJwtForSimple;
     }

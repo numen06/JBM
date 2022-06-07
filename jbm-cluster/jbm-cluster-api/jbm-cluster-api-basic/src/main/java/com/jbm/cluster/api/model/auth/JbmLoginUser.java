@@ -55,6 +55,16 @@ public class JbmLoginUser implements Serializable {
     private String username;
 
     /**
+     * 登陆账号
+     */
+    private String account;
+
+    /**
+     * 登陆帐户类型
+     */
+    private String accountType;
+
+    /**
      * 登录时间
      */
     private Long loginTime;
@@ -90,10 +100,10 @@ public class JbmLoginUser implements Serializable {
      */
     private Set<String> roles;
 
-    /**
-     * 数据权限 当前角色ID
-     */
-    private Long roleId;
+//    /**
+//     * 数据权限 当前角色ID
+//     */
+//    private Long roleId;
 
 //    /**
 //     * 用户信息

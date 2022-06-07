@@ -1,5 +1,5 @@
 server:
-  port: 6666
+  port: 6060
   # undertow 配置
   undertow:
     # HTTP post内容的最大大小。当值为-1时，默认值为大小是无限的
@@ -40,17 +40,17 @@ spring:
           enabled: false
           #将请求路径上的服务名配置为小写（因为服务注册的时候，向注册中心注册时将服务名转成大写的了,比如以/service-hi/*的请求路径被路由转发到服务名为service-hi的服务上
           lowerCaseServiceId: true
-#      routes:
-#        # 认证中心
-#        - id: jbm-cluster-platform-auth2
-#          uri: lb://jbm-cluster-platform-auth2
-#          predicates:
-#            - Path=/auth/**
-#          filters:
-#            # 验证码处理
-#            - CacheRequestFilter
-#            - ValidateCodeFilter
-#            - StripPrefix=1
+  #      routes:
+  #        # 认证中心
+  #        - id: jbm-cluster-platform-auth2
+  #          uri: lb://jbm-cluster-platform-auth2
+  #          predicates:
+  #            - Path=/auth/**
+  #          filters:
+  #            # 验证码处理
+  #            - CacheRequestFilter
+  #            - ValidateCodeFilter
+  #            - StripPrefix=1
   profiles:
     active: ${profile.name}
 

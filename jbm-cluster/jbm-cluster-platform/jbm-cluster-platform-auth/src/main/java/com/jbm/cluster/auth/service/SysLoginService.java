@@ -9,26 +9,36 @@ import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
+import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.auth.LoginWay;
+import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
-import com.jbm.cluster.auth.form.RegisterBody;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.auth.service.feign.DynamicLoginFeignClient;
+import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
+import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.WebUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +58,8 @@ public class SysLoginService {
 //    private RemoteLogService remoteLogService;
     //    @DubboReference
 //    private RemoteUserService remoteUserService;
+    @Autowired
+    private JbmClusterStreamTemplate jbmClusterStreamTemplate;
 
     @Autowired
     private RedisService redisService;
@@ -77,7 +89,12 @@ public class SysLoginService {
                     //如果获取成功则直接登录，失败则返回错误信息
                     if (resultBody.getSuccess()) {
                         log.info("获取到了用户信息,触发登录");
+                        checkLogin(loginType, username, () -> true);
                         LoginHelper.login(resultBody.getResult());
+                        recordLogininfor(resultBody.getResult(), true, null);
+                    } else {
+                        checkLogin(loginType, username, () -> false);
+                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
                     }
                     return resultBody;
                 }).
@@ -157,7 +174,7 @@ public class SysLoginService {
     /**
      * 注册
      */
-    public void register(RegisterBody registerBody) {
+    public void register(RegisterForm registerBody) {
         String username = registerBody.getUsername();
         String password = registerBody.getPassword();
         // 校验用户类型是否存在
@@ -165,7 +182,7 @@ public class SysLoginService {
         // 注册用户信息
         BaseUser sysUser = new BaseUser();
         sysUser.setUserName(username);
-        sysUser.setNickName(username);
+        sysUser.setNickName(registerBody.getNickName());
         sysUser.setPassword(LoginHelper.encryptPassword(password));
 //        sysUser.setUserType(userType);
 //        boolean regFlag = remoteUserService.registerUserInfo(sysUser);
@@ -175,27 +192,28 @@ public class SysLoginService {
 //        recordLogininfor(username, JbmConstants.REGISTER, MessageUtils.message("user.register.success"));
     }
 
-//    /**
-//     * 记录登录信息
-//     *
-//     * @param username 用户名
-//     * @param status   状态
-//     * @param message  消息内容
-//     * @return
-//     */
-//    public void recordLogininfor( String username, String status, String message) {
-//        BaseAccountLogs logininfor = new BaseAccountLogs();
-//        logininfor.setUserName(username);
-//        logininfor.setIpaddr(ServletUtils.getClientIP());
-//        logininfor.setMsg(message);
-//        // 日志状态
-//        if (StrUtil.equalsAny(status, JbmConstants.LOGIN_SUCCESS, JbmConstants.LOGOUT, JbmConstants.REGISTER)) {
-//            logininfor.setStatus(JbmConstants.LOGIN_SUCCESS_STATUS);
-//        } else if (JbmConstants.LOGIN_FAIL.equals(status)) {
-//            logininfor.setStatus(JbmConstants.LOGIN_FAIL_STATUS);
-//        }
-//        remoteLogService.saveLogininfor(logininfor);
-//    }
+    /**
+     * 记录登录信息
+     *
+     * @param message 消息内容
+     * @return
+     */
+    public void recordLogininfor(JbmLoginUser jbmLoginUser, Boolean loginStatus, String message) {
+        HttpServletRequest request = WebUtils.getHttpServletRequest();
+        BaseAccountLogs log = new BaseAccountLogs();
+        log.setDomain(jbmLoginUser.getUserType());
+        log.setUserId(jbmLoginUser.getUserId());
+        log.setAccount(jbmLoginUser.getAccount());
+//        log.setAccountId(StrUtil.toString(baseAccount.getAccountId()));
+        log.setAccountType(jbmLoginUser.getAccountType());
+        log.setLoginIp(IpUtils.getRequestIp(request));
+        log.setLoginAgent(request.getHeader(HttpHeaders.USER_AGENT));
+        UserAgent userAgent = UserAgentUtil.parse(log.getLoginAgent());
+        log.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
+        log.setOs(userAgent.getOs().getName());
+        log.setLoginStatus(loginStatus);
+        jbmClusterStreamTemplate.sendAccountLogs(log);
+    }
 
     /**
      * 校验短信验证码
@@ -222,7 +240,7 @@ public class SysLoginService {
             throw new UserException(loginType.getRetryLimitExceed(), errorLimitTime);
         }
 
-        if (supplier.get()) {
+        if (!supplier.get()) {
             // 是否第一次
             errorNumber = ObjectUtil.isNull(errorNumber) ? 1 : errorNumber + 1;
             // 达到规定错误次数 则锁定登录
