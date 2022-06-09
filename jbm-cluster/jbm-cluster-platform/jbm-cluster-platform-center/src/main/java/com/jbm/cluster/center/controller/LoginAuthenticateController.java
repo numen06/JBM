@@ -1,8 +1,10 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.constants.LoginType;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.center.service.BaseUserService;
@@ -12,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @Created wesley.zhang
@@ -40,6 +45,10 @@ public class LoginAuthenticateController implements ILoginAuthenticate {
             jbmLoginUser.setAccount(account.getAccount());
             jbmLoginUser.setAccountType(account.getAccountType());
             jbmLoginUser.setDeptId(account.getDepartmentId());
+            Set<String> roles = account.getRoles().stream().map(BaseRole::getRoleCode).collect(Collectors.toSet());
+            jbmLoginUser.setRoles(roles);
+            Set<String> menuPermission = account.getAuthorities().stream().map(OpenAuthority::getAuthority).collect(Collectors.toSet());
+            jbmLoginUser.setMenuPermission(menuPermission);
             return ResultBody.ok().data(jbmLoginUser);
         } else {
             return ResultBody.error("密码错误");

@@ -31,6 +31,7 @@ import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.ServletUtils;
 import com.jbm.framework.mvc.WebUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
@@ -88,8 +89,11 @@ public class SysLoginService {
                     ResultBody<JbmLoginUser> resultBody = this.login(username, password, loginType);
                     //如果获取成功则直接登录，失败则返回错误信息
                     if (resultBody.getSuccess()) {
+                        UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));
                         log.info("获取到了用户信息,触发登录");
                         checkLogin(loginType, username, () -> true);
+                        //设置系统名称
+                        resultBody.getResult().setDevice(userAgent.getOs().getName());
                         LoginHelper.login(resultBody.getResult());
                         recordLogininfor(resultBody.getResult(), true, null);
                     } else {
@@ -252,10 +256,11 @@ public class SysLoginService {
                 // 未达到规定错误次数 则递增
                 redisService.setCacheObject(errorKey, errorNumber);
 //                recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitCount(), errorNumber));
-                throw new UserException(loginType.getRetryLimitCount(), errorNumber);
+//                throw new UserException(loginType.getRetryLimitCount(), errorNumber);
             }
+        } else {
+            // 登录成功 清空错误次数
+            redisService.deleteObject(errorKey);
         }
-        // 登录成功 清空错误次数
-        redisService.deleteObject(errorKey);
     }
 }

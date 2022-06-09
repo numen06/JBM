@@ -35,18 +35,18 @@ jbm:
   cluster:
     token-type: redis
     permit-all:
-      - /authority/access
-      - /authority/app
-      - /app/*/info
-      - /app/client/*/info
-      - /gateway/api/**
-      #      - /user/add/thirdParty
-      - /user/info
-      - /user/login
-      - /user/register
-      - /developer/add/thirdParty
-      - /developer/info
-      - /developer/login
+#      - /authority/access
+#      - /authority/app
+#      - /app/*/info
+#      - /app/client/*/info
+#      - /gateway/api/**
+#      - /user/add/thirdParty
+#      - /user/info
+#      - /user/login
+#      - /user/register
+#      - /developer/add/thirdParty
+#      - /developer/info
+#      - /developer/login
       - /baseArea/getChinaAreaList
 swagger2:
   enabled: true

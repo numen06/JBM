@@ -8,6 +8,7 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.dev33.satoken.secure.SaSecureUtil;
+import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.temp.SaTempUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -31,6 +32,11 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             if (StrUtil.isBlank(tokenValue)) {
                 throw new SaOAuth2Exception("无效Token");
             }
+            SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
+            if (ObjectUtil.isNotEmpty(saTokenInfo)) {
+                if (saTokenInfo.isLogin)
+                    return;
+            }
             SaRequest req = SaHolder.getRequest();
             String clientId = null;
             AccessTokenModel accessTokenModel = SaOAuth2Util.getAccessToken(tokenValue);
@@ -45,7 +51,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 }
             }
             if (ObjectUtil.isEmpty(clientId)) {
-                throw new SaOAuth2Exception("无效客户端");
+                throw new SaOAuth2Exception("无效的访问客户端");
             }
         } catch (Exception e) {
             throw e;

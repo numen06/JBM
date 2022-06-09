@@ -297,12 +297,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         // 用户权限列表
         List<OpenAuthority> authorities = Lists.newArrayList();
         // 用户角色列表
-        List<Map> roles = Lists.newArrayList();
+//        List<Map> roles = Lists.newArrayList();
         List<BaseRole> rolesList = roleService.getUserRoles(userId);
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 用户角色详情
-                roles.add(BeanUtil.beanToMap(role));
+//                roles.add(BeanUtil.beanToMap(role));
                 // 加入角色标识
                 OpenAuthority authority = new OpenAuthority(role.getRoleId().toString(), JbmSecurityConstants.AUTHORITY_PREFIX_ROLE + role.getRoleCode(), null, "role");
                 authorities.add(authority);
@@ -326,7 +326,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        userAccount.setAvatar(baseUser.getAvatar());
 //        // 权限信息
         userAccount.setAuthorities(authorities);
-        userAccount.setRoles(roles);
+        userAccount.setRoles(rolesList);
         return userAccount;
     }
 

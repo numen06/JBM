@@ -27,6 +27,7 @@ import java.util.Map;
  */
 @Api(tags = "系统接口资源管理")
 @RestController
+@RequestMapping("/baseApi")
 public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiService> {
     @Autowired
     private BaseApiService apiService;

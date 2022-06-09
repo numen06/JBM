@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.DemoModeException;
 import com.jbm.framework.exceptions.InnerAuthException;
 import com.jbm.framework.exceptions.ServiceException;
@@ -42,6 +43,22 @@ public class GlobalDefaultExceptionHandler {
 
 
     /**
+     * 统一返回结果集
+     *
+     * @param resultBody
+     * @param response
+     * @return
+     */
+    public ResultBody returnResult(ResultBody resultBody, HttpServletResponse response) {
+        response.setStatus(resultBody.getHttpStatus());
+        if (StrUtil.isBlank(resultBody.getMessage())) {
+            resultBody.setMessage(WebExceptionResolve.DEF_ERROR_MSG);
+        }
+        return resultBody;
+    }
+
+
+    /**
      * 统一异常处理
      * AuthenticationException
      *
@@ -53,25 +70,25 @@ public class GlobalDefaultExceptionHandler {
 //    @ExceptionHandler({AuthenticationException.class})
     public ResultBody authenticationException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
         ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
-        response.setStatus(resultBody.getHttpStatus());
-        return resultBody;
+        return returnResult(resultBody, response);
     }
 
     /**
      * 权限码异常
      */
     @ExceptionHandler(NotPermissionException.class)
-    public ResultBody handleNotPermissionException(NotPermissionException e, HttpServletRequest request) {
+    public ResultBody handleNotPermissionException(NotPermissionException e, HttpServletRequest request, HttpServletResponse response) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',权限码校验失败'{}'", requestURI, e.getMessage());
-        return ResultBody.failed().httpStatus(HttpStatus.FORBIDDEN.value()).msg("没有访问权限，请联系管理员授权");
+        ResultBody resultBody = ResultBody.failed().httpStatus(HttpStatus.FORBIDDEN.value()).msg("没有访问权限，请联系管理员授权");
+        return returnResult(resultBody, response);
     }
 
     /**
      * 拦截未知的运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
-    public ResultBody handleRuntimeException(RuntimeException runtimeException, HttpServletRequest httpServletRequest) {
+    public ResultBody handleRuntimeException(RuntimeException runtimeException, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         String requestURI = httpServletRequest.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, runtimeException);
         //以上标准内容注入完成之后，搜索自定义配置
@@ -87,7 +104,7 @@ public class GlobalDefaultExceptionHandler {
                 }
             }
         });
-        return resultBody;
+        return returnResult(resultBody, response);
     }
 
 
@@ -105,54 +122,58 @@ public class GlobalDefaultExceptionHandler {
         if (ObjectUtil.isNotEmpty(ex.getMessage())) {
             resultBody.msg(ex.getMessage());
         }
-        response.setStatus(resultBody.getHttpStatus());
-        return resultBody;
+        return returnResult(resultBody, response);
     }
 
     /**
      * 系统异常
      */
     @ExceptionHandler(Exception.class)
-    public ResultBody handleException(Exception e, HttpServletRequest request) {
+    public ResultBody handleException(Exception e, HttpServletRequest request, HttpServletResponse response) {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
-        return ResultBody.error(e);
+        ResultBody resultBody = ResultBody.error(e);
+        return returnResult(resultBody, response);
     }
 
     /**
      * 自定义验证异常
      */
     @ExceptionHandler(BindException.class)
-    public ResultBody handleBindException(BindException e) {
+    public ResultBody handleBindException(BindException e, HttpServletResponse response) {
         log.error(e.getMessage(), e);
         String message = e.getAllErrors().get(0).getDefaultMessage();
-        return ResultBody.failed().msg(message);
+        ResultBody resultBody = ResultBody.failed().msg(message);
+        return returnResult(resultBody, response);
     }
 
     /**
      * 自定义验证异常
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResultBody handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    public ResultBody handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletResponse response) {
         log.error(e.getMessage(), e);
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
-        return ResultBody.failed().msg(message);
+        ResultBody resultBody = ResultBody.failed().msg(message);
+        return returnResult(resultBody, response);
     }
 
     /**
      * 内部认证异常
      */
     @ExceptionHandler(InnerAuthException.class)
-    public ResultBody handleInnerAuthException(InnerAuthException e) {
-        return ResultBody.failed().msg(e.getMessage());
+    public ResultBody handleInnerAuthException(InnerAuthException e, HttpServletResponse response) {
+        ResultBody resultBody = ResultBody.failed().msg(e.getMessage());
+        return returnResult(resultBody, response);
     }
 
     /**
      * 演示模式异常
      */
     @ExceptionHandler(DemoModeException.class)
-    public ResultBody handleDemoModeException(DemoModeException e) {
-        return ResultBody.failed().msg("演示模式，不允许操作");
+    public ResultBody handleDemoModeException(DemoModeException e, HttpServletResponse response) {
+        ResultBody resultBody = ResultBody.failed().msg("演示模式，不允许操作");
+        return returnResult(resultBody, response);
     }
 
 

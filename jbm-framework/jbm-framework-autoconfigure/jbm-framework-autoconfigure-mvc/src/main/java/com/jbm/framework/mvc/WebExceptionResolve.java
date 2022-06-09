@@ -16,6 +16,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 @Slf4j
 public class WebExceptionResolve {
 
+
+    public final static String DEF_ERROR_MSG = "请求地址发生错误";
+
     /**
      * 静态解析异常。可以直接调用
      *
@@ -143,7 +146,7 @@ public class WebExceptionResolve {
             resultCode = ErrorCode.ERROR;
         }
         ResultBody resultBody = ResultBody.failed().code(resultCode.getCode())
-                .msg("服务器发生错误,请联系管理员处理。").path(path).httpStatus(httpStatus).exception(exception);
+                .msg(DEF_ERROR_MSG).path(path).httpStatus(httpStatus).exception(exception);
 //        log.error("==> error:{}", resultBody, exception);
         return resultBody;
     }

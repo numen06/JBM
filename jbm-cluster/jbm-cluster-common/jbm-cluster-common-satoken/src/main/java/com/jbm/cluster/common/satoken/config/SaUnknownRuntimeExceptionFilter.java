@@ -3,6 +3,7 @@ package com.jbm.cluster.common.satoken.config;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.dev33.satoken.jwt.exception.SaJwtException;
+import com.jbm.framework.exceptions.user.UserException;
 import jbm.framework.boot.autoconfigure.filter.SimpleUnknownRuntimeExceptionFilter;
 
 import javax.naming.NoPermissionException;
@@ -18,5 +19,6 @@ public class SaUnknownRuntimeExceptionFilter extends SimpleUnknownRuntimeExcepti
     @Override
     public void filterRuntimeExceptions(Set<Class<? extends RuntimeException>> runtimeExceptions) {
         runtimeExceptions.add(SaTokenException.class);
+        runtimeExceptions.add(UserException.class);
     }
 }

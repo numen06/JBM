@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.mvc.ServletUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
@@ -20,6 +21,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -38,7 +40,7 @@ public class SaServletSuperFilter extends SaServletFilter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(ServletRequest request, ServletResponse servletResponse, FilterChain chain)
             throws IOException, ServletException {
         try {
             // 执行全局过滤器
@@ -50,18 +52,22 @@ public class SaServletSuperFilter extends SaServletFilter {
         } catch (StopMatchException e) {
 
         } catch (Throwable e) {
+            HttpServletResponse response = (HttpServletResponse) servletResponse;
             // 1. 获取异常处理策略结果
             Object result = (e instanceof BackResultException) ? e.getMessage() : error.run(e);
             if (ObjectUtil.isNotEmpty(result)) {
                 if (result instanceof ResultBody) {
+                    response.setStatus(((ResultBody<?>) result).getHttpStatus());
                     String error = JSON.toJSONString(result);
                     result = error;
                     // 2. 写入输出流
                     if (response.getContentType() == null) {
                         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
                     }
+
                 }
             }
+
             // 2. 写入输出流
             if (response.getContentType() == null) {
                 response.setContentType(MediaType.TEXT_PLAIN_VALUE);
@@ -71,6 +77,6 @@ public class SaServletSuperFilter extends SaServletFilter {
         }
 
         // 执行
-        chain.doFilter(request, response);
+        chain.doFilter(request, servletResponse);
     }
 }

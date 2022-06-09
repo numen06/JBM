@@ -36,4 +36,5 @@ jbm:
 #    token-type: redis
     permit-all:
       - /oauth2/**
+      - /captcha/**
 

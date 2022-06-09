@@ -13,7 +13,7 @@ import java.util.Date;
  * @author wesley.zhang
  */
 @Data
-public   class OpenAuthority implements Serializable {
+public class OpenAuthority implements Serializable {
     private static final long serialVersionUID = -4682269495406460314L;
 
     /**
@@ -62,8 +62,6 @@ public   class OpenAuthority implements Serializable {
         this.expireTime = expireTime;
         this.owner = owner;
     }
-
-
 
 
 }
