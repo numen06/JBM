@@ -6,15 +6,11 @@ import com.jbm.cluster.api.model.api.JbmApi;
 import com.jbm.cluster.api.model.api.JbmApiResource;
 import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.configuration.apis.ApiBuild;
-import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
-import com.jbm.util.ClassUtils;
+import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.ApplicationListener;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -31,10 +27,10 @@ import java.util.concurrent.Executors;
  */
 @Slf4j
 public class RequestMappingScan implements ApplicationListener<ApplicationReadyEvent> {
-    private JbmApiScanProperties scanProperties;
+    private JbmClusterProperties jbmClusterProperties;
 
-    public RequestMappingScan(JbmApiScanProperties scanProperties) {
-        this.scanProperties = scanProperties;
+    public RequestMappingScan(JbmClusterProperties jbmClusterProperties) {
+        this.jbmClusterProperties = jbmClusterProperties;
     }
 
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -47,7 +43,7 @@ public class RequestMappingScan implements ApplicationListener<ApplicationReadyE
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        if (BooleanUtil.isFalse(scanProperties.getRegisterRequestMapping())) {
+        if (BooleanUtil.isFalse(jbmClusterProperties.getApiRegister())) {
             return;
         }
         // 服务名称

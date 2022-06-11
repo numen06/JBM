@@ -430,11 +430,6 @@
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-autoconfigure-i18n</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
             <!-- webjars -->
             <dependency>
                 <groupId>com.jbm</groupId>

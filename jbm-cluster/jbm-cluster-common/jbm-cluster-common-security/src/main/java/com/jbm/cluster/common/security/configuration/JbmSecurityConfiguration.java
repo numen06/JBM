@@ -3,12 +3,9 @@ package com.jbm.cluster.common.security.configuration;
 import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.router.SaRouter;
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
-import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
@@ -36,13 +33,11 @@ import java.util.Set;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({JbmClusterProperties.class, JbmApiScanProperties.class})
+@EnableConfigurationProperties({JbmClusterProperties.class})
 public class JbmSecurityConfiguration implements WebMvcConfigurer {
 
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
-    @Autowired
-    private JbmApiScanProperties jbmApiScanProperties;
     /**
      * 不需要拦截地址
      */

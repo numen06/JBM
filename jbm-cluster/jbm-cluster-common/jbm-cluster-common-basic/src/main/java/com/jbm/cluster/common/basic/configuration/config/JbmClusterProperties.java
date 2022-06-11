@@ -70,6 +70,8 @@ public class JbmClusterProperties {
      */
     private String jwtSigningKey;
 
+    private Boolean apiRegister = true;
+
     /**
      * 忽略验证路径
      */

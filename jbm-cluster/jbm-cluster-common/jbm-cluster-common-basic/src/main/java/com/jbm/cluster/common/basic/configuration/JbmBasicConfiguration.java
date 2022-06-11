@@ -2,7 +2,6 @@ package com.jbm.cluster.common.basic.configuration;
 
 import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.cluster.common.basic.configuration.config.JbmApiScanProperties;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +15,10 @@ import org.springframework.context.annotation.Configuration;
  * @Description TODO
  */
 @Configuration
-@EnableConfigurationProperties({JbmClusterProperties.class, JbmApiScanProperties.class})
+@EnableConfigurationProperties({JbmClusterProperties.class})
 public class JbmBasicConfiguration {
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
-    @Autowired
-    private JbmApiScanProperties jbmApiScanProperties;
 //    @Autowired
 //    private BusProperties busProperties;
 
@@ -32,7 +29,7 @@ public class JbmBasicConfiguration {
 
     @Bean
     public RequestMappingScan requestMappingScan() {
-        return new RequestMappingScan(jbmApiScanProperties);
+        return new RequestMappingScan(jbmClusterProperties);
     }
 
     @Bean

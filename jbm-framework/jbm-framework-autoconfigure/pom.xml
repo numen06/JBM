@@ -35,7 +35,6 @@
         <module>jbm-framework-autoconfigure-rocketmq</module>
         <module>jbm-framework-autoconfigure-disruptor</module>
         <module>jbm-framework-autoconfigure-tio</module>
-        <module>jbm-framework-autoconfigure-i18n</module>
         <module>jbm-framework-autoconfigure-fastdfs</module>
         <module>jbm-framework-autoconfigure-canal</module>
         <module>jbm-framework-autoconfigure-amqp</module>

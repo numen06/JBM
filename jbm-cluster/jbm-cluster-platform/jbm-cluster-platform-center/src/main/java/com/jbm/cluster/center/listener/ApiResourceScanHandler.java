@@ -8,6 +8,7 @@ import com.jbm.cluster.api.model.api.JbmApi;
 import com.jbm.cluster.api.model.api.JbmApiResource;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -35,13 +37,13 @@ public class ApiResourceScanHandler {
     private BaseAuthorityService baseAuthorityService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisService redisService;
 
     private final static String SCAN_API_RESOURCE_KEY_PREFIX = "scan_api_resource:";
 
 
     @Bean
-    public Function<Flux<Message<JbmApiResource>>, Mono<Void>> jbmApiResource() {
+    public Function<Flux<Message<JbmApiResource>>, Mono<Void>> apiResource() {
         return flux -> flux.map(message -> {
             this.scanApiResourceQueue(message.getPayload());
             return message;
@@ -55,11 +57,11 @@ public class ApiResourceScanHandler {
     public void scanApiResourceQueue(JbmApiResource jbmApiResource) {
         try {
             String key = SCAN_API_RESOURCE_KEY_PREFIX + jbmApiResource.getServiceId();
-            Object object = redisTemplate.opsForValue().get(key);
-            if (object != null) {
-                // 3分钟内未失效,不再更新资源
-                return;
-            }
+            Object object = redisService.getCacheObject(key);
+//            if (object != null) {
+//                // 3分钟内未失效,不再更新资源
+//                return;
+//            }
             List<String> codes = Lists.newArrayList();
             jbmApiResource.getJbmApiList().forEach(new Consumer<JbmApi>() {
                 @Override
@@ -88,9 +90,9 @@ public class ApiResourceScanHandler {
                 // 清理无效权限数据
                 baseAuthorityService.clearInvalidApi(jbmApiResource.getServiceId(), codes);
                 // 发送更新API事件
-                // restTemplate.refreshGateway();
+//                restTemplate.refreshGateway();
                 // 设置API数量到缓存
-                // redisTemplate.opsForValue().set(Duration.ofMinutes(3), key, array.size());
+//                redisService.setCacheObject(key, codes.size(), 5l, TimeUnit.MINUTES);
             }
 
         } catch (Exception e) {

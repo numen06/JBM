@@ -88,10 +88,6 @@
             <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-i18n</artifactId>
-        </dependency>
-        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>

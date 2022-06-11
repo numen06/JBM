@@ -1,9 +1,12 @@
 package jbm.framework.boot.autoconfigure.filter;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.exceptions.base.BaseException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.util.Assert;
+import jbm.framework.spring.MessageUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.NoSuchMessageException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashSet;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
  * @Date 2022/5/21 19:50
  * @Description TODO
  */
+@Slf4j
 public abstract class SimpleUnknownRuntimeExceptionFilter implements UnknownRuntimeExceptionFilter {
 
 
@@ -50,8 +54,12 @@ public abstract class SimpleUnknownRuntimeExceptionFilter implements UnknownRunt
                 if (!errorException.isInstance(runtimeException)) {
                     return;
                 }
+                String error = runtimeException.getMessage();
+                if (runtimeException instanceof BaseException) {
+                    error = getBaseExceptionMessage((BaseException) runtimeException);
+                }
                 //默认将错误引入消息
-                resultBody.msg(runtimeException.getMessage());
+                resultBody.msg(error);
                 //擦除报错信息
                 resultBody.exception(null);
                 //
@@ -66,6 +74,22 @@ public abstract class SimpleUnknownRuntimeExceptionFilter implements UnknownRunt
 //            //
 //            return;
 //        }
+    }
+
+
+    public String getBaseExceptionMessage(BaseException baseException) {
+        String message = null;
+        try {
+            if (!StrUtil.isEmpty(baseException.getCode())) {
+                message = MessageUtils.message(baseException.getCode(), baseException.getArgs());
+            }
+        } catch (NoSuchMessageException noSuchMessageException) {
+            log.warn("没有配置错误国际化:{}", baseException.getCode());
+        }
+        if (message == null) {
+            message = baseException.getDefaultMessage();
+        }
+        return message;
     }
 
 

@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @Created wesley.zhang
@@ -72,9 +73,9 @@ public class ApiBuild {
                 .paths(requestMappingInfo.getPatternsCondition().getPatterns())
                 .className(className)
                 .md5(md5)
-                .requestMethods(methodsCondition.getMethods())
+                .requestMethods(methodsCondition.getMethods().stream().map(RequestMethod::toString).collect(Collectors.toSet()))
                 .serviceId(serviceId)
-                .contentTypes(requestMappingInfo.getProducesCondition().getProducibleMediaTypes())
+                .contentTypes(requestMappingInfo.getProducesCondition().getProducibleMediaTypes().stream().map(MediaType::toString).collect(Collectors.toSet()))
                 .isAuth(isAuth);
         return api.build();
     }

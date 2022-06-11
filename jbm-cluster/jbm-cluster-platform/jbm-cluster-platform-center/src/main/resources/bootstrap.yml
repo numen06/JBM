@@ -8,11 +8,13 @@ spring:
     bus:
       id: ${spring.application.name}:${server.port}
     function:
-      definition: accountLogs
+      definition: accountLogs;apiResource
     stream:
       #      default-binder: kafka
       bindings:
         accountLogs-in-0:
+          group: ${spring.application.name}
+        apiResource-in-0:
           group: ${spring.application.name}
   main:
     allow-bean-definition-overriding: true

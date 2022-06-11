@@ -2,6 +2,7 @@ package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.oauth2.config.SaOAuth2Config;
+import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
@@ -98,7 +99,8 @@ public class SysLoginService {
                         recordLogininfor(resultBody.getResult(), true, null);
                     } else {
                         checkLogin(loginType, username, () -> false);
-                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
+                        throw new SaOAuth2Exception(resultBody.getMessage());
+//                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
                     }
                     return resultBody;
                 }).
@@ -203,6 +205,9 @@ public class SysLoginService {
      * @return
      */
     public void recordLogininfor(JbmLoginUser jbmLoginUser, Boolean loginStatus, String message) {
+        if (ObjectUtil.isEmpty(jbmLoginUser)) {
+            return;
+        }
         HttpServletRequest request = WebUtils.getHttpServletRequest();
         BaseAccountLogs log = new BaseAccountLogs();
         log.setDomain(jbmLoginUser.getUserType());

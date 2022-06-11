@@ -1,8 +1,10 @@
 package com.jbm.framework.mvc;
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.exceptions.base.BaseException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
+import jbm.framework.spring.MessageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 public class WebExceptionResolve {
 
 
-    public final static String DEF_ERROR_MSG = "请求地址发生错误";
+    public final static String DEF_ERROR_MSG = "请求地址发生服务器错误";
 
     /**
      * 静态解析异常。可以直接调用
@@ -150,5 +152,17 @@ public class WebExceptionResolve {
 //        log.error("==> error:{}", resultBody, exception);
         return resultBody;
     }
+
+    public String getBaseExceptionMessage(BaseException baseException) {
+        String message = null;
+        if (!StrUtil.isEmpty(baseException.getCode())) {
+            message = MessageUtils.message(baseException.getCode(), baseException.getArgs());
+        }
+        if (message == null) {
+            message = baseException.getDefaultMessage();
+        }
+        return message;
+    }
+
 
 }

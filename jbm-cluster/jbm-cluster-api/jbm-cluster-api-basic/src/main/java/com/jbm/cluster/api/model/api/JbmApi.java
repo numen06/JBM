@@ -1,9 +1,9 @@
 package com.jbm.cluster.api.model.api;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMethod;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -15,6 +15,8 @@ import java.util.Set;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class JbmApi implements Serializable {
 
     /**
@@ -25,11 +27,11 @@ public class JbmApi implements Serializable {
     private String apiDesc;
     private Set<String> paths;
     private String className;
-    private Set<RequestMethod> requestMethods;
+    private Set<String> requestMethods;
     private String md5;
     private String requestMethod;
     private String serviceId;
-    private Set<MediaType> contentTypes;
+    private Set<String> contentTypes;
     private Boolean isAuth;
     private String permissions;
 

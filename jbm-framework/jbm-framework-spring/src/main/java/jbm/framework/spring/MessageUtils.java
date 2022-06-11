@@ -14,7 +14,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MessageUtils {
 
-    private static final MessageSource MESSAGE_SOURCE = SpringUtil.getBean(MessageSource.class);
+    private static final MessageSourceTamplate messageSourceTamplate = new MessageSourceTamplate(SpringUtil.getBean(MessageSource.class));
 
     /**
      * 根据消息键和参数 获取消息 委托给spring messageSource
@@ -24,6 +24,8 @@ public class MessageUtils {
      * @return 获取国际化翻译值
      */
     public static String message(String code, Object... args) {
-        return MESSAGE_SOURCE.getMessage(code, args, LocaleContextHolder.getLocale());
+        return messageSourceTamplate.getMessage(code, args, LocaleContextHolder.getLocale());
     }
+
+
 }
