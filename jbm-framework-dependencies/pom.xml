@@ -44,7 +44,7 @@
         <jbm.framework.version>6.1.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.8</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
-        <fastjson.version>1.2.79</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <minio.version>8.3.0</minio.version>
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>
