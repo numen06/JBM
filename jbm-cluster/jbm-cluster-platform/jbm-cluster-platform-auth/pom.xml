@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbm-cluster-platform-auth2</artifactId>
+    <artifactId>jbm-cluster-platform-auth</artifactId>
 
     <dependencies>
         <dependency>

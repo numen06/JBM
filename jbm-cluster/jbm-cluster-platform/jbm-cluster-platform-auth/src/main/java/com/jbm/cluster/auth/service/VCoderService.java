@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.validation.ValidationException;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -31,6 +32,9 @@ public class VCoderService {
     public Boolean verify(String vcode, String scope) {
         String key = this.getVcodePath(scope, vcode);
         boolean has = stringRedisTemplate.hasKey(key);
+        if (!has) {
+            throw new ValidationException("验证码错误");
+        }
 //        if (has) {
 //            try {
 //                stringRedisTemplate.delete(key);

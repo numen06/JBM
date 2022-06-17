@@ -10,14 +10,16 @@ import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.asymmetric.KeyType;
+import cn.hutool.crypto.asymmetric.RSA;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
-import com.jbm.cluster.api.form.auth.LoginWay;
 import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
@@ -28,8 +30,10 @@ import com.jbm.cluster.auth.service.feign.DynamicLoginFeignClient;
 import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.ServletUtils;
@@ -41,6 +45,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +71,12 @@ public class SysLoginService {
     @Autowired
     private RedisService redisService;
 
+    @Autowired
+    private BaseAppPreprocessing baseAppPreprocessing;
+
+    @Autowired
+    private VCoderService vCoderService;
+
     public JbmLoginUser conventJbmLoginUser(BaseUser baseUser) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         BeanUtil.copyProperties(baseUser, jbmLoginUser);
@@ -83,11 +94,18 @@ public class SysLoginService {
                 // 登录处理函数
                         setDoLoginHandle((username, password) -> {
                     String loginTypeValue = SaHolder.getRequest().getParam("loginType");
+                    String clientId = SaHolder.getRequest().getParam("client_id");
+                    String vcode = SaHolder.getRequest().getParam("vcode");
                     LoginType loginType = LoginType.PASSWORD;
                     if (StrUtil.isNotEmpty(loginTypeValue)) {
                         loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
                     }
-                    ResultBody<JbmLoginUser> resultBody = this.login(username, password, loginType);
+                    if (ObjectUtil.isEmpty(clientId)) {
+                        throw new SaOAuth2Exception("未知应用");
+                    }
+                    vCoderService.verify(vcode, null);
+                    final String pwd = decryptPassword(clientId, password);
+                    ResultBody<JbmLoginUser> resultBody = this.login(username, pwd, loginType);
                     //如果获取成功则直接登录，失败则返回错误信息
                     if (resultBody.getSuccess()) {
                         UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));
@@ -113,6 +131,24 @@ public class SysLoginService {
                 })
         ;
     }
+
+    /**
+     * 解密密码
+     *
+     * @param clientId
+     * @return
+     */
+    public String decryptPassword(String clientId, String key) {
+        try {
+            BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
+            KeyPair keyPair = SecurityUtils.generateRSAKey(baseApp.getSecretKey());
+            RSA rsa = SecureUtil.rsa(keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded());
+            return rsa.decryptStr(key, KeyType.PrivateKey);
+        } catch (Exception e) {
+            throw new ServiceException("处理登录信息异常");
+        }
+    }
+
 
     @Autowired
     private DynamicLoginFeignClient dynamicLoginFeignClient;
@@ -268,4 +304,6 @@ public class SysLoginService {
             redisService.deleteObject(errorKey);
         }
     }
+
+
 }

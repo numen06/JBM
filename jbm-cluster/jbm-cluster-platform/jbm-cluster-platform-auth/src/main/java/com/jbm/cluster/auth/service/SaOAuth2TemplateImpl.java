@@ -6,8 +6,10 @@ import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.SaClientModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,15 +21,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class SaOAuth2TemplateImpl extends SaOAuth2Template {
 
+    @Autowired
+    private BaseAppPreprocessing baseAppPreprocessing;
+
     // 根据 id 获取 Client 信息
     @Override
     public SaClientModel getClientModel(String clientId) {
-        // 此为模拟数据，真实环境需要从数据库查询
+        BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
         return new SaClientModel()
-                .setClientId(clientId)
-                .setClientSecret("aaaa-bbbb-cccc-dddd-eeee")
+                .setClientId(baseApp.getApiKey())
+                .setClientSecret(baseApp.getSecretKey())
                 .setAllowUrl("*")
-                .setContractScope("userinfo")
+                .setContractScope("*")
                 .setIsAutoMode(true);
     }
 

@@ -1,16 +1,17 @@
 package com.jbm.cluster.common.satoken.utils;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.basic.context.SecurityContextHolder;
-import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import com.jbm.framework.mvc.ServletUtils;
-import com.jbm.util.PasswordUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.KeyPair;
 
 /**
  * 权限获取工具类
@@ -73,6 +74,22 @@ public class SecurityUtils {
         }
         return token;
     }
+
+    public static KeyPair generateRSAKey(String seed) {
+        KeyPair keyPair = SecureUtil.generateKeyPair("RSA", 2048, seed.getBytes());
+        return keyPair;
+    }
+
+    public static String generateRSAPublicKey(String seed) {
+        String publicKey = Base64.encode(generateRSAKey(seed).getPublic().getEncoded());
+        return publicKey;
+    }
+
+    public static String generateRSAPrivateKey(String seed) {
+        String privateKey = Base64.encode(generateRSAKey(seed).getPrivate().getEncoded());
+        return privateKey;
+    }
+
 
     /**
      * 是否为管理员

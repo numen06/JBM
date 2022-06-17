@@ -4,6 +4,7 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author wesley.zhang
@@ -18,6 +19,9 @@ public interface IBaseAppServiceClient {
      */
     @GetMapping("/app/{appId}/info")
     ResultBody<BaseApp> getApp(@PathVariable("appId") String appId);
+
+    @GetMapping("/app/getAppByKey")
+    ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey);
 
 //    /**
 //     * 获取应用开发配置信息

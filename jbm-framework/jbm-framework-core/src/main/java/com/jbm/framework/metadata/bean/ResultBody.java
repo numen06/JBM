@@ -15,6 +15,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author wesley
@@ -210,5 +212,13 @@ public class ResultBody<T> implements Serializable {
         return result;
     }
 
+    public <R> R action(Function<? super T, ? super R> function) {
+        return (R) function.apply(this.result);
+    }
+
+    public ResultBody<T> call(Consumer<ResultBody<T>> consumer) {
+        consumer.accept(this);
+        return this;
+    }
 
 }

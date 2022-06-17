@@ -51,7 +51,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param appId
      * @return
      */
-    @ApiOperation(value = "获取应用详情", notes = "获取应用详情")
+    @ApiOperation(value = "获取应用详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
     })
@@ -61,6 +61,14 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @PathVariable("appId") String appId
     ) {
         BaseApp appInfo = baseAppService.getAppInfo(appId);
+        return ResultBody.ok().data(appInfo);
+    }
+
+    @ApiOperation(value = "通过appKey获取应用详情")
+    @GetMapping("/getAppByKey")
+    @Override
+    public ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey) {
+        BaseApp appInfo = baseAppService.getAppInfoByKey(appKey);
         return ResultBody.ok().data(appInfo);
     }
 

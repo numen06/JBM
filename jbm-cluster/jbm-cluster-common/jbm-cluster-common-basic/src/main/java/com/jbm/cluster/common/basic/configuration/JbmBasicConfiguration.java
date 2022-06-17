@@ -43,5 +43,10 @@ public class JbmBasicConfiguration {
         return jbmClusterStreamTemplate;
     }
 
+    @Bean
+    public BasicUnknownRuntimeExceptionFilter basicUnknownRuntimeExceptionFilter() {
+        return new BasicUnknownRuntimeExceptionFilter();
+    }
+
 
 }

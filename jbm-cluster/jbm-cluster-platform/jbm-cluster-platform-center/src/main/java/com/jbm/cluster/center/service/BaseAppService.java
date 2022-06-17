@@ -4,6 +4,7 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import org.springframework.cache.annotation.Cacheable;
 
 /**
  * 应用信息管理
@@ -43,6 +44,8 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
 //     * @param client
 //     */
 //    void updateAppClientInfo(OpenClientDetails client);
+
+    BaseApp getAppInfoByKey(String appKey);
 
     /**
      * 添加应用

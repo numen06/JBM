@@ -10,7 +10,7 @@ public class JbmClusterConstants {
     /**
      * 服务名称
      */
-    public static final String AUTH_SERVER = "jbm-cluster-platform-auth2";
+    public static final String AUTH_SERVER = "jbm-cluster-platform-auth";
 
     /**
      * 文档服务

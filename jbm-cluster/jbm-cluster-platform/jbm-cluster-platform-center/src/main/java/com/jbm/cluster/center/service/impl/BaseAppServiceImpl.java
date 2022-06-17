@@ -1,12 +1,15 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.center.mapper.BaseAppMapper;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author: wesley.zhang
@@ -89,10 +93,22 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * @param appId
      * @return
      */
-    @Cacheable(value = "apps", key = "#appId")
+    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appId")
     @Override
     public BaseApp getAppInfo(String appId) {
         return baseAppMapper.selectById(appId);
+    }
+
+    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey")
+    @Override
+    public BaseApp getAppInfoByKey(String appKey) {
+        if (ObjectUtils.isEmpty(appKey)) {
+            throw new ServiceException("key为空");
+        }
+        QueryWrapper<BaseApp> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda().eq(BaseApp::getApiKey, appKey);
+        List<BaseApp> list = baseAppMapper.selectList(queryWrapper);
+        return CollUtil.getFirst(list);
     }
 
     /**
@@ -101,7 +117,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * @return
      */
 //    @Override
-//    @Cacheable(value = "apps", key = "'client:'+#clientId")
+//    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "'client:'+#clientId")
 //    public OpenClientDetails getAppClientInfo(String clientId) {
 ////        BaseClientDetails baseClientDetails = null;
 ////        try {

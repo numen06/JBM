@@ -42,8 +42,8 @@ spring:
           lowerCaseServiceId: true
   #      routes:
   #        # 认证中心
-  #        - id: jbm-cluster-platform-auth2
-  #          uri: lb://jbm-cluster-platform-auth2
+  #        - id: jbm-cluster-platform-auth
+  #          uri: lb://jbm-cluster-platform-auth
   #          predicates:
   #            - Path=/auth/**
   #          filters:
