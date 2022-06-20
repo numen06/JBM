@@ -1,8 +1,6 @@
 package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.id.SaIdTemplate;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.util.ObjectUtil;

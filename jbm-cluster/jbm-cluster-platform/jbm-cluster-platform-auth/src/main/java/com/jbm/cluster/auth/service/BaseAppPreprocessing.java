@@ -6,7 +6,6 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.auth.service.feign.BaseAppServiceClient;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 

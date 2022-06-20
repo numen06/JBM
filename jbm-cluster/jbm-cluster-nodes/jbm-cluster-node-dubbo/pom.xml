@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.jbm</groupId>
         <artifactId>jbm-cluster-nodes</artifactId>
-        <version>7.0.1-SNAPSHOT</version>
+        <version>7.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,11 +16,11 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node-oauth</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.jbm</groupId>-->
+<!--            <artifactId>jbm-cluster-node-oauth</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-dubbo</artifactId>
