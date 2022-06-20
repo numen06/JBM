@@ -8,7 +8,7 @@ import com.jbm.framework.masterdata.service.IMultiPlatformTreeService;
  * @Create: 2020-03-24 03:28:09
  */
 public interface BaseOrgService extends IMultiPlatformTreeService<BaseOrg> {
-    BaseOrg findTopCompany(BaseOrg org);
+    BaseOrg     findTopCompany(BaseOrg org);
 
     BaseOrg findRelegationCompany(BaseOrg org);
 }

@@ -1,9 +1,12 @@
 package com.jbm.cluster.doc.controller;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;
 import com.google.common.base.Charsets;
+import com.jbm.cluster.doc.model.Token;
+import com.jbm.cluster.doc.service.FileService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.minio.StatObjectResponse;
 import io.swagger.annotations.Api;
@@ -40,6 +43,9 @@ public class DocumentController {
 
     @Autowired
     private MinioService minioService;
+
+    @Autowired
+    private FileService fileService;
 
     @ApiOperation(value = "获取文档列表")
     @GetMapping("/list/{filePath}")
@@ -124,7 +130,7 @@ public class DocumentController {
         response.addHeader("Content-disposition", "inline;filename=" + fileName);
         response.setContentType(URLConnection.guessContentTypeFromName(filePath));
         // Copy the stream to the response's output stream.
-        IOUtils.copyLarge(inputStream, response.getOutputStream());
+        IoUtil.copy(inputStream, response.getOutputStream());
         response.flushBuffer();
     }
 
@@ -142,8 +148,21 @@ public class DocumentController {
         response.addHeader("Content-disposition", "attachment;filename=" + fileName);
         response.setContentType(URLConnection.guessContentTypeFromName(filePath));
         // Copy the stream to the response's output stream.
-        IOUtils.copyLarge(inputStream, response.getOutputStream());
+        IoUtil.copy(inputStream, response.getOutputStream());
         response.flushBuffer();
+    }
+
+    /**
+     * 获取网络文件预览URL
+     *
+     * @param fileUrl fileUrl
+     * @return t
+     */
+    @GetMapping("getViewUrl")
+    public ResultBody<Token> getViewUrlWebPath(String fileUrl) {
+        log.info("getViewUrlWebPath：fileUrl={}", fileUrl);
+        Token t = fileService.getViewUrl(fileUrl, true);
+        return ResultBody.ok().data(t);
     }
 
     private static String getExtractPath(final HttpServletRequest request) {
