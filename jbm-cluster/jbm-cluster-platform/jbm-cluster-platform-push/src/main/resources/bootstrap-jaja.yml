@@ -2,15 +2,15 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: ${config.namespace}
+        namespace: jbm
         #        group: ${config.group}
         refreshable-dataids: common.properties
-        server-addr: ${config.server-addr}
+        server-addr: 10.100.10.98:8848
         shared-dataids: ${jbm.cluster.nacos-confs}
       discovery:
-#        namespace:
+        namespace: jbm
         #        group: ${config.group}
-        server-addr: ${discovery.server-addr}
+        server-addr: 10.100.10.98:8848
 #        ip: 10.100.50.2
 #dubbo:
 #  protocol:
@@ -19,6 +19,6 @@ spring:
 #  registry:
 #      address: spring-cloud://10.23.100.20
 
-logging:
-  logstash:
-    url: 10.100.10.98:4560
+#logging:
+#  logstash:
+#    url: 10.100.10.98:4560

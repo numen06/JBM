@@ -83,7 +83,7 @@ public class OAuth2ServerController {
      */
     @ApiOperation(value = "获取token", notes = "")
     @RequestMapping("/token")
-    public Object token() {
+    public Object token(AuthorizeForm authorizeForm) {
         return this.oauth2();
     }
 

@@ -1,4 +1,4 @@
-package com.jbm.cluster.auth.service;
+package com.jbm.cluster.auth.service.authenticate;
 
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.service.ILoginAuthenticate;

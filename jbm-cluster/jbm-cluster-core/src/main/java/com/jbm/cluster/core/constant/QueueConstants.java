@@ -42,6 +42,9 @@ public class QueueConstants {
      */
     public static final String QUEUE_CLUSTER_EVENT_EXCHANGE = QUEUE_CLUSTER_EVENT + ".exchange";
 
+
+
+    public static final String NOTIFICATION_STREAM = "notification-in-0";
     /**
      * 访问日志
      */

@@ -1,4 +1,4 @@
-package com.jbm.cluster.common.basic;
+package com.jbm.cluster.common.basic.module;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.model.api.JbmApiResource;

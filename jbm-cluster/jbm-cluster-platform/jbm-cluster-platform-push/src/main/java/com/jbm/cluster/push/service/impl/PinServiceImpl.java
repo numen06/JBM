@@ -52,8 +52,9 @@ public class PinServiceImpl implements PinService {
     public JSONObject sendPinCode(String phoneNumber) throws Exception {
         final String key = JbmConstants.PIN_PREFIX + phoneNumber;
         Integer count = NumberUtil.parseInt(stringRedisTemplate.opsForValue().get(key));
-        if (count > 3)
+        if (count > 3) {
             throw new ServiceException("短信数量超限请稍后重试");
+        }
         count++;
         final String code = buildCode(phoneNumber);
         JSONObject ret = aliyunSmsTemplate.sendPin(code, phoneNumber);

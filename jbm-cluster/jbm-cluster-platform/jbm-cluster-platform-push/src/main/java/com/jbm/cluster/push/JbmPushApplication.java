@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author wesley.zhang
  */
 @EnableClusterEventBus(basePackages = {"com.jbm.cluster.push"})
-@EnableFeignClients("com.jbm.cluster.push.fegin")
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableScheduling

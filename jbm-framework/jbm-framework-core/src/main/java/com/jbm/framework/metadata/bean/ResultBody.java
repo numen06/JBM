@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author wesley
@@ -216,9 +217,12 @@ public class ResultBody<T> implements Serializable {
         return (R) function.apply(this.result);
     }
 
-    public ResultBody<T> call(Consumer<ResultBody<T>> consumer) {
-        consumer.accept(this);
-        return this;
+    public static <T> ResultBody<T> callback(Supplier<T> supplier) {
+        return ResultBody.ok().data(supplier.get());
+    }
+
+    public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
+        return ResultBody.ok().data(supplier.get()).msg(msg);
     }
 
 }

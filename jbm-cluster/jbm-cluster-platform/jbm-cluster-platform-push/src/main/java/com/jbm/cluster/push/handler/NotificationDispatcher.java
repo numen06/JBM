@@ -1,6 +1,7 @@
 package com.jbm.cluster.push.handler;
 
 import com.jbm.cluster.api.entitys.message.Notification;
+import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.push.usage.NotificationExchanger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -50,7 +51,7 @@ public class NotificationDispatcher implements ApplicationContextAware {
         final Message<Notification> message = MessageBuilder.withPayload(notification)
                 .setHeader("class", notification.getClass())
                 .build();
-        streamBridge.send("notification-in-0", message);
+        streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
     }
 
     @Bean

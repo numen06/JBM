@@ -4,7 +4,7 @@ import cn.hutool.core.util.BooleanUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.api.JbmApi;
 import com.jbm.cluster.api.model.api.JbmApiResource;
-import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
+import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.configuration.apis.ApiBuild;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import jbm.framework.spring.config.SpringContextHolder;

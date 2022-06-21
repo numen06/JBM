@@ -1,5 +1,7 @@
-package com.jbm.cluster.auth.service.feign;
+package com.jbm.cluster.auth.service;
 
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
@@ -10,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClientBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 
 /**
@@ -26,6 +30,8 @@ public class DynamicLoginFeignClient {
     private RedisService redisService;
     @Autowired
     private LoginAuthenticateFallback loginAuthenticateFallback;
+    @Autowired
+    private ApplicationContext applicationContext;
 
 
     public DynamicLoginFeignClient(@Autowired ApplicationContext appContext) {
@@ -45,7 +51,25 @@ public class DynamicLoginFeignClient {
 
     }
 
+    public ILoginAuthenticate findLoalLoginAuthenticate(LoginType loginType) {
+        Map<String, ILoginAuthenticate> loginBeans = applicationContext.getBeansOfType(ILoginAuthenticate.class);
+        if (MapUtil.isEmpty(loginBeans)) {
+            return null;
+        }
+        for (ILoginAuthenticate authenticate : loginBeans.values()) {
+            if (authenticate.getLoginType().equals(loginType)) {
+                return authenticate;
+            }
+        }
+        return null;
+    }
+
+
     public ILoginAuthenticate getFeginLoginAuthenticate(LoginType loginType) {
+        ILoginAuthenticate authenticate = this.findLoalLoginAuthenticate(loginType);
+        if (ObjectUtil.isNotEmpty(authenticate)) {
+            return authenticate;
+        }
         return this.getFeginLoginAuthenticate(this.findLoginServiceName(loginType));
     }
 

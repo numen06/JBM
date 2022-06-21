@@ -1,10 +1,11 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.core.lang.Validator;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
+import com.jbm.cluster.auth.service.PCoderService;
 import com.jbm.cluster.auth.service.VCoderService;
-import com.jbm.cluster.auth.service.feign.BaseAppServiceClient;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -15,8 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Api(tags = "验证码中心")
 @RestController
@@ -26,17 +26,19 @@ public class CaptchaController {
     @Autowired
     private VCoderService vCoderService;
     @Autowired
+    private PCoderService pCoderService;
+    @Autowired
     private BaseAppPreprocessing baseAppPreprocessing;
 
     @ApiOperation(value = "获取应用公钥", notes = "")
     @GetMapping(value = "/pkey")
     public ResultBody<String> getPKey(@RequestParam(required = true) String appKey) {
-        return new ResultBody<String>().call(new Consumer<ResultBody<String>>() {
+        return ResultBody.callback(new Supplier<String>() {
             @Override
-            public void accept(ResultBody<String> stringResultBody) {
+            public String get() {
                 BaseApp baseApp = baseAppPreprocessing.getAppByKey(appKey);
                 String pkey = SecurityUtils.generateRSAPublicKey(baseApp.getSecretKey());
-                stringResultBody.setResult(pkey);
+                return pkey;
             }
         });
     }
@@ -61,6 +63,15 @@ public class CaptchaController {
         //图形验证码写出，可以写出到文件，也可以写出到流
         //验证图形验证码的有效性，返回boolean值
         lineCaptcha.write(response.getOutputStream());
+    }
+
+    @ApiOperation(value = "发送验证码")
+    @GetMapping(value = "/pcode")
+    public ResultBody<Boolean> pcode(@RequestParam(required = true) String phone, @RequestParam(required = true) String vcode) throws IOException {
+        vCoderService.verify(vcode);
+        Validator.validateMobile(phone, "非法手机号");
+        pCoderService.send(phone);
+        return ResultBody.success("验证码发送成功");
     }
 
     /**
@@ -90,4 +101,5 @@ public class CaptchaController {
     public ResultBody<Boolean> verify(@PathVariable(value = "scope") String scope, @RequestParam(required = false) String vcode, HttpServletRequest request) throws IOException {
         return ResultBody.ok().data(vCoderService.verify(vcode, scope));
     }
+
 }

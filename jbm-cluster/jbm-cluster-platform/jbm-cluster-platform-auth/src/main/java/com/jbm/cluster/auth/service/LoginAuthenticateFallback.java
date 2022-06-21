@@ -1,4 +1,4 @@
-package com.jbm.cluster.auth.service.feign;
+package com.jbm.cluster.auth.service;
 
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.entitys.basic.BaseUser;

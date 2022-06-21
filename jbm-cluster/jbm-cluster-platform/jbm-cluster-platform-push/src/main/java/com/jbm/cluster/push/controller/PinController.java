@@ -9,6 +9,7 @@ import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,14 +21,13 @@ public class PinController {
     @Autowired
     private PinService pinService;
 
-
     /**
      * @Description: 获取短信验证码
      * @Author: wesley.zhang
      * @Date: 2018/12/13
      **/
     @ApiOperation("发送验证码")
-    @PostMapping("/send")
+    @GetMapping("/send")
     public ResultBody sendCode(String phoneNumber) {
         try {
             if (!Validator.isMobile(phoneNumber)) {
@@ -40,7 +40,6 @@ public class PinController {
         } catch (Exception e) {
             return ResultBody.error(e);
         }
-
     }
 
     /**

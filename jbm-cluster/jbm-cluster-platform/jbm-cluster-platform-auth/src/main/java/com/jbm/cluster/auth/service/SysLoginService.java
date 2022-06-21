@@ -26,8 +26,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
-import com.jbm.cluster.auth.service.feign.DynamicLoginFeignClient;
-import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
+import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -103,8 +102,12 @@ public class SysLoginService {
                     if (ObjectUtil.isEmpty(clientId)) {
                         throw new SaOAuth2Exception("未知应用");
                     }
-                    vCoderService.verify(vcode, null);
-                    final String pwd = decryptPassword(clientId, password);
+                    String pwd = password;
+                    //不是短信登录的时候需要加密
+                    if (loginType.equals(LoginType.PASSWORD)) {
+                        vCoderService.verify(vcode, null);
+                        pwd = decryptPassword(clientId, password);
+                    }
                     ResultBody<JbmLoginUser> resultBody = this.login(username, pwd, loginType);
                     //如果获取成功则直接登录，失败则返回错误信息
                     if (resultBody.getSuccess()) {
@@ -130,6 +133,13 @@ public class SysLoginService {
                     return SaResult.error("确认登录");
                 })
         ;
+    }
+
+    /**
+     * 预登录
+     */
+    public void preLogin() {
+
     }
 
     /**

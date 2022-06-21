@@ -1,0 +1,48 @@
+package com.jbm.cluster.auth.service;
+
+import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
+import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private IBaseUserServiceClient baseUserServiceClient;
+
+    public JbmLoginUser findUserByUsername(String userName) {
+        return baseUserServiceClient.userLogin(userName).action(new Function<UserAccount, JbmLoginUser>() {
+            @Override
+            public JbmLoginUser apply(UserAccount userAccount) {
+                return userAccountToLoginUser(userAccount);
+            }
+        });
+
+    }
+
+    public JbmLoginUser userAccountToLoginUser(UserAccount account) {
+        JbmLoginUser jbmLoginUser = null;
+        jbmLoginUser = new JbmLoginUser();
+        jbmLoginUser.setUserId(account.getUserId());
+        BaseUser baseUser = baseUserServiceClient.getUserInfoById(account.getUserId()).getResult();
+        jbmLoginUser.setUsername(baseUser.getUserName());
+        jbmLoginUser.setAccount(account.getAccount());
+        jbmLoginUser.setAccountType(account.getAccountType());
+        jbmLoginUser.setDeptId(account.getDepartmentId());
+        Set<String> roles = account.getRoles().stream().map(BaseRole::getRoleCode).collect(Collectors.toSet());
+        jbmLoginUser.setRoles(roles);
+        Set<String> menuPermission = account.getAuthorities().stream().map(OpenAuthority::getAuthority).collect(Collectors.toSet());
+        jbmLoginUser.setMenuPermission(menuPermission);
+        return jbmLoginUser;
+    }
+
+}

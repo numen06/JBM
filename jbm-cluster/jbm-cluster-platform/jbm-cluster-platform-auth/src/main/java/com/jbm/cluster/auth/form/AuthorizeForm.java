@@ -28,4 +28,6 @@ public class AuthorizeForm {
     private String scope;
     @ApiModelProperty("授权码")
     private String code;
+    @ApiModelProperty("登录方式")
+    private String loginType;
 }

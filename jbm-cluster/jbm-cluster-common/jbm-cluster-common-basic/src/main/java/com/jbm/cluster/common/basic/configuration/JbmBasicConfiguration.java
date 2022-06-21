@@ -1,6 +1,6 @@
 package com.jbm.cluster.common.basic.configuration;
 
-import com.jbm.cluster.common.basic.JbmClusterStreamTemplate;
+import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
  * @Date 2022/4/27 2:46
  * @Description TODO
  */
-@Configuration
 @EnableConfigurationProperties({JbmClusterProperties.class})
 public class JbmBasicConfiguration {
     @Autowired
