@@ -79,6 +79,7 @@ public class LoginHelper {
 //        }
         LOGIN_CACHE.set(loginUser);
         StpUtil.login(loginUser.getLoginId(), device);
+        loginUser.setToken(StpUtil.getTokenValue());
         setLoginUser(loginUser);
     }
 

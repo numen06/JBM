@@ -106,8 +106,8 @@ public class OAuth2ServerController {
     }
 
     @ApiOperation(value = "登录", notes = "")
-    @RequestMapping("/doLogin")
-    public Object doLogin() {
+    @PostMapping("/doLogin")
+    public Object doLogin(AuthorizeForm authorizeForm) {
         return this.oauth2();
     }
 

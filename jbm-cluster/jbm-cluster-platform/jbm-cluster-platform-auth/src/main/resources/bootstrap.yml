@@ -37,4 +37,5 @@ jbm:
     permit-all:
       - /oauth2/**
       - /captcha/**
+      - /qrcode/**
 
