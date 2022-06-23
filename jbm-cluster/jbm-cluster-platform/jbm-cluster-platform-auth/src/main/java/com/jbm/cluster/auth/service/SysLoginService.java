@@ -1,15 +1,13 @@
 package com.jbm.cluster.auth.service;
 
-import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.oauth2.config.SaOAuth2Config;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
@@ -25,6 +23,7 @@ import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
@@ -35,7 +34,6 @@ import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.ServletUtils;
 import com.jbm.framework.mvc.WebUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
@@ -88,58 +86,58 @@ public class SysLoginService {
         cfg.
                 // 未登录的视图
                         setNotLoginView(() -> {
-                    return SaResult.error("你还没有登录");
+                    return ResultBody.error("你还没有登录");
                 }).
                 // 登录处理函数
-                        setDoLoginHandle((username, password) -> {
-                    String loginTypeValue = SaHolder.getRequest().getParam("loginType");
-                    String clientId = SaHolder.getRequest().getParam("client_id");
-                    String vcode = SaHolder.getRequest().getParam("vcode");
-                    LoginType loginType = LoginType.PASSWORD;
-                    if (StrUtil.isNotEmpty(loginTypeValue)) {
-                        loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
+                        setDoLoginHandle(new SaOAuthLoginHandle() {
+                    @Override
+                    public String doDecryptPassword(LoginProcessModel loginProcessModel) {
+                        return decryptPassword(loginProcessModel.getClientId(), loginProcessModel.getOriginalPassword());
                     }
-                    if (ObjectUtil.isEmpty(clientId)) {
-                        throw new SaOAuth2Exception("未知应用");
+
+                    @Override
+                    public void preCheck(LoginProcessModel loginProcessModel) {
+                        if (loginProcessModel.getLoginType().equals(LoginType.PASSWORD)) {
+                            vCoderService.verify(loginProcessModel.getVcode(), null);
+                        }
+                        SaOAuth2Util.checkClientModel(loginProcessModel.getClientId());
                     }
-                    String pwd = password;
-                    //不是短信登录的时候需要加密
-                    if (loginType.equals(LoginType.PASSWORD)) {
-                        vCoderService.verify(vcode, null);
-                        pwd = decryptPassword(clientId, password);
+
+                    @Override
+                    public ResultBody doCheck(LoginProcessModel loginProcessModel) {
+                        return checkLoginIdentity(loginProcessModel);
                     }
-                    ResultBody<JbmLoginUser> resultBody = this.login(username, pwd, loginType);
-                    //如果获取成功则直接登录，失败则返回错误信息
-                    if (resultBody.getSuccess()) {
-                        UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));
-                        log.info("获取到了用户信息,触发登录");
-                        checkLogin(loginType, username, () -> true);
-                        //设置系统名称
-                        resultBody.getResult().setDevice(userAgent.getOs().getName());
-                        LoginHelper.login(resultBody.getResult());
-                        recordLogininfor(resultBody.getResult(), true, null);
-                    } else {
-                        checkLogin(loginType, username, () -> false);
-                        throw new SaOAuth2Exception(resultBody.getMessage());
-//                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
-                    }
-                    return resultBody;
                 }).
                 // 授权确认视图
                         setConfirmView((clientId, scope) -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("clientId", clientId);
                     map.put("scope", scope);
-                    return SaResult.error("确认登录");
-                })
-        ;
+                    return ResultBody.error("确认登录");
+                });
     }
 
     /**
-     * 预登录
+     * 实现登录接口
+     *
+     * @return
      */
-    public void preLogin() {
-
+    public ResultBody checkLoginIdentity(LoginProcessModel loginProcessModel) {
+        ResultBody<JbmLoginUser> resultBody = this.login(loginProcessModel.getUsername(), loginProcessModel.getDecryptPassword(), loginProcessModel.getLoginType());
+        //如果获取成功则直接登录，失败则返回错误信息
+        if (resultBody.getSuccess()) {
+            log.info("获取到了用户信息,触发登录");
+            checkLogin(loginProcessModel.getLoginType(), loginProcessModel.getUsername(), () -> true);
+            //设置系统名称
+            resultBody.getResult().setDevice(loginProcessModel.getLoginDevice());
+            LoginHelper.login(resultBody.getResult());
+            recordLogininfor(resultBody.getResult(), true, null);
+        } else {
+            checkLogin(loginProcessModel.getLoginType(), loginProcessModel.getUsername(), () -> false);
+            throw new SaOAuth2Exception(resultBody.getMessage());
+//                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
+        }
+        return resultBody;
     }
 
     /**
@@ -148,6 +146,7 @@ public class SysLoginService {
      * @param clientId
      * @return
      */
+
     public String decryptPassword(String clientId, String key) {
         try {
             BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
@@ -158,7 +157,6 @@ public class SysLoginService {
             throw new ServiceException("处理登录信息异常");
         }
     }
-
 
     @Autowired
     private DynamicLoginFeignClient dynamicLoginFeignClient;

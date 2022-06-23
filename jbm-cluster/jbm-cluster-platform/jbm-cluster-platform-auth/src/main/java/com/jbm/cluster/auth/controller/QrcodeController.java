@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.Supplier;
 
-@Api(tags = "验证码中心")
+@Api(tags = "二维码中心")
 @RestController
 @RequestMapping("/qrcode")
 public class QrcodeController {
