@@ -59,6 +59,8 @@ public abstract class SaOAuthLoginHandle implements BiFunction<String, String, O
         if (StrUtil.isBlank(clientId)) {
             throw new SaTokenException("未知应用");
         }
+        String vcode = request.getParam("vcode");
+        loginProcessModel.setVcode(vcode);
         loginProcessModel.setClientId(clientId);
         String loginTypeValue = request.getParam("loginType");
         loginProcessModel.setLoginTypeValue(loginTypeValue);

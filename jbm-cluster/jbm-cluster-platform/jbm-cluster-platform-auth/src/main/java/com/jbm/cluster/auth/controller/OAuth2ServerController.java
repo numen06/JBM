@@ -15,12 +15,11 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
+import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -99,10 +98,15 @@ public class OAuth2ServerController {
         return this.oauth2();
     }
 
+    @Autowired
+    private ConfirmService confirmService;
+
     @ApiOperation(value = "确认认证", notes = "")
     @RequestMapping("/doConfirm")
-    public Object doConfirm() {
-        return this.oauth2();
+    public Object doConfirm(@RequestParam(required = false) String code) {
+        Object result = this.oauth2();
+        confirmService.doConfirm(code);
+        return result;
     }
 
     @ApiOperation(value = "登录", notes = "")

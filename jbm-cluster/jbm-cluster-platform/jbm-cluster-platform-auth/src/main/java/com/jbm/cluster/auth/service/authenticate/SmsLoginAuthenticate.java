@@ -21,6 +21,7 @@ public class SmsLoginAuthenticate implements ILoginAuthenticate {
     @Autowired
     private UserService userService;
 
+
     @Override
     public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
         return ResultBody.callback("短信登录成功", new Supplier<JbmLoginUser>() {
