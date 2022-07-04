@@ -105,7 +105,7 @@ public class OpcUaTemplate {
             }
         } catch (Exception e) {
             log.error("读取OPCUA设备失败", e);
-            throw e;
+//            throw e;
         }
     }
 
@@ -135,8 +135,9 @@ public class OpcUaTemplate {
      */
     public OpcUaClient getOpcUaClient(String deviceId, OpcUaSource driverInfo) {
         OpcUaClient opcUaClient = null;
-        if (clientMap.containsKey(deviceId))
+        if (clientMap.containsKey(deviceId) && clientMap.get(deviceId).getOpcUaClient() != null) {
             return clientMap.get(deviceId).getOpcUaClient();
+        }
         try {
             KeyLoader loader = new KeyLoader().load(Paths.get(FileUtil.getTmpDirPath()));
             if (null == opcUaClient) {
@@ -272,8 +273,9 @@ public class OpcUaTemplate {
      */
     public UaSubscription getSubscription(OpcUaClient client) throws ExecutionException, InterruptedException {
         UaSubscription subscription = CollUtil.getFirst(client.getSubscriptionManager().getSubscriptions());
-        if (subscription == null)
+        if (subscription == null) {
             subscription = client.getSubscriptionManager().createSubscription(1000.0).get();
+        }
         return subscription;
     }
 
