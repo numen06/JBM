@@ -42,6 +42,8 @@ public class LoginAuthenticateController implements ILoginAuthenticate {
             jbmLoginUser.setUserId(account.getUserId());
             BaseUser baseUser = baseUserService.getUserById(account.getUserId());
             jbmLoginUser.setUsername(baseUser.getUserName());
+            jbmLoginUser.setRealName(baseUser.getRealName());
+            jbmLoginUser.setMobile(baseUser.getMobile());
             jbmLoginUser.setAccount(account.getAccount());
             jbmLoginUser.setAccountType(account.getAccountType());
             jbmLoginUser.setDeptId(account.getDepartmentId());

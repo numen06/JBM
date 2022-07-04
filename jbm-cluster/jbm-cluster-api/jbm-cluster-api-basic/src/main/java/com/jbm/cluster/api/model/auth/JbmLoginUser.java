@@ -35,6 +35,17 @@ public class JbmLoginUser implements Serializable {
     private Long userId;
 
     /**
+     * 手机号
+     */
+    private String mobile;
+
+    /**
+     * 真实姓名
+     */
+    private String realName;
+
+
+    /**
      * 用户的OPENID
      */
     private String openId;

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 当前在线会话
@@ -64,6 +65,9 @@ public class SysUserOnline implements Serializable {
      * 登录时间
      */
     @ApiModelProperty(value = "登录时间")
-    private Long loginTime;
+    private Date loginTime;
+
+    @ApiModelProperty(value = "过期时间")
+    private Date expiredTime;
 
 }

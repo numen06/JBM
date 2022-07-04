@@ -3,6 +3,9 @@ package com.jbm.cluster.auth.listener;
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.listener.SaTokenListener;
 import cn.dev33.satoken.stp.SaLoginModel;
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
@@ -50,8 +53,9 @@ public class UserActionListener implements SaTokenListener {
         userOnline.setLoginLocation(IpUtils.getAddressByIP(ip));
         userOnline.setBrowser(userAgent.getBrowser().getName());
         userOnline.setOs(userAgent.getOs().getName());
-        userOnline.setLoginTime(System.currentTimeMillis());
+        userOnline.setLoginTime(DateTime.now());
         userOnline.setTokenId(tokenValue);
+        userOnline.setExpiredTime(DateUtil.offsetSecond(userOnline.getLoginTime(), loginModel.getTimeout().intValue()));
         userOnline.setUserName(user.getUsername());
         if (ObjectUtil.isNotNull(user.getDeptName())) {
             userOnline.setDeptName(user.getDeptName());

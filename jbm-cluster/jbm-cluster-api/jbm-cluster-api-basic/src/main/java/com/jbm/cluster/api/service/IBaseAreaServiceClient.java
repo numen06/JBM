@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-@RequestMapping("/baseArea")
 public interface IBaseAreaServiceClient {
 
     @ApiOperation("获取地区字典")

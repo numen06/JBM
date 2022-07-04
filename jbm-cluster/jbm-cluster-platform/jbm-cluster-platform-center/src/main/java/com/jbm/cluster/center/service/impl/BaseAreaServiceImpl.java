@@ -35,7 +35,7 @@ import java.util.Map;
 @Service
 public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> implements BaseAreaService, ApplicationListener<ApplicationReadyEvent> {
 
-    private final static String CACHE_KEY = "areaList";
+    private final static String CACHE_KEY = "chinaAreaList";
 
     @Resource
     private BaseAreaMapper baseAreaMapper;

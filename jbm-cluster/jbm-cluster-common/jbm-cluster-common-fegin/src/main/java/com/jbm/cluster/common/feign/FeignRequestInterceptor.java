@@ -29,19 +29,19 @@ public class FeignRequestInterceptor implements RequestInterceptor {
     @Override
     public void apply(RequestTemplate requestTemplate) {
         HttpServletRequest httpServletRequest = ServletUtils.getRequest();
-        if (ObjectUtil.isNull(httpServletRequest))
+        if (ObjectUtil.isNull(httpServletRequest)) {
             return;
-        Map<String, String> headers = ServletUtils.getHeaders(httpServletRequest);
+        }
         // 传递用户信息请求头，防止丢失
-        String userId = headers.get(JbmSecurityConstants.DETAILS_USER_ID);
+        String userId = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.DETAILS_USER_ID);
         if (StrUtil.isNotEmpty(userId)) {
             requestTemplate.header(JbmSecurityConstants.DETAILS_USER_ID, userId);
         }
-        String userName = headers.get(JbmSecurityConstants.DETAILS_USERNAME);
+        String userName = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.DETAILS_USERNAME);
         if (StrUtil.isNotEmpty(userName)) {
             requestTemplate.header(JbmSecurityConstants.DETAILS_USERNAME, userName);
         }
-        String authentication = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
+        String authentication = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.AUTHORIZATION_HEADER);
         if (StrUtil.isNotEmpty(authentication)) {
             requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
         }
