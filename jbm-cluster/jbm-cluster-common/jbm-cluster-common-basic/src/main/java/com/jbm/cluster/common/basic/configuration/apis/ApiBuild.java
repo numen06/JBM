@@ -68,6 +68,7 @@ public class ApiBuild {
         }
         name = StringUtils.isBlank(name) ? methodName : name;
         api.apiName(name)
+                .methodName(methodName)
                 .apiCode(md5)
                 .apiDesc(desc)
                 .paths(requestMappingInfo.getPatternsCondition().getPatterns())

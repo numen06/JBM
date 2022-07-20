@@ -35,6 +35,7 @@ import java.util.Map;
  * @description:
  */
 @Api(tags = "系统权限管理")
+@RequestMapping("/authority")
 @RestController
 public class BaseAuthorityController implements IBaseAuthorityServiceClient {
 
@@ -51,7 +52,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "获取所有访问权限列表", notes = "获取所有访问权限列表")
-    @GetMapping("/authority/access")
+    @GetMapping("/access")
     @Override
     public ResultBody<List<AuthorityResource>> findAuthorityResource() {
         List<AuthorityResource> result = baseAuthorityService.findAuthorityResource();
@@ -64,7 +65,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "获取接口权限列表", notes = "获取接口权限列表")
-    @GetMapping("/authority/api")
+    @GetMapping("/api")
     public ResultBody<List<AuthorityApi>> findAuthorityApi(
             @RequestParam(value = "serviceId", required = false) String serviceId
     ) {
@@ -79,7 +80,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
-    @GetMapping("/authority/menu")
+    @GetMapping("/menu")
     @Override
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
@@ -92,7 +93,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
-    @GetMapping("/authority/menu/treeList")
+    @GetMapping("/menu/treeList")
     public ResultBody<List<AuthorityMenu>> findAuthorityMenuTreeList() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
         List<Map<String, Object>> result2 = ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
@@ -109,7 +110,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
     })
-    @GetMapping("/authority/action")
+    @GetMapping("/action")
     public ResultBody<List<BaseAuthorityAction>> findAuthorityAction(
             @RequestParam(value = "actionId") Long actionId
     ) {
@@ -128,7 +129,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
-    @GetMapping("/authority/role")
+    @GetMapping("/role")
     public ResultBody<List<OpenAuthority>> findAuthorityRole(Long roleId) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(roleId);
         return ResultBody.ok().data(result);
@@ -140,7 +141,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "获取角色已分配权限JSON方式", notes = "获取角色已分配权限")
-    @PostMapping("/authority/byRole")
+    @PostMapping("/byRole")
     public ResultBody<List<OpenAuthority>> findAuthorityRoles(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(baseAuthorityRoleForm.getRoleId());
         return ResultBody.ok().data(result);
@@ -156,7 +157,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
     })
-    @PostMapping("/authority/byUser")
+    @PostMapping("/byUser")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
         BaseUser user = baseUserService.getUserById(baseAuthorityUserForm.getUserId());
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), JbmConstants.ROOT.equals(user.getUserName()));
@@ -173,7 +174,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
     })
-    @GetMapping("/authority/user")
+    @GetMapping("/user")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(
             @RequestParam(value = "userId") Long userId
     ) {
@@ -193,7 +194,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
     })
-    @GetMapping("/authority/app")
+    @GetMapping("/app")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(
             @RequestParam(value = "appId") String appId
     ) {
@@ -211,7 +212,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
     })
-    @PostMapping("/authority/byApp")
+    @PostMapping("/byApp")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(@RequestBody(required = false) BaseAuthorityApp baseAuthorityApp) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(baseAuthorityApp.getAppId());
         return ResultBody.ok().data(result);
@@ -231,7 +232,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
-    @PostMapping("/authority/role/grant")
+    @PostMapping("/role/grant")
     public ResultBody grantAuthorityRole(
             @RequestParam(value = "roleId") Long roleId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
@@ -249,7 +250,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @return
      */
     @ApiOperation(value = "分配角色权限JSON提交方式", notes = "分配角色权限")
-    @PostMapping("/authority/grant/role")
+    @PostMapping("/grant/role")
     public ResultBody grantAuthorityRole(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
         baseAuthorityService.addAuthorityRole(baseAuthorityRoleForm.getRoleId(), baseAuthorityRoleForm.getExpireTime(), baseAuthorityRoleForm.getAuthorityIds());
         jbmClusterTemplate.refreshGateway();
@@ -271,7 +272,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
-    @PostMapping("/authority/user/grant")
+    @PostMapping("/user/grant")
     public ResultBody grantAuthorityUser(
             @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
@@ -283,7 +284,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     }
 
     @ApiOperation(value = "分配用户权限JSON提交方式", notes = "分配用户权限")
-    @PostMapping("/authority/grant/user")
+    @PostMapping("/grant/user")
     public ResultBody grantAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
         baseAuthorityService.addAuthorityUser(baseAuthorityUserForm.getUserId(), baseAuthorityUserForm.getExpireTime(), baseAuthorityUserForm.getAuthorityIds());
         jbmClusterTemplate.refreshGateway();
@@ -305,7 +306,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
-    @PostMapping("/authority/app/grant")
+    @PostMapping("/app/grant")
     public ResultBody grantAuthorityApp(
             @RequestParam(value = "appId") String appId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
@@ -328,7 +329,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
             @ApiImplicitParam(name = "authorityIds", required = false, value = "全新ID:多个用,号隔开", paramType = "form"),
     })
-    @PostMapping("/authority/action/grant")
+    @PostMapping("/action/grant")
     public ResultBody grantAuthorityAction(
             @RequestParam(value = "actionId") Long actionId,
             @RequestParam(value = "authorityIds", required = false) String authorityIds

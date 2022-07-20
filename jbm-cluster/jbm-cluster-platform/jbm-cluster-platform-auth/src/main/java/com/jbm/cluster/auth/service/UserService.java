@@ -26,8 +26,8 @@ public class UserService {
                 return userAccountToLoginUser(userAccount);
             }
         });
-
     }
+
 
     public JbmLoginUser userAccountToLoginUser(UserAccount account) {
         JbmLoginUser jbmLoginUser = null;
@@ -35,6 +35,8 @@ public class UserService {
         jbmLoginUser.setUserId(account.getUserId());
         BaseUser baseUser = baseUserServiceClient.getUserInfoById(account.getUserId()).getResult();
         jbmLoginUser.setUsername(baseUser.getUserName());
+        jbmLoginUser.setRealName(baseUser.getRealName());
+        jbmLoginUser.setMobile(baseUser.getMobile());
         jbmLoginUser.setAccount(account.getAccount());
         jbmLoginUser.setAccountType(account.getAccountType());
         jbmLoginUser.setDeptId(account.getDepartmentId());

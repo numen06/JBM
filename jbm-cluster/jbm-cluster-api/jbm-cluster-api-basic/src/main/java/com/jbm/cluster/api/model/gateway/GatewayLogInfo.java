@@ -1,6 +1,5 @@
 package com.jbm.cluster.api.model.gateway;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +19,30 @@ public class GatewayLogInfo implements Serializable {
 
     @ApiModelProperty(value = "路径")
     private String path;
+
+    @ApiModelProperty(value = "请求人ID")
+    private Long requestUserId;
+
+    @ApiModelProperty(value = "请求人")
+    private String requestRealName;
+
+    @ApiModelProperty(value = "接口名称")
+    private String apiName;
+
+    @ApiModelProperty(value = "操作类型")
+    private String operationType;
+
+//    @ApiModelProperty(value = "操作反馈")
+//    private String operationFeedback;
+
+    @ApiModelProperty(value = "应用ID")
+    private String appId;
+
+    @ApiModelProperty(value = "应用Key")
+    private String appKey;
+
+    @ApiModelProperty(value = "应用名称")
+    private String appName;
 
     @ApiModelProperty(value = "请求类型")
     private String method;

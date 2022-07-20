@@ -10,11 +10,19 @@ import org.springframework.context.annotation.Configuration;
  * @author wesley.zhang
  **/
 @Configuration
-public class FeignAutoConfiguration
-{
+public class FeignAutoConfiguration {
     @Bean
-    public RequestInterceptor requestInterceptor()
-    {
+    public RequestInterceptor requestInterceptor() {
         return new FeignRequestInterceptor();
+    }
+
+    @Bean
+    public AppPreRequestInterceptor appPreRequestInterceptor() {
+        return new AppPreRequestInterceptor();
+    }
+
+    @Bean
+    public FeignUnknownRuntimeExceptionFilter feginUnknownRuntimeExceptionFilter() {
+        return new FeignUnknownRuntimeExceptionFilter();
     }
 }

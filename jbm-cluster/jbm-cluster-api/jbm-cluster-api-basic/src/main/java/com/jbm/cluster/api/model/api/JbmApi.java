@@ -27,12 +27,15 @@ public class JbmApi implements Serializable {
     private String apiDesc;
     private Set<String> paths;
     private String className;
+    private String methodName;
     private Set<String> requestMethods;
     private String md5;
     private String requestMethod;
     private String serviceId;
     private Set<String> contentTypes;
     private Boolean isAuth;
+    private Boolean accessLog;
+    private Boolean businessScope;
     private String permissions;
 
 

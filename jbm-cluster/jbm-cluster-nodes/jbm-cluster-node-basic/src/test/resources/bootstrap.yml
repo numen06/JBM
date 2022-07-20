@@ -7,6 +7,16 @@ spring:
     #手动配置Bus id,
     bus:
       id: jbm-cluster-node-basic}:${server.port}
+    # sentinel 配置
+    sentinel:
+      filter:
+        # sentinel 在 springboot 2.6.x 不兼容问题的处理
+        enabled: false
+      # 取消控制台懒加载
+      eager: true
+      transport:
+        # 控制台地址
+        dashboard: localhost:8718
   main:
     allow-bean-definition-overriding: true
     #2.6版本后增加循环引用判断
@@ -34,3 +44,25 @@ swagger2:
   description: 测试基础服务器
   title: 测试基础服务器
 
+# seata配置
+seata:
+  # 默认关闭，如需启用spring.datasource.dynami.seata需要同时开启
+  enabled: true
+  # Seata 应用编号，默认为 ${spring.application.name}
+  application-id: ${spring.application.name}
+  # Seata 事务组编号，用于 TC 集群名
+  tx-service-group: ${spring.application.name}-group
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${spring.cloud.nacos.server-addr}
+      group: ${spring.cloud.nacos.config.group}
+      namespace: ${spring.profiles.active}
+      data-id: seata-server.properties
+  registry:
+    type: nacos
+    nacos:
+      application: ruoyi-seata-server
+      server-addr: ${spring.cloud.nacos.server-addr}
+      group: ${spring.cloud.nacos.discovery.group}
+      namespace: ${spring.profiles.active}

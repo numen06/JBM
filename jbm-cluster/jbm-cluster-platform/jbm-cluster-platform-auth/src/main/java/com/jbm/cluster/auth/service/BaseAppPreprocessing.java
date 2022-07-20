@@ -3,7 +3,7 @@ package com.jbm.cluster.auth.service;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.auth.service.feign.BaseAppServiceClient;
+import com.jbm.cluster.api.service.fegin.client.BaseAppServiceClient;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;

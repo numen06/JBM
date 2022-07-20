@@ -34,6 +34,7 @@
         <module>jbm-framework-aliyun</module>
         <module>jbm-framework-baidu</module>
         <module>jbm-framework-weixin</module>
+        <module>jbm-framework-web</module>
     </modules>
 
 

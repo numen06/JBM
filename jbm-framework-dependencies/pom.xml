@@ -35,9 +35,10 @@
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <!--加入alibaba cloud-->
         <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
-        <alibaba.nacos.version>1.4.3</alibaba.nacos.version>
+        <alibaba.nacos.version>2.1.0</alibaba.nacos.version>
         <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
-
+        <!-- 7.0add-->
+        <arthas.version>3.6.2</arthas.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
@@ -124,6 +125,12 @@
                 <artifactId>nacos-client</artifactId>
                 <version>${alibaba.nacos.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.taobao.arthas</groupId>
+                <artifactId>arthas-spring-boot-starter</artifactId>
+                <version>${arthas.version}</version>
+            </dependency>
+
             <!--mapStruct依赖 高性能对象映射-->
             <!--mapstruct核心-->
             <dependency>
@@ -216,6 +223,11 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-core</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-web</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>
@@ -746,7 +758,12 @@
                 <artifactId>sa-token-jwt</artifactId>
                 <version>${satoken.version}</version>
             </dependency>
-
+            <!-- Sa-Token 整合 oauth -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-oauth2</artifactId>
+                <version>${satoken.version}</version>
+            </dependency>
             <!--redisson-->
             <dependency>
                 <groupId>org.redisson</groupId>

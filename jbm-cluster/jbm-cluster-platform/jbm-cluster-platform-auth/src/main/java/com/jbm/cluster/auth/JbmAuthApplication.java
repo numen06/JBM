@@ -14,7 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
  * @author wesley.zhang
  */
 @EnableCaching
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.jbm.cluster")
 @EnableDiscoveryClient
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class JbmAuthApplication {

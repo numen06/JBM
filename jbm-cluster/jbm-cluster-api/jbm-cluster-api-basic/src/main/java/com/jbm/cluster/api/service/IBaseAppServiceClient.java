@@ -17,10 +17,10 @@ public interface IBaseAppServiceClient {
      * @param appId 应用Id
      * @return
      */
-    @GetMapping("/app/{appId}/info")
+    @GetMapping("/{appId}/info")
     ResultBody<BaseApp> getApp(@PathVariable("appId") String appId);
 
-    @GetMapping("/app/getAppByKey")
+    @GetMapping("/getAppByKey")
     ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey);
 
 //    /**

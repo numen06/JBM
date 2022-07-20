@@ -1,5 +1,6 @@
 package com.jbm.cluster.platform.gateway.config;
 
+import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.jbm.cluster.platform.gateway.filter.GatewayContextFilter;
 import com.jbm.cluster.platform.gateway.filter.RemoveGatewayContextFilter;
 import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
@@ -10,6 +11,7 @@ import com.jbm.cluster.platform.gateway.service.RouteDataSource;
 import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
@@ -20,9 +22,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 网关限流配置
@@ -76,7 +82,7 @@ public class GatewayConfig {
      * @return
      */
     @Bean
-    @Lazy
+//    @Lazy
     public DynamicResourceLocator resourceLocator(RouteDefinitionLocator routeDefinitionLocator) {
         DynamicResourceLocator resourceLocator = new DynamicResourceLocator(routeDefinitionLocator);
         log.info("ResourceLocator [{}]", resourceLocator);
@@ -134,5 +140,30 @@ public class GatewayConfig {
                 new org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource(new PathPatternParser());
         source.registerCorsConfiguration("/**", config);
         return new CorsWebFilter(source);
+    }
+
+    @Bean
+    public HttpMessageConverters fastJsonHttpMessageConverters() {
+        List<MediaType> supportedMediaTypes = new ArrayList<>();
+        supportedMediaTypes.add(MediaType.APPLICATION_JSON);
+        supportedMediaTypes.add(MediaType.APPLICATION_JSON_UTF8);
+        supportedMediaTypes.add(MediaType.APPLICATION_ATOM_XML);
+        supportedMediaTypes.add(MediaType.APPLICATION_FORM_URLENCODED);
+        supportedMediaTypes.add(MediaType.APPLICATION_OCTET_STREAM);
+        supportedMediaTypes.add(MediaType.APPLICATION_PDF);
+        supportedMediaTypes.add(MediaType.APPLICATION_RSS_XML);
+        supportedMediaTypes.add(MediaType.APPLICATION_XHTML_XML);
+        supportedMediaTypes.add(MediaType.APPLICATION_XML);
+        supportedMediaTypes.add(MediaType.IMAGE_GIF);
+        supportedMediaTypes.add(MediaType.IMAGE_JPEG);
+        supportedMediaTypes.add(MediaType.IMAGE_PNG);
+        supportedMediaTypes.add(MediaType.TEXT_EVENT_STREAM);
+        supportedMediaTypes.add(MediaType.TEXT_HTML);
+        supportedMediaTypes.add(MediaType.TEXT_MARKDOWN);
+        supportedMediaTypes.add(MediaType.TEXT_PLAIN);
+        supportedMediaTypes.add(MediaType.TEXT_XML);
+        FastJsonHttpMessageConverter fastConverter = new FastJsonHttpMessageConverter();
+        fastConverter.setSupportedMediaTypes(supportedMediaTypes);
+        return new HttpMessageConverters(fastConverter);
     }
 }

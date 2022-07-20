@@ -26,6 +26,17 @@ public class GatewayLogsController {
 
 
     @ApiOperation(value = "获取多表查询分页列表")
+    @PostMapping({"/findOperationLogs"})
+    public ResultBody<DataPaging<GatewayLogs>> findOperationLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
+        try {
+            DataPaging<GatewayLogs> dataPaging = gatewayLogsService.findLogs(gatewayLogsForm, true);
+            return ResultBody.success(dataPaging, "查询分页列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询日志失败", e);
+        }
+    }
+
+    @ApiOperation(value = "获取多表查询分页列表")
     @PostMapping({"/findLogs"})
     public ResultBody<DataPaging<GatewayLogs>> findLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
         try {

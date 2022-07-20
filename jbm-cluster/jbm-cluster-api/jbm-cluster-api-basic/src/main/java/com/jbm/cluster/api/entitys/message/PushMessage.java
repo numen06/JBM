@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.entitys.message;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
 import io.swagger.annotations.ApiModel;
@@ -75,6 +77,8 @@ public class PushMessage extends MasterDataCodeEntity {
      * 删除标志：N未删除，Y已删除
      */
     @ApiModelProperty("逻辑删除标志")
+    @TableLogic
+    @TableField(select = false)
     private Integer deleteFlag;
     /**
      * 扩展字段

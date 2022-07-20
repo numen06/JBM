@@ -28,11 +28,6 @@ public class SaAuthFilter {
      */
     private static final String[] excludeUrls = {"/favicon.ico", "/static/favicon.ico", "/actuator/**"};
 
-    @Bean
-    public RedisSaTokenDao redisSaTokenDao() {
-        return new RedisSaTokenDao();
-    }
-
     // 注册 Sa-Token全局过滤器
     @Bean
     public SaReactorFilter getSaReactorFilter(IgnoreWhiteProperties ignoreWhite) {

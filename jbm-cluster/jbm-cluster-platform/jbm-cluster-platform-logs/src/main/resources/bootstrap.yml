@@ -14,9 +14,15 @@ spring:
       bindings:
         accessLogs-in-0:
           group: ${spring.application.name}
+    nacos:
+      config:
+        namespace: jbm
+        #        group: ${config.group}
+        refreshable-dataids: common.properties
+        server-addr: nacos2:8848
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,mongodb.properties
   resources:
     add-mappings: false
-
 management:
   endpoints:
     web:

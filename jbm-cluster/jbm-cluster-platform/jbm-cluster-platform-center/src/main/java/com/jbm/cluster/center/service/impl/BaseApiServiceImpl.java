@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
@@ -195,6 +196,15 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Override
     public int getCount(QueryWrapper<BaseApi> queryWrapper) {
         return baseApiMapper.selectCount(queryWrapper);
+    }
+
+    @Override
+    public BaseApi findApiByPath(String serviceId, String path) {
+        QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda().eq(BaseApi::getServiceId, serviceId);
+        queryWrapper.lambda().eq(BaseApi::getPath, path);
+        List<BaseApi> list = baseApiMapper.selectList(queryWrapper);
+        return CollUtil.getFirst(list);
     }
 
 

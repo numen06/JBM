@@ -17,7 +17,7 @@ public interface IBaseAuthorityServiceClient {
      * 获取所有访问权限列表
      * @return
      */
-    @GetMapping("/authority/access")
+    @GetMapping("/access")
     ResultBody<List<AuthorityResource>> findAuthorityResource();
 
     /**
@@ -25,6 +25,6 @@ public interface IBaseAuthorityServiceClient {
      *
      * @return
      */
-    @GetMapping("/authority/menu")
+    @GetMapping("/menu")
     ResultBody<List<AuthorityMenu>> findAuthorityMenu();
 }

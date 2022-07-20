@@ -15,7 +15,7 @@ public class QueueConstants {
     /**
      * 扫描字典
      */
-    public static final String QUEUE_SCAN_DIC_RESOURCE = "cluster.scan.dic";
+//    public static final String QUEUE_SCAN_DIC_RESOURCE = "cluster.scan.dic";
 
     /**
      * 扫描事件方法
@@ -42,6 +42,10 @@ public class QueueConstants {
      */
     public static final String QUEUE_CLUSTER_EVENT_EXCHANGE = QUEUE_CLUSTER_EVENT + ".exchange";
 
+    /**
+     * 字典通道
+     */
+    public static final String DIC_RESOURCE_STREAM = "dicResource-in-0";
 
 
     public static final String NOTIFICATION_STREAM = "notification-in-0";

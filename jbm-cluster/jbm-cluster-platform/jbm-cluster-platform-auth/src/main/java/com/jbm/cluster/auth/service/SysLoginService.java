@@ -22,9 +22,9 @@ import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.model.LoginProcessModel;
-import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -56,8 +56,8 @@ import java.util.function.Supplier;
 @Slf4j
 @Service
 public class SysLoginService {
-    @Autowired(required = false)
-    private BaseUserServiceClient baseUserServiceClient;
+    @Autowired
+    private IBaseUserServiceClient baseUserServiceClient;
     //    @DubboReference
 //    private RemoteLogService remoteLogService;
     //    @DubboReference

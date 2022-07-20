@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.model.api;
 
+import com.jbm.cluster.api.model.JbmClusterResource;
+import com.jbm.cluster.core.constant.JbmClusterConstants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,20 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * @author wesley
  * @Created wesley.zhang
  * @Date 2022/4/30 17:17
  * @Description TODO
  */
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class JbmApiResource implements Serializable {
-
-    /**
-     * 服务ID
-     */
-    private String serviceId;
+public class JbmApiResource extends JbmClusterResource {
 
     private List<JbmApi> jbmApiList = new ArrayList<>();
 

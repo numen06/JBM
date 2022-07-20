@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.baidu.aip</groupId>
             <artifactId>java-sdk</artifactId>
-            <version>4.11.3</version>
+            <version>4.16.9</version>
             <exclusions>
                 <exclusion>
                     <artifactId>*</artifactId>
@@ -24,11 +24,10 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>${hutool.version}</version>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-util</artifactId>
         </dependency>
-        <!-- 百度图像识别 -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -37,6 +36,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>

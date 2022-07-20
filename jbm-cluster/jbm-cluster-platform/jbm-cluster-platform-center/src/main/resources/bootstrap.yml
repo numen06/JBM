@@ -1,5 +1,6 @@
 server:
   port: 7777
+  max-http-header-size: 204800
 spring:
   application:
     name: ${artifactId}
@@ -8,13 +9,15 @@ spring:
     bus:
       id: ${spring.application.name}:${server.port}
     function:
-      definition: accountLogs;apiResource
+      definition: accountLogs;apiResource;dicResource;
     stream:
       #      default-binder: kafka
       bindings:
         accountLogs-in-0:
           group: ${spring.application.name}
         apiResource-in-0:
+          group: ${spring.application.name}
+        dicResource-in-0:
           group: ${spring.application.name}
   main:
     allow-bean-definition-overriding: true
@@ -60,3 +63,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
     #枚举扫描包
   type-enums-package: com.jbm.cluster.api.constants,com.jbm.framework.masterdata.constant
+
+arthas:
+  appName: ${spring.application.name}
+#  tunnelServer: ws://127.0.0.1:7777/ws
+#  agentId: mmmmmmyiddddd

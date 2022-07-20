@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.amqp.BaiduOcrAutoConfiguration
+jbm.framework.boot.autoconfigure.baidu.BaiduAutoConfiguration

@@ -87,4 +87,5 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
      */
     int getCount(QueryWrapper<BaseApi> queryWrapper);
 
+    BaseApi findApiByPath(String serviceId, String path);
 }

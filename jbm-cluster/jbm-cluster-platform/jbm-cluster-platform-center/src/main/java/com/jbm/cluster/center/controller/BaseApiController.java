@@ -2,6 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
+import com.jbm.cluster.api.service.IBaseApiServiceClient;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
@@ -16,6 +17,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author wesley.zhang
@@ -23,7 +25,7 @@ import java.util.List;
 @Api(tags = "系统接口资源管理")
 @RestController
 @RequestMapping("/api")
-public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiService> {
+public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiService> implements IBaseApiServiceClient {
     @Autowired
     private BaseApiService apiService;
     @Autowired
@@ -46,10 +48,23 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
-    @ApiOperation(value = "获取所有接口列表", notes = "获取所有接口列表")
+    @ApiOperation(value = "获取单个应用的接口列表")
     @GetMapping("/all")
+    @Override
     public ResultBody<List<BaseApi>> getApiAllList(String serviceId) {
         return ResultBody.ok().data(apiService.findAllList(serviceId));
+    }
+
+    @ApiOperation(value = "根据路径查询API")
+    @GetMapping("/findApiByPath")
+    @Override
+    public ResultBody<BaseApi> findApiByPath(String serviceId, String path) {
+        return ResultBody.callback(new Supplier<BaseApi>() {
+            @Override
+            public BaseApi get() {
+                return apiService.findApiByPath(serviceId, path);
+            }
+        });
     }
 
     /**
@@ -58,6 +73,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @param apiId
      * @return
      */
+    @Override
     @OperatorLog
     @ApiOperation(value = "获取接口资源", notes = "获取接口资源")
     @ApiImplicitParams({

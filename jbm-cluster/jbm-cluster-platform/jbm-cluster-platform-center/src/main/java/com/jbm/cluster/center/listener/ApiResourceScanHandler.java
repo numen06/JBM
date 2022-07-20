@@ -2,6 +2,8 @@ package com.jbm.cluster.center.listener;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.model.api.JbmApi;
@@ -55,6 +57,8 @@ public class ApiResourceScanHandler {
      */
 //    @RabbitListener(queues = QueueConstants.QUEUE_SCAN_API_RESOURCE)
     public void scanApiResourceQueue(JbmApiResource jbmApiResource) {
+        StopWatch stopWatch = new StopWatch(StrUtil.format("接受到API资源信息,来自服务:{},数量为:{}", jbmApiResource.getServiceId(), CollUtil.emptyIfNull(jbmApiResource.getJbmApiList()).size()));
+        stopWatch.start();
         try {
             String key = SCAN_API_RESOURCE_KEY_PREFIX + jbmApiResource.getServiceId();
             Object object = redisService.getCacheObject(key);
@@ -70,6 +74,8 @@ public class ApiResourceScanHandler {
                         BaseApi api = new BaseApi();
                         //复制Bean
                         BeanUtil.copyProperties(jbmApi, api);
+                        api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
+                        api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
                         codes.add(api.getApiCode());
                         BaseApi save = baseApiService.getApi(api.getApiCode());
                         if (save == null) {
@@ -97,6 +103,9 @@ public class ApiResourceScanHandler {
 
         } catch (Exception e) {
             log.error("更新API资源信息错误", e);
+        } finally {
+            stopWatch.stop();
+            log.info(stopWatch.prettyPrint(TimeUnit.SECONDS));
         }
     }
 

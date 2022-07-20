@@ -1,13 +1,9 @@
 package com.jbm.cluster.common.satoken.config;
 
-import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.SaTokenException;
-import cn.dev33.satoken.jwt.exception.SaJwtException;
-import cn.hutool.core.exceptions.ValidateException;
 import com.jbm.framework.exceptions.user.UserException;
-import jbm.framework.boot.autoconfigure.filter.SimpleUnknownRuntimeExceptionFilter;
+import jbm.framework.web.exception.filter.SimpleUnknownRuntimeExceptionFilter;
 
-import javax.naming.NoPermissionException;
 import java.util.Set;
 
 /**

@@ -15,18 +15,16 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-node-basic</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.jbm</groupId>
-                    <artifactId>jbm-framework-data-masterdata</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-mongo</artifactId>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
+        </dependency>
+        <!--        <dependency>-->
 <!--            <groupId>com.jbm</groupId>-->
 <!--            <artifactId>jbm-framework-micro-mysql</artifactId>-->
 <!--        </dependency>-->

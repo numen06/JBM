@@ -12,6 +12,7 @@ public class TestIP {
     public void testIP() {
         IpRegionTemplate ipRegionTemplate = new IpRegionTemplate();
         ipRegionTemplate.init();
-        ipRegionTemplate.getRegion("180.162.26.193");
+        System.out.println(ipRegionTemplate.getRegion("180.162.26.193"));
+
     }
 }

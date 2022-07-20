@@ -33,6 +33,23 @@ spring:
     #手动配置Bus id,
     bus:
       id: ${spring.application.name}:${server.port}
+    # sentinel 配置
+    sentinel:
+#      scg:
+#        fallback:
+#          mode: response
+#          response-status: 455
+#          response-body: error!
+      # nacos配置持久化
+      datasource:
+        ds1:
+          nacos:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            dataId: sentinel-${spring.application.name}.json
+            groupId: ${spring.cloud.nacos.config.group}
+            namespace: ${spring.profiles.active}
+            data-type: json
+            rule-type: flow
     gateway:
       discovery:
         locator:
@@ -54,6 +71,10 @@ spring:
   profiles:
     active: ${profile.name}
 
+#Feign对Sentinel的支持
+feign:
+  sentinel:
+    enabled: true
 
 management:
   endpoints:

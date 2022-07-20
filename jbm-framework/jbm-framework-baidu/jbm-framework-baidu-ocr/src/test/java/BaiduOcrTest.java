@@ -1,20 +1,20 @@
 import com.baidu.aip.ocr.AipOcr;
-import jbm.framework.boot.autoconfigure.amqp.BaiduOcrAutoConfiguration;
+import jbm.framework.boot.autoconfigure.baidu.BaiduAutoConfiguration;
 import org.json.JSONObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.util.HashMap;
 
 @ExtendWith(SpringExtension.class)
 //@Import(BaiduOcrProperties.class)
-@SpringBootTest(classes = BaiduOcrAutoConfiguration.class)
+@SpringBootTest(classes = BaiduAutoConfiguration.class)
 public class BaiduOcrTest {
 
     @Autowired

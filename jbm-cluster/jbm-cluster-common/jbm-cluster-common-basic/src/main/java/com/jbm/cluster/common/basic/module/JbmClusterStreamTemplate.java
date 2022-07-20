@@ -2,14 +2,17 @@ package com.jbm.cluster.common.basic.module;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.model.api.JbmApiResource;
+import com.jbm.cluster.api.model.dic.JbmDicResource;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
 import com.jbm.cluster.core.constant.QueueConstants;
+import com.jbm.framework.dictionary.JbmDictionary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * 自定义RestTemplate请求工具类
@@ -57,5 +60,23 @@ public class JbmClusterStreamTemplate {
         streamBridge.send(QueueConstants.API_RESOURCE_STREAM, message);
     }
 
+    public void sendJbmDicResource(JbmDicResource jbmDicResource) {
+        final Message<JbmDicResource> message = MessageBuilder.withPayload(jbmDicResource).build();
+        //发送数据
+        streamBridge.send(QueueConstants.DIC_RESOURCE_STREAM, message);
+    }
+
+    public <T> void sendResources(String stream, List<T> resources) {
+        final Message<List<T>> message = MessageBuilder.withPayload(resources).build();
+        //发送数据
+        streamBridge.send(stream, message);
+    }
+
+
+    public <T> void sendResource(String stream, T resource) {
+        final Message<T> message = MessageBuilder.withPayload(resource).build();
+        //发送数据
+        streamBridge.send(stream, message);
+    }
 
 }

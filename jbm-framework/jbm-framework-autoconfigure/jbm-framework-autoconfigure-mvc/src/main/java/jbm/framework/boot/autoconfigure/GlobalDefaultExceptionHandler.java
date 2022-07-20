@@ -4,11 +4,10 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.DemoModeException;
 import com.jbm.framework.exceptions.InnerAuthException;
-import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.WebExceptionResolve;
-import jbm.framework.boot.autoconfigure.filter.UnknownRuntimeExceptionFilter;
+import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -107,26 +106,14 @@ public class GlobalDefaultExceptionHandler {
                 }
             }
         });
-        return returnResult(resultBody, response);
-    }
-
-
-    /**
-     * 自定义异常
-     *
-     * @param ex
-     * @param request
-     * @param response
-     * @return
-     */
-    @ExceptionHandler({ServiceException.class})
-    public ResultBody openException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
-        ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
-        if (ObjectUtil.isNotEmpty(ex.getMessage())) {
-            resultBody.msg(ex.getMessage());
+        //强制删除错误信息
+        if (ObjectUtil.isNotEmpty(resultBody.getException())) {
+            resultBody.setMessage("发生未知的运行时异常");
+            resultBody.setException(null);
         }
         return returnResult(resultBody, response);
     }
+
 
     /**
      * 系统异常

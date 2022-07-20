@@ -1,7 +1,6 @@
 package com.jbm.cluster.platform.gateway.locator;
 
 import com.google.common.collect.Lists;
-import com.jbm.cluster.api.bus.event.RemoteRefreshRouteEvent;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.platform.gateway.service.RouteDataSource;
@@ -15,7 +14,6 @@ import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.support.NameUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.context.ApplicationListener;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
@@ -31,7 +29,7 @@ import java.util.Map;
  * @author wesley.zhang
  */
 @Slf4j
-public class DynamicRouteDefinitionLocator implements ApplicationListener<RemoteRefreshRouteEvent>, ApplicationEventPublisherAware {
+public class DynamicRouteDefinitionLocator extends DynamicResourceService implements ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher publisher;
     private InMemoryRouteDefinitionRepository repository;
@@ -42,36 +40,18 @@ public class DynamicRouteDefinitionLocator implements ApplicationListener<Remote
         this.repository = repository;
     }
 
-    /**
-     * 启动的时候刷新一遍
-     */
-    @PostConstruct
-    public void init() {
-        this.refresh();
-    }
-
 
     /**
      * 刷新路由
      *
      * @return
      */
-    public Mono<Void> refresh() {
+    public void refresh() {
         this.loadRoutes();
         // 触发默认路由刷新事件,刷新缓存路由
         this.publisher.publishEvent(new RefreshRoutesEvent(this));
-        return Mono.empty();
     }
 
-    /**
-     * bus刷新事件
-     *
-     * @param event
-     */
-    @Override
-    public void onApplicationEvent(RemoteRefreshRouteEvent event) {
-        refresh();
-    }
 
     protected String getFullPath(List<GatewayRoute> routeList, String serviceId, String path) {
         final String[] fullPath = {path.startsWith("/") ? path : "/" + path};

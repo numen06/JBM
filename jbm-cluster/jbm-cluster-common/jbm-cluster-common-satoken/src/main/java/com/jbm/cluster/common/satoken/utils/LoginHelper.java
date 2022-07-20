@@ -112,6 +112,20 @@ public class LoginHelper {
 
 
     /**
+     * 安全获取用户对象
+     *
+     * @return
+     */
+    public static JbmLoginUser softGetLoginUser() {
+        try {
+            return getLoginUser();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    /**
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser(String tokenValue) {

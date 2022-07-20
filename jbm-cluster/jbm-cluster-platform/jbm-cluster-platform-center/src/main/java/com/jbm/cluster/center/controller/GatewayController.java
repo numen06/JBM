@@ -14,6 +14,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @description:
  */
 @Api(tags = "网关对外接口")
+@RequestMapping("/gateway")
 @RestController
 public class GatewayController implements IGatewayServiceClient {
 
@@ -38,7 +40,7 @@ public class GatewayController implements IGatewayServiceClient {
     private GatewayRouteService gatewayRouteService;
 
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
-    @GetMapping("/gateway/service/list")
+    @GetMapping("/service/list")
     public ResultBody getServiceList() {
         List<Map> services = Lists.newArrayList();
         List<GatewayRoute> routes = gatewayRouteService.findRouteList();
@@ -59,7 +61,7 @@ public class GatewayController implements IGatewayServiceClient {
      * @return
      */
     @ApiOperation(value = "获取接口黑名单列表", notes = "仅限内部调用")
-    @GetMapping("/gateway/api/blackList")
+    @GetMapping("/api/blackList")
     @Override
     public ResultBody<List<IpLimitApi>> getApiBlackList() {
         return ResultBody.ok().data(gatewayIpLimitService.findBlackList());
@@ -71,7 +73,7 @@ public class GatewayController implements IGatewayServiceClient {
      * @return
      */
     @ApiOperation(value = "获取接口白名单列表", notes = "仅限内部调用")
-    @GetMapping("/gateway/api/whiteList")
+    @GetMapping("/api/whiteList")
     @Override
     public ResultBody<List<IpLimitApi>> getApiWhiteList() {
         return ResultBody.ok().data(gatewayIpLimitService.findWhiteList());
@@ -83,7 +85,7 @@ public class GatewayController implements IGatewayServiceClient {
      * @return
      */
     @ApiOperation(value = "获取限流列表", notes = "仅限内部调用")
-    @GetMapping("/gateway/api/rateLimit")
+    @GetMapping("/api/rateLimit")
     @Override
     public ResultBody<List<RateLimitApi>> getApiRateLimitList() {
         return ResultBody.ok().data(gatewayRateLimitService.findRateLimitApiList());
@@ -95,7 +97,7 @@ public class GatewayController implements IGatewayServiceClient {
      * @return
      */
     @ApiOperation(value = "获取路由列表", notes = "仅限内部调用")
-    @GetMapping("/gateway/api/route")
+    @GetMapping("/api/route")
     @Override
     public ResultBody<List<GatewayRoute>> getApiRouteList() {
         return ResultBody.ok().data(gatewayRouteService.findRouteList());

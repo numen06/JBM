@@ -5,12 +5,12 @@ spring:
         namespace: jbm
         #        group: ${config.group}
         refreshable-dataids: common.properties
-        server-addr: 10.100.10.98:8848
+        server-addr: 10.100.10.62:8848
         shared-dataids: ${jbm.cluster.nacos-confs}
       discovery:
         namespace: jbm
         #        group: ${config.group}
-        server-addr: 10.100.10.98:8848
+        server-addr: 10.100.10.62:8848
 #        ip: 10.100.50.2
 #dubbo:
 #  protocol:

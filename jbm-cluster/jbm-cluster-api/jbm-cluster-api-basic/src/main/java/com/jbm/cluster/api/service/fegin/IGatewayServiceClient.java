@@ -18,27 +18,27 @@ public interface IGatewayServiceClient {
      *
      * @return
      */
-    @GetMapping("/gateway/api/blackList")
+    @GetMapping("/api/blackList")
      ResultBody<List<IpLimitApi>> getApiBlackList() ;
 
     /**
      * 获取接口白名单列表
      * @return
      */
-    @GetMapping("/gateway/api/whiteList")
+    @GetMapping("/api/whiteList")
     ResultBody<List<IpLimitApi> > getApiWhiteList();
 
     /**
      * 获取限流列表
      * @return
      */
-    @GetMapping("/gateway/api/rateLimit")
+    @GetMapping("/api/rateLimit")
     ResultBody<List<RateLimitApi> > getApiRateLimitList();
 
     /**
      * 获取路由列表
      * @return
      */
-    @GetMapping("/gateway/api/route")
+    @GetMapping("/api/route")
     ResultBody<List<GatewayRoute> > getApiRouteList();
 }

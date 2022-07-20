@@ -1,5 +1,5 @@
 baidu:
-  ocr:
-    appid: 11759439
-    api-key: PWzQe2xtjf9SB52RwdN7V08M
-    secret-key: wFQh2fYVHpmfdCytftseanAbla0FAL5X
+  api:
+    appid: xxx
+    api-key: xxx
+    secret-key: xxx

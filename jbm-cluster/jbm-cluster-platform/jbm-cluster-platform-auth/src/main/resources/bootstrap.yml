@@ -1,5 +1,6 @@
 server:
   port: 5555
+  max-http-header-size: 204800
   servlet:
     session:
       cookie:

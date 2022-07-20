@@ -48,9 +48,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-web</artifactId>
         </dependency>
         <!--        6.0的OAuth-->
         <!--        <dependency>-->
