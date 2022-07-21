@@ -14,7 +14,8 @@
     <modules>
         <module>jbm-cluster-node-basic</module>
         <module>jbm-cluster-node-dubbo</module>
-<!--        <module>jbm-cluster-node-oauth</module>-->
+        <module>jbm-cluster-node-mysql</module>
+        <!--        <module>jbm-cluster-node-oauth</module>-->
     </modules>
 
     <properties>

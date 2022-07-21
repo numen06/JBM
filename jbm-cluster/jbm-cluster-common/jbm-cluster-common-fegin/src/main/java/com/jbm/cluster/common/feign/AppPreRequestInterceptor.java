@@ -10,7 +10,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
-import com.jbm.framework.mvc.ServletUtils;
+import jbm.framework.web.ServletUtils;
 import feign.RequestTemplate;
 
 import javax.servlet.http.HttpServletRequest;

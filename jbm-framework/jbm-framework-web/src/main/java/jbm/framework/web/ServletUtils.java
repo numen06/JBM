@@ -1,4 +1,4 @@
-package com.jbm.framework.mvc;
+package jbm.framework.web;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.CharsetUtil;

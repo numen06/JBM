@@ -6,7 +6,7 @@ import com.jbm.framework.exceptions.DemoModeException;
 import com.jbm.framework.exceptions.InnerAuthException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.WebExceptionResolve;
+import jbm.framework.web.WebExceptionResolve;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

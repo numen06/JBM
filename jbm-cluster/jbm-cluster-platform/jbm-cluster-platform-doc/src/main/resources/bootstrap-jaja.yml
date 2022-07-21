@@ -6,7 +6,7 @@ spring:
         #        group: ${config.group}
         refreshable-dataids: common.properties
         server-addr: 10.100.10.62:8848
-        shared-dataids: common.properties,redis.properties,rabbitmq.properties,doc.properties
+        shared-dataids: common.properties,redis.properties,rabbitmq.properties,doc.properties,db.properties
       discovery:
         namespace: jbm
         #        group: ${config.group}

@@ -6,7 +6,7 @@ import cn.hutool.crypto.SecureUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.basic.context.SecurityContextHolder;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
-import com.jbm.framework.mvc.ServletUtils;
+import jbm.framework.web.ServletUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 

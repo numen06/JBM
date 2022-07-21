@@ -28,10 +28,6 @@
             <artifactId>jbm-framework-micro-mysql</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.github.tokenjan</groupId>
             <artifactId>pinyin4j</artifactId>
         </dependency>

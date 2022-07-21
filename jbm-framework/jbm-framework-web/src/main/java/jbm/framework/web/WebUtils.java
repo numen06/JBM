@@ -1,4 +1,4 @@
-package com.jbm.framework.mvc;
+package jbm.framework.web;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -256,8 +256,20 @@ public class WebUtils {
     public static void setFileDownloadHeader(HttpServletResponse response, String fileName) {
         try {
             // 中文文件名支持
-            String encodedfileName = new String(fileName.getBytes(), "ISO8859-1");
+//            String encodedfileName = new String(fileName.getBytes(), "ISO8859-1");
+            String encodedfileName = URLEncoder.encode(fileName, "UTF-8");
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedfileName + "\"");
+        } catch (UnsupportedEncodingException e) {
+            e.getMessage();
+        }
+    }
+
+    public static void setFileInlineHeader(HttpServletResponse response, String fileName) {
+        try {
+            // 中文文件名支持
+//            String encodedfileName = new String(fileName.getBytes(), "ISO8859-1");
+            String encodedfileName = URLEncoder.encode(fileName, "UTF-8");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedfileName + "\"");
         } catch (UnsupportedEncodingException e) {
             e.getMessage();
         }

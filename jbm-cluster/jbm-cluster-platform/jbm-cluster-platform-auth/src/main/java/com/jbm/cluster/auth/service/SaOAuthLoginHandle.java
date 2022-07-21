@@ -13,7 +13,7 @@ import cn.hutool.http.useragent.UserAgentUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.ServletUtils;
+import jbm.framework.web.ServletUtils;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;

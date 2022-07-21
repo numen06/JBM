@@ -9,7 +9,7 @@ import com.jbm.cluster.common.idempotent.annotation.RepeatSubmit;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.ServletUtils;
+import jbm.framework.web.ServletUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import jbm.framework.spring.MessageUtils;
 import org.aspectj.lang.JoinPoint;

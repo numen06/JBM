@@ -12,7 +12,7 @@ spring:
         server-addr: nacos-standalone:8848
         file-extension: yml
         refreshable-dataids: common.properties
-        shared-dataids: doc.properties,common.properties,redis.properties,rabbitmq.properties
+        shared-dataids: doc.properties,common.properties,redis.properties,rabbitmq.properties,db.properties
       discovery:
         #namespace: emc
         server-addr: nacos-standalone

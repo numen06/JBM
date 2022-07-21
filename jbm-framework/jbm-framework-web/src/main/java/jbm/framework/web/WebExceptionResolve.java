@@ -1,4 +1,4 @@
-package com.jbm.framework.mvc;
+package jbm.framework.web;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.base.BaseException;

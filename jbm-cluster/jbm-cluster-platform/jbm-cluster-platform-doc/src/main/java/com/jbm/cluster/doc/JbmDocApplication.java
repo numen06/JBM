@@ -1,8 +1,16 @@
 package com.jbm.cluster.doc;
 
+import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
+import com.jbm.cluster.api.constants.OrgType;
+import com.jbm.cluster.api.entitys.basic.BaseDic;
+import com.jbm.cluster.api.entitys.doc.BaseDoc;
+import com.jbm.cluster.doc.mapper.BaseDocMapper;
+import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import jbm.framework.boot.autoconfigure.swagger.annotation.EnableSwagger2;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
@@ -16,6 +24,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 @SpringBootApplication
 @EnableDiscoveryClient
+@EntityScan(basePackages = {"com.jbm.cluster.api.entitys"})
+@MapperScan(basePackageClasses = BaseDocMapper.class)
+@EnableJbmDictionary(basePackageClasses = OrgType.class)
+@EnableCodeAutoGeneate(entityPackageClasses = {BaseDoc.class}, targetPackage = "com.jbm.cluster.doc")
 public class JbmDocApplication {
 
     public static void main(String[] args) {

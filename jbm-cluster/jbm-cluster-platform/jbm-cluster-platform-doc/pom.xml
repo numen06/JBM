@@ -10,11 +10,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbm-cluster-platform-doc</artifactId>
-    <description>平台基文档服务器</description>
+    <description>平台文档服务器</description>
     <dependencies>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node-basic</artifactId>
+            <artifactId>jbm-cluster-node-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

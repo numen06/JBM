@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class FileService {
+public class WpsFileService {
 
     @Autowired
     private WpsTemplate wpsTemplate;
