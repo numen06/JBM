@@ -22,5 +22,4 @@
         <module>jbm-cluster-platform-job</module>
         <module>jbm-cluster-platform-auth</module>
     </modules>
-
 </project>
