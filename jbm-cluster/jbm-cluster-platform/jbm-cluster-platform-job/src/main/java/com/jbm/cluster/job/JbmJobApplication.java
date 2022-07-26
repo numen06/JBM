@@ -4,7 +4,7 @@ import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.job.mapper.SysJobMapper;
-import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
+import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -138,53 +138,47 @@
     </select>
 
     <select id="selectAllAuthorityResource" resultMap="AuthorityResource">
-       SELECT
-	a.authority_id,
-	a.authority,
-	menu.path,
-	menu.service_id,
-	'1' AS is_auth,
-	'1' AS is_open,
-	menu.`status`,
-	route.path AS prefix
-    FROM
-        base_authority AS a
-    INNER JOIN base_menu AS menu ON a.menu_id = menu.menu_id
-    LEFT JOIN gateway_route AS route ON route.route_name = menu.service_id
-    WHERE
-        menu.`status` = 1
-    UNION ALL
-	SELECT
-		a.authority_id,
-		a.authority,
-		api.path,
-		api.service_id,
-		api.is_auth,
-		api.is_open,
-		api.`status`,
-		route.path AS prefix
-	FROM
-		base_authority AS a
-	INNER JOIN base_api AS api ON a.api_id = api.api_id
-	LEFT JOIN gateway_route AS route ON route.route_name = api.service_id
-	UNION ALL
-		SELECT
-			a.authority_id,
-			a.authority,
-			api.path,
-			api.service_id,
-			api.is_auth,
-			api.is_open,
-			api.`status`,
-			route.path AS prefix
-		FROM
-			base_authority_action AS ac
-		INNER JOIN base_authority AS a ON a.action_id = ac.action_id
-		INNER JOIN base_authority AS a2 ON ac.authority_id = a2.authority_id
-		INNER JOIN base_api AS api ON a2.api_id = api.api_id
-		INNER JOIN base_action AS action ON ac.action_id = action.action_id
-		LEFT JOIN gateway_route AS route ON route.route_name = api.service_id
-		WHERE
-			action.`status` = 1
+        SELECT a.authority_id,
+               a.authority,
+               menu.path,
+               menu.service_id,
+               '1'        AS is_auth,
+               '1'        AS is_open,
+               menu.`status`,
+               route.path AS prefix
+        FROM base_authority AS a
+                 INNER JOIN base_menu AS menu ON a.menu_id = menu.menu_id
+                 LEFT JOIN gateway_route AS route ON route.route_name = menu.service_id
+        WHERE menu.`status` = 1
+        UNION ALL
+        SELECT a.authority_id,
+               a.authority,
+               api.path,
+               api.service_id,
+               api.is_auth,
+               api.is_open,
+               api.`status`,
+               route.path AS prefix
+        FROM base_authority AS a
+                 INNER JOIN base_api AS api ON a.api_id = api.api_id
+                 LEFT JOIN gateway_route AS route ON route.route_name = api.service_id
+        UNION ALL
+        SELECT a.authority_id,
+               a.authority,
+               api.path,
+               api.service_id,
+               api.is_auth,
+               api.is_open,
+               api.`status`,
+               route.path AS prefix
+        FROM base_authority_action AS ac
+                 INNER JOIN base_authority AS a ON a.action_id = ac.action_id
+                 INNER JOIN base_authority AS a2 ON ac.authority_id = a2.authority_id
+                 INNER JOIN base_api AS api ON a2.api_id = api.api_id
+                 INNER JOIN base_action AS action
+        ON ac.action_id = action.action_id
+            LEFT JOIN gateway_route AS route ON route.route_name = api.service_id
+        WHERE
+            action.`status` = 1
     </select>
 </mapper>

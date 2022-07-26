@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -26,13 +25,9 @@ import java.util.function.Supplier;
 @Data
 @NoArgsConstructor
 public class ResultBody<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
-
     public static final Integer SUCCESS = HttpStatus.HTTP_INTERNAL_ERROR;
-
     public static final Integer FAIL = HttpStatus.HTTP_OK;
-
-
+    private static final long serialVersionUID = 1L;
     /**
      * 响应编码
      */
@@ -80,7 +75,8 @@ public class ResultBody<T> implements Serializable {
 //    public ResultBody() {
 //        super();
 //    }
-
+    @ApiModelProperty(value = "错误信息")
+    private String exception;
 
     public static ResultBody ok() {
         return new ResultBody().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
@@ -92,6 +88,68 @@ public class ResultBody<T> implements Serializable {
 
     public static ResultBody failed() {
         return new ResultBody().code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
+    }
+
+    public static <T> ResultBody<T> success() {
+        return ResultBody.ok();
+    }
+
+    public static <T> ResultBody<T> error() {
+        return ResultBody.failed();
+    }
+
+    public static <T> ResultBody<T> success(T data, String msg) {
+        return ResultBody.ok().data(data).msg(msg);
+    }
+
+    public static <T> ResultBody<T> success(String msg) {
+        return ResultBody.ok().data(null).msg(msg);
+    }
+
+    public static <T> ResultBody<T> error(T data, String msg) {
+        return ResultBody.failed().data(data).msg(msg);
+    }
+
+    public static <T> ResultBody<T> error(String e) {
+        return ResultBody.failed().msg(e);
+    }
+
+//    /**
+//     * 错误信息配置
+//     */
+//    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("error");
+//
+//    /**
+//     * 提示信息国际化
+//     *
+//     * @param message
+//     * @param defaultMessage
+//     * @return
+//     */
+//    private static String i18n(String message, String defaultMessage) {
+//        return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
+//    }
+
+    public static <T> ResultBody<T> error(Exception e) {
+        if (e instanceof ServiceException) {
+            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
+        }
+        return ResultBody.failed().exception(e);
+    }
+
+    public static <T> ResultBody<T> error(T data, String msg, Exception e) {
+        if (e instanceof ServiceException) {
+            return ResultBody.failed().data(data).msg(e.getMessage()).exception(e);
+        }
+        return ResultBody.failed().data(data).msg(msg).exception(e);
+    }
+
+    public static <T> ResultBody<T> callback(Supplier<T> supplier) {
+        return ResultBody.ok().data(supplier.get());
+    }
+
+    public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
+        return ResultBody.ok().data(supplier.get()).msg(msg);
     }
 
     public ResultBody code(int code) {
@@ -141,26 +199,6 @@ public class ResultBody<T> implements Serializable {
                 '}';
     }
 
-//    /**
-//     * 错误信息配置
-//     */
-//    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("error");
-//
-//    /**
-//     * 提示信息国际化
-//     *
-//     * @param message
-//     * @param defaultMessage
-//     * @return
-//     */
-//    private static String i18n(String message, String defaultMessage) {
-//        return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
-//    }
-
-    @ApiModelProperty(value = "错误信息")
-    private String exception;
-
-
     public ResultBody exception(Throwable e) {
         if (e == null) {
             exception = null;
@@ -170,44 +208,6 @@ public class ResultBody<T> implements Serializable {
         return this;
     }
 
-    public static <T> ResultBody<T> success() {
-        return ResultBody.ok();
-    }
-
-    public static <T> ResultBody<T> error() {
-        return ResultBody.failed();
-    }
-
-    public static <T> ResultBody<T> success(T data, String msg) {
-        return ResultBody.ok().data(data).msg(msg);
-    }
-
-    public static <T> ResultBody<T> success(String msg) {
-        return ResultBody.ok().data(null).msg(msg);
-    }
-
-    public static <T> ResultBody<T> error(T data, String msg) {
-        return ResultBody.failed().data(data).msg(msg);
-    }
-
-    public static <T> ResultBody<T> error(String e) {
-        return ResultBody.failed().msg(e);
-    }
-
-    public static <T> ResultBody<T> error(Exception e) {
-        if (e instanceof ServiceException) {
-            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
-        }
-        return ResultBody.failed().exception(e);
-    }
-
-    public static <T> ResultBody<T> error(T data, String msg, Exception e) {
-        if (e instanceof ServiceException) {
-            return ResultBody.failed().data(data).msg(e.getMessage()).exception(e);
-        }
-        return ResultBody.failed().data(data).msg(msg).exception(e);
-    }
-
     public Map<String, Object> toMap() {
         Map<String, Object> result = BeanUtil.beanToMap(this, false, true);
         return result;
@@ -215,14 +215,6 @@ public class ResultBody<T> implements Serializable {
 
     public <R> R action(Function<? super T, ? super R> function) {
         return (R) function.apply(this.result);
-    }
-
-    public static <T> ResultBody<T> callback(Supplier<T> supplier) {
-        return ResultBody.ok().data(supplier.get());
-    }
-
-    public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
-        return ResultBody.ok().data(supplier.get()).msg(msg);
     }
 
 }

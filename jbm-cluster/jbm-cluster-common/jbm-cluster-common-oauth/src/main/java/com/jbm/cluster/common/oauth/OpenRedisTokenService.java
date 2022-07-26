@@ -14,24 +14,24 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 @Slf4j
 public class OpenRedisTokenService implements ResourceServerTokenServices {
 
-	private TokenStore tokenStore;
+    private TokenStore tokenStore;
 
-	@Override
-	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException{
-		OAuth2Authentication oAuth2Authentication = tokenStore.readAuthentication(accessToken);
-		return oAuth2Authentication;
-	}
+    @Override
+    public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException {
+        OAuth2Authentication oAuth2Authentication = tokenStore.readAuthentication(accessToken);
+        return oAuth2Authentication;
+    }
 
-	@Override
-	public OAuth2AccessToken readAccessToken(String accessToken) {
-		return tokenStore.readAccessToken(accessToken);
-	}
+    @Override
+    public OAuth2AccessToken readAccessToken(String accessToken) {
+        return tokenStore.readAccessToken(accessToken);
+    }
 
-	public TokenStore getTokenStore() {
-		return tokenStore;
-	}
+    public TokenStore getTokenStore() {
+        return tokenStore;
+    }
 
-	public void setTokenStore(TokenStore tokenStore) {
-		this.tokenStore = tokenStore;
-	}
+    public void setTokenStore(TokenStore tokenStore) {
+        this.tokenStore = tokenStore;
+    }
 }

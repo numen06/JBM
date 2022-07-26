@@ -1,7 +1,5 @@
 package com.jbm.framework.exceptions.base;
 
-import cn.hutool.core.util.StrUtil;
-
 /**
  * 基础异常
  *

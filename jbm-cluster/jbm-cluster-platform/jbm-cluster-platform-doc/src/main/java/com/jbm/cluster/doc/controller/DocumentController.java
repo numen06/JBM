@@ -6,10 +6,10 @@ import com.jbm.cluster.doc.model.Token;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.cluster.doc.service.WpsFileService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import jbm.framework.web.WebUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
+import jbm.framework.web.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.AntPathMatcher;
@@ -53,6 +53,11 @@ public class DocumentController {
 //        System.out.println(FileNameUtil.getPath("/test/testwet/hsdad.xtew"));
 //    }
 
+    private static String getExtractPath(final HttpServletRequest request) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+    }
 
     @ApiOperation(value = "上传随机文档")
     @PostMapping("/put")
@@ -75,7 +80,6 @@ public class DocumentController {
             }
         });
     }
-
 
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/{filePath}")
@@ -103,7 +107,6 @@ public class DocumentController {
         response.flushBuffer();
     }
 
-
     @ApiOperation(value = "下载一个文档")
     @GetMapping("/download/{filePath}")
     public void download(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
@@ -130,12 +133,6 @@ public class DocumentController {
         log.info("getViewUrlWebPath：fileUrl={}", fileUrl);
         Token t = wpsFileService.getViewUrl(fileUrl, true);
         return ResultBody.ok().data(t);
-    }
-
-    private static String getExtractPath(final HttpServletRequest request) {
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
     }
 
 }

@@ -3,7 +3,6 @@ package com.jbm.cluster.auth.service.authenticate;
 import cn.hutool.core.lang.Validator;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.service.PCoderService;
 import com.jbm.cluster.auth.service.UserService;

@@ -33,7 +33,7 @@ public class LoginAssemblyConfiguration {
     @Autowired
     private ApplicationContext applicationContext;
 
-    private Map<String, ILoginAuthenticate> loginAuthenticate  =new ConcurrentHashMap<>();
+    private Map<String, ILoginAuthenticate> loginAuthenticate = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void assembly() {

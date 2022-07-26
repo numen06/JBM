@@ -22,24 +22,21 @@
     </resultMap>
 
     <select id="selectRateLimitApi" resultMap="RateLimitApi">
-      SELECT
-        i.policy_id,
-        p.limit_quota,
-        p.interval_unit,
-        p.policy_name,
-        a.api_id,
-        a.api_code,
-        a.api_name,
-        a.api_category,
-        a.service_id,
-        a.path,
-        r.url
-    FROM
-        gateway_rate_limit_api AS i
-    INNER JOIN gateway_rate_limit AS p ON i.policy_id = p.policy_id
-    INNER JOIN base_api AS a ON i.api_id = a.api_id
-    INNER JOIN gateway_route AS r ON a.service_id = r.route_name
-    WHERE
-        p.policy_type = 'url'
+        SELECT i.policy_id,
+               p.limit_quota,
+               p.interval_unit,
+               p.policy_name,
+               a.api_id,
+               a.api_code,
+               a.api_name,
+               a.api_category,
+               a.service_id,
+               a.path,
+               r.url
+        FROM gateway_rate_limit_api AS i
+                 INNER JOIN gateway_rate_limit AS p ON i.policy_id = p.policy_id
+                 INNER JOIN base_api AS a ON i.api_id = a.api_id
+                 INNER JOIN gateway_route AS r ON a.service_id = r.route_name
+        WHERE p.policy_type = 'url'
     </select>
 </mapper>

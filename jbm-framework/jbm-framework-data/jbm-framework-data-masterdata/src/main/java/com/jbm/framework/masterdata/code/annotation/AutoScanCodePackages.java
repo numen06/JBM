@@ -1,5 +1,7 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.annotation;
 
+import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.masterdata.code.GenerateMasterData;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -35,10 +37,6 @@ public class AutoScanCodePackages {
         this.packageNames = Collections.unmodifiableList(packages);
     }
 
-    public List<String> getPackageNames() {
-        return this.packageNames;
-    }
-
     public static AutoScanCodePackages get(BeanFactory beanFactory) {
         // Currently we only store a single base package, but we return a list to
         // allow this to change in the future if needed
@@ -69,12 +67,15 @@ public class AutoScanCodePackages {
         return StringUtils.toStringArray(merged);
     }
 
+    public List<String> getPackageNames() {
+        return this.packageNames;
+    }
+
     static class CodeRegistrar implements ImportBeanDefinitionRegistrar {
 
         @Override
         public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
             gnerate(registry, getPackagesToGeneate(metadata), getPackagesToScan(metadata));
-
         }
 
         private String getPackagesToGeneate(AnnotationMetadata metadata) {
@@ -96,12 +97,11 @@ public class AutoScanCodePackages {
             }
             if (packagesToScan.isEmpty()) {
                 String packageName = ClassUtils.getPackageName(metadata.getClassName());
-                Assert.state(!StringUtils.isEmpty(packageName),
+                Assert.state(!StrUtil.isEmpty(packageName),
                         "@EntityScan cannot be used with the default package");
                 return Collections.singleton(packageName);
             }
             return packagesToScan;
-
         }
 
     }

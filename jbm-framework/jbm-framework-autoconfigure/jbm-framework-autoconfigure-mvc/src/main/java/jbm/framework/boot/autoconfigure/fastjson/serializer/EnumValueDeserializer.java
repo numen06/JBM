@@ -1,11 +1,7 @@
 package jbm.framework.boot.autoconfigure.fastjson.serializer;
 
-import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.ReflectUtil;
-import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.DefaultJSONParser;
-import com.alibaba.fastjson.parser.JSONLexer;
 import com.alibaba.fastjson.parser.JSONToken;
 import com.alibaba.fastjson.parser.deserializer.EnumDeserializer;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;

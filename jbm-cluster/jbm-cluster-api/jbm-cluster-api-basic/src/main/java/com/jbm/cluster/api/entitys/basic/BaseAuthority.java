@@ -22,35 +22,28 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName("base_authority")
 public class BaseAuthority extends MasterDataEntity {
+    private static final long serialVersionUID = 1L;
     @Id
     @TableId(type = IdType.ID_WORKER)
     private Long authorityId;
-
     /**
      * 权限标识
      */
     private String authority;
-
     /**
      * 菜单资源ID
      */
     private Long menuId;
-
     /**
      * API资源ID
      */
     private Long apiId;
-
     /**
      * 操作资源ID
      */
     private Long actionId;
-
     /**
      * 状态
      */
     private Integer status;
-
-
-    private static final long serialVersionUID = 1L;
 }

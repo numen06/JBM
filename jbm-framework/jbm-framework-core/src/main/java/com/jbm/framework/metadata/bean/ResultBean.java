@@ -1,107 +1,105 @@
 package com.jbm.framework.metadata.bean;
 
+import com.jbm.framework.metadata.enumerate.ResultEnum;
+
 import java.io.Serializable;
 import java.util.UUID;
 
-import com.jbm.framework.metadata.enumerate.ResultEnum;
-
 /**
- * 
  * 通讯之间返回值的封装类
- * 
+ *
  * @author Wesley
- * 
  */
 public class ResultBean implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	private String key;
-	private Integer flag;
-	private String[] messages;
-	private Object result;
+    private String key;
+    private Integer flag;
+    private String[] messages;
+    private Object result;
 
-	public ResultBean() {
-		super();
-	}
+    public ResultBean() {
+        super();
+    }
 
-	public ResultBean(String key, Integer flag) {
-		super();
-		this.key = key;
-		this.flag = flag;
-	}
+    public ResultBean(String key, Integer flag) {
+        super();
+        this.key = key;
+        this.flag = flag;
+    }
 
-	public ResultBean(String key, Integer flag, String[] messages, Object result) {
-		super();
-		this.key = key;
-		this.flag = flag;
-		this.messages = messages;
-		this.result = result;
-	}
+    public ResultBean(String key, Integer flag, String[] messages, Object result) {
+        super();
+        this.key = key;
+        this.flag = flag;
+        this.messages = messages;
+        this.result = result;
+    }
 
-	public String getKey() {
-		return key;
-	}
+    public static ResultBean createResultBean() {
+        return new ResultBean(UUID.randomUUID().toString(), ResultEnum.none.getResult());
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public static ResultBean createResultBean(ResultEnum flag) {
+        return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), null, null);
+    }
 
-	public Integer getFlag() {
-		return flag;
-	}
+    public static ResultBean createResultBean(ResultEnum flag, Object result) {
+        return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), null, result);
+    }
 
-	public void setFlag(Integer flag) {
-		this.flag = flag;
-	}
+    public static ResultBean createResultBean(ResultEnum flag, Object result, String... messages) {
+        return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), messages, result);
+    }
 
-	public String[] getMessages() {
-		return messages;
-	}
+    public static ResultBean createResultBean(Throwable throwable) {
+        return new ResultBean(UUID.randomUUID().toString(), ResultEnum.error.getResult(), new String[]{throwable.getMessage()}, null);
+    }
 
-	public void setMessages(String[] messages) {
-		this.messages = messages;
-	}
+    public static boolean isSuccess(ResultBean result) {
+        return compareToResultEnum(ResultEnum.success, result);
+    }
 
-	public Object getResult() {
-		return result;
-	}
+    public static boolean compareToResultEnum(ResultEnum resultEnum, ResultBean result) {
+        return resultEnum.getResult().equals(result.getFlag());
+    }
 
-	public void setResult(Object result) {
-		this.result = result;
-	}
+    public static boolean compareToResultEnum(ResultEnum resultEnum, Integer result) {
+        return resultEnum.getResult().equals(result);
+    }
 
-	public static ResultBean createResultBean() {
-		return new ResultBean(UUID.randomUUID().toString(), ResultEnum.none.getResult());
-	}
+    public String getKey() {
+        return key;
+    }
 
-	public static ResultBean createResultBean(ResultEnum flag) {
-		return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), null, null);
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public static ResultBean createResultBean(ResultEnum flag, Object result) {
-		return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), null, result);
-	}
+    public Integer getFlag() {
+        return flag;
+    }
 
-	public static ResultBean createResultBean(ResultEnum flag, Object result, String... messages) {
-		return new ResultBean(UUID.randomUUID().toString(), flag.getResult(), messages, result);
-	}
+    public void setFlag(Integer flag) {
+        this.flag = flag;
+    }
 
-	public static ResultBean createResultBean(Throwable throwable) {
-		return new ResultBean(UUID.randomUUID().toString(), ResultEnum.error.getResult(), new String[] { throwable.getMessage() }, null);
-	}
+    public String[] getMessages() {
+        return messages;
+    }
 
-	public static boolean isSuccess(ResultBean result) {
-		return compareToResultEnum(ResultEnum.success, result);
-	}
+    public void setMessages(String[] messages) {
+        this.messages = messages;
+    }
 
-	public static boolean compareToResultEnum(ResultEnum resultEnum, ResultBean result) {
-		return resultEnum.getResult().equals(result.getFlag());
-	}
+    public Object getResult() {
+        return result;
+    }
 
-	public static boolean compareToResultEnum(ResultEnum resultEnum, Integer result) {
-		return resultEnum.getResult().equals(result);
-	}
+    public void setResult(Object result) {
+        this.result = result;
+    }
 }

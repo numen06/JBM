@@ -29,37 +29,30 @@ public abstract class ClassUtils {
      * Suffix for array class names: "[]"
      */
     public static final String ARRAY_SUFFIX = "[]";
-
-    /**
-     * Prefix for internal array class names: "["
-     */
-    private static final String INTERNAL_ARRAY_PREFIX = "[";
-
-    /**
-     * Prefix for internal non-primitive array class names: "[L"
-     */
-    private static final String NON_PRIMITIVE_ARRAY_PREFIX = "[L";
-
-    /**
-     * The package separator character '.'
-     */
-    private static final char PACKAGE_SEPARATOR = '.';
-
-    /**
-     * The inner class separator character '$'
-     */
-    private static final char INNER_CLASS_SEPARATOR = '$';
-
     /**
      * The CGLIB class separator character "$$"
      */
     public static final String CGLIB_CLASS_SEPARATOR = "$$";
-
     /**
      * The ".class" file suffix
      */
     public static final String CLASS_FILE_SUFFIX = ".class";
-
+    /**
+     * Prefix for internal array class names: "["
+     */
+    private static final String INTERNAL_ARRAY_PREFIX = "[";
+    /**
+     * Prefix for internal non-primitive array class names: "[L"
+     */
+    private static final String NON_PRIMITIVE_ARRAY_PREFIX = "[L";
+    /**
+     * The package separator character '.'
+     */
+    private static final char PACKAGE_SEPARATOR = '.';
+    /**
+     * The inner class separator character '$'
+     */
+    private static final char INNER_CLASS_SEPARATOR = '$';
     /**
      * Map with primitive wrapper type as key and corresponding primitive type as
      * value, for example: Integer.class -> int.class.

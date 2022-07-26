@@ -1,9 +1,10 @@
 package jbm.framework.aliyun.sms.model;
 
-import cn.hutool.core.util.ArrayUtil;
 import lombok.Data;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author: create by wesley

@@ -35,7 +35,7 @@ public class Excel2Module {
         String path = "D:\\IdeaSpace\\Excel4J\\src\\test\\resource\\students_02.xlsx";
 
         // 不基于注解,将Excel内容读至List<List<String>>对象内
-        List<List<String>> lists = ExcelTemplate.getInstance().readExcel2List(path,new ReadParam(1, 3, 0));
+        List<List<String>> lists = ExcelTemplate.getInstance().readExcel2List(path, new ReadParam(1, 3, 0));
         System.out.println("读取Excel至String数组：");
         for (List<String> list : lists) {
             System.out.println(list);

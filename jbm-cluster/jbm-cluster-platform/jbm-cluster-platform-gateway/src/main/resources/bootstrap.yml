@@ -35,11 +35,11 @@ spring:
       id: ${spring.application.name}:${server.port}
     # sentinel 配置
     sentinel:
-#      scg:
-#        fallback:
-#          mode: response
-#          response-status: 455
-#          response-body: error!
+      #      scg:
+      #        fallback:
+      #          mode: response
+      #          response-status: 455
+      #          response-body: error!
       # nacos配置持久化
       datasource:
         ds1:

@@ -12,14 +12,14 @@ interface IEchoTask extends TaskInterface<IEchoTask> {
     CompletableFuture<String> echo(String s);
 }
 
+interface ICombinerTask extends TaskInterface<ICombinerTask> {
+    CompletableFuture<String> combine(CompletableFuture<String> a, CompletableFuture<String> b);
+}
+
 class EchoTask implements IEchoTask {
     public CompletableFuture<String> echo(String s) {
         return complete(s);
     }
-}
-
-interface ICombinerTask extends TaskInterface<ICombinerTask> {
-    CompletableFuture<String> combine(CompletableFuture<String> a, CompletableFuture<String> b);
 }
 
 class CombinerTask implements ICombinerTask {

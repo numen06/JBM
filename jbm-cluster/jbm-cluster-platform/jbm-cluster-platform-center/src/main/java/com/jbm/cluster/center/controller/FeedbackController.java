@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-03-15 12:13:48
  */
 @Api(tags = "反馈管理开放接口")

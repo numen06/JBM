@@ -29,7 +29,7 @@ public class BaseRole extends MasterDataEntity {
      * 角色ID
      */
     @Id
-    @TableId(type= IdType.ID_WORKER)
+    @TableId(type = IdType.ID_WORKER)
     private Long roleId;
 
     /**

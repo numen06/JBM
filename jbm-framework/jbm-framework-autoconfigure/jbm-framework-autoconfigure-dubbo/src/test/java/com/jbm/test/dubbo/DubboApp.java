@@ -7,8 +7,8 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan("com.jbm")
 public class DubboApp {
-	public static void main(String[] args) throws InterruptedException {
-		SpringApplication.run(DubboApp.class, args);
-		Thread.sleep(10000);
-	}
+    public static void main(String[] args) throws InterruptedException {
+        SpringApplication.run(DubboApp.class, args);
+        Thread.sleep(10000);
+    }
 }

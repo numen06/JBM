@@ -9,15 +9,15 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
-@SpringBootTest(classes = { DubboApp.class })
+@SpringBootTest(classes = {DubboApp.class})
 public class DubboTest {
 
-	@Autowired
-	private DubboProviderServcie dubboProviderServcie;
+    @Autowired
+    private DubboProviderServcie dubboProviderServcie;
 
-	@Test
-	public void test() throws InterruptedException {
-		dubboProviderServcie.test();
-		Thread.sleep(10000);
-	}
+    @Test
+    public void test() throws InterruptedException {
+        dubboProviderServcie.test();
+        Thread.sleep(10000);
+    }
 }

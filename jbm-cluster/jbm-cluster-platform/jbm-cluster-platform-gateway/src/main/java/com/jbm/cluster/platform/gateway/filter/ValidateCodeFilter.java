@@ -4,8 +4,8 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.platform.gateway.config.properties.CaptchaProperties;
-import com.jbm.cluster.platform.gateway.utils.WebFluxUtils;
 import com.jbm.cluster.platform.gateway.service.ValidateCodeService;
+import com.jbm.cluster.platform.gateway.utils.WebFluxUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -30,16 +30,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
     private final static String[] VALIDATE_URL = new String[]{
             "/auth/login", "/auth/register"};
-
+    private static final String CODE = "code";
+    private static final String UUID = "uuid";
     @Autowired
     private ValidateCodeService validateCodeService;
-
     @Autowired
     private CaptchaProperties captchaProperties;
-
-    private static final String CODE = "code";
-
-    private static final String UUID = "uuid";
 
     @Override
     public GatewayFilter apply(Object config) {

@@ -1,8 +1,5 @@
 package jbm.framework.boot.autoconfigure.redis.annotation;
 
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.core.annotation.AliasFor;
-
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +31,8 @@ public @interface RedisLock {
      */
     LockFailAction action() default LockFailAction.CONTINUE;
 
+    TimeUnit unit() default TimeUnit.MILLISECONDS;
+
     enum LockFailAction {
         /**
          * 放弃
@@ -44,6 +43,4 @@ public @interface RedisLock {
          */
         CONTINUE;
     }
-
-    TimeUnit unit() default TimeUnit.MILLISECONDS;
 }

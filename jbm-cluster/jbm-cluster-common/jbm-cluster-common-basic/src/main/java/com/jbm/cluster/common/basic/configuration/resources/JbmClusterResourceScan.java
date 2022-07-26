@@ -11,20 +11,16 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 public abstract class JbmClusterResourceScan<T extends JbmClusterResource> implements ApplicationListener<ApplicationReadyEvent> {
 
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
-
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public JbmClusterResourceScan() {
     }
-
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {

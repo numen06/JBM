@@ -4,91 +4,91 @@ package jbm.framework.excel.handler;
  * 功能说明: 用来存储Excel标题的对象，通过该对象可以获取标题和方法的对应关系
  */
 public class ExcelHeader implements Comparable<ExcelHeader> {
-	/**
-	 * excel的标题名称
-	 */
-	private String title;
-	/**
-	 * 每一个标题的顺序
-	 */
-	private int order;
-	/**
-	 * 注解域
-	 */
-	private String filed;
-	/**
-	 * 属性类型
-	 */
-	private Class<?> filedClazz;
+    /**
+     * excel的标题名称
+     */
+    private String title;
+    /**
+     * 每一个标题的顺序
+     */
+    private int order;
+    /**
+     * 注解域
+     */
+    private String filed;
+    /**
+     * 属性类型
+     */
+    private Class<?> filedClazz;
 
-	private String format = "yyyy-MM-dd HH:mm:ss";
+    private String format = "yyyy-MM-dd HH:mm:ss";
 
-	public String getTitle() {
-		return title;
-	}
+    public ExcelHeader(String title, String filed, Class<?> filedClazz) {
+        super();
+        this.title = title;
+        this.filed = filed;
+        this.filedClazz = filedClazz;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public ExcelHeader(String title, int order, String filed, Class<?> filedClazz) {
+        super();
+        this.title = title;
+        this.order = order;
+        this.filed = filed;
+        this.filedClazz = filedClazz;
+    }
 
-	public int getOrder() {
-		return order;
-	}
+    public ExcelHeader(String title, int order, String filed, Class<?> filedClazz, String format) {
+        super();
+        this.title = title;
+        this.order = order;
+        this.filed = filed;
+        this.filedClazz = filedClazz;
+        this.format = format;
+    }
 
-	public void setOrder(int order) {
-		this.order = order;
-	}
+    public String getTitle() {
+        return title;
+    }
 
-	public String getFiled() {
-		return filed;
-	}
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-	public void setFiled(String filed) {
-		this.filed = filed;
-	}
+    public int getOrder() {
+        return order;
+    }
 
-	public Class<?> getFiledClazz() {
-		return filedClazz;
-	}
+    public void setOrder(int order) {
+        this.order = order;
+    }
 
-	public void setFiledClazz(Class<?> filedClazz) {
-		this.filedClazz = filedClazz;
-	}
+    public String getFiled() {
+        return filed;
+    }
 
-	public int compareTo(ExcelHeader o) {
-		return order - o.order;
-	}
+    public void setFiled(String filed) {
+        this.filed = filed;
+    }
 
-	public String getFormat() {
-		return format;
-	}
+    public Class<?> getFiledClazz() {
+        return filedClazz;
+    }
 
-	public void setFormat(String format) {
-		this.format = format;
-	}
+    public void setFiledClazz(Class<?> filedClazz) {
+        this.filedClazz = filedClazz;
+    }
 
-	public ExcelHeader(String title, String filed, Class<?> filedClazz) {
-		super();
-		this.title = title;
-		this.filed = filed;
-		this.filedClazz = filedClazz;
-	}
+    public int compareTo(ExcelHeader o) {
+        return order - o.order;
+    }
 
-	public ExcelHeader(String title, int order, String filed, Class<?> filedClazz) {
-		super();
-		this.title = title;
-		this.order = order;
-		this.filed = filed;
-		this.filedClazz = filedClazz;
-	}
+    public String getFormat() {
+        return format;
+    }
 
-	public ExcelHeader(String title, int order, String filed, Class<?> filedClazz, String format) {
-		super();
-		this.title = title;
-		this.order = order;
-		this.filed = filed;
-		this.filedClazz = filedClazz;
-		this.format = format;
-	}
+    public void setFormat(String format) {
+        this.format = format;
+    }
 
 }

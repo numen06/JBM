@@ -24,10 +24,9 @@ import java.util.Map;
 
 public abstract class ApplicationEnvironmentDefaultListener implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
+    private static HashSet<String> configsMap = new HashSet<>();
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     protected ResourceLoader resourceLoader = null;
-
     protected ApplicationEnvironmentPreparedEvent event;
 
     public ClassLoader getClassLoader() {
@@ -40,9 +39,6 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
     public abstract List<String> loadPropertiesPath();
 
     public abstract Map<String, Object> loadMapConfigs();
-
-
-    private static HashSet<String> configsMap = new HashSet<>();
 
     @Override
     public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
@@ -59,8 +55,9 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 
     protected void importProperties(ApplicationEnvironmentPreparedEvent event, ResourceLoader resourceLoader) throws IOException {
         List<String> pps = this.loadPropertiesPath();
-        if (CollectionUtils.isEmpty(pps))
+        if (CollectionUtils.isEmpty(pps)) {
             return;
+        }
         for (String ss : pps) {
             String path = ss;
             if (!StringUtils.contains(path, "classpath:configs/")) {

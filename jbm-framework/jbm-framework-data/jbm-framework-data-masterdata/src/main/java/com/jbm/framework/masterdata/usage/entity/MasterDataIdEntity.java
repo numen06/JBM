@@ -24,6 +24,12 @@ import javax.persistence.MappedSuperclass;
 public abstract class MasterDataIdEntity extends MasterDataEntity {
 
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
+    @ApiModelProperty("主键ID")
+    private Long id;
+
     public MasterDataIdEntity() {
         super();
     }
@@ -32,12 +38,6 @@ public abstract class MasterDataIdEntity extends MasterDataEntity {
         super();
         this.id = id;
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.ASSIGN_ID)
-    @ApiModelProperty("主键ID")
-    private Long id;
 
 
 }

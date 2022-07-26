@@ -124,7 +124,7 @@ public class GatewayIpLimitController {
         ipLimit.setIpAddress(ipAddress);
         Long policyId = null;
         GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
-        if(result!=null){
+        if (result != null) {
             policyId = result.getPolicyId();
         }
         return ResultBody.ok().data(policyId);

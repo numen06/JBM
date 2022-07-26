@@ -20,6 +20,7 @@ public interface BaseAuthorityMapper extends SuperMapper<BaseAuthority> {
 
     /**
      * 查询所有资源授权列表
+     *
      * @return
      */
     List<AuthorityResource> selectAllAuthorityResource();

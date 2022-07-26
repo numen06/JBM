@@ -9,9 +9,9 @@ import com.jbm.cluster.common.idempotent.annotation.RepeatSubmit;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import jbm.framework.web.ServletUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import jbm.framework.spring.MessageUtils;
+import jbm.framework.web.ServletUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -36,7 +36,7 @@ public class RepeatSubmitAspect {
 
     private static final ThreadLocal<String> KEY_CACHE = new ThreadLocal<>();
 
-//    @Autowired
+    //    @Autowired
     private final RedisService redisService;
 
     public RepeatSubmitAspect(RedisService redisService) {

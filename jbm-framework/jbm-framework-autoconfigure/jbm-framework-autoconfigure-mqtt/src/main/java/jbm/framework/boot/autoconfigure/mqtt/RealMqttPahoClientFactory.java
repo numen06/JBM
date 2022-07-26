@@ -10,9 +10,11 @@ import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttAsyncClient;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.mqtt.core.ConsumerStopAction;
@@ -38,6 +40,9 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 //                    return messageHandler;
 //                }
 //            });
+    @Autowired
+    private ApplicationContext applicationContext;
+    private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
 
 
     public RealMqttPahoClientFactory(MqttConnectProperties mqttConnectProperties) {
@@ -54,7 +59,6 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         return this;
     }
 
-
     @Override
     public MqttConnectOptions getConnectionOptions() {
         return mqttConnectProperties.toMqttConnectOptions();
@@ -67,9 +71,6 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         SimpleMqttClient simpleMqttClient = new SimpleMqttClient(client, properties);
         return simpleMqttClient;
     }
-
-    @Autowired
-    private ApplicationContext applicationContext;
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance(String clientId) throws MqttException {
@@ -90,10 +91,6 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
             properties.setClientId(clientId);
         return this.getClientInstance(properties);
     }
-
-
-    private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
-
 
     /**
      * 通过参数直接创建MQTT对象
@@ -172,7 +169,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 //    }
 //
 //    public SimpleMqttPahoMessageHandler cteateSimpleMqttPahoMessageHandler(String clientId, String defaultTopic) {
-//        logger.info("create client:{}", clientId);
+//        log.info("create client:{}", clientId);
 //        KeySerialization keySerialization = new KeySerialization(clientId, defaultTopic);
 //        String key = JSON.toJSONString(keySerialization);
 //        try {

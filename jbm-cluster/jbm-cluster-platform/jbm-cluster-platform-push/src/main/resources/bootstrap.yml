@@ -10,11 +10,15 @@ spring:
         enabled: true
       id: ${spring.application.name}:${server.port}
     function:
-      definition: notification
+      definition: notification;mqtt;pushCallBack
     stream:
-#      default-binder: kafka
+      #      default-binder: kafka
       bindings:
         notification-in-0:
+          group: ${spring.application.name}
+        mqtt-in-0:
+          group: ${spring.application.name}
+        pushCallBack-in-0:
           group: ${spring.application.name}
     nacos:
       config:
@@ -33,8 +37,8 @@ management:
 jbm:
   cluster:
     nacos-confs: common.properties,rabbitmq.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
-#    nacos-confs: common.properties,rabbitmq.properties,kafka.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
-#    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    #    nacos-confs: common.properties,rabbitmq.properties,kafka.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    #    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     token-type: redis
     permit-all:
       - /get/**

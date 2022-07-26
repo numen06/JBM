@@ -18,45 +18,46 @@ import java.util.Map;
 @Slf4j
 public class OpenJwtTokenService implements ResourceServerTokenServices {
 
-	private TokenStore tokenStore;
+    private TokenStore tokenStore;
 
-	private DefaultAccessTokenConverter defaultAccessTokenConverter;
+    private DefaultAccessTokenConverter defaultAccessTokenConverter;
 
-	private JwtAccessTokenConverter jwtAccessTokenConverter;
-	@Override
-	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException{
-		OAuth2Authentication oAuth2Authentication = tokenStore.readAuthentication(accessToken);
-		Map<String, ?> map = jwtAccessTokenConverter.convertAccessToken(readAccessToken(accessToken), oAuth2Authentication);
-		return defaultAccessTokenConverter.extractAuthentication(map);
-	}
+    private JwtAccessTokenConverter jwtAccessTokenConverter;
+
+    @Override
+    public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException {
+        OAuth2Authentication oAuth2Authentication = tokenStore.readAuthentication(accessToken);
+        Map<String, ?> map = jwtAccessTokenConverter.convertAccessToken(readAccessToken(accessToken), oAuth2Authentication);
+        return defaultAccessTokenConverter.extractAuthentication(map);
+    }
 
 
-	@Override
-	public OAuth2AccessToken readAccessToken(String accessToken) {
-		return tokenStore.readAccessToken(accessToken);
-	}
+    @Override
+    public OAuth2AccessToken readAccessToken(String accessToken) {
+        return tokenStore.readAccessToken(accessToken);
+    }
 
-	public TokenStore getTokenStore() {
-		return tokenStore;
-	}
+    public TokenStore getTokenStore() {
+        return tokenStore;
+    }
 
-	public void setTokenStore(TokenStore tokenStore) {
-		this.tokenStore = tokenStore;
-	}
+    public void setTokenStore(TokenStore tokenStore) {
+        this.tokenStore = tokenStore;
+    }
 
-	public DefaultAccessTokenConverter getDefaultAccessTokenConverter() {
-		return defaultAccessTokenConverter;
-	}
+    public DefaultAccessTokenConverter getDefaultAccessTokenConverter() {
+        return defaultAccessTokenConverter;
+    }
 
-	public void setDefaultAccessTokenConverter(DefaultAccessTokenConverter defaultAccessTokenConverter) {
-		this.defaultAccessTokenConverter = defaultAccessTokenConverter;
-	}
+    public void setDefaultAccessTokenConverter(DefaultAccessTokenConverter defaultAccessTokenConverter) {
+        this.defaultAccessTokenConverter = defaultAccessTokenConverter;
+    }
 
-	public JwtAccessTokenConverter getJwtAccessTokenConverter() {
-		return jwtAccessTokenConverter;
-	}
+    public JwtAccessTokenConverter getJwtAccessTokenConverter() {
+        return jwtAccessTokenConverter;
+    }
 
-	public void setJwtAccessTokenConverter(JwtAccessTokenConverter jwtAccessTokenConverter) {
-		this.jwtAccessTokenConverter = jwtAccessTokenConverter;
-	}
+    public void setJwtAccessTokenConverter(JwtAccessTokenConverter jwtAccessTokenConverter) {
+        this.jwtAccessTokenConverter = jwtAccessTokenConverter;
+    }
 }

@@ -23,6 +23,7 @@ public interface BaseRoleUserMapper extends SuperMapper<BaseRoleUser> {
 
     /**
      * 查询用户角色ID列表
+     *
      * @param userId
      * @return
      */

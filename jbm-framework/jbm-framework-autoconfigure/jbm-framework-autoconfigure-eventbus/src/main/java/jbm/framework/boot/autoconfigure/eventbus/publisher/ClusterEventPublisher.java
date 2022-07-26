@@ -15,11 +15,9 @@ import org.springframework.context.ApplicationEventPublisher;
  */
 public class ClusterEventPublisher {
 
+    private static ClusterEventPublisher clusterEventPublisher;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final BusProperties busProperties;
-
-    private static ClusterEventPublisher clusterEventPublisher;
-
     private final PathDestinationFactory DEFAULT_DESTINATION_FACTORY = new PathDestinationFactory();
 
     public ClusterEventPublisher(ApplicationEventPublisher applicationEventPublisher, BusProperties busProperties) {

@@ -7,6 +7,7 @@ import java.util.Objects;
 
 /**
  * API权限
+ *
  * @author wesley.zhang
  */
 //@JsonIgnoreProperties(ignoreUnknown = true)
@@ -57,7 +58,7 @@ public class AuthorityApi extends BaseApi implements Serializable {
         if (this == obj) {
             return true;
         }
-        if(!(obj instanceof AuthorityApi)) {
+        if (!(obj instanceof AuthorityApi)) {
             return false;
         }
         AuthorityApi a = (AuthorityApi) obj;

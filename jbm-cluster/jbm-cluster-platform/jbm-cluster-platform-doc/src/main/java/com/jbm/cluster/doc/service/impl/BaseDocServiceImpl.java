@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-07-20 14:46:37
  */
 @Service
@@ -33,6 +33,12 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
 
     @Autowired
     private MinioService minioService;
+
+    private static String getExtractPath(final HttpServletRequest request) {
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+    }
 
     /**
      * 上传文档
@@ -84,7 +90,6 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         }
     }
 
-
     @Override
     public BaseDoc createDoc(File file) {
         BaseDoc baseDoc = new BaseDoc();
@@ -134,13 +139,6 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         baseDoc.setDocPath(FileNameUtil.normalize(path.toString(), true));
         this.setCreator(baseDoc);
         return baseDoc;
-    }
-
-
-    private static String getExtractPath(final HttpServletRequest request) {
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
     }
 
 }

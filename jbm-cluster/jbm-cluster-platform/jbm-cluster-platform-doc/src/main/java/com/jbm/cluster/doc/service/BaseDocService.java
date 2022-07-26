@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.InputStream;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-07-20 14:46:37
  */
 public interface BaseDocService extends IMasterDataService<BaseDoc> {

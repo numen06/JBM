@@ -3,7 +3,6 @@ package com.jbm.cluster.platform.gateway.service.impl;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.fastjson.JSON;
@@ -33,7 +32,6 @@ import org.springframework.web.server.ServerWebExchange;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 
@@ -58,6 +56,12 @@ public class StreamAccessLogService implements AccessLogService {
             "/auth/captcha/**",
             "/auth/oauth2/token"
     );
+    @Autowired
+    private StreamBridge streamBridge;
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     /**
      * 不记录日志
@@ -80,15 +84,6 @@ public class StreamAccessLogService implements AccessLogService {
     public void sendLog(ServerWebExchange exchange, Throwable ex) {
         this.sendLog(exchange, null, ex);
     }
-
-    @Autowired
-    private StreamBridge streamBridge;
-
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
-    @Autowired
-    private ApplicationContext applicationContext;
 
     @Override
     public void sendLog(ServerWebExchange exchange, String responseBody, Throwable ex) {

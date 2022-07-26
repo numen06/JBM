@@ -30,30 +30,28 @@ public class DictionaryScanner implements InitializingBean {
 //    private final DictionaryTemplate dictionaryTemplate;
 
     private Map<String, List<JbmDictionary>> jbmDicMapCache = Maps.newLinkedHashMap();
-
-    public Map<String, List<JbmDictionary>> getJbmDicMapCache() {
-        return jbmDicMapCache;
-    }
-
     private ITypeConverter typeConverter = new EnumTypeConverter();
-
     @Value("${spring.application.name:}")
     private String application;
 
-    public String getApplication() {
-        return application;
-    }
-
-    public DictionaryScanner(  EnumScanPackages enumScanPackages) {
+    public DictionaryScanner(EnumScanPackages enumScanPackages) {
         super();
         this.enumScanPackages = enumScanPackages;
 //        this.dictionaryTemplate = dictionaryTemplate;
     }
 
+    public Map<String, List<JbmDictionary>> getJbmDicMapCache() {
+        return jbmDicMapCache;
+    }
+
+    public String getApplication() {
+        return application;
+    }
+
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
             jbmDictionary.setApplication(application);
-            log.info("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(),jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
+            log.info("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
             this.putIfAbsent(jbmDictionary);
         }
 //        jbmDictionaryArrayList.addAll(jbmDictionaries);
@@ -89,7 +87,7 @@ public class DictionaryScanner implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet()  {
+    public void afterPropertiesSet() {
         try {
             log.info("JBM开始扫描字典");
             scanner();

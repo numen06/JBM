@@ -2,8 +2,8 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HtmlUtil;
-import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
 import com.jbm.cluster.platform.gateway.config.properties.XssProperties;
+import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
 import io.netty.buffer.ByteBufAllocator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

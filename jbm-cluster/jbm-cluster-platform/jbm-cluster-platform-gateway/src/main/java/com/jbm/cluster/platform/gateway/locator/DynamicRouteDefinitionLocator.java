@@ -17,7 +17,6 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;

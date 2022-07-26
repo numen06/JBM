@@ -12,13 +12,13 @@ public class Demo01Message {
      */
     private Integer id;
 
+    public Integer getId() {
+        return id;
+    }
+
     public Demo01Message setId(Integer id) {
         this.id = id;
         return this;
-    }
-
-    public Integer getId() {
-        return id;
     }
 
     @Override

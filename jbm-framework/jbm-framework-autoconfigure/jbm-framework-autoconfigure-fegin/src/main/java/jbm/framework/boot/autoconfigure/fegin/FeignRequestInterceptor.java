@@ -32,7 +32,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 跳过 content-length
-                if (entry.getKey().equals("content-length")){
+                if (entry.getKey().equals("content-length")) {
                     continue;
                 }
                 template.header(entry.getKey(), entry.getValue());

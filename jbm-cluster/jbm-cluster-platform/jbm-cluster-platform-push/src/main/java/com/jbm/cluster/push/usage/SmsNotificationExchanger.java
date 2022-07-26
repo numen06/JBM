@@ -1,7 +1,11 @@
 package com.jbm.cluster.push.usage;
 
+import cn.hutool.http.HttpException;
 import com.alibaba.fastjson.JSONObject;
+import com.jbm.cluster.api.entitys.message.PushMessageBody;
+import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.entitys.message.SmsNotification;
+import com.jbm.cluster.api.model.push.PushCallback;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.aliyun.sms.model.AliyunSms;
 import jbm.framework.aliyun.sms.model.SmsSendResult;
@@ -17,9 +21,8 @@ import org.springframework.util.Assert;
 @Slf4j
 public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotification> {
 
-    private AliyunSmsTemplate aliyunSmsTemplate;
-
     private final static String STATUS_OK = "OK";
+    private AliyunSmsTemplate aliyunSmsTemplate;
 
     public SmsNotificationExchanger(AliyunSmsTemplate aliyunSmsTemplate) {
         if (aliyunSmsTemplate != null) {
@@ -30,7 +33,7 @@ public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotif
 
 
     @Override
-    public boolean process(SmsNotification notification) {
+    public PushCallback apply(SmsNotification notification) {
         Assert.notNull(aliyunSmsTemplate, "短信接口没有初始化");
         SmsNotification smsNotification = (SmsNotification) notification;
         AliyunSms aliyunSms = new AliyunSms();
@@ -43,8 +46,16 @@ public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotif
             smsSendResult = jsonObject.toJavaObject(SmsSendResult.class);
         } catch (Exception e) {
             log.error("发送短信错误", e);
-            return false;
         }
-        return STATUS_OK.equals(smsSendResult.getCode());
+        if (!STATUS_OK.equals(smsSendResult.getCode())) {
+            throw new HttpException("发送短信错误");
+        }
+        return this.success(notification);
     }
+
+    @Override
+    public SmsNotification build(PushMessageBody pushMessageBody, PushMessageItem pushMessageItem) {
+        return null;
+    }
+
 }

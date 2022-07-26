@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Bean;
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class IdempotentAutoConfiguration {
 
-	@Bean
-	public RepeatSubmitAspect repeatSubmitAspect(RedisService redisService) {
-		return new RepeatSubmitAspect(redisService);
-	}
+    @Bean
+    public RepeatSubmitAspect repeatSubmitAspect(RedisService redisService) {
+        return new RepeatSubmitAspect(redisService);
+    }
 
 }

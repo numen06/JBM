@@ -1,4 +1,6 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.annotation;
+
+import com.jbm.framework.masterdata.code.constants.CodeType;
 
 import java.lang.annotation.*;
 
@@ -10,4 +12,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface IgnoreGeneate {
+
+    CodeType[] value() default {};
+
 }

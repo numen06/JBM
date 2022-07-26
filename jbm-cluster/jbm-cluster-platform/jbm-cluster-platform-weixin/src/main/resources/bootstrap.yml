@@ -24,7 +24,7 @@ management:
 jbm:
   cluster:
     nacos-confs: common.properties,redis.properties,rabbitmq.properties,weixin.yml
-#    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    #    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     token-type: redis
     permit-all:
       - /**

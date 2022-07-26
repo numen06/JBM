@@ -1,7 +1,7 @@
 package com.jbm.cluster.api.factory;
 
-import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.service.fegin.RemoteUserService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.slf4j.Logger;

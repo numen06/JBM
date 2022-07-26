@@ -1,6 +1,9 @@
 package com.jbm.cluster.push.usage;
 
 import com.jbm.cluster.api.entitys.message.EmailNotification;
+import com.jbm.cluster.api.entitys.message.PushMessageBody;
+import com.jbm.cluster.api.entitys.message.PushMessageItem;
+import com.jbm.cluster.api.model.push.PushCallback;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
 
@@ -17,12 +20,18 @@ public class EmailNoficationExchanger extends BaseNotificationExchanger<EmailNot
     }
 
     @Override
-    public boolean process(EmailNotification emailNotification) {
+    public PushCallback apply(EmailNotification emailNotification) {
         MailRequest mailRequest = new MailRequest();
         mailRequest.setTitle(emailNotification.getTitle());
         mailRequest.setContent(emailNotification.getContent());
         mailRequest.setMailTo(emailNotification.getReceiver());
         mailSender.sendSimpleMail(mailRequest);
-        return false;
+        return this.success(emailNotification);
     }
+
+    @Override
+    public EmailNotification build(PushMessageBody pushMessageBody, PushMessageItem pushMessageItem) {
+        return null;
+    }
+
 }

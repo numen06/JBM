@@ -1,12 +1,12 @@
 package com.jbm.framework.mongo;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
+import com.jbm.framework.metadata.usage.bean.FileInfoBean;
+import com.jbm.util.Base64Utils;
+import com.jbm.util.PathUtils;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSDownloadStream;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -19,17 +19,13 @@ import org.springframework.data.mongodb.gridfs.GridFsCriteria;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 
-import com.jbm.framework.metadata.usage.bean.FileInfoBean;
-import com.jbm.util.Base64Utils;
-import com.jbm.util.PathUtils;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSDownloadStream;
+import java.io.*;
 
 public class MongoFileSupportService implements FileSupportService {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoFileSupportService.class);
+    private GridFsTemplate gridFsTemplate;
+    private GridFSBucket gridFSBucket;
 
     public MongoFileSupportService() {
         super();
@@ -40,10 +36,6 @@ public class MongoFileSupportService implements FileSupportService {
         this.gridFsTemplate = gridFsTemplate;
         this.gridFSBucket = gridFSBucket;
     }
-
-    private GridFsTemplate gridFsTemplate;
-
-    private GridFSBucket gridFSBucket;
 
     @Override
     public FileInfoBean saveByteToFile(FileInfoBean fileInfoBean) throws IOException {
@@ -172,12 +164,12 @@ public class MongoFileSupportService implements FileSupportService {
         Query query = genQuery(fileInfoBean);
         // 如果查询都是空的那么取消删除
         if (query.getQueryObject().size() < 0)
-            return 0l;
+            return 0L;
         try {
             gridFsTemplate.delete(query);
         } catch (Exception e) {
             logger.error("删除文件错误", e);
-            return 0l;
+            return 0L;
         }
         return 1l;
     }

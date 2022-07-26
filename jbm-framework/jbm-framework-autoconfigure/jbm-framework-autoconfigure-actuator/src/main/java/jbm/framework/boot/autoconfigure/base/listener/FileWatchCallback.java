@@ -5,11 +5,11 @@ import java.nio.file.WatchEvent;
 
 public interface FileWatchCallback {
 
-	void modify(WatchEvent<?> event);
+    void modify(WatchEvent<?> event);
 
-	void create(WatchEvent<?> event);
+    void create(WatchEvent<?> event);
 
-	void delete(WatchEvent<?> event);
+    void delete(WatchEvent<?> event);
 
-	File getWatchFile();
+    File getWatchFile();
 }

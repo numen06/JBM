@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.controller.authenticate;
 
-import afu.org.checkerframework.checker.oigj.qual.O;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;

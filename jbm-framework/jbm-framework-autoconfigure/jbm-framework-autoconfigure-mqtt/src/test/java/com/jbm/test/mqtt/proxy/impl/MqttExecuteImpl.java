@@ -5,7 +5,6 @@ import com.jbm.test.mqtt.proxy.MqttExecute;
 import com.jbm.util.proxy.annotation.RequestBody;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
-import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttResponse;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import lombok.Getter;

@@ -138,9 +138,9 @@ public class MqttSample extends BaseSample {
                 // 如果不一定是json格式，可以参考如下方式回复
                 MqttPublishRequest rrpcResponse = new MqttPublishRequest();
                 rrpcResponse.topic = resourceRequest.topic;
-                rrpcResponse.payloadObj ="xxx";
+                rrpcResponse.payloadObj = "xxx";
 
-                LinkKit.getInstance().publish(rrpcResponse,null);
+                LinkKit.getInstance().publish(rrpcResponse, null);
             }
 
             @Override

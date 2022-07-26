@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2021-08-25 10:49:30
  */
 @Api(tags = "版本发布管理")

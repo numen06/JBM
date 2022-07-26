@@ -27,8 +27,8 @@ public class NoticationAutoConfiguration {
 
     @Bean
 //    @ConditionalOnBean(RealMqttPahoClientFactory.class)
-    public PushMessageNotificationExchanger pushMessageNotificationExchanger(RealMqttPahoClientFactory mqttPahoClientFactory) {
-        return new PushMessageNotificationExchanger(mqttPahoClientFactory);
+    public PushMessageNotificationExchanger pushMessageNotificationExchanger() {
+        return new PushMessageNotificationExchanger();
     }
 
 

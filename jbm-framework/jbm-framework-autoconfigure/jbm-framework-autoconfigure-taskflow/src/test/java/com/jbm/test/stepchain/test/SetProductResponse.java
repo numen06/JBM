@@ -1,5 +1,5 @@
 package com.jbm.test.stepchain.test;
 
 public class SetProductResponse {
-	public Integer returnCode = -1;
+    public Integer returnCode = -1;
 }

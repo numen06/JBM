@@ -16,6 +16,9 @@ import java.util.List;
  */
 public class FastJsonUtils {
 
+    private final static String st1 = "{\"username\":\"tom\",\"age\":18,\"addressTset\":[{\"provinceTest\":\"addressTset\"},{\"city\":\"上海市\"},{\"disrtictTest\":\"静安区\"}]}";
+    private final static String st2 = "{username:\"tom\",age:18}";
+
     /**
      * 将JSON的name转换成下划线
      *
@@ -94,9 +97,6 @@ public class FastJsonUtils {
         }
         return list;
     }
-
-    private final static String st1 = "{\"username\":\"tom\",\"age\":18,\"addressTset\":[{\"provinceTest\":\"addressTset\"},{\"city\":\"上海市\"},{\"disrtictTest\":\"静安区\"}]}";
-    private final static String st2 = "{username:\"tom\",age:18}";
 
 //    public static void main(String[] args) {
 //        System.out.println(st1);

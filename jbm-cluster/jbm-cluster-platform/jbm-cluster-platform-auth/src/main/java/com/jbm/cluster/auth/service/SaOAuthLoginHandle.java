@@ -21,12 +21,12 @@ import java.util.function.Function;
 public abstract class SaOAuthLoginHandle implements BiFunction<String, String, Object> {
 
 
+    private SaRequest request;
+
     @Override
     public <V> BiFunction<String, String, V> andThen(Function<? super Object, ? extends V> after) {
         return BiFunction.super.andThen(after);
     }
-
-    private SaRequest request;
 
     @Override
     public Object apply(String username, String password) {

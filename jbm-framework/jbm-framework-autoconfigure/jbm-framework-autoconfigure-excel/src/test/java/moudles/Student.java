@@ -2,51 +2,51 @@ package moudles;
 
 public class Student {
 
-	// 学号
-	private String id;
+    // 学号
+    private String id;
 
-	// 姓名
-	private String name;
+    // 姓名
+    private String name;
 
-	// 班级
-	private String classes;
+    // 班级
+    private String classes;
 
-	public String getId() {
-		return id;
-	}
+    public Student() {
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    }
 
-	public String getName() {
-		return name;
-	}
+    public Student(String id, String name, String classes) {
+        this.id = id;
+        this.name = name;
+        this.classes = classes;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getClasses() {
-		return classes;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public void setClasses(String classes) {
-		this.classes = classes;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Student() {
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	}
+    public String getClasses() {
+        return classes;
+    }
 
-	public Student(String id, String name, String classes) {
-		this.id = id;
-		this.name = name;
-		this.classes = classes;
-	}
+    public void setClasses(String classes) {
+        this.classes = classes;
+    }
 
-	@Override
-	public String toString() {
-		return "Student1{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", classes='" + classes + '\'' + '}';
-	}
+    @Override
+    public String toString() {
+        return "Student1{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", classes='" + classes + '\'' + '}';
+    }
 }

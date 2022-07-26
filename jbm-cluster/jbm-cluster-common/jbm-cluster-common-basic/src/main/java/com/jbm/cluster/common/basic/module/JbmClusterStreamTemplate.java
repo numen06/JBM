@@ -5,7 +5,6 @@ import com.jbm.cluster.api.model.api.JbmApiResource;
 import com.jbm.cluster.api.model.dic.JbmDicResource;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
 import com.jbm.cluster.core.constant.QueueConstants;
-import com.jbm.framework.dictionary.JbmDictionary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;

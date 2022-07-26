@@ -1,11 +1,11 @@
 package com.jbm.cluster.center.mapper;
 
-import com.jbm.framework.masterdata.mapper.SuperMapper;
-import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.cluster.api.entitys.basic.BaseOpenUser;
+import com.jbm.framework.masterdata.annotation.MapperRepository;
+import com.jbm.framework.masterdata.mapper.SuperMapper;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-07-19 14:01:27
  */
 @MapperRepository

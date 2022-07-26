@@ -44,11 +44,11 @@ public class FastJsonMessageConverter extends AbstractMessageConverter {
         });
     }
 
+    private SimpleMessageConverter simpleMessageConverter = new SimpleMessageConverter();
+
     public FastJsonMessageConverter() {
         super();
     }
-
-    private SimpleMessageConverter simpleMessageConverter = new SimpleMessageConverter();
 
     @Override
     public Object fromMessage(Message message) throws MessageConversionException {

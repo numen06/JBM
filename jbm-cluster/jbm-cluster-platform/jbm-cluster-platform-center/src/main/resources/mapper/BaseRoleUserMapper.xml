@@ -9,28 +9,26 @@
         <result column="role_id" property="roleId" jdbcType="BIGINT"/>
     </resultMap>
     <select id="selectRoleUserList" resultType="com.jbm.cluster.api.entitys.basic.BaseRole">
-        SELECT
-        base_role_user.user_id,
-        base_role.role_id,
-        base_role.role_code,
-        base_role.role_name,
-        base_role.role_desc,
-        base_role.status,
-        base_role.create_time,
-        base_role.update_time
-        FROM
-        base_role_user
-        INNER JOIN base_role ON base_role_user.role_id = base_role.role_id
-        WHERE user_id = #{userId}  and status = 1
+        SELECT base_role_user.user_id,
+               base_role.role_id,
+               base_role.role_code,
+               base_role.role_name,
+               base_role.role_desc,
+               base_role.status,
+               base_role.create_time,
+               base_role.update_time
+        FROM base_role_user
+                 INNER JOIN base_role ON base_role_user.role_id = base_role.role_id
+        WHERE user_id = #{userId}
+          and status = 1
     </select>
 
 
     <select id="selectRoleUserIdList" resultType="java.lang.Long">
-        SELECT
-        base_role.role_id
-        FROM
-        base_role_user
-        INNER JOIN base_role ON base_role_user.role_id = base_role.role_id
-        WHERE user_id = #{userId}  and status = 1
+        SELECT base_role.role_id
+        FROM base_role_user
+                 INNER JOIN base_role ON base_role_user.role_id = base_role.role_id
+        WHERE user_id = #{userId}
+          and status = 1
     </select>
 </mapper>

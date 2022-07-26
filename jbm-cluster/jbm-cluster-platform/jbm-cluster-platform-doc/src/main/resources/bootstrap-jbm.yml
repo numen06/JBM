@@ -8,6 +8,6 @@ spring:
         server-addr: nacos2:8848
         shared-dataids: common.properties,redis.properties,rabbitmq.properties,doc.properties
       discovery:
-#        namespace:
+        #        namespace:
         #        group: ${config.group}
         server-addr: nacos2:8848

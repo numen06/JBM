@@ -1,7 +1,6 @@
 package jbm.framework.boot.autoconfigure.modbus.socket.handler;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.tio.core.ChannelContext;
 import org.tio.core.intf.Packet;
 import org.tio.server.intf.ServerAioListener;

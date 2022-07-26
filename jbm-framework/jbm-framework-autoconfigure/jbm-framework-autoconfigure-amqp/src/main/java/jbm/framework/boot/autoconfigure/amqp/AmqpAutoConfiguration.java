@@ -1,14 +1,10 @@
 package jbm.framework.boot.autoconfigure.amqp;
 
-import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.rabbitmq.client.Channel;
 import jbm.framework.boot.autoconfigure.amqp.usage.FastJsonMessageConverter;
-import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

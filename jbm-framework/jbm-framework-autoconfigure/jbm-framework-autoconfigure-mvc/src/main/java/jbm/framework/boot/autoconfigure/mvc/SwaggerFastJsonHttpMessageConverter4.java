@@ -12,23 +12,23 @@ import java.util.List;
 
 public class SwaggerFastJsonHttpMessageConverter4 extends FastJsonHttpMessageConverter4 {
 
-	public SwaggerFastJsonHttpMessageConverter4() {
-		super();
-		List<MediaType> aa = new ArrayList<>();
-		aa.add(MediaType.APPLICATION_JSON);
-		aa.add(MediaType.APPLICATION_JSON_UTF8);
-		aa.add(MediaType.TEXT_HTML);
-		this.setSupportedMediaTypes(aa);
-		this.getFastJsonConfig().setSerializerFeatures(SerializerFeature.BrowserCompatible, SerializerFeature.PrettyFormat,SerializerFeature.SkipTransientField, SerializerFeature.DisableCircularReferenceDetect);
+    public SwaggerFastJsonHttpMessageConverter4() {
+        super();
+        List<MediaType> aa = new ArrayList<>();
+        aa.add(MediaType.APPLICATION_JSON);
+        aa.add(MediaType.APPLICATION_JSON_UTF8);
+        aa.add(MediaType.TEXT_HTML);
+        this.setSupportedMediaTypes(aa);
+        this.getFastJsonConfig().setSerializerFeatures(SerializerFeature.BrowserCompatible, SerializerFeature.PrettyFormat, SerializerFeature.SkipTransientField, SerializerFeature.DisableCircularReferenceDetect);
 
-		try {
-			ClassUtils.forName("springfox.documentation.spring.web.json.Json", ClassUtils.getDefaultClassLoader());
-			this.getFastJsonConfig().getSerializeConfig().put(Json.class, SwaggerJsonSerializer.instance);
-			// fastJsonConfig.getSerializeConfig().put(springfox.documentation.swagger.web.UiConfiguration.class,
-			// new SwaggerConfigurationSerializer(fastConverter));
-		} catch (ClassNotFoundException | LinkageError e) {
-			logger.warn("swagger is not found");
-		}
-	}
+        try {
+            ClassUtils.forName("springfox.documentation.spring.web.json.Json", ClassUtils.getDefaultClassLoader());
+            this.getFastJsonConfig().getSerializeConfig().put(Json.class, SwaggerJsonSerializer.instance);
+            // fastJsonConfig.getSerializeConfig().put(springfox.documentation.swagger.web.UiConfiguration.class,
+            // new SwaggerConfigurationSerializer(fastConverter));
+        } catch (ClassNotFoundException | LinkageError e) {
+            logger.warn("swagger is not found");
+        }
+    }
 
 }

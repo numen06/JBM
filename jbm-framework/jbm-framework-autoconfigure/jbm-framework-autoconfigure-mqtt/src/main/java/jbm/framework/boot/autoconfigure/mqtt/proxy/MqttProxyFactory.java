@@ -2,8 +2,6 @@ package jbm.framework.boot.autoconfigure.mqtt.proxy;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.*;
 import cn.hutool.extra.expression.engine.spel.SpELEngine;
@@ -13,7 +11,6 @@ import com.jbm.util.proxy.wapper.RequestHeaders;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
-import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttResponse;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
@@ -36,13 +33,14 @@ public class MqttProxyFactory {
 
     private final ApplicationContext applicationContext;
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
+    private ThreadPoolExecutor threadPoolExecutor = ThreadUtil.newExecutor(5, 20);
+
+//    private SimpleMqttClient simpleMqttClient;
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
         this.mqttPahoClientFactory = mqttPahoClientFactory;
     }
-
-//    private SimpleMqttClient simpleMqttClient;
 
     @PostConstruct
     public void find() throws MqttException {
@@ -87,8 +85,6 @@ public class MqttProxyFactory {
         }
         return str;
     }
-
-    private ThreadPoolExecutor threadPoolExecutor = ThreadUtil.newExecutor(5, 20);
 
     public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) throws MqttException {
         log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());

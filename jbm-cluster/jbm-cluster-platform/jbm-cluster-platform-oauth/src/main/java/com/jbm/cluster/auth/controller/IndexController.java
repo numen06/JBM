@@ -47,6 +47,7 @@ public class IndexController {
 
     /**
      * 确认授权页
+     *
      * @param request
      * @param session
      * @param model
@@ -75,6 +76,7 @@ public class IndexController {
 
     /**
      * 自定义oauth2错误页
+     *
      * @param request
      * @return
      */

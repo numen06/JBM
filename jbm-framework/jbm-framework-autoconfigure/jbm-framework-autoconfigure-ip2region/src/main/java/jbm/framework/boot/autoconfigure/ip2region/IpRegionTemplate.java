@@ -3,8 +3,6 @@ package jbm.framework.boot.autoconfigure.ip2region;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
-import cn.hutool.core.util.URLUtil;
-import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,7 +10,6 @@ import org.springframework.beans.factory.InitializingBean;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 
 
 /**
@@ -26,9 +23,8 @@ public class IpRegionTemplate implements InitializingBean {
      * 远程下载地址
      */
     private static final String DB_URL = "https://gitee.com/lionsoul/ip2region/blob/master/data/ip2region.xdb";
-    private Searcher searcher = null;
-
     private static final String DB_PATH = "data/ip2region.xdb";
+    private Searcher searcher = null;
 
     /**
      * 初始化IP库

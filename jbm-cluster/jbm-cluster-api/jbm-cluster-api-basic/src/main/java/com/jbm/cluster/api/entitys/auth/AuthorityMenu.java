@@ -8,6 +8,7 @@ import java.util.Objects;
 
 /**
  * 菜单权限
+ *
  * @author wesley.zhang
  */
 //@JsonIgnoreProperties(ignoreUnknown = true)
@@ -57,7 +58,7 @@ public class AuthorityMenu extends BaseMenu implements Serializable {
         if (this == obj) {
             return true;
         }
-        if(!(obj instanceof AuthorityMenu)) {
+        if (!(obj instanceof AuthorityMenu)) {
             return false;
         }
         AuthorityMenu a = (AuthorityMenu) obj;

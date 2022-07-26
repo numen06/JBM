@@ -11,7 +11,6 @@ import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.jbm.util.StringUtils;
 import jbm.framework.aliyun.sms.autoconfigure.AliyunSmsProperties;
@@ -28,9 +27,8 @@ import javax.annotation.PostConstruct;
 @Slf4j
 public class AliyunSmsTemplate {
 
-    private IAcsClient client;
-
     private final AliyunSmsProperties aliyunSmsProperties;
+    private IAcsClient client;
 
     public AliyunSmsTemplate(AliyunSmsProperties aliyunSmsProperties) {
         this.aliyunSmsProperties = aliyunSmsProperties;

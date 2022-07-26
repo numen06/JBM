@@ -20,7 +20,11 @@ public class MultiPlatformIdEntity extends MultiPlatformEntity {
 
     @ApiModelProperty("应用ID")
     private Long appId;
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.ASSIGN_ID)
+    @ApiModelProperty("主键ID")
+    private Long id;
 
     public MultiPlatformIdEntity() {
         super();
@@ -30,10 +34,4 @@ public class MultiPlatformIdEntity extends MultiPlatformEntity {
         super();
         this.id = id;
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(type = IdType.ASSIGN_ID)
-    @ApiModelProperty("主键ID")
-    private Long id;
 }

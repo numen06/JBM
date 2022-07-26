@@ -37,11 +37,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * select-before-update being enabled.
  *
  * @author Steve Ebersole
- *
  * @see SelectBeforeUpdate
  */
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface DynamicUpdate {
-	boolean value() default true;
+    boolean value() default true;
 }

@@ -1,9 +1,8 @@
 package test.util;
 
 import com.jbm.util.VersionUtils;
-import org.junit.Test;
-
 import com.jbm.util.bean.Version;
+import org.junit.Test;
 
 public class VersionTest {
 
@@ -13,6 +12,7 @@ public class VersionTest {
         System.out.println(ver.toString());
         for (int i = 0; i < 100; i++) {
             ver.bugfix();
+            System.out.println(ver.toString());
         }
         System.out.println(ver.toString());
     }
@@ -56,6 +56,7 @@ public class VersionTest {
 
         String verStr1 = "1.0.0";
         String verStr2 = "1.0.0";
+        Version version = VersionUtils.create(verStr1);
         System.out.println(ver.compareTo(ver1));
         System.out.println(VersionUtils.before(ver, ver1));
         System.out.println(VersionUtils.after(ver, ver1));

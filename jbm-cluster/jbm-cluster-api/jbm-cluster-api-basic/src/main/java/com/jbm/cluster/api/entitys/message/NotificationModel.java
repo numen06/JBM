@@ -8,8 +8,6 @@ import java.util.UUID;
 @Data
 public class NotificationModel extends Notification {
 
-    private String msgId;
-
     private Date createTime;
 
     private Date reviceTime;
@@ -23,7 +21,7 @@ public class NotificationModel extends Notification {
     private String recipient;
 
     public void sendBuild(String sender) {
-        this.msgId = UUID.randomUUID().toString();
+        this.setMsgId(UUID.randomUUID().toString());
         this.sender = sender;
         this.createTime = new Date();
     }

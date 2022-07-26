@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,16 +32,13 @@ import java.util.function.Function;
 @Configuration
 @Slf4j
 public class ApiResourceScanHandler {
+    private final static String SCAN_API_RESOURCE_KEY_PREFIX = "scan_api_resource:";
     @Autowired
     private BaseApiService baseApiService;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
-
     @Autowired
     private RedisService redisService;
-
-    private final static String SCAN_API_RESOURCE_KEY_PREFIX = "scan_api_resource:";
-
 
     @Bean
     public Function<Flux<Message<JbmApiResource>>, Mono<Void>> apiResource() {

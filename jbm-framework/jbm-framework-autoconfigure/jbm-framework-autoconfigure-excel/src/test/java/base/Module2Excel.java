@@ -1,14 +1,13 @@
 package base;
 
+import jbm.framework.excel.ExcelTemplate;
+import moudles.Student1;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-
-import moudles.Student1;
-import jbm.framework.excel.ExcelTemplate;
-import org.junit.jupiter.api.Test;
 
 public class Module2Excel {
 

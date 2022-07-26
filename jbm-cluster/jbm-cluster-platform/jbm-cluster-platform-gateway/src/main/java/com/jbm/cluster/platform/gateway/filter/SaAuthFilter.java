@@ -5,7 +5,6 @@ import cn.dev33.satoken.router.SaRouter;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.alibaba.fastjson.JSON;
-import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.platform.gateway.config.properties.IgnoreWhiteProperties;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.context.annotation.Bean;

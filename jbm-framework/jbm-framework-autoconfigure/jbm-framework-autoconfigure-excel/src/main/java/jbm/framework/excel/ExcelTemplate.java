@@ -38,6 +38,10 @@ public class ExcelTemplate {
         this.resourceLoader = resourceLoader;
     }
 
+    public static ExcelTemplate getInstance() {
+        return excelUtils;
+    }
+
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
     }
@@ -45,11 +49,6 @@ public class ExcelTemplate {
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
-
-    public static ExcelTemplate getInstance() {
-        return excelUtils;
-    }
-
 
     /*----------------------------------------读取Excel操作基于注解映射---------------------------------------------*/
     /* 一. 操作流程 ： */

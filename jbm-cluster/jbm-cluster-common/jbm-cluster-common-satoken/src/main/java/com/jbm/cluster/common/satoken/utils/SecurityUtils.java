@@ -19,6 +19,8 @@ import java.security.KeyPair;
  * @author wesley.zhang
  */
 public class SecurityUtils {
+    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     /**
      * 获取用户ID
      */
@@ -90,7 +92,6 @@ public class SecurityUtils {
         return privateKey;
     }
 
-
     /**
      * 是否为管理员
      *
@@ -100,9 +101,6 @@ public class SecurityUtils {
     public static boolean isAdmin(Long userId) {
         return userId != null && 1L == userId;
     }
-
-
-    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public static PasswordEncoder getPasswordEncoder() {
         return passwordEncoder;

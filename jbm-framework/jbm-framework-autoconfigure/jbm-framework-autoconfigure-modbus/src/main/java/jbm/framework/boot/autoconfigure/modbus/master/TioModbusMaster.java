@@ -24,9 +24,8 @@ import java.util.Arrays;
  **/
 @Slf4j
 public class TioModbusMaster extends ModbusMaster {
-    private int nextTransactionId = 0;
     private final ChannelContext channelContext;
-
+    private int nextTransactionId = 0;
     private MessageSendControl messageSendControl;
 
 

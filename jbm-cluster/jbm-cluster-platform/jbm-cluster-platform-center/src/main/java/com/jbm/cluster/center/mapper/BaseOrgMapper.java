@@ -5,7 +5,7 @@ import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2020-03-24 03:28:09
  */
 @MapperRepository

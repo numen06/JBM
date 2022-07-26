@@ -1,12 +1,5 @@
 package com.jbm.cluster.auth.controller;
 
-import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.context.SaHolder;
-import cn.dev33.satoken.exception.NotLoginException;
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
-import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -16,7 +9,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

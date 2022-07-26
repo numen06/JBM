@@ -39,12 +39,6 @@ import java.util.List;
 @Transactional(rollbackFor = Exception.class)
 public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implements BaseAppService {
 
-    @Autowired
-    private BaseAppMapper baseAppMapper;
-    @Autowired
-    private BaseAuthorityService baseAuthorityService;
-//    @Autowired
-//    private JdbcClientDetailsService jdbcClientDetailsService;
     /**
      * token有效期，默认12小时
      */
@@ -53,6 +47,12 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * token有效期，默认7天
      */
     public static final int REFRESH_TOKEN_VALIDITY_SECONDS = 60 * 60 * 24 * 7;
+//    @Autowired
+//    private JdbcClientDetailsService jdbcClientDetailsService;
+    @Autowired
+    private BaseAppMapper baseAppMapper;
+    @Autowired
+    private BaseAuthorityService baseAuthorityService;
 
     @Override
     public BaseApp saveEntity(BaseApp entity) {

@@ -20,9 +20,9 @@ import java.io.IOException;
 public class MessageSendControl implements DataConsumer {
     private static int DEFAULT_RETRIES = 2;
     private static int DEFAULT_TIMEOUT = 500;
-    private WaitingRoomKeyFactory waitingRoomKeyFactory;
     public final WaitingRoom waitingRoom = new WaitingRoom();
     private final ChannelContext channelContext;
+    private WaitingRoomKeyFactory waitingRoomKeyFactory;
 
     public MessageSendControl(ChannelContext channelContext, WaitingRoomKeyFactory waitingRoomKeyFactory) {
         this.channelContext = channelContext;

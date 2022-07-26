@@ -38,13 +38,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class SubThingSample extends BaseSample {
+    final static Pattern pattern = Pattern.compile("^[-\\+]?[.\\d]*$");
     private static final String TAG = "SubThingSample";
-
     private final static String SERVICE_SET = "set";
     private final static String SERVICE_GET = "get";
     private final static String CONNECT_ID = "LINK_PERSISTENT";
-    final static Pattern pattern = Pattern.compile("^[-\\+]?[.\\d]*$");
-
     private final static int DEF_VALUE = Integer.MIN_VALUE;
 
     private String identity = null;
@@ -58,6 +56,122 @@ public class SubThingSample extends BaseSample {
 
     private BaseInfo baseInfo = null;
     private IThing subdevThing = null;
+    private IConnectNotifyListener connectNotifyListener = new IConnectNotifyListener() {
+        public void onNotify(String connectId, String topic, AMessage aMessage) {
+            ALog.d(TAG, "onNotify() called with: connectId = [" + connectId + "], topic = [" + topic + "], aMessage = [" + printAMessage(aMessage) + "]");
+            if (CONNECT_ID.equals(connectId) && !StringUtils.isEmptyString(topic) &&
+                    topic.startsWith("/sys/" + productKey + "/" + deviceName + "/rrpc/request")) {
+                ALog.d(TAG, "收到云端同步下行" + printAMessage(aMessage));
+//                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
+                // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
+                MqttPublishRequest request = new MqttPublishRequest();
+                request.isRPC = false;
+                request.topic = topic.replace("request", "response");
+                String resId = topic.substring(topic.indexOf("rrpc/request/") + 13);
+                request.msgId = resId;
+                // TODO 用户根据实际情况填写 仅做参考
+                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
+//                    aResponse.result =
+                LinkKit.getInstance().getMqttClient().publish(request, new IConnectSendListener() {
+                    public void onResponse(ARequest aRequest, AResponse aResponse) {
+                        ALog.d(TAG, "onResponse() called with: aRequest = [" + aRequest + "], aResponse = [" + aResponse + "]");
+                    }
+
+                    public void onFailure(ARequest aRequest, AError aError) {
+                        ALog.d(TAG, "onFailure() called with: aRequest = [" + aRequest + "], aError = [" + getError(aError) + "]");
+                    }
+                });
+            } else if (CONNECT_ID.equals(connectId) && !TextUtils.isEmpty(topic) &&
+                    topic.startsWith("/ext/rrpc/")) {
+                ALog.d(TAG, "收到云端自定义RRPC下行");
+                //                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
+                // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
+                MqttPublishRequest request = new MqttPublishRequest();
+                // 支持 0 和 1， 默认0
+                //                request.qos = 0;
+                request.isRPC = false;
+                request.topic = topic.replace("request", "response");
+                String[] array = topic.split("/");
+                String resId = array[3];
+                request.msgId = resId;
+                // TODO 用户根据实际情况填写 仅做参考
+                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
+                //                    aResponse.result =
+                LinkKit.getInstance().publish(request, new IConnectSendListener() {
+                    @Override
+                    public void onResponse(ARequest aRequest, AResponse aResponse) {
+                        ALog.d(TAG, "onResponse() called with: aRequest = [" + aRequest + "], aResponse = [" + aResponse + "]");
+                    }
+
+                    @Override
+                    public void onFailure(ARequest aRequest, AError aError) {
+                        ALog.d(TAG, "onFailure() called with: aRequest = [" + aRequest + "], aError = [" + aError + "]");
+                    }
+                });
+            }
+        }
+
+        public boolean shouldHandle(String s, String s1) {
+            return true;
+        }
+
+        public void onConnectStateChange(String s, ConnectState connectState) {
+
+        }
+    };
+    private ITResRequestHandler mCommonHandler = new ITResRequestHandler() {
+        public void onProcess(String identify, Object result, ITResResponseCallback itResResponseCallback) {
+            ALog.d(TAG, "onProcess() called with: s = [" + identify + "], o = [" + result + "], itResResponseCallback = [" + itResResponseCallback + "]");
+            ALog.d(TAG, "收到云端异步服务调用 " + identify);
+            try {
+                if (SERVICE_SET.equals(identify)) {
+                    // TODO  用户按照真实设备的接口调用  设置设备的属性
+                    // 设置完真实设备属性之后，上报设置完成的属性值
+                    // 用户根据实际情况判断属性是否设置成功 这里测试直接返回成功
+                    boolean isSetPropertySuccess = true;
+                    if (isSetPropertySuccess) {
+                        if (result instanceof InputParams) {
+                            Map<String, ValueWrapper> data = (Map<String, ValueWrapper>) ((InputParams) result).getData();
+//                        result.get()
+                            ALog.d(TAG, "收到异步下行数据 " + data);
+                            // 响应云端 接收数据成功
+                            itResResponseCallback.onComplete(identify, null, null);
+                        } else {
+                            itResResponseCallback.onComplete(identify, null, null);
+                        }
+                    } else {
+                        AError error = new AError();
+                        error.setCode(100);
+                        error.setMsg("setPropertyFailed.");
+                        itResResponseCallback.onComplete(identify, new ErrorInfo(error), null);
+                    }
+
+                } else if (SERVICE_GET.equals(identify)) {
+                    //  初始化的时候将默认值初始化传进来，物模型内部会直接返回云端缓存的值
+
+                } else {
+                    // 根据不同的服务做不同的处理，跟具体的服务有关系
+                    ALog.d(TAG, "用户根据真实的服务返回服务的值，请参照set示例");
+                    OutputParams outputParams = new OutputParams();
+//                    outputParams.put("op", new ValueWrapper.IntValueWrapper(20));
+                    itResResponseCallback.onComplete(identify, null, outputParams);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                ALog.d(TAG, "TMP 返回数据格式异常");
+            }
+        }
+
+        public void onSuccess(Object o, OutputParams outputParams) {
+            ALog.d(TAG, "onSuccess() called with: o = [" + o + "], outputParams = [" + outputParams + "]");
+            ALog.d(TAG, "注册服务成功");
+        }
+
+        public void onFail(Object o, ErrorInfo errorInfo) {
+            ALog.d(TAG, "onFail() called with: o = [" + o + "], errorInfo = [" + errorInfo + "]");
+            ALog.d(TAG, "注册服务失败");
+        }
+    };
 
     public SubThingSample(String pk, String dn) {
         super(pk, dn);
@@ -369,7 +483,7 @@ public class SubThingSample extends BaseSample {
         }
     }
 
-    private void reportProperty(){
+    private void reportProperty() {
         if (StringUtils.isEmptyString(identity) || valueWrapper == null) {
             ALog.e(TAG, "数据格式错误");
             return;
@@ -392,6 +506,7 @@ public class SubThingSample extends BaseSample {
             }
         });
     }
+
     /**
      * 云端调用设备的某项服务的时候，设备端需要响应该服务并回复。
      * 设备端事件触发的时候需要调用这个接口上报事件，如事件告警等
@@ -411,125 +526,6 @@ public class SubThingSample extends BaseSample {
     private String printAMessage(AMessage aMessage) {
         return (aMessage == null || aMessage.data == null) ? "" : new String((byte[]) aMessage.data);
     }
-
-    private IConnectNotifyListener connectNotifyListener = new IConnectNotifyListener() {
-        public void onNotify(String connectId, String topic, AMessage aMessage) {
-            ALog.d(TAG, "onNotify() called with: connectId = [" + connectId + "], topic = [" + topic + "], aMessage = [" + printAMessage(aMessage) + "]");
-            if (CONNECT_ID.equals(connectId) && !StringUtils.isEmptyString(topic) &&
-                    topic.startsWith("/sys/" + productKey + "/" + deviceName + "/rrpc/request")) {
-                ALog.d(TAG, "收到云端同步下行" + printAMessage(aMessage));
-//                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
-                // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
-                MqttPublishRequest request = new MqttPublishRequest();
-                request.isRPC = false;
-                request.topic = topic.replace("request", "response");
-                String resId = topic.substring(topic.indexOf("rrpc/request/") + 13);
-                request.msgId = resId;
-                // TODO 用户根据实际情况填写 仅做参考
-                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
-//                    aResponse.result =
-                LinkKit.getInstance().getMqttClient().publish(request, new IConnectSendListener() {
-                    public void onResponse(ARequest aRequest, AResponse aResponse) {
-                        ALog.d(TAG, "onResponse() called with: aRequest = [" + aRequest + "], aResponse = [" + aResponse + "]");
-                    }
-
-                    public void onFailure(ARequest aRequest, AError aError) {
-                        ALog.d(TAG, "onFailure() called with: aRequest = [" + aRequest + "], aError = [" + getError(aError) + "]");
-                    }
-                });
-            }
-            else if (CONNECT_ID.equals(connectId) && !TextUtils.isEmpty(topic) &&
-                    topic.startsWith("/ext/rrpc/")) {
-                ALog.d(TAG, "收到云端自定义RRPC下行");
-                //                    ALog.d(TAG, "receice Message=" + new String((byte[]) aMessage.result));
-                // 服务端返回数据示例  {"method":"thing.service.test_service","id":"123374967","params":{"vv":60},"version":"1.0.0"}
-                MqttPublishRequest request = new MqttPublishRequest();
-                // 支持 0 和 1， 默认0
-                //                request.qos = 0;
-                request.isRPC = false;
-                request.topic = topic.replace("request", "response");
-                String[] array = topic.split("/");
-                String resId = array[3];
-                request.msgId = resId;
-                // TODO 用户根据实际情况填写 仅做参考
-                request.payloadObj = "{\"id\":\"" + resId + "\", \"code\":\"200\"" + ",\"result\":{} }";
-                //                    aResponse.result =
-                LinkKit.getInstance().publish(request, new IConnectSendListener() {
-                    @Override
-                    public void onResponse(ARequest aRequest, AResponse aResponse) {
-                        ALog.d(TAG, "onResponse() called with: aRequest = [" + aRequest + "], aResponse = [" + aResponse + "]");
-                    }
-
-                    @Override
-                    public void onFailure(ARequest aRequest, AError aError) {
-                        ALog.d(TAG, "onFailure() called with: aRequest = [" + aRequest + "], aError = [" + aError + "]");
-                    }
-                });
-            }
-        }
-
-        public boolean shouldHandle(String s, String s1) {
-            return true;
-        }
-
-        public void onConnectStateChange(String s, ConnectState connectState) {
-
-        }
-    };
-
-    private ITResRequestHandler mCommonHandler = new ITResRequestHandler() {
-        public void onProcess(String identify, Object result, ITResResponseCallback itResResponseCallback) {
-            ALog.d(TAG, "onProcess() called with: s = [" + identify + "], o = [" + result + "], itResResponseCallback = [" + itResResponseCallback + "]");
-            ALog.d(TAG, "收到云端异步服务调用 " + identify);
-            try {
-                if (SERVICE_SET.equals(identify)) {
-                    // TODO  用户按照真实设备的接口调用  设置设备的属性
-                    // 设置完真实设备属性之后，上报设置完成的属性值
-                    // 用户根据实际情况判断属性是否设置成功 这里测试直接返回成功
-                    boolean isSetPropertySuccess = true;
-                    if (isSetPropertySuccess) {
-                        if (result instanceof InputParams) {
-                            Map<String, ValueWrapper> data = (Map<String, ValueWrapper>) ((InputParams) result).getData();
-//                        result.get()
-                            ALog.d(TAG, "收到异步下行数据 " + data);
-                            // 响应云端 接收数据成功
-                            itResResponseCallback.onComplete(identify, null, null);
-                        } else {
-                            itResResponseCallback.onComplete(identify, null, null);
-                        }
-                    } else {
-                        AError error = new AError();
-                        error.setCode(100);
-                        error.setMsg("setPropertyFailed.");
-                        itResResponseCallback.onComplete(identify, new ErrorInfo(error), null);
-                    }
-
-                } else if (SERVICE_GET.equals(identify)) {
-                    //  初始化的时候将默认值初始化传进来，物模型内部会直接返回云端缓存的值
-
-                } else {
-                    // 根据不同的服务做不同的处理，跟具体的服务有关系
-                    ALog.d(TAG, "用户根据真实的服务返回服务的值，请参照set示例");
-                    OutputParams outputParams = new OutputParams();
-//                    outputParams.put("op", new ValueWrapper.IntValueWrapper(20));
-                    itResResponseCallback.onComplete(identify, null, outputParams);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                ALog.d(TAG, "TMP 返回数据格式异常");
-            }
-        }
-
-        public void onSuccess(Object o, OutputParams outputParams) {
-            ALog.d(TAG, "onSuccess() called with: o = [" + o + "], outputParams = [" + outputParams + "]");
-            ALog.d(TAG, "注册服务成功");
-        }
-
-        public void onFail(Object o, ErrorInfo errorInfo) {
-            ALog.d(TAG, "onFail() called with: o = [" + o + "], errorInfo = [" + errorInfo + "]");
-            ALog.d(TAG, "注册服务失败");
-        }
-    };
 
     private boolean isValidDouble(String value) {
         if (StringUtils.isEmptyString(value)) {

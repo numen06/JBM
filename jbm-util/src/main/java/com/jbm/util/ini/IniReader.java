@@ -1,25 +1,16 @@
 package com.jbm.util.ini;
 
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.io.resource.Resource;
+import cn.hutool.setting.Setting;
+import org.apache.commons.io.Charsets;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.io.resource.Resource;
-import cn.hutool.setting.Setting;
-import cn.hutool.setting.dialect.Props;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
-
-import com.jbm.util.StringUtils;
 
 
 /**

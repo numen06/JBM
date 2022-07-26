@@ -9,7 +9,7 @@ import com.jbm.framework.dictionary.annotation.JbmDicType;
  * @create: 2020-03-05 03:09
  **/
 @JbmDicType(typeName = "消息发送状态")
-public enum MessageSendStatus {
+public enum PushStatus {
     unsent("未发送"), wait("等待中"),
     issued("已发送"), fail("发送失败");
 
@@ -17,7 +17,7 @@ public enum MessageSendStatus {
     private final String key;
     private final String value;
 
-    MessageSendStatus(String value) {
+    PushStatus(String value) {
         this.key = this.toString();
         this.value = value;
     }

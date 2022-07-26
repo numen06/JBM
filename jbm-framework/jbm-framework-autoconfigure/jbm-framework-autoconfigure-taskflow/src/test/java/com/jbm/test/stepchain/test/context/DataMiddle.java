@@ -1,10 +1,10 @@
 package com.jbm.test.stepchain.test.context;
 
-import java.util.Map;
-
 import com.google.common.collect.Maps;
 
+import java.util.Map;
+
 public class DataMiddle {
-	public Map<String, String> data1Map=Maps.newHashMap();
-	public Map<String, Integer> data2Map=Maps.newHashMap();
+    public Map<String, String> data1Map = Maps.newHashMap();
+    public Map<String, Integer> data2Map = Maps.newHashMap();
 }

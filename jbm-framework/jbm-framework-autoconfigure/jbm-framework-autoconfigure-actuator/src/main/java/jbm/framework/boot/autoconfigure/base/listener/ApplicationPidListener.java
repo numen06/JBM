@@ -1,11 +1,5 @@
 package jbm.framework.boot.autoconfigure.base.listener;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.Timer;
-import java.util.UUID;
-
 import cn.hutool.core.util.StrUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +8,19 @@ import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.SpringApplicationEvent;
 import org.springframework.core.env.ConfigurableEnvironment;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.Timer;
+import java.util.UUID;
+
 
 public class ApplicationPidListener extends ApplicationPidFileWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationPidListener.class);
-
-    private static String DEFAULT_FILE_NAME = "application.pid";
-
     private static final String LINUX_START = "java -jar .*.jar";
     private static final String WINODWS_START = "java -jar .*.jar";
-
+    private static String DEFAULT_FILE_NAME = "application.pid";
     private static String appName;
 
     static {

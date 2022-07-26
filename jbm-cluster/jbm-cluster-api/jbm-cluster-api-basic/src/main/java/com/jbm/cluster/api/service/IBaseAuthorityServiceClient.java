@@ -15,6 +15,7 @@ import java.util.List;
 public interface IBaseAuthorityServiceClient {
     /**
      * 获取所有访问权限列表
+     *
      * @return
      */
     @GetMapping("/access")

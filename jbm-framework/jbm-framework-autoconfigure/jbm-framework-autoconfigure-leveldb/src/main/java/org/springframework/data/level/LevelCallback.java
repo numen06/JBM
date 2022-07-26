@@ -5,6 +5,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.level.serializer.LevelSerializer;
 
 public interface LevelCallback<T> {
-	@SuppressWarnings("rawtypes")
-	T doInLevel(DB db, LevelSerializer keySerializer, LevelSerializer valueSerializer) throws DataAccessException;
+    @SuppressWarnings("rawtypes")
+    T doInLevel(DB db, LevelSerializer keySerializer, LevelSerializer valueSerializer) throws DataAccessException;
 }

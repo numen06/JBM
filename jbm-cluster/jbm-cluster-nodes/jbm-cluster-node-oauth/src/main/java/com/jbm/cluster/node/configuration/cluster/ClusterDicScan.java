@@ -32,13 +32,12 @@ public class ClusterDicScan implements ApplicationListener<ApplicationReadyEvent
     private JbmClusterEventRegistry jbmClusterEventRegistry;
     @Autowired
     private JbmClusterScheduledRegistry jbmClusterScheduledRegistry;
+    private AtomicBoolean lock = new AtomicBoolean(false);
 
     public ClusterDicScan(DictionaryTemplate dictionaryTemplate, AmqpTemplate amqpTemplate) {
         this.dictionaryTemplate = dictionaryTemplate;
         this.amqpTemplate = amqpTemplate;
     }
-
-    private AtomicBoolean lock = new AtomicBoolean(false);
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {

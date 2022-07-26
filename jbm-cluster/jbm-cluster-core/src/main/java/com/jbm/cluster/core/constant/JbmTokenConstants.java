@@ -2,11 +2,10 @@ package com.jbm.cluster.core.constant;
 
 /**
  * Token的Key常量
- * 
+ *
  * @author wesley.zhang
  */
-public class JbmTokenConstants
-{
+public class JbmTokenConstants {
     /**
      * 令牌自定义标识
      */

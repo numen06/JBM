@@ -1,8 +1,6 @@
 package com.jbm.test.bascomtask;
 
 import com.ebay.bascomtask.annotations.Work;
-import com.google.common.collect.Lists;
-import com.jbm.test.model.ClassRoom;
 import com.jbm.test.model.Student;
 import jbm.framework.boot.autoconfigure.taskflow.spring.JbmTaskFlow;
 import jbm.framework.boot.autoconfigure.taskflow.useage.JbmEndProcessor;
@@ -11,11 +9,8 @@ import jbm.framework.boot.autoconfigure.taskflow.useage.JbmStepProcessor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 @Slf4j
 public class JbmTestTask extends JbmTaskFlow {
-
 
 
     /**

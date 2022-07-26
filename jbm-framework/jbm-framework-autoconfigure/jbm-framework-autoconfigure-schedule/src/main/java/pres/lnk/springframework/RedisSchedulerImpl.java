@@ -17,6 +17,10 @@ public class RedisSchedulerImpl extends AbstractScheduler {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    private static String prefixKey(String key) {
+        return CACHE_PREFIX.concat(key.replaceAll("\\W+", "_"));
+    }
+
     @Override
     public boolean check(String id) {
         Long time = getCache(id);
@@ -28,11 +32,11 @@ public class RedisSchedulerImpl extends AbstractScheduler {
         String key = prefixKey(id);
         long nextTimeMillis = currentTimeMillis() + timeoutMillis;
         boolean flag = redisTemplate.opsForValue().setIfAbsent(key, nextTimeMillis);
-        if(flag){
+        if (flag) {
             redisTemplate.expire(key, timeoutMillis < 0 ? 1 : timeoutMillis, TimeUnit.MILLISECONDS);
-        }else{
+        } else {
             Long time = getCache(id);
-            if(time == null || currentTimeMillis() > time){
+            if (time == null || currentTimeMillis() > time) {
                 //避免极端情况下，锁设置失效时间失败，导致了死锁发生，如果锁太久没被释放就主动删除锁
                 removeCache(id);
                 //删除锁之后再重新抢锁
@@ -106,17 +110,13 @@ public class RedisSchedulerImpl extends AbstractScheduler {
 
     public <T> T getCache(String key) {
         key = prefixKey(key);
-        return (T)redisTemplate.opsForValue().get(key);
+        return (T) redisTemplate.opsForValue().get(key);
     }
 
     public void removeCache(String key) {
         key = prefixKey(key);
-        if(redisTemplate.hasKey(key)){
+        if (redisTemplate.hasKey(key)) {
             redisTemplate.delete(key);
         }
-    }
-
-    private static String prefixKey(String key) {
-        return CACHE_PREFIX.concat(key.replaceAll("\\W+", "_"));
     }
 }

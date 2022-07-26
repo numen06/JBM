@@ -36,12 +36,12 @@ import java.util.Set;
 @EnableConfigurationProperties({JbmClusterProperties.class})
 public class JbmSecurityConfiguration implements WebMvcConfigurer {
 
-    @Autowired
-    private JbmClusterProperties jbmClusterProperties;
     /**
      * 不需要拦截地址
      */
     public static final String[] excludeUrls = {"/actuator/**", "/v2/api-docs/**"};
+    @Autowired
+    private JbmClusterProperties jbmClusterProperties;
 
     /**
      * 注册sa-token的拦截器

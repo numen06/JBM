@@ -5,31 +5,31 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = DictionaryProperties.PREFIX)
 public class DictionaryProperties {
 
-	public static final String PREFIX = "dictionary";
+    public static final String PREFIX = "dictionary";
 
-	public final static String DEF_NAMESPACES = "center";
+    public final static String DEF_NAMESPACES = "center";
 
-	/**
-	 * 常量扫描
-	 */
-	private String basepackage;
+    /**
+     * 常量扫描
+     */
+    private String basepackage;
 
-	private String application = "application";
+    private String application = "application";
 
-	public String getBasepackage() {
-		return basepackage;
-	}
+    public String getBasepackage() {
+        return basepackage;
+    }
 
-	public void setBasepackage(String basepackage) {
-		this.basepackage = basepackage;
-	}
+    public void setBasepackage(String basepackage) {
+        this.basepackage = basepackage;
+    }
 
-	public String getApplication() {
-		return application;
-	}
+    public String getApplication() {
+        return application;
+    }
 
-	public void setApplication(String application) {
-		this.application = application;
-	}
+    public void setApplication(String application) {
+        this.application = application;
+    }
 
 }

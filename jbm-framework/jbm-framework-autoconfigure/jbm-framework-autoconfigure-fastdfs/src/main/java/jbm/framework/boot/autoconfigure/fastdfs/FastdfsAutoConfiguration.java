@@ -12,12 +12,12 @@ import org.springframework.data.fastdfs.FastdfsTemplate;
 @ConditionalOnProperty(prefix = "fastdfs", name = "trackerServers")
 public class FastdfsAutoConfiguration {
 
-	@Autowired
-	private FastdfsProperties ftpProperties;
+    @Autowired
+    private FastdfsProperties ftpProperties;
 
-	@Bean
-	public FastdfsTemplate fastdfsTemplate() throws Exception {
-		return new FastdfsTemplate(ftpProperties.getTrackerServers());
-	}
+    @Bean
+    public FastdfsTemplate fastdfsTemplate() throws Exception {
+        return new FastdfsTemplate(ftpProperties.getTrackerServers());
+    }
 
 }

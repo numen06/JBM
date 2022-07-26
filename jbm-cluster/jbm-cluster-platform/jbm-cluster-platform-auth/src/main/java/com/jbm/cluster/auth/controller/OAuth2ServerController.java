@@ -38,6 +38,8 @@ public class OAuth2ServerController {
 
     @Autowired
     private SysLoginService sysLoginService;
+    @Autowired
+    private ConfirmService confirmService;
 
     // 处理所有OAuth相关请求
     public Object oauth2() {
@@ -97,9 +99,6 @@ public class OAuth2ServerController {
     public Object client_token() {
         return this.oauth2();
     }
-
-    @Autowired
-    private ConfirmService confirmService;
 
     @ApiOperation(value = "确认认证", notes = "")
     @RequestMapping("/doConfirm")

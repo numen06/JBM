@@ -1,7 +1,5 @@
 package com.jbm.test.rest.bean;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumValueDeserializer;
 import lombok.Data;
 
 /**

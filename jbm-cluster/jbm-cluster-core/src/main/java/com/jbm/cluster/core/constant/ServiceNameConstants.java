@@ -2,11 +2,10 @@ package com.jbm.cluster.core.constant;
 
 /**
  * 服务名称
- * 
+ *
  * @author wesley.zhang
  */
-public class ServiceNameConstants
-{
+public class ServiceNameConstants {
     /**
      * 认证服务的serviceid
      */

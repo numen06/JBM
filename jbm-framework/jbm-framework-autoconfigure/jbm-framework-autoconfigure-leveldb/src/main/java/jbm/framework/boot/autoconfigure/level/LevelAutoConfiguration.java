@@ -15,19 +15,19 @@ import org.springframework.data.level.LevelTemplate;
 @ConditionalOnProperty(prefix = "spring.data.level", name = "root")
 public class LevelAutoConfiguration {
 
-	@Autowired
-	private LevelProperties levelProperties;
+    @Autowired
+    private LevelProperties levelProperties;
 
-	@Bean
-	public LevelTemplate<Object, Object> levelTemplate() {
-		return new LevelTemplate<Object, Object>(levelProperties);
-	}
+    @Bean
+    public LevelTemplate<Object, Object> levelTemplate() {
+        return new LevelTemplate<Object, Object>(levelProperties);
+    }
 
-	@Bean
-	public LevelKeyValueTemplate levelKeyValueTemplate(LevelTemplate<Object, Object> levelTemplate) throws Exception {
-		LevelKeyValueAdapter keyValueAdapter = new LevelKeyValueAdapter(levelTemplate, levelProperties);
-		keyValueAdapter.afterPropertiesSet();
-		return new LevelKeyValueTemplate(keyValueAdapter, new LevelMappingContext());
-	}
+    @Bean
+    public LevelKeyValueTemplate levelKeyValueTemplate(LevelTemplate<Object, Object> levelTemplate) throws Exception {
+        LevelKeyValueAdapter keyValueAdapter = new LevelKeyValueAdapter(levelTemplate, levelProperties);
+        keyValueAdapter.afterPropertiesSet();
+        return new LevelKeyValueTemplate(keyValueAdapter, new LevelMappingContext());
+    }
 
 }

@@ -9,11 +9,11 @@ import com.alibaba.otter.canal.protocol.CanalEntry.Entry;
  */
 public class UpdateCanalEvent extends CanalEvent {
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 3893332970574480618L;
+     *
+     */
+    private static final long serialVersionUID = 3893332970574480618L;
 
-	/**
+    /**
      * Create a new ApplicationEvent.
      *
      * @param source the object on which the event initially occurred (never {@code null})

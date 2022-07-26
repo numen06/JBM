@@ -2,7 +2,6 @@ package com.jbm.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.NumberFormat;
 
 /**
  * 货币转换工具类

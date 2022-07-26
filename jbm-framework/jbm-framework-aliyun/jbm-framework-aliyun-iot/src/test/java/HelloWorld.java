@@ -26,10 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 public class HelloWorld {
     private static final String TAG = "HelloWorld";
-
+    boolean testDeinit = false;
     private String pk, dn;
     private ThingSample thingTestManager = null;
-
 
     public static void main(String[] args) {
         ALog.d(TAG, "Hello world!");
@@ -57,7 +56,6 @@ public class HelloWorld {
         ALog.d(TAG, "测试一机一密和物模型");
         manager.init(deviceInfoData);
     }
-
 
     public void init(final DeviceInfoData deviceInfoData) {
         this.pk = deviceInfoData.productKey;
@@ -111,8 +109,6 @@ public class HelloWorld {
             }
         });
     }
-
-    boolean testDeinit = false;
 
     /**
      * 定时执行

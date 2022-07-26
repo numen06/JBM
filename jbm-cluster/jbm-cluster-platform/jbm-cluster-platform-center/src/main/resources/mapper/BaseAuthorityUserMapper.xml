@@ -19,34 +19,28 @@
 
     <select id="selectAuthorityByUser"
             resultMap="com.jbm.cluster.center.mapper.BaseAuthorityMapper.Authority">
-        SELECT
-            a.authority_id,
-            a.authority,
-            up.expire_time,
-            'user' as owner
-        FROM
-            base_authority_user AS up
-                INNER JOIN base_authority AS a ON up.authority_id = a.authority_id
-        WHERE
-            up.user_id = #{userId}
-            and  a.status = 1
+        SELECT a.authority_id,
+               a.authority,
+               up.expire_time,
+               'user' as owner
+        FROM base_authority_user AS up
+                 INNER JOIN base_authority AS a ON up.authority_id = a.authority_id
+        WHERE up.user_id = #{userId}
+          and a.status = 1
     </select>
 
     <select id="selectAuthorityMenuByUser"
             resultMap="UserAuthorityMenu">
-         SELECT
-            a.authority_id,
-            a.authority,
-            a.`status`,
-            m.*,
-            ua.user_id,
-            ua.expire_time
-        FROM
-            base_authority_user AS ua
-       INNER JOIN base_authority AS a ON ua.authority_id = a.authority_id
-       INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
-        WHERE
-                ua.user_id = #{userId}
-                and a.status = 1
+        SELECT a.authority_id,
+               a.authority,
+               a.`status`,
+               m.*,
+               ua.user_id,
+               ua.expire_time
+        FROM base_authority_user AS ua
+                 INNER JOIN base_authority AS a ON ua.authority_id = a.authority_id
+                 INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
+        WHERE ua.user_id = #{userId}
+          and a.status = 1
     </select>
 </mapper>

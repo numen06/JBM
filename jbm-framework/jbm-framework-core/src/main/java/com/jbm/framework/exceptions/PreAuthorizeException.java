@@ -1,7 +1,5 @@
 package com.jbm.framework.exceptions;
 
-import lombok.NoArgsConstructor;
-
 /**
  * 权限异常
  *

@@ -11,7 +11,6 @@ import org.springframework.scheduling.config.IntervalTask;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.util.StringValueResolver;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
 
 /**
@@ -26,11 +25,15 @@ public class ScheduledClusterAnnotationBeanPostProcessor extends ScheduledAnnota
 
     private StringValueResolver embeddedValueResolver;
 
-    /** @see #level(int) */
+    /**
+     * @see #level(int)
+     */
     @Value(value = "${spring.scheduling.cluster.level:}")
     private Integer level;
 
-    /** @see #heartTime(int) */
+    /**
+     * @see #heartTime(int)
+     */
     @Value(value = "${spring.scheduling.cluster.heartTime:60}")
     private Integer heartTime = 60;
 

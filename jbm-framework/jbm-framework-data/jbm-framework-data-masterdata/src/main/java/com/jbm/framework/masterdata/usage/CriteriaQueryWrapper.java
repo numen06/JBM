@@ -36,20 +36,10 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
     private PageParams pageParams;
 
 
-    /**
-     * 通过分页创建空查询
-     *
-     * @param pageParams
-     * @return
-     */
-    public static CriteriaQueryWrapper from(PageParams pageParams) {
-        return new CriteriaQueryWrapper(pageParams);
-    }
-
-
     public CriteriaQueryWrapper() {
         super();
     }
+
 
     public CriteriaQueryWrapper(T entity) {
         super(entity);
@@ -58,7 +48,6 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
     public CriteriaQueryWrapper(T entity, String... columns) {
         super(entity, columns);
     }
-
 
     public CriteriaQueryWrapper(PageParams pageParams) {
         this.setPageParams(pageParams);
@@ -70,24 +59,19 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
         this.setPageParams(pageParams);
     }
 
-    public void setPageParams(PageParams pageParams) {
-        this.pageParams = pageParams;
-        String sort = pageParams.getSort();
-//        apply("1=1");
-        if (ObjectUtils.isNotEmpty(sort)) {
-            //自动添加ordery by
-            String order = pageParams.getOrder();
-            Boolean isAsc = StringUtils.equalsIgnoreCase(SqlKeyword.ASC.name(), order);
-            sort = StrUtil.toUnderlineCase(sort);
-            orderBy(true, isAsc, sort);
-        }
+    /**
+     * 通过分页创建空查询
+     *
+     * @param pageParams
+     * @return
+     */
+    public static CriteriaQueryWrapper from(PageParams pageParams) {
+        return new CriteriaQueryWrapper(pageParams);
     }
-
 
     public Map<String, String> getAliasMap() {
         return aliasMap;
     }
-
 
     /**
      * 创建外键表关联对象,需要在mapper(xml)中编写join
@@ -95,7 +79,6 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
     public void createAlias(String entiry, String alias) {
         this.aliasMap.put(entiry, alias);
     }
-
 
     /**
      * 创建外键表关联对象,需要在mapper(xml)中编写join
@@ -134,7 +117,6 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
         return this;
     }
 
-
     /**
      * ge
      */
@@ -171,7 +153,6 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
         return this;
     }
 
-
     /**
      * or
      */
@@ -207,6 +188,19 @@ public class CriteriaQueryWrapper<T> extends QueryWrapper<T> {
 
     public PageParams getPageParams() {
         return pageParams;
+    }
+
+    public void setPageParams(PageParams pageParams) {
+        this.pageParams = pageParams;
+        String sort = pageParams.getSort();
+//        apply("1=1");
+        if (ObjectUtils.isNotEmpty(sort)) {
+            //自动添加ordery by
+            String order = pageParams.getOrder();
+            Boolean isAsc = StringUtils.equalsIgnoreCase(SqlKeyword.ASC.name(), order);
+            sort = StrUtil.toUnderlineCase(sort);
+            orderBy(true, isAsc, sort);
+        }
     }
 
     public String getSelect() {

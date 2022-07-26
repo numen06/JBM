@@ -1,7 +1,6 @@
 package com.jbm.cluster.auth.form;
 
 import com.jbm.framework.usage.form.PageSearchForm;
-import com.jbm.framework.usage.paging.PageForm;
 import lombok.Data;
 
 /**

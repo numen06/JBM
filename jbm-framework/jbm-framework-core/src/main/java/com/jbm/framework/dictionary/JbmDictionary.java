@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Map;
 
 @Data
 public class JbmDictionary implements Serializable {

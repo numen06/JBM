@@ -15,6 +15,20 @@ public interface DicEnum<K> {
 
     String DEFAULT_VALUE_NAME = "value";
 
+    static <T extends Enum<T>> T valueOfEnum(Class<T> enumClass, T value) {
+        if (value == null)
+            throw new IllegalArgumentException("DicEnum value should not be null");
+        if (enumClass.isAssignableFrom(DicEnum.class))
+            throw new IllegalArgumentException("illegal DicEnum type");
+        T[] enums = enumClass.getEnumConstants();
+        for (T t : enums) {
+            DicEnum displayedEnum = (DicEnum) t;
+            if (displayedEnum.getValue().equals(value))
+                return (T) displayedEnum;
+        }
+        throw new IllegalArgumentException("cannot parse integer: " + value + " to " + enumClass.getName());
+    }
+
     default K getKey() {
         Field field = ReflectUtil.getField(this.getClass(), DEFAULT_KEY_NAME);
         if (field == null)
@@ -37,19 +51,5 @@ public interface DicEnum<K> {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    static <T extends Enum<T>> T valueOfEnum(Class<T> enumClass, T value) {
-        if (value == null)
-            throw new IllegalArgumentException("DicEnum value should not be null");
-        if (enumClass.isAssignableFrom(DicEnum.class))
-            throw new IllegalArgumentException("illegal DicEnum type");
-        T[] enums = enumClass.getEnumConstants();
-        for (T t : enums) {
-            DicEnum displayedEnum = (DicEnum) t;
-            if (displayedEnum.getValue().equals(value))
-                return (T) displayedEnum;
-        }
-        throw new IllegalArgumentException("cannot parse integer: " + value + " to " + enumClass.getName());
     }
 }

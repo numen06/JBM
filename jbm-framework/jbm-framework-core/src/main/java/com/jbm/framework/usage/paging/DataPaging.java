@@ -19,7 +19,6 @@ import java.util.Map;
 @Data
 @ApiModel(value = "分页实体")
 public class DataPaging<E> implements Serializable {
-    private static final long serialVersionUID = 1L;
     /**
      * 空的数据
      */
@@ -28,7 +27,7 @@ public class DataPaging<E> implements Serializable {
      * 空分页对象
      */
     public final static PageForm EMPTY_PAGEABLE = new PageForm();
-
+    private static final long serialVersionUID = 1L;
     /**
      * 查询的内容
      */
@@ -45,10 +44,13 @@ public class DataPaging<E> implements Serializable {
      * 查询的分页信息
      */
     private PageForm pageForm = EMPTY_PAGEABLE;
+    @ApiModelProperty(value = "列表扩展解析")
+    private Map<String, Object> exposition;
 
     public DataPaging() {
         super();
     }
+
 
     public DataPaging(List<E> contents, DataPaging dataPaging) {
         super();
@@ -56,7 +58,6 @@ public class DataPaging<E> implements Serializable {
         this.total = dataPaging.getTotal();
         this.pageForm = dataPaging.getPageForm();
     }
-
 
     public DataPaging(List<E> contents, Integer total) {
         super();
@@ -78,10 +79,6 @@ public class DataPaging<E> implements Serializable {
         this.total = total.intValue();
         this.pageForm = pageForm;
     }
-
-    @ApiModelProperty(value = "列表扩展解析")
-    private Map<String, Object> exposition;
-
 
     public <K, V, T extends Map<K, V>> void putExp(Map<String, T> exp) {
         if (exposition == null)

@@ -9,15 +9,15 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExcelField {
 
-	/**
-	 * 属性的标题名称
-	 */
-	String title();
+    /**
+     * 属性的标题名称
+     */
+    String title();
 
-	/**
-	 * 在excel的顺序
-	 */
-	int order() default 9999;
+    /**
+     * 在excel的顺序
+     */
+    int order() default 9999;
 
-	String format() default "yyyy-MM-dd HH:mm:ss";
+    String format() default "yyyy-MM-dd HH:mm:ss";
 }

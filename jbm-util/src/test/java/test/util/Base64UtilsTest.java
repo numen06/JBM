@@ -3,8 +3,6 @@ package test.util;
 import com.jbm.util.Base64Utils;
 import junit.framework.TestCase;
 
-import java.io.IOException;
-
 public class Base64UtilsTest extends TestCase {
 
 

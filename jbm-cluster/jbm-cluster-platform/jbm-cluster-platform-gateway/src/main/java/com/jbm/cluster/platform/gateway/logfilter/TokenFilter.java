@@ -24,6 +24,15 @@ import java.util.concurrent.TimeUnit;
 public class TokenFilter implements AccessLogFilter {
     @Autowired
     private BaseAppServiceClient baseAppServiceClient;
+    LoadingCache<String, BaseApp> appLoadingCache = Caffeine.newBuilder()
+            //一小时没有读取释放
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build(new CacheLoader<String, BaseApp>() {
+                @Override
+                public @Nullable BaseApp load(@NonNull String appkey) throws Exception {
+                    return baseAppServiceClient.getAppByKey(appkey).getResult();
+                }
+            });
 
     @Override
     public void filter(GatewayLogInfo gatewayLogInfo, Map<String, String> headers) {
@@ -50,15 +59,5 @@ public class TokenFilter implements AccessLogFilter {
             //gatewayLogs.setAuthentication(jbmLoginUser.getToken());
         }
     }
-
-    LoadingCache<String, BaseApp> appLoadingCache = Caffeine.newBuilder()
-            //一小时没有读取释放
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build(new CacheLoader<String, BaseApp>() {
-                @Override
-                public @Nullable BaseApp load(@NonNull String appkey) throws Exception {
-                    return baseAppServiceClient.getAppByKey(appkey).getResult();
-                }
-            });
 
 }

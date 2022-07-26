@@ -3,11 +3,11 @@ spring:
     nacos:
       config:
         namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
-#        group:
+        #        group:
         server-addr: 172.16.106.26:8848
       discovery:
         namespace: a059f5a6-bedc-40c9-b8cd-a621881be75f
-#        group:
+        #        group:
         server-addr: 172.16.106.26:8848
     inetutils:
       preferred-networks: 10.99.99

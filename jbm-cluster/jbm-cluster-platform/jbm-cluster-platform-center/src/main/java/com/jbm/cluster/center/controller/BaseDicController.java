@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2020-02-25 03:47:52
  */
 @Api(tags = "系统字典")

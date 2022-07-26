@@ -3,7 +3,6 @@ package jbm.framework.boot.autoconfigure.dictionary;
 import com.jbm.autoconfig.dic.DictionaryScanner;
 import com.jbm.autoconfig.dic.DictionaryTemplate;
 import com.jbm.autoconfig.dic.EnumScanPackages;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

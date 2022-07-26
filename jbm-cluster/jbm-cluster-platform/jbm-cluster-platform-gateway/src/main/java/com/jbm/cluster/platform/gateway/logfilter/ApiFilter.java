@@ -23,7 +23,17 @@ import java.util.concurrent.TimeUnit;
 public class ApiFilter implements AccessLogFilter {
     @Autowired
     private BaseApiServiceClient baseApiServiceClient;
-
+    LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
+            //一小时没有读取释放
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build(new CacheLoader<String, BaseApi>() {
+                @Override
+                public @Nullable BaseApi load(@NonNull String path) throws Exception {
+                    String serviceId = StrUtil.subBefore(path, "/", false);
+                    String realPath = StrUtil.removePrefix(path, serviceId);
+                    return baseApiServiceClient.findApiByPath(serviceId, realPath).getResult();
+                }
+            });
 
     @Override
     public void filter(GatewayLogInfo gatewayLogInfo, Map<String, String> headers) {
@@ -45,16 +55,4 @@ public class ApiFilter implements AccessLogFilter {
 
         }
     }
-
-    LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
-            //一小时没有读取释放
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build(new CacheLoader<String, BaseApi>() {
-                @Override
-                public @Nullable BaseApi load(@NonNull String path) throws Exception {
-                    String serviceId = StrUtil.subBefore(path, "/", false);
-                    String realPath = StrUtil.removePrefix(path, serviceId);
-                    return baseApiServiceClient.findApiByPath(serviceId, realPath).getResult();
-                }
-            });
 }

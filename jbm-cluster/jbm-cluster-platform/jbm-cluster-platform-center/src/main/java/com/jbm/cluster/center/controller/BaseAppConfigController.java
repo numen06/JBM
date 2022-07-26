@@ -2,7 +2,6 @@ package com.jbm.cluster.center.controller;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
-import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.center.service.BaseAppConfigService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -13,12 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-06-27 12:55:11
  */
 @Api(tags = "应用配置管理接口")

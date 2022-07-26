@@ -1,4 +1,3 @@
-
 package com.jbm.cluster.push.handler;
 
 import com.jbm.cluster.api.entitys.message.Notification;
@@ -26,7 +25,7 @@ public class NotificationTask implements Callable<Boolean> {
     @Override
     public Boolean call() throws Exception {
         try {
-            notificationExchanger.exchange(notification);
+            notificationExchanger.send(notification);
         } catch (Exception e) {
             log.error("处理消息错误", e);
             return false;

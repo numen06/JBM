@@ -30,6 +30,9 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 public abstract class PathTaskTestBase {
 
+    protected static List<String> EMPTY_STRS = new ArrayList<>();
+    protected TaskTestWrapper track;
+
     protected static void sleep(int millis) {
         PathTask.sleep(millis);
     }
@@ -44,7 +47,51 @@ public abstract class PathTaskTestBase {
         return new PathTask.ListPath(ta);
     }
 
-    protected static List<String> EMPTY_STRS = new ArrayList<>();
+    protected void verify(int expectThreads) {
+        verify(expectThreads, true);
+    }
+
+    protected void verify(int expectThreads, boolean testNoThreads) {
+        verify(expectThreads, expectThreads, testNoThreads);
+    }
+
+    protected void verify(int expectThreadsMin, int expectThreadsMax) {
+        verify(expectThreadsMin, expectThreadsMax, true);
+    }
+
+    protected void verify(int expectThreadsMin, int expectThreadsMax, boolean testNoThreads) {
+        // track.orc.execute(TimeUnit.SECONDS.toMillis(1L));
+        track.orc.execute(TimeUnit.SECONDS.toMillis(99999L));
+        track.check();
+        sleep(2);
+        int nt = track.orc.getNumberOfThreadsCreated();
+        String msg = "Got " + nt + " threads out-of-range " + expectThreadsMin + ".." + expectThreadsMax;
+        assertTrue(msg, nt >= expectThreadsMin && nt <= expectThreadsMax);
+        if (testNoThreads) {
+            assertEquals(0, track.orc.getNumberOfOpenThreads());
+        }
+    }
+
+    @BeforeEach
+    public void init() {
+        track = new TaskTestWrapper();
+    }
+
+    /**
+     * Utility exception for generating in a task in order to verify that it
+     * gets thrown.
+     */
+    static class OnlyATestException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        OnlyATestException() {
+            super();
+        }
+
+        OnlyATestException(String msg) {
+            super(msg);
+        }
+    }
 
     /**
      * For streamlining unit tests, an new instance is made available for
@@ -81,53 +128,5 @@ public abstract class PathTaskTestBase {
                 task.check();
             }
         }
-    }
-
-    protected void verify(int expectThreads) {
-        verify(expectThreads, true);
-    }
-
-    protected void verify(int expectThreads, boolean testNoThreads) {
-        verify(expectThreads, expectThreads, testNoThreads);
-    }
-
-    protected void verify(int expectThreadsMin, int expectThreadsMax) {
-        verify(expectThreadsMin, expectThreadsMax, true);
-    }
-
-    protected void verify(int expectThreadsMin, int expectThreadsMax, boolean testNoThreads) {
-        // track.orc.execute(TimeUnit.SECONDS.toMillis(1L));
-        track.orc.execute(TimeUnit.SECONDS.toMillis(99999L));
-        track.check();
-        sleep(2);
-        int nt = track.orc.getNumberOfThreadsCreated();
-        String msg = "Got " + nt + " threads out-of-range " + expectThreadsMin + ".." + expectThreadsMax;
-        assertTrue(msg, nt >= expectThreadsMin && nt <= expectThreadsMax);
-        if (testNoThreads) {
-            assertEquals(0, track.orc.getNumberOfOpenThreads());
-        }
-    }
-
-    protected TaskTestWrapper track;
-
-    @BeforeEach
-    public void init() {
-        track = new TaskTestWrapper();
-    }
-
-    /**
-     * Utility exception for generating in a task in order to verify that it
-     * gets thrown.
-     */
-    static class OnlyATestException extends RuntimeException {
-        OnlyATestException() {
-            super();
-        }
-
-        OnlyATestException(String msg) {
-            super(msg);
-        }
-
-        private static final long serialVersionUID = 1L;
     }
 }

@@ -26,10 +26,9 @@ import java.util.regex.Pattern;
 public class BaseDataServiceImpl<Entity, Repository extends MongoRepository<Entity, String>> implements BaseDataService<Entity> {
 
     @Autowired
-    private Repository repository;
-
-    @Autowired
     protected MongoTemplate mongoTemplate;
+    @Autowired
+    private Repository repository;
 
     @Override
     public long count() {

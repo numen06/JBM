@@ -7,22 +7,8 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WebFileInfo {
 
-    public WebFileInfo() {
-        super();
-    }
-
-    public WebFileInfo(String id, String name, int version, int size, String creator,
-                       long create_time, String download_url, UserAclBO user_acl, WatermarkBO watermark) {
-        this.id = id;
-        this.name = name;
-        this.version = version;
-        this.size = size;
-        this.creator = creator;
-        this.create_time = create_time;
-        this.download_url = download_url;
-        this.user_acl = user_acl;
-        this.watermark = watermark;
-    }
+    private String id;
+    private String name;
 
     	/*
 	id:  "132aa30a87064",                 //文件id,字符串长度小于40
@@ -35,9 +21,6 @@ public class WebFileInfo {
     modify_time: 1551409818,            //修改时间，时间戳，单位为秒
     download_url: "http://www.xxx.cn/v1/file?fid=f132aa30a87064",  //文档下载地址
     */
-
-    private String id;
-    private String name;
     private int version;
     private int size;
     private String creator;
@@ -45,9 +28,24 @@ public class WebFileInfo {
     private long create_time;
     private long modify_time;
     private String download_url;
-
     private UserAclBO user_acl;
     private WatermarkBO watermark;
+
+    public WebFileInfo() {
+        super();
+    }
+    public WebFileInfo(String id, String name, int version, int size, String creator,
+                       long create_time, String download_url, UserAclBO user_acl, WatermarkBO watermark) {
+        this.id = id;
+        this.name = name;
+        this.version = version;
+        this.size = size;
+        this.creator = creator;
+        this.create_time = create_time;
+        this.download_url = download_url;
+        this.user_acl = user_acl;
+        this.watermark = watermark;
+    }
 
 }
 

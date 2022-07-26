@@ -12,12 +12,11 @@ import java.util.Map;
 public class QueueScanning {
 
     private final ApplicationContext applicationContext;
+    private final Map<String, Queue> queues = Maps.newHashMap();
 
     public QueueScanning(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
-
-    private final Map<String, Queue> queues = Maps.newHashMap();
 
     public void scanning() {
         Map<String, AbstractAmqpSender> abstractAmqpSenderMap = applicationContext.getBeansOfType(AbstractAmqpSender.class);

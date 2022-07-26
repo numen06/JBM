@@ -42,6 +42,9 @@ import java.util.*;
 @Slf4j
 public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> extends BaseServiceImpl<SuperMapper<Entity>, Entity> implements IMasterDataService<Entity> {
 
+    @Autowired
+    protected SqlSessionTemplate sqlSessionTemplate;
+
     @Override
     public Entity selectById(Long id) {
         return super.getById(id);
@@ -124,7 +127,6 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         return ServiceUtils.pageToDataPaging(list);
     }
 
-
     @Override
     public DataPaging<Entity> selectEntitys(PageParams pageParams, QueryWrapper queryWrapper) {
         IPage list = this.baseMapper.selectPage(pageParams, queryWrapper);
@@ -147,7 +149,6 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     public List<Entity> selectEntitys(QueryWrapper queryWrapper) {
         return baseMapper.selectList(queryWrapper);
     }
-
 
     @Override
     public Entity selectEntity(Entity entity, Entity def) {
@@ -245,17 +246,14 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         return super.updateById(entity);
     }
 
+
+    // ---------------------------------------------------------直接操作Mapper------------------------------------------------------------------------
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateByWrapper(Entity entity, Wrapper<Entity> updateWrapper) {
         return super.update(entity, updateWrapper);
     }
-
-
-    // ---------------------------------------------------------直接操作Mapper------------------------------------------------------------------------
-
-    @Autowired
-    protected SqlSessionTemplate sqlSessionTemplate;
 
     protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm) {
         return this.selectMapperPaging(sqlStatement(statement), params, pageForm);

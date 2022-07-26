@@ -3,7 +3,6 @@ package com.jbm.framework.opcua.listener;
 import com.jbm.framework.opcua.OpcUaClientBean;
 import com.jbm.framework.opcua.OpcUaTemplate;
 import com.jbm.framework.opcua.attribute.OpcPoint;
-import com.jbm.framework.opcua.attribute.SubscriptionPoint;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;

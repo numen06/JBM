@@ -30,13 +30,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * For inserting, should this entity use dynamic sql generation where only non-null columns get referenced in the 
+ * For inserting, should this entity use dynamic sql generation where only non-null columns get referenced in the
  * prepared sql statement?
  *
  * @author Steve Ebersole
  */
-@Target( TYPE )
-@Retention( RUNTIME )
+@Target(TYPE)
+@Retention(RUNTIME)
 public @interface DynamicInsert {
-	boolean value() default true;
+    boolean value() default true;
 }

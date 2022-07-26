@@ -1,9 +1,9 @@
 package com.jbm.cluster.platform.gateway.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.platform.gateway.service.ValidateCodeService;
 import com.jbm.framework.exceptions.CaptchaException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.cluster.platform.gateway.service.ValidateCodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

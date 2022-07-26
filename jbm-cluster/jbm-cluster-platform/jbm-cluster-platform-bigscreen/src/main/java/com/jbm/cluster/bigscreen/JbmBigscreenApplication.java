@@ -3,7 +3,7 @@ package com.jbm.cluster.bigscreen;
 import com.jbm.cluster.api.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.mapper.BigscreenViewMapper;
-import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
+import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

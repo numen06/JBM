@@ -12,16 +12,13 @@
 
     <select id="selectAuthorityByApp"
             resultMap="com.jbm.cluster.center.mapper.BaseAuthorityMapper.Authority">
-    SELECT
-      a.authority_id,
-      a.authority,
-      ap.expire_time,
-      'app' as owner
-    FROM
-      base_authority_app AS ap
-        INNER JOIN base_authority AS a ON ap.authority_id = a.authority_id
-    WHERE
-      ap.app_id = #{appId}
-      and  a.status = 1
-  </select>
+        SELECT a.authority_id,
+               a.authority,
+               ap.expire_time,
+               'app' as owner
+        FROM base_authority_app AS ap
+                 INNER JOIN base_authority AS a ON ap.authority_id = a.authority_id
+        WHERE ap.app_id = #{appId}
+          and a.status = 1
+    </select>
 </mapper>

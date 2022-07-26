@@ -6,17 +6,17 @@
 
     <select id="findLastVersionInfo" parameterType="com.jbm.cluster.api.entitys.basic.BaseReleaseInfo" resultType="map">
         SELECT
-            *
+        *
         FROM
-            `base_release_info`
+        `base_release_info`
         <where>
             <if test="appId !=null">
                 app_id = #{appId}
             </if>
         </where>
         ORDER BY
-            INET_ATON(
-                    SUBSTRING_INDEX( CONCAT( version_number, '.0.0' ), '.', 3 )) DESC
+        INET_ATON(
+        SUBSTRING_INDEX( CONCAT( version_number, '.0.0' ), '.', 3 )) DESC
         LIMIT 1
     </select>
 </mapper>

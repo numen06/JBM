@@ -5,7 +5,6 @@ import jbm.framework.spring.config.ApplicationEnvironmentDefaultListener;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * 默认配置文件注入

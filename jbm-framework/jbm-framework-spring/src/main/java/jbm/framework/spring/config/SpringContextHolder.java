@@ -37,16 +37,6 @@ import org.springframework.core.env.Environment;
 public class SpringContextHolder implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
 
-    /**
-     * 实现ApplicationContextAware接口的context注入函数, 将其存入静态变量.
-     */
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        // NOSONAR
-        SpringContextHolder.applicationContext = applicationContext;
-    }
-
-
     public static String geteApplicationName() {
         Environment env = applicationContext.getEnvironment();
         // 服务名称
@@ -60,6 +50,15 @@ public class SpringContextHolder implements ApplicationContextAware {
     public static ApplicationContext getApplicationContext() {
         checkApplicationContext();
         return applicationContext;
+    }
+
+    /**
+     * 实现ApplicationContextAware接口的context注入函数, 将其存入静态变量.
+     */
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        // NOSONAR
+        SpringContextHolder.applicationContext = applicationContext;
     }
 
     /**

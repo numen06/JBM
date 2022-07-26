@@ -6,7 +6,7 @@ import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2021-10-08 16:43:28
  */
 @Service

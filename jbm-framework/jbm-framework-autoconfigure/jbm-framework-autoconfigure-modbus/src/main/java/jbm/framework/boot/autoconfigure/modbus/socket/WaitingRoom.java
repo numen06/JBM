@@ -32,7 +32,7 @@ public class WaitingRoom {
      * @return
      */
     public void enter(WaitingRoomKey key) {
-       WaitingRoom.Member member = new WaitingRoom.Member();
+        WaitingRoom.Member member = new WaitingRoom.Member();
         synchronized (this) {
             while (waitHere.get(key) != null) {
                 if (log.isDebugEnabled())
@@ -55,7 +55,7 @@ public class WaitingRoom {
 
     public IncomingResponseMessage getResponse(WaitingRoomKey key, long timeout) throws WaitingRoomException {
         // Get the member.
-       WaitingRoom.Member member;
+        WaitingRoom.Member member;
         synchronized (this) {
             member = waitHere.get(key);
         }
@@ -89,7 +89,7 @@ public class WaitingRoom {
             // The key factory can return a null key if the response should be ignored.
             return;
 
-       WaitingRoom.Member member;
+        WaitingRoom.Member member;
 
         synchronized (this) {
             member = waitHere.get(key);

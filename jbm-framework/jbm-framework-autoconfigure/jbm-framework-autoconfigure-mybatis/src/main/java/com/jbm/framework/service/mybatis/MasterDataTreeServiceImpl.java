@@ -3,7 +3,6 @@ package com.jbm.framework.service.mybatis;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
@@ -13,7 +12,6 @@ import com.jbm.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 

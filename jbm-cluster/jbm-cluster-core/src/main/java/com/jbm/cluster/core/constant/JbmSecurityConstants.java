@@ -2,11 +2,10 @@ package com.jbm.cluster.core.constant;
 
 /**
  * 权限相关通用常量
- * 
+ *
  * @author wesley.zhang
  */
-public class JbmSecurityConstants
-{
+public class JbmSecurityConstants {
     /**
      * 用户ID字段
      */

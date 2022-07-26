@@ -4,7 +4,6 @@ import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.form.auth.PasswordLoginWay;
 import com.jbm.cluster.api.form.auth.SmsLoginWay;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -17,11 +16,11 @@ public interface LoginAccountStruct {
 
     LoginAccountStruct INSTANCT = Mappers.getMapper(LoginAccountStruct.class);
 
-//    @Mapping(target = "account", source = "username")
-        // 忽略id，不进行映射
+    //    @Mapping(target = "account", source = "username")
+    // 忽略id，不进行映射
     BaseAccount converLoginWay(PasswordLoginWay passwordLoginWay);
 
-//    @Mapping(target = "account", source = "mobile")
-        // 忽略id，不进行映射
+    //    @Mapping(target = "account", source = "mobile")
+    // 忽略id，不进行映射
     BaseAccount converLoginWay(SmsLoginWay smsLoginAccount);
 }

@@ -2,7 +2,6 @@ package com.jbm.util;
 
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -322,7 +321,6 @@ public class PathUtils extends org.apache.commons.io.FilenameUtils {
         int separatorIndex = path.lastIndexOf(FOLDER_SEPARATOR);
         return (separatorIndex != -1 ? path.substring(separatorIndex + 1) : path);
     }
-
 
 
 }

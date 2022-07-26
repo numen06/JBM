@@ -1,7 +1,5 @@
 package com.jbm.test.tio;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tio.http.common.HttpConfig;
@@ -13,44 +11,43 @@ import org.tio.http.server.handler.DefaultHttpRequestHandler;
 import org.tio.http.server.mvc.Routes;
 import org.tio.utils.SystemTimer;
 
+import java.io.IOException;
+
 /**
  *
  */
 public class TioHttpServerStarter {
 
-	private static Logger log = LoggerFactory.getLogger(TioHttpServerStarter.class);
+    public static HttpConfig httpConfig;
+    public static HttpRequestHandler requestHandler;
+    public static HttpServerStarter httpServerStarter;
+    private static Logger log = LoggerFactory.getLogger(TioHttpServerStarter.class);
 
-	public static HttpConfig httpConfig;
+    public static void main(String[] args) throws IOException {
+        long start = System.currentTimeMillis();
 
-	public static HttpRequestHandler requestHandler;
+        int port = 888;// 启动端口
+        String pageRoot = "/";// html/css/js等的根目录，支持classpath:，也支持绝对路径
+        String[] scanPackages = new String[]{"com.jbm.test"};
 
-	public static HttpServerStarter httpServerStarter;
+        httpConfig = new HttpConfig(port, null, null, null);
+        httpConfig.setPageRoot(pageRoot);
+        httpConfig.setSessionIdGenerator(new ISessionIdGenerator() {
 
-	public static void main(String[] args) throws IOException {
-		long start = System.currentTimeMillis();
+            @Override
+            public String sessionId(HttpConfig httpConfig, HttpRequest request) {
+                return request.getChannelContext().getClientNode().toString();
+            }
+        });
 
-		int port = 888;// 启动端口
-		String pageRoot = "/";// html/css/js等的根目录，支持classpath:，也支持绝对路径
-		String[] scanPackages = new String[] { "com.jbm.test"};
+        Routes routes = new Routes(scanPackages);
+        DefaultHttpRequestHandler requestHandler = new DefaultHttpRequestHandler(httpConfig, routes);
+        requestHandler.setHttpSessionListener(new TestHttpSessionListener());
+        httpServerStarter = new HttpServerStarter(httpConfig, requestHandler);
+        httpServerStarter.start();
 
-		httpConfig = new HttpConfig(port, null, null, null);
-		httpConfig.setPageRoot(pageRoot);
-		httpConfig.setSessionIdGenerator(new ISessionIdGenerator() {
-
-			@Override
-			public String sessionId(HttpConfig httpConfig, HttpRequest request) {
-				return request.getChannelContext().getClientNode().toString();
-			}
-		});
-
-		Routes routes = new Routes(scanPackages);
-		DefaultHttpRequestHandler requestHandler = new DefaultHttpRequestHandler(httpConfig, routes);
-		requestHandler.setHttpSessionListener(new TestHttpSessionListener());
-		httpServerStarter = new HttpServerStarter(httpConfig, requestHandler);
-		httpServerStarter.start();
-
-		long end = SystemTimer.currentTimeMillis();
-		long iv = end - start;
-		log.info("Tio Http Server启动完毕,耗时:{}ms,访问地址:http://127.0.0.1:{}", iv, port);
-	}
+        long end = SystemTimer.currentTimeMillis();
+        long iv = end - start;
+        log.info("Tio Http Server启动完毕,耗时:{}ms,访问地址:http://127.0.0.1:{}", iv, port);
+    }
 }

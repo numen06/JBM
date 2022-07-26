@@ -1,14 +1,5 @@
 package org.springframework.boot.logging.logback;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.bind.Bindable;
-import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.boot.logging.LogFile;
-import org.springframework.boot.logging.LoggingInitializationContext;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertyResolver;
-import org.springframework.core.env.PropertySourcesPropertyResolver;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -21,17 +12,21 @@ import jodd.io.FileNameUtil;
 import net.logstash.logback.appender.LogstashTcpSocketAppender;
 import net.logstash.logback.encoder.LogstashEncoder;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.logging.LogFile;
+import org.springframework.boot.logging.LoggingInitializationContext;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertyResolver;
+import org.springframework.core.env.PropertySourcesPropertyResolver;
 
 public class RemoteDefaultLogbackConfiguration extends DefaultLogbackConfiguration {
 
-    private LoggingInitializationContext initializationContext;
-
     private static final String FILE_LOG_PATTERN = "%d{yyyy-MM-dd HH:mm:ss.SSS} "
             + "${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}";
-
     private final PropertyResolver patterns;
-
     private final LogFile logFile;
+    private LoggingInitializationContext initializationContext;
 
     RemoteDefaultLogbackConfiguration(LoggingInitializationContext initializationContext, LogFile logFile) {
         super(logFile);

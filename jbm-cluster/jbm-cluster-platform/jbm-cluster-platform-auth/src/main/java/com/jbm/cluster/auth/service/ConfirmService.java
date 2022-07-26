@@ -6,8 +6,8 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
 import com.jbm.cluster.auth.model.AuthConfirmModel;
-import jbm.framework.web.ServletUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
+import jbm.framework.web.ServletUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +15,9 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class ConfirmService {
+    private final String CONFIRM_PIX = "confirm:oauth2:code:";
     @Autowired
     private RedisService redisService;
-
-
-    private final String CONFIRM_PIX = "confirm:oauth2:code:";
 
     /**
      * 确认登录

@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.api.model.auth.OpenClientDetails;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
@@ -16,7 +15,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**

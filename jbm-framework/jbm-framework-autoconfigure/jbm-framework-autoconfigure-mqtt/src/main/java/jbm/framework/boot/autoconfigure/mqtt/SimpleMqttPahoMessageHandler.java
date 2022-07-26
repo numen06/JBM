@@ -1,7 +1,6 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
 import com.google.common.collect.Maps;
-import org.eclipse.paho.client.mqttv3.internal.wire.MqttReceivedMessage;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;

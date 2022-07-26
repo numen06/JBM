@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.text.MessageFormat;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2021-09-03 17:08:07
  */
 @Api(tags = "大屏跳转接口")

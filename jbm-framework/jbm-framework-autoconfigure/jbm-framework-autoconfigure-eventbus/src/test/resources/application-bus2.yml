@@ -4,14 +4,14 @@ spring:
   application:
     name: EventBusApp2
   cloud:
-#    stream:
-#      bindings:
-#        springCloudBusInput:
-#          destination: test
-#          group: ${spring.application.name}
-#        springCloudBusOutput:
-#          destination: test
-#          group: ${spring.application.name}
+    #    stream:
+    #      bindings:
+    #        springCloudBusInput:
+    #          destination: test
+    #          group: ${spring.application.name}
+    #        springCloudBusOutput:
+    #          destination: test
+    #          group: ${spring.application.name}
     bus:
       destination: test
       id: ${spring.application.name}

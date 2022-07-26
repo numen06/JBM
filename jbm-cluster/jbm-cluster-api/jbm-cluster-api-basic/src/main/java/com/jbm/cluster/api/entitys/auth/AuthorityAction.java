@@ -6,6 +6,7 @@ import java.util.Objects;
 
 /**
  * 功能权限
+ *
  * @author wesley.zhang
  */
 //@JsonIgnoreProperties(ignoreUnknown = true)
@@ -57,7 +58,7 @@ public class AuthorityAction extends BaseAction {
         if (this == obj) {
             return true;
         }
-        if(!(obj instanceof AuthorityAction)) {
+        if (!(obj instanceof AuthorityAction)) {
             return false;
         }
         AuthorityAction a = (AuthorityAction) obj;

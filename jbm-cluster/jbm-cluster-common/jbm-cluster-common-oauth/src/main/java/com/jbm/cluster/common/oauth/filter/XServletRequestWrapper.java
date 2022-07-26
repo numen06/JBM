@@ -19,8 +19,8 @@ import java.util.*;
  * @author wesley.zhang
  */
 public class XServletRequestWrapper extends HttpServletRequestWrapper {
-    private HttpServletRequest request;
     private final byte[] body;
+    private HttpServletRequest request;
     private Map<String, String> customHeaders;
 
     public XServletRequestWrapper(HttpServletRequest request) throws IOException {

@@ -1,11 +1,7 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.hutool.captcha.LineCaptcha;
-import cn.hutool.core.codec.Base64;
-import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.lang.Validator;
-import cn.hutool.extra.qrcode.QrCodeUtil;
-import cn.hutool.extra.qrcode.QrConfig;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.PCoderService;
@@ -19,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.function.Supplier;
 
@@ -122,8 +116,6 @@ public class CaptchaController {
     public ResultBody<Boolean> verify(@PathVariable(value = "scope") String scope, @RequestParam(required = false) String vcode, HttpServletRequest request) throws IOException {
         return ResultBody.ok().data(vCoderService.verify(vcode, scope));
     }
-
-
 
 
 //    @Autowired

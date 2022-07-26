@@ -33,7 +33,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author: wesley.zhang
  * @date: 2018/12/24 12:49
@@ -43,19 +47,18 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         implements IBaseSqlService<Entity>, IService<Entity> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Autowired(required = false)
+    protected SqlSessionTemplate sqlSessionTemplate;
+
+    public BaseSqlService() {
+        super();
+    }
 
     @SuppressWarnings("unchecked")
     @Override
     public Class<Entity> getEntityClass() {
         return currentModelClass();
     }
-
-    public BaseSqlService() {
-        super();
-    }
-
-    @Autowired(required = false)
-    protected SqlSessionTemplate sqlSessionTemplate;
 
     @Override
     public Entity selectById(Long id) throws DataServiceException {
@@ -161,8 +164,9 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @Override
     public Entity selectEntity(Entity entity, Entity def) throws DataServiceException {
         Entity result = this.selectEntity(entity);
-        if (result == null)
+        if (result == null) {
             return def;
+        }
         return result;
     }
 
@@ -428,7 +432,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
             try {
                 parameter = MapUtils.fromArray(args);
             } catch (Exception e) {
-                logger.error("组装参数错误", e);
+                log.error("组装参数错误", e);
                 throw new DataServiceException("组装参数错误", e);
             }
         }

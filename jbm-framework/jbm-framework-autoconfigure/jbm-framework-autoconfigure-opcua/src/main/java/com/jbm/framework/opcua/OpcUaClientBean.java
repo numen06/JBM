@@ -30,22 +30,6 @@ public class OpcUaClientBean extends AbstractScheduledService {
     private OpcUaClient opcUaClient;
     private Map<String, OpcPoint> points = Maps.newConcurrentMap();
     private Map<String, ValueChanageEvent> subscriptionPoints = Maps.newConcurrentMap();
-
-    public OpcUaClientBean(String deviceId, OpcUaClient opcUaClient) {
-        this.deviceId = deviceId;
-        this.opcUaClient = opcUaClient;
-        this.startAsync();
-        this.awaitRunning();
-    }
-
-    public OpcPoint findPoint(String pointName) {
-        if (!points.containsKey(pointName)) {
-            log.warn("没有发现点位:{}", pointName);
-            return null;
-        }
-        return this.points.get(pointName);
-    }
-
     private LoadingCache<String, NodeId> nodeIdLoadingCache = CacheBuilder.newBuilder()
             .build(new CacheLoader<String, NodeId>() {
                 @Override
@@ -62,6 +46,21 @@ public class OpcUaClientBean extends AbstractScheduledService {
                     return nodeId;
                 }
             });
+
+    public OpcUaClientBean(String deviceId, OpcUaClient opcUaClient) {
+        this.deviceId = deviceId;
+        this.opcUaClient = opcUaClient;
+        this.startAsync();
+        this.awaitRunning();
+    }
+
+    public OpcPoint findPoint(String pointName) {
+        if (!points.containsKey(pointName)) {
+            log.warn("没有发现点位:{}", pointName);
+            return null;
+        }
+        return this.points.get(pointName);
+    }
 
     public NodeId getNodeId(String pointName) throws ExecutionException {
         return this.nodeIdLoadingCache.get(pointName);

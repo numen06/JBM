@@ -60,34 +60,6 @@ public class FileTypeJudge {
         return bytesToHexString(b);
     }
 
-    /**
-     * 判断文件类型
-     *
-     * @return 文件类型
-     */
-    public FileType getType(InputStream is) throws IOException {
-
-        String fileHead = getFileContent(is);
-
-        if (fileHead == null || fileHead.length() == 0) {
-            return null;
-        }
-
-        fileHead = fileHead.toUpperCase();
-
-        FileType[] fileTypes = FileType.values();
-
-
-        for (FileType type : fileTypes) {
-            System.out.println(type.getValue());
-            if (fileHead.startsWith(type.getValue())) {
-                return type;
-            }
-        }
-
-        return null;
-    }
-
     public static Integer isFileType(FileType value) {
         int type = 7;// 其他
         // 图片
@@ -136,6 +108,34 @@ public class FileTypeJudge {
             }
         }
         return type;
+    }
+
+    /**
+     * 判断文件类型
+     *
+     * @return 文件类型
+     */
+    public FileType getType(InputStream is) throws IOException {
+
+        String fileHead = getFileContent(is);
+
+        if (fileHead == null || fileHead.length() == 0) {
+            return null;
+        }
+
+        fileHead = fileHead.toUpperCase();
+
+        FileType[] fileTypes = FileType.values();
+
+
+        for (FileType type : fileTypes) {
+            System.out.println(type.getValue());
+            if (fileHead.startsWith(type.getValue())) {
+                return type;
+            }
+        }
+
+        return null;
     }
 
 }

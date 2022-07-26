@@ -21,7 +21,8 @@ import javax.persistence.Entity;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@TableName("base_dic")public class BaseDic extends MasterDataTreeEntity {
+@TableName("base_dic")
+public class BaseDic extends MasterDataTreeEntity {
 
     @ApiModelProperty(value = "名称")
     private String name;

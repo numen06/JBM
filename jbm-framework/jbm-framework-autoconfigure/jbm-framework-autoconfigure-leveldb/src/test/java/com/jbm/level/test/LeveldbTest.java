@@ -1,12 +1,6 @@
 package com.jbm.level.test;
 
-import java.text.MessageFormat;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
+import jbm.framework.boot.autoconfigure.level.LevelAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,23 +9,25 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.level.LevelKeyValueTemplate;
 import org.springframework.data.level.LevelTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import jbm.framework.boot.autoconfigure.level.LevelAutoConfiguration;
+import java.text.MessageFormat;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootConfiguration
 @SpringBootTest(classes = {LevelAutoConfiguration.class})
 public class LeveldbTest {
 
-    @Autowired
-    private LevelTemplate<Object, Object> levelTemplate;
-
-    @Autowired
-    private LevelKeyValueTemplate levelKeyValueTemplate;
-
     private final String dbName = "test";
     private final String mKey = "test";
+    @Autowired
+    private LevelTemplate<Object, Object> levelTemplate;
+    @Autowired
+    private LevelKeyValueTemplate levelKeyValueTemplate;
 
     @Test
     public void exampleTest1() {

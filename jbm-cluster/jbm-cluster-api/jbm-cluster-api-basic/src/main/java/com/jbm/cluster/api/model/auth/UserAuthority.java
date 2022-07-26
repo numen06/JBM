@@ -1,7 +1,6 @@
 package com.jbm.cluster.api.model.auth;
 
 import com.google.common.collect.Lists;
-import com.jbm.cluster.api.model.auth.OpenAuthority;
 
 import java.io.Serializable;
 import java.util.Collection;

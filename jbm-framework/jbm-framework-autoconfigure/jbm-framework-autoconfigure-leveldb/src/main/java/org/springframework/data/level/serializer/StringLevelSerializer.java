@@ -1,8 +1,8 @@
 package org.springframework.data.level.serializer;
 
-import java.nio.charset.Charset;
-
 import org.springframework.util.Assert;
+
+import java.nio.charset.Charset;
 
 public class StringLevelSerializer implements LevelSerializer<String> {
 

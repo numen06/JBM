@@ -19,34 +19,28 @@
 
     <select id="selectAuthorityByRole"
             resultMap="com.jbm.cluster.center.mapper.BaseAuthorityMapper.Authority">
-        SELECT
-            a.authority_id,
-            a.authority,
-            rp.expire_time,
-            'role' as owner
-        FROM
-            base_authority_role AS rp
-                INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
-        WHERE
-            rp.role_id = #{roleId}
-            and a.status = 1
+        SELECT a.authority_id,
+               a.authority,
+               rp.expire_time,
+               'role' as owner
+        FROM base_authority_role AS rp
+                 INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
+        WHERE rp.role_id = #{roleId}
+          and a.status = 1
     </select>
 
     <select id="selectAuthorityMenuByRole"
             resultMap="RoleAuthorityMenu">
-       SELECT
-            a.authority_id,
-            a.authority,
-            a.`status`,
-            m.*,
-            rp.role_id,
-            rp.expire_time
-        FROM
-            base_authority_role AS rp
-       INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
-       INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
-        WHERE
-                rp.role_id = #{roleId}
-                and a.status = 1
+        SELECT a.authority_id,
+               a.authority,
+               a.`status`,
+               m.*,
+               rp.role_id,
+               rp.expire_time
+        FROM base_authority_role AS rp
+                 INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
+                 INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
+        WHERE rp.role_id = #{roleId}
+          and a.status = 1
     </select>
 </mapper>

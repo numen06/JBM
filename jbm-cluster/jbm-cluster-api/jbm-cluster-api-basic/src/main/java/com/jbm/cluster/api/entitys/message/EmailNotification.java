@@ -7,7 +7,7 @@ import lombok.Data;
  * @date 2018-3-27
  **/
 @Data
-public class EmailNotification extends Notification{
+public class EmailNotification extends Notification {
 
     private String receiver;
 

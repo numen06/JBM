@@ -1,13 +1,10 @@
 package com.jbm.cluster.api.model.api;
 
 import com.jbm.cluster.api.model.JbmClusterResource;
-import com.jbm.cluster.core.constant.JbmClusterConstants;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 

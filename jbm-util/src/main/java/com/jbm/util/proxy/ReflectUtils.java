@@ -3,7 +3,6 @@ package com.jbm.util.proxy;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.exceptions.UtilException;
 import cn.hutool.core.lang.Filter;
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.TypeUtil;
 import com.alibaba.fastjson.JSON;

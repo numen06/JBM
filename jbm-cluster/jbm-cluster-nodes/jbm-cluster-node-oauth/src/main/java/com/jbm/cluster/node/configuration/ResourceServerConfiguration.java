@@ -44,12 +44,6 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
 
-    @Override
-    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-        resources.tokenServices(resourceServerTokenServices);
-        initJbmNode();
-    }
-
     public static void initJbmNode() {
         try {
             final String branner = FileUtil.readString("classpath*:jbm.banner", Charsets.UTF_8);
@@ -60,6 +54,11 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         }
     }
 
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+        resources.tokenServices(resourceServerTokenServices);
+        initJbmNode();
+    }
 
     @Override
     public void configure(HttpSecurity http) throws Exception {

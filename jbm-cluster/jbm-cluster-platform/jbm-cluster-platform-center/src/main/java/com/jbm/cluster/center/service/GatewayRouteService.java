@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service;
 
-import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
+import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.usage.paging.DataPaging;
 

@@ -4,7 +4,6 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
-import org.springframework.cache.annotation.Cacheable;
 
 /**
  * 应用信息管理

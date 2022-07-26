@@ -28,12 +28,15 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2021-09-03 17:08:07
  */
 @Service
 @Slf4j
 public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService, ApplicationListener<ApplicationReadyEvent> {
+
+    @Resource
+    private DiscoveryClient discoveryClient;
 
     /**
      * 系统启动之后加载所有大屏
@@ -74,7 +77,6 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         File viewDir = this.getViewDir(bigscreenView);
         return FileUtil.exist(viewDir);
     }
-
 
     private File getViewDir(BigscreenView bigscreenView) {
         File viewDir = Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl()).toFile();
@@ -183,9 +185,6 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         this.cleanView(bigscreenView);
         return super.deleteById(id);
     }
-
-    @Resource
-    private DiscoveryClient discoveryClient;
 
     public String getDocAddress() {
         List<ServiceInstance> instances = discoveryClient.getInstances("jbm-cluster-platform-doc");

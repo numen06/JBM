@@ -12,31 +12,30 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * 高级的Mongo数据转换类
- * 
- * @author wesley
  *
+ * @author wesley
  */
 public class AdvMappingMongoConverter extends MappingMongoConverter {
 
-	@SuppressWarnings("deprecation")
-	public AdvMappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		super(mongoDbFactory, mappingContext);
-	}
+    @SuppressWarnings("deprecation")
+    public AdvMappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+        super(mongoDbFactory, mappingContext);
+    }
 
-	public AdvMappingMongoConverter(DbRefResolver dbRefResolver, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		super(dbRefResolver, mappingContext);
-	}
+    public AdvMappingMongoConverter(DbRefResolver dbRefResolver, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+        super(dbRefResolver, mappingContext);
+    }
 
-	/**
-	 * 默认将_class去掉
-	 * 
-	 * @param mongoDbFactory
-	 */
-	@SuppressWarnings("deprecation")
-	public AdvMappingMongoConverter(MongoDbFactory mongoDbFactory) {
-		super(mongoDbFactory, new MongoMappingContext());
-		MongoTypeMapper typeMapper = new DefaultMongoTypeMapper(null);
-		this.setTypeMapper(typeMapper);
-	}
+    /**
+     * 默认将_class去掉
+     *
+     * @param mongoDbFactory
+     */
+    @SuppressWarnings("deprecation")
+    public AdvMappingMongoConverter(MongoDbFactory mongoDbFactory) {
+        super(mongoDbFactory, new MongoMappingContext());
+        MongoTypeMapper typeMapper = new DefaultMongoTypeMapper(null);
+        this.setTypeMapper(typeMapper);
+    }
 
 }

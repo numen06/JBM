@@ -7,11 +7,11 @@ package jbm.framework.excel.exceptions;
 public class TimeMatchFormatException extends Exception {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	public TimeMatchFormatException(String message) {
+    public TimeMatchFormatException(String message) {
         super(message);
     }
 

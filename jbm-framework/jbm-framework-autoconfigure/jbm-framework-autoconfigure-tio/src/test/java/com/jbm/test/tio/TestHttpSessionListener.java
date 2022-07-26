@@ -8,11 +8,11 @@ import org.tio.http.common.session.HttpSession;
 
 public class TestHttpSessionListener implements org.tio.http.server.session.HttpSessionListener {
 
-	private static Logger log = LoggerFactory.getLogger(TestHttpSessionListener.class);
+    private static Logger log = LoggerFactory.getLogger(TestHttpSessionListener.class);
 
-	@Override
-	public void doAfterCreated(HttpRequest request, HttpSession session, HttpConfig httpConfig) {
-		log.info("有一个客户端正在连接{},消息内容{}", request.getHeaderString(), request.getBodyString());
-	}
+    @Override
+    public void doAfterCreated(HttpRequest request, HttpSession session, HttpConfig httpConfig) {
+        log.info("有一个客户端正在连接{},消息内容{}", request.getHeaderString(), request.getBodyString());
+    }
 
 }

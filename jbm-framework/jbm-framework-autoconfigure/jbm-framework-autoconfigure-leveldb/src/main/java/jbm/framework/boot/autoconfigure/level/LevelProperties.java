@@ -6,30 +6,30 @@ import org.springframework.data.level.LevelOption;
 @ConfigurationProperties(prefix = "spring.data.level")
 public class LevelProperties extends LevelOption {
 
-	/**
-	 * 缓存数据库位置
-	 */
-	private String cache = "LEVEL_CACHE";
+    /**
+     * 缓存数据库位置
+     */
+    private String cache = "LEVEL_CACHE";
 
-	/**
-	 * 是否自动销毁缓存数据库
-	 */
-	private Boolean autoDestroy = false;
+    /**
+     * 是否自动销毁缓存数据库
+     */
+    private Boolean autoDestroy = false;
 
-	public String getCache() {
-		return cache;
-	}
+    public String getCache() {
+        return cache;
+    }
 
-	public void setCache(String cache) {
-		this.cache = cache;
-	}
+    public void setCache(String cache) {
+        this.cache = cache;
+    }
 
-	public Boolean getAutoDestroy() {
-		return autoDestroy;
-	}
+    public Boolean getAutoDestroy() {
+        return autoDestroy;
+    }
 
-	public void setAutoDestroy(Boolean autoDestroy) {
-		this.autoDestroy = autoDestroy;
-	}
+    public void setAutoDestroy(Boolean autoDestroy) {
+        this.autoDestroy = autoDestroy;
+    }
 
 }

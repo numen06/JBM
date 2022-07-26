@@ -29,7 +29,7 @@ public class BaseAction extends MasterDataEntity {
      * 资源ID
      */
     @Id
-    @TableId(type= IdType.ID_WORKER)
+    @TableId(type = IdType.ID_WORKER)
     private Long actionId;
 
     /**

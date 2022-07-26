@@ -1,10 +1,10 @@
 package com.jbm.cluster.common.basic.configuration;
 
 import com.jbm.autoconfig.dic.DictionaryTemplate;
-import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
+import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.runtime.BasicUnknownRuntimeExceptionFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

@@ -3,7 +3,6 @@ package com.jbm.test.token;
 import cn.dev33.satoken.session.SaSession;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.jwt.JWTUtil;
-import cn.hutool.jwt.signers.JWTSigner;
 import cn.hutool.jwt.signers.JWTSignerUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;

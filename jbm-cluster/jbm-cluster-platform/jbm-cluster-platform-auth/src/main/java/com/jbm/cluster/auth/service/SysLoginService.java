@@ -34,8 +34,8 @@ import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import jbm.framework.web.WebUtils;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
+import jbm.framework.web.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -73,6 +73,8 @@ public class SysLoginService {
 
     @Autowired
     private VCoderService vCoderService;
+    @Autowired
+    private DynamicLoginFeignClient dynamicLoginFeignClient;
 
     public JbmLoginUser conventJbmLoginUser(BaseUser baseUser) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
@@ -157,9 +159,6 @@ public class SysLoginService {
             throw new ServiceException("处理登录信息异常");
         }
     }
-
-    @Autowired
-    private DynamicLoginFeignClient dynamicLoginFeignClient;
 
     public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
         ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);

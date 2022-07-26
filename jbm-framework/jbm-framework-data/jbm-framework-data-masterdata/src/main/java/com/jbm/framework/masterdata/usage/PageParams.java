@@ -19,13 +19,6 @@ import java.util.Map;
  * @date 2018/07/10
  */
 public class PageParams extends Page implements Serializable {
-    private static final long serialVersionUID = -1710273706052960025L;
-    private int page = DEFAULT_PAGE;
-    private int limit = DEFAULT_LIMIT;
-    private String sort;
-    private String order;
-    private Map<String, Object> requestMap = Maps.newHashMap();
-
     public static final String PAGE_KEY = "page";
     /**
      * 显示条数 KEY
@@ -39,7 +32,6 @@ public class PageParams extends Page implements Serializable {
      * 排序方向 KEY
      */
     public static final String PAGE_ORDER_KEY = "order";
-
     /**
      * 默认页码
      */
@@ -48,7 +40,6 @@ public class PageParams extends Page implements Serializable {
      * 默认显示条数
      */
     public static final int DEFAULT_LIMIT = Integer.MAX_VALUE;
-
     /**
      * 默认最小页码
      */
@@ -57,19 +48,16 @@ public class PageParams extends Page implements Serializable {
      * 最大显示条数
      */
     public static final int MAX_LIMIT = 999;
+    private static final long serialVersionUID = -1710273706052960025L;
+    private int page = DEFAULT_PAGE;
+    private int limit = DEFAULT_LIMIT;
+    private String sort;
+    private String order;
+    private Map<String, Object> requestMap = Maps.newHashMap();
     /**
      * 排序
      */
     private String orderBy;
-
-
-    public static PageParams from(Map map) {
-        return new PageParams(map);
-    }
-
-    public static PageParams from(PageForm pageForm) {
-        return new PageParams(pageForm);
-    }
 
 
     public PageParams() {
@@ -92,6 +80,7 @@ public class PageParams extends Page implements Serializable {
         super.setCurrent(page);
         super.setSize(limit);
     }
+
 
     public PageParams(Map map) {
         if (map == null) {
@@ -119,6 +108,14 @@ public class PageParams extends Page implements Serializable {
         this.limit = limit;
         this.sort = sort;
         this.order = order;
+    }
+
+    public static PageParams from(Map map) {
+        return new PageParams(map);
+    }
+
+    public static PageParams from(PageForm pageForm) {
+        return new PageParams(pageForm);
     }
 
     public int getPage() {

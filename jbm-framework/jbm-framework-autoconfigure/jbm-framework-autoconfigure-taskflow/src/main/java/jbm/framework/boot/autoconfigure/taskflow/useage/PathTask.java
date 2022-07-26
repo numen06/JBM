@@ -37,10 +37,184 @@ import java.util.Objects;
 @Slf4j
 @Data
 public abstract class PathTask {
-    private int sleepFor = 0;
-    protected ITask taskInstance;
     private final List<List<PathTask.Arg>> exp = new ArrayList<>();
     private final List<List<PathTask.Arg>> got = new ArrayList<>();
+    protected ITask taskInstance;
+    private int sleepFor = 0;
+    private long timestamp = 0;
+
+    static List<PathTask.Arg> toArgs(PathTask... tasks) {
+        List<PathTask.Arg> args = new ArrayList<>();
+        for (PathTask next : Arrays.asList(tasks)) {
+            args.add(next.asArg());
+        }
+        return args;
+    }
+
+    static <T> String css(List<T> os, Class<T> cls) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < os.size(); i++) {
+            Object next = os.get(i);
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append(next.toString());
+        }
+        return sb.toString();
+    }
+
+    public static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ':' + exp.size() + ':' + got.size();
+    }
+
+    String getName() {
+        // taskInstance might not be set in nested @Work cases
+        if (taskInstance == null) {
+            return "???";
+        }
+        return taskInstance.getName();
+    }
+
+    PathTask name(String name) {
+        taskInstance.name(name);
+        return this;
+    }
+
+    PathTask noWait() {
+        taskInstance.noWait();
+        return this;
+    }
+
+    PathTask multiMethodOk() {
+        taskInstance.multiMethodOk();
+        return this;
+    }
+
+    PathTask fork() {
+        taskInstance.fork();
+        return this;
+    }
+
+    PathTask before(Object x) {
+        taskInstance.before(x);
+        return this;
+    }
+
+    PathTask after(Object x) {
+        taskInstance.after(x);
+        return this;
+    }
+
+    PathTask provides(Class<?> taskClass) {
+        taskInstance.provides(taskClass);
+        return this;
+    }
+
+    /**
+     * Sleeps for given number of ms when {@link #got} is called, in order to
+     * simulate taskInstance-specific delay.
+     *
+     * @param sleepFor ms
+     * @return
+     */
+    PathTask sleepFor(int sleepFor) {
+        this.sleepFor = sleepFor;
+        return this;
+    }
+
+    PathTask.Arg asArg() {
+        return new SingleArg(this);
+    }
+
+    /**
+     * Sets an expectation of the given actual parameter list, which should
+     * match the formal parameter list of the method signature. This method
+     * should be invoked once for each call expected.
+     *
+     * @param tasks
+     * @return
+     */
+    public PathTask exp(PathTask... tasks) {
+        if (tasks.length > 0) {
+            List<PathTask.Arg> args = toArgs(tasks);
+            // List<PathTask.Arg> args = Arrays.asList(tasks).stream().map(t ->
+            // t.asArg()).collect(Collectors.toList());
+            exp.add(args);
+        }
+        return this;
+    }
+
+    /**
+     * Did both tasks execute, and did this one execute after the given one?
+     *
+     * @param other
+     * @return
+     */
+    public boolean followed(PathTask other) {
+        if (this.timestamp == 0 || other.timestamp == 0) {
+            throw new RuntimeException("Timestamps unset this=" + this.timestamp + ", other=" + other.timestamp);
+        }
+        return this.timestamp > other.timestamp;
+    }
+
+    public synchronized PathTask got(PathTask... tasks) {
+        timestamp = System.nanoTime();
+
+        if (tasks.length > 0) {
+            List<PathTask.Arg> args = toArgs(tasks);
+            log.info("tasks runing ", CollectionUtil.getFirst(args).getClass());
+            got.add(args);
+        }
+        if (sleepFor > 0) {
+            sleep(sleepFor);
+        }
+
+        return this;
+    }
+
+    public String fmt(List<PathTask.Arg> args) {
+        return "(" + css(args, PathTask.Arg.class) + ")";
+        // return "(" +
+        // args.stream().map(Object::toString).collect(Collectors.joining(","))
+        // + ")";
+    }
+
+    /**
+     * Raises JUnit failures if actual results did not match expected results.
+     */
+    public synchronized void check() {
+        List<String> bad = new ArrayList<>();
+        for (List<PathTask.Arg> next : exp) {
+            if (!got.contains(next)) {
+                bad.add("missing" + next);
+            }
+        }
+        for (List<PathTask.Arg> next : got) {
+            if (!exp.contains(next)) {
+                bad.add("unexp " + next);
+            }
+        }
+        if (bad.size() > 0) {
+            log.error(taskInstance.getName() + " " + css(bad, String.class));
+        }
+        // This might happen when task is called extra times with same
+        // argument(s)
+        int expSize = exp.size();
+        int gotSize = got.size();
+        if (expSize != gotSize) {
+            log.error(taskInstance.getName() + " contents matched but exp.length " + expSize + " != got.length " + gotSize);
+        }
+    }
 
     static class Arg {
 
@@ -113,172 +287,6 @@ public abstract class PathTask {
         }
     }
 
-    @Override
-    public String toString() {
-        return getName() + ':' + exp.size() + ':' + got.size();
-    }
-
-    String getName() {
-        // taskInstance might not be set in nested @Work cases
-        if (taskInstance == null) {
-            return "???";
-        }
-        return taskInstance.getName();
-    }
-
-    PathTask name(String name) {
-        taskInstance.name(name);
-        return this;
-    }
-
-    PathTask noWait() {
-        taskInstance.noWait();
-        return this;
-    }
-
-    PathTask multiMethodOk() {
-        taskInstance.multiMethodOk();
-        return this;
-    }
-
-    PathTask fork() {
-        taskInstance.fork();
-        return this;
-    }
-
-    PathTask before(Object x) {
-        taskInstance.before(x);
-        return this;
-    }
-
-    PathTask after(Object x) {
-        taskInstance.after(x);
-        return this;
-    }
-
-    PathTask provides(Class<?> taskClass) {
-        taskInstance.provides(taskClass);
-        return this;
-    }
-
-    /**
-     * Sleeps for given number of ms when {@link #got} is called, in order to
-     * simulate taskInstance-specific delay.
-     *
-     * @param sleepFor ms
-     * @return
-     */
-    PathTask sleepFor(int sleepFor) {
-        this.sleepFor = sleepFor;
-        return this;
-    }
-
-    PathTask.Arg asArg() {
-        return new SingleArg(this);
-    }
-
-    static List<PathTask.Arg> toArgs(PathTask... tasks) {
-        List<PathTask.Arg> args = new ArrayList<>();
-        for (PathTask next : Arrays.asList(tasks)) {
-            args.add(next.asArg());
-        }
-        return args;
-    }
-
-    /**
-     * Sets an expectation of the given actual parameter list, which should
-     * match the formal parameter list of the method signature. This method
-     * should be invoked once for each call expected.
-     *
-     * @param tasks
-     * @return
-     */
-    public PathTask exp(PathTask... tasks) {
-        if (tasks.length > 0) {
-            List<PathTask.Arg> args = toArgs(tasks);
-            // List<PathTask.Arg> args = Arrays.asList(tasks).stream().map(t ->
-            // t.asArg()).collect(Collectors.toList());
-            exp.add(args);
-        }
-        return this;
-    }
-
-    private long timestamp = 0;
-
-    /**
-     * Did both tasks execute, and did this one execute after the given one?
-     *
-     * @param other
-     * @return
-     */
-    public boolean followed(PathTask other) {
-        if (this.timestamp == 0 || other.timestamp == 0) {
-            throw new RuntimeException("Timestamps unset this=" + this.timestamp + ", other=" + other.timestamp);
-        }
-        return this.timestamp > other.timestamp;
-    }
-
-    public synchronized PathTask got(PathTask... tasks) {
-        timestamp = System.nanoTime();
-
-        if (tasks.length > 0) {
-            List<PathTask.Arg> args = toArgs(tasks);
-            log.info("tasks runing ", CollectionUtil.getFirst(args).getClass());
-            got.add(args);
-        }
-        if (sleepFor > 0) {
-            sleep(sleepFor);
-        }
-
-        return this;
-    }
-
-    public String fmt(List<PathTask.Arg> args) {
-        return "(" + css(args, PathTask.Arg.class) + ")";
-        // return "(" +
-        // args.stream().map(Object::toString).collect(Collectors.joining(","))
-        // + ")";
-    }
-
-    static <T> String css(List<T> os, Class<T> cls) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < os.size(); i++) {
-            Object next = os.get(i);
-            if (i > 0) {
-                sb.append(',');
-            }
-            sb.append(next.toString());
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Raises JUnit failures if actual results did not match expected results.
-     */
-    public synchronized void check() {
-        List<String> bad = new ArrayList<>();
-        for (List<PathTask.Arg> next : exp) {
-            if (!got.contains(next)) {
-                bad.add("missing" + next);
-            }
-        }
-        for (List<PathTask.Arg> next : got) {
-            if (!exp.contains(next)) {
-                bad.add("unexp " + next);
-            }
-        }
-        if (bad.size() > 0) {
-            log.error(taskInstance.getName() + " " + css(bad, String.class));
-        }
-        // This might happen when task is called extra times with same
-        // argument(s)
-        int expSize = exp.size();
-        int gotSize = got.size();
-        if (expSize != gotSize) {
-            log.error(taskInstance.getName() + " contents matched but exp.length " + expSize + " != got.length " + gotSize);
-        }
-    }
-
     /**
      * Temporary holder of tasklist so we can create a ListArg. Only extends
      * PathTask for convenience -- it would be probably be cleaner to have this
@@ -295,14 +303,5 @@ public abstract class PathTask {
         PathTask.Arg asArg() {
             return new ListArg(tasks);
         }
-    }
-
-    public static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        ;
     }
 }

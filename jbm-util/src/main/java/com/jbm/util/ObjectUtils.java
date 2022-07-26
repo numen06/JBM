@@ -30,7 +30,7 @@ public class ObjectUtils extends org.apache.commons.lang.ObjectUtils {
     /**
      * 默认的Long:0
      */
-    public static final Long LONG_DEF = 0l;
+    public static final Long LONG_DEF = 0L;
     /**
      * 默认的Number:0
      */

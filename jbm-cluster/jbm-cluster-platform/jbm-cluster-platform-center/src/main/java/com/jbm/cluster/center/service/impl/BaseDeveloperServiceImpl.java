@@ -12,10 +12,10 @@ import com.jbm.cluster.center.service.BaseDeveloperService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
-import jbm.framework.web.WebUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
+import jbm.framework.web.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +36,11 @@ import java.util.Map;
 @Transactional(rollbackFor = Exception.class)
 public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloper> implements BaseDeveloperService {
 
+    private final String ACCOUNT_DOMAIN = JbmConstants.ACCOUNT_DOMAIN_PORTAL;
     @Autowired
     private BaseDeveloperMapper baseDeveloperMapper;
     @Autowired
     private BaseAccountService baseAccountService;
-
-    private final String ACCOUNT_DOMAIN = JbmConstants.ACCOUNT_DOMAIN_PORTAL;
 
     /**
      * 添加系统用户

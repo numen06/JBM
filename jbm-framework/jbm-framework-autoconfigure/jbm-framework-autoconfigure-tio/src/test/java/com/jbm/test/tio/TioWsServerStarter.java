@@ -1,62 +1,59 @@
 package com.jbm.test.tio;
 
-import java.io.IOException;
-
+import jbm.framework.boot.autoconfigure.tio.AioWsServerTemplate;
 import org.tio.core.ChannelContext;
 import org.tio.server.ServerGroupContext;
 import org.tio.websocket.server.WsServerAioListener;
 import org.tio.websocket.server.WsServerConfig;
 
-import jbm.framework.boot.autoconfigure.tio.AioWsServerTemplate;
+import java.io.IOException;
 
 /**
  *
  */
 public class TioWsServerStarter {
 
-	/**
-	 * @param args
-	 * @author tanyaowu
-	 * @throws IOException
-	 */
-	public static void main(String[] args) throws IOException {
-		TioWsServerStarter appStarter = new TioWsServerStarter(9321, new WsMsgHandler());
-		appStarter.start();
-	}
+    private ServerGroupContext serverGroupContext;
+    private AioWsServerTemplate wsServerStarter;
+    /**
+     * @author tanyaowu
+     */
+    public TioWsServerStarter(int port, WsMsgHandler wsMsgHandler) throws IOException {
+        WsServerConfig serverConfig = new WsServerConfig(port);
+        wsServerStarter = new AioWsServerTemplate(serverConfig, wsMsgHandler, new WsServerAioListener() {
 
-	private ServerGroupContext serverGroupContext;
-	private AioWsServerTemplate wsServerStarter;
+            @Override
+            public void onAfterConnected(ChannelContext channelContext, boolean isConnected, boolean isReconnect) {
+                super.onAfterConnected(channelContext, isConnected, isReconnect);
+                System.out.println(channelContext.getId());
+            }
+        });
+        wsServerStarter.getServerGroupContext().setHeartbeatTimeout(30 * 1000);
+        serverGroupContext = wsServerStarter.getServerGroupContext();
+    }
 
-	/**
-	 *
-	 * @author tanyaowu
-	 */
-	public TioWsServerStarter(int port, WsMsgHandler wsMsgHandler) throws IOException {
-		WsServerConfig serverConfig = new WsServerConfig(port);
-		wsServerStarter = new AioWsServerTemplate(serverConfig, wsMsgHandler, new WsServerAioListener() {
+    /**
+     * @param args
+     * @throws IOException
+     * @author tanyaowu
+     */
+    public static void main(String[] args) throws IOException {
+        TioWsServerStarter appStarter = new TioWsServerStarter(9321, new WsMsgHandler());
+        appStarter.start();
+    }
 
-			@Override
-			public void onAfterConnected(ChannelContext channelContext, boolean isConnected, boolean isReconnect) {
-				super.onAfterConnected(channelContext, isConnected, isReconnect);
-				System.out.println(channelContext.getId());
-			}
-		});
-		wsServerStarter.getServerGroupContext().setHeartbeatTimeout(30 * 1000);
-		serverGroupContext = wsServerStarter.getServerGroupContext();
-	}
+    /**
+     * @return the serverGroupContext
+     */
+    public ServerGroupContext getServerGroupContext() {
+        return serverGroupContext;
+    }
 
-	/**
-	 * @return the serverGroupContext
-	 */
-	public ServerGroupContext getServerGroupContext() {
-		return serverGroupContext;
-	}
+    public AioWsServerTemplate getWsServerStarter() {
+        return wsServerStarter;
+    }
 
-	public AioWsServerTemplate getWsServerStarter() {
-		return wsServerStarter;
-	}
-
-	public void start() throws IOException {
-		wsServerStarter.start();
-	}
+    public void start() throws IOException {
+        wsServerStarter.start();
+    }
 }

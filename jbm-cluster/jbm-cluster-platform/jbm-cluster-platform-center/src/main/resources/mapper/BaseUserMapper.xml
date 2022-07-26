@@ -11,8 +11,8 @@
         <result column="avatar" jdbcType="VARCHAR" property="avatar"/>
         <result column="email" jdbcType="VARCHAR" property="email"/>
         <result column="mobile" jdbcType="VARCHAR" property="mobile"/>
-        <result column="company_id"  jdbcType="BIGINT" property="companyId"/>
-        <result column="user_type" jdbcType="VARCHAR" property="userType" />
+        <result column="company_id" jdbcType="BIGINT" property="companyId"/>
+        <result column="user_type" jdbcType="VARCHAR" property="userType"/>
         <result column="user_desc" jdbcType="VARCHAR" property="userDesc"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>

@@ -102,9 +102,9 @@ public class GatewayRateLimitController {
      * 添加流量控制
      *
      * @param policyName   策略名称
-     * @param limitQuota        限制数
+     * @param limitQuota   限制数
      * @param intervalUnit 单位时间
-     * @param policyType    限流规则类型
+     * @param policyType   限流规则类型
      * @return
      */
     @ApiOperation(value = "添加流量控制", notes = "添加流量控制")
@@ -129,7 +129,7 @@ public class GatewayRateLimitController {
         rateLimit.setPolicyType(policyType);
         Long policyId = null;
         GatewayRateLimit result = gatewayRateLimitService.addRateLimitPolicy(rateLimit);
-        if(result!=null){
+        if (result != null) {
             policyId = result.getPolicyId();
         }
         return ResultBody.ok().data(policyId);
@@ -140,9 +140,9 @@ public class GatewayRateLimitController {
      *
      * @param policyId     流量控制ID
      * @param policyName   策略名称
-     * @param limitQuota        限制数
+     * @param limitQuota   限制数
      * @param intervalUnit 单位时间
-     * @param policyType    限流规则类型
+     * @param policyType   限流规则类型
      * @return
      */
     @ApiOperation(value = "编辑流量控制", notes = "编辑流量控制")

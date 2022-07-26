@@ -2,9 +2,9 @@ package com.jbm.cluster.center.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
-import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
+import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.center.mapper.GatewayIpLimitApiMapper;
 import com.jbm.cluster.center.mapper.GatewayIpLimitMapper;
 import com.jbm.cluster.center.service.GatewayIpLimitService;

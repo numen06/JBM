@@ -23,13 +23,14 @@ package com.jbm.util.archive.jar;
  */
 interface JarEntryFilter {
 
-	/**
-	 * Apply the jar entry filter.
-	 * @param name the current entry name. This may be different that the original entry
-	 * name if a previous filter has been applied
-	 * @return the new name of the entry or {@code null} if the entry should not be
-	 * included.
-	 */
-	AsciiBytes apply(AsciiBytes name);
+    /**
+     * Apply the jar entry filter.
+     *
+     * @param name the current entry name. This may be different that the original entry
+     *             name if a previous filter has been applied
+     * @return the new name of the entry or {@code null} if the entry should not be
+     * included.
+     */
+    AsciiBytes apply(AsciiBytes name);
 
 }

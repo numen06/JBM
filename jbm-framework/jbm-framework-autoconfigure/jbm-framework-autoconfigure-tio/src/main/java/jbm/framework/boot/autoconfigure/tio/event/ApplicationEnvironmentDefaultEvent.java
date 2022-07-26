@@ -5,18 +5,17 @@ import org.springframework.context.ApplicationListener;
 
 /**
  * 默认配置文件注入
- * 
- * @author wesley
  *
+ * @author wesley
  */
 public class ApplicationEnvironmentDefaultEvent implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
-	@Override
-	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
-		// RelaxedPropertyResolver propertyResolver =
-		// RelaxedPropertyResolver.ignoringUnresolvableNestedPlaceholders(event.getEnvironment(),
-		// "aio.");
+    @Override
+    public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+        // RelaxedPropertyResolver propertyResolver =
+        // RelaxedPropertyResolver.ignoringUnresolvableNestedPlaceholders(event.getEnvironment(),
+        // "aio.");
 
-	}
+    }
 
 }

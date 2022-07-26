@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.annotation;
 
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;

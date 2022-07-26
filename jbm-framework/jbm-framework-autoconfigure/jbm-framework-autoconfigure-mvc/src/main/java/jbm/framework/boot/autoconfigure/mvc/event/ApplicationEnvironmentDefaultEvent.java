@@ -1,8 +1,5 @@
 package jbm.framework.boot.autoconfigure.mvc.event;
 
-import java.io.IOException;
-import java.util.Properties;
-
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.jbm.framework.fastjson.JbmStringCodec;
 import org.slf4j.Logger;
@@ -14,6 +11,9 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.ClassUtils;
+
+import java.util.Properties;
+
 
 public class ApplicationEnvironmentDefaultEvent implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationEnvironmentDefaultEvent.class);

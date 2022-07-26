@@ -50,12 +50,14 @@ public interface JbmOAuth2Service {
 
     /**
      * 获取登录成功地址
+     *
      * @return
      */
     String getLoginSuccessUrl();
 
     /**
      * 获取客户端配置信息
+     *
      * @return
      */
     JbmOAuth2ClientDetails getClientDetails();

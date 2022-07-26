@@ -12,9 +12,6 @@ import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 import java.util.stream.Collectors;

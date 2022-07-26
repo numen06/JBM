@@ -25,17 +25,14 @@ import org.springframework.stereotype.Component;
 public class SmsIntegrationAuthenticator extends AbstractPreparableIntegrationAuthenticator implements ApplicationEventPublisherAware {
 
 
+    private final static String SMS_AUTH_TYPE = "mobile";
     @Autowired
     private VerificationCodeClient verificationCodeClient;
     @Autowired
     private BaseUserServiceClient baseUserServiceClient;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     private ApplicationEventPublisher applicationEventPublisher;
-
-    private final static String SMS_AUTH_TYPE = "mobile";
 
     @Override
     public UserAccount authenticate(IntegrationAuthentication integrationAuthentication) {

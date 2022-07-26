@@ -9,14 +9,14 @@ import org.springframework.web.servlet.resource.ResourceUrlProvider;
 @ControllerAdvice
 public class ResourceUrlAdvice {
 
-	@Autowired
-	private ResourceUrlProvider resourceUrlProvider;
+    @Autowired
+    private ResourceUrlProvider resourceUrlProvider;
 
-	@ModelAttribute
-	public void urls(Model model) {
-		if (model.containsAttribute("urls"))
-			return;
-		model.addAttribute("urls", this.resourceUrlProvider);
-	}
+    @ModelAttribute
+    public void urls(Model model) {
+        if (model.containsAttribute("urls"))
+            return;
+        model.addAttribute("urls", this.resourceUrlProvider);
+    }
 
 }

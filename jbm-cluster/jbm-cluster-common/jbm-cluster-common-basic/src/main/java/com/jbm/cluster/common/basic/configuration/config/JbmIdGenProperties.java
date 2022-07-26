@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 自定义ID生成器配置
+ *
  * @author wesley.zhang
  * @date 2018/7/29
  */

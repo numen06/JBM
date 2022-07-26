@@ -7,10 +7,8 @@ import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
-import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.temp.SaTempUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.util.AntPathMatcher;
@@ -34,8 +32,12 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             }
             SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
             if (ObjectUtil.isNotEmpty(saTokenInfo)) {
-                if (saTokenInfo.isLogin)
+                if (saTokenInfo.isLogin) {
+                    if (saTokenInfo.tokenTimeout <= 0) {
+                        throw new SaOAuth2Exception("Token已失效");
+                    }
                     return;
+                }
             }
             SaRequest req = SaHolder.getRequest();
             String clientId = null;

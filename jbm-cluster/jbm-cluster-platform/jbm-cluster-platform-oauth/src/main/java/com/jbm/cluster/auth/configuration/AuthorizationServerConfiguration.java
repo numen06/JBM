@@ -51,17 +51,11 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Autowired
     @Qualifier(value = "clientDetailsServiceImpl")
     private ClientDetailsService customClientDetailsService;
-
     /**
-     * 令牌存放
-     *
-     * @return
+     * 加载默认的token解析器
      */
-    @Bean
-    @Primary
-    public TokenStore tokenStore() {
-        return new RedisTokenStore(redisConnectionFactory);
-    }
+    @Autowired
+    private AccessTokenConverter accessTokenConverter;
 
 
     /**
@@ -75,13 +69,14 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 //    }
 
     /**
-     * 令牌信息拓展
+     * 令牌存放
      *
      * @return
      */
     @Bean
-    public TokenEnhancer tokenEnhancer() {
-        return new JbmTokenEnhancer();
+    @Primary
+    public TokenStore tokenStore() {
+        return new RedisTokenStore(redisConnectionFactory);
     }
 
 //    /**
@@ -95,6 +90,16 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 //    }
 
     /**
+     * 令牌信息拓展
+     *
+     * @return
+     */
+    @Bean
+    public TokenEnhancer tokenEnhancer() {
+        return new JbmTokenEnhancer();
+    }
+
+    /**
      * 设置授权码模式的授权码如何存取，暂时采用内存方式
      */
     @Bean
@@ -102,17 +107,10 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
         return new InMemoryAuthorizationCodeServices();
     }
 
-
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.withClientDetails(customClientDetailsService);
     }
-
-    /**
-     * 加载默认的token解析器
-     */
-    @Autowired
-    private AccessTokenConverter accessTokenConverter;
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {

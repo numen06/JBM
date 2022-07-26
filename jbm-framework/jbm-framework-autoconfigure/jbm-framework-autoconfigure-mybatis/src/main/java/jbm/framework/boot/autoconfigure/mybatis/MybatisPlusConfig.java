@@ -44,6 +44,9 @@ import java.util.Set;
 public class MybatisPlusConfig {
 
 
+    @Autowired
+    private MybatisPlusProperties mybatisPlusProperties;
+
     /**
      * 自动填充字段
      *
@@ -53,7 +56,6 @@ public class MybatisPlusConfig {
     public MasterdataObjectHandler masterdataObjectHandler() {
         return new MasterdataObjectHandler();
     }
-
 
     /**
      * 分页拦截器
@@ -107,14 +109,10 @@ public class MybatisPlusConfig {
         return new MasterDataSqlInjector();
     }
 
-
     @Bean
     public CameHumpInterceptor cameHumpInterceptor() {
         return new CameHumpInterceptor();
     }
-
-    @Autowired
-    private MybatisPlusProperties mybatisPlusProperties;
 
     /**
      * 乐观锁插件

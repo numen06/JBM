@@ -2,8 +2,6 @@ package com.jbm.cluster.api.constants;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.jbm.framework.dictionary.annotation.JbmDicType;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  * 设备类型

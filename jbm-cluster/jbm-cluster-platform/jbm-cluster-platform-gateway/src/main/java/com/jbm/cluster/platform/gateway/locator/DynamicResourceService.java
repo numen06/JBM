@@ -8,7 +8,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 @Slf4j
 public abstract class DynamicResourceService implements ApplicationListener<RemoteRefreshRouteEvent> {
@@ -38,25 +37,6 @@ public abstract class DynamicResourceService implements ApplicationListener<Remo
     public static final int PERIOD_HOUR_TTL = 2 * 3600 + 10;
     public static final int PERIOD_DAY_TTL = 2 * 3600 * 24 + 10;
 
-
-    /**
-     * 启动的时候刷新一遍
-     */
-    @EventListener
-    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
-        this.refresh();
-    }
-
-
-    @Override
-    public void onApplicationEvent(RemoteRefreshRouteEvent event) {
-        StopWatch stopWatch = new StopWatch("动态资源刷新事件");
-        this.refresh();
-        log.info(stopWatch.prettyPrint());
-    }
-
-    public abstract void refresh();
-
     /**
      * 获取单位时间内刷新时长和请求总时长
      *
@@ -76,4 +56,21 @@ public abstract class DynamicResourceService implements ApplicationListener<Remo
             throw new IllegalArgumentException("Don't support this TimeUnit: " + timeUnit);
         }
     }
+
+    /**
+     * 启动的时候刷新一遍
+     */
+    @EventListener
+    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+        this.refresh();
+    }
+
+    @Override
+    public void onApplicationEvent(RemoteRefreshRouteEvent event) {
+        StopWatch stopWatch = new StopWatch("动态资源刷新事件");
+        this.refresh();
+        log.info(stopWatch.prettyPrint());
+    }
+
+    public abstract void refresh();
 }

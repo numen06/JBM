@@ -16,7 +16,6 @@ import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * Feign OAuth2 request interceptor.

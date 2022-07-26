@@ -4,7 +4,6 @@ import com.jbm.framework.metadata.usage.bean.IBaseForm;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * <pre>
@@ -19,11 +18,6 @@ import lombok.EqualsAndHashCode;
 public class PageForm implements IBaseForm {
 
     private static final long serialVersionUID = 1L;
-
-    public final static PageForm NO_PAGING() {
-        return new PageForm(1, Integer.MAX_VALUE);
-    }
-
     /**
      * 当前页
      */
@@ -40,20 +34,17 @@ public class PageForm implements IBaseForm {
      */
     @ApiModelProperty(value = "排序规则—id:asc,code:desc")
     private String sortRule;
-
     /**
      * 搜索词
      */
     @ApiModelProperty(value = "搜索词")
     private String keyword;
-
     /**
      * 匹配规则<br/>
      * field:eq,field:in,field:like
      */
     @ApiModelProperty(value = "匹配规则")
     private MatchRule matchRule;
-
     /**
      * 分页参数合理化
      */
@@ -74,6 +65,10 @@ public class PageForm implements IBaseForm {
         this.currPage = currPage;
         this.pageSize = pageSize;
         this.sortRule = sortRule;
+    }
+
+    public final static PageForm NO_PAGING() {
+        return new PageForm(1, Integer.MAX_VALUE);
     }
 
     public void setPage(Integer page) {

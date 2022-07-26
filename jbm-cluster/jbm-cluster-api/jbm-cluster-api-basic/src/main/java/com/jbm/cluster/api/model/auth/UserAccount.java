@@ -3,12 +3,10 @@ package com.jbm.cluster.api.model.auth;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
-import com.jbm.cluster.api.model.auth.OpenAuthority;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * @author: wesley.zhang

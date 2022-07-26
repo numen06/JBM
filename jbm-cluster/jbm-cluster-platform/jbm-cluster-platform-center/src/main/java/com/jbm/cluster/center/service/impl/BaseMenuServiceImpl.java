@@ -34,7 +34,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Autowired
     private BaseMenuMapper baseMenuMapper;
 
-//    @Autowired
+    //    @Autowired
 //    private BaseAuthorityMapper baseAuthorityMapper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;

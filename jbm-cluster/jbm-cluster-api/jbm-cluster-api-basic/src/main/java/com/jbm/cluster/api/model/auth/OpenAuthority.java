@@ -34,14 +34,6 @@ public class OpenAuthority implements Serializable {
      */
     private String owner;
 
-    @JsonProperty("isExpired")
-    public Boolean getIsExpired() {
-        if (expireTime != null && System.currentTimeMillis() > expireTime.getTime()) {
-            return true;
-        }
-        return false;
-    }
-
     public OpenAuthority() {
     }
 
@@ -61,6 +53,14 @@ public class OpenAuthority implements Serializable {
         this.authority = authority;
         this.expireTime = expireTime;
         this.owner = owner;
+    }
+
+    @JsonProperty("isExpired")
+    public Boolean getIsExpired() {
+        if (expireTime != null && System.currentTimeMillis() > expireTime.getTime()) {
+            return true;
+        }
+        return false;
     }
 
 

@@ -1,13 +1,10 @@
 package com.jbm.cluster.common.satoken.utils;
 
-import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.jwt.SaJwtUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.jwt.JWTUtil;
 import com.jbm.cluster.api.constants.RequestDeviceType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.UserConstants;
@@ -39,7 +36,7 @@ public class LoginHelper {
     public static final String LOGIN_USER_KEY = "loginUser";
 
     private static final ThreadLocal<JbmLoginUser> LOGIN_CACHE = new ThreadLocal<>();
-
+    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private Map<String, StpLogic> userTypes = new HashMap<>();
 
     /**
@@ -60,12 +57,10 @@ public class LoginHelper {
         clearCache();
     }
 
-
     public static void loginout(Object loginId) {
         StpUtil.logout(loginId);
         clearCache();
     }
-
 
     /**
      * 登录系统 基于 设备类型
@@ -84,13 +79,6 @@ public class LoginHelper {
     }
 
     /**
-     * 设置用户数据(多级缓存)
-     */
-    public static void setLoginUser(JbmLoginUser loginUser) {
-        StpUtil.getTokenSession().set(LOGIN_USER_KEY, loginUser);
-    }
-
-    /**
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser() {
@@ -101,6 +89,12 @@ public class LoginHelper {
         return (JbmLoginUser) StpUtil.getTokenSession().get(LOGIN_USER_KEY);
     }
 
+    /**
+     * 设置用户数据(多级缓存)
+     */
+    public static void setLoginUser(JbmLoginUser loginUser) {
+        StpUtil.getTokenSession().set(LOGIN_USER_KEY, loginUser);
+    }
 
     /**
      * 获取用户(多级缓存)
@@ -109,7 +103,6 @@ public class LoginHelper {
         String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
         return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
     }
-
 
     /**
      * 安全获取用户对象
@@ -124,14 +117,12 @@ public class LoginHelper {
         }
     }
 
-
     /**
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser(String tokenValue) {
         return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
     }
-
 
     /**
      * 清除一级缓存 防止内存问题
@@ -170,13 +161,6 @@ public class LoginHelper {
         return getLoginUser().getDeptId();
     }
 
-    /**
-     * 获取用户账户
-     */
-    public static String getUsername() {
-        return getLoginUser().getUsername();
-    }
-
 //    /**
 //     * 获取用户类型
 //     */
@@ -184,6 +168,13 @@ public class LoginHelper {
 //        String loginId = StpUtil.getLoginIdAsString();
 //        return UserType.getUserType(loginId);
 //    }
+
+    /**
+     * 获取用户账户
+     */
+    public static String getUsername() {
+        return getLoginUser().getUsername();
+    }
 
     /**
      * 是否为超级管理员
@@ -198,8 +189,6 @@ public class LoginHelper {
     public static boolean isAdmin() {
         return isAdmin(getUserId());
     }
-
-    private static BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public static PasswordEncoder getPasswordEncoder() {
         return passwordEncoder;

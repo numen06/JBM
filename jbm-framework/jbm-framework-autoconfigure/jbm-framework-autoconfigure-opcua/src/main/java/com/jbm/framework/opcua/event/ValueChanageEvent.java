@@ -2,7 +2,6 @@ package com.jbm.framework.opcua.event;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.IdUtil;
-import com.jbm.framework.opcua.attribute.OpcPoint;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;

@@ -11,7 +11,7 @@ public enum MatchRuleTypes {
     }
 
     public int getValNum() {
-       return this.valNum;
+        return this.valNum;
     }
 
 

@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Api(tags = "系统开发者管理")
 @RestController
-public class BaseDeveloperController implements IBaseDeveloperServiceClient{
+public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @Autowired
     private BaseDeveloperService baseDeveloperService;
 

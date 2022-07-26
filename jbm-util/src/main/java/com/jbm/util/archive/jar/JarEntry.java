@@ -32,81 +32,78 @@ import java.util.jar.Manifest;
  */
 class JarEntry extends java.util.jar.JarEntry implements FileHeader {
 
-	private final AsciiBytes name;
+    private final AsciiBytes name;
 
-	private final AsciiBytes headerName;
+    private final AsciiBytes headerName;
+    private final JarFile jarFile;
+    private Certificate[] certificates;
+    private CodeSigner[] codeSigners;
+    private long localHeaderOffset;
 
-	private Certificate[] certificates;
+    JarEntry(JarFile jarFile, CentralDirectoryFileHeader header, AsciiBytes nameAlias) {
+        super((nameAlias != null) ? nameAlias.toString() : header.getName().toString());
+        this.name = (nameAlias != null) ? nameAlias : header.getName();
+        this.headerName = header.getName();
+        this.jarFile = jarFile;
+        this.localHeaderOffset = header.getLocalHeaderOffset();
+        setCompressedSize(header.getCompressedSize());
+        setMethod(header.getMethod());
+        setCrc(header.getCrc());
+        setComment(header.getComment().toString());
+        setSize(header.getSize());
+        setTime(header.getTime());
+        setExtra(header.getExtra());
+    }
 
-	private CodeSigner[] codeSigners;
+    AsciiBytes getAsciiBytesName() {
+        return this.name;
+    }
 
-	private final JarFile jarFile;
+    @Override
+    public boolean hasName(CharSequence name, char suffix) {
+        return this.headerName.matches(name, suffix);
+    }
 
-	private long localHeaderOffset;
+    /**
+     * Return a {@link URL} for this {@link JarEntry}.
+     *
+     * @return the URL for the entry
+     * @throws MalformedURLException if the URL is not valid
+     */
+    URL getUrl() throws MalformedURLException {
+        return new URL(this.jarFile.getUrl(), getName());
+    }
 
-	JarEntry(JarFile jarFile, CentralDirectoryFileHeader header, AsciiBytes nameAlias) {
-		super((nameAlias != null) ? nameAlias.toString() : header.getName().toString());
-		this.name = (nameAlias != null) ? nameAlias : header.getName();
-		this.headerName = header.getName();
-		this.jarFile = jarFile;
-		this.localHeaderOffset = header.getLocalHeaderOffset();
-		setCompressedSize(header.getCompressedSize());
-		setMethod(header.getMethod());
-		setCrc(header.getCrc());
-		setComment(header.getComment().toString());
-		setSize(header.getSize());
-		setTime(header.getTime());
-		setExtra(header.getExtra());
-	}
+    @Override
+    public Attributes getAttributes() throws IOException {
+        Manifest manifest = this.jarFile.getManifest();
+        return (manifest != null) ? manifest.getAttributes(getName()) : null;
+    }
 
-	AsciiBytes getAsciiBytesName() {
-		return this.name;
-	}
+    @Override
+    public Certificate[] getCertificates() {
+        if (this.jarFile.isSigned() && this.certificates == null) {
+            this.jarFile.setupEntryCertificates(this);
+        }
+        return this.certificates;
+    }
 
-	@Override
-	public boolean hasName(CharSequence name, char suffix) {
-		return this.headerName.matches(name, suffix);
-	}
+    void setCertificates(java.util.jar.JarEntry entry) {
+        this.certificates = entry.getCertificates();
+        this.codeSigners = entry.getCodeSigners();
+    }
 
-	/**
-	 * Return a {@link URL} for this {@link JarEntry}.
-	 * @return the URL for the entry
-	 * @throws MalformedURLException if the URL is not valid
-	 */
-	URL getUrl() throws MalformedURLException {
-		return new URL(this.jarFile.getUrl(), getName());
-	}
+    @Override
+    public CodeSigner[] getCodeSigners() {
+        if (this.jarFile.isSigned() && this.codeSigners == null) {
+            this.jarFile.setupEntryCertificates(this);
+        }
+        return this.codeSigners;
+    }
 
-	@Override
-	public Attributes getAttributes() throws IOException {
-		Manifest manifest = this.jarFile.getManifest();
-		return (manifest != null) ? manifest.getAttributes(getName()) : null;
-	}
-
-	@Override
-	public Certificate[] getCertificates() {
-		if (this.jarFile.isSigned() && this.certificates == null) {
-			this.jarFile.setupEntryCertificates(this);
-		}
-		return this.certificates;
-	}
-
-	@Override
-	public CodeSigner[] getCodeSigners() {
-		if (this.jarFile.isSigned() && this.codeSigners == null) {
-			this.jarFile.setupEntryCertificates(this);
-		}
-		return this.codeSigners;
-	}
-
-	void setCertificates(java.util.jar.JarEntry entry) {
-		this.certificates = entry.getCertificates();
-		this.codeSigners = entry.getCodeSigners();
-	}
-
-	@Override
-	public long getLocalHeaderOffset() {
-		return this.localHeaderOffset;
-	}
+    @Override
+    public long getLocalHeaderOffset() {
+        return this.localHeaderOffset;
+    }
 
 }

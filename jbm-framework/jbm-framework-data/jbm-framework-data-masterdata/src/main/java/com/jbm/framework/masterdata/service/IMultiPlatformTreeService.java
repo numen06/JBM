@@ -1,7 +1,6 @@
 package com.jbm.framework.masterdata.service;
 
 import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
 
 import java.util.List;

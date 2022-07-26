@@ -91,8 +91,8 @@ public class MinioNotificationConfiguration implements ApplicationContextAware {
                                         .suffix(annotation.suffix())
                                         .events(annotation.value())
                                         .build();
-                                try(CloseableIterator<Result<NotificationRecords>> list = minioClient.listenBucketNotification(args)){
-                                    while(list.hasNext()){
+                                try (CloseableIterator<Result<NotificationRecords>> list = minioClient.listenBucketNotification(args)) {
+                                    while (list.hasNext()) {
                                         NotificationRecords info = list.next().get();
                                         try {
                                             LOGGER.debug("Receive notification for method {}", m.getName());
@@ -103,7 +103,8 @@ public class MinioNotificationConfiguration implements ApplicationContextAware {
                                         }
 
                                     }
-                                };
+                                }
+                                ;
                             } catch (Exception e) {
                                 LOGGER.error("Error while registering notification for method " + m.getName() + " with notification " + Arrays.toString(annotation.value()), e);
                                 throw new IllegalStateException("Cannot register handler", e);

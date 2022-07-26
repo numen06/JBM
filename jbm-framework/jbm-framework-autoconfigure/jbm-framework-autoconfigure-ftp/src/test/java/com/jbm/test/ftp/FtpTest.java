@@ -15,16 +15,16 @@ import java.io.IOException;
 @SpringBootTest(classes = FtpAutoConfiguration.class)
 public class FtpTest {
 
-	@Autowired
-	private FtpTemplate ftpTemplate;
+    @Autowired
+    private FtpTemplate ftpTemplate;
 
-	@Test
-	public void testFtp() throws IOException {
-		// System.out.println(JSON.toJSONString(ftpTemplate.getFtpClient().listFiles()));
-		FTPFile[] fs = ftpTemplate.getFtpClient().listFiles();
-		String localpath = "ftp/";
-		for (int i = 0; i < fs.length; i++) {
-			ftpTemplate.syncDir("", localpath);
-		}
-	}
+    @Test
+    public void testFtp() throws IOException {
+        // System.out.println(JSON.toJSONString(ftpTemplate.getFtpClient().listFiles()));
+        FTPFile[] fs = ftpTemplate.getFtpClient().listFiles();
+        String localpath = "ftp/";
+        for (int i = 0; i < fs.length; i++) {
+            ftpTemplate.syncDir("", localpath);
+        }
+    }
 }

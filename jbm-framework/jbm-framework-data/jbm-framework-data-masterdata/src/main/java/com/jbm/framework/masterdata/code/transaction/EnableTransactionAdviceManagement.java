@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.transaction;
 
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({TransactionManagementConfigurationSelector.class,TransactionAdviceConfig.class})
+@Import({TransactionManagementConfigurationSelector.class, TransactionAdviceConfig.class})
 @EnableTransactionManagement
 public @interface EnableTransactionAdviceManagement {
     String targetPackages() default "execution (* com.***.service.*.*(..))";

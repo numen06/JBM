@@ -5,7 +5,6 @@ import com.jbm.cluster.platform.gateway.service.AccessLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.Charsets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.gateway.support.NotFoundException;

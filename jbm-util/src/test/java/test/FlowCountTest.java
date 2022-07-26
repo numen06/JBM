@@ -2,11 +2,13 @@ package test;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
-import com.jbm.util.TimeUtils;
 import com.jbm.util.flow.FlowCount;
 import org.junit.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: JBM6
@@ -25,7 +27,7 @@ public class FlowCountTest {
                 while (true) {
                     try {
                         flowStatistics.add();
-                        TimeUnit.MILLISECONDS.sleep(RandomUtil.randomInt(10,100));
+                        TimeUnit.MILLISECONDS.sleep(RandomUtil.randomInt(10, 100));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

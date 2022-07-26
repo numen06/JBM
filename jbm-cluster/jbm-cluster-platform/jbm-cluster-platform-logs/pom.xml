@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>jbm-cluster-platform</artifactId>
@@ -25,13 +25,13 @@
             <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
         </dependency>
         <!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-framework-micro-mysql</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.data</groupId>-->
-<!--            <artifactId>spring-data-mongodb</artifactId>-->
-<!--        </dependency>-->
+        <!--            <groupId>com.jbm</groupId>-->
+        <!--            <artifactId>jbm-framework-micro-mysql</artifactId>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.data</groupId>-->
+        <!--            <artifactId>spring-data-mongodb</artifactId>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <build>

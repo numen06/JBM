@@ -26,14 +26,12 @@ import java.util.Properties;
  */
 public abstract class AbstractEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-
-    protected final static String APP_NAME_KEY = "spring.application.name";
-
     /**
      * 预加载设置目录
      */
     public final static String RROLOAD_CONFIG_DIR = "classpath:configs/";
+    protected final static String APP_NAME_KEY = "spring.application.name";
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {

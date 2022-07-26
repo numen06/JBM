@@ -1,6 +1,5 @@
 package jbm.framework.boot.autoconfigure.ip2region;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 
 /**

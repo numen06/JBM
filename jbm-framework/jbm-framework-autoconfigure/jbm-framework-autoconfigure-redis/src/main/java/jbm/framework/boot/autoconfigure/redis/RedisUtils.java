@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class RedisUtils<T> {
 
+    private RedisTemplate<String, T> redisTemplate;
+
     public RedisUtils(RedisTemplate<String, T> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
-
-    private RedisTemplate<String, T> redisTemplate;
 
     /**
      * 指定缓存失效时间

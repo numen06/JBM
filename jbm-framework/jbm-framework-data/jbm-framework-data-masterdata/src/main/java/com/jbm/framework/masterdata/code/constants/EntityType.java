@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.constants;
 
 /**
  * @author: create by wesley

@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -28,7 +27,7 @@ public class MqMessageProducer {
     @Autowired
     private NotificationDispatcher notificationDispatcher;
 
-    @Scheduled(cron = "0/10 * *  * * ? ")
+    //    @Scheduled(cron = "0/10 * *  * * ? ")
     public void sendTestClusterEvent() {
 //        TestClusterEvent testClusterEvent = new TestClusterEvent();
 //        testClusterEvent.setCreateTime(DateTime.now());

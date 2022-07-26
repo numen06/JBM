@@ -29,11 +29,6 @@ public class Context {
         }
     }
 
-    static void setToken(String tokenKey) {
-        init();
-        securityMap.get().put(TOKEN_KEY, tokenKey);
-    }
-
     public static String getToken() {
         if (securityMap.get() == null)
             return null;
@@ -41,8 +36,9 @@ public class Context {
             return securityMap.get().get(TOKEN_KEY);
     }
 
-    static void setFileId(String fileId) {
-        securityMap.get().put(FILE_ID_KEY, fileId);
+    static void setToken(String tokenKey) {
+        init();
+        securityMap.get().put(TOKEN_KEY, tokenKey);
     }
 
     public static String getFileId() {
@@ -52,8 +48,8 @@ public class Context {
             return securityMap.get().get(FILE_ID_KEY);
     }
 
-    static void setAgent(String agent) {
-        securityMap.get().put(USER_AGENT, agent);
+    static void setFileId(String fileId) {
+        securityMap.get().put(FILE_ID_KEY, fileId);
     }
 
     public static String getAgent() {
@@ -63,8 +59,8 @@ public class Context {
             return securityMap.get().get(USER_AGENT);
     }
 
-    static void setAppId(String appId) {
-        securityMap.get().put(APP_ID, appId);
+    static void setAgent(String agent) {
+        securityMap.get().put(USER_AGENT, agent);
     }
 
     public static String getAppId() {
@@ -74,8 +70,8 @@ public class Context {
             return securityMap.get().get(APP_ID);
     }
 
-    static void setSignature(String signature) {
-        securityMap.get().put(SIGNATURE, signature);
+    static void setAppId(String appId) {
+        securityMap.get().put(APP_ID, appId);
     }
 
     public static String getSignature() {
@@ -85,8 +81,8 @@ public class Context {
             return securityMap.get().get(SIGNATURE);
     }
 
-    static void setUserId(String userId) {
-        securityMap.get().put(USER_ID, userId);
+    static void setSignature(String signature) {
+        securityMap.get().put(SIGNATURE, signature);
     }
 
     public static String getUserId() {
@@ -94,6 +90,10 @@ public class Context {
             return null;
         else
             return securityMap.get().get(USER_ID);
+    }
+
+    static void setUserId(String userId) {
+        securityMap.get().put(USER_ID, userId);
     }
 
 }

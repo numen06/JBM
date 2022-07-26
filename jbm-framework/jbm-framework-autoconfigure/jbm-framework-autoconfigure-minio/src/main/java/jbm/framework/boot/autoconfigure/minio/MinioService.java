@@ -38,8 +38,8 @@ import java.util.stream.StreamSupport;
  * The bucket name is provided with the one defined in the configuration properties.
  *
  * @author Jordan LEFEBURE
- *
- *
+ * <p>
+ * <p>
  * This service adapetd with minio sdk 7.0.x
  * @author Mostafa Jalambadani
  */
@@ -125,15 +125,15 @@ public class MinioService {
      */
     private List<Item> getItems(Iterable<Result<Item>> myObjects) {
         return StreamSupport
-            .stream(myObjects.spliterator(), true)
-            .map(itemResult -> {
-                try {
-                    return itemResult.get();
-                } catch (Exception e) {
-                    throw new MinioFetchException("Error while parsing list of objects", e);
-                } 
-            })
-            .collect(Collectors.toList());
+                .stream(myObjects.spliterator(), true)
+                .map(itemResult -> {
+                    try {
+                        return itemResult.get();
+                    } catch (Exception e) {
+                        throw new MinioFetchException("Error while parsing list of objects", e);
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -182,18 +182,18 @@ public class MinioService {
      */
     public Map<Path, StatObjectResponse> getMetadata(Iterable<Path> paths) {
         return StreamSupport.stream(paths.spliterator(), false)
-            .map(path -> {
-                try {
-                    StatObjectArgs args = StatObjectArgs.builder()
-                            .bucket(configurationProperties.getBucket())
-                            .object(path.toString())
-                            .build();
-                    return new HashMap.SimpleEntry<>(path, minioClient.statObject(args));
-                } catch (Exception e) {
-                    throw new MinioFetchException("Error while parsing list of objects", e);
-                }
-            })
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(path -> {
+                    try {
+                        StatObjectArgs args = StatObjectArgs.builder()
+                                .bucket(configurationProperties.getBucket())
+                                .object(path.toString())
+                                .build();
+                        return new HashMap.SimpleEntry<>(path, minioClient.statObject(args));
+                    } catch (Exception e) {
+                        throw new MinioFetchException("Error while parsing list of objects", e);
+                    }
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     /**
@@ -219,13 +219,13 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source      Path with prefix to the object. Object name must be included.
-     * @param file        File as an inputstream
-     * @param headers     Additional headers to put on the file. The map MUST be mutable. All custom headers will start with 'x-amz-meta-' prefix when fetched with {@code getMetadata()} method.
+     * @param source  Path with prefix to the object. Object name must be included.
+     * @param file    File as an inputstream
+     * @param headers Additional headers to put on the file. The map MUST be mutable. All custom headers will start with 'x-amz-meta-' prefix when fetched with {@code getMetadata()} method.
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
     public void upload(Path source, InputStream file, Map<String, String> headers) throws
-        jbm.framework.boot.autoconfigure.minio.MinioException {
+            jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
@@ -242,12 +242,12 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source      Path with prefix to the object. Object name must be included.
-     * @param file        File as an inputstream
+     * @param source Path with prefix to the object. Object name must be included.
+     * @param file   File as an inputstream
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
     public void upload(Path source, InputStream file) throws
-        jbm.framework.boot.autoconfigure.minio.MinioException {
+            jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
@@ -270,7 +270,7 @@ public class MinioService {
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
     public void upload(Path source, InputStream file, String contentType, Map<String, String> headers) throws
-        jbm.framework.boot.autoconfigure.minio.MinioException {
+            jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
@@ -295,7 +295,7 @@ public class MinioService {
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
     public void upload(Path source, InputStream file, String contentType) throws
-        jbm.framework.boot.autoconfigure.minio.MinioException {
+            jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
@@ -313,8 +313,9 @@ public class MinioService {
     /**
      * Upload a file to Minio
      * upload file bigger than Xmx size
-     * @param source      Path with prefix to the object. Object name must be included.
-     * @param file        File as an Filename
+     *
+     * @param source Path with prefix to the object. Object name must be included.
+     * @param file   File as an Filename
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
     public void upload(Path source, File file) throws

@@ -7,11 +7,11 @@ package jbm.framework.excel.exceptions;
 public class IllegalGroupIndexException extends Exception {
 
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	public IllegalGroupIndexException(String message) {
+    public IllegalGroupIndexException(String message) {
         super(message);
     }
 }

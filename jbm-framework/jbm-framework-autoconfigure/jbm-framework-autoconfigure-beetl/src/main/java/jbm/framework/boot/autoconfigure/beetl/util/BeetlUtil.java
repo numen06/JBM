@@ -1,24 +1,18 @@
 package jbm.framework.boot.autoconfigure.beetl.util;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.Map;
-
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IORuntimeException;
+import cn.hutool.core.util.CharsetUtil;
 import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.ResourceLoader;
 import org.beetl.core.Template;
-import org.beetl.core.resource.ClasspathResourceLoader;
-import org.beetl.core.resource.CompositeResourceLoader;
-import org.beetl.core.resource.FileResourceLoader;
-import org.beetl.core.resource.Matcher;
-import org.beetl.core.resource.StringTemplateResourceLoader;
-import org.beetl.core.resource.WebAppResourceLoader;
+import org.beetl.core.resource.*;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IORuntimeException;
-import cn.hutool.core.util.CharsetUtil;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.util.Map;
 
 /**
  * Beetl模板引擎工具类<br>
@@ -88,7 +82,7 @@ public final class BeetlUtil {
      * 创建文件目录的模板组 {@link GroupTemplate}，配置文件使用全局默认<br>
      * 此时自定义的配置文件可在ClassPath中放入beetl.properties配置
      *
-     * @param dir 目录路径（绝对路径）
+     * @param dir     目录路径（绝对路径）
      * @param charset 读取模板文件的编码
      * @return {@link GroupTemplate}
      * @since 3.2.0
@@ -117,7 +111,7 @@ public final class BeetlUtil {
      * 创建自定义的 {@link GroupTemplate}
      *
      * @param loader {@link ResourceLoader}，资源加载器
-     * @param conf {@link Configuration} 配置文件
+     * @param conf   {@link Configuration} 配置文件
      * @return {@link GroupTemplate}
      */
     public static GroupTemplate createGroupTemplate(ResourceLoader loader, Configuration conf) {
@@ -128,7 +122,7 @@ public final class BeetlUtil {
      * 获得模板
      *
      * @param groupTemplate {@link GroupTemplate}
-     * @param source 模板资源，根据不同的 {@link ResourceLoader} 加载不同的模板资源
+     * @param source        模板资源，根据不同的 {@link ResourceLoader} 加载不同的模板资源
      * @return {@link Template}
      */
     public static Template getTemplate(GroupTemplate groupTemplate, String source) {
@@ -149,7 +143,7 @@ public final class BeetlUtil {
     /**
      * 获得ClassPath模板
      *
-     * @param path ClassPath路径
+     * @param path             ClassPath路径
      * @param templateFileName 模板内容
      * @return 模板
      * @since 3.2.0
@@ -161,7 +155,7 @@ public final class BeetlUtil {
     /**
      * 获得本地文件模板
      *
-     * @param dir 目录绝对路径
+     * @param dir              目录绝对路径
      * @param templateFileName 模板内容
      * @return 模板
      * @since 3.2.0
@@ -171,10 +165,11 @@ public final class BeetlUtil {
     }
 
     // ------------------------------------------------------------------------------------- Render
+
     /**
      * 渲染模板
      *
-     * @param template {@link Template}
+     * @param template   {@link Template}
      * @param bindingMap 绑定参数
      * @return 渲染后的内容
      */
@@ -186,9 +181,9 @@ public final class BeetlUtil {
     /**
      * 渲染模板，如果为相对路径，则渲染ClassPath模板，否则渲染本地文件模板
      *
-     * @param path 路径
+     * @param path             路径
      * @param templateFileName 模板文件名
-     * @param bindingMap 绑定参数
+     * @param bindingMap       绑定参数
      * @return 渲染后的内容
      * @since 3.2.0
      */
@@ -204,7 +199,7 @@ public final class BeetlUtil {
      * 渲染模板
      *
      * @param templateContent 模板内容
-     * @param bindingMap 绑定参数
+     * @param bindingMap      绑定参数
      * @return 渲染后的内容
      * @since 3.2.0
      */
@@ -216,8 +211,8 @@ public final class BeetlUtil {
      * 渲染模板
      *
      * @param templateContent {@link Template}
-     * @param bindingMap 绑定参数
-     * @param writer {@link Writer} 渲染后写入的目标Writer
+     * @param bindingMap      绑定参数
+     * @param writer          {@link Writer} 渲染后写入的目标Writer
      * @return {@link Writer}
      */
     public static Writer render(Template templateContent, Map<String, Object> bindingMap, Writer writer) {
@@ -230,8 +225,8 @@ public final class BeetlUtil {
      * 渲染模板
      *
      * @param templateContent 模板内容
-     * @param bindingMap 绑定参数
-     * @param writer {@link Writer} 渲染后写入的目标Writer
+     * @param bindingMap      绑定参数
+     * @param writer          {@link Writer} 渲染后写入的目标Writer
      * @return {@link Writer}
      */
     public static Writer renderFromStr(String templateContent, Map<String, Object> bindingMap, Writer writer) {
@@ -251,7 +246,6 @@ public final class BeetlUtil {
      * ResourceLoader构建器
      *
      * @author Looly
-     *
      */
     public static class ResourceLoaderBuilder {
         private CompositeResourceLoader compositeResourceLoader = new CompositeResourceLoader();
@@ -268,7 +262,7 @@ public final class BeetlUtil {
         /**
          * 添加一个资源加载器
          *
-         * @param matcher {@link Matcher} 匹配器
+         * @param matcher        {@link Matcher} 匹配器
          * @param resourceLoader {@link ResourceLoader} 匹配时对应的资源加载器
          * @return {@link ResourceLoaderBuilder}
          */

@@ -4,6 +4,7 @@ import org.springframework.context.ApplicationEvent;
 
 /**
  * 短信认证成功事件
+ *
  * @author wesley.zhang
  * @date 2018-3-31
  **/

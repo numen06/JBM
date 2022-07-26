@@ -7,7 +7,7 @@ import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
- * @Author: auto generate by jbm
+ * @Author: wesley.zhang
  * @Create: 2022-07-19 14:01:27
  */
 @Service

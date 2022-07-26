@@ -19,6 +19,9 @@ public class MqttNotification extends NotificationModel {
      */
     private Object body;
 
+    /**
+     * 送达设置
+     */
     private Integer qos = 1;
 
 }

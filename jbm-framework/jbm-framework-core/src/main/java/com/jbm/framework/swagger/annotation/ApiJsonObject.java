@@ -1,8 +1,6 @@
 package com.jbm.framework.swagger.annotation;
 
 
-import com.jbm.framework.swagger.EntityWarp;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

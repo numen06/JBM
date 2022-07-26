@@ -39,19 +39,16 @@ public class JbmClusterTemplate {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-
+    @Value("${spring.application.name:}")
+    private String microServiceName;
+    private Integer microServicePort;
+    private String microServiceNode;
+    private Map<String, CountDownLatch> clusterEventThreadMap = Maps.newConcurrentMap();
 
     public JbmClusterTemplate(RabbitTemplate rabbitTemplate, ApplicationContext applicationContext) {
         this.rabbitTemplate = rabbitTemplate;
         this.applicationContext = applicationContext;
     }
-
-    @Value("${spring.application.name:}")
-    private String microServiceName;
-
-    private Integer microServicePort;
-
-    private String microServiceNode;
 
     private void loadNodeInfo() {
         String ip = NetUtil.getLocalhostStr();
@@ -89,15 +86,11 @@ public class JbmClusterTemplate {
         }
     }
 
-
     @EventListener(WebServerInitializedEvent.class)
     public void onWebServerInitializedEvent(WebServerInitializedEvent event) {
         microServicePort = event.getWebServer().getPort();
         this.loadNodeInfo();
     }
-
-
-    private Map<String, CountDownLatch> clusterEventThreadMap = Maps.newConcurrentMap();
 
     private CountDownLatch getClusterEventThread(String key) {
         if (clusterEventThreadMap.containsKey(key))

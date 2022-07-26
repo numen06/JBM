@@ -3,8 +3,6 @@ package com.jbm.cluster.platform.gateway.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.sql.DataSource;
-
 /**
  * @Created wesley.zhang
  * @Date 2022/5/11 19:53

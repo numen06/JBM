@@ -6,7 +6,10 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * @author wesley.zhang

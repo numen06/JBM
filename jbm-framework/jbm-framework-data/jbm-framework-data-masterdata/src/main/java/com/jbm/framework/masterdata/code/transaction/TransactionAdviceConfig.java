@@ -1,4 +1,4 @@
-package com.jbm.framework.masterdata.code;
+package com.jbm.framework.masterdata.code.transaction;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Aspect;

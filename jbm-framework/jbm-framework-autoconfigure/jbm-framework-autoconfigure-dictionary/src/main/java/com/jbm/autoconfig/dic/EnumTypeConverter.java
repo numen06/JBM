@@ -39,13 +39,6 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
 
     private final static String TYPE_NAME_FIELD = "typeName";
 
-    @Data
-    class EnumType {
-        private String type;
-        private String typeName;
-    }
-
-
     @Override
     public List<JbmDictionary> convert(Class<? extends Enum<?>> emClass) {
         final Enum<?>[] enums = emClass.getEnumConstants();
@@ -111,7 +104,6 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
             jsonObject.put("code", e.toString());
     }
 
-
     public Map<String, String> parseCodeAnnotation(Class<? extends Enum<?>> emClass, List<String> fields) {
         Map<String, String> maps = Maps.newHashMap();
         maps.put("value", "value");
@@ -125,6 +117,12 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
             }
         }
         return maps;
+    }
+
+    @Data
+    class EnumType {
+        private String type;
+        private String typeName;
     }
 
 }

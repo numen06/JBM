@@ -20,16 +20,15 @@ import java.nio.charset.Charset;
  * @author wesley.zhang
  */
 public class FastJson2JsonRedisSerializer<T> implements RedisSerializer<T> {
-    @SuppressWarnings("unused")
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
-    private Class<T> clazz;
 
     static {
         ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
     }
+
+    @SuppressWarnings("unused")
+    private ObjectMapper objectMapper = new ObjectMapper();
+    private Class<T> clazz;
 
     public FastJson2JsonRedisSerializer(Class<T> clazz) {
         super();

@@ -115,5 +115,5 @@ public class UserConstants {
     /**
      * 管理员ID
      */
-    public static final Long ADMIN_ID = 0l;
+    public static final Long ADMIN_ID = 0L;
 }

@@ -22,15 +22,15 @@ public class FileUtils {
             e.printStackTrace();
         } finally {
             try {
-                if (bufReader != null){
+                if (bufReader != null) {
                     bufReader.close();
                 }
-                if (bufReader != null){
+                if (bufReader != null) {
                     bufReader.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

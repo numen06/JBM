@@ -2,7 +2,6 @@ package com.jbm.framework.fastjson;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.parser.DefaultJSONParser;
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.StringCodec;
 
 import java.lang.reflect.Type;

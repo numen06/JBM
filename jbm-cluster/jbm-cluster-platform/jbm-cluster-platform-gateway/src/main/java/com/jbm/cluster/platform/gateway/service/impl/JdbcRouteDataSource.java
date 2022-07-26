@@ -11,7 +11,6 @@ import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.platform.gateway.config.JdbcDataSourceProperties;
 import com.jbm.cluster.platform.gateway.service.RouteDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 
 import javax.sql.DataSource;
 import java.sql.Connection;

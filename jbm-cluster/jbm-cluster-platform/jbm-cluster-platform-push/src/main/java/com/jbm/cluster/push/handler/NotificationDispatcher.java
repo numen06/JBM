@@ -9,12 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Bean;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.Map;
@@ -22,7 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * @author wesley.zhang
@@ -54,25 +50,10 @@ public class NotificationDispatcher implements ApplicationContextAware {
         streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
     }
 
-    @Bean
-    public Function<Flux<Message<Notification>>, Mono<Void>> notification() {
-        return flux -> flux.map(message -> {
-            this.receive(message);
-            return message;
-        }).then();
-    }
 
-    //    @StreamListener(QueueConstants.QUEUE_PUSH_MESSAGE + MqMessageSource.INPUT)
     public void receive(Message<Notification> message) {
         Notification notification = message.getPayload();
-        if (notification != null && exchangers != null) {
-            exchangers.forEach((exchanger) -> {
-                if (exchanger.support(notification)) {
-                    //添加到线程池进行处理
-                    executorService.submit(new NotificationTask(exchanger, notification));
-                }
-            });
-        }
+        this.dispatch(notification);
     }
 
     public void dispatch(Notification notification) {
@@ -85,18 +66,6 @@ public class NotificationDispatcher implements ApplicationContextAware {
             });
         }
     }
-
-//    @RabbitHandler
-//    public void dispatch(@Payload Notification notification) {
-//        if (notification != null && exchangers != null) {
-//            exchangers.forEach((exchanger) -> {
-//                if (exchanger.support(notification)) {
-//                    //添加到线程池进行处理
-//                    executorService.submit(new NotificationTask(exchanger, notification));
-//                }
-//            });
-//        }
-//    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {

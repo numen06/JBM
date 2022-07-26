@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

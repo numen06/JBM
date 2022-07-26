@@ -37,10 +37,6 @@ public class EnumScanPackages {
         this.packageNames = Collections.unmodifiableList(packages);
     }
 
-    public List<String> getPackageNames() {
-        return this.packageNames;
-    }
-
     public static EnumScanPackages get(BeanFactory beanFactory) {
         try {
             return (EnumScanPackages) beanFactory.getBean(BEAN, EnumScanPackages.class);
@@ -78,6 +74,10 @@ public class EnumScanPackages {
         merged.addAll(Arrays.asList(existing));
         merged.addAll(packageNames);
         return StringUtils.toStringArray(merged);
+    }
+
+    public List<String> getPackageNames() {
+        return this.packageNames;
     }
 
     /**
