@@ -33,6 +33,8 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
             query.addCriteria(this.likeCriteria("serviceId", gatewayLogsForm.getGatewayLogs().getServiceId()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getError()))
             query.addCriteria(this.likeCriteria("error", gatewayLogsForm.getGatewayLogs().getError()));
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getRequestUserRealName()))
+            query.addCriteria(this.likeCriteria("requestUserRealName", gatewayLogsForm.getGatewayLogs().getRequestUserRealName()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getHttpStatus()))
             query.addCriteria(Criteria.where("httpStatus").is(gatewayLogsForm.getGatewayLogs().getHttpStatus()));
         if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getUseTime()))
