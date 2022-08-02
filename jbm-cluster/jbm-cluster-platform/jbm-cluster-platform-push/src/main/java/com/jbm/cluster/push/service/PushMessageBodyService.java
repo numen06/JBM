@@ -1,6 +1,7 @@
 package com.jbm.cluster.push.service;
 
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
+import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.framework.masterdata.service.IMasterDataService;
@@ -16,7 +17,7 @@ public interface PushMessageBodyService extends IMasterDataService<PushMessageBo
 
     DataPaging<PushMessageBody> selectPageList(PageRequestBody pageRequestBody);
 
-    DataPaging<PushMessageBody> findUserPushMessage(PushMessageForm pushMessageform);
+    DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform);
 
     void sendPushMsg(PushMsg pushMsg);
 

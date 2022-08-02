@@ -1,10 +1,12 @@
 package com.jbm.cluster.push.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
+import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
@@ -36,13 +38,17 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
     }
 
     @Override
-    public DataPaging<PushMessageBody> findUserPushMessage(PushMessageForm pushMessageform) {
+    public DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform) {
         DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.findUserPushMessage(pushMessageform);
-        List<PushMessageBody> pushMessageBodyList = Lists.newArrayList();
+        List<PushMessageResult> pushMessageBodyList = Lists.newArrayList();
         pushMessageItemDataPaging.getContents().forEach(new Consumer<PushMessageItem>() {
             @Override
             public void accept(PushMessageItem pushMessageItem) {
-                pushMessageBodyList.add(selectById(pushMessageItem.getMsgBodyId()));
+                PushMessageResult pushMessageResult = new PushMessageResult();
+                PushMessageBody pushMessageBody = selectById(pushMessageItem.getMsgBodyId());
+                BeanUtil.copyProperties(pushMessageItem, pushMessageResult);
+                BeanUtil.copyProperties(pushMessageBody, pushMessageResult);
+                pushMessageBodyList.add(pushMessageResult);
             }
         });
         return new DataPaging<>(pushMessageBodyList, pushMessageItemDataPaging);
@@ -81,9 +87,9 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageBody.setTitle(pushMsg.getTitle());
         pushMessageBody.setType(pushMsg.getPushMsgType());
         pushMessageBody.setContent(pushMsg.getContent());
+        pushMessageBody.setExtend(pushMsg.getExtend());
         this.saveEntity(pushMessageBody);
         pushMsg.getRecUserIds().forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
-
     }
 
 

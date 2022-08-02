@@ -1,13 +1,14 @@
 package com.jbm.framework.masterdata.code.model;
 
+import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
 import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import org.beetl.core.Template;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * 生产源
@@ -18,7 +19,8 @@ public class GenerateSource {
     /**
      * 业务分组
      */
-    private List<String> bussinessGroup;
+//    private List<Class> bussinessGroupList = new ArrayList<>();
+    private Set<Class> bussinessEntityList = new HashSet<>();
 
     /**
      * 实体类
@@ -44,14 +46,25 @@ public class GenerateSource {
     private String targetPackage;
 
     /**
+     * 具体包的位置
+     */
+    private String codePackage;
+    /**
+     * 目标文件文件夹
+     */
+    private Path targetDir;
+    /**
      * 生成代码时候的数据
      */
-    private Map<String, Object> data;
+    private Map<String, Object> data = new HashMap<>();
 
 
     private File targetFile;
 
     private IgnoreGeneate ignoreGeneate;
+
+
+    private BussinessGroup bussinessGroup;
 
     private ApiModel apiModel;
 

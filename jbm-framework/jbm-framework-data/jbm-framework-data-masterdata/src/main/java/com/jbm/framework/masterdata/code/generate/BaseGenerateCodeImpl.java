@@ -1,106 +1,111 @@
 package com.jbm.framework.masterdata.code.generate;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.PathUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.beetl.core.GroupTemplate;
-import org.beetl.core.Template;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static com.jbm.framework.masterdata.code.constants.CodeType.service;
+import java.util.Map;
 
 @Slf4j
 public abstract class BaseGenerateCodeImpl implements IGenerateCode {
 
-    private final GroupTemplate groupTemplate;
 
-    public BaseGenerateCodeImpl(GroupTemplate groupTemplate) {
-        this.groupTemplate = groupTemplate;
+    public BaseGenerateCodeImpl() {
     }
 
     @Override
     public File generate(GenerateSource generateSource) {
-        if (this.isSkip(generateSource)) {
-            return null;
-        }
+//        if (this.pre(generateSource)) {
+//            return null;
+//        }
+        this.getSuperClass(generateSource);
         return this.getWriteFile(generateSource);
     }
 
 
     @Override
-    public Template createTemplate() {
-        Template t = groupTemplate.getTemplate(this.getCodeType().name() + ".btl");
-        return t;
+    public String getTemplateName(GenerateSource generateSource) {
+        return this.getCodeType().name();
     }
 
     @Override
-    public File getWriteFile(GenerateSource generateSource) {
-        CodeType codeType = this.getCodeType();
-        URL url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
-        try {
-            String temp = generateSource.getTargetPackage().replace(".", "/");
-            Path wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("java").resolve(temp);
-            String ext = ".java";
-            String suffix = StrUtil.upperFirst(codeType.name());
-            switch (codeType) {
-                case mapperXml:
-                    wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("resources").resolve("mapper");
-                    ext = ".xml";
-                    suffix = "Mapper";
-                    break;
-                case serviceImpl:
-                    wp = wp.resolve(service.name()).resolve("impl");
-                    break;
-                default:
-                    wp = wp.resolve(codeType.name());
-                    break;
-            }
-            FileUtil.mkdir(wp.toFile());
-            String fileName = generateSource.getEntityClass().getSimpleName() + suffix + ext;
-            File file = wp.resolve(fileName).toFile();
-            return file;
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+    public Map<String, Object> getData() {
         return null;
     }
 
     @Override
-    public boolean isSkip(GenerateSource generateSource) {
+    public File getWriteFile(GenerateSource generateSource) {
+        File file = this.getTargetDir(generateSource).resolve(this.getCodeFileName(generateSource)).toFile();
+        return file;
+    }
+
+
+    @SneakyThrows
+    @Override
+    public Path getTargetDir(GenerateSource generateSource) {
+        URL url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
+        String temp = generateSource.getTargetPackage().replace(".", "/");
+        String codeInPackge = StrUtil.replace(StrUtil.toUnderlineCase(this.getCodeType().name()), "_", "/");
+        String codePackage = StrUtil.replace(StrUtil.concat(true, temp, "/", codeInPackge), "/", ".");
+        generateSource.getData().put("codePackage", codePackage);
+        Path wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("java").resolve(temp).resolve(codeInPackge);
+        PathUtil.mkdir(wp);
+        return wp;
+    }
+
+    @Override
+    public String getCodeFileName(GenerateSource generateSource) {
+        CodeType codeType = this.getCodeType();
+        String ext = ".java";
+        String suffix = StrUtil.upperFirst(codeType.name());
+        String fileName = generateSource.getEntityClass().getSimpleName() + suffix + ext;
+        return fileName;
+    }
+
+    @Override
+    public void pre(GenerateSource generateSource) {
         if (generateSource.getSuperclass() == null) {
-            log.debug("未检测到超类跳过:{}", generateSource.getEntityClass());
-            return true;
+            throw new ValidateException("未检测到超类跳过");
         }
         if (ClassUtil.isAbstract(generateSource.getEntityClass())) {
-            log.debug("该类为虚拟类:{}", generateSource.getEntityClass());
-            return true;
+            throw new ValidateException("该类为虚拟类");
+        } else {
+            generateSource.getData().put("basePackage", generateSource.getTargetPackage());
+            generateSource.getData().put("entityClass", generateSource.getEntityClass());
         }
         if (ObjectUtil.isNotEmpty(generateSource.getIgnoreGeneate())) {
             if (ArrayUtil.contains(generateSource.getIgnoreGeneate().value(), this.getCodeType())) {
-                log.debug("设置为忽略生成:{}", generateSource.getEntityClass());
-                return true;
+                throw new ValidateException("设置为忽略生成");
             }
         }
-        if (ObjectUtil.isNotEmpty(generateSource)) {
-            if (FileUtil.exist(generateSource.getTargetFile())) {
-                return true;
-            }
+        generateSource.setTargetDir(this.getTargetDir(generateSource));
+        generateSource.setTargetFile(this.getWriteFile(generateSource));
+        if (FileUtil.exist(generateSource.getTargetFile())) {
+            throw new ValidateException(StrUtil.format("文件已经存在:{}", generateSource.getTargetFile()));
+        } else {
+            generateSource.getData().put("fileName", FileUtil.mainName(generateSource.getTargetFile()));
         }
         if (ObjectUtil.isEmpty(generateSource.getApiModel())) {
-            throw new RuntimeException("该实体没有添加注解[ApiModel]");
+            throw new RuntimeException("该实体没有Swagger注解[ApiModel]");
+        } else {
+            generateSource.getData().put("entityDesc", generateSource.getApiModel().value());
         }
-
-
-        return false;
+        generateSource.getData().put("entityFieldName", StrUtil.lowerFirst(ClassUtil.getClassName(generateSource.getEntityClass(), true)));
+        generateSource.getData().put("time", DateUtil.now());
     }
+
+
 }

@@ -1,19 +1,40 @@
 package com.jbm.framework.masterdata.code.generate;
 
+import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.*;
 import com.jbm.util.StringUtils;
-import org.beetl.core.GroupTemplate;
+import lombok.SneakyThrows;
 
 public class GenerateControllerCode extends BaseGenerateCodeImpl {
 
-    public GenerateControllerCode(GroupTemplate groupTemplate) {
-        super(groupTemplate);
+
+    @Override
+    public String getCodeFileName(GenerateSource generateSource) {
+        CodeType codeType = this.getCodeType();
+        String ext = ".java";
+        String suffix = StrUtil.upperFirst(codeType.name());
+        String fileName = generateSource.getEntityClass().getSimpleName() + suffix + ext;
+        if (ObjectUtil.isNotNull(generateSource.getBussinessGroup())) {
+            String businessName = GenerateBusinessImplCode.getBusinessName(generateSource);
+            fileName = businessName + suffix + ext;
+        }
+        return fileName;
     }
 
-    public void getSuperClass(GenerateSource generateSource) throws ClassNotFoundException {
+    @Override
+    public String getTemplateName(GenerateSource generateSource) {
+        if (ObjectUtil.isNotNull(generateSource.getBussinessGroup())) {
+            return "businessController";
+        }
+        return super.getTemplateName(generateSource);
+    }
+
+    @SneakyThrows
+    public String getSuperClass(GenerateSource generateSource) {
         Class superclass = generateSource.getSuperclass();
         String extClass = null;
         if (superclass.equals(MasterDataEntity.class)) {
@@ -40,13 +61,14 @@ public class GenerateControllerCode extends BaseGenerateCodeImpl {
         if (StrUtil.isBlank(extClass)) {
             throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
         }
-        generateSource.getTemplate().binding("extClass", extClass);
-        generateSource.getTemplate().binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        generateSource.getData().put("extClass", extClass);
+        generateSource.getData().put("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        return extClass;
     }
 
 
     @Override
     public CodeType getCodeType() {
-        return CodeType.service;
+        return CodeType.controller;
     }
 }

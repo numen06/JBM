@@ -47,4 +47,6 @@ public class PushMsg {
     @ApiModelProperty("模板参数")
     private Map<String, Object> templateData;
 
+    @ApiModelProperty("消息等级")
+    private Integer level;
 }

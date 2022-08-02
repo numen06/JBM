@@ -7,16 +7,12 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
 import com.jbm.framework.masterdata.usage.entity.*;
-import com.jbm.util.StringUtils;
-import org.beetl.core.GroupTemplate;
+import lombok.SneakyThrows;
 
 public class GenerateServiceCode extends BaseGenerateCodeImpl {
 
-    public GenerateServiceCode(GroupTemplate groupTemplate) {
-        super(groupTemplate);
-    }
-
-    public void getSuperClass(GenerateSource generateSource) throws ClassNotFoundException {
+    @SneakyThrows
+    public String getSuperClass(GenerateSource generateSource) {
         Class superclass = generateSource.getSuperclass();
         String extClass = null;
         if (superclass.equals(MasterDataEntity.class)) {
@@ -43,8 +39,9 @@ public class GenerateServiceCode extends BaseGenerateCodeImpl {
         if (StrUtil.isBlank(extClass)) {
             throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
         }
-        generateSource.getTemplate().binding("extClass", extClass);
-        generateSource.getTemplate().binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        generateSource.getData().put("extClass", extClass);
+        generateSource.getData().put("extClassName", StrUtil.subAfter(extClass, ".", true));
+        return extClass;
     }
 
 

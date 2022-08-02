@@ -1,0 +1,11 @@
+package ${codePackage};
+
+import ${extClass};
+
+/**
+ * ${entityDesc}业务接口
+ * @Author: jbm
+ * @Create: ${time}
+ */
+public interface ${fileName} extends ${extClassName} {
+}

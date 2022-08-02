@@ -8,4 +8,6 @@ import ${extClass};
  * @Create: ${time}
  */
 public interface ${entityClass.simpleName}Service extends ${extClassName}<${entityClass.simpleName}> {
+
+
 }

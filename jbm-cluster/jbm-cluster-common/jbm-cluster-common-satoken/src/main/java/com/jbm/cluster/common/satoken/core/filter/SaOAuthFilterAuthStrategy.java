@@ -15,6 +15,8 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
 /**
+ * Token过滤
+ *
  * @Created wesley.zhang
  * @Date 2022/5/31 10:46
  * @Description TODO
@@ -45,6 +47,10 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             if (ObjectUtil.isNotEmpty(accessTokenModel)) {
                 clientId = accessTokenModel.clientId;
                 SaOAuth2Util.checkAccessToken(tokenValue);
+                // 先检查是否已过期
+                StpUtil.checkActivityTimeout();
+                // 检查通过后继续续签
+                StpUtil.updateLastActivityToNow();
             } else {
                 ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {

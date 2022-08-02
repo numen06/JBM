@@ -1,0 +1,19 @@
+package ${basePackage}.controller;
+
+import ${basePackage}.business.${businessName}Business;
+import io.swagger.annotations.Api;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * @Author: jbm
+ * @Create: ${time}
+ */
+@Api(tags = "${entityDesc}开放接口")
+@RestController
+@RequestMapping("/${businessFeildName}")
+public class ${businessName}Controller{
+
+    private ${businessName}Business ${businessFeildName}Business;
+
+}

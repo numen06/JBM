@@ -1,0 +1,30 @@
+package ${codePackage};
+
+import ${extClass};
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import ${basePackage}.business.${businessName}Business;
+    <%
+    for(entity in bussinessEntityList){
+    var name = @entity.getSimpleName() +"Service";
+    %>
+import ${basePackage}.service.${name};
+    <%}%>
+
+/**
+ * ${entityDesc}业务实现类
+ * @Author: jbm
+ * @Create: ${time}
+ */
+@Service
+public class ${fileName} extends ${extClassName} implements ${businessName}Business {
+
+    <%
+    for(entity in bussinessEntityList){
+    var name = @entity.getSimpleName() +"Service";
+    var nameFeild = @cn.hutool.core.util.StrUtil.lowerFirst(@entity.getSimpleName() +"Service");
+    %>
+    @Autowired
+    private ${name} ${nameFeild};
+    <%}%>
+}

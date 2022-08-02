@@ -5,16 +5,16 @@ import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.*;
 import com.jbm.util.StringUtils;
+import lombok.SneakyThrows;
 import org.beetl.core.GroupTemplate;
+
+import java.nio.file.Path;
 
 public class GenerateServiceImplCode extends BaseGenerateCodeImpl {
 
-    public GenerateServiceImplCode(GroupTemplate groupTemplate) {
-        super(groupTemplate);
-    }
 
-
-    public void getSuperClass(GenerateSource generateSource) throws ClassNotFoundException {
+    @SneakyThrows
+    public String getSuperClass(GenerateSource generateSource) {
         Class superclass = generateSource.getSuperclass();
         String extClass = null;
         if (superclass.equals(MasterDataEntity.class)) {
@@ -41,13 +41,14 @@ public class GenerateServiceImplCode extends BaseGenerateCodeImpl {
         if (StrUtil.isBlank(extClass)) {
             throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
         }
-        generateSource.getTemplate().binding("extClass", extClass);
-        generateSource.getTemplate().binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        generateSource.getData().put("extClass", extClass);
+        generateSource.getData().put("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        return extClass;
     }
 
 
     @Override
     public CodeType getCodeType() {
-        return CodeType.service;
+        return CodeType.serviceImpl;
     }
 }

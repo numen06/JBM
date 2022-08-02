@@ -1,6 +1,7 @@
 package com.jbm.cluster.push.message;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.push.PushMsgType;
@@ -26,6 +27,7 @@ public class PushMessageHandler {
         pushMsg.setSysMsg(true);
         pushMsg.setSendUserId(0L);
         pushMsg.setTitle("测试");
+        pushMsg.setExtend(MapUtil.of("test", 123123));
         pushMsg.setContent(StrUtil.format("{}发的:{}", DateTime.now(), pushMsg.getTitle()));
         pushMessageBodyService.sendPushMsg(pushMsg);
     }

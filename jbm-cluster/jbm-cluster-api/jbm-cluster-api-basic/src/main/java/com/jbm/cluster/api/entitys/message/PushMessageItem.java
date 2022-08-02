@@ -3,8 +3,12 @@ package com.jbm.cluster.api.entitys.message;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.cluster.api.bo.PushMessage;
 import com.jbm.cluster.api.constants.push.PushStatus;
 import com.jbm.cluster.api.constants.push.PushWay;
+import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
+import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
+import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,6 +34,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName
 @ApiModel("消息推送项")
+@BussinessGroup(businessClass = PushMessage.class)
 public class PushMessageItem extends MasterDataEntity {
     @Id
     @TableId(type = IdType.ASSIGN_UUID)

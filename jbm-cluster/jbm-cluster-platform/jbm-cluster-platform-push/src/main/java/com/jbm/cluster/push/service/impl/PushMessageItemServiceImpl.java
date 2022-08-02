@@ -1,6 +1,8 @@
 package com.jbm.cluster.push.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.push.PushStatus;
 import com.jbm.cluster.api.constants.push.PushWay;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
@@ -31,32 +33,29 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
 
     @Override
     public boolean read(List<String> ids) {
-        ids.forEach(id -> read(id));
-        return true;
+//        ids.forEach(id -> read(id));
+        Assert.noNullElements(ids, "推送ID不能为空");
+        UpdateWrapper<PushMessageItem> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.lambda().set(PushMessageItem::getReadFlag, true).in(PushMessageItem::getMsgId, ids);
+        return this.update(updateWrapper);
     }
 
     @Override
     public boolean unread(List<String> ids) {
-        ids.forEach(id -> unread(id));
-        return true;
+        Assert.noNullElements(ids, "推送ID不能为空");
+        UpdateWrapper<PushMessageItem> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.lambda().set(PushMessageItem::getReadFlag, false).in(PushMessageItem::getMsgId, ids);
+        return this.update(updateWrapper);
     }
 
     @Override
     public boolean read(String id) {
-        Assert.notNull(id, "推送ID不能为空");
-        PushMessageItem message = new PushMessageItem();
-        message.setMsgId(id);
-        message.setReadFlag(true);
-        return super.updateById(message);
+        return this.read(Lists.newArrayList(id));
     }
 
     @Override
     public boolean unread(String id) {
-        Assert.notNull(id, "推送ID不能为空");
-        PushMessageItem message = new PushMessageItem();
-        message.setMsgId(id);
-        message.setReadFlag(false);
-        return super.updateById(message);
+        return this.unread(Lists.newArrayList(id));
     }
 
     @Override

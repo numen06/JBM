@@ -1,10 +1,11 @@
 package com.jbm.cluster.api.entitys.message;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.jbm.cluster.api.bo.PushMessage;
 import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
-import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
-import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -12,9 +13,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
+import java.util.Map;
 
 /**
  * 站内信
@@ -27,10 +27,9 @@ import javax.persistence.Enumerated;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@TableName
+@TableName(autoResultMap = true)
 @ApiModel("推送消息内容")
-@IgnoreGeneate(value = {CodeType.controller})
-@BussinessGroup(businessName = "PushMessage")
+@BussinessGroup(businessClass = PushMessage.class)
 public class PushMessageBody extends MasterDataCodeEntity {
 
     @ApiModelProperty("发送者ID")
@@ -53,6 +52,9 @@ public class PushMessageBody extends MasterDataCodeEntity {
 //    @TableField(select = false)
 //    private Integer deleteFlag;
     @ApiModelProperty("扩展字段")
-    private String extend;
+    @ElementCollection(targetClass = String.class)
+    @Column(columnDefinition = "text")
+    @TableField(typeHandler = FastjsonTypeHandler.class)
+    private Map<String, Object> extend;
 
 }

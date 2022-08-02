@@ -1,7 +1,12 @@
 package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ClassUtil;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
 import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
 import com.jbm.framework.masterdata.code.generate.*;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
@@ -18,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -38,11 +44,13 @@ public class GenerateMasterData {
             ClasspathResourceLoader resourceLoader = new ClasspathResourceLoader("/com/jbm/framework/masterdata/code/btl");
             Configuration cfg = Configuration.defaultConfiguration();
             groupTemplate = new GroupTemplate(resourceLoader, cfg);
-            generateCodeList.add(new GenerateBusinessCode(groupTemplate));
-            generateCodeList.add(new GenerateControllerCode(groupTemplate));
-            generateCodeList.add(new GenerateMapperCode(groupTemplate));
-            generateCodeList.add(new GenerateServiceCode(groupTemplate));
-            generateCodeList.add(new GenerateServiceImplCode(groupTemplate));
+            generateCodeList.add(new GenerateMapperXmlCode());
+            generateCodeList.add(new GenerateMapperCode());
+            generateCodeList.add(new GenerateServiceCode());
+            generateCodeList.add(new GenerateServiceImplCode());
+            generateCodeList.add(new GenerateBusinessCode());
+            generateCodeList.add(new GenerateBusinessImplCode());
+            generateCodeList.add(new GenerateControllerCode());
         } catch (IOException e) {
             log.error("初始化代码构建器失败");
         }
@@ -52,37 +60,72 @@ public class GenerateMasterData {
         GenerateMasterData generateMasterData = new GenerateMasterData();
         try {
             Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
-            log.info("自动扫描生成代码:{},目标包名:{},发现{}个实体", entityPackage, targetPackage, entitys.size());
-            for (Class clazz : entitys) {
+            List<GenerateSource> generateSourceList = generateMasterData.filter(entitys, targetPackage);
+            generateSourceList.forEach(generateSource -> {
                 try {
-                    generateMasterData.generate(clazz, targetPackage);
+                    generateMasterData.generate(generateSource);
                 } catch (FileSystemNotFoundException e) {
                     //没找到文件就说明没有在开发环境
-                    break;
+                    return;
                 } catch (Exception e) {
-                    log.error("生成代码错误Class:{}", clazz, e);
+                    log.error("生成代码错误Class:{}", generateSource.getEntityClass(), e);
                 }
-            }
+            });
         } catch (Exception e) {
             log.error("生成代码错误", e);
         }
+        // TODO: 2022/7/29
+//        throw new RuntimeException("测试结束");
     }
 
-    public GenerateSource generate(Class<?> entityClass, String targetPackage) throws Exception {
-        GenerateSource generateSource = this.buildSource(entityClass, targetPackage);
-        generateCodeList.forEach(new Consumer<IGenerateCode>() {
+    private Map<Class, List<Class>> businessGroups = Maps.newConcurrentMap();
+
+    public List<GenerateSource> filter(Set<Class<?>> entitys, String targetPackage) throws Exception {
+        List<GenerateSource> generateSourceList = new ArrayList<>();
+
+        entitys.forEach(new Consumer<Class<?>>() {
             @Override
-            public void accept(IGenerateCode iGenerateCode) {
-                try {
-                    Template template = iGenerateCode.createTemplate();
-                    generateSource.setTemplate(template);
-                    File file = iGenerateCode.generate(generateSource);
-//                    generateSource.getTemplate().renderTo(FileUtil.getOutputStream(file));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+            public void accept(Class<?> entity) {
+                GenerateSource generateSource = buildSource(entity, targetPackage);
+                if (generateSource.getBussinessGroup() != null) {
+                    if (businessGroups.containsKey(generateSource.getBussinessGroup().businessClass())) {
+                        businessGroups.get(generateSource.getBussinessGroup().businessClass()).add(entity);
+                    } else {
+                        businessGroups.put(generateSource.getBussinessGroup().businessClass(), Lists.newArrayList(entity));
+                    }
                 }
+                generateSourceList.add(generateSource);
             }
         });
+        return generateSourceList;
+    }
+
+    public GenerateSource generate(GenerateSource generateSource) throws Exception {
+        for (IGenerateCode iGenerateCode : this.generateCodeList) {
+//            generateSource = this.buildSource(entityClass, targetPackage);
+            try {
+                Template template = groupTemplate.getTemplate(iGenerateCode.getTemplateName(generateSource) + ".btl");
+                generateSource.setTemplate(template);
+                if (generateSource.getBussinessGroup() != null) {
+                    //将业务范围加入模板
+                    generateSource.getData().put("bussinessEntityList", businessGroups.get(generateSource.getBussinessGroup().businessClass()));
+                }
+                try {
+                    iGenerateCode.pre(generateSource);
+                } catch (Exception e) {
+                    log.debug("跳过[{}]生成:[{}],原因:{}", iGenerateCode.getCodeType().name(), generateSource.getEntityClass(), e.getMessage());
+                    continue;
+                }
+                File file = iGenerateCode.generate(generateSource);
+                if (MapUtil.isNotEmpty(generateSource.getData())) {
+                    generateSource.getData().putAll(generateSource.getData());
+                    generateSource.getTemplate().binding(generateSource.getData());
+                }
+                generateSource.getTemplate().renderTo(FileUtil.getOutputStream(file));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         return generateSource;
     }
 
@@ -94,6 +137,8 @@ public class GenerateMasterData {
         generateSource.setIgnoreGeneate(ignoreGeneate);
         ApiModel apiModel = AnnotationUtil.getAnnotation(entityClass, ApiModel.class);
         generateSource.setApiModel(apiModel);
+        BussinessGroup bussinessGroup = AnnotationUtil.getAnnotation(entityClass, BussinessGroup.class);
+        generateSource.setBussinessGroup(bussinessGroup);
         //        generateSource.setTargetPackage(ClassUtil.getPackage(generateSource.getEntityClass()));
         if (MasterDataEntity.class.isAssignableFrom(generateSource.getEntityClass())) {
             generateSource.setSuperclass(generateSource.getEntityClass().getSuperclass());

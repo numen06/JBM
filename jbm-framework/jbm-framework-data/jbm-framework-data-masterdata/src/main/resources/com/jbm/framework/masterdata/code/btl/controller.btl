@@ -13,6 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Api(tags = "${entityDesc}开放接口")
 @RestController
-@RequestMapping("/${mapping}")
+@RequestMapping("/${entityFieldName}")
 public class ${entityClass.simpleName}Controller extends ${extClassName}<${entityClass.simpleName}, ${entityClass.simpleName}Service> {
 }

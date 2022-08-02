@@ -1,5 +1,8 @@
 package test.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.jbm.util.VersionUtils;
 import com.jbm.util.bean.Version;
 import org.junit.Test;
@@ -56,7 +59,12 @@ public class VersionTest {
 
         String verStr1 = "1.0.0";
         String verStr2 = "1.0.0";
+        SerializeConfig serializeConfig = SerializeConfig.globalInstance;
+        serializeConfig.put(Version.class, ToStringSerializer.instance);
+
         Version version = VersionUtils.create(verStr1);
+
+        System.out.println(JSON.toJSONString(version));
         System.out.println(ver.compareTo(ver1));
         System.out.println(VersionUtils.before(ver, ver1));
         System.out.println(VersionUtils.after(ver, ver1));

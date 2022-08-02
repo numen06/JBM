@@ -2,6 +2,7 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.router.SaRouter;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.alibaba.fastjson.JSON;
@@ -44,7 +45,6 @@ public class SaAuthFilter {
                     SaRouter.match("/**", r -> {
                         // 检查是否登录 是否有token
 //                        StpUtil.checkLogin();
-
                         // 有效率影响 用于临时测试
                         // if (log.isDebugEnabled()) {
                         //     log.debug("剩余有效时间: {}", StpUtil.getTokenTimeout());

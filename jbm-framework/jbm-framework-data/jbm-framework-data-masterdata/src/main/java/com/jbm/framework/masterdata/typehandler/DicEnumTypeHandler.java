@@ -1,4 +1,4 @@
-package com.jbm.framework.type.handlers;
+package com.jbm.framework.masterdata.typehandler;
 
 import com.jbm.framework.masterdata.usage.DicEnum;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -24,7 +24,9 @@ public class DicEnumTypeHandler extends BaseTypeHandler<DicEnum> {
     }
 
     public DicEnumTypeHandler(Class<DicEnum> type) {
-        if (type == null) throw new IllegalArgumentException("Type argument cannot be null");
+        if (type == null) {
+            throw new IllegalArgumentException("Type argument cannot be null");
+        }
         this.type = type;
     }
 

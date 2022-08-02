@@ -1,5 +1,6 @@
 package com.jbm.cluster.push.usage;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -8,6 +9,7 @@ import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.model.push.PushCallback;
+import com.jbm.cluster.api.model.push.PushMessageResult;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.SneakyThrows;
@@ -68,7 +70,10 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         mqttNotification.setTopic(topic);
         mqttNotification.setMsgId(pushMessageItem.getMsgId());
         mqttNotification.setPushStatus(pushMessageItem.getPushStatus());
-        mqttNotification.setBody(pushMessageBody);
+        PushMessageResult pushMessageResult = new PushMessageResult();
+        BeanUtil.copyProperties(pushMessageItem, pushMessageResult);
+        BeanUtil.copyProperties(pushMessageBody, pushMessageResult);
+        mqttNotification.setBody(pushMessageResult);
         return mqttNotification;
     }
 

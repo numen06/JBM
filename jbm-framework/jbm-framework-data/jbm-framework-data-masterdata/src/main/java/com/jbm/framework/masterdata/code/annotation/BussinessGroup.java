@@ -13,9 +13,10 @@ import java.lang.annotation.*;
 @Documented
 public @interface BussinessGroup {
 
-    String businessName();
 
-    String[] businessNames() default {};
+    Class businessClass();
+
+//    String[] businessNames() default {};
 
 
 }

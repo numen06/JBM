@@ -3,13 +3,13 @@ package com.jbm.framework.masterdata.code.generate;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.framework.masterdata.business.IPlatformBusiness;
+import com.jbm.framework.masterdata.business.PlatformBusinessImpl;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 
 import java.io.File;
 
-public class GenerateBusinessCode extends BaseGenerateCodeImpl {
+public class GenerateBusinessImplCode extends BaseGenerateCodeImpl {
 
 
     @Override
@@ -17,13 +17,13 @@ public class GenerateBusinessCode extends BaseGenerateCodeImpl {
         CodeType codeType = this.getCodeType();
         String ext = ".java";
         String suffix = StrUtil.upperFirst(codeType.name());
-        String fileName = GenerateBusinessImplCode.getBusinessName(generateSource) + suffix + ext;
+        String fileName = getBusinessName(generateSource) + suffix + ext;
         File file = this.getTargetDir(generateSource).resolve(fileName).toFile();
         return file;
     }
 
     public String getSuperClass(GenerateSource generateSource) {
-        Class extClass = IPlatformBusiness.class;
+        Class extClass = PlatformBusinessImpl.class;
         generateSource.getData().put("extClass", extClass.getName());
         generateSource.getData().put("extClassName", ClassUtil.getClassName(extClass, true));
         return extClass.getName();
@@ -36,7 +36,7 @@ public class GenerateBusinessCode extends BaseGenerateCodeImpl {
 
     @Override
     public CodeType getCodeType() {
-        return CodeType.business;
+        return CodeType.businessImpl;
     }
 
     @Override
@@ -44,6 +44,15 @@ public class GenerateBusinessCode extends BaseGenerateCodeImpl {
         super.pre(generateSource);
         if (generateSource.getBussinessGroup() == null) {
             throw new ValidateException("不需要业务分类");
+        } else {
+            generateSource.getData().put("businessName", getBusinessName(generateSource));
+            generateSource.getData().put("businessFeildName", StrUtil.lowerFirst(getBusinessName(generateSource)));
         }
+    }
+
+    public static String getBusinessName(GenerateSource generateSource) {
+        String businessName = ClassUtil.getClassName(generateSource.getBussinessGroup().businessClass(), true);
+        businessName = StrUtil.removeSuffixIgnoreCase(businessName, "Bo");
+        return businessName;
     }
 }

@@ -8,20 +8,19 @@ import org.beetl.core.GroupTemplate;
 
 public class GenerateMapperCode extends BaseGenerateCodeImpl {
 
-    public GenerateMapperCode(GroupTemplate groupTemplate) {
-        super(groupTemplate);
-    }
 
 
-    public void getSuperClass(GenerateSource generateSource) {
+    @Override
+    public String getSuperClass(GenerateSource generateSource) {
         String extClass = SuperMapper.class.getName();
-        generateSource.getTemplate().binding("extClass", extClass);
-        generateSource.getTemplate().binding("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        generateSource.getData().put("extClass", extClass);
+        generateSource.getData().put("extClassName", StringUtils.substringAfterLast(extClass, "."));
+        return extClass;
     }
 
 
     @Override
     public CodeType getCodeType() {
-        return CodeType.service;
+        return CodeType.mapper;
     }
 }
