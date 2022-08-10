@@ -24,7 +24,7 @@ import javax.persistence.Id;
 public class BaseAuthority extends MasterDataEntity {
     private static final long serialVersionUID = 1L;
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long authorityId;
     /**
      * 权限标识

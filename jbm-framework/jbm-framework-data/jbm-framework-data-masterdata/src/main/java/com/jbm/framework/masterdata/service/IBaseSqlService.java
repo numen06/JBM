@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
 import com.jbm.framework.masterdata.usage.bean.BaseEntity;
@@ -10,12 +11,11 @@ import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface IBaseSqlService<Entity extends BaseEntity> {
+public interface IBaseSqlService<Entity extends BaseEntity> extends IService<Entity> {
 
     public Class<Entity> getEntityClass();
 
@@ -73,7 +73,7 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
      * @param entity
      * @return
      */
-    Integer count(Entity entity) throws DataServiceException;
+    Long count(Entity entity) throws DataServiceException;
 
     /**
      * 查询实体
@@ -203,41 +203,6 @@ public interface IBaseSqlService<Entity extends BaseEntity> {
      */
     boolean saveOrUpdateBatch(Collection<Entity> entityList, int batchSize);
 
-    /**
-     * <p>
-     * 根据 ID 删除
-     * </p>
-     *
-     * @param id 主键ID
-     */
-    boolean removeById(Serializable id);
-
-    /**
-     * <p>
-     * 根据 columnMap 条件，删除记录
-     * </p>
-     *
-     * @param columnMap 表字段 map 对象
-     */
-    boolean removeByMap(Map<String, Object> columnMap);
-
-    /**
-     * <p>
-     * 删除（根据ID 批量删除）
-     * </p>
-     *
-     * @param idList 主键ID列表
-     */
-    boolean removeByIds(Collection<? extends Serializable> idList);
-
-    /**
-     * <p>
-     * 根据 ID 选择修改
-     * </p>
-     *
-     * @param entity 实体对象
-     */
-    boolean updateById(Entity entity);
 
     @Transactional(rollbackFor = Exception.class)
     DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException;

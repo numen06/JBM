@@ -25,7 +25,7 @@ public class GatewayIpLimit extends MasterDataEntity {
      * 策略ID
      */
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long policyId;
     /**
      * 策略名称

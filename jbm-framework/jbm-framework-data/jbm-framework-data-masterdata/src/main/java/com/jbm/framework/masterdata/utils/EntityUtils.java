@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.core.toolkit.LambdaUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
+import com.baomidou.mybatisplus.core.toolkit.support.LambdaMeta;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.core.toolkit.support.SerializedLambda;
 import com.google.common.collect.Maps;
@@ -45,7 +46,7 @@ public class EntityUtils {
      * 主键值
      */
     public static <T> T getKeyValue(Object entity) {
-        return (T) ReflectionKit.getMethodValue(entity, getKeyProperty(entity.getClass()));
+        return (T) ReflectionKit.getFieldValue(entity, getKeyProperty(entity.getClass()));
     }
 
     /**
@@ -105,7 +106,7 @@ public class EntityUtils {
      * @return
      */
     public static <T> String toFieldName(SFunction<T, ?> func) {
-        SerializedLambda lambda = LambdaUtils.resolve(func);
+        LambdaMeta lambda = LambdaUtils.extract(func);
         // 获取方法名
         String methodName = lambda.getImplMethodName();
         String prefix = null;

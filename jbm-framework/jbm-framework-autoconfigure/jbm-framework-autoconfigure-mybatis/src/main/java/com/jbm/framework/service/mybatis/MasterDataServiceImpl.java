@@ -14,7 +14,6 @@ import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.service.IMasterDataService;
@@ -28,16 +27,20 @@ import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.CollectionUtils;
-import com.jbm.util.MapUtils;
 import com.jbm.util.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.binding.MapperMethod;
+import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 @Slf4j
 public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> extends BaseServiceImpl<SuperMapper<Entity>, Entity> implements IMasterDataService<Entity> {
@@ -79,6 +82,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteByWapper(QueryWrapper queryWrapper) {
         return super.remove(queryWrapper);
     }
@@ -153,18 +157,21 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     @Override
     public Entity selectEntity(Entity entity, Entity def) {
         Entity result = this.selectEntity(entity);
-        if (result == null)
+        if (result == null) {
             return def;
+        }
         return result;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Entity insertEntity(Entity entity) {
         super.save(entity);
         return entity;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteEntity(Entity entity) {
         boolean hasId = false;
         try {
@@ -184,6 +191,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteById(Long id) {
         return super.removeById(id);
     }
@@ -204,7 +212,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
-    public Integer count(Entity entity) {
+    public Long count(Entity entity) {
         return super.count(EntityUtils.buildEntityQueryWrapper(entity));
     }
 
@@ -255,120 +263,10 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         return super.update(entity, updateWrapper);
     }
 
-    protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm) {
-        return this.selectMapperPaging(sqlStatement(statement), params, pageForm);
-    }
-
-    /**
-     * 通过Mapper查询分页
-     *
-     * @param statement
-     * @param params
-     * @param pageForm
-     * @return
-     * @throws DataServiceException
-     */
-    protected <T> DataPaging<T> selectMapperPaging(final String statement, Map<String, Object> params,
-                                                   PageForm pageForm) {
-        final Page<Map<String, Object>> page = ServiceUtils.buildPage(pageForm);
-        final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
-        tempParams.put(UUID.randomUUID().toString(), page);
-        final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
-        final DataPaging<T> dataPaging = new DataPaging<>(list, page.getTotal(), page.getPages(), pageForm);
-        return dataPaging;
-    }
-
-    /**
-     * 通过Mapper查询一个实体
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @SuppressWarnings("unchecked")
-    protected <T> T selectMapperOne(final String statement, final Object... args) {
-        return (T) CollectionUtils.firstResult(selectMapperList(sqlStatement(statement), args));
-    }
-
-
-    /**
-     * 通过Mapper查询列表
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected <T> List<T> selectMapperList(final String statement, final Object... args) throws
-            DataServiceException {
-        final Object parameter = ServiceUtils.buildMapperParameter(args);
-        return this.sqlSessionTemplate.selectList(sqlStatement(statement), parameter);
-    }
-
-    /**
-     * 通过Mapper查询Map
-     *
-     * @param statement
-     * @param mapKey
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected <K, V> Map<K, V> selectMapperMap(final String statement, String mapKey, final Object... args) {
-        final Object parameter = ServiceUtils.buildMapperParameter(args);
-        return this.sqlSessionTemplate.selectMap(sqlStatement(statement), parameter, mapKey);
-    }
-
-    /**
-     * 通过Mapper更新数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected int updateMapperMap(final String statement, final Object... args) {
-        final Object parameter = ServiceUtils.buildMapperParameter(args);
-        return this.sqlSessionTemplate.update(sqlStatement(statement), parameter);
-    }
-
-    /**
-     * 通过Mapper删除数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @Transactional(rollbackFor = Exception.class)
-    protected int deleteMapperMap(final String statement, final Object... args) {
-        final Object parameter = ServiceUtils.buildMapperParameter(args);
-        return this.sqlSessionTemplate.delete(sqlStatement(statement), parameter);
-    }
-
-    /**
-     * 通过Mapper插入数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @Transactional(rollbackFor = Exception.class)
-    protected int insertMapperMap(final String statement, final Object... args) {
-        final Object parameter = ServiceUtils.buildMapperParameter(args);
-        return this.sqlSessionTemplate.insert(sqlStatement(statement), parameter);
-    }
-
-
-    protected String sqlStatement(String statement) {
-        return ServiceUtils.sqlStatement(this.currentEntityClass(), statement);
-    }
 
     @Override
     public Class<Entity> currentEntityClass() {
-        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
+        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), MasterDataServiceImpl.class, 0);
     }
 
 
@@ -384,7 +282,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
 
     @Override
     protected Class<Entity> currentModelClass() {
-        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
+        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), BaseServiceImpl.class, 1);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -404,10 +302,10 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         String keyProperty = tableInfo.getKeyProperty();
         Assert.notEmpty(keyProperty, "error: can not execute. because can not find column for id from entity!");
         int size = entityList.size();
-        executeBatch(sqlSession -> {
-            int i = 1;
-            for (Entity entity : entityList) {
-                Object idVal = ReflectionKit.getMethodValue(cls, entity, keyProperty);
+        return super.executeBatch(entityList, batchSize, new BiConsumer<SqlSession, Entity>() {
+            @Override
+            public void accept(SqlSession sqlSession, Entity entity) {
+                Object idVal = ReflectionKit.getFieldValue(entity, keyProperty);
                 if (StringUtils.checkValNull(idVal) || Objects.isNull(getById((Serializable) idVal))) {
                     sqlSession.insert(sqlStatement(SqlMethod.INSERT_ONE), entity);
                 } else {
@@ -415,15 +313,8 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
                     param.put(Constants.ENTITY, entity);
                     sqlSession.update(sqlStatement(SqlMethod.UPDATE_BY_ID), param);
                 }
-                // 不知道以后会不会有人说更新失败了还要执行插入 😂😂😂
-                if ((i % batchSize == 0) || i == size) {
-                    sqlSession.flushStatements();
-                }
-                i++;
             }
         });
-        return true;
     }
-
 
 }

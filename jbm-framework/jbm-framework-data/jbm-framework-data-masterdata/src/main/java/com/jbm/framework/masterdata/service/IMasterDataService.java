@@ -65,7 +65,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param entity
      * @return
      */
-    Integer count(Entity entity);
+    Long count(Entity entity);
 
     Map<Long, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper);
 
@@ -180,15 +180,6 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param columnMap 表字段 map 对象
      */
     boolean removeByMap(Map<String, Object> columnMap);
-
-    /**
-     * <p>
-     * 删除（根据ID 批量删除）
-     * </p>
-     *
-     * @param idList 主键ID列表
-     */
-    boolean removeByIds(Collection<? extends Serializable> idList);
 
     /**
      * <p>

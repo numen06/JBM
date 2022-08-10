@@ -33,7 +33,7 @@ public class GatewayRoute extends MasterDataEntity {
      * 路由ID
      */
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "路由ID")
     private Long routeId;
 

@@ -5,12 +5,23 @@
     <parent>
         <groupId>com.jbm</groupId>
         <artifactId>jbm-framework-dependencies</artifactId>
-        <version>7.1.0-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
         <relativePath>../jbm-framework-dependencies/pom.xml</relativePath>
     </parent>
     <artifactId>jbm-framework</artifactId>
     <packaging>pom</packaging>
-
+    <distributionManagement>
+        <repository>
+            <id>jbm-releases</id>
+            <name>jbm-releases</name>
+            <url>https://repo.rdc.aliyun.com/repository/2084842-release-b3KaCP/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jbm-snapshots</id>
+            <name>jbm-snapshots</name>
+            <url>https://repo.rdc.aliyun.com/repository/2084842-snapshot-btK7jQ/</url>
+        </snapshotRepository>
+    </distributionManagement>
     <developers>
         <developer>
             <id>wesley</id>

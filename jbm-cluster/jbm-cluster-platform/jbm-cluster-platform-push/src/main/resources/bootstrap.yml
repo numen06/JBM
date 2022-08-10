@@ -47,6 +47,8 @@ swagger2:
   description: 平台文档服务器
   title: 平台文档服务器
 
-
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
 

@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.baomidou.mybatisplus.core.toolkit.Assert;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
-import com.baomidou.mybatisplus.core.toolkit.ExceptionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ReflectionKit;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.google.common.collect.Lists;
@@ -22,10 +22,13 @@ import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataCodeService<Entity> {
 
@@ -85,11 +88,12 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private boolean updateBatchByCode(Collection<Entity> entityList, int batchSize) {
+    public boolean updateBatchByCode(Collection<Entity> entityList, int batchSize) {
         if (CollectionUtils.isEmpty(entityList)) {
             throw new IllegalArgumentException("Error: entityList must not be empty");
         }
         int i = 0;
+
         String sqlStatement = sqlStatement(MasterDataSqlInjector.UPDATE_BY_CODE);
         try (SqlSession batchSqlSession = sqlSessionBatch()) {
             for (Entity anEntityList : entityList) {
@@ -113,42 +117,27 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private boolean saveOrUpdateBatchByCode(Collection<Entity> entityList, int batchSize) {
+    public boolean saveOrUpdateBatchByCode(Collection<Entity> entityList, int batchSize) {
         if (CollectionUtils.isEmpty(entityList)) {
             throw new IllegalArgumentException("Error: entityList must not be empty");
         }
-        Class<?> cls = null;
-        TableInfo tableInfo = null;
-        int i = 0;
-        try (SqlSession batchSqlSession = sqlSessionBatch()) {
-            for (Entity anEntityList : entityList) {
-                if (i == 0) {
-                    cls = anEntityList.getClass();
-                    tableInfo = TableInfoHelper.getTableInfo(cls);
-                }
-                if (null != tableInfo && StringUtils.isNotEmpty(tableInfo.getKeyProperty())) {
-                    Object codeVal = ReflectionKit.getMethodValue(cls, anEntityList, IMasterDataCodeService.CODE_COLUMN);
-                    if (StringUtils.checkValNull(codeVal)) {
-                        String sqlStatement = sqlStatement(SqlMethod.INSERT_ONE);
-                        batchSqlSession.insert(sqlStatement, anEntityList);
-                    } else {
-                        String sqlStatement = sqlStatement(MasterDataSqlInjector.UPDATE_BY_CODE);
-                        MapperMethod.ParamMap<Entity> param = new MapperMethod.ParamMap<>();
-                        param.put(Constants.ENTITY, anEntityList);
-                        batchSqlSession.update(sqlStatement, param);
-                        // 不知道以后会不会有人说更新失败了还要执行插入 😂😂😂
-                    }
-                    if (i >= 1 && i % batchSize == 0) {
-                        batchSqlSession.flushStatements();
-                    }
-                    i++;
+        Assert.notEmpty(entityList, "error: entityList must not be empty");
+        Class<?> cls = currentModelClass();
+        TableInfo tableInfo = TableInfoHelper.getTableInfo(cls);
+        Assert.notNull(tableInfo, "error: can not execute. because can not find cache of TableInfo for entity!");
+        return super.executeBatch(entityList, batchSize, new BiConsumer<SqlSession, Entity>() {
+            @Override
+            public void accept(SqlSession sqlSession, Entity entity) {
+                Object idVal = ReflectionKit.getFieldValue(entity, "code");
+                if (StringUtils.checkValNull(idVal) || Objects.isNull(getById((Serializable) idVal))) {
+                    sqlSession.insert(sqlStatement(SqlMethod.INSERT_ONE), entity);
                 } else {
-                    throw ExceptionUtils.mpe("Error:  Can not execute. Could not find @TableId.");
+                    MapperMethod.ParamMap<Entity> param = new MapperMethod.ParamMap<>();
+                    param.put(Constants.ENTITY, entity);
+                    sqlSession.update(sqlStatement(MasterDataSqlInjector.UPDATE_BY_CODE), param);
                 }
-                batchSqlSession.flushStatements();
             }
-        }
-        return true;
+        });
     }
 
     // ---------------------------------------------------------build转换方法----------------------------------------------------------------------
@@ -164,6 +153,7 @@ public class MasterDataCodeServiceImpl<Entity extends MasterDataCodeEntity> exte
         queryWrapper.in(IMasterDataCodeService.CODE_COLUMN, codes);
         return queryWrapper;
     }
+
 
 
 }

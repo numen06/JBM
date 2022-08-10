@@ -30,7 +30,7 @@ public class BaseDeveloper extends MasterDataEntity {
      * 系统用户ID
      */
     @Id
-    @TableId(type = IdType.ID_WORKER)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long userId;
 
     /**

@@ -213,13 +213,18 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     @Override
-    public Integer count(Entity entity) throws DataServiceException {
+    public Long count(Entity entity) throws DataServiceException {
         return super.count(this.buildEntityQueryWrapper(entity));
     }
 
     @Override
     public Entity selectEntity(Map<String, Object> parameter, Entity def) throws DataServiceException {
         return ObjectUtils.nullToDefault(this.selectEntity(parameter), def);
+    }
+
+    @Override
+    public boolean save(Entity entity) {
+        return super.save(entity);
     }
 
 //	@Override
@@ -245,6 +250,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return super.saveOrUpdateBatch(entityList, 50);
     }
 
+
     @Override
     public DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) throws DataServiceException {
         return null;
@@ -256,6 +262,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
         return super.updateById(entity);
     }
 
+
     // ---------------------------------------------------------直接操作Mapper------------------------------------------------------------------------
 
 //	protected Entity selectEntity(String statement, Map<String, Object> params) throws DataServiceException {
@@ -266,111 +273,111 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
 //		return this.selectMapperList(statement, params);
 //	}
 
-    protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm)
-            throws DataServiceException {
-        return this.selectMapperPaging(sqlStatement(statement), params, pageForm);
-    }
+//    protected DataPaging<Entity> selectEntitys(String statement, Map<String, Object> params, PageForm pageForm)
+//            throws DataServiceException {
+//        return this.selectMapperPaging(sqlStatement(statement), params, pageForm);
+//    }
 
-    /**
-     * 通过Mapper查询分页
-     *
-     * @param statement
-     * @param params
-     * @param pageForm
-     * @return
-     * @throws DataServiceException
-     */
-    protected <T> DataPaging<T> selectMapperPaging(final String statement, Map<String, Object> params,
-                                                   PageForm pageForm) throws DataServiceException {
-        final Page<Map<String, Object>> page = buildPage(pageForm);
-        final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
-        tempParams.put("pg", page);
-        final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
-        final DataPaging<T> dataPaging = new DataPaging<>(list, page.getTotal(), page.getPages(), pageForm);
-        return dataPaging;
-    }
+//    /**
+//     * 通过Mapper查询分页
+//     *
+//     * @param statement
+//     * @param params
+//     * @param pageForm
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    protected <T> DataPaging<T> selectMapperPaging(final String statement, Map<String, Object> params,
+//                                                   PageForm pageForm) throws DataServiceException {
+//        final Page<Map<String, Object>> page = buildPage(pageForm);
+//        final Map<String, Object> tempParams = MapUtils.isEmpty(params) ? Maps.newLinkedHashMap() : params;
+//        tempParams.put("pg", page);
+//        final List<T> list = this.sqlSessionTemplate.selectList(sqlStatement(statement), tempParams);
+//        final DataPaging<T> dataPaging = new DataPaging<>(list, page.getTotal(), page.getPages(), pageForm);
+//        return dataPaging;
+//    }
 
-    /**
-     * 通过Mapper查询一个实体
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @SuppressWarnings("unchecked")
-    protected <T> T selectMapperOne(final String statement, final Object... args) throws DataServiceException {
-        return (T) CollectionUtils.firstResult(selectMapperList(sqlStatement(statement), args));
-    }
+//    /**
+//     * 通过Mapper查询一个实体
+//     *
+//     * @param statement
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    @SuppressWarnings("unchecked")
+//    protected <T> T selectMapperOne(final String statement, final Object... args) throws DataServiceException {
+//        return (T) CollectionUtils.firstResult(selectMapperList(sqlStatement(statement), args));
+//    }
 
-    /**
-     * 通过Mapper查询列表
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected <T> List<T> selectMapperList(final String statement, final Object... args) throws DataServiceException {
-        final Object parameter = buildMapperParameter(args);
-        return this.sqlSessionTemplate.selectList(sqlStatement(statement), parameter);
-    }
+//    /**
+//     * 通过Mapper查询列表
+//     *
+//     * @param statement
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    protected <T> List<T> selectMapperList(final String statement, final Object... args) throws DataServiceException {
+//        final Object parameter = buildMapperParameter(args);
+//        return this.sqlSessionTemplate.selectList(sqlStatement(statement), parameter);
+//    }
 
-    /**
-     * 通过Mapper查询Map
-     *
-     * @param statement
-     * @param mapKey
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected <K, V> Map<K, V> selectMapperMap(final String statement, String mapKey, final Object... args)
-            throws DataServiceException {
-        final Object parameter = buildMapperParameter(args);
-        return this.sqlSessionTemplate.selectMap(sqlStatement(statement), parameter, mapKey);
-    }
+//    /**
+//     * 通过Mapper查询Map
+//     *
+//     * @param statement
+//     * @param mapKey
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    protected <K, V> Map<K, V> selectMapperMap(final String statement, String mapKey, final Object... args)
+//            throws DataServiceException {
+//        final Object parameter = buildMapperParameter(args);
+//        return this.sqlSessionTemplate.selectMap(sqlStatement(statement), parameter, mapKey);
+//    }
 
-    /**
-     * 通过Mapper更新数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    protected int updateMapperMap(final String statement, final Object... args) throws DataServiceException {
-        final Object parameter = buildMapperParameter(args);
-        return this.sqlSessionTemplate.update(sqlStatement(statement), parameter);
-    }
+//    /**
+//     * 通过Mapper更新数据
+//     *
+//     * @param statement
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    protected int updateMapperMap(final String statement, final Object... args) throws DataServiceException {
+//        final Object parameter = buildMapperParameter(args);
+//        return this.sqlSessionTemplate.update(sqlStatement(statement), parameter);
+//    }
 
-    /**
-     * 通过Mapper删除数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @Transactional(rollbackFor = Exception.class)
-    protected int deleteMapperMap(final String statement, final Object... args) throws DataServiceException {
-        final Object parameter = buildMapperParameter(args);
-        return this.sqlSessionTemplate.delete(sqlStatement(statement), parameter);
-    }
+//    /**
+//     * 通过Mapper删除数据
+//     *
+//     * @param statement
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    @Transactional(rollbackFor = Exception.class)
+//    protected int deleteMapperMap(final String statement, final Object... args) throws DataServiceException {
+//        final Object parameter = buildMapperParameter(args);
+//        return this.sqlSessionTemplate.delete(sqlStatement(statement), parameter);
+//    }
 
-    /**
-     * 通过Mapper插入数据
-     *
-     * @param statement
-     * @param args
-     * @return
-     * @throws DataServiceException
-     */
-    @Transactional(rollbackFor = Exception.class)
-    protected int insertMapperMap(final String statement, final Object... args) throws DataServiceException {
-        final Object parameter = buildMapperParameter(args);
-        return this.sqlSessionTemplate.insert(sqlStatement(statement), parameter);
-    }
+//    /**
+//     * 通过Mapper插入数据
+//     *
+//     * @param statement
+//     * @param args
+//     * @return
+//     * @throws DataServiceException
+//     */
+//    @Transactional(rollbackFor = Exception.class)
+//    protected int insertMapperMap(final String statement, final Object... args) throws DataServiceException {
+//        final Object parameter = buildMapperParameter(args);
+//        return this.sqlSessionTemplate.insert(sqlStatement(statement), parameter);
+//    }
 
     // ---------------------------------------------------------build转换方法----------------------------------------------------------------------
 
@@ -406,8 +413,9 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     }
 
     private <T> Page<T> buildPage(PageForm pageForm) {
-        if (pageForm == null)
+        if (pageForm == null) {
             pageForm = PageForm.NO_PAGING();
+        }
         final Page<T> page = new Page<T>(pageForm.getCurrPage(), pageForm.getPageSize());
         final Map<String, String> rule = MapUtils.split(pageForm.getSortRule(), Maps.newLinkedHashMap(), ",", ":");
         for (String col : rule.keySet()) {
@@ -456,7 +464,7 @@ public class BaseSqlService<Entity extends BaseEntity> extends ServiceImpl<BaseM
     @SuppressWarnings("unchecked")
     @Override
     protected Class<Entity> currentModelClass() {
-        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), 0);
+        return (Class<Entity>) ReflectionKit.getSuperClassGenericType(getClass(), ServiceImpl.class, 1);
     }
 
 }
