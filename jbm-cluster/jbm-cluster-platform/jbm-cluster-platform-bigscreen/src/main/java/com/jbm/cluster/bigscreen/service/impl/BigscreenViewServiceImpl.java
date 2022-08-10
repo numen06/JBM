@@ -83,10 +83,6 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         return viewDir;
     }
 
-    @Override
-    protected int deleteMapperMap(String statement, Object... args) {
-        return super.deleteMapperMap(statement, args);
-    }
 
     private File getViewZip(BigscreenView bigscreenView) {
         File zip = Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getId() + ".zip").toFile();
@@ -171,7 +167,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
     private void checkParentDelete(Long parentId) {
         BigscreenView parentView = new BigscreenView();
         parentView.setParentId(parentId);
-        int cot = this.count(parentView);
+        Long cot = this.count(parentView);
         if (cot > 0) {
             throw new ServiceException("存在子视图不允许删除");
         }
