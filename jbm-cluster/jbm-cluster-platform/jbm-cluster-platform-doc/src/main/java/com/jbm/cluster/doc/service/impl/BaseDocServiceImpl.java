@@ -9,11 +9,13 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import com.jbm.util.VersionUtils;
+import com.jbm.util.bean.Version;
+import jbm.framework.boot.autoconfigure.minio.MinioException;
 import jbm.framework.boot.autoconfigure.minio.MinioService;
 import jodd.io.FileNameUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.HandlerMapping;
@@ -23,6 +25,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * @Author: wesley.zhang
@@ -38,6 +42,28 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+    }
+
+
+    public BaseDoc selectByDocId(String docId) {
+        return super.getById(docId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeByIds(Collection<?> list) {
+        list.stream().forEach(new Consumer<Object>() {
+            @Override
+            public void accept(Object o) {
+                BaseDoc baseDoc = selectByDocId(o.toString());
+                try {
+                    minioService.remove(Paths.get(baseDoc.getDocPath()));
+                } catch (MinioException e) {
+                    throw new ServiceException("删除文件失败");
+                }
+            }
+        });
+        return super.removeByIds(list);
     }
 
     /**
@@ -97,7 +123,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         baseDoc.setDocName(file.getName());
         baseDoc.setSize(FileUtil.size(file));
         //文件版本
-        baseDoc.setVersion(VersionUtils.create().toString());
+        baseDoc.setVersion(new Version());
         baseDoc.setContentType(FileUtil.getMimeType(file.getName()));
         //文件路径
         baseDoc.setDocPath(file.getName());
@@ -132,7 +158,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         baseDoc.setDocName(file.getOriginalFilename());
         baseDoc.setSize(file.getSize());
         //文件版本
-        baseDoc.setVersion(VersionUtils.create().toString());
+        baseDoc.setVersion(new Version());
         Path path = Paths.get(filePath, fileName);
         baseDoc.setContentType(FileUtil.getMimeType(path));
         //文件路径

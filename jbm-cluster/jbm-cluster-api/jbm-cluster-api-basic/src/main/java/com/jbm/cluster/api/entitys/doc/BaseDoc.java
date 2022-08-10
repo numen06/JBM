@@ -3,13 +3,16 @@ package com.jbm.cluster.api.entitys.doc;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.framework.masterdata.converters.StringConverter;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.util.bean.Version;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.Date;
@@ -52,7 +55,8 @@ public class BaseDoc extends MasterDataEntity {
     private Date ExpirationTime;
 
     @ApiModelProperty(value = "文档版本")
-    private String version;
+    @Convert(converter = StringConverter.class)
+    private Version version;
 
     @ApiModelProperty(value = "文档创建者")
     private Long creator;

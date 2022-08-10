@@ -26,24 +26,22 @@ import java.util.List;
  * Value object to represent a Version consisting of major, minor and bugfix
  * part.
  *
- * @author Oliver Gierke
+ * @author wesley.zhang
  */
 public class Version implements Comparable<Version> {
 
     private static final String VERSION_PARSE_ERROR = "Invalid version string! Could not parse segment %s within %s.";
 
-    private int major;
-    private int minor;
-    private int bugfix;
-    private int build;
+    private int major = 1;
+    private int minor = 0;
+    private int bugfix = 0;
+    private int build = 0;
 
-    /**
-     * Creates a new {@link Version} from the given integer values. At least one
-     * value has to be given but a maximum of 4.
-     *
-     * @param parts must not be {@literal null} or empty.
-     */
-    public Version(int... parts) {
+    public Version() {
+        this(1, 0, 0);
+    }
+
+    public Version(int[] parts) {
         Assert.notNull(parts);
         Assert.isTrue(parts.length > 0 && parts.length < 5);
 
@@ -56,6 +54,24 @@ public class Version implements Comparable<Version> {
         Assert.isTrue(minor >= 0, "Minor version must be greater or equal zero!");
         Assert.isTrue(bugfix >= 0, "Bugfix version must be greater or equal zero!");
         Assert.isTrue(build >= 0, "Build version must be greater or equal zero!");
+    }
+
+    public Version(int major) {
+        this(major, 0, 0, 0);
+    }
+
+
+    public Version(int major, int minor) {
+        this(major, minor, 0, 0);
+    }
+
+    public Version(int major, int minor, int bugfix) {
+        this(major, minor, bugfix, 0);
+    }
+
+
+    public Version(int major, int minor, int bugfix, int build) {
+        this(new int[]{major, minor, bugfix, build});
     }
 
     /**

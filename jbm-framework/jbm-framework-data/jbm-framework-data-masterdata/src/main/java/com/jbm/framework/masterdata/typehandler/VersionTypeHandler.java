@@ -58,6 +58,7 @@ public class VersionTypeHandler extends BaseTypeHandler<Version> implements Attr
         return convert(cs.getString(columnIndex));
     }
 
+
     private Version convert(String val) {
         return Version.parse(val);
     }
