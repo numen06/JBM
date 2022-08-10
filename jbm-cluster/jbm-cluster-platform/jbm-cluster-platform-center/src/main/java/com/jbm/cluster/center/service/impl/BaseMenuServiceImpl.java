@@ -103,7 +103,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(BaseMenu::getMenuCode, menuCode);
-        int count = baseMenuMapper.selectCount(queryWrapper);
+        Long count = baseMenuMapper.selectCount(queryWrapper);
         return count > 0 ? true : false;
     }
 

@@ -142,7 +142,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     public Boolean isExist(String routeName) {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(GatewayRoute::getRouteName, routeName);
-        int count = count(queryWrapper);
+        Long count = count(queryWrapper);
         return count > 0;
     }
 }

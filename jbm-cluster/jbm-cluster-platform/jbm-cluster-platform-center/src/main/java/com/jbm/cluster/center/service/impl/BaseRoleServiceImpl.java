@@ -134,7 +134,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         if (role != null && role.getIsPersist().equals(JbmConstants.ENABLED)) {
             throw new ServiceException(String.format("保留数据,不允许删除"));
         }
-        int count = getCountByRole(roleId);
+        Long count = getCountByRole(roleId);
         if (count > 0) {
             throw new ServiceException("该角色下存在授权人员,不允许删除!");
         }
@@ -232,10 +232,10 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      * @return
      */
     @Override
-    public int getCountByRole(Long roleId) {
+    public Long getCountByRole(Long roleId) {
         QueryWrapper<BaseRoleUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseRoleUser::getRoleId, roleId);
-        int result = baseRoleUserMapper.selectCount(queryWrapper);
+        Long result = baseRoleUserMapper.selectCount(queryWrapper);
         return result;
     }
 
@@ -246,10 +246,10 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      * @return
      */
     @Override
-    public int getCountByUser(Long userId) {
+    public Long getCountByUser(Long userId) {
         QueryWrapper<BaseRoleUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseRoleUser::getUserId, userId);
-        int result = baseRoleUserMapper.selectCount(queryWrapper);
+        Long result = baseRoleUserMapper.selectCount(queryWrapper);
         return result;
     }
 
@@ -292,7 +292,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         queryWrapper.lambda().eq(BaseRoleUser::getRoleId, roleId);
         queryWrapper.lambda().eq(BaseRoleUser::getUserId, userId);
         baseRoleUserMapper.delete(queryWrapper);
-        int result = baseRoleUserMapper.selectCount(queryWrapper);
+        Long result = baseRoleUserMapper.selectCount(queryWrapper);
         return result > 0;
     }
 

@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -149,7 +150,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
                 .eq(BaseAccount::getAccount, account)
                 .eq(BaseAccount::getAccountType, accountType)
                 .eq(BaseAccount::getDomain, domain);
-        int count = baseAccountMapper.selectCount(queryWrapper);
+        Long count = baseAccountMapper.selectCount(queryWrapper);
         return count > 0 ? true : false;
     }
 
@@ -258,9 +259,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         queryWrapper.lambda()
 //                .eq(BaseAccountLogs::getAccountId, log.getAccountId())
                 .eq(BaseAccountLogs::getUserId, log.getUserId());
-        int count = baseAccountLogsMapper.selectCount(queryWrapper);
-        log.setLoginTime(new Date());
-        log.setLoginNums(count + 1);
+        Long count = baseAccountLogsMapper.selectCount(queryWrapper);
+        log.setLoginTime(DateTime.now());
+        log.setLoginNums(count.intValue() + 1);
         baseAccountLogsMapper.insert(log);
     }
 

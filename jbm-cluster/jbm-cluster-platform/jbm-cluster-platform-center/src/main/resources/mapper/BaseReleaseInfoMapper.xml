@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.center.mapper.BaseReleaseInfoMapper">
 
-    <select id="findLastVersionInfo" parameterType="com.jbm.cluster.api.entitys.basic.BaseReleaseInfo" resultType="map">
+    <select id="findLastVersionInfo" parameterType="com.jbm.cluster.api.entitys.basic.BaseReleaseInfo" resultType="com.jbm.cluster.api.entitys.basic.BaseReleaseInfo">
         SELECT
         *
         FROM

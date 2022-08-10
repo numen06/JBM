@@ -236,13 +236,13 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         QueryWrapper<BaseAuthorityRole> roleQueryWrapper = new QueryWrapper();
         roleQueryWrapper.lambda().eq(BaseAuthorityRole::getAuthorityId, authority.getAuthorityId());
-        int roleGrantedCount = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
+        Long roleGrantedCount = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
         QueryWrapper<BaseAuthorityUser> userQueryWrapper = new QueryWrapper();
         userQueryWrapper.lambda().eq(BaseAuthorityUser::getAuthorityId, authority.getAuthorityId());
-        int userGrantedCount = baseAuthorityUserMapper.selectCount(userQueryWrapper);
+        Long userGrantedCount = baseAuthorityUserMapper.selectCount(userQueryWrapper);
         QueryWrapper<BaseAuthorityApp> appQueryWrapper = new QueryWrapper();
         appQueryWrapper.lambda().eq(BaseAuthorityApp::getAuthorityId, authority.getAuthorityId());
-        int appGrantedCount = baseAuthorityAppMapper.selectCount(appQueryWrapper);
+        Long appGrantedCount = baseAuthorityAppMapper.selectCount(appQueryWrapper);
         return roleGrantedCount > 0 || userGrantedCount > 0 || appGrantedCount > 0;
     }
 
@@ -433,7 +433,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         appQueryWrapper.lambda()
                 .eq(BaseAuthorityApp::getAppId, appId)
                 .eq(BaseAuthorityApp::getAuthorityId, authorityId);
-        int count = baseAuthorityAppMapper.selectCount(appQueryWrapper);
+        Long count = baseAuthorityAppMapper.selectCount(appQueryWrapper);
         if (count > 0) {
             return;
         }
@@ -600,7 +600,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         roleQueryWrapper.lambda()
                 .in(BaseAuthorityRole::getRoleId, roleIds)
                 .eq(BaseAuthorityRole::getAuthorityId, authorityId);
-        int count = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
+        Long count = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
         return count > 0;
     }
 

@@ -89,7 +89,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     public Boolean isExist(String apiCode) {
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseApi::getApiCode, apiCode);
-        int count = getCount(queryWrapper);
+        Long count = getCount(queryWrapper);
         return count > 0 ? true : false;
     }
 
@@ -194,7 +194,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      * @return
      */
     @Override
-    public int getCount(QueryWrapper<BaseApi> queryWrapper) {
+    public Long getCount(QueryWrapper<BaseApi> queryWrapper) {
         return baseApiMapper.selectCount(queryWrapper);
     }
 

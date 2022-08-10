@@ -95,7 +95,7 @@ public interface BaseRoleService extends IMasterDataService<BaseRole> {
      * @param roleId
      * @return
      */
-    int getCountByRole(Long roleId);
+    Long getCountByRole(Long roleId);
 
     /**
      * 获取组员角色数量
@@ -103,7 +103,7 @@ public interface BaseRoleService extends IMasterDataService<BaseRole> {
      * @param userId
      * @return
      */
-    int getCountByUser(Long userId);
+    Long getCountByUser(Long userId);
 
     /**
      * 移除角色所有组员

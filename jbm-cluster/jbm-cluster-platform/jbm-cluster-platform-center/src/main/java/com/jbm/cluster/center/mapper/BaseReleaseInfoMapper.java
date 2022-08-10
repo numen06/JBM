@@ -10,4 +10,6 @@ import com.jbm.framework.masterdata.mapper.SuperMapper;
  */
 @MapperRepository
 public interface BaseReleaseInfoMapper extends SuperMapper<BaseReleaseInfo> {
+
+    BaseReleaseInfo findLastVersionInfo(BaseReleaseInfo releaseInfo);
 }

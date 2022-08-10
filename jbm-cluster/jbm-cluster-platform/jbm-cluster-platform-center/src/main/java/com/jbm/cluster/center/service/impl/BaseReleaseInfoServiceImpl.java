@@ -1,12 +1,11 @@
 package com.jbm.cluster.center.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.entitys.basic.BaseReleaseInfo;
+import com.jbm.cluster.center.mapper.BaseReleaseInfoMapper;
 import com.jbm.cluster.center.service.BaseReleaseInfoService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 /**
  * @Author: wesley.zhang
@@ -15,12 +14,14 @@ import java.util.Map;
 @Service
 public class BaseReleaseInfoServiceImpl extends MasterDataServiceImpl<BaseReleaseInfo> implements BaseReleaseInfoService {
 
+
+    @Autowired
+    private BaseReleaseInfoMapper baseReleaseInfoMapper;
+
     @Override
     public BaseReleaseInfo findLastVersionInfo(BaseReleaseInfo releaseInfo) {
-        Map<String, Object> map = this.selectMapperOne("findLastVersionInfo", releaseInfo);
-        String json = JSON.toJSONString(map);
-        releaseInfo = JSON.parseObject(json, BaseReleaseInfo.class);
-        return releaseInfo;
+        BaseReleaseInfo baseReleaseInfo = baseReleaseInfoMapper.findLastVersionInfo(releaseInfo);
+        return baseReleaseInfo;
     }
 
 

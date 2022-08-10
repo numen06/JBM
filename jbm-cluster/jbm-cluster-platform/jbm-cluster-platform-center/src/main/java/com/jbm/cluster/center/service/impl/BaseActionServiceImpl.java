@@ -95,7 +95,7 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         QueryWrapper<BaseAction> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
                 .eq(BaseAction::getActionCode, acitonCode);
-        int count = baseActionMapper.selectCount(queryWrapper);
+        Long count = baseActionMapper.selectCount(queryWrapper);
         return count > 0 ? true : false;
     }
 
