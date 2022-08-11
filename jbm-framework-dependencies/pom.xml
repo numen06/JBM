@@ -524,6 +524,11 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-node-mysql</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-core</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>

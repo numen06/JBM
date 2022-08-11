@@ -26,7 +26,7 @@ jbm:
     token-type: redis
     permit-all:
       - /static/**
-#      - /views/**
+      - /views/**
 swagger2:
   enabled: true
   description: 大屏管理服务
