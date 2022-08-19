@@ -1,5 +1,7 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.logs.entity.GatewayLogs;
@@ -13,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -29,41 +32,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
-        Query query = new Query();
-        if (isOperation && StrUtil.isBlank(gatewayLogsForm.getGatewayLogs().getApiName())) {
-            query.addCriteria(Criteria.where("apiName").exists(true));
-        }
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getApiName()))
-            query.addCriteria(this.likeCriteria("apiName", gatewayLogsForm.getGatewayLogs().getApiName()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getPath()))
-            query.addCriteria(this.likeCriteria("path", gatewayLogsForm.getGatewayLogs().getPath()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getIp()))
-            query.addCriteria(this.likeCriteria("ip", gatewayLogsForm.getGatewayLogs().getIp()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getServiceId()))
-            query.addCriteria(this.likeCriteria("serviceId", gatewayLogsForm.getGatewayLogs().getServiceId()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getError()))
-            query.addCriteria(this.likeCriteria("error", gatewayLogsForm.getGatewayLogs().getError()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getHttpStatus()))
-            query.addCriteria(Criteria.where("httpStatus").is(gatewayLogsForm.getGatewayLogs().getHttpStatus()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getUseTime()))
-            query.addCriteria(Criteria.where("useTime").gte(gatewayLogsForm.getGatewayLogs().getUseTime()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getMethod()))
-            query.addCriteria(Criteria.where("method").is(gatewayLogsForm.getGatewayLogs().getMethod()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getOperationType()))
-            query.addCriteria(Criteria.where("operationType").is(gatewayLogsForm.getGatewayLogs().getOperationType()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getRequestUserId()))
-            query.addCriteria(Criteria.where("requestUserId").is(gatewayLogsForm.getGatewayLogs().getRequestUserId()));
-        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getRequestRealName()))
-            query.addCriteria(Criteria.where("requestRealName").is(gatewayLogsForm.getGatewayLogs().getRequestRealName()));
-        if (ObjectUtil.isAllNotEmpty(gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime())) {
-            query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()).lte(gatewayLogsForm.getEndTime()));
-        } else {
-            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getBeginTime()))
-                query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()));
-            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getEndTime()))
-                query.addCriteria(Criteria.where("requestTime").lte(gatewayLogsForm.getEndTime()));
-        }
-
+        Query query = this.buildQuery(gatewayLogsForm, isOperation);
 //        List<Sort.Order> orders = new ArrayList<Sort.Order>();  //排序
 //        orders.add(new Sort.Order(Sort.Direction.DESC, "requestTime"));
 //        Sort sort = new Sort(orders);
@@ -81,8 +50,76 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     }
 
     @Override
-    public String testDubbo(String tiancai) {
-        return tiancai;
+    public Long totalAccess() {
+        GatewayLogsForm gatewayLogsForm = new GatewayLogsForm();
+        gatewayLogsForm.setGatewayLogs(new GatewayLogs());
+        Query query = this.buildQuery(gatewayLogsForm, false);
+        Long total = mongoTemplate.count(query, GatewayLogs.class);
+        return total;
     }
+    @Override
+    public Long todayAccess() {
+        GatewayLogsForm gatewayLogsForm = new GatewayLogsForm();
+        gatewayLogsForm.setGatewayLogs(new GatewayLogs());
+        Date now = DateTime.now();
+        Date today = DateUtil.beginOfDay(now);
+        gatewayLogsForm.setBeginTime(today);
+        gatewayLogsForm.setBeginTime(DateUtil.offsetDay(today, 1));
+        Query query = this.buildQuery(gatewayLogsForm, false);
+        Long total = mongoTemplate.count(query, GatewayLogs.class);
+        return total;
+    }
+
+    public Query buildQuery(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
+        Query query = new Query();
+        if (isOperation && StrUtil.isBlank(gatewayLogsForm.getGatewayLogs().getApiName())) {
+            query.addCriteria(Criteria.where("apiName").exists(true));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getApiName())) {
+            query.addCriteria(this.likeCriteria("apiName", gatewayLogsForm.getGatewayLogs().getApiName()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getPath())) {
+            query.addCriteria(this.likeCriteria("path", gatewayLogsForm.getGatewayLogs().getPath()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getIp())) {
+            query.addCriteria(this.likeCriteria("ip", gatewayLogsForm.getGatewayLogs().getIp()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getServiceId())) {
+            query.addCriteria(this.likeCriteria("serviceId", gatewayLogsForm.getGatewayLogs().getServiceId()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getError())) {
+            query.addCriteria(this.likeCriteria("error", gatewayLogsForm.getGatewayLogs().getError()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getHttpStatus())) {
+            query.addCriteria(Criteria.where("httpStatus").is(gatewayLogsForm.getGatewayLogs().getHttpStatus()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getUseTime())) {
+            query.addCriteria(Criteria.where("useTime").gte(gatewayLogsForm.getGatewayLogs().getUseTime()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getMethod())) {
+            query.addCriteria(Criteria.where("method").is(gatewayLogsForm.getGatewayLogs().getMethod()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getOperationType())) {
+            query.addCriteria(Criteria.where("operationType").is(gatewayLogsForm.getGatewayLogs().getOperationType()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getRequestUserId())) {
+            query.addCriteria(Criteria.where("requestUserId").is(gatewayLogsForm.getGatewayLogs().getRequestUserId()));
+        }
+        if (ObjectUtil.isNotEmpty(gatewayLogsForm.getGatewayLogs().getRequestRealName())) {
+            query.addCriteria(Criteria.where("requestRealName").is(gatewayLogsForm.getGatewayLogs().getRequestRealName()));
+        }
+        if (ObjectUtil.isAllNotEmpty(gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime())) {
+            query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()).lte(gatewayLogsForm.getEndTime()));
+        } else {
+            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getBeginTime())) {
+                query.addCriteria(Criteria.where("requestTime").gte(gatewayLogsForm.getBeginTime()));
+            }
+            if (ObjectUtil.isNotEmpty(gatewayLogsForm.getEndTime())) {
+                query.addCriteria(Criteria.where("requestTime").lte(gatewayLogsForm.getEndTime()));
+            }
+        }
+        return query;
+    }
+
 
 }

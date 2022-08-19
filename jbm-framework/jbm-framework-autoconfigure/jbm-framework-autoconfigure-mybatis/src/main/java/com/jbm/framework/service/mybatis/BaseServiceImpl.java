@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -187,5 +188,10 @@ public abstract class BaseServiceImpl<M extends SuperMapper<T>, T> extends Servi
 
     protected String sqlStatement(Class mapper, String sqlMethod) {
         return StrUtil.concat(true, getMapperName(mapper), sqlMethod);
+    }
+
+    @Override
+    protected String getSqlStatement(SqlMethod sqlMethod) {
+        return sqlStatement(sqlMethod.getMethod());
     }
 }

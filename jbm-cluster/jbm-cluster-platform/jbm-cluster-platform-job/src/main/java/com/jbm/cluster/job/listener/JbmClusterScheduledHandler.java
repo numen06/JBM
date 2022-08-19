@@ -35,8 +35,9 @@ public class JbmClusterScheduledHandler {
     public void ScanDicResourceQueue(@Payload List<JbmClusterEventBean> jbmClusterEventBeans) {
         log.info("接受到集群推送的定时任务,数量为:{}", CollUtil.size(jbmClusterEventBeans));
         for (JbmClusterEventBean jbmClusterEventBean : jbmClusterEventBeans) {
-            if (ObjectUtil.isEmpty(jbmClusterEventBean))
+            if (ObjectUtil.isEmpty(jbmClusterEventBean)) {
                 continue;
+            }
             try {
                 sysJobService.saveEntity(this.conventType(jbmClusterEventBean));
             } catch (Exception e) {

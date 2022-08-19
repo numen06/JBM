@@ -6,12 +6,14 @@ import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
+import com.jbm.cluster.logs.event.AccessEvent;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.util.statistics.CountWithTime;
 import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -55,6 +57,8 @@ public class GatewayLogsHandler {
     @Autowired
     private StreamBridge streamBridge;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Bean
     public Function<Flux<Message<GatewayLogs>>, Mono<Void>> accessLogs() {
@@ -66,6 +70,7 @@ public class GatewayLogsHandler {
                         //设置IP属地
                         logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));
                     }
+                    applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
                     gatewayLogsService.save(logs);
                 }
                 return message;

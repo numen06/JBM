@@ -209,27 +209,6 @@ public interface IBaseSqlService<Entity extends BaseEntity> extends IService<Ent
 
     /**
      * <p>
-     * 根据ID 批量更新
-     * </p>
-     *
-     * @param entityList 实体对象集合
-     */
-    default boolean updateBatchById(Collection<Entity> entityList) {
-        return updateBatchById(entityList, 30);
-    }
-
-    /**
-     * <p>
-     * 根据ID 批量更新
-     * </p>
-     *
-     * @param entityList 实体对象集合
-     * @param batchSize  更新批次数量
-     */
-    boolean updateBatchById(Collection<Entity> entityList, int batchSize);
-
-    /**
-     * <p>
      * TableId 注解存在更新记录，否插入一条记录
      * </p>
      *

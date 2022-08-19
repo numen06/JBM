@@ -1,10 +1,7 @@
 package com.jbm.autoconfig.dic;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.EnumUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.*;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -55,13 +52,15 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
             jsonObject.put(TYPE_FIELD, enumType.getType());
             jsonObject.put(TYPE_NAME_FIELD, enumType.getTypeName());
             JbmDictionary jbmDictionary = this.putValue(jsonObject, keys, e, fields);
-            if (jbmDictionary == null)
+            if (jbmDictionary == null) {
                 return jbmDictionaries;
+            }
             //设置类型
             putCodeValue(jsonObject, keys, e);
             for (String field : fields) {
-                if (CollectionUtil.contains(keys.values(), field))
+                if (CollectionUtil.contains(keys.values(), field)) {
                     continue;
+                }
                 jsonObject.put(field, ReflectUtil.getFieldValue(e, field));
             }
             jbmDictionary = jsonObject.toJavaObject(JbmDictionary.class);
@@ -88,8 +87,9 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
     private JbmDictionary putValue(JSONObject jsonObject, Map<String, String> keys, Enum<?> e, List<String> fields) {
         JbmDictionary jbmDictionary = new JbmDictionary();
         final String key = keys.containsKey(VALUE_FIELD) ? keys.get(VALUE_FIELD) : VALUE_FIELD;
-        if (!CollectionUtil.contains(fields, key))
+        if (!CollectionUtil.contains(fields, key)) {
             return null;
+        }
         jsonObject.put(VALUE_FIELD, ReflectUtil.getFieldValue(e, key));
         jbmDictionary.setValue(jsonObject.getString(VALUE_FIELD));
 //        fields.remove(key);
@@ -98,10 +98,11 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
 
     private void putCodeValue(JSONObject jsonObject, Map<String, String> keys, Enum<?> e) {
         final String key = keys.get(CODE_FIELD);
-        if (ObjectUtil.isNotEmpty(key))
+        if (ObjectUtil.isNotEmpty(key)) {
             jsonObject.put("code", ReflectUtil.getFieldValue(e, keys.get(CODE_FIELD)));
-        else
+        } else {
             jsonObject.put("code", e.toString());
+        }
     }
 
     public Map<String, String> parseCodeAnnotation(Class<? extends Enum<?>> emClass, List<String> fields) {
@@ -109,6 +110,12 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
         maps.put("value", "value");
         for (String fieldName : fields) {
             Field field = ReflectUtil.getField(emClass, fieldName);
+            Class clz = ClassUtil.loadClass("com.baomidou.mybatisplus.annotation.EnumValue");
+            if (ObjectUtil.isNotEmpty(clz)) {
+                if (ObjectUtil.isNotEmpty(field.getDeclaredAnnotation(clz))) {
+                    maps.put(CODE_FIELD, fieldName);
+                }
+            }
             if (ObjectUtil.isNotEmpty(field.getDeclaredAnnotation(JbmDicCode.class))) {
                 maps.put(CODE_FIELD, fieldName);
             }

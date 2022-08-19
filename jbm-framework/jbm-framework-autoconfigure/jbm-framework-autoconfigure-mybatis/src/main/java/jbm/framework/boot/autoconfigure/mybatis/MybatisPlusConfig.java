@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.autoconfigure.MybatisPlusProperties;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.google.common.collect.Sets;
+import com.jbm.framework.dao.JdbcDataSourceProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +42,7 @@ import java.util.Set;
  * https://baomidou.com/pages/2a45ff/
  */
 @Configuration
+@EnableConfigurationProperties({JdbcDataSourceProperties.class})
 public class MybatisPlusConfig {
 
 
@@ -107,5 +110,6 @@ public class MybatisPlusConfig {
 
         return mybatisMapperRefresh;
     }
+
 
 }

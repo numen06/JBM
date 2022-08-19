@@ -9,6 +9,7 @@ import com.jbm.framework.masterdata.usage.bean.EntityMap;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface SuperMapper<T> extends BaseMapper<T> {
@@ -16,4 +17,7 @@ public interface SuperMapper<T> extends BaseMapper<T> {
 
 
     List<EntityMap> getEntityMap(@Param(Constants.WRAPPER) Wrapper<?> wrapper);
+
+    Page<T> selectPageList(Map<String, Object> params);
+
 }

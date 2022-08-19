@@ -193,27 +193,6 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
     @Transactional(rollbackFor = Exception.class)
     DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody);
 
-    /**
-     * <p>
-     * 根据ID 批量更新
-     * </p>
-     *
-     * @param entityList 实体对象集合
-     */
-    default boolean updateBatchById(Collection<Entity> entityList) {
-        return updateBatchById(entityList, 30);
-    }
-
-    /**
-     * <p>
-     * 根据ID 批量更新
-     * </p>
-     *
-     * @param entityList 实体对象集合
-     * @param batchSize  更新批次数量
-     */
-    boolean updateBatchById(Collection<Entity> entityList, int batchSize);
-
 
     /**
      * 插入一个实体

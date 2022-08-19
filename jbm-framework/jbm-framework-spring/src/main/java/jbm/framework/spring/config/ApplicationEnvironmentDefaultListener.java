@@ -5,6 +5,7 @@ import com.jbm.util.MapUtils;
 import com.jbm.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.context.ApplicationListener;

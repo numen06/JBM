@@ -230,11 +230,6 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
         return ServiceUtils.pageToDataPaging(pages);
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateBatchById(Collection<Entity> entityList) {
-        return super.updateBatchById(entityList);
-    }
 
     @Transactional(rollbackFor = Exception.class)
     @Override

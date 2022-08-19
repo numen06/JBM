@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @Author: auto generate by jbm
@@ -38,6 +40,17 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
         UpdateWrapper<PushMessageItem> updateWrapper = new UpdateWrapper<>();
         updateWrapper.lambda().set(PushMessageItem::getReadFlag, true).in(PushMessageItem::getMsgId, ids);
         return this.update(updateWrapper);
+//        List<PushMessageItem> list = new ArrayList<>();
+//        ids.forEach(new Consumer<String>() {
+//            @Override
+//            public void accept(String id) {
+//                PushMessageItem pushMessageItem = new PushMessageItem();
+//                pushMessageItem.setReadFlag(true);
+//                pushMessageItem.setMsgId(id);
+//                list.add(pushMessageItem);
+//            }
+//        });
+//        return this.updateBatchById(list);
     }
 
     @Override
