@@ -1,8 +1,11 @@
 package test.util;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
+import com.jbm.util.version.VersionDeserializer;
 import com.jbm.util.VersionUtils;
 import com.jbm.util.bean.Version;
 import org.junit.Test;
@@ -61,6 +64,12 @@ public class VersionTest {
         String verStr2 = "1.0.0";
         SerializeConfig serializeConfig = SerializeConfig.globalInstance;
         serializeConfig.put(Version.class, ToStringSerializer.instance);
+
+        ParserConfig parserConfig = ParserConfig.getGlobalInstance();
+        parserConfig.putDeserializer(Version.class, new VersionDeserializer());
+
+        JSONObject jsonObject = JSON.parseObject("{\"test\":\"1.10.0\"}");
+        jsonObject.getObject("test", Version.class);
 
         Version version = VersionUtils.create(verStr1);
 

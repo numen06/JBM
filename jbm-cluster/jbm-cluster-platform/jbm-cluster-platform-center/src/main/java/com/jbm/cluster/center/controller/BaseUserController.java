@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.exceptions.ValidateException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
+import com.jbm.cluster.api.form.user.UserInfoStatistics;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseRoleService;
@@ -380,5 +382,18 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             return ResultBody.error(e);
         }
     }
+
+    @ApiOperation(value = "用户统计")
+    @GetMapping("/getUserInfoStatistics")
+    public ResultBody<UserInfoStatistics> getUserInfoStatistics() {
+        return ResultBody.callback(() -> {
+            UserInfoStatistics userInfoStatistics = new UserInfoStatistics();
+            List<String> list = StpUtil.searchTokenValue("", -1, 0);
+            userInfoStatistics.setOnlineUser(new Long(list.size()));
+            userInfoStatistics.setUsersTotal(baseUserService.count(new BaseUser()));
+            return userInfoStatistics;
+        });
+    }
+
 
 }

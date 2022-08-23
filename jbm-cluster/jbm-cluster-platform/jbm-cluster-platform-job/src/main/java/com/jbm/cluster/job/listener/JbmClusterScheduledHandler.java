@@ -7,15 +7,21 @@ import com.jbm.cluster.api.bus.JbmClusterEventBean;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
 import com.jbm.cluster.api.entitys.job.SysJob;
+import com.jbm.cluster.api.model.dic.JbmDicResource;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.job.service.SysJobService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Payload;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * mq消息接收者
@@ -28,11 +34,19 @@ public class JbmClusterScheduledHandler {
     @Autowired
     private SysJobService sysJobService;
 
+
+    @Bean
+    public Function<Flux<Message<List<JbmClusterEventBean>>>, Mono<Void>> scheduledJob() {
+        return flux -> flux.map(message -> {
+            this.scheduledJobQueue(message.getPayload());
+            return message;
+        }).then();
+    }
+
     /**
      * 接收API资源扫描消息
      */
-    @RabbitListener(queues = QueueConstants.QUEUE_SCAN_SCHEDULED)
-    public void ScanDicResourceQueue(@Payload List<JbmClusterEventBean> jbmClusterEventBeans) {
+    public void scheduledJobQueue(@Payload List<JbmClusterEventBean> jbmClusterEventBeans) {
         log.info("接受到集群推送的定时任务,数量为:{}", CollUtil.size(jbmClusterEventBeans));
         for (JbmClusterEventBean jbmClusterEventBean : jbmClusterEventBeans) {
             if (ObjectUtil.isEmpty(jbmClusterEventBean)) {

@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -41,18 +42,19 @@ public class ClusterAccessServiceImpl implements ClusterAccessService {
      */
     @EventListener
     public void accumulate(AccessEvent accessEvent) {
-        AtomicLong atomicTotal = new AtomicLong(clusterAccessInfo.getTotal());
-        clusterAccessInfo.setTotal(atomicTotal.addAndGet(1));
-        try {
-            if (DateUtil.isSameDay(clusterAccessInfo.getTime(), DateTime.now())) {
+        redisService.syncExecute("test", 3, TimeUnit.SECONDS, (key) -> {
+            AtomicLong atomicTotal = new AtomicLong(clusterAccessInfo.getTotal());
+            clusterAccessInfo.setTotal(atomicTotal.addAndGet(1));
+            if (ObjectUtil.isEmpty(clusterAccessInfo.getTime())) {
+                clusterAccessInfo.setTime(DateTime.now());
+            }
+            if (!DateUtil.isSameDay(clusterAccessInfo.getTime(), DateTime.now())) {
                 clusterAccessInfo.setToday(0L);
             }
-        } catch (Exception e) {
-            clusterAccessInfo.setToday(0L);
-        }
-        AtomicLong atomicToday = new AtomicLong(clusterAccessInfo.getToday());
-        clusterAccessInfo.setToday(atomicToday.addAndGet(1));
-        redisService.setCacheObject(ACCESS_CACHE_KEY, clusterAccessInfo);
+            AtomicLong atomicToday = new AtomicLong(clusterAccessInfo.getToday());
+            clusterAccessInfo.setToday(atomicToday.addAndGet(1));
+            redisService.setCacheObject(ACCESS_CACHE_KEY, clusterAccessInfo);
+        });
     }
 
 

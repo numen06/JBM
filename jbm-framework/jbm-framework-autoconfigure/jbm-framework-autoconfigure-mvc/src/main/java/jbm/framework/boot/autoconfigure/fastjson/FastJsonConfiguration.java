@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.fastjson;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
@@ -9,6 +10,7 @@ import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.alibaba.fastjson.support.springfox.SwaggerJsonSerializer;
 import com.jbm.util.bean.Version;
+import com.jbm.util.version.VersionDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -66,7 +68,9 @@ public class FastJsonConfiguration {
 //        supportedMediaTypes.add(MediaType.TEXT_XML);
 //        supportedMediaTypes.add(MediaType.ALL);
         fastConverter.setSupportedMediaTypes(supportedMediaTypes);
-//        ParserConfig parserConfig = ParserConfig.getGlobalInstance();
+        //反序列化支持
+        ParserConfig parserConfig = ParserConfig.getGlobalInstance();
+        parserConfig.putDeserializer(Version.class, new VersionDeserializer());
 //        parserConfig.putDeserializer(Enum.class, new EnumValueDeserializer(Enum.class));
 //
 //        SerializeConfig globalInstance = SerializeConfig.getGlobalInstance();
@@ -102,6 +106,9 @@ public class FastJsonConfiguration {
 //                SerializerFeature.WriteNullStringAsEmpty,
 //                SerializerFeature.WriteNonStringValueAsString
         );
+        //反序列化
+        fastJsonConfig.setParserConfig(parserConfig);
+        //序列化
         fastJsonConfig.setSerializeConfig(serializeConfig);
         fastConverter.setDefaultCharset(StandardCharsets.UTF_8);
         fastConverter.setFastJsonConfig(fastJsonConfig);

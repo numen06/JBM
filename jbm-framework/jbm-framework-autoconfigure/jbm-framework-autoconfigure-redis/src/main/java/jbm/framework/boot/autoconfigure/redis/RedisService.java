@@ -1,13 +1,18 @@
 package jbm.framework.boot.autoconfigure.redis;
 
+import cn.hutool.core.thread.ThreadUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundSetOperations;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.integration.redis.util.RedisLockRegistry;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.function.Consumer;
 
 /**
  * spring redis 工具类
@@ -15,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author wesley.zhang
  **/
 @SuppressWarnings(value = {"unchecked", "rawtypes"})
+@Slf4j
 public class RedisService {
     @Autowired
     public RedisTemplate redisTemplate;
@@ -236,6 +242,31 @@ public class RedisService {
      */
     public Collection<String> keys(final String pattern) {
         return redisTemplate.keys(pattern);
+    }
+
+    @Autowired
+    private RedisLockRegistry redisLockRegistry;
+
+    public void syncExecute(String key, long time, TimeUnit unit, Consumer<String> callback) {
+        Lock redisLock = redisLockRegistry.obtain(key);
+        try {
+            while (true) {
+                if (!redisLock.tryLock(time, unit)) {
+                    ThreadUtil.safeSleep(500);
+                    continue;
+                }
+                callback.accept(key);
+                break;
+            }
+        } catch (Exception e) {
+            log.error("execute locked method occured an exception", e);
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                redisLock.unlock();
+            } catch (Exception e) {
+            }
+        }
     }
 
 
