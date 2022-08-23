@@ -50,6 +50,7 @@ public class ClusterAccessServiceImpl implements ClusterAccessService {
             }
             if (!DateUtil.isSameDay(clusterAccessInfo.getTime(), DateTime.now())) {
                 clusterAccessInfo.setToday(0L);
+                clusterAccessInfo.setTime(DateTime.now());
             }
             AtomicLong atomicToday = new AtomicLong(clusterAccessInfo.getToday());
             clusterAccessInfo.setToday(atomicToday.addAndGet(1));
