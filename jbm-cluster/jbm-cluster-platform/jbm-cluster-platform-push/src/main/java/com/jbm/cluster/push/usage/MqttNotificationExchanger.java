@@ -1,5 +1,6 @@
 package com.jbm.cluster.push.usage;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -78,6 +79,7 @@ public class MqttNotificationExchanger implements NotificationExchanger {
             throw new RuntimeException(e);
         }
         message.setPayload(outputStream.toByteArray());
+        IoUtil.close(outputStream);
         message.setQos(mqttNotification.getQos());
         try {
             if (StrUtil.isBlank(mqttNotification.getTopic())) {
