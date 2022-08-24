@@ -61,27 +61,23 @@ public class MqttNotificationExchanger implements NotificationExchanger {
         if (ObjectUtil.isEmpty(mqttNotification)) {
             mqttNotification.setBody("");
         }
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        HttpOutputMessage httpOutputMessage = new HttpOutputMessage() {
-            @Override
-            public OutputStream getBody() throws IOException {
-                return outputStream;
-            }
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            HttpOutputMessage httpOutputMessage = new HttpOutputMessage() {
+                @Override
+                public OutputStream getBody() throws IOException {
+                    return outputStream;
+                }
 
-            @Override
-            public HttpHeaders getHeaders() {
-                return new HttpHeaders();
-            }
-        };
-        try {
+                @Override
+                public HttpHeaders getHeaders() {
+                    return new HttpHeaders();
+                }
+            };
             FastJsonConfiguration.getFastJsonHttpMessageConverter().write(mqttNotification.getBody(), MediaType.APPLICATION_JSON, httpOutputMessage);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        message.setPayload(outputStream.toByteArray());
-        IoUtil.close(outputStream);
-        message.setQos(mqttNotification.getQos());
-        try {
+            message.setPayload(outputStream.toByteArray());
+            IoUtil.close(outputStream);
+            message.setQos(mqttNotification.getQos());
             if (StrUtil.isBlank(mqttNotification.getTopic())) {
                 throw new NullPointerException("没有指定Topic");
             }
