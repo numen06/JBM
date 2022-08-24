@@ -6,13 +6,19 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.model.entitys.message.MqttNotification;
 import com.jbm.cluster.api.model.entitys.message.Notification;
-import com.jbm.cluster.api.model.entitys.message.PushMessage;
+import jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpOutputMessage;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * 站内消息通知
@@ -40,6 +46,7 @@ public class MqttNotificationExchanger implements NotificationExchanger {
         }
     }
 
+
     @Override
     public boolean support(Object notification) {
         return notification.getClass().equals(MqttNotification.class);
@@ -53,7 +60,24 @@ public class MqttNotificationExchanger implements NotificationExchanger {
         if (ObjectUtil.isEmpty(mqttNotification)) {
             mqttNotification.setBody("");
         }
-        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody()));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        HttpOutputMessage httpOutputMessage = new HttpOutputMessage() {
+            @Override
+            public OutputStream getBody() throws IOException {
+                return outputStream;
+            }
+
+            @Override
+            public HttpHeaders getHeaders() {
+                return new HttpHeaders();
+            }
+        };
+        try {
+            FastJsonConfiguration.getFastJsonHttpMessageConverter().write(mqttNotification.getBody(), MediaType.APPLICATION_JSON, httpOutputMessage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        message.setPayload(outputStream.toByteArray());
         message.setQos(mqttNotification.getQos());
         try {
             if (StrUtil.isBlank(mqttNotification.getTopic())) {
