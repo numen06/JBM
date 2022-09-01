@@ -66,5 +66,10 @@ public class QueueConstants {
      */
     public static final String API_RESOURCE_STREAM = "apiResource-in-0";
 
+    /**
+     * 站内信
+     */
+    public static final String PUSH_MESSAGE_STREAM = "pushMsg-in-0";
+
 
 }

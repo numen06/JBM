@@ -4,6 +4,7 @@ import com.jbm.cluster.api.entitys.message.EmailNotification;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.api.entitys.message.SmsNotification;
+import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.core.constant.QueueConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,13 @@ public class JbmClusterNotification {
         final Message<Notification> message = MessageBuilder.withPayload(notification)
                 .build();
         streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
+    }
+
+
+    public void pushMsg(PushMsg pushMsg) {
+        final Message<PushMsg> message = MessageBuilder.withPayload(pushMsg)
+                .build();
+        streamBridge.send(QueueConstants.PUSH_MESSAGE_STREAM, message);
     }
 
 //    /**

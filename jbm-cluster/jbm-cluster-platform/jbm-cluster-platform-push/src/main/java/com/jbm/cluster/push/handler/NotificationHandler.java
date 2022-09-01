@@ -3,6 +3,8 @@ package com.jbm.cluster.push.handler;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.api.model.push.PushCallback;
+import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.cluster.push.usage.MqttNotificationExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,4 +62,14 @@ public class NotificationHandler {
         }).then();
     }
 
+    @Autowired
+    private PushMessageBodyService pushMessageBodyService;
+
+    @Bean
+    public Function<Flux<Message<PushMsg>>, Mono<Void>> pushMsg() {
+        return flux -> flux.map(message -> {
+            pushMessageBodyService.sendPushMsg(message.getPayload());
+            return message;
+        }).then();
+    }
 }

@@ -10,7 +10,7 @@ spring:
         enabled: true
       id: ${spring.application.name}:${server.port}
     function:
-      definition: notification;mqtt;pushCallBack
+      definition: notification;mqtt;pushCallBack;pushMsg
     stream:
       #      default-binder: kafka
       bindings:
@@ -19,6 +19,8 @@ spring:
         mqtt-in-0:
           group: ${spring.application.name}
         pushCallBack-in-0:
+          group: ${spring.application.name}
+        pushMsg-in-0:
           group: ${spring.application.name}
     nacos:
       config:

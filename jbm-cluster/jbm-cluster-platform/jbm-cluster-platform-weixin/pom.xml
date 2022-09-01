@@ -24,6 +24,11 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-weixin-mp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-node-basic</artifactId>
             <version>${project.version}</version>
         </dependency>

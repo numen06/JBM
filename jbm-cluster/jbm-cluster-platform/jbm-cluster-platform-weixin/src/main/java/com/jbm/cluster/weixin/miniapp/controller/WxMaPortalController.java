@@ -5,6 +5,8 @@ import cn.binarywang.wx.miniapp.bean.WxMaMessage;
 import cn.binarywang.wx.miniapp.constant.WxMaConstants;
 import jbm.framework.weixin.config.WxMaConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.mp.api.WxMpMessageRouter;
+import me.chanjar.weixin.mp.api.WxMpService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +15,7 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping("/portal/{appid}")
-public class WxPortalController {
+public class WxMaPortalController {
 
     @GetMapping(produces = "text/plain;charset=utf-8")
     @ResponseBody

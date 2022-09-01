@@ -1,5 +1,5 @@
 server:
-  port: 3313
+  port: 3319
 spring:
   application:
     name: ${artifactId}

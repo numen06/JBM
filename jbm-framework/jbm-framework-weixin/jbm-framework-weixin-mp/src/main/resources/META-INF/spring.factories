@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.weixin.config.WxMpConfiguration
+jbm.framework.weixin.WxMenuConfiguration

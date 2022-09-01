@@ -11,7 +11,22 @@
     <packaging>pom</packaging>
     <artifactId>jbm-framework-weixin</artifactId>
     <modules>
-        <module>jbm-framework-weixin-miniapp</module>
+        <module>jbm-framework-weixin-mp</module>
     </modules>
-
+    <dependencies>
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>wx-java-mp-spring-boot-starter</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+    </dependencies>
 </project>
