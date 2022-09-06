@@ -32,4 +32,9 @@ public class JbmClusterConstants {
      */
     public static final String JOB_SERVER = "jbm-cluster-platform-job";
 
+    /**
+     * 微信服务
+     */
+    public static final String WEIXIN_SERVER = "jbm-cluster-platform-weixin";
+
 }

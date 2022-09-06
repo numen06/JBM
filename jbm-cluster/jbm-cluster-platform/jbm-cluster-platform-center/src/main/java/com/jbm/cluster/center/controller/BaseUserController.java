@@ -12,6 +12,7 @@ import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.form.user.UserInfoStatistics;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -395,5 +396,16 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+
+    @Autowired
+    private BaseAccountService baseAccountService;
+
+    @ApiOperation(value = "获取用户帐号信息")
+    @GetMapping("/getUserAccounts")
+    public ResultBody<List<BaseAccount>> getUserAccounts(@RequestParam(value = "userId") Long userId) {
+        return ResultBody.callback("查询用户帐号列表成功", () -> {
+            return baseAccountService.getUserAccounts(userId);
+        });
+    }
 
 }

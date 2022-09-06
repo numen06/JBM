@@ -3,7 +3,7 @@ package com.jbm.cluster.api.entitys.message;
 import lombok.Data;
 
 /**
- * @author LIQIU
+ * @author wesley.zhang
  * @date 2018-3-27
  **/
 @Data

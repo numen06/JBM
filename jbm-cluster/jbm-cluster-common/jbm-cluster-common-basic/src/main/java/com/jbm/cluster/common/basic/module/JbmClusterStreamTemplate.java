@@ -1,5 +1,7 @@
 package com.jbm.cluster.common.basic.module;
 
+import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.model.api.JbmApiResource;
 import com.jbm.cluster.api.model.dic.JbmDicResource;
@@ -25,6 +27,14 @@ public class JbmClusterStreamTemplate {
 
     @Autowired
     private StreamBridge streamBridge;
+
+
+    public <T> void sendToStream(T obj) {
+        final Message<T> message = MessageBuilder.withPayload(obj).build();
+        String clsName = StrUtil.lowerFirst(ClassUtil.getClassName(obj, true));
+        //发送数据
+        streamBridge.send(StrUtil.format("{}-in-0", clsName), message);
+    }
 
     /**
      * 发送访问日志

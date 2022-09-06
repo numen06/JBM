@@ -32,6 +32,11 @@ public abstract class BaseNotificationExchanger<T extends Notification> implemen
         return baseType.equals(notification.getClass());
     }
 
+    /**
+     * 发送回调
+     *
+     * @param notification
+     */
     @Override
     public void send(T notification) {
         try {
@@ -44,21 +49,49 @@ public abstract class BaseNotificationExchanger<T extends Notification> implemen
     }
 
 
+    /**
+     * 通过消息体和消息条目生产发送实体
+     *
+     * @param pushMessageBody
+     * @param pushMessageItem
+     * @return
+     */
     @Override
     public T build(PushMessageBody pushMessageBody, PushMessageItem pushMessageItem) {
         return null;
     }
 
+    /**
+     * 发送回调
+     *
+     * @param pushCallback
+     * @return
+     */
     public boolean sendCallBack(PushCallback pushCallback) {
         return streamBridge.send("pushCallBack-in-0", pushCallback);
     }
 
+    /**
+     * 发送成功回调
+     *
+     * @param notification
+     * @return
+     */
     public PushCallback success(T notification) {
         PushCallback pushCallback = new PushCallback();
         pushCallback.setMsgId(notification.getMsgId());
         pushCallback.setPushStatus(PushStatus.issued);
         return pushCallback;
     }
+
+    /**
+     * 发送失败回调
+     *
+     * @param notification
+     * @param code
+     * @param msg
+     * @return
+     */
 
     public PushCallback error(T notification, String code, String msg) {
         PushCallback pushCallback = new PushCallback();

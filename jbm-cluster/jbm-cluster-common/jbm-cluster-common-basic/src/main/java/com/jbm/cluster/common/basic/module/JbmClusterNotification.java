@@ -60,6 +60,7 @@ public class JbmClusterNotification {
         this.sendNotification(mqttNotification);
     }
 
+
     /**
      * 发送邮件通知
      *

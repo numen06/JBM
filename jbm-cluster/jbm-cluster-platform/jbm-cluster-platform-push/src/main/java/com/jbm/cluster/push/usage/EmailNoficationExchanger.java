@@ -8,7 +8,7 @@ import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mail.model.MailRequest;
 
 /**
- * @author LIQIU
+ * @author wesley.zhang
  * @date 2018-3-27
  **/
 public class EmailNoficationExchanger extends BaseNotificationExchanger<EmailNotification> {

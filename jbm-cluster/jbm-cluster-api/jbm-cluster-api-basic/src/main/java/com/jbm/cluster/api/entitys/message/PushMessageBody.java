@@ -42,11 +42,15 @@ public class PushMessageBody extends MasterDataCodeEntity {
     private String tags;
     @ApiModelProperty("内容")
     private String content;
+    @ApiModelProperty("模板编码")
+    private String templateCode;
     @ApiModelProperty("消息类型")
     @Enumerated(EnumType.STRING)
     private PushMsgType type;
     @ApiModelProperty("等级")
     private Integer level;
+    @ApiModelProperty("超链接")
+    private String url;
     //    @ApiModelProperty("逻辑删除标志")
 //    @TableLogic
 //    @TableField(select = false)

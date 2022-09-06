@@ -49,4 +49,7 @@ public class PushMsg {
 
     @ApiModelProperty("消息等级")
     private Integer level;
+
+    @ApiModelProperty("超链接")
+    private String url;
 }

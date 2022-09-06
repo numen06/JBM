@@ -3,6 +3,7 @@ package com.jbm.cluster.push.usage;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
+import com.jbm.cluster.api.entitys.message.WeixinNotification;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,9 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
     private MqttNotificationExchanger mqttNotificationExchanger;
 
     @Autowired
+    private WeixinNoficationExchanger weixinNoficationExchanger;
+
+    @Autowired
     private JbmClusterNotification jbmClusterNotification;
 
     private SimpleMqttClient mqttClient;
@@ -48,6 +52,10 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
             case mqtt:
                 MqttNotification mqttNotification = mqttNotificationExchanger.build(pushMessageBody, pushMessageItem);
                 jbmClusterNotification.sendMqttNotification(mqttNotification);
+                break;
+            case wechat:
+                WeixinNotification weixinNotification = weixinNoficationExchanger.build(pushMessageBody, pushMessageItem);
+                jbmClusterNotification.sendNotification(weixinNotification);
                 break;
         }
         return true;

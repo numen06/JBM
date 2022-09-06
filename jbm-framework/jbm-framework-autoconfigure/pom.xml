@@ -49,6 +49,7 @@
         <module>jbm-framework-autoconfigure-opcua</module>
         <module>jbm-framework-autoconfigure-nacos</module>
         <module>jbm-framework-autoconfigure-eventbus</module>
+        <module>jbm-framework-autoconfigure-rules</module>
     </modules>
     <dependencies>
         <dependency>

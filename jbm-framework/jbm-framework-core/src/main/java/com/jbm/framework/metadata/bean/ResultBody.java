@@ -15,6 +15,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -72,7 +74,7 @@ public class ResultBody<T> implements Serializable {
     @ApiModelProperty(value = "是否成功")
     private Boolean success = true;
 
-//    public ResultBody() {
+    //    public ResultBody() {
 //        super();
 //    }
     @ApiModelProperty(value = "错误信息")
@@ -148,6 +150,7 @@ public class ResultBody<T> implements Serializable {
         return ResultBody.ok().data(supplier.get());
     }
 
+
     public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
         return ResultBody.ok().data(supplier.get()).msg(msg);
     }
@@ -216,5 +219,10 @@ public class ResultBody<T> implements Serializable {
     public <R> R action(Function<? super T, ? super R> function) {
         return (R) function.apply(this.result);
     }
+
+    public void action(Consumer<? super T> consumer) {
+        consumer.accept(this.result);
+    }
+
 
 }

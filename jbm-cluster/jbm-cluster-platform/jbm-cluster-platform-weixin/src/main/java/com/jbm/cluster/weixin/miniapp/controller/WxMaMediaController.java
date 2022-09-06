@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/media/{appid}")
-public class WxMaMediaController {
+public class WxMaMediaController   {
 
 
     /**

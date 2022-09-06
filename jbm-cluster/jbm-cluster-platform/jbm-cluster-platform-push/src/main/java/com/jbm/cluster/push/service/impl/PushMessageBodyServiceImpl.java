@@ -88,6 +88,8 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageBody.setType(pushMsg.getPushMsgType());
         pushMessageBody.setContent(pushMsg.getContent());
         pushMessageBody.setExtend(pushMsg.getExtend());
+        pushMessageBody.setTemplateCode(pushMsg.getTemplateCode());
+        pushMessageBody.setUrl(pushMsg.getUrl());
         this.saveEntity(pushMessageBody);
         pushMsg.getRecUserIds().forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
     }

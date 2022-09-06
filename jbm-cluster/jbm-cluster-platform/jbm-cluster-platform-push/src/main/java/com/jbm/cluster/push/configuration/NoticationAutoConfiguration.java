@@ -1,9 +1,6 @@
 package com.jbm.cluster.push.configuration;
 
-import com.jbm.cluster.push.usage.EmailNoficationExchanger;
-import com.jbm.cluster.push.usage.MqttNotificationExchanger;
-import com.jbm.cluster.push.usage.PushMessageNotificationExchanger;
-import com.jbm.cluster.push.usage.SmsNotificationExchanger;
+import com.jbm.cluster.push.usage.*;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
@@ -11,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * @author LIQIU
+ * @author wesley.zhang
  * @date 2018-3-27
  **/
 @Configuration
@@ -43,5 +40,13 @@ public class NoticationAutoConfiguration {
     public EmailNoficationExchanger emailNotifcationExchanger(MailSendTemplate mailSendTemplate) {
         return new EmailNoficationExchanger(mailSendTemplate);
     }
+
+
+    @Bean
+//    @ConditionalOnBean(MailSendTemplate.class)
+    public WeixinNoficationExchanger weixinNotifcationExchanger() {
+        return new WeixinNoficationExchanger();
+    }
+
 
 }

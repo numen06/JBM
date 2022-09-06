@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 通用账号
@@ -49,6 +50,14 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     @Override
     public BaseAccount getAccountById(Long accountId) {
         return baseAccountMapper.selectById(accountId);
+    }
+
+    @Override
+    public List<BaseAccount> getUserAccounts(Long userId) {
+        QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
+        wrapper.lambda()
+                .eq(BaseAccount::getUserId, userId);
+        return baseAccountMapper.selectList(wrapper);
     }
 
     /**

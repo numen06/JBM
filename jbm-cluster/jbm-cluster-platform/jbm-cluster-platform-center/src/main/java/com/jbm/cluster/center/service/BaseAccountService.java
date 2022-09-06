@@ -5,6 +5,8 @@ import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
+import java.util.List;
+
 /**
  * 系统用户登录账号管理
  * 支持多账号登陆
@@ -21,6 +23,14 @@ public interface BaseAccountService extends IMasterDataService<BaseAccount> {
      * @return
      */
     BaseAccount getAccountById(Long accountId);
+
+
+    /***
+     * 通过用户ID获取账号信息
+     * @param userId
+     * @return
+     */
+    List<BaseAccount> getUserAccounts(Long userId);
 
 
     /**

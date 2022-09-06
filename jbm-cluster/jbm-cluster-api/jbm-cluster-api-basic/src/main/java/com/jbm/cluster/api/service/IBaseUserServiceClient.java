@@ -1,5 +1,6 @@
 package com.jbm.cluster.api.service;
 
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 /**
  * @author wesley.zhang
@@ -88,4 +91,9 @@ public interface IBaseUserServiceClient {
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/getUserByPhone")
     ResultBody<BaseUser> getUserByPhone(@RequestParam(value = "phone") String phone);
+
+
+    @ApiOperation(value = "获取用户帐号信息")
+    @GetMapping("/getUserAccounts")
+    ResultBody<List<BaseAccount>> getUserAccounts(@RequestParam(value = "userId") Long userId);
 }
