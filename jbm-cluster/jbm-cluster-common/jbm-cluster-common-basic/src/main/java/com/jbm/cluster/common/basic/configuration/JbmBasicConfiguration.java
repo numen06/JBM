@@ -30,8 +30,13 @@ public class JbmBasicConfiguration {
     }
 
     @Bean
-    public RequestMappingScan requestMappingScan() {
-        return new RequestMappingScan();
+    public JbmApiResourceScan jbmApiResourceScan() {
+        return new JbmApiResourceScan();
+    }
+
+    @Bean
+    public JbmClusterJobScan jbmClusterJobScan() {
+        return new JbmClusterJobScan();
     }
 
     @Bean

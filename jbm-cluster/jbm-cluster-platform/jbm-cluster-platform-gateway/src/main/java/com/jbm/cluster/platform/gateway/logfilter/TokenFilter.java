@@ -9,7 +9,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.api.service.fegin.client.BaseAppServiceClient;
+import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import org.checkerframework.checker.nullness.qual.NonNull;

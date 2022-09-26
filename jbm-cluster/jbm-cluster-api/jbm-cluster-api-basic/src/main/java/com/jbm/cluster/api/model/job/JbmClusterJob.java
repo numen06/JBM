@@ -1,9 +1,14 @@
-package com.jbm.cluster.api.bus;
+package com.jbm.cluster.api.model.job;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
+/**
+ * @author wesley
+ */
 @Data
-public class JbmClusterEventBean {
+public class JbmClusterJob implements Serializable {
 
     /**
      * 事件类型
@@ -28,6 +33,11 @@ public class JbmClusterEventBean {
      * 定时任务
      */
     private String cron;
+
+    /**
+     * 是否启用
+     */
+    private Boolean enable;
     /**
      * 方法类型
      */

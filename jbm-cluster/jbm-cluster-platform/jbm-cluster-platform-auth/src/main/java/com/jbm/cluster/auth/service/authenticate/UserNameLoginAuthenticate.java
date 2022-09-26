@@ -1,8 +1,11 @@
 package com.jbm.cluster.auth.service.authenticate;
 
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.framework.metadata.bean.ResultBody;
+
+import java.util.List;
 
 /**
  * @Created wesley.zhang
@@ -17,7 +20,7 @@ public class UserNameLoginAuthenticate implements ILoginAuthenticate {
     }
 
     @Override
-    public LoginType getLoginType() {
-        return LoginType.PASSWORD;
+    public List<LoginType> getLoginType() {
+        return Lists.newArrayList(LoginType.PASSWORD);
     }
 }

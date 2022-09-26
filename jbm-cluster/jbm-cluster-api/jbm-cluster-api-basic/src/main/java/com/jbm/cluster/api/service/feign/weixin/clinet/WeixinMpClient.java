@@ -1,13 +1,12 @@
-package com.jbm.cluster.api.service.fegin.weixin.clinet;
+package com.jbm.cluster.api.service.feign.weixin.clinet;
 
 import com.jbm.cluster.api.entitys.message.WeixinNotification;
-import com.jbm.cluster.api.service.fegin.weixin.IWxMpTemplateMsg;
+import com.jbm.cluster.api.service.feign.weixin.IWxMpTemplateMsg;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 

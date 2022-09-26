@@ -1,5 +1,6 @@
 package com.jbm.framework.dao.expand;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.db.ds.simple.SimpleDataSource;
 import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.framework.dao.JdbcDataSourceProperties;
@@ -25,7 +26,7 @@ public class InitializeSqlProcessor implements BeanPostProcessor {
             SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(ds);
             sqlPrepareRunner.scanSqlFiles();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+//            throw new RuntimeException(e);
         }
     }
 

@@ -14,6 +14,8 @@ import java.util.List;
  * @author wesley
  */
 public interface SysJobService extends IMasterDataService<SysJob> {
+    SysJob selectJobByName(String jobName, String jobGroup);
+
     /**
      * 获取quartz调度器的计划任务
      *
@@ -24,6 +26,14 @@ public interface SysJobService extends IMasterDataService<SysJob> {
 
     @Transactional(rollbackFor = Exception.class)
     SysJob pauseJob(SysJob job) throws SchedulerException;
+
+    List<SysJob> selectJobsByGroup(String group);
+
+    List<SysJob> pauseGroup(String group);
+
+    void pauseJobs(List<SysJob> sysJobs);
+
+    void resumeJobs(List<SysJob> sysJobs) throws SchedulerException;
 
     @Transactional(rollbackFor = Exception.class)
     SysJob resumeJob(SysJob job) throws SchedulerException;

@@ -94,6 +94,12 @@ public class SysLoginService {
                         setDoLoginHandle(new SaOAuthLoginHandle() {
                     @Override
                     public String doDecryptPassword(LoginProcessModel loginProcessModel) {
+                        if (LoginType.MINIAPP.equals(loginProcessModel.getLoginType())) {
+                            return loginProcessModel.getOriginalPassword();
+                        }
+                        if (LoginType.WECHAT.equals(loginProcessModel.getLoginType())) {
+                            return loginProcessModel.getOriginalPassword();
+                        }
                         return decryptPassword(loginProcessModel.getClientId(), loginProcessModel.getOriginalPassword());
                     }
 
@@ -285,7 +291,8 @@ public class SysLoginService {
         String loginFail = JbmConstants.LOGIN_FAIL;
 
         // 获取用户登录错误次数(可自定义限制策略 例如: key + username + ip)
-        Integer errorNumber = redisService.getCacheObject(errorKey);
+//        Integer errorNumber = redisService.getCacheObject(errorKey);
+        Integer errorNumber = 0;
         // 锁定时间内登录 则踢出
         if (ObjectUtil.isNotNull(errorNumber) && errorNumber.equals(setErrorNumber)) {
 //            recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), errorLimitTime));

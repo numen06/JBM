@@ -1,6 +1,6 @@
-package com.jbm.cluster.api.service.fegin.client;
+package com.jbm.cluster.api.service.feign.client;
 
-import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.cluster.api.service.IBaseApiServiceClient;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
@@ -11,8 +11,7 @@ import org.springframework.stereotype.Component;
  * @description:
  */
 @Component
-@FeignClient(value = JbmClusterConstants.BASE_SERVER, path = "/user")
-public interface BaseUserServiceClient extends IBaseUserServiceClient {
-
+@FeignClient(value = JbmClusterConstants.BASE_SERVER, path = "/api")
+public interface BaseApiServiceClient extends IBaseApiServiceClient {
 
 }

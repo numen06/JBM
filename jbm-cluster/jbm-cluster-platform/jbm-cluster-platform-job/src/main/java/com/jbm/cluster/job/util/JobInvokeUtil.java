@@ -1,13 +1,18 @@
 package com.jbm.cluster.job.util;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.api.entitys.job.SysJob;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -157,4 +162,37 @@ public class JobInvokeUtil {
         }
         return classs;
     }
+
+
+    public static boolean isFeign(String url) {
+        return url.toLowerCase().startsWith("feign:");
+    }
+
+    public static String getServiceIdByUrl(String url) {
+        String serviceId = ReUtil.get("(?<=://)[^//]*?/", url, 0);
+        serviceId = StrUtil.removeSuffix(serviceId, "/");
+        return serviceId;
+    }
+
+    public static String feignToUrl(String url) {
+        String serviceId = getServiceIdByUrl(url);
+        URI uri = getServiceUrl(serviceId);
+        if (ObjectUtil.isEmpty(uri)) {
+            return null;
+        }
+        String realUrl = uri.toString();
+        return StrUtil.replace(url, "feign://" + serviceId, realUrl);
+    }
+
+    public static URI getServiceUrl(String serviceId) {
+        DiscoveryClient discoveryClient = SpringUtil.getBean(DiscoveryClient.class);
+        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(serviceId);
+        if (CollUtil.isEmpty(serviceInstances)) {
+            return null;
+        }
+        ServiceInstance serviceInstance = CollUtil.getFirst(serviceInstances);
+        return serviceInstance.getUri();
+    }
+
+
 }

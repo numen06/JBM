@@ -7,8 +7,8 @@ import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.entitys.message.WeixinNotification;
 import com.jbm.cluster.api.entitys.message.weixin.WxMpTemplateData;
 import com.jbm.cluster.api.model.push.PushCallback;
-import com.jbm.cluster.api.service.fegin.client.BaseUserServiceClient;
-import com.jbm.cluster.api.service.fegin.weixin.clinet.WeixinMpClient;
+import com.jbm.cluster.api.service.feign.client.BaseUserServiceClient;
+import com.jbm.cluster.api.service.feign.weixin.clinet.WeixinMpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;

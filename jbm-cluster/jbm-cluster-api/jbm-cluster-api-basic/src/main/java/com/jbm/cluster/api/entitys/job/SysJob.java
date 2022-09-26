@@ -47,11 +47,22 @@ public class SysJob extends MasterDataEntity {
     @ApiModelProperty("任务组名")
     private String jobGroup;
 
+
+//    @ApiModelProperty("执行链接")
+//    private String url;
+
+
+//    @ApiModelProperty("是否内部任务")
+//    private Boolean isInternal;
     /**
      * 调用目标字符串
      */
     @ApiModelProperty("调用目标字符串")
     private String invokeTarget;
+
+    @ApiModelProperty("调用方法类型")
+    private String methodType;
+
 
     /**
      * cron执行表达式
@@ -71,6 +82,9 @@ public class SysJob extends MasterDataEntity {
     @ApiModelProperty("并发执行:1=允许,0=禁止")
     private Boolean concurrent;
 
+    @ApiModelProperty(value = "是否记录日志")
+    private Boolean recordLog;
+
     /**
      * 任务状态（0正常 1暂停）
      */
@@ -85,4 +99,5 @@ public class SysJob extends MasterDataEntity {
 
     @ApiModelProperty(value = "描述")
     private String description;
+
 }

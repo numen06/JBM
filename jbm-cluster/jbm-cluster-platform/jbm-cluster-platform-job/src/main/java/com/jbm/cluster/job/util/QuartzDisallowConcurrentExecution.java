@@ -1,6 +1,10 @@
 package com.jbm.cluster.job.util;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpUtil;
 import com.jbm.cluster.api.entitys.job.SysJob;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 
@@ -9,10 +13,7 @@ import org.quartz.JobExecutionContext;
  *
  * @author wesley
  */
+@Slf4j
 @DisallowConcurrentExecution
 public class QuartzDisallowConcurrentExecution extends AbstractQuartzJob {
-    @Override
-    protected void doExecute(JobExecutionContext context, SysJob sysJob) throws Exception {
-        JobInvokeUtil.invokeMethod(sysJob);
-    }
 }

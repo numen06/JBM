@@ -26,7 +26,6 @@ import java.util.Date;
 @NoArgsConstructor
 @ApiModel("系统任务日志")
 public class SysJobLog extends MasterDataEntity {
-    private static final long serialVersionUID = 1L;
 
     /**
      * ID
@@ -42,6 +41,9 @@ public class SysJobLog extends MasterDataEntity {
      */
     @ApiModelProperty("任务名称")
     private String jobName;
+
+    @ApiModelProperty("运行时间-毫秒")
+    private Long runTime;
 
     /**
      * 任务组名

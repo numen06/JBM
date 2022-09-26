@@ -2,7 +2,7 @@ package com.jbm.cluster.weixin.miniapp.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.api.entitys.message.WeixinNotification;
-import com.jbm.cluster.api.service.fegin.weixin.IWxMpTemplateMsg;
+import com.jbm.cluster.api.service.feign.weixin.IWxMpTemplateMsg;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;

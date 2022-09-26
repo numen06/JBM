@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -85,7 +86,7 @@ public class FaceLoginAuthenticate implements ILoginAuthenticate {
     }
 
     @Override
-    public LoginType getLoginType() {
-        return LoginType.FACE;
+    public List<LoginType> getLoginType() {
+        return Lists.newArrayList(LoginType.FACE);
     }
 }

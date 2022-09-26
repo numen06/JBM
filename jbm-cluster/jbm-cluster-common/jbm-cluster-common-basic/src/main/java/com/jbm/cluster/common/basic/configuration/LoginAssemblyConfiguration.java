@@ -1,5 +1,6 @@
 package com.jbm.cluster.common.basic.configuration;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -41,14 +43,16 @@ public class LoginAssemblyConfiguration {
         loginAuthenticateMap.forEach(new BiConsumer<String, ILoginAuthenticate>() {
             @Override
             public void accept(String beanName, ILoginAuthenticate iLoginAuthenticate) {
-                LoginType loginType = iLoginAuthenticate.getLoginType();
-                if (loginType == null) {
+                List<LoginType> loginTypes = iLoginAuthenticate.getLoginType();
+                if (CollUtil.isEmpty(loginTypes)) {
                     return;
                 }
-                loginAuthenticate.put(loginType.toString(), iLoginAuthenticate);
-                String key = JbmSecurityConstants.LOGIN_AUTHENTICATE_KEY + loginType.toString();
-                log.info("装配登录注册器[{}],服务名[{}]", loginType, SpringUtil.getApplicationName());
-                redisService.setCacheObject(key, SpringUtil.getApplicationName());
+                loginTypes.forEach(loginType -> {
+                    loginAuthenticate.put(loginType.toString(), iLoginAuthenticate);
+                    String key = JbmSecurityConstants.LOGIN_AUTHENTICATE_KEY + loginType.toString();
+                    log.info("装配登录注册器[{}],服务名[{}]", loginType, SpringUtil.getApplicationName());
+                    redisService.setCacheObject(key, SpringUtil.getApplicationName());
+                });
             }
         });
     }

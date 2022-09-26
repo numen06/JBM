@@ -33,6 +33,7 @@ public class ScheduleConfig {
         // JobStore配置
         prop.put("org.quartz.jobStore.class", "org.springframework.scheduling.quartz.LocalDataSourceJobStore");
         // 集群配置
+        prop.put("org.quartz.jobStore.acquireTriggersWithinLock", "true");
         prop.put("org.quartz.jobStore.isClustered", "true");
         prop.put("org.quartz.jobStore.clusterCheckinInterval", "15000");
         prop.put("org.quartz.jobStore.maxMisfiresToHandleAtATime", "1");

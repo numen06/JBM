@@ -16,7 +16,7 @@ import com.jbm.cluster.node.configuration.cluster.JbmClusterEventRegistry;
 import com.jbm.cluster.node.configuration.cluster.JbmClusterScheduledRegistry;
 import com.jbm.cluster.node.configuration.fegin.FeignRequestOAuth2Interceptor;
 import com.jbm.cluster.node.configuration.scan.RequestMappingScan;
-import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
+import jbm.framework.boot.autoconfigure.feign.FeignRequestInterceptor;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;

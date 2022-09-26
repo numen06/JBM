@@ -1,5 +1,6 @@
 package com.jbm.cluster.auth.service;
 
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
@@ -7,6 +8,8 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * @Created wesley.zhang
@@ -27,8 +30,8 @@ public class LoginAuthenticateFallback implements FallbackFactory<ILoginAuthenti
             }
 
             @Override
-            public LoginType getLoginType() {
-                return LoginType.PASSWORD;
+            public List<LoginType> getLoginType() {
+                return Lists.newArrayList(LoginType.PASSWORD);
             }
         };
     }

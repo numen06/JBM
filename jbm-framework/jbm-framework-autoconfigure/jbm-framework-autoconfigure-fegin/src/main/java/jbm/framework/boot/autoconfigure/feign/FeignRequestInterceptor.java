@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.fegin;
+package jbm.framework.boot.autoconfigure.feign;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

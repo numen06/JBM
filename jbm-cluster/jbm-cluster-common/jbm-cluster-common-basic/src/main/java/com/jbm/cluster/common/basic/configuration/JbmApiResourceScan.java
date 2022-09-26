@@ -23,7 +23,7 @@ import java.util.Map;
  * @author wesley.zhang
  */
 @Slf4j
-public class RequestMappingScan extends JbmClusterResourceScan<JbmApiResource> {
+public class JbmApiResourceScan extends JbmClusterResourceScan<JbmApiResource> {
 
     @Override
     public String queue() {

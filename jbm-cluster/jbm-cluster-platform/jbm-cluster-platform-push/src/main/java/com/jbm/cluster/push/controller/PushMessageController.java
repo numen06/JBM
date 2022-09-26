@@ -1,10 +1,12 @@
 package com.jbm.cluster.push.controller;
 
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
+import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.push.form.PushMessageForm;
+import com.jbm.cluster.push.message.PushMessageTest;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.framework.form.ObjectIdsForm;
@@ -44,7 +46,7 @@ public class PushMessageController {
     @PostMapping("/unread")
     public ResultBody<String> unread(@RequestBody ObjectIdsForm idsForm) {
         this.pushMessageItemService.unread(idsForm.getIds());
-        return  ResultBody.success("标记未F读成功");
+        return ResultBody.success("标记未F读成功");
     }
 
 
@@ -69,6 +71,18 @@ public class PushMessageController {
     @PostMapping("/sendSysMessage")
     public ResultBody<String> sendSysMessage(@RequestBody PushMessageBody pushMessageBody) {
         this.pushMessageBodyService.sendSysMessage(pushMessageBody);
+        return ResultBody.ok();
+    }
+
+
+    @Autowired
+    private PushMessageTest pushMessageTest;
+
+    @SchedulerJob(cron = "0/5 * *  * * ? ", name = "发送管理员测试信息")
+    @ApiOperation("发送管理员测试信息")
+    @PostMapping("/testSend")
+    public ResultBody<String> testSend() {
+        pushMessageTest.testSend();
         return ResultBody.ok();
     }
 

@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.service.fegin;
+package com.jbm.cluster.api.service.feign;
 
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.model.IpLimitApi;

@@ -57,7 +57,7 @@ public class DynamicLoginFeignClient {
             return null;
         }
         for (ILoginAuthenticate authenticate : loginBeans.values()) {
-            if (authenticate.getLoginType().equals(loginType)) {
+            if (authenticate.getLoginType().contains(loginType)) {
                 return authenticate;
             }
         }

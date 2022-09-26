@@ -2,8 +2,8 @@ package com.jbm.cluster.push;
 
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.event.UserLoginEvent;
-import com.jbm.cluster.api.service.fegin.client.BaseUserServiceClient;
-import com.jbm.cluster.api.service.fegin.weixin.clinet.WeixinMpClient;
+import com.jbm.cluster.api.service.feign.client.BaseUserServiceClient;
+import com.jbm.cluster.api.service.feign.weixin.clinet.WeixinMpClient;
 import com.jbm.cluster.push.mapper.PushConfigInfoMapper;
 import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
 import jbm.framework.boot.autoconfigure.eventbus.annotation.EnableClusterEventBus;

@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.service.fegin.client;
+package com.jbm.cluster.api.service.feign.client;
 
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.core.constant.JbmClusterConstants;

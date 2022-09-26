@@ -1,6 +1,7 @@
 package com.jbm.cluster.job.task;
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.entitys.job.SysJob;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

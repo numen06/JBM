@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 /**
  * 登录认证接口
  *
@@ -22,5 +24,5 @@ public interface ILoginAuthenticate {
     ResultBody<JbmLoginUser> login(@RequestParam("username") String username, @RequestParam("password") String password, @PathVariable("loginType") String loginType);
 
     @GetMapping(value = {"/authenticate/getLoginType"})
-    LoginType getLoginType();
+    List<LoginType> getLoginType();
 }

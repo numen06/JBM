@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.service.fegin;
+package com.jbm.cluster.api.service.feign;
 
 import com.jbm.cluster.api.factory.RemoteFileFallbackFactory;
 import com.jbm.cluster.core.constant.JbmClusterConstants;

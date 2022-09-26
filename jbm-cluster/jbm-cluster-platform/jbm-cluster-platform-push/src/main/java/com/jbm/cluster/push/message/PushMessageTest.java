@@ -24,7 +24,7 @@ public class PushMessageTest {
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
 
-    @Scheduled(cron = "0/5 * *  * * ? ")
+//    @Scheduled(cron = "0/5 * *  * * ? ")
     public void testSend() {
         PushMsg pushMsg = new PushMsg();
 //        pushMsg.setPushWays(Lists.newArrayList(PushWay.wechat));

@@ -38,9 +38,9 @@ public class SqlPrepareRunner {
 
 
     private final static String SQL_INIT_TABLE = "sql_initialize.sql";
-    public final static String SQl_DIR = "classpath*:sql/schema/";
+    public final static String SQl_DIR = "classpath:sql/schema/";
 
-    public final static String BASE_SQl_DIR = SQl_DIR + "/**/**/*.sql";
+    public final static String BASE_SQl_DIR = SQl_DIR + "/**/**/**.sql";
     private final DataSource ds;
 
 
@@ -126,6 +126,7 @@ public class SqlPrepareRunner {
                 executeSqlFile(fileName);
                 executeSuccess(fileName);
             } catch (Exception e) {
+                log.error("扫描SQL文件错误", e);
             }
         }
         log.info("扫描SQL文件结束,用时:{}秒", stopWatch.getTotalTimeSeconds());

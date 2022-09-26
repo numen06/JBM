@@ -1,6 +1,8 @@
 package com.jbm.cluster.job.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
@@ -51,11 +53,20 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     }
 
     @Override
+    public SysJob selectJobByName(String jobName, String jobGroup) {
+        QueryWrapper<SysJob> sysJobQueryWrapper = this.currentQueryWrapper();
+        sysJobQueryWrapper.lambda().eq(SysJob::getJobName, jobName).eq(SysJob::getJobGroup, jobGroup);
+        return this.selectEntityByWapper(sysJobQueryWrapper);
+    }
+
+    @Override
     public SysJob saveEntity(SysJob entity) {
-        if (ObjectUtil.isEmpty(entity.getMisfirePolicy()))
-            entity.setMisfirePolicy(MisfirePolicy.DEFAULT);
-        if (ObjectUtil.isEmpty(entity.getConcurrent()))
+        if (ObjectUtil.isEmpty(entity.getMisfirePolicy())) {
+            entity.setMisfirePolicy(MisfirePolicy.DO_NOTHING);
+        }
+        if (ObjectUtil.isEmpty(entity.getConcurrent())) {
             entity.setConcurrent(false);
+        }
         return super.saveEntity(entity);
     }
 
@@ -91,6 +102,70 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     }
 
     /**
+     * 查询组任务
+     *
+     * @param group
+     * @return
+     */
+    @Override
+    public List<SysJob> selectJobsByGroup(String group) {
+        if (StrUtil.isBlank(group)) {
+            throw new ServiceException("分组不能为空");
+        }
+        QueryWrapper<SysJob> sysJobQueryWrapper = this.currentQueryWrapper();
+        sysJobQueryWrapper.lambda().eq(SysJob::getJobGroup, group);
+        List<SysJob> sysJobs = this.selectEntitysByWapper(sysJobQueryWrapper);
+        return sysJobs;
+    }
+
+    /**
+     * 暂定整个组的任务
+     *
+     * @param group
+     * @return
+     */
+    @Override
+    public List<SysJob> pauseGroup(String group) {
+        List<SysJob> sysJobs = this.selectJobsByGroup(group);
+        this.pauseJobs(sysJobs);
+        return sysJobs;
+    }
+
+    /**
+     * 暂定多个任务
+     * @param sysJobs
+     */
+    @Override
+    public void pauseJobs(List<SysJob> sysJobs) {
+        sysJobs.forEach(sysJob -> {
+            try {
+                this.pauseJob(sysJob);
+            } catch (SchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * 恢复多个任务
+     *
+     * @param sysJobs
+     * @throws SchedulerException
+     */
+    @Override
+    public void resumeJobs(List<SysJob> sysJobs) {
+        sysJobs.forEach(sysJob -> {
+            try {
+                this.resumeJob(sysJob);
+            } catch (SchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
+
+    /**
      * 恢复任务
      *
      * @param job 调度信息
@@ -100,6 +175,13 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     @Transactional(rollbackFor = Exception.class)
     public SysJob resumeJob(SysJob job) throws SchedulerException {
         Long jobId = job.getJobId();
+        if (ObjectUtil.isEmpty(jobId)) {
+            throw new ServiceException("没有对应的任务ID");
+        }
+        job = this.selectById(jobId);
+        if (ObjectUtil.isEmpty(job)) {
+            throw new ServiceException("没有对应的任务");
+        }
         String jobGroup = job.getJobGroup();
         job.setStatus(ScheduleStauts.NORMAL);
         int rows = this.baseMapper.updateById(job);

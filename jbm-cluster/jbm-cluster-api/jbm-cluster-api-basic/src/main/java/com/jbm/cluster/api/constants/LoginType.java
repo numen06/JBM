@@ -35,7 +35,12 @@ public enum LoginType {
     /**
      * 微信登录
      */
-    WECHAT("", "");
+    WECHAT("", ""),
+
+    /**
+     * 微信小程序
+     */
+    MINIAPP("", "");
 
     /**
      * 登录重试超出限制提示

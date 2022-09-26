@@ -1,6 +1,7 @@
 package com.jbm.cluster.auth.service.authenticate;
 
 import cn.hutool.core.lang.Validator;
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
@@ -10,6 +11,7 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 @Service
@@ -34,7 +36,7 @@ public class SmsLoginAuthenticate implements ILoginAuthenticate {
     }
 
     @Override
-    public LoginType getLoginType() {
-        return LoginType.SMS;
+    public List<LoginType> getLoginType() {
+        return Lists.newArrayList(LoginType.SMS);
     }
 }

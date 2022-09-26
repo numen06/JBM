@@ -3,7 +3,7 @@ package com.jbm.cluster.node.configuration.fegin;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.util.StringUtils;
 import feign.RequestTemplate;
-import jbm.framework.boot.autoconfigure.fegin.FeignRequestInterceptor;
+import jbm.framework.boot.autoconfigure.feign.FeignRequestInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;

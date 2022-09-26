@@ -1,6 +1,6 @@
 package com.jbm.cluster.api.factory;
 
-import com.jbm.cluster.api.service.fegin.RemoteFileService;
+import com.jbm.cluster.api.service.feign.RemoteFileService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

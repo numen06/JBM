@@ -7,15 +7,17 @@ spring:
     #手动配置Bus id,
     bus:
       id: ${spring.application.name}:${server.port}
+    function:
+      definition: scheduledJob;
+    stream:
+      #      default-binder: kafka
+      bindings:
+        scheduledJob-in-0:
+          group: ${spring.application.name}
   main:
     allow-bean-definition-overriding: true
     #2.6版本后增加循环引用判断
     allow-circular-references: true
-  sql:
-    init:
-      mode: ALWAYS
-      schema-locations:
-        - classpath*:db/quartz.sql
   #解决restful 404错误 spring.mavc.throw-exception-if-no-handler-found=true spring.resources.add-mappings=false
   mvc:
     throw-exception-if-no-handler-found: true

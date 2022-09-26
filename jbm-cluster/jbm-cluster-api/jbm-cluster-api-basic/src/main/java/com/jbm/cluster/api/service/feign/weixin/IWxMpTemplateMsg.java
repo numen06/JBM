@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.service.fegin.weixin;
+package com.jbm.cluster.api.service.feign.weixin;
 
 import com.jbm.cluster.api.entitys.message.WeixinNotification;
 import com.jbm.framework.metadata.bean.ResultBody;

@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.fegin.FeignAutoConfiguration
+jbm.framework.boot.autoconfigure.feign.FeignAutoConfiguration

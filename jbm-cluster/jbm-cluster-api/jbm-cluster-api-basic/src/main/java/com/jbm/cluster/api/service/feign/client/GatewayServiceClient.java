@@ -1,6 +1,6 @@
-package com.jbm.cluster.api.service.fegin.client;
+package com.jbm.cluster.api.service.feign.client;
 
-import com.jbm.cluster.api.service.fegin.IGatewayServiceClient;
+import com.jbm.cluster.api.service.feign.IGatewayServiceClient;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;

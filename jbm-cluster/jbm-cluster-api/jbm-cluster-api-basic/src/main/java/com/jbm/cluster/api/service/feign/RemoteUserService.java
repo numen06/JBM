@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.service.fegin;
+package com.jbm.cluster.api.service.feign;
 
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.factory.RemoteUserFallbackFactory;

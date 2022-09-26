@@ -7,6 +7,7 @@ import com.jbm.cluster.api.constants.job.ScheduleStauts;
 import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.framework.exceptions.job.TaskException;
 import org.quartz.*;
+import org.quartz.impl.triggers.CronTriggerImpl;
 
 /**
  * 定时任务工具类
@@ -46,7 +47,7 @@ public class ScheduleUtils {
         // 构建job信息
         Long jobId = job.getJobId();
         String jobGroup = job.getJobGroup();
-        JobDetail jobDetail = JobBuilder.newJob(jobClass).withIdentity(getJobKey(jobId, jobGroup)).build();
+        JobDetail jobDetail = JobBuilder.newJob(jobClass).withIdentity(getJobKey(jobId, jobGroup)).storeDurably().build();
 
         // 表达式调度构建器
         CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(job.getCronExpression());
@@ -54,7 +55,7 @@ public class ScheduleUtils {
 
         // 按新的cronExpression表达式构建一个新的trigger
         CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(getTriggerKey(jobId, jobGroup))
-                .withSchedule(cronScheduleBuilder).build();
+                .withSchedule(cronScheduleBuilder.withMisfireHandlingInstructionFireAndProceed()).build();
 
         // 放入参数，运行时的方法可以获取
         jobDetail.getJobDataMap().put(ScheduleConstants.TASK_PROPERTIES, JSON.toJSONString(job));
