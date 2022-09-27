@@ -1,7 +1,6 @@
-package com.jbm.cluster.api.model.job;
+package com.jbm.cluster.api.model.event;
 
 import com.jbm.cluster.api.model.JbmClusterResource;
-import com.jbm.cluster.api.model.event.JbmClusterBusinessEventBean;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,8 +17,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JbmClusterJobResource extends JbmClusterResource {
+public class JbmClusterBusinessEventResource extends JbmClusterResource {
 
-    private List<JbmClusterJob> jbmClusterJobs = new ArrayList<>();
+    private List<JbmClusterBusinessEventBean> jbmClusterBusinessEventBeans = new ArrayList<>();
 
 }

@@ -163,36 +163,36 @@ public class JobInvokeUtil {
         return classs;
     }
 
-
-    public static boolean isFeign(String url) {
-        return url.toLowerCase().startsWith("feign:");
-    }
-
-    public static String getServiceIdByUrl(String url) {
-        String serviceId = ReUtil.get("(?<=://)[^//]*?/", url, 0);
-        serviceId = StrUtil.removeSuffix(serviceId, "/");
-        return serviceId;
-    }
-
-    public static String feignToUrl(String url) {
-        String serviceId = getServiceIdByUrl(url);
-        URI uri = getServiceUrl(serviceId);
-        if (ObjectUtil.isEmpty(uri)) {
-            return null;
-        }
-        String realUrl = uri.toString();
-        return StrUtil.replace(url, "feign://" + serviceId, realUrl);
-    }
-
-    public static URI getServiceUrl(String serviceId) {
-        DiscoveryClient discoveryClient = SpringUtil.getBean(DiscoveryClient.class);
-        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(serviceId);
-        if (CollUtil.isEmpty(serviceInstances)) {
-            return null;
-        }
-        ServiceInstance serviceInstance = CollUtil.getFirst(serviceInstances);
-        return serviceInstance.getUri();
-    }
+//
+//    public static boolean isFeign(String url) {
+//        return url.toLowerCase().startsWith("feign:");
+//    }
+//
+//    public static String getServiceIdByUrl(String url) {
+//        String serviceId = ReUtil.get("(?<=://)[^//]*?/", url, 0);
+//        serviceId = StrUtil.removeSuffix(serviceId, "/");
+//        return serviceId;
+//    }
+//
+//    public static String feignToUrl(String url) {
+//        String serviceId = getServiceIdByUrl(url);
+//        URI uri = getServiceUrl(serviceId);
+//        if (ObjectUtil.isEmpty(uri)) {
+//            return null;
+//        }
+//        String realUrl = uri.toString();
+//        return StrUtil.replace(url, "feign://" + serviceId, realUrl);
+//    }
+//
+//    public static URI getServiceUrl(String serviceId) {
+//        DiscoveryClient discoveryClient = SpringUtil.getBean(DiscoveryClient.class);
+//        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(serviceId);
+//        if (CollUtil.isEmpty(serviceInstances)) {
+//            return null;
+//        }
+//        ServiceInstance serviceInstance = CollUtil.getFirst(serviceInstances);
+//        return serviceInstance.getUri();
+//    }
 
 
 }

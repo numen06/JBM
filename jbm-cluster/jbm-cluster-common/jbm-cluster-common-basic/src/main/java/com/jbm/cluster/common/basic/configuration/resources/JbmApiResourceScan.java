@@ -1,4 +1,4 @@
-package com.jbm.cluster.common.basic.configuration;
+package com.jbm.cluster.common.basic.configuration.resources;
 
 import cn.hutool.core.util.BooleanUtil;
 import com.google.common.collect.Lists;

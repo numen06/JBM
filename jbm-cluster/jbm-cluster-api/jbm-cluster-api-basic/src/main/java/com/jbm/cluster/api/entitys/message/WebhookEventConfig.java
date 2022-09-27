@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -26,20 +27,30 @@ public class WebhookEventConfig extends MultiPlatformEntity {
     @ApiModelProperty(value = "事件ID")
     private String eventId;
 
-    @ApiModelProperty("业务事件ID")
-    private String businessEventId;
+    @ApiModelProperty("业务事件CODE")
+    private String businessEventCode;
 
     @ApiModelProperty("事件名称")
     private String eventName;
 
+    @ApiModelProperty("事件分组")
+    private String eventGroup;
+
+//    @ApiModelProperty("事件内容")
+//    @Column(columnDefinition = "TEXT")
+//    private String eventBody;
+
     @ApiModelProperty("是否内部")
     private Boolean internal;
+
+    @ApiModelProperty("反向推送URL")
+    private String url;
 
     @ApiModelProperty("头部认证信息")
     private String authHeader;
 
     @ApiModelProperty("推送方式:POST,GET")
-    private String httpMethod;
+    private String methodType;
 
 
 }

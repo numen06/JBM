@@ -1,6 +1,7 @@
 package com.jbm.cluster.push.service;
 
 import com.jbm.cluster.api.entitys.message.WebhookTask;
+import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
 
 /**
@@ -10,4 +11,5 @@ import com.jbm.framework.masterdata.service.IMultiPlatformService;
 public interface WebhookTaskService extends IMultiPlatformService<WebhookTask> {
 
 
+    void sendEvent(WebhookTaskForm webhookTaskForm);
 }

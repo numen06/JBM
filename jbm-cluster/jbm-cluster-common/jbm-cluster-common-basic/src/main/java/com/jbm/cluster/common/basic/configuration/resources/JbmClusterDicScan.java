@@ -1,10 +1,9 @@
-package com.jbm.cluster.common.basic.configuration;
+package com.jbm.cluster.common.basic.configuration.resources;
 
 import cn.hutool.core.collection.CollUtil;
 import com.jbm.autoconfig.dic.DictionaryTemplate;
 import com.jbm.cluster.api.model.dic.JbmDicResource;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
-import com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.framework.dictionary.JbmDictionary;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +15,11 @@ import java.util.Map;
  * @author wesley
  */
 @Slf4j
-public class ClusterDicScan extends JbmClusterResourceScan<JbmDicResource> {
+public class JbmClusterDicScan extends JbmClusterResourceScan<JbmDicResource> {
 
     private final DictionaryTemplate dictionaryTemplate;
 
-    public ClusterDicScan(DictionaryTemplate dictionaryTemplate) {
+    public JbmClusterDicScan(DictionaryTemplate dictionaryTemplate) {
         this.dictionaryTemplate = dictionaryTemplate;
     }
 

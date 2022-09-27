@@ -1,5 +1,6 @@
 package com.jbm.cluster.common.feign;
 
+import com.jbm.cluster.common.feign.request.JbmFeignRequest;
 import feign.RequestInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,5 +25,10 @@ public class FeignAutoConfiguration {
     @Bean
     public FeignUnknownRuntimeExceptionFilter feginUnknownRuntimeExceptionFilter() {
         return new FeignUnknownRuntimeExceptionFilter();
+    }
+
+    @Bean
+    public JbmFeignRequest jbmFeginRequest(){
+        return new JbmFeignRequest();
     }
 }

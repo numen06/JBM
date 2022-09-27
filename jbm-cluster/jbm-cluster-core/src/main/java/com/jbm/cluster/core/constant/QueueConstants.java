@@ -44,6 +44,10 @@ public class QueueConstants {
 
 
     public static final String DIC_RESOURCE_STREAM = "dicResource-in-0";
+
+    public static final String BUSINESS_EVENT_RESOURCE_STREAM = "businessEventResource-in-0";
+
+    public static final String BUSINESS_EVENT_STREAM = "businessEvent-in-0";
     /**
      * 字典通道
      */

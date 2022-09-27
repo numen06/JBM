@@ -1,10 +1,5 @@
 package com.jbm.cluster.job.util;
 
-import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.id.SaIdUtil;
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
-import cn.dev33.satoken.oauth2.model.ClientTokenModel;
-import cn.dev33.satoken.oauth2.model.SaClientModel;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
@@ -14,20 +9,17 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.api.entitys.job.SysJobLog;
-import com.jbm.cluster.core.constant.JbmSecurityConstants;
+import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
 import com.jbm.cluster.job.service.SysJobLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 
 import java.util.Date;
@@ -54,6 +46,7 @@ public abstract class AbstractQuartzJob implements Job {
 
     public AbstractQuartzJob() {
         redisLockRegistry = SpringUtil.getBean(RedisLockRegistry.class);
+        jbmRequestTemplate = SpringUtil.getBean(JbmRequestTemplate.class);
     }
 
     @Override
@@ -148,20 +141,8 @@ public abstract class AbstractQuartzJob implements Job {
         SpringUtil.getBean(SysJobLogService.class).saveEntity(sysJobLog);
     }
 
-    private SaOAuth2Template saOAuth2Template = new SaOAuth2Template() {
-        @Override
-        public SaClientModel getClientModel(String clientToken) {
-            if (SpringUtil.getApplicationName().equals(clientToken)) {
-                return new SaClientModel()
-                        .setClientId(SpringUtil.getApplicationName())
-                        .setClientSecret(SaIdUtil.getToken())
-                        .setAllowUrl("*")
-                        .setContractScope("*")
-                        .setIsAutoMode(true);
-            }
-            return null;
-        }
-    };
+
+    private final JbmRequestTemplate jbmRequestTemplate;
 
     /**
      * 执行方法，由子类重载
@@ -171,32 +152,33 @@ public abstract class AbstractQuartzJob implements Job {
      * @throws Exception 执行过程中的异常
      */
     protected void doExecute(JobExecutionContext context, SysJob sysJob) throws Exception {
-        if (JobInvokeUtil.isFeign(sysJob.getInvokeTarget())) {
-            String url = JobInvokeUtil.feignToUrl(sysJob.getInvokeTarget());
-            if (StrUtil.isEmpty(url)) {
-                throw new RuntimeException("远程服务没有启动");
-            }
-            HttpRequest httpRequest = HttpRequest.get(url).timeout(3000);
-            if (HttpMethod.POST.matches(sysJob.getMethodType())) {
-                httpRequest = HttpRequest.post(url).timeout(3000);
-            }
-            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-            httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
-            HttpResponse httpResponse = httpRequest.execute();
-            log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
-        }
-        //如果和HTTP链接
-        else if (HttpUtil.isHttp(sysJob.getInvokeTarget()) || HttpUtil.isHttps(sysJob.getInvokeTarget())) {
-            HttpRequest httpRequest = HttpRequest.get(sysJob.getInvokeTarget()).timeout(3000);
-            if (HttpMethod.POST.matches(sysJob.getMethodType())) {
-                httpRequest = HttpRequest.post(sysJob.getInvokeTarget()).timeout(3000);
-            }
-            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-            httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
-            HttpResponse httpResponse = httpRequest.execute();
-            log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
-        } else {
-            JobInvokeUtil.invokeMethod(sysJob);
-        }
+        jbmRequestTemplate.request(sysJob.getInvokeTarget(), sysJob.getMethodType(), null);
+//        if (JobInvokeUtil.isFeign(sysJob.getInvokeTarget())) {
+//            String url = JobInvokeUtil.feignToUrl(sysJob.getInvokeTarget());
+//            if (StrUtil.isEmpty(url)) {
+//                throw new RuntimeException("远程服务没有启动");
+//            }
+//            HttpRequest httpRequest = HttpRequest.get(url).timeout(3000);
+//            if (HttpMethod.POST.matches(sysJob.getMethodType())) {
+//                httpRequest = HttpRequest.post(url).timeout(3000);
+//            }
+//            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+//            httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
+//            HttpResponse httpResponse = httpRequest.execute();
+//            log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
+//        }
+//        //如果和HTTP链接
+//        else if (HttpUtil.isHttp(sysJob.getInvokeTarget()) || HttpUtil.isHttps(sysJob.getInvokeTarget())) {
+//            HttpRequest httpRequest = HttpRequest.get(sysJob.getInvokeTarget()).timeout(3000);
+//            if (HttpMethod.POST.matches(sysJob.getMethodType())) {
+//                httpRequest = HttpRequest.post(sysJob.getInvokeTarget()).timeout(3000);
+//            }
+//            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+//            httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
+//            HttpResponse httpResponse = httpRequest.execute();
+//            log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
+//        } else {
+//            JobInvokeUtil.invokeMethod(sysJob);
+//        }
     }
 }

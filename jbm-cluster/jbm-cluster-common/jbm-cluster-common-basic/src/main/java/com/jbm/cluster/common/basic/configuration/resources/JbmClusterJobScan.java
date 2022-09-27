@@ -1,6 +1,8 @@
-package com.jbm.cluster.common.basic.configuration;
+package com.jbm.cluster.common.basic.configuration.resources;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.net.url.UrlBuilder;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.ContentType;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.job.SchedulerJob;
@@ -60,7 +62,8 @@ public class JbmClusterJobScan extends JbmClusterResourceScan<JbmClusterJobResou
                 JbmClusterJob jbmClusterJob = new JbmClusterJob();
                 jbmClusterJob.setJobName(schedulerJob.name());
                 jbmClusterJob.setServiceName(serviceId);
-                jbmClusterJob.setUrl("feign://" + serviceId + path);
+                String url = UrlBuilder.create().setHost(serviceId).addPath(path).build();
+                jbmClusterJob.setUrl(StrUtil.replace(url, UrlBuilder.create().getSchemeWithDefault(), "feign"));
 //                jbmClusterJob.setJobName(handlerMethodEntry.getKey().toString());
                 jbmClusterJob.setMethodType(CollUtil.getFirst(handlerMethodEntry.getKey().getMethodsCondition().getMethods()).toString());
                 jbmClusterJob.setCron(schedulerJob.cron());

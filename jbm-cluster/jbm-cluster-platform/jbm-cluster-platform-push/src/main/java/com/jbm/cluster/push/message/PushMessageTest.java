@@ -6,11 +6,12 @@ import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.cluster.api.constants.push.PushWay;
+import com.jbm.cluster.api.event.TestBusinessEvent;
 import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.common.basic.module.JbmClusterBusinessEventTemplate;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -23,8 +24,10 @@ public class PushMessageTest {
     private PushMessageBodyService pushMessageBodyService;
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
+    @Autowired
+    private JbmClusterBusinessEventTemplate jbmClusterBusinessEventTemplate;
 
-//    @Scheduled(cron = "0/5 * *  * * ? ")
+    //    @Scheduled(cron = "0/5 * *  * * ? ")
     public void testSend() {
         PushMsg pushMsg = new PushMsg();
 //        pushMsg.setPushWays(Lists.newArrayList(PushWay.wechat));
@@ -47,6 +50,7 @@ public class PushMessageTest {
         pushMsg.setContent(StrUtil.format("{}发的:{}", DateTime.now(), pushMsg.getTitle()));
 //        pushMessageBodyService.sendPushMsg(pushMsg);
         jbmClusterNotification.pushMsg(pushMsg);
+        jbmClusterBusinessEventTemplate.sendBusinessEvent(new TestBusinessEvent("我是测试事件:" + DateUtil.now()));
     }
 
 
