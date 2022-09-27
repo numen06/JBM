@@ -16,11 +16,19 @@
 联系邮箱；numen06@qq.com
 ```
 
+
 ### 说明
 
 - Java Business Model(JBM)
 - 适合中大型项目开发，全分布式架构统一平台管理
 - 支持多租户，多项目管理
+
+### 使用说明文档
+
+- JBM7随着使用越来越庞大和复杂正在不断完善文档
+- [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)
+
+
 
 ### 故事
 

@@ -24,9 +24,16 @@ public class PushMessageTest {
     private PushMessageBodyService pushMessageBodyService;
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
+    /**
+     * 引入时间发送模板类
+     */
     @Autowired
     private JbmClusterBusinessEventTemplate jbmClusterBusinessEventTemplate;
 
+    /**
+     *
+     * 发送测试事件
+     */
     //    @Scheduled(cron = "0/5 * *  * * ? ")
     public void testSend() {
         PushMsg pushMsg = new PushMsg();

@@ -11,10 +11,22 @@ import java.lang.annotation.*;
 public @interface SchedulerJob {
 
 
+    /**
+     * 任务的名称
+     * @return
+     */
     String name();
 
+    /**
+     * 周期运行字符串
+     * @return
+     */
     String cron();
 
+    /**
+     * 是否启用
+     * @return
+     */
     boolean enable() default true;
 
 }
