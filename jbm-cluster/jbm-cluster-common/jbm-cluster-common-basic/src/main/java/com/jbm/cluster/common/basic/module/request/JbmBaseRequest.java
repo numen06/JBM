@@ -14,18 +14,23 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     @Override
     public HttpResponse request(String url, String methodType, String jsonBody) {
         HttpRequest httpRequest = new HttpRequest(this.buildUrl(url));
-        httpRequest.contentType(ContentType.JSON.getValue());
-        httpRequest.setMethod(Method.GET);
-        httpRequest.timeout(3000);
         httpRequest.body(jsonBody);
-        httpRequest = this.buildRequest(httpRequest);
+        httpRequest.setMethod(Method.GET);
         if (HttpMethod.POST.matches(methodType)) {
             httpRequest.setMethod(Method.POST);
         }
+        return request(httpRequest);
+    }
+
+    @Override
+    public HttpResponse request(HttpRequest httpRequest) {
+        httpRequest.contentType(ContentType.JSON.getValue());
+        httpRequest = this.buildRequest(httpRequest);
         HttpResponse httpResponse = httpRequest.execute();
         log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
         return httpResponse;
     }
+
 
     public HttpRequest buildRequest(HttpRequest httpRequest) {
         return httpRequest;

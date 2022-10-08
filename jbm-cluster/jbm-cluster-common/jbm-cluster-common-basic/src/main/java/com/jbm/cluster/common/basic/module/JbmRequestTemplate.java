@@ -2,6 +2,7 @@ package com.jbm.cluster.common.basic.module;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.jbm.cluster.common.basic.module.request.ICustomizeRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,12 @@ public class JbmRequestTemplate {
         ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(url);
         return iCustomizeRequest.request(url, methodType, jsonBody);
     }
+
+    public HttpResponse request(String url,HttpRequest httpRequest) {
+        ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(url);
+        return iCustomizeRequest.request(httpRequest);
+    }
+
 
     public ICustomizeRequest findCustomizeRequest(String url) {
         Map<String, ICustomizeRequest> iCustomizeRequestMap = applicationContext.getBeansOfType(ICustomizeRequest.class);

@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,6 +44,8 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         });
     }
 
+    private Map<String,WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
+
     public void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
         WebhookTask webhookTask = new WebhookTask();
@@ -50,8 +54,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         webhookTask.setEventId(webhookEventConfig.getEventId());
         webhookTask.setRetryNumber(0);
         this.saveEntity(webhookTask);
-        while (ok.get()) {
+        while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
             try {
+                webhookTaskCache.put(webhookTask.getTaskId(),webhookTask);
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
@@ -61,6 +66,8 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 ThreadUtil.safeSleep(500);
                 webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
                 log.error("执行远程业务事件错误", e);
+            }finally {
+                webhookTaskCache.remove(webhookTask.getTaskId());
             }
         }
     }
