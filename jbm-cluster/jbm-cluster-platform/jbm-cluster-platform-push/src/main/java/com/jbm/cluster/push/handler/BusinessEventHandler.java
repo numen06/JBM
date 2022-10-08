@@ -46,7 +46,6 @@ public class BusinessEventHandler {
         }).then();
     }
 
-
     public void sendEvent(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
         WebhookTaskForm webhookTaskForm = beanToWebHook(jbmClusterBusinessEventBean);
         webhookTaskService.sendEvent(webhookTaskForm);

@@ -26,7 +26,7 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     public HttpResponse request(HttpRequest httpRequest) {
         httpRequest.contentType(ContentType.JSON.getValue());
         httpRequest = this.buildRequest(httpRequest);
-        HttpResponse httpResponse = httpRequest.execute();
+        HttpResponse httpResponse = httpRequest.execute(true);
         log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
         return httpResponse;
     }

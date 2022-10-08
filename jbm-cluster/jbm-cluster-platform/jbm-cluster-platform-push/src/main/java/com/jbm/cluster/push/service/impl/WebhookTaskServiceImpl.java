@@ -40,11 +40,15 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             return;
         }
         webhookEventConfigs.forEach(webhookEventConfig -> {
-            sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+            try {
+                sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+            } catch (Exception e) {
+                log.error("推送Webhook事件错误", e);
+            }
         });
     }
 
-    private Map<String,WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
+    private Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
 
     public void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
@@ -56,17 +60,23 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         this.saveEntity(webhookTask);
         while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
             try {
-                webhookTaskCache.put(webhookTask.getTaskId(),webhookTask);
+                webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
-                this.saveEntity(webhookTask);
+//                this.saveEntity(webhookTask);
                 ok.set(false);
             } catch (Exception e) {
                 ThreadUtil.safeSleep(500);
                 webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
                 log.error("执行远程业务事件错误", e);
-            }finally {
+                webhookTask.setErrorMsg(e.getMessage());
+                if (webhookTask.getRetryNumber() >= 3) {
+                    break;
+                }
+            } finally {
+                //保存信息
+                this.saveEntity(webhookTask);
                 webhookTaskCache.remove(webhookTask.getTaskId());
             }
         }

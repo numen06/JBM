@@ -8,6 +8,7 @@ import com.jbm.cluster.job.service.SysJobLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ public class SysJobLogController extends MasterDataCollection<SysJobLog, SysJobL
     /**
      * 导出定时任务调度日志列表
      */
+    @ApiOperation(value = "导出定时任务调度日志列表")
     @RequiresPermissions("monitor:job:export")
     @PostMapping("/export")
     public void export(HttpServletResponse response, SysJobLog sysJobLog) {
@@ -50,6 +52,7 @@ public class SysJobLogController extends MasterDataCollection<SysJobLog, SysJobL
     /**
      * 清空定时任务调度日志
      */
+    @ApiOperation(value = "清空定时任务调度日志")
     @RequiresPermissions("monitor:job:remove")
     @DeleteMapping("/clean")
     public ResultBody clean() {

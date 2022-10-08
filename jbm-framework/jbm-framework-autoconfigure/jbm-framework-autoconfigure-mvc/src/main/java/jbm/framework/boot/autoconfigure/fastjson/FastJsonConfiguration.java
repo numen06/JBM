@@ -38,7 +38,7 @@ public class FastJsonConfiguration {
     }
 
     public static FastJsonHttpMessageConverter getFastJsonHttpMessageConverter(boolean clean) {
-
+        //是否要清除序列化
         if (ObjectUtil.isNotEmpty(fastConverter)) {
             if (clean) {
                 fastConverter.getFastJsonConfig().getSerializeConfig().clearSerializers();

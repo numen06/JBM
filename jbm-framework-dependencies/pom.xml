@@ -49,7 +49,8 @@
         <jbm.framework.version>7.2.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
-        <fastjson.version>1.2.79</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
+        <fastjson2.version>2.0.15</fastjson2.version>
         <minio.version>8.3.0</minio.version>
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>
@@ -894,6 +895,21 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
+            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.alibaba</groupId>-->
+<!--                <artifactId>fastjson</artifactId>-->
+<!--                <version>${fastjson2.version}</version>-->
+<!--            </dependency>-->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2-extension</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
             <!-- ref -->
             <dependency>

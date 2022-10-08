@@ -37,5 +37,7 @@ public class WebhookTask extends MultiPlatformEntity {
     private Integer httpStatus;
     @ApiModelProperty("重试次数")
     private Integer retryNumber;
+    @ApiModelProperty("错误信息")
+    private String errorMsg;
 
 }
