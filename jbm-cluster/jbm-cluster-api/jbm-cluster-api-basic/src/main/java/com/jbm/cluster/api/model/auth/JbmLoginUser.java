@@ -56,6 +56,11 @@ public class JbmLoginUser implements Serializable {
     private String clientId;
 
     /**
+     * 用户的APPID
+     */
+    private Long appId;
+
+    /**
      * 用户类型
      */
     private String userType;
@@ -135,8 +140,9 @@ public class JbmLoginUser implements Serializable {
      * 获取登录id
      */
     public String getLoginId() {
-        if (StrUtil.isNotBlank(openId))
+        if (StrUtil.isNotBlank(openId)) {
             return openId;
+        }
         if (StrUtil.isEmpty(userType)) {
             userType = "user";
         }

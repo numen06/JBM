@@ -18,7 +18,7 @@ public interface IBaseAppServiceClient {
      * @return
      */
     @GetMapping("/{appId}/info")
-    ResultBody<BaseApp> getApp(@PathVariable("appId") String appId);
+    ResultBody<BaseApp> getApp(@PathVariable("appId") Long appId);
 
     @GetMapping("/getAppByKey")
     ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey);

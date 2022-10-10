@@ -26,7 +26,7 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param appId
      * @return
      */
-    BaseApp getAppInfo(String appId);
+    BaseApp getAppInfo(Long appId);
 
 //    /**
 //     * 获取app和应用信息
@@ -69,7 +69,7 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param appId
      * @return
      */
-    String restSecret(String appId);
+    String restSecret(Long appId);
 
     /**
      * 删除应用
@@ -77,5 +77,5 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param appId
      * @return
      */
-    void removeApp(String appId);
+    void removeApp(Long appId);
 }

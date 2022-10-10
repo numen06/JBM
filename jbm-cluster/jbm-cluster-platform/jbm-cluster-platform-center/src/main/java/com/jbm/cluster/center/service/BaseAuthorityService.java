@@ -87,7 +87,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      *
      * @param appId
      */
-    void removeAuthorityApp(String appId);
+    void removeAuthorityApp(Long appId);
 
 
     /**
@@ -139,7 +139,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      * @param authorityIds 权限集合
      * @return
      */
-    void addAuthorityApp(String appId, Date expireTime, String... authorityIds);
+    void addAuthorityApp(Long appId, Date expireTime, String... authorityIds);
 
     /**
      * 应用授权-添加单个权限
@@ -148,7 +148,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      * @param expireTime
      * @param authorityId
      */
-    void addAuthorityApp(String appId, Date expireTime, String authorityId);
+    void addAuthorityApp(Long appId, Date expireTime, String authorityId);
 
     /**
      * 添加功能按钮权限
@@ -165,7 +165,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      * @param appId
      * @return
      */
-    List<OpenAuthority> findAuthorityByApp(String appId);
+    List<OpenAuthority> findAuthorityByApp(Long appId);
 
     /**
      * 获取角色已授权权限

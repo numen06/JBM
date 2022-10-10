@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.form.IdsForm;
+import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.masterdata.controller.IMultiPlatformController;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
@@ -128,6 +128,8 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
         }
     }
 
+
+
     /**
      * 保存
      *
@@ -201,10 +203,11 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
         try {
             validator(entityRequsetForm);
             Entity entity = validatorMasterData(entityRequsetForm, true);
-            if (service.deleteEntity(entity))
+            if (service.deleteEntity(entity)) {
                 return ResultBody.success(true, "删除对象成功");
-            else
+            } else {
                 return ResultBody.success(false, "删除对象失败");
+            }
         } catch (Exception e) {
             return ResultBody.error(e);
         }
@@ -213,10 +216,10 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
     @PostMapping("/deleteByIds")
     @Override
-    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) ObjectIdsForm objectIdsForm) {
         try {
             // 获取前端信息List<BusCompanyInfo>
-            List<Long> ids = idsForm.getIds();
+            List<String> ids = objectIdsForm.getIds();
             if (CollectionUtil.isEmpty(ids)) {
                 return ResultBody.error(true, "ID为空");
             }

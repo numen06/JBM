@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class LoginProcessModel {
 
+
     private String username;
     private String originalPassword;
     private String decryptPassword;
@@ -16,5 +17,8 @@ public class LoginProcessModel {
      * 登录设备
      */
     private String loginDevice;
+    /**
+     * 验证码
+     */
     private String vcode;
 }

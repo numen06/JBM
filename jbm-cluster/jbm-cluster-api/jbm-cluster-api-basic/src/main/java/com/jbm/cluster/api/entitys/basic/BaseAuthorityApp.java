@@ -27,6 +27,6 @@ public class BaseAuthorityApp extends AuthorityExt {
      * 应用ID
      */
     @ApiModelProperty("APPID")
-    private String appId;
+    private Long appId;
 
 }

@@ -56,8 +56,8 @@ public class FaceLoginAuthenticate implements ILoginAuthenticate {
                         throw new ServiceException("该用户没有注册实名信息");
                     }
                     String image = baseUserCertification.getFaceImage();
-                    MatchRequest matchRequest1 = new MatchRequest(StrUtil.subAfter(image, "base64,", false), "BASE64");
-                    MatchRequest matchRequest2 = new MatchRequest(StrUtil.subAfter(password, "base64,", false), "BASE64");
+                    MatchRequest matchRequest1 = new MatchRequest(getImageData(image), "BASE64");
+                    MatchRequest matchRequest2 = new MatchRequest(getImageData(password), "BASE64");
                     JSONObject jsonObject = aipFace.match(Lists.newArrayList(matchRequest1, matchRequest2));
                     BaiduResult<MatchResult> baiduResult = JSON.parseObject(jsonObject.toString(), new TypeReference<BaiduResult<MatchResult>>() {
                     });
@@ -83,6 +83,14 @@ public class FaceLoginAuthenticate implements ILoginAuthenticate {
                 }
             }
         });
+    }
+
+    private String getImageData(String image) {
+        String ret = StrUtil.startWith(image, "data:image") ? StrUtil.subAfter(image, "base64,", false) : image;
+        if (StrUtil.isBlank(ret)) {
+            throw new ServiceException("人脸信息为空");
+        }
+        return ret;
     }
 
     @Override

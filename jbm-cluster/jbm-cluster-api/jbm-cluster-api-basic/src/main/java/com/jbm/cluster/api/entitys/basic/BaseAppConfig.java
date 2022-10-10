@@ -27,7 +27,7 @@ public class BaseAppConfig extends MasterDataEntity {
     @Id
     @TableId(type = IdType.INPUT)
     @ApiModelProperty(value = "应用ID")
-    private String appId;
+    private Long appId;
     @ApiModelProperty(value = "应用KEY")
     private String appKey;
     /**

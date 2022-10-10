@@ -1,16 +1,18 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -21,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -110,6 +111,9 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
 
     @Override
     public BaseMenu saveEntity(BaseMenu menu) {
+        //获取当前用户的APPID
+        JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
+        menu.setAppId(jbmLoginUser.getAppId());
         if (ObjectUtil.isNotEmpty(menu.getMenuId())) {
             BaseMenu saved = getMenu(menu.getMenuId());
             if (saved == null) {
@@ -139,14 +143,12 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
             menu.setStatus(1);
         }
         if (ObjectUtil.isEmpty(menu.getParentId())) {
-            menu.setParentId(0l);
+            menu.setParentId(0L);
         }
         if (ObjectUtil.isEmpty(menu.getPriority())) {
             menu.setPriority(0);
         }
         menu.setServiceId(DEFAULT_SERVICE_ID);
-        menu.setCreateTime(new Date());
-        menu.setUpdateTime(menu.getCreateTime());
         super.saveEntity(menu);
         // 同步权限表里的信息
         baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
@@ -196,7 +198,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Override
     public void removeMenu(Long menuId) {
         BaseMenu menu = getMenu(menuId);
-        if (menu != null && menu.getIsPersist().equals(JbmConstants.ENABLED)) {
+        if (BooleanUtil.isTrue(menu.getIsPersist())) {
             throw new ServiceException(String.format("保留数据,不允许删除!"));
         }
         // 移除菜单权限

@@ -1,6 +1,6 @@
 package com.jbm.framework.masterdata.controller;
 
-import com.jbm.framework.form.IdsForm;
+import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.EntityPageSearchForm;
@@ -62,8 +62,8 @@ public interface IMultiPlatformController<Entity extends MultiPlatformEntity> {
     /**
      * 批量删除
      *
-     * @param idsForm
+     * @param objectIdsForm
      * @return
      */
-    ResultBody<Boolean> deleteByIds(IdsForm idsForm);
+    ResultBody<Boolean> deleteByIds(ObjectIdsForm objectIdsForm);
 }

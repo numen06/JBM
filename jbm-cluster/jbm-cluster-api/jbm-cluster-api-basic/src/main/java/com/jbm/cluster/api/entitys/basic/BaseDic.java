@@ -36,6 +36,6 @@ public class BaseDic extends MasterDataTreeEntity {
     private String serviceId;
 
     @ApiModelProperty(value = "应用ID")
-    private String appId;
+    private Long appId;
 
 }

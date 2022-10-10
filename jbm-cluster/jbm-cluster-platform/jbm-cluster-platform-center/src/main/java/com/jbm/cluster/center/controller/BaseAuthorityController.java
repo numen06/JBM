@@ -196,7 +196,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     })
     @GetMapping("/app")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(
-            @RequestParam(value = "appId") String appId
+            @RequestParam(value = "appId") Long appId
     ) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(appId);
         return ResultBody.ok().data(result);
@@ -308,7 +308,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     })
     @PostMapping("/app/grant")
     public ResultBody grantAuthorityApp(
-            @RequestParam(value = "appId") String appId,
+            @RequestParam(value = "appId") Long appId,
             @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
             @RequestParam(value = "authorityIds", required = false) String authorityIds
     ) {

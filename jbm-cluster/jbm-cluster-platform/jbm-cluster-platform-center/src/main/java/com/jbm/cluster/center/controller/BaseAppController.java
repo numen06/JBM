@@ -56,7 +56,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     @GetMapping("/{appId}/info")
     @Override
     public ResultBody<BaseApp> getApp(
-            @PathVariable("appId") String appId
+            @PathVariable("appId") Long appId
     ) {
         BaseApp appInfo = baseAppService.getAppInfo(appId);
         return ResultBody.ok().data(appInfo);
@@ -138,7 +138,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
         app.setWebsite(website);
         app.setDeveloperId(developerId);
         BaseApp result = baseAppService.addAppInfo(app);
-        String appId = null;
+        Long appId = null;
         if (result != null) {
             appId = result.getAppId();
         }
@@ -176,7 +176,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     })
     @PostMapping("/update")
     public ResultBody updateApp(
-            @RequestParam("appId") String appId,
+            @RequestParam("appId") Long appId,
             @RequestParam(value = "appName") String appName,
             @RequestParam(value = "appNameEn") String appNameEn,
             @RequestParam(value = "appType") String appType,
@@ -228,7 +228,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     })
     @PostMapping("/client/update")
     public ResultBody<String> updateAppClientInfo(
-            @RequestParam("appId") String appId,
+            @RequestParam("appId") Long appId,
             @RequestParam(value = "grantTypes") String grantTypes,
             @RequestParam(value = "redirectUrls") String redirectUrls,
             @RequestParam(value = "scopes") String scopes,
@@ -261,7 +261,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     })
     @PostMapping("/reset")
     public ResultBody<String> resetAppSecret(
-            @RequestParam("appId") String appId
+            @RequestParam("appId") Long appId
     ) {
         String result = baseAppService.restSecret(appId);
         return ResultBody.ok().data(result);
@@ -279,7 +279,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     })
     @PostMapping("/remove")
     public ResultBody removeApp(
-            @RequestParam("appId") String appId
+            @RequestParam("appId") Long appId
     ) {
         baseAppService.removeApp(appId);
         jbmClusterTemplate.refreshGateway();

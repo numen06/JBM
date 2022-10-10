@@ -30,9 +30,9 @@ import javax.persistence.Table;
 @Table(name = "base_app", indexes = {@Index(name = "apiKeyIndex", columnList = "apiKey", unique = true)})
 public class BaseApp extends MasterDataEntity {
     @Id
-    @TableId(type = IdType.INPUT)
+    @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "应用ID")
-    private String appId;
+    private Long appId;
 
     /**
      * API访问key

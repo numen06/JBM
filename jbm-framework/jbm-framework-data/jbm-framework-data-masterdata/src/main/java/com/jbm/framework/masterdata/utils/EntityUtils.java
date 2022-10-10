@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.toolkit.support.SerializedLambda;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -84,8 +85,8 @@ public class EntityUtils {
      * @param <Entity>
      * @return
      */
-    public static <Entity> Map<Long, Entity> entityToDictionary(List<Entity> list) {
-        Map<Long, Entity> result = Maps.newHashMap();
+    public static <Entity> Map<Serializable, Entity> entityToDictionary(List<Entity> list) {
+        Map<Serializable, Entity> result = Maps.newHashMap();
         for (Iterator<Entity> iterator = list.iterator(); iterator.hasNext(); ) {
             Entity e = iterator.next();
             result.put(EntityUtils.getKeyValue(e), e);

@@ -20,5 +20,5 @@ public interface BaseAuthorityAppMapper extends SuperMapper<BaseAuthorityApp> {
      * @param appId
      * @return
      */
-    List<OpenAuthority> selectAuthorityByApp(@Param("appId") String appId);
+    List<OpenAuthority> selectAuthorityByApp(@Param("appId") Long appId);
 }

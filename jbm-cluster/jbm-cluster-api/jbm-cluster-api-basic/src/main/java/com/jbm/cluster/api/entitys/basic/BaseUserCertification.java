@@ -71,7 +71,7 @@ public class BaseUserCertification extends MasterDataIdEntity {
     /**
      * 人脸照片
      */
-    @Column(columnDefinition = "mediumtext")
+    @Column(columnDefinition = "LongText")
     @ApiModelProperty(value = "人脸照片")
     private String faceImage;
 

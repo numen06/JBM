@@ -136,8 +136,13 @@ public class SysLoginService {
         if (resultBody.getSuccess()) {
             log.info("获取到了用户信息,触发登录");
             checkLogin(loginProcessModel.getLoginType(), loginProcessModel.getUsername(), () -> true);
+            //获取当前登录APPID
+            // TODO: 2022/10/8 临时使用ClientID作为APPID
+            BaseApp baseApp = baseAppPreprocessing.getAppByKey(loginProcessModel.getClientId());
+            JbmLoginUser jbmLoginUser = resultBody.getResult();
+            jbmLoginUser.setAppId(baseApp.getAppId());
             //设置系统名称
-            resultBody.getResult().setDevice(loginProcessModel.getLoginDevice());
+            jbmLoginUser.setDevice(loginProcessModel.getLoginDevice());
             LoginHelper.login(resultBody.getResult());
             recordLogininfor(resultBody.getResult(), true, null);
         } else {
@@ -154,7 +159,6 @@ public class SysLoginService {
      * @param clientId
      * @return
      */
-
     public String decryptPassword(String clientId, String key) {
         try {
             BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);

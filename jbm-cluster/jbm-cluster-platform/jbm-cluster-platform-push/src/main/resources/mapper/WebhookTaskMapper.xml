@@ -3,4 +3,37 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.push.mapper.WebhookTaskMapper">
+
+    <select id="selectWebhookTasks" parameterType="com.jbm.cluster.push.form.WebhookTaskForm" resultType="com.jbm.cluster.push.result.WebhookTaskReslut">
+        SELECT
+        wt.*,
+        wec.event_name,
+        wec.event_group,
+        wec.business_event_code,
+        wec.url
+        FROM
+        webhook_task wt
+        JOIN webhook_event_config wec ON wt.event_id = wec.event_id
+        <where>
+            <if test="form.webHookTask.taskId != null and form.webHookTask.taskId != ''">
+                AND wt.taskId = #{form.webHookTask.taskId}
+            </if>
+            <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
+                AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
+            </if>
+            <if test="form.webhookEventConfig.eventName != null and form.webhookEventConfig.eventName != ''">
+                AND wec.event_name like concat('%', #{form.webhookEventConfig.eventName}, '%')
+            </if>
+            <if test="form.webhookEventConfig.eventGroup != null and form.webhookEventConfig.eventGroup != ''">
+                AND wec.event_group like concat('%', #{form.webhookEventConfig.eventGroup}, '%')
+            </if>
+            <if test="form.beginTime != null"><!-- 开始时间检索 -->
+                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.beginTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+            <if test="form.endTime != null"><!-- 结束时间检索 -->
+                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.endTime},'%Y-%m-%d %H:%i:%s')
+            </if>
+        </where>
+    </select>
+
 </mapper>

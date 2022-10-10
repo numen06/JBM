@@ -33,7 +33,7 @@ public class WebhookTask extends MultiPlatformEntity {
     @ApiModelProperty("返回体")
     @Column(columnDefinition = "TEXT")
     private String response;
-    @ApiModelProperty("业务事件ID")
+    @ApiModelProperty("事件状态")
     private Integer httpStatus;
     @ApiModelProperty("重试次数")
     private Integer retryNumber;

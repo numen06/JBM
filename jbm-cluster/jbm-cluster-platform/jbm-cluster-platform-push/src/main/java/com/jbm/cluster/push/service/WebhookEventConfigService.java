@@ -1,9 +1,7 @@
 package com.jbm.cluster.push.service;
 
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
-import com.jbm.cluster.api.model.event.JbmClusterBusinessEventResource;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
-import org.springframework.messaging.Message;
 
 import java.util.List;
 
@@ -13,6 +11,8 @@ import java.util.List;
  */
 public interface WebhookEventConfigService extends IMultiPlatformService<WebhookEventConfig> {
 
+
+    WebhookEventConfig selectByEventId(String eventId);
 
     List<WebhookEventConfig> selectByEventCode(String code);
 

@@ -36,9 +36,9 @@ public class WebhookEventConfig extends MultiPlatformEntity {
     @ApiModelProperty("事件分组")
     private String eventGroup;
 
-//    @ApiModelProperty("事件内容")
-//    @Column(columnDefinition = "TEXT")
-//    private String eventBody;
+    @ApiModelProperty("事件默认内容:JSON")
+    @Column(columnDefinition = "TEXT")
+    private String eventBody;
 
     @ApiModelProperty("是否内部")
     private Boolean internal;

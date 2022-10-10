@@ -26,7 +26,7 @@ public class BaseAppPreprocessing {
     public BaseApp getAppByKey(String appKey) {
         if (StrUtil.contains(appKey, "-")) {
             BaseApp app = new BaseApp();
-            app.setAppId("0");
+            app.setAppId(0L);
             app.setApiKey(appKey);
             app.setSecretKey(appKey);
             return app;

@@ -49,12 +49,12 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     protected SqlSessionTemplate sqlSessionTemplate;
 
     @Override
-    public Entity selectById(Long id) {
+    public Entity selectById(Serializable id) {
         return super.getById(id);
     }
 
     @Override
-    public List<Entity> selectByIds(Collection<Long> ids) {
+    public List<Entity> selectByIds(Collection<Serializable> ids) {
         return Lists.newArrayList(super.listByIds(ids));
     }
 
@@ -138,13 +138,13 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
-    public Map<Long, Entity> selectEntityDictionary(Entity entity) {
+    public Map<Serializable, Entity> selectEntityDictionary(Entity entity) {
         List<Entity> list = this.selectEntitys(entity);
         return EntityUtils.entityToDictionary(list);
     }
 
     @Override
-    public Map<Long, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper) {
+    public Map<Serializable, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper) {
         List<Entity> list = super.list(criteriaQueryWrapper);
         return EntityUtils.entityToDictionary(list);
     }
@@ -175,7 +175,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     public boolean deleteEntity(Entity entity) {
         boolean hasId = false;
         try {
-            Long id = EntityUtils.getKeyValue(entity);
+            Serializable id = EntityUtils.getKeyValue(entity);
             hasId = ObjectUtil.isNotEmpty(hasId);
             if (hasId) {
                 return this.deleteById(id);
@@ -192,7 +192,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteById(Long id) {
+    public boolean deleteById(Serializable id) {
         return super.removeById(id);
     }
 

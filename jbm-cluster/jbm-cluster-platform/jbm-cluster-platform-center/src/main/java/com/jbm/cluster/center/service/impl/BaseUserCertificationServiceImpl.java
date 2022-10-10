@@ -22,4 +22,5 @@ public class BaseUserCertificationServiceImpl extends MasterDataServiceImpl<Base
         return this.selectEntityByWapper(queryWrapper);
     }
 
+
 }

@@ -67,7 +67,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      */
     Long count(Entity entity);
 
-    Map<Long, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper);
+    Map<Serializable, Entity> selectEntityDictionaryByWapper(CriteriaQueryWrapper criteriaQueryWrapper);
 
     /**
      * 通过一个查询条件查询
@@ -104,7 +104,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
     boolean updateByWrapper(Entity entity, Wrapper<Entity> wrapper);
 
 
-    Entity selectById(Long id);
+    Entity selectById(Serializable id);
 
     List<Entity> selectEntitys(Map<String, Object> params);
 
@@ -117,7 +117,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @return
      * @throws DataServiceException
      */
-    Map<Long, Entity> selectEntityDictionary(Entity entity);
+    Map<Serializable, Entity> selectEntityDictionary(Entity entity);
 
 
     /**
@@ -216,7 +216,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param id
      * @return
      */
-    boolean deleteById(Long id);
+    boolean deleteById(Serializable id);
 
     /**
      * 根据ID数组查询
@@ -224,7 +224,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param ids
      * @return
      */
-    List<Entity> selectByIds(Collection<Long> ids);
+    List<Entity> selectByIds(Collection<Serializable> ids);
 
 
     /**

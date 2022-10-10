@@ -100,7 +100,7 @@ public class BaseMenu extends MasterDataEntity {
      * 保留数据0-否 1-是 不允许删除
      */
     @ApiModelProperty(value = "保留数据0-否 1-是 不允许删除")
-    private Integer isPersist;
+    private Boolean isPersist;
 
     /**
      * 服务ID
@@ -111,6 +111,6 @@ public class BaseMenu extends MasterDataEntity {
     /**
      * 对应的什么APP
      */
-    @ApiModelProperty(value = "对应的什么APP")
+    @ApiModelProperty(value = "对应的APP")
     private Long appId;
 }

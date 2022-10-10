@@ -274,7 +274,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @param appId
      */
     @Override
-    public void removeAuthorityApp(String appId) {
+    public void removeAuthorityApp(Long appId) {
         QueryWrapper<BaseAuthorityApp> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseAuthorityApp::getAppId, appId);
         baseAuthorityAppMapper.delete(queryWrapper);
@@ -382,7 +382,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      */
     @CacheEvict(value = {"apps"}, key = "'client:'+#appId")
     @Override
-    public void addAuthorityApp(String appId, Date expireTime, String... authorityIds) {
+    public void addAuthorityApp(Long appId, Date expireTime, String... authorityIds) {
         if (appId == null) {
             return;
         }
@@ -422,7 +422,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      */
     @CacheEvict(value = {"apps"}, key = "'client:'+#appId")
     @Override
-    public void addAuthorityApp(String appId, Date expireTime, String authorityId) {
+    public void addAuthorityApp(Long appId, Date expireTime, String authorityId) {
         BaseAuthorityApp authority = new BaseAuthorityApp();
         authority.setAppId(appId);
         authority.setAuthorityId(Long.parseLong(authorityId));
@@ -475,7 +475,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @return
      */
     @Override
-    public List<OpenAuthority> findAuthorityByApp(String appId) {
+    public List<OpenAuthority> findAuthorityByApp(Long appId) {
         List<OpenAuthority> authorities = Lists.newArrayList();
         List<OpenAuthority> list = baseAuthorityAppMapper.selectAuthorityByApp(appId);
         if (list != null) {

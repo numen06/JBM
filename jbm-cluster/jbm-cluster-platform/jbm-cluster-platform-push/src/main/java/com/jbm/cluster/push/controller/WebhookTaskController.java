@@ -3,15 +3,15 @@ package com.jbm.cluster.push.controller;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.api.event.TestBusinessEvent;
 import com.jbm.cluster.api.event.annotation.BusinessEventListener;
+import com.jbm.cluster.push.form.WebhookTaskForm;
+import com.jbm.cluster.push.result.WebhookTaskReslut;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
+import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author: auto generate by jbm
@@ -26,13 +26,50 @@ public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, 
     @BusinessEventListener(eventClass = TestBusinessEvent.class)
     @PostMapping("/businessEventListener")
     public ResultBody<String> businessEventListener(@RequestBody TestBusinessEvent testBusinessEvent) {
-        return ResultBody.success("标记已读成功");
+        return ResultBody.success("监听测试-1成功");
     }
 
     @ApiOperation("监听测试-2")
     @BusinessEventListener(eventClass = TestBusinessEvent.class)
     @PostMapping("/businessEventListener2")
     public ResultBody<String> businessEventListener2(@RequestBody TestBusinessEvent testBusinessEvent) {
-        return ResultBody.success("标记已读成功");
+        return ResultBody.success("监听测试-2成功");
+    }
+
+    @ApiOperation("触发")
+    @GetMapping("/run")
+    public ResultBody<String> run(String eventId) {
+        this.service.sendEvent(eventId);
+        return ResultBody.success("触发成功");
+    }
+
+    @ApiOperation("请求")
+    @PostMapping("/req")
+    public ResultBody<String> run(@RequestBody WebhookTask webhookTask) {
+        this.service.sendEvent(webhookTask);
+        return ResultBody.success("请求成功");
+    }
+
+    @ApiOperation("重试")
+    @GetMapping("/retry")
+    public ResultBody<String> retry(String taskId) {
+        this.service.retryEventTask(taskId);
+        return ResultBody.success("重试成功");
+    }
+
+    @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
+    @PostMapping("/findTask")
+    public ResultBody<WebhookTask> findConfig(@RequestBody(required = false) final WebhookTask entity) {
+        return ResultBody.callback("查询成功", () -> {
+            return service.selectEntity(entity);
+        });
+    }
+
+    @ApiOperation(value = "查询任务列表")
+    @PostMapping("/selectWebhookTasks")
+    public ResultBody<DataPaging<WebhookTaskReslut>> selectWebhookTasks(@RequestBody(required = false) final WebhookTaskForm webhookTaskForm) {
+        return ResultBody.callback("查询成功", () -> {
+            return service.selectWebhookTasks(webhookTaskForm);
+        });
     }
 }

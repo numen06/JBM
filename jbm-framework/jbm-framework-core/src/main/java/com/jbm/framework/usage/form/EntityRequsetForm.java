@@ -3,6 +3,7 @@ package com.jbm.framework.usage.form;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,7 +20,6 @@ import java.util.List;
 public class EntityRequsetForm<Entity> extends BaseRequestForm {
 
     private static final long serialVersionUID = 1L;
-
     private Entity entity;
 
     public Entity tryGet(Class<Entity> clazz) {

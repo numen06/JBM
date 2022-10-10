@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -56,7 +57,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 
     @Override
     public BaseApp saveEntity(BaseApp entity) {
-        if (StrUtil.isBlank(entity.getAppId())) {
+        if (ObjectUtil.isEmpty(entity.getAppId())) {
             return this.addAppInfo(entity);
         } else {
             return this.updateInfo(entity);
@@ -95,7 +96,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      */
     @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appId")
     @Override
-    public BaseApp getAppInfo(String appId) {
+    public BaseApp getAppInfo(Long appId) {
         return baseAppMapper.selectById(appId);
     }
 
@@ -125,7 +126,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 ////        } catch (Exception e) {
 ////            return null;
 ////        }
-////        String appId = baseClientDetails.getAdditionalInformation().get("appId").toString();
+////        Long appId = baseClientDetails.getAdditionalInformation().get("appId").toString();
 //        OpenClientDetails openClient = new OpenClientDetails();
 //        BeanUtils.copyProperties(baseClientDetails, openClient);
 //        openClient.setAuthorities(baseAuthorityService.findAuthorityByApp(appId));
@@ -152,10 +153,10 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     @CachePut(value = "apps", key = "#app.appId")
     @Override
     public BaseApp addAppInfo(BaseApp app) {
-        String appId = String.valueOf(System.currentTimeMillis());
+//        Long appId = String.valueOf(System.currentTimeMillis());
         String apiKey = RandomValueUtils.randomAlphanumeric(24);
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
-        app.setAppId(appId);
+//        app.setAppId(appId);
         app.setApiKey(apiKey);
         app.setSecretKey(secretKey);
         app.setCreateTime(new Date());
@@ -211,7 +212,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
             @CacheEvict(value = {"apps"}, key = "#appId"),
             @CacheEvict(value = {"apps"}, key = "'client:'+#appId")
     })
-    public String restSecret(String appId) {
+    public String restSecret(Long appId) {
         BaseApp appInfo = getAppInfo(appId);
         if (appInfo == null) {
             throw new ServiceException(appId + "应用不存在!");
@@ -239,7 +240,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
             @CacheEvict(value = {"apps"}, key = "'client:'+#appId")
     })
     @Override
-    public void removeApp(String appId) {
+    public void removeApp(Long appId) {
         BaseApp appInfo = getAppInfo(appId);
         if (appInfo == null) {
             throw new ServiceException(appId + "应用不存在!");

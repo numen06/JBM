@@ -64,10 +64,11 @@ public class Context {
     }
 
     public static String getAppId() {
-        if (securityMap.get() == null)
+        if (securityMap.get() == null) {
             return null;
-        else
+        } else {
             return securityMap.get().get(APP_ID);
+        }
     }
 
     static void setAppId(String appId) {
@@ -75,10 +76,11 @@ public class Context {
     }
 
     public static String getSignature() {
-        if (securityMap.get() == null)
+        if (securityMap.get() == null) {
             return null;
-        else
+        } else {
             return securityMap.get().get(SIGNATURE);
+        }
     }
 
     static void setSignature(String signature) {
@@ -86,10 +88,11 @@ public class Context {
     }
 
     public static String getUserId() {
-        if (securityMap.get() == null)
+        if (securityMap.get() == null) {
             return null;
-        else
+        } else {
             return securityMap.get().get(USER_ID);
+        }
     }
 
     static void setUserId(String userId) {
