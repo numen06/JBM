@@ -54,7 +54,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
-    public List<Entity> selectByIds(Collection<Serializable> ids) {
+    public List<Entity> selectByIds(Collection<? extends Serializable> ids) {
         return Lists.newArrayList(super.listByIds(ids));
     }
 

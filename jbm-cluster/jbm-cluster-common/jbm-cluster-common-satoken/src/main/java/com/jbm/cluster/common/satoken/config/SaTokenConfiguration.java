@@ -3,6 +3,7 @@ package com.jbm.cluster.common.satoken.config;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
+import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -64,5 +65,10 @@ public class SaTokenConfiguration {
         return new SaPermissionImpl();
     }
 
+
+    @Bean
+    public JbmNodeOAuth2TemplateImpl jbmNodeOAuth2Template() {
+        return new JbmNodeOAuth2TemplateImpl();
+    }
 
 }

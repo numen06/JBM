@@ -24,20 +24,20 @@ import java.util.List;
 @Slf4j
 public class JbmFeignRequest extends JbmBaseRequest {
 
-    private SaOAuth2Template saOAuth2Template = new SaOAuth2Template() {
-        @Override
-        public SaClientModel getClientModel(String clientToken) {
-            if (SpringUtil.getApplicationName().equals(clientToken)) {
-                return new SaClientModel()
-                        .setClientId(SpringUtil.getApplicationName())
-                        .setClientSecret(SaIdUtil.getToken())
-                        .setAllowUrl("*")
-                        .setContractScope("*")
-                        .setIsAutoMode(true);
-            }
-            return null;
-        }
-    };
+//    private SaOAuth2Template saOAuth2Template = new SaOAuth2Template() {
+//        @Override
+//        public SaClientModel getClientModel(String clientToken) {
+//            if (SpringUtil.getApplicationName().equals(clientToken)) {
+//                return new SaClientModel()
+//                        .setClientId(SpringUtil.getApplicationName())
+//                        .setClientSecret(SaIdUtil.getToken())
+//                        .setAllowUrl("*")
+//                        .setContractScope("*")
+//                        .setIsAutoMode(true);
+//            }
+//            return null;
+//        }
+//    };
 
 
     @Override
@@ -51,6 +51,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
     @Override
     public HttpRequest buildRequest(HttpRequest httpRequest) {
+        SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
         return httpRequest;

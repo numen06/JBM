@@ -1,5 +1,7 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -16,10 +18,13 @@ import com.jbm.framework.usage.form.JsonRequestBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.baidu.model.BaiduResult;
-import jbm.framework.boot.autoconfigure.baidu.model.result.MatchResult;
+import jbm.framework.boot.autoconfigure.baidu.model.result.DetectResult;
+import jbm.framework.boot.autoconfigure.baidu.model.result.FaceInfo;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 
 /**
  * @Author: wesley.zhang
@@ -35,18 +40,34 @@ public class BaseUserCertificationController extends MasterDataCollection<BaseUs
 
     @ApiOperation(value = "上传人脸信息")
     @PostMapping("/updateFaceImage")
-    public ResultBody<MatchResult> updateFaceImage(@RequestBody JsonRequestBody jsonRequestBody) {
+    public ResultBody<DetectResult> updateFaceImage(@RequestBody JsonRequestBody jsonRequestBody) {
         return ResultBody.callback("人脸检测成功", () -> {
             String base64 = jsonRequestBody.getString("faceImage");
+
             String faceImage = StrUtil.subAfter(base64, "base64,", false);
             if (StrUtil.isBlank(faceImage)) {
                 throw new ServiceException("未检测到人脸信息");
             }
-            JSONObject jsonObject = aipFace.detect(faceImage, "BASE64", null);
-            BaiduResult<MatchResult> baiduResult = JSON.parseObject(jsonObject.toString(), new TypeReference<BaiduResult<MatchResult>>() {
+            HashMap<String, Object> options = new HashMap<String, Object>();
+            options.put("face_field", "age");
+            options.put("max_face_num", "2");
+            options.put("face_type", "LIVE");
+            options.put("liveness_control", "LOW");
+            JSONObject jsonObject = aipFace.detect(faceImage, "BASE64", options);
+            BaiduResult<DetectResult> baiduResult = JSON.parseObject(jsonObject.toString(), new TypeReference<BaiduResult<DetectResult>>() {
             });
             if (ObjectUtil.isEmpty(baiduResult.getResult())) {
                 throw new ServiceException("未检测到人脸信息");
+            }
+            if (baiduResult.getResult().getFaceNum() == 0) {
+                throw new ServiceException("未检测到人脸信息");
+            }
+            if (baiduResult.getResult().getFaceNum() > 1) {
+                throw new ServiceException("检测到多张人脸");
+            }
+            FaceInfo faceInfo = CollUtil.getFirst(baiduResult.getResult().getFaceList());
+            if (!NumberUtil.equals(faceInfo.getFaceProbability(), 1)) {
+                throw new ServiceException("人脸可信度差请重新上传");
             }
             JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
             BaseUserCertification baseUserCertification = service.findByUserId(jbmLoginUser.getUserId());

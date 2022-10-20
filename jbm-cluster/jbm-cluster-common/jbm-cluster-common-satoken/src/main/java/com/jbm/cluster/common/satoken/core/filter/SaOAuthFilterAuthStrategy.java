@@ -3,6 +3,7 @@ package com.jbm.cluster.common.satoken.core.filter;
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.filter.SaFilterAuthStrategy;
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
@@ -28,7 +29,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     @Override
     public void run(Object r) {
         try {
-            String tokenValue = StpUtil.getTokenValue();
+            final String tokenValue = StpUtil.getTokenValue();
             if (StrUtil.isBlank(tokenValue)) {
                 throw new SaOAuth2Exception("无效Token");
             }
@@ -39,6 +40,8 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                         throw new SaOAuth2Exception("Token已失效");
                     }
                     return;
+                } else {
+                    SaIdUtil.checkToken(tokenValue);
                 }
             }
             SaRequest req = SaHolder.getRequest();
@@ -47,10 +50,10 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             if (ObjectUtil.isNotEmpty(accessTokenModel)) {
                 clientId = accessTokenModel.clientId;
                 SaOAuth2Util.checkAccessToken(tokenValue);
-                // 先检查是否已过期
-                StpUtil.checkActivityTimeout();
-                // 检查通过后继续续签
-                StpUtil.updateLastActivityToNow();
+//                // 先检查是否已过期
+//                StpUtil.checkActivityTimeout();
+//                // 检查通过后继续续签
+//                StpUtil.updateLastActivityToNow();
             } else {
                 ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {

@@ -4,6 +4,9 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.auth.SysUserOnline;
 import com.jbm.cluster.auth.form.OnlineUserSearchForm;
@@ -46,10 +49,13 @@ public class OnlineUserController {
         for (String key : keys) {
             String token = key.replace(JbmCacheConstants.LOGIN_TOKEN_KEY, "");
             // 如果已经过期则踢下线
-            if (StpUtil.stpLogic.getTokenActivityTimeoutByToken(token) < 0) {
+            Long activityTime = StpUtil.stpLogic.getTokenActivityTimeoutByToken(token);
+            if (activityTime < 0) {
                 continue;
             }
-            userOnlineList.add(redisService.getCacheObject(JbmCacheConstants.ONLINE_TOKEN_KEY + token));
+            SysUserOnline sysUserOnline = redisService.getCacheObject(JbmCacheConstants.ONLINE_TOKEN_KEY + token);
+            sysUserOnline.setActivityTime(DateUtil.offset(DateTime.now(), DateField.SECOND, activityTime.intValue()));
+            userOnlineList.add(sysUserOnline);
         }
         if (StrUtil.isNotEmpty(onlineUserSearchForm.getIpaddr()) && StrUtil.isNotEmpty(onlineUserSearchForm.getUserName())) {
             userOnlineList = userOnlineList.stream().filter(userOnline ->
@@ -92,5 +98,14 @@ public class OnlineUserController {
         } catch (NotLoginException e) {
         }
         return ResultBody.ok();
+    }
+
+    @ApiOperation("刷新Token临时有效期")
+    @DeleteMapping("/refresh")
+    public ResultBody<Void> refresh() {
+        return ResultBody.callback("刷新成功", () -> {
+            StpUtil.updateLastActivityToNow();
+            return null;
+        });
     }
 }

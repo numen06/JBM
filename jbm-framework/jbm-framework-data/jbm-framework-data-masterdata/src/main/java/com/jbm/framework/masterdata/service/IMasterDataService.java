@@ -224,7 +224,7 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
      * @param ids
      * @return
      */
-    List<Entity> selectByIds(Collection<Serializable> ids);
+    List<Entity> selectByIds(Collection<? extends Serializable> ids);
 
 
     /**

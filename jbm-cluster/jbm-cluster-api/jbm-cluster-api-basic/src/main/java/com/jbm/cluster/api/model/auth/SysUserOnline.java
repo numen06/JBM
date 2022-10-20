@@ -70,4 +70,7 @@ public class SysUserOnline implements Serializable {
     @ApiModelProperty(value = "过期时间")
     private Date expiredTime;
 
+    @ApiModelProperty(value = "临时有效期")
+    private Date activityTime;
+
 }

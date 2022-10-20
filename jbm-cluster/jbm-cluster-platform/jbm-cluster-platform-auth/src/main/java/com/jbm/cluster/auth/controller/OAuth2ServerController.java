@@ -91,7 +91,8 @@ public class OAuth2ServerController {
     @ApiOperation(value = "刷新token", notes = "")
     @RequestMapping("/refresh")
     public Object refresh() {
-        return this.oauth2();
+        Object object = this.oauth2();
+        return object;
     }
 
     @ApiOperation(value = "客户端Token", notes = "")
@@ -116,12 +117,21 @@ public class OAuth2ServerController {
 
 
     @ApiOperation("用户注册")
-    @PostMapping("register")
+    @PostMapping("/register")
     public ResultBody<Void> register(@RequestBody RegisterForm registerBody) {
         // 用户注册
         sysLoginService.register(registerBody);
         return ResultBody.ok();
     }
+
+    @ApiOperation("续签")
+    @PostMapping("/renewal")
+    public ResultBody<Void> renewal() {
+        // 用户注册
+        StpUtil.updateLastActivityToNow();
+        return ResultBody.ok();
+    }
+
 
     // ---------- 开放相关资源接口： Client端根据 Access-Token ，置换相关资源 ------------
     // 获取Userinfo信息：昵称、头像、性别等等
