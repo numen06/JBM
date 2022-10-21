@@ -3,6 +3,7 @@ package com.jbm.cluster.push.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
@@ -105,11 +106,16 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     public void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
-        WebhookTask webhookTask = new WebhookTask();
+        WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
         //初始化一个方法
         webhookTask.setEventId(webhookEventConfig.getEventId());
-        webhookTask.setRetryNumber(0);
+        if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
+            webhookTask.setRetryNumber(0);
+        }
+        if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
+            webhookTask.setHttpStatus(404);
+        }
         this.saveEntity(webhookTask);
         while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
             try {
