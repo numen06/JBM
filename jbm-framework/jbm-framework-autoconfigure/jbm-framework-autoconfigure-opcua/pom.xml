@@ -13,12 +13,18 @@
 
     <properties>
         <milo.version>0.6.3</milo.version>
+        <cglib.version>3.1</cglib.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.eclipse.milo</groupId>
             <artifactId>sdk-client</artifactId>
             <version>${milo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
         </dependency>
     </dependencies>
 </project>

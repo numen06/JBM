@@ -3,6 +3,7 @@ package com.jbm.framework.opcua;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -13,6 +14,7 @@ import com.jbm.framework.opcua.attribute.OpcPointsRead;
 import com.jbm.framework.opcua.attribute.ValueType;
 import com.jbm.framework.opcua.event.PointSubscribeEvent;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
+import com.jbm.framework.opcua.factory.OpcBeanFactory;
 import com.jbm.framework.opcua.key.KeyLoader;
 import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
@@ -74,6 +76,13 @@ public class OpcUaTemplate {
 //        this.loadPoints(opcUaClientBean.getOpcUaSource());
     }
 
+    public <T extends OpcBean> T getOpcBean(String deviceId, Class<T> clazz) throws Exception {
+        OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
+        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcBean())) {
+            opcUaClientBean.setOpcBean(new OpcBeanFactory().get(deviceId, this, clazz));
+        }
+        return (T) opcUaClientBean.getOpcBean();
+    }
 
     public synchronized void removeClient(String deviceId) {
         if (!this.clientMap.containsKey(deviceId)) {
@@ -300,9 +309,7 @@ public class OpcUaTemplate {
     }
 
     private List<UaMonitoredItem> createItemMonitored(OpcUaClientBean opcUaClientBean, OpcPoint opcPoint) throws ExecutionException, InterruptedException {
-        int namespace = opcPoint.getNamespace();
-        String tag = opcPoint.getTagName();
-        NodeId nodeId = new NodeId(namespace, tag);
+        NodeId nodeId = opcUaClientBean.getNodeId(opcPoint.getAlias());
         //创建发布间隔1000ms的订阅对象
         UaSubscription subscription = this.getSubscription(opcUaClientBean.getOpcUaClient());
         MonitoringParameters parameters = new MonitoringParameters(

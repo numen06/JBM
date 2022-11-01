@@ -36,6 +36,10 @@ public class OpcPoint {
      */
     private Object value;
 
+    public OpcPoint(String alias) {
+        this.alias = alias;
+    }
+
     public OpcPoint(Integer namespace, String tagName, String dataType) {
         this.namespace = namespace;
         this.tagName = tagName;

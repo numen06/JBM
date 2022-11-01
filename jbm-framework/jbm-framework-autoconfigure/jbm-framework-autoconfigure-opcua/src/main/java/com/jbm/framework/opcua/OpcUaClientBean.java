@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class OpcUaClientBean extends AbstractScheduledService {
 
     private String deviceId;
+    private OpcBean opcBean;
     private OpcUaSource opcUaSource;
     private OpcUaClient opcUaClient;
     private Map<String, OpcPoint> points = Maps.newConcurrentMap();
