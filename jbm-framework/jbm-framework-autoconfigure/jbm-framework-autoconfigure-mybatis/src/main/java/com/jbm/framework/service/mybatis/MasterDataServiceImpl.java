@@ -240,7 +240,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean saveEntitys(Collection<Entity> entityList) {
-        return super.saveOrUpdateBatch(entityList, 50);
+        return this.saveOrUpdateBatch(entityList, 50);
     }
 
     @Override
