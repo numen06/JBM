@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
@@ -55,20 +56,27 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "菜单所有资源列表", notes = "菜单所有资源列表")
     @GetMapping("/all")
-    public ResultBody<List<BaseMenu>> getMenuAllList() {
-        return ResultBody.ok().data(baseResourceMenuService.findAllList());
+    public ResultBody<List<BaseMenu>> getMenuAllList(@RequestParam(required = false) Long appId) {
+        BaseMenu baseMenu = new BaseMenu();
+        baseMenu.setAppId(appId);
+        if (ObjectUtil.isEmpty(appId)) {
+            return ResultBody.callback("查询平台菜单成功", () -> {
+                return baseResourceMenuService.findPlatformList(baseMenu);
+            });
+        }
+        return ResultBody.callback("查询平台菜单成功", () -> {
+            return baseResourceMenuService.findAllList(baseMenu);
+        });
     }
 
 
-    /**
-     * 菜单所有资源列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取某个应用的所有菜单", notes = "获取某个应用的所有菜单")
-    @GetMapping("/all/{appId}")
-    public ResultBody<List<BaseMenu>> getMenuAllList(@PathVariable("appId") Long appId) {
-        return ResultBody.ok().data(baseResourceMenuService.findAllList());
+    @ApiOperation(value = "获取当前系统所有菜单", notes = "获取当前系统所有菜单")
+    @GetMapping("/currentAllMenu")
+    public ResultBody<List<BaseMenu>> currentAllMenu() {
+        JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
+        BaseMenu baseMenu = new BaseMenu();
+        baseMenu.setAppId(jbmLoginUser.getAppId());
+        return ResultBody.ok().data(baseResourceMenuService.findAllList(baseMenu));
     }
 
 

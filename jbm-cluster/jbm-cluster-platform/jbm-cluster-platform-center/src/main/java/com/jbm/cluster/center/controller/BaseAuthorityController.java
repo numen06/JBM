@@ -94,8 +94,8 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/menu/treeList")
-    public ResultBody<List<AuthorityMenu>> findAuthorityMenuTreeList() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
+    public ResultBody<List<AuthorityMenu>> findAuthorityMenuTreeList(@RequestParam(value = "appId", required = false) Long appId) {
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1, appId);
         List<Map<String, Object>> result2 = ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
         return ResultBody.ok().data(result2).msg("查询列表成功");
     }

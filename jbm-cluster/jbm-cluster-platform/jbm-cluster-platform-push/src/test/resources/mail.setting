@@ -1,11 +1,11 @@
-host=smtp.126.com
-port=465
-from=xxxxxxx@126.com
-pass=xxxxxxx
-user=xxxxxxx
+host=szemail.feg.cn
+port=25
+from=pa66.energy@feg.cn
+pass=abc-1234
+user=pa66.energy@feg.cn
 
 # 使用SSL安全连接
-sslEnable = true
+sslEnable = false
 # 指定实现javax.net.SocketFactory接口的类的名称,这个类将被用于创建SMTP的套接字
 socketFactoryClass = javax.net.ssl.SSLSocketFactory
 # 如果设置为true,未能创建一个套接字使用指定的套接字工厂类将导致使用java.net.Socket创建的套接字类, 默认值为true

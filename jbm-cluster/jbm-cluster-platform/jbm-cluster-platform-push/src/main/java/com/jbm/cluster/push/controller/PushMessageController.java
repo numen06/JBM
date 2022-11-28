@@ -78,7 +78,7 @@ public class PushMessageController {
     @Autowired
     private PushMessageTest pushMessageTest;
 
-    @SchedulerJob(cron = "0/5 * *  * * ? ", name = "发送管理员测试信息")
+    @SchedulerJob(cron = "0/5 * *  * * ? ", name = "发送管理员测试信息", enable = false)
     @ApiOperation("发送管理员测试信息")
     @PostMapping("/testSend")
     public ResultBody<String> testSend() {

@@ -106,15 +106,12 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     public void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
-        WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
+        WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
         //初始化一个方法
         webhookTask.setEventId(webhookEventConfig.getEventId());
         if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
             webhookTask.setRetryNumber(0);
-        }
-        if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
-            webhookTask.setHttpStatus(404);
         }
         this.saveEntity(webhookTask);
         while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
@@ -123,6 +120,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
+                webhookTask.setErrorMsg("无");
 //                this.saveEntity(webhookTask);
                 ok.set(false);
             } catch (Exception e) {
@@ -134,6 +132,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                     break;
                 }
             } finally {
+                if (ObjectUtil.isEmpty(webhookTask.getHttpStatus())) {
+                    webhookTask.setHttpStatus(404);
+                }
                 //保存信息
                 this.saveEntity(webhookTask);
                 webhookTaskCache.remove(webhookTask.getTaskId());

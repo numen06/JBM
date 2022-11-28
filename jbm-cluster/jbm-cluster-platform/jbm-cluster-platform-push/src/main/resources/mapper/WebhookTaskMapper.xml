@@ -15,8 +15,17 @@
         webhook_task wt
         JOIN webhook_event_config wec ON wt.event_id = wec.event_id
         <where>
-            <if test="form.webHookTask.taskId != null and form.webHookTask.taskId != ''">
-                AND wt.taskId = #{form.webHookTask.taskId}
+            <if test="form.webhookTask.taskId != null and form.webhookTask.taskId != ''">
+                AND wt.task_id = #{form.webhookTask.taskId}
+            </if>
+            <if test="form.webhookTask.httpStatus != null">
+                AND wt.http_status = #{form.webhookTask.httpStatus}
+            </if>
+            <if test="form.webhookEventConfig.eventId != null and form.webhookEventConfig.eventId != ''">
+                AND wec.event_id = #{form.webhookEventConfig.eventId}
+            </if>
+            <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
+                AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
             </if>
             <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
                 AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
@@ -31,7 +40,7 @@
                 and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.beginTime},'%Y-%m-%d %H:%i:%s')
             </if>
             <if test="form.endTime != null"><!-- 结束时间检索 -->
-                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.endTime},'%Y-%m-%d %H:%i:%s')
+                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &lt;= date_format(#{form.endTime},'%Y-%m-%d %H:%i:%s')
             </if>
         </where>
     </select>

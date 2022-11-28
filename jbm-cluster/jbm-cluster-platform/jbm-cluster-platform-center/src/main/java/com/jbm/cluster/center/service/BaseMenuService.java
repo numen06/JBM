@@ -16,12 +16,14 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 
     DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody);
 
+    List<BaseMenu> findPlatformList(BaseMenu baseMenu);
+
     /**
      * 查询列表
      *
      * @return
      */
-    List<BaseMenu> findAllList();
+    List<BaseMenu> findAllList(BaseMenu baseMenu);
 
     /**
      * 根据主键获取菜单

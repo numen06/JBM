@@ -13,6 +13,6 @@ public class MailTest {
 
     @Test
     public void testMail() {
-        MailUtil.send("numen06@qq.com", "测试", "邮件来自Hutool测试" + DateUtil.now(), false);
+        MailUtil.send("jason.peng@feg.cn", "测试", "邮件来自Hutool测试" + DateUtil.now(), false);
     }
 }

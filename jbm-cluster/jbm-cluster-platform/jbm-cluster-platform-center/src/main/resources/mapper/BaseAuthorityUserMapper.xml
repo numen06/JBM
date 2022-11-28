@@ -32,15 +32,25 @@
     <select id="selectAuthorityMenuByUser"
             resultMap="UserAuthorityMenu">
         SELECT a.authority_id,
-               a.authority,
-               a.`status`,
-               m.*,
-               ua.user_id,
-               ua.expire_time
+        a.authority,
+        a.`status`,
+        m.*,
+        ua.user_id,
+        ua.expire_time
         FROM base_authority_user AS ua
-                 INNER JOIN base_authority AS a ON ua.authority_id = a.authority_id
-                 INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
-        WHERE ua.user_id = #{userId}
-          and a.status = 1
+        INNER JOIN base_authority AS a ON ua.authority_id = a.authority_id
+        INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
+        <where>
+            <if test="userId != null">
+                and ua.user_id = #{userId}
+            </if>
+            <if test="appId != null">
+                and (m.app_id = #{appId} or m.app_id is null)
+            </if>
+            <if test="appId == null">
+                and m.app_id is null
+            </if>
+            and a.status = 1
+        </where>
     </select>
 </mapper>

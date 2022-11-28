@@ -27,13 +27,15 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      */
     List<AuthorityResource> findAuthorityResource();
 
+    List<AuthorityMenu> findAuthorityMenu(Integer status);
+
     /**
      * 获取菜单权限列表
      *
      * @param status
      * @return
      */
-    List<AuthorityMenu> findAuthorityMenu(Integer status);
+    List<AuthorityMenu> findAuthorityMenu(Integer status, Long appId);
 
 
     /**
@@ -199,7 +201,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      * @param root
      * @return
      */
-    List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Boolean root);
+    List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root);
 
     /**
      * 检测全是是否被多个角色授权

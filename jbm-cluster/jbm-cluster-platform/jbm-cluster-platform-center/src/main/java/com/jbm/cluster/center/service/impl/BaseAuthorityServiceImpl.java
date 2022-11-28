@@ -93,8 +93,14 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      */
     @Override
     public List<AuthorityMenu> findAuthorityMenu(Integer status) {
+        return this.findAuthorityMenu(status, null);
+    }
+
+    @Override
+    public List<AuthorityMenu> findAuthorityMenu(Integer status, Long appId) {
         Map map = Maps.newHashMap();
         map.put("status", status);
+        map.put("appId", appId);
         List<AuthorityMenu> authorities = baseAuthorityMapper.selectAuthorityMenu(map);
         return authorities;
     }
@@ -492,7 +498,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      */
     @Override
     public List<OpenAuthority> findAuthorityByRole(Long roleId) {
-        return baseAuthorityRoleMapper.selectAuthorityByRole(roleId);
+        return baseAuthorityRoleMapper.selectAuthorityByRole(roleId, null);
     }
 
     /**
@@ -553,10 +559,10 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @return
      */
     @Override
-    public List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Boolean root) {
+    public List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root) {
         if (root) {
             // 超级管理员返回所有
-            return findAuthorityMenu(null);
+            return findAuthorityMenu(null, appId);
         }
         // 用户权限列表
         List<AuthorityMenu> authorities = Lists.newArrayList();
@@ -564,14 +570,14 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         if (rolesList != null) {
             for (BaseRole role : rolesList) {
                 // 加入角色已授权
-                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getRoleId());
+                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getRoleId(), appId);
                 if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
                     authorities.addAll(roleGrantedAuthority);
                 }
             }
         }
         // 加入用户特殊授权
-        List<AuthorityMenu> userGrantedAuthority = baseAuthorityUserMapper.selectAuthorityMenuByUser(userId);
+        List<AuthorityMenu> userGrantedAuthority = baseAuthorityUserMapper.selectAuthorityMenuByUser(userId, appId);
         if (userGrantedAuthority != null && userGrantedAuthority.size() > 0) {
             authorities.addAll(userGrantedAuthority);
         }

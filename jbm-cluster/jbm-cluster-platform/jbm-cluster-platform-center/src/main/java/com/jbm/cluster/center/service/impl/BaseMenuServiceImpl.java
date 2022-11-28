@@ -7,12 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
-import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
-import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -63,13 +61,37 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     }
 
     /**
+     * 查询平台菜单
+     *
+     * @param baseMenu
+     * @return
+     */
+    @Override
+    public List<BaseMenu> findPlatformList(BaseMenu baseMenu) {
+        QueryWrapper<BaseMenu> baseMenuQueryWrapper = new QueryWrapper<>();
+        baseMenuQueryWrapper.lambda().like(ObjectUtil.isNotEmpty(baseMenu.getMenuName()), BaseMenu::getMenuName, baseMenu.getMenuName())
+                .like(ObjectUtil.isNotEmpty(baseMenu.getMenuCode()), BaseMenu::getMenuCode, baseMenu.getMenuCode())
+                .isNull(BaseMenu::getAppId)
+                .eq(ObjectUtil.isNotEmpty(baseMenu.getStatus()), BaseMenu::getStatus, baseMenu.getStatus());
+        List<BaseMenu> list = baseMenuMapper.selectList(baseMenuQueryWrapper);
+        //根据优先级从小到大排序
+        list.sort((BaseMenu h1, BaseMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
+        return list;
+    }
+
+    /**
      * 查询列表
      *
      * @return
      */
     @Override
-    public List<BaseMenu> findAllList() {
-        List<BaseMenu> list = baseMenuMapper.selectList(new QueryWrapper<>());
+    public List<BaseMenu> findAllList(BaseMenu baseMenu) {
+        QueryWrapper<BaseMenu> baseMenuQueryWrapper = new QueryWrapper<>();
+        baseMenuQueryWrapper.lambda().like(ObjectUtil.isNotEmpty(baseMenu.getMenuName()), BaseMenu::getMenuName, baseMenu.getMenuName())
+                .like(ObjectUtil.isNotEmpty(baseMenu.getMenuCode()), BaseMenu::getMenuCode, baseMenu.getMenuCode())
+                .and(ObjectUtil.isNotEmpty(baseMenu.getAppId()), baseMenuLambdaQueryWrapper -> baseMenuLambdaQueryWrapper.eq(BaseMenu::getAppId, baseMenu.getAppId()).or().isNull(BaseMenu::getAppId))
+                .eq(ObjectUtil.isNotEmpty(baseMenu.getStatus()), BaseMenu::getStatus, baseMenu.getStatus());
+        List<BaseMenu> list = baseMenuMapper.selectList(baseMenuQueryWrapper);
         //根据优先级从小到大排序
         list.sort((BaseMenu h1, BaseMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
         return list;
@@ -112,8 +134,8 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Override
     public BaseMenu saveEntity(BaseMenu menu) {
         //获取当前用户的APPID
-        JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
-        menu.setAppId(jbmLoginUser.getAppId());
+//        JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
+//        menu.setAppId(jbmLoginUser.getAppId());
         if (ObjectUtil.isNotEmpty(menu.getMenuId())) {
             BaseMenu saved = getMenu(menu.getMenuId());
             if (saved == null) {

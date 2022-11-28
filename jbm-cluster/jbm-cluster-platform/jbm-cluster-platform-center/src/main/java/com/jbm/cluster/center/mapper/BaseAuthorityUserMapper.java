@@ -29,5 +29,5 @@ public interface BaseAuthorityUserMapper extends SuperMapper<BaseAuthorityUser> 
      * @param userId
      * @return
      */
-    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("userId") Long userId);
+    List<AuthorityMenu> selectAuthorityMenuByUser(@Param("userId") Long userId, @Param("appId") Long appId);
 }

@@ -32,15 +32,25 @@
     <select id="selectAuthorityMenuByRole"
             resultMap="RoleAuthorityMenu">
         SELECT a.authority_id,
-               a.authority,
-               a.`status`,
-               m.*,
-               rp.role_id,
-               rp.expire_time
+        a.authority,
+        a.`status`,
+        m.*,
+        rp.role_id,
+        rp.expire_time
         FROM base_authority_role AS rp
-                 INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
-                 INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
-        WHERE rp.role_id = #{roleId}
-          and a.status = 1
+        INNER JOIN base_authority AS a ON rp.authority_id = a.authority_id
+        INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
+        <where>
+            <if test="roleId != null">
+                and rp.role_id = #{roleId}
+            </if>
+            <if test="appId != null">
+                and (m.app_id = #{appId} or m.app_id is null)
+            </if>
+            <if test="appId == null">
+                and m.app_id is null
+            </if>
+            and a.status = 1
+        </where>
     </select>
 </mapper>

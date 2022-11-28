@@ -118,7 +118,7 @@ public class OAuth2ServerController {
 
     @ApiOperation("用户注册")
     @PostMapping("/register")
-    public ResultBody<Void> register(@RequestBody RegisterForm registerBody) {
+    public ResultBody<Void> register(RegisterForm registerBody) {
         // 用户注册
         sysLoginService.register(registerBody);
         return ResultBody.ok();

@@ -60,8 +60,14 @@
         base_authority AS a
         INNER JOIN base_menu AS m ON a.menu_id = m.menu_id
         <where>
-            <if test="status!=null">
+            <if test="status != null">
                 AND m.status = #{status}
+            </if>
+            <if test="appId != null">
+                AND (m.app_id = #{appId} OR m.app_id is null)
+            </if>
+            <if test="appId == null">
+                AND m.app_id is null
             </if>
         </where>
     </select>

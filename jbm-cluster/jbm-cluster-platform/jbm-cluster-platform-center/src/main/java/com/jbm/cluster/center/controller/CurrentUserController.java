@@ -91,14 +91,18 @@ public class CurrentUserController {
         JbmLoginUser openUserDetails = SecurityUtils.getLoginUser();
         BaseUser user = new BaseUser();
         user.setUserId(openUserDetails.getUserId());
-        if (StrUtil.isNotBlank(nickName))
+        if (StrUtil.isNotBlank(nickName)) {
             user.setNickName(nickName);
-        if (StrUtil.isNotBlank(userDesc))
+        }
+        if (StrUtil.isNotBlank(userDesc)) {
             user.setUserDesc(userDesc);
-        if (StrUtil.isNotBlank(avatar))
+        }
+        if (StrUtil.isNotBlank(avatar)) {
             user.setAvatar(avatar);
-        if (StrUtil.isNotBlank(realName))
+        }
+        if (StrUtil.isNotBlank(realName)) {
             user.setRealName(realName);
+        }
         baseUserService.updateUser(user);
 //        if (StrUtil.isNotBlank(nickName))
 //            openUserDetails.setNickName(nickName);
@@ -119,7 +123,7 @@ public class CurrentUserController {
     @ApiOperation(value = "获取当前登录用户已分配菜单权限", notes = "获取当前登录用户已分配菜单权限")
     @GetMapping("/user/menu")
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(),
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(), SecurityUtils.getLoginUser().getAppId(),
                 LoginHelper.isAdmin());
         return ResultBody.ok().data(result);
     }
