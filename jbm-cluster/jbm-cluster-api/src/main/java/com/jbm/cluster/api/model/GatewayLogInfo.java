@@ -60,4 +60,10 @@ public class GatewayLogInfo implements Serializable {
 
     @ApiModelProperty(value = "错误信息")
     private String error;
+
+    @ApiModelProperty(value = "请求用户ID")
+    private Long requestUserId;
+
+    @ApiModelProperty(value = "请求用户姓名")
+    private String requestUserRealName;
 }

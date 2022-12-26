@@ -1,6 +1,8 @@
 package com.jbm.cluster.gateway.server.configuration;
 
+import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.common.configuration.JbmClusterProperties;
+import com.jbm.cluster.common.health.DependsOnHealth;
 import com.jbm.cluster.gateway.server.actuator.ApiEndpoint;
 import com.jbm.cluster.gateway.server.exception.JsonExceptionHandler;
 import com.jbm.cluster.gateway.server.filter.GatewayContextFilter;
@@ -13,6 +15,7 @@ import com.jbm.cluster.gateway.server.service.feign.GatewayServiceClient;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,6 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.cloud.bus.BusProperties;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
@@ -193,4 +197,7 @@ public class ApiConfiguration {
     public KeyResolver pathKeyResolver() {
         return exchange -> Mono.just(exchange.getRequest().getPath().value());
     }
+
+
+
 }
