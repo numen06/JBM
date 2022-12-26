@@ -1,5 +1,7 @@
 package com.jbm.cluster.gateway.server.configuration;
 
+import com.jbm.cluster.api.constants.BaseConstants;
+import com.jbm.cluster.common.health.DependsOnHealth;
 import com.jbm.cluster.gateway.server.exception.JsonAccessDeniedHandler;
 import com.jbm.cluster.gateway.server.exception.JsonAuthenticationEntryPoint;
 import com.jbm.cluster.gateway.server.exception.JsonSignatureDeniedHandler;
@@ -9,6 +11,8 @@ import com.jbm.cluster.gateway.server.oauth2.RedisAuthenticationManager;
 import com.jbm.cluster.gateway.server.service.AccessLogService;
 import com.jbm.cluster.gateway.server.service.feign.BaseAppServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -130,5 +134,16 @@ public class ResourceServerConfiguration {
                 // 日志过滤器
                 .addFilterAt(new AccessLogFilter(accessLogService), SecurityWebFiltersOrder.SECURITY_CONTEXT_SERVER_WEB_EXCHANGE);
         return http.build();
+    }
+
+    /**
+     * 启动监测
+     * @param discoveryClient
+     * @param applicationContext
+     * @return
+     */
+    @Bean
+    public DependsOnHealth dependsOnEndpoint(@Autowired DiscoveryClient discoveryClient, @Autowired ApplicationContext applicationContext) {
+        return new DependsOnHealth(discoveryClient,applicationContext, BaseConstants.BASE_SERVER);
     }
 }

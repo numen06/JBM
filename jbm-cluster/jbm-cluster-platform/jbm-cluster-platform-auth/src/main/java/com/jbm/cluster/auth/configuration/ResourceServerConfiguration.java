@@ -1,10 +1,15 @@
 package com.jbm.cluster.auth.configuration;
 
+import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.common.exception.JbmAccessDeniedHandler;
 import com.jbm.cluster.common.exception.JbmAuthenticationEntryPoint;
+import com.jbm.cluster.common.health.DependsOnHealth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -88,6 +93,17 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
             }
             super.onLogoutSuccess(request, response, authentication);
         }
+    }
+
+    /**
+     * 启动监测
+     * @param discoveryClient
+     * @param applicationContext
+     * @return
+     */
+    @Bean
+    public DependsOnHealth dependsOnEndpoint(@Autowired DiscoveryClient discoveryClient, @Autowired ApplicationContext applicationContext) {
+        return new DependsOnHealth(discoveryClient,applicationContext, BaseConstants.BASE_SERVER);
     }
 }
 

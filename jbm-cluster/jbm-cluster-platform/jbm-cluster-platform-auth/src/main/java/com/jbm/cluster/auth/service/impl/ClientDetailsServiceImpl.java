@@ -34,7 +34,7 @@ public class ClientDetailsServiceImpl implements ClientDetailsService {
         try {
             this.clientCache.getAppClientInfo(clientProperties.getOauth2().get("admin").getClientId());
         } catch (Exception e) {
-            log.warn("初始化加载客户端失败");
+            log.warn("初始化加载客户端失败", e);
         }
     }
 
