@@ -12,5 +12,7 @@ public interface BigscreenViewService extends IMasterDataService<BigscreenView> 
 
     void cleanView(BigscreenView bigscreenView);
 
+    boolean deleteById(Long id);
+
     BigscreenView upload(BigscreenView bigscreenView);
 }
