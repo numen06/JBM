@@ -273,8 +273,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser getUserByPhone(String phone) {
-        if (StrUtil.isBlank(phone))
+        if (StrUtil.isBlank(phone)) {
             return null;
+        }
         BaseUser baseUser = new BaseUser();
         baseUser.setMobile(phone);
         return this.selectEntity(baseUser);
@@ -417,6 +418,16 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     }
 
     @Override
+    public UserAccount registerAccountByPhone(String phone, String username, String password, String accountType) {
+        ThirdPartyUserForm thirdPartyUserForm = new ThirdPartyUserForm();
+        thirdPartyUserForm.setPhone(phone);
+        thirdPartyUserForm.setAccountType(accountType);
+        thirdPartyUserForm.setAccount(username);
+        thirdPartyUserForm.setPassword(password);
+        return this.loginAndRegisterMobileUser(thirdPartyUserForm);
+    }
+
+    @Override
     public UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm) {
         try {
             UserAccount userAccount = this.login(thirdPartyUserForm.getAccount(), thirdPartyUserForm.getPassword());
@@ -451,7 +462,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 this.addUserThirdParty(user, thirdPartyUserForm.getAccountType());
             }
             //最后再登录一次
-            return this.login(user.getUserName(), thirdPartyUserForm.getPassword());
+            return this.login(user.getUserName(), thirdPartyUserForm.getAccountType());
         } catch (Exception e) {
             log.error("添加登录日志失败:{}", e);
             throw new ServiceException(e);

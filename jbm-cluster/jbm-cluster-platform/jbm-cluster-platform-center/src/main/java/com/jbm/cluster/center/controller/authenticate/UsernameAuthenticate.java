@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.controller.authenticate;
 
-import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
@@ -9,10 +8,12 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,11 +31,26 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
     @Autowired
     private BaseUserService baseUserService;
 
+    @Autowired
+    private BaseAccountService baseAccountService;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     @Override
     public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
         UserAccount account = baseUserService.login(username, LoginType.PASSWORD.toString().equals(loginType) ? null : loginType.toLowerCase());
         if (account == null) {
-            return ResultBody.error("没有找到此用户");
+            //小程序自动注册
+            if (LoginType.MINIAPP.toString().equals(loginType)) {
+                String key = password + "-PHONE";
+                if (stringRedisTemplate.hasKey(key)) {
+                    String phone = stringRedisTemplate.opsForValue().get(key);
+                    account = baseUserService.registerAccountByPhone(phone, username, password, loginType.toLowerCase());
+                }
+            } else {
+                return ResultBody.error("没有找到此用户");
+            }
         }
         JbmLoginUser jbmLoginUser = null;
         if (LoginType.MINIAPP.toString().equals(loginType)) {

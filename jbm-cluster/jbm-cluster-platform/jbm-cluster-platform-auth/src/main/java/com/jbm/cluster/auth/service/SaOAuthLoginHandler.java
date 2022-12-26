@@ -18,7 +18,7 @@ import jbm.framework.web.ServletUtils;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class SaOAuthLoginHandle implements BiFunction<String, String, Object> {
+public abstract class SaOAuthLoginHandler implements BiFunction<String, String, Object> {
 
 
     private SaRequest request;

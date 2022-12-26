@@ -10,7 +10,11 @@ import jbm.framework.weixin.config.WxMaConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 微信小程序用户接口
@@ -19,6 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user/{appid}")
 public class WxMaUserController {
+
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 登陆接口
@@ -39,6 +47,7 @@ public class WxMaUserController {
             log.info(session.getSessionKey());
             log.info(session.getOpenid());
             //TODO 可以增加自己的逻辑，关联业务相关数据
+            stringRedisTemplate.opsForValue().set(session.getSessionKey()+"-OPENID", session.getOpenid(), 5, TimeUnit.MINUTES);
             return ResultBody.success(session, "微信登录成功");
         } catch (WxErrorException e) {
             log.error(e.getMessage(), e);
@@ -94,6 +103,8 @@ public class WxMaUserController {
         // 解密
         WxMaPhoneNumberInfo phoneNoInfo = wxService.getUserService().getPhoneNoInfo(wxUserInfo.getSessionKey(), wxUserInfo
                 .getEncryptedData(), wxUserInfo.getIv());
+        //将手机号临时放到缓存中5分钟
+        stringRedisTemplate.opsForValue().set(wxUserInfo.getSessionKey()+"-PHONE", phoneNoInfo.getPhoneNumber(), 5, TimeUnit.MINUTES);
         return ResultBody.success(phoneNoInfo, "微信获取手机号成功");
     }
 

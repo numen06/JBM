@@ -111,5 +111,7 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
 
     List<BaseUser> retrievalUsers(String keyword);
 
+    UserAccount registerAccountByPhone(String phone, String username, String password, String accountType);
+
     UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm);
 }

@@ -91,7 +91,7 @@ public class SysLoginService {
                     return ResultBody.error("你还没有登录");
                 }).
                 // 登录处理函数
-                        setDoLoginHandle(new SaOAuthLoginHandle() {
+                        setDoLoginHandle(new SaOAuthLoginHandler() {
                     @Override
                     public String doDecryptPassword(LoginProcessModel loginProcessModel) {
                         if (LoginType.MINIAPP.equals(loginProcessModel.getLoginType())) {
