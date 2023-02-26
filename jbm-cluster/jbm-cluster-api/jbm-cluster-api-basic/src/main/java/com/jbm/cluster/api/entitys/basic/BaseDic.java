@@ -29,6 +29,12 @@ public class BaseDic extends MasterDataTreeEntity {
 
     @ApiModelProperty(value = "编码")
     private String code;
+
+    @ApiModelProperty(value = "样式")
+    private String cssClass;
+
+    @ApiModelProperty(value = "列表样式")
+    private String listClass;
     @ApiModelProperty(value = "备注")
     private String remark;
 
