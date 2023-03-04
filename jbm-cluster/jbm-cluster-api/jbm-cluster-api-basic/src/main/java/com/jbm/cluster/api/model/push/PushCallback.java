@@ -9,19 +9,19 @@ import java.io.Serializable;
 
 /**
  * @author wesley
- */
+ */delProperty("消息ID")
+private String msgId;
+@ApiModelProperty("错误消息内容")
+private String errorMsg;
+@ApiModelProperty("错误消息码")
+private String errorCode;
+@ApiModelProperty("发送状态")
+private PushStatus pushStatus;
+@ApiModelProperty("发送渠道")
+private PushWay pushWay;
 @Data
 public class PushCallback implements Serializable {
 
-    @ApiModelProperty("消息ID")
-    private String msgId;
-    @ApiModelProperty("错误消息内容")
-    private String errorMsg;
-    @ApiModelProperty("错误消息码")
-    private String errorCode;
-    @ApiModelProperty("发送状态")
-    private PushStatus pushStatus;
-    @ApiModelProperty("发送渠道")
-    private PushWay pushWay;
+    @ApiMo
 
 }

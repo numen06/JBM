@@ -5,17 +5,23 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.model.push.PushCallback;
 import com.jbm.cluster.api.model.push.PushMessageResult;
+import com.jbm.util.FastJsonUtils;
+import jbm.framework.boot.autoconfigure.amqp.usage.FastJsonMessageConverter;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
+
+import java.io.ByteArrayInputStream;
 
 /**
  * 站内消息通知
@@ -44,6 +50,9 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         }
     }
 
+    @Autowired(required = false)
+    private FastJsonHttpMessageConverter fastJsonHttpMessageConverter;
+
     @SneakyThrows
     @Override
     public PushCallback apply(MqttNotification mqttNotification) {
@@ -52,7 +61,7 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         if (ObjectUtil.isEmpty(mqttNotification)) {
             mqttNotification.setBody("");
         }
-        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody()));
+        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody(),FastJsonUtils.defaultWebConfig()));
         message.setQos(mqttNotification.getQos());
         if (StrUtil.isBlank(mqttNotification.getTopic())) {
             throw new NullPointerException("没有指定Topic");

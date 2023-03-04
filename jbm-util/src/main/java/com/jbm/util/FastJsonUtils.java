@@ -1,11 +1,23 @@
 package com.jbm.util;
 
+import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.PropertyNamingStrategy;
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.serializer.ToStringSerializer;
+import com.alibaba.fastjson.support.config.FastJsonConfig;
+import com.alibaba.fastjson.support.springfox.SwaggerJsonSerializer;
+import com.jbm.util.bean.Version;
+import com.jbm.util.version.VersionDeserializer;
+import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,10 +26,22 @@ import java.util.List;
  * @author: create by wesley
  * @date:2019/5/11
  */
+@Slf4j
 public class FastJsonUtils {
 
     private final static String st1 = "{\"username\":\"tom\",\"age\":18,\"addressTset\":[{\"provinceTest\":\"addressTset\"},{\"city\":\"上海市\"},{\"disrtictTest\":\"静安区\"}]}";
     private final static String st2 = "{username:\"tom\",age:18}";
+
+    public static SerializeConfig defaultWebConfig() {
+        //设置swagger ui
+        SerializeConfig serializeConfig = new SerializeConfig();
+        serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
+        serializeConfig.put(Long.class, ToStringSerializer.instance);
+        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
+        serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
+        serializeConfig.put(Version.class, ToStringSerializer.instance);
+        return serializeConfig;
+    }
 
     /**
      * 将JSON的name转换成下划线
@@ -32,8 +56,9 @@ public class FastJsonUtils {
         for (String key : keys) {
             final String keyStr = "\"" + key + "\":";
             final String newKeyStr = "\"" + PropertyNamingStrategy.SnakeCase.translate(key) + "\":";
-            if (!keyStr.equals(newKeyStr))
+            if (!keyStr.equals(newKeyStr)) {
                 temp = StrUtil.replace(temp, keyStr, newKeyStr);
+            }
         }
         return temp;
     }
@@ -51,8 +76,9 @@ public class FastJsonUtils {
         for (String key : keys) {
             final String keyStr = "\"" + key + "\":";
             final String newKeyStr = "\"" + PropertyNamingStrategy.CamelCase.translate(key) + "\":";
-            if (!keyStr.equals(newKeyStr))
+            if (!keyStr.equals(newKeyStr)) {
                 temp = StrUtil.replace(temp, keyStr, newKeyStr);
+            }
         }
         return temp;
     }
