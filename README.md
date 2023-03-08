@@ -26,7 +26,7 @@
 ### 使用说明文档
 
 - JBM7随着使用越来越庞大和复杂正在不断完善文档
-- [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)
+- [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)，详细说明特性功能
 
 
 
