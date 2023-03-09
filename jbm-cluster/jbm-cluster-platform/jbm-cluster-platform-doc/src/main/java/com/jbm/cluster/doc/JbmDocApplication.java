@@ -22,9 +22,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 @SpringBootApplication
 @EnableDiscoveryClient
+//实体扫描路径
 @EntityScan(basePackages = {"com.jbm.cluster.api.entitys"})
+//MyBatis Mapper扫描路径
 @MapperScan(basePackageClasses = BaseDocMapper.class)
+//启用JBM字典功能
 @EnableJbmDictionary(basePackageClasses = OrgType.class)
+//启用自动生成代码功能
 @EnableCodeAutoGeneate(entityPackageClasses = {BaseDoc.class}, targetPackage = "com.jbm.cluster.doc")
 public class JbmDocApplication {
 

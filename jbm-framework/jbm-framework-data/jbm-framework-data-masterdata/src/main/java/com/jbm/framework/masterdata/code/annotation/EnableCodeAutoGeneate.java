@@ -14,13 +14,26 @@ import java.lang.annotation.*;
 @Documented
 @Import({AutoScanCodePackages.CodeRegistrar.class})
 public @interface EnableCodeAutoGeneate {
+    /**
+     * 需要生产实体的扫描包路径
+     * @return
+     */
     @AliasFor("entityPackages")
     String[] value() default {};
-
+    /**
+     * @entityPackages
+     */
     @AliasFor("value")
     String[] entityPackages() default {};
-
+    /**
+     * 需要生产实体的扫描包的一个或多个实体
+     * @return
+     */
     Class<?>[] entityPackageClasses() default {};
 
+    /**
+     * 代码生成目录
+     * @return
+     */
     String targetPackage();
 }
