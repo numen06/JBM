@@ -2,7 +2,7 @@ import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import org.junit.jupiter.api.Test;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-18 05:20
  **/

@@ -7,7 +7,7 @@ import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
 import java.lang.reflect.Type;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-15 00:55
  **/

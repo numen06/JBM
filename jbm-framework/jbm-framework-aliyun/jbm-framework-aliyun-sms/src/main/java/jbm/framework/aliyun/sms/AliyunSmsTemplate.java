@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.PostConstruct;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-05 05:09
  **/

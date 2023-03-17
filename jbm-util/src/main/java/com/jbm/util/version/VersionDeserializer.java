@@ -8,7 +8,7 @@ import com.jbm.util.bean.Version;
 import java.lang.reflect.Type;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-14 21:26
  **/

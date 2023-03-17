@@ -12,7 +12,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-04 21:21
  **/

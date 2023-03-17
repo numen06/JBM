@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.git.handler;
 import org.eclipse.jgit.lib.ProgressMonitor;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-18 01:37
  **/

@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.util.function.Supplier;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-18 08:28
  **/

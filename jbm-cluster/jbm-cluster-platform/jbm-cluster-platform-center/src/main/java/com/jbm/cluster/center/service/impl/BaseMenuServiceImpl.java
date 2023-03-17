@@ -4,6 +4,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
@@ -172,6 +173,12 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         }
         menu.setServiceId(DEFAULT_SERVICE_ID);
         super.saveEntity(menu);
+        if (ObjectUtil.isEmpty(menu.getAppId())) {
+            //如果为空则置空
+            UpdateWrapper<BaseMenu> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.lambda().set(BaseMenu::getAppId, null).eq(BaseMenu::getMenuId, menu.getMenuId());
+            this.update(updateWrapper);
+        }
         // 同步权限表里的信息
         baseAuthorityService.saveOrUpdateAuthority(menu.getMenuId(), ResourceType.menu);
 //        applicationContext.publishEvent(new NewMenuEvent(this, menu));

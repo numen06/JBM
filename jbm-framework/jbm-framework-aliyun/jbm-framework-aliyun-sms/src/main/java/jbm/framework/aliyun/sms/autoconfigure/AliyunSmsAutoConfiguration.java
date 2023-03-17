@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-05 05:17
  **/

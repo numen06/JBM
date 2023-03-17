@@ -5,7 +5,7 @@ import cn.hutool.extra.mail.MailUtil;
 import org.junit.jupiter.api.Test;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-06 04:21
  **/

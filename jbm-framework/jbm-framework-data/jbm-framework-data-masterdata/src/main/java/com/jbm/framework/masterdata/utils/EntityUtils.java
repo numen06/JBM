@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * 针对实体进行操作
  *
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-21 01:32
  **/

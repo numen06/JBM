@@ -3,7 +3,7 @@ package com.jbm.test.rest.bean;
 import lombok.Data;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-15 00:31
  **/

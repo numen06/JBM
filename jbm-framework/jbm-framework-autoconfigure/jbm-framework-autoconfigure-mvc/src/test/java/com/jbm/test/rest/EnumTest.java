@@ -8,7 +8,7 @@ import jbm.framework.boot.autoconfigure.fastjson.serializer.EnumSerializeConfig;
 import org.junit.jupiter.api.Test;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-15 00:27
  **/

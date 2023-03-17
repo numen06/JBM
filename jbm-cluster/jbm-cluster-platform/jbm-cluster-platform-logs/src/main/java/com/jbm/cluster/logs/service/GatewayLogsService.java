@@ -5,7 +5,7 @@ import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2021-05-06 16:55
  **/

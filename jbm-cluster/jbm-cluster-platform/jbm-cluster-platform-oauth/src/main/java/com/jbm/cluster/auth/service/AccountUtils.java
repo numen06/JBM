@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.jbm.cluster.common.security.OpenUserDetails;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-29 05:08
  **/

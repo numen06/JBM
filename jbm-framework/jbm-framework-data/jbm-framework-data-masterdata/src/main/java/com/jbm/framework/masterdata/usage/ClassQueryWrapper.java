@@ -3,7 +3,7 @@ package com.jbm.framework.masterdata.usage;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-25 01:03
  **/

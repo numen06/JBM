@@ -5,7 +5,7 @@ import cn.hutool.core.util.ReflectUtil;
 import java.lang.reflect.Field;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-03 03:00
  **/

@@ -11,7 +11,7 @@ import javax.persistence.MappedSuperclass;
 import java.util.Date;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-27 23:24
  **/

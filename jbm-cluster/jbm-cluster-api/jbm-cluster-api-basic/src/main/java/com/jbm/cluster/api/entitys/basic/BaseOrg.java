@@ -13,7 +13,7 @@ import javax.persistence.Entity;
 /**
  * 组织结构
  *
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-24 03:08
  **/

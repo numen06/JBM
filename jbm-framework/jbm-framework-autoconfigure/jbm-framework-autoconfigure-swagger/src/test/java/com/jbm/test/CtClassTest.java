@@ -3,7 +3,7 @@ package com.jbm.test;
 import org.junit.jupiter.api.Test;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-19 02:12
  **/

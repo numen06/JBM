@@ -3,7 +3,7 @@ package jbm.framework.boot.autoconfigure.ip2region;
 import org.springframework.context.annotation.Bean;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-18 00:58
  **/

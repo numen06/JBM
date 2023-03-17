@@ -4,7 +4,7 @@ import com.jbm.framework.usage.form.BaseRequsetBody;
 import lombok.Data;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-03-23 23:47
  **/

@@ -4,7 +4,7 @@ import com.jbm.util.PasswordUtils;
 import org.junit.Test;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-07-03 13:11
  **/
