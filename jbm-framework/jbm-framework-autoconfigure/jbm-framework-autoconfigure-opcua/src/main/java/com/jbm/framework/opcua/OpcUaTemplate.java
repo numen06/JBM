@@ -78,7 +78,11 @@ public class OpcUaTemplate {
 
     public <T extends OpcBean> T getOpcBean(String deviceId) {
         OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-        return ObjectUtil.isNotEmpty(opcUaClientBean) ? (T) opcUaClientBean.getOpcBean() : null;
+        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcBean()) && ObjectUtil.isEmpty(opcUaClientBean.getOpcUaClient())) {
+            // OpcBean和OPC UA客户端都不存在的情况下，尝试重新注册
+            this.addClient(opcUaClientBean);
+        }
+        return (T) opcUaClientBean.getOpcBean();
     }
 
     public <T extends OpcBean> void setOpcBean(String deviceId, T opcBean) {
