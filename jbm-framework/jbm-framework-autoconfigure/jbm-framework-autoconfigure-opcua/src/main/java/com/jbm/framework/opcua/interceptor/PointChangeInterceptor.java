@@ -3,19 +3,21 @@ package com.jbm.framework.opcua.interceptor;
 import cn.hutool.aop.aspects.SimpleAspect;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.opcua.OpcUaTemplate;
+import com.jbm.framework.opcua.annotation.OpcUaHeartBeat;
 import com.jbm.framework.opcua.util.ReflectUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.aopalliance.intercept.Interceptor;
 
 import java.lang.reflect.Method;
 
 /**
- * @Author fanscat
- * @CreateTime 2022/10/31 18:47
- * @Description
+ * @author fanscat
+ * @createTime 2022/10/31 18:47
  */
 @Slf4j
-public class PointChangeInterceptor extends SimpleAspect {
+public class PointChangeInterceptor extends SimpleAspect implements Interceptor {
 
     private String device;
     private OpcUaTemplate opcUaTemplate;
@@ -27,18 +29,23 @@ public class PointChangeInterceptor extends SimpleAspect {
 
     @Override
     public boolean after(Object target, Method method, Object[] args, Object returnVal) {
-        String name = method.getName();
-        String column = ReflectUtils.firstToLowerCase(name.substring(name.indexOf(ReflectUtils.SET) + 3));
-        if (ObjectUtil.isEmpty(ReflectUtil.getField(target.getClass(), column))) {
-            return true;
+        String column = StrUtil.getGeneralField(method.getName());
+        if (StrUtil.isEmpty(column)) {
+            return super.after(target, method, args, returnVal);
         }
+        String pointAlias = ReflectUtils.getWriteFieldAlias(target, column);
+        if (ObjectUtil.isEmpty(pointAlias)) {
+            return super.after(target, method, args, returnVal);
+        }
+        Object obj = ReflectUtil.getFieldValue(target, column);
         try {
-            if (column.indexOf(ReflectUtils.WRITE) == 0) {
-                // 属性名必须[write]开头，才会触发OPC写入
-                opcUaTemplate.writeItem(device, ReflectUtils.camelToUnderline(column), ReflectUtils.getFieldValue(target, column));
+            if (!ReflectUtil.getField(target.getClass(), column).isAnnotationPresent(OpcUaHeartBeat.class)) {
+                // 心跳点位读写频率太高，输出日志时排除心跳
+                log.info("设备[{}]点位[{}]写入值[{}]", device, pointAlias, obj);
             }
+            this.opcUaTemplate.writeItem(device, pointAlias, obj);
         } catch (Exception var3) {
-            log.error("设备[{}]点位[{}]写入值[{}]失败", device, ReflectUtils.camelToUnderline(column), ReflectUtils.getFieldValue(target, column), var3);
+            log.error("设备[{}]点位[{}]写入值[{}]失败", device, pointAlias, obj, var3);
         }
         return super.after(target, method, args, returnVal);
     }

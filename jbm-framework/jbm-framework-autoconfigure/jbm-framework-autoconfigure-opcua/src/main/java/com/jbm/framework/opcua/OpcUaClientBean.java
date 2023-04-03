@@ -6,6 +6,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.jbm.framework.opcua.attribute.OpcBean;
 import com.jbm.framework.opcua.attribute.OpcPoint;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
 import lombok.Data;

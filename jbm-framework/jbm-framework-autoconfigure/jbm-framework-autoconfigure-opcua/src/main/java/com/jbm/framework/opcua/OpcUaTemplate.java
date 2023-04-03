@@ -9,12 +9,12 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.jbm.framework.opcua.attribute.OpcBean;
 import com.jbm.framework.opcua.attribute.OpcPoint;
 import com.jbm.framework.opcua.attribute.OpcPointsRead;
 import com.jbm.framework.opcua.attribute.ValueType;
 import com.jbm.framework.opcua.event.PointSubscribeEvent;
 import com.jbm.framework.opcua.event.ValueChanageEvent;
-import com.jbm.framework.opcua.factory.OpcBeanFactory;
 import com.jbm.framework.opcua.key.KeyLoader;
 import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
@@ -76,12 +76,13 @@ public class OpcUaTemplate {
 //        this.loadPoints(opcUaClientBean.getOpcUaSource());
     }
 
-    public <T extends OpcBean> T getOpcBean(String deviceId, Class<T> clazz) throws Exception {
+    public <T extends OpcBean> T getOpcBean(String deviceId) {
         OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcBean())) {
-            opcUaClientBean.setOpcBean(new OpcBeanFactory().get(deviceId, this, clazz));
-        }
-        return (T) opcUaClientBean.getOpcBean();
+        return ObjectUtil.isNotEmpty(opcUaClientBean) ? (T) opcUaClientBean.getOpcBean() : null;
+    }
+
+    public <T extends OpcBean> void setOpcBean(String deviceId, T opcBean) {
+        this.clientMap.get(deviceId).setOpcBean(opcBean);
     }
 
     public synchronized void removeClient(String deviceId) {

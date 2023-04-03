@@ -1,171 +1,113 @@
 package com.jbm.framework.opcua.util;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.exceptions.UtilException;
 import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.opcua.annotation.OpcUaHeartBeat;
+import com.jbm.framework.opcua.annotation.OpcUaReadField;
+import com.jbm.framework.opcua.annotation.OpcUaWriteField;
+import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
 
 /**
- * @Author fanscat
- * @CreateTime 2022/11/1 19:46
- * @Description
+ * @author fanscat
+ * @createTime 2022/11/1 19:46
  */
 public class ReflectUtils {
 
-    public static final String SET = "set", GET = "get", READ = "read", WRITE = "write";
-
     /**
-     * 获取字段值
-     *
-     * @param obj       对象，如果static字段，此处为类
-     * @param fieldName 字段名
-     * @return 字段值
-     * @throws UtilException 包装IllegalAccessException异常
-     */
-    public static Object getFieldValue(Object obj, String fieldName) throws UtilException {
-        if (null == obj || StrUtil.isBlank(fieldName)) {
-            return null;
-        }
-        Field field = ReflectUtil.getField(obj instanceof Class ? (Class<?>) obj : obj.getClass(), fieldName);
-        if (null == field) {
-            return null;
-        }
-        if (obj instanceof Class) {
-            // 静态字段获取时对象为null
-            obj = null;
-        }
-        ReflectUtil.setAccessible(field);
-        Object result = ReflectUtil.invoke(obj, ReflectUtils.GET + firstToUpperCase(field.getName()));
-        return result;
-    }
-
-    /**
-     * 设置字段值
+     * 通过反射set方法设置字段值
      *
      * @param obj       对象,static字段则此处传Class
      * @param fieldName 字段名
      * @param value     值，值类型必须与字段类型匹配，不会自动转换对象类型
-     * @throws UtilException 包装IllegalAccessException异常
      */
-    public static void setFieldValue(Object obj, String fieldName, Object value) throws UtilException {
-        Assert.notNull(obj);
-        Assert.notBlank(fieldName);
-        final Field field = ReflectUtil.getField((obj instanceof Class) ? (Class<?>) obj : obj.getClass(), fieldName);
-        Assert.notNull(field, "Field [{}] is not exist in [{}]", fieldName, obj.getClass().getName());
-        Assert.notNull(field, "Field in [{}] not exist !", obj);
-        final Class<?> fieldType = field.getType();
-        if (null != value) {
-            if (false == fieldType.isAssignableFrom(value.getClass())) {
-                //对于类型不同的字段，尝试转换，转换失败则使用原对象类型
-                final Object targetValue = Convert.convert(fieldType, value);
-                if (null != targetValue) {
-                    value = targetValue;
-                }
-            }
-        } else {
-            // 获取null对应默认值，防止原始类型造成空指针问题
-            value = ClassUtil.getDefaultValue(fieldType);
-        }
-        ReflectUtil.setAccessible(field);
-        ReflectUtil.invoke(obj, ReflectUtils.SET + firstToUpperCase(field.getName()), value);
-    }
-
-
-    /**
-     * 下划线字符
-     */
-    public static final char UNDERLINE = '_';
-
-    /**
-     * 字符串驼峰转下划线格式
-     *
-     * @param param 需要转换的字符串
-     * @return 转换好的字符串
-     */
-    public static String camelToUnderline(String param) {
-        if (isBlank(param)) {
-            return "";
-        }
-        int len = param.length();
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            char c = param.charAt(i);
-            if (Character.isUpperCase(c) && i > 0) {
-                sb.append(UNDERLINE);
-            }
-            sb.append(Character.toLowerCase(c));
-        }
-        return sb.toString();
+    public static void setFieldValue(Object obj, String fieldName, Object value) {
+        Class<?> beanClass = ClassUtils.getUserClass(obj.getClass());
+        Field field = ReflectUtil.getField(beanClass, fieldName);
+        Assert.notNull(field, "Field [{}] is not exist in [{}]", fieldName, beanClass.getName());
+        setFieldValue(obj, field, value);
     }
 
     /**
-     * 首字母转换小写
+     * 通过反射set方法设置字段值
      *
-     * @param param 需要转换的字符串
-     * @return 转换好的字符串
+     * @param obj   对象,static字段则此处传Class
+     * @param field 字段
+     * @param value 值，值类型必须与字段类型匹配，不会自动转换对象类型
      */
-    public static String firstToLowerCase(String param) {
-        if (isBlank(param)) {
-            return "";
-        }
-        return param.substring(0, 1).toLowerCase() + param.substring(1);
+    public static void setFieldValue(Object obj, Field field, Object value) {
+        ReflectUtil.invoke(obj, StrUtil.genSetter(field.getName()), value);
     }
 
     /**
-     * 首字母转换大写
+     * 通过OPC UA点位的别名获取Bean当中的字段
      *
-     * @param param 需要转换的字符串
-     * @return 转换好的字符串
+     * @param source Bean的实例
+     * @param alias  OPC UA的点位别名
+     * @return 点位对应的字段
      */
-    public static String firstToUpperCase(String param) {
-        return isBlank(param) ? "" : param.substring(0, 1).toUpperCase() + param.substring(1);
+    public static Field getReadField(Object source, String alias) {
+        Class<?> beanClass = ClassUtils.getUserClass(source.getClass());
+        final Field[] fields = ReflectUtil.getFields(beanClass);
+        Field field = ArrayUtil.firstMatch((item) -> (item.isAnnotationPresent(OpcUaHeartBeat.class) && ObjectUtil.equals(alias, item.getAnnotation(OpcUaHeartBeat.class).read()))
+                || (item.isAnnotationPresent(OpcUaReadField.class) && ObjectUtil.equals(alias, item.getAnnotation(OpcUaReadField.class).alias())), fields);
+        Assert.notNull(field, "Field [{}] is not exist in [{}]", alias, beanClass.getName());
+        return field;
     }
 
     /**
-     * 字符串下划线转驼峰格式
+     * 获取字段对应的OPC UA点位别名
      *
-     * @param param 需要转换的字符串
-     * @return 转换好的字符串
+     * @param field 字段
+     * @return OPC UA的点位别名
      */
-    public static String underlineToCamel(String param) {
-        if (isBlank(param)) {
-            return "";
-        }
-        String temp = param.toLowerCase();
-        int len = temp.length();
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            char c = temp.charAt(i);
-            if (c == UNDERLINE) {
-                if (++i < len) {
-                    sb.append(Character.toUpperCase(temp.charAt(i)));
-                }
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+    public static String getReadFieldAlias(Field field) {
+        return field.isAnnotationPresent(OpcUaHeartBeat.class) ? field.getAnnotation(OpcUaHeartBeat.class).read() :
+                field.isAnnotationPresent(OpcUaReadField.class) ? field.getAnnotation(OpcUaReadField.class).alias() : null;
     }
 
     /**
-     * 判断字符串中是否全是空白字符
+     * 通过OPC UA点位的别名获取Bean当中的字段
      *
-     * @param cs 需要判断的字符串
-     * @return 如果字符串序列是 null 或者全是空白，返回 true
+     * @param source Bean的实例
+     * @param alias  OPC UA的点位别名
+     * @return 点位对应的字段
      */
-    public static boolean isBlank(CharSequence cs) {
-        if (cs != null) {
-            int length = cs.length();
-            for (int i = 0; i < length; i++) {
-                if (!Character.isWhitespace(cs.charAt(i))) {
-                    return false;
-                }
-            }
-        }
-        return true;
+    public static Field getWriteField(Object source, String alias) {
+        Class<?> beanClass = ClassUtils.getUserClass(source.getClass());
+        final Field[] fields = ReflectUtil.getFields(beanClass);
+        Field field = ArrayUtil.firstMatch((item) -> (item.isAnnotationPresent(OpcUaHeartBeat.class) && ObjectUtil.equals(alias, item.getAnnotation(OpcUaHeartBeat.class).write()))
+                || (item.isAnnotationPresent(OpcUaWriteField.class) && ObjectUtil.equals(alias, item.getAnnotation(OpcUaWriteField.class).alias())), fields);
+        Assert.notNull(field, "Field [{}] is not exist in [{}]", alias, beanClass.getName());
+        return field;
+    }
+
+    /**
+     * 获取字段对应的OPC UA点位别名
+     *
+     * @param field 字段
+     * @return OPC UA的点位别名
+     */
+    public static String getWriteFieldAlias(Field field) {
+        return field.isAnnotationPresent(OpcUaHeartBeat.class) ? field.getAnnotation(OpcUaHeartBeat.class).write() :
+                field.isAnnotationPresent(OpcUaWriteField.class) ? field.getAnnotation(OpcUaWriteField.class).alias() : null;
+    }
+
+    /**
+     * 获取字段对应的OPC UA点位别名
+     *
+     * @param source Bean的实例
+     * @param name   字段名
+     * @return OPC UA的点位别名
+     */
+    public static String getWriteFieldAlias(Object source, String name) {
+        Class<?> beanClass = ClassUtils.getUserClass(source.getClass());
+        Field field = ReflectUtil.getField(beanClass, name);
+        return field.isAnnotationPresent(OpcUaHeartBeat.class) ? field.getAnnotation(OpcUaHeartBeat.class).write() :
+                field.isAnnotationPresent(OpcUaWriteField.class) ? field.getAnnotation(OpcUaWriteField.class).alias() : null;
     }
 }
