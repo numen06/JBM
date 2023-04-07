@@ -34,6 +34,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 throw new SaOAuth2Exception("无效Token");
             }
             SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
+
             if (ObjectUtil.isNotEmpty(saTokenInfo)) {
                 if (saTokenInfo.isLogin) {
                     if (saTokenInfo.tokenTimeout <= 0) {
@@ -41,7 +42,11 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                     }
                     return;
                 } else {
-                    SaIdUtil.checkToken(tokenValue);
+                    SaRequest req = SaHolder.getRequest();
+                    if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
+                        SaIdUtil.checkCurrentRequestToken();
+                        return;
+                    }
                 }
             }
             SaRequest req = SaHolder.getRequest();
@@ -58,7 +63,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {
                     clientId = clientTokenModel.clientId;
-                    SaOAuth2Util.checkClientToken(tokenValue);
+//                    SaOAuth2Util.checkClientToken(tokenValue);
                 }
             }
             if (ObjectUtil.isEmpty(clientId)) {

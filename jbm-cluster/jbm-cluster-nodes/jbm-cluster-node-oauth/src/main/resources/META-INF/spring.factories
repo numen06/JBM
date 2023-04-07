@@ -1,7 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.jbm.cluster.node.configuration.NodeConfiguration,\
-com.jbm.cluster.node.configuration.MqAutoConfiguration,\
-com.jbm.cluster.node.configuration.ResourceServerConfiguration,\
-com.jbm.cluster.node.configuration.token.RemoteTokenConfiguration,\
-com.jbm.cluster.node.configuration.token.RedisTokenConfiguration,\
-com.jbm.cluster.node.configuration.token.JwtTokenConfiguration

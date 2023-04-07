@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.satoken.oauth;
 
 
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
@@ -10,8 +11,12 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 
 /**
  * jbm默认自己节点的oauth认证
@@ -100,8 +105,8 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
     @Override
     public String randomClientToken(String clientId, String scope) {
         //使用IdToken接管
-        final String idToken = SaIdUtil.saIdTemplate.createToken();
-        SaIdUtil.saIdTemplate.saveToken(idToken);
+        final String idToken = SaIdUtil.getToken();
+//        SaIdUtil.saIdTemplate.saveToken(idToken);
         return idToken;
     }
 }

@@ -1,10 +1,8 @@
 package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
-import cn.dev33.satoken.oauth2.model.SaClientModel;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.ObjectUtil;
