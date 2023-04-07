@@ -48,7 +48,7 @@
         <jdk.version>1.8</jdk.version>
         <jbm.framework.version>7.2.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
-        <dubbo.version>2.7.13</dubbo.version>
+        <dubbo.version>2.7.21</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
         <fastjson2.version>2.0.15</fastjson2.version>
         <minio.version>8.3.0</minio.version>
