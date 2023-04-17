@@ -3,12 +3,9 @@ package com.jbm.cluster.common.satoken.config;
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
-import cn.dev33.satoken.spring.SaBeanInject;
-import cn.dev33.satoken.spring.SaBeanRegister;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,7 +34,6 @@ import org.springframework.context.annotation.Configuration;
  * @author Lion Li
  */
 @Configuration
-@AutoConfigureAfter({SaBeanInject.class, SaBeanRegister.class})
 public class SaTokenConfiguration {
 
     // Sa-Token 整合 jwt (Simple 简单模式)
