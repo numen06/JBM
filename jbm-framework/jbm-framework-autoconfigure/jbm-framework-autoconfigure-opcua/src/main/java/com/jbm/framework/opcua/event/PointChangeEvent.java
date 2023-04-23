@@ -1,6 +1,5 @@
 package com.jbm.framework.opcua.event;
 
-import cn.hutool.core.util.ReflectUtil;
 import com.jbm.framework.opcua.annotation.OpcUaHeartBeat;
 import com.jbm.framework.opcua.attribute.OpcBean;
 import com.jbm.framework.opcua.attribute.OpcPoint;
@@ -35,7 +34,7 @@ public class PointChangeEvent<T extends OpcBean> extends PointSubscribeEvent {
         final Field field = ReflectUtils.getReadField(this.getTarget(), super.getOpcPoint().getAlias());
         if (!field.isAnnotationPresent(OpcUaHeartBeat.class)) {
             // 心跳点位读写频率太高，输出日志时排除心跳
-            log.info("设备[{}]点位[{}]数据发生变化[{}]==>[{}]", getDevice(), getSource(), ReflectUtil.getFieldValue(this.getTarget(), field), super.getOpcPoint().getValue());
+            log.info("设备[{}]点位[{}]数据发生变化[{}]==>[{}]", getDevice(), getSource(), ReflectUtils.getFieldValue(this.getTarget(), field), super.getOpcPoint().getValue());
         }
         ReflectUtils.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
     }
