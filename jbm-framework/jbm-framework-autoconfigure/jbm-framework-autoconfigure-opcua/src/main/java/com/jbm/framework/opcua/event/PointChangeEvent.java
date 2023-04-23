@@ -33,15 +33,10 @@ public class PointChangeEvent<T extends OpcBean> extends PointSubscribeEvent {
     public void putData(UaMonitoredItem uaMonitoredItem, DataValue dataValue) {
         super.putData(uaMonitoredItem, dataValue);
         final Field field = ReflectUtils.getReadField(this.getTarget(), super.getOpcPoint().getAlias());
-        if (field.isAnnotationPresent(OpcUaHeartBeat.class)) {
-            // 心跳通过反射set方法设置数值，因为写入OPC UA值的功能通过set方法进行切面写入。
-            ReflectUtils.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
-        } else {
+        if (!field.isAnnotationPresent(OpcUaHeartBeat.class)) {
             // 心跳点位读写频率太高，输出日志时排除心跳
             log.info("设备[{}]点位[{}]数据发生变化[{}]==>[{}]", getDevice(), getSource(), ReflectUtil.getFieldValue(this.getTarget(), field), super.getOpcPoint().getValue());
-            // 订阅点直接写入字段值，可以不通过set方法
-            ReflectUtil.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
         }
-
+        ReflectUtils.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
     }
 }

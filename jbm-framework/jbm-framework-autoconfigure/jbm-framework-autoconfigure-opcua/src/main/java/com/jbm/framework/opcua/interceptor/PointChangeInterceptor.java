@@ -1,7 +1,6 @@
 package com.jbm.framework.opcua.interceptor;
 
 import cn.hutool.aop.aspects.SimpleAspect;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.opcua.OpcUaTemplate;
@@ -10,6 +9,7 @@ import com.jbm.framework.opcua.util.ReflectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.Interceptor;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -29,24 +29,29 @@ public class PointChangeInterceptor extends SimpleAspect implements Interceptor 
 
     @Override
     public boolean after(Object target, Method method, Object[] args, Object returnVal) {
-        String column = StrUtil.getGeneralField(method.getName());
-        if (StrUtil.isEmpty(column)) {
+        if (!ReflectUtil.isGetterOrSetterIgnoreCase(method)) {
             return super.after(target, method, args, returnVal);
         }
-        String pointAlias = ReflectUtils.getWriteFieldAlias(target, column);
-        if (ObjectUtil.isEmpty(pointAlias)) {
+        final Field field = ReflectUtils.getField(target, StrUtil.getGeneralField(method.getName()));
+        if (StrUtil.equals(method.getName(), StrUtil.genGetter(field.getName()))) {
+            // 执行Getter方法时无需写入OPC UA
             return super.after(target, method, args, returnVal);
         }
-        Object obj = ReflectUtil.getFieldValue(target, column);
+        String alias = ReflectUtils.getWriteAlias(field);
+        if (StrUtil.isBlank(alias)) {
+            return super.after(target, method, args, returnVal);
+        }
+        Object fieldValue = ReflectUtils.getFieldValue(target, field);
         try {
-            if (!ReflectUtil.getField(target.getClass(), column).isAnnotationPresent(OpcUaHeartBeat.class)) {
+            if (!field.isAnnotationPresent(OpcUaHeartBeat.class)) {
                 // 心跳点位读写频率太高，输出日志时排除心跳
-                log.info("设备[{}]点位[{}]写入值[{}]", device, pointAlias, obj);
+                log.info("设备[{}]点位[{}]写入值[{}]", device, alias, fieldValue);
             }
-            this.opcUaTemplate.writeItem(device, pointAlias, obj);
+            this.opcUaTemplate.writeItem(device, alias, fieldValue);
         } catch (Exception var3) {
-            log.error("设备[{}]点位[{}]写入值[{}]失败", device, pointAlias, obj, var3);
+            log.error("设备[{}]点位[{}]写入值[{}]失败", device, alias, fieldValue, var3);
         }
         return super.after(target, method, args, returnVal);
     }
+
 }

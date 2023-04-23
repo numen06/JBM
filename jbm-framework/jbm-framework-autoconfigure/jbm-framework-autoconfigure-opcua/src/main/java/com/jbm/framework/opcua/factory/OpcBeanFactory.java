@@ -3,10 +3,10 @@ package com.jbm.framework.opcua.factory;
 import cn.hutool.aop.proxy.ProxyFactory;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.opcua.OpcUaTemplate;
 import com.jbm.framework.opcua.annotation.OpcUaHeartBeat;
 import com.jbm.framework.opcua.annotation.OpcUaReadField;
-import com.jbm.framework.opcua.annotation.OpcUaWriteField;
 import com.jbm.framework.opcua.attribute.OpcBean;
 import com.jbm.framework.opcua.event.PointChangeEvent;
 import com.jbm.framework.opcua.interceptor.PointChangeInterceptor;
@@ -53,12 +53,10 @@ public class OpcBeanFactory {
     private static <T extends OpcBean> void initOpcBean(OpcUaTemplate opcUaTemplate, String device, Class<T> clazz) throws Exception {
         T opcBean = ProxyFactory.createProxy(ReflectUtil.newInstance(clazz), new PointChangeInterceptor(device, opcUaTemplate));
         for (Field field : ReflectUtil.getFields(clazz)) {
-            if (field.isAnnotationPresent(OpcUaWriteField.class)) {
-                ReflectUtil.setFieldValue(opcBean, field, opcUaTemplate.readItem(device, ReflectUtils.getWriteFieldAlias(field)));
-            } else if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
-                String pointAlias = ReflectUtils.getReadFieldAlias(field);
-                ReflectUtil.setFieldValue(opcBean, field, opcUaTemplate.readItem(device, pointAlias));
-                opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcBean, device, pointAlias));
+            String alias = StrUtil.isBlank(ReflectUtils.getWriteAlias(field)) ? ReflectUtils.getReadAlias(field) : ReflectUtils.getWriteAlias(field);
+            ReflectUtils.setFieldValue(opcBean, field, opcUaTemplate.readItem(device, alias));
+            if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
+                opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcBean, device, alias));
             }
         }
         opcUaTemplate.setOpcBean(device, opcBean);
