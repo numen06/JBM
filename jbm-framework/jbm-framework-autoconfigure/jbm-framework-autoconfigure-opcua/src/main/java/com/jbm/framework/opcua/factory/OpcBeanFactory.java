@@ -36,13 +36,13 @@ public class OpcBeanFactory {
     public static <T extends OpcBean> T get(ApplicationContext applicationContext, String device, Class<T> clazz) throws Exception {
         OpcUaTemplate opcUaTemplate = applicationContext.getBean(OpcUaTemplate.class);
         if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
-            OpcBeanFactory.initOpcBean(opcUaTemplate, device, clazz);
+            OpcBeanFactory.registerOpcBean(opcUaTemplate, device, clazz);
         }
         return opcUaTemplate.getOpcBean(device);
     }
 
     /**
-     * 初始化OPC UA的读写Bean
+     * 注册OPC UA的读写Bean
      *
      * @param opcUaTemplate OPC UA读写类
      * @param device        设备号
@@ -50,7 +50,7 @@ public class OpcBeanFactory {
      * @param <T>           读写Bean的类型
      * @throws Exception 初始化时发生异常
      */
-    private static <T extends OpcBean> void initOpcBean(OpcUaTemplate opcUaTemplate, String device, Class<T> clazz) throws Exception {
+    private static <T extends OpcBean> void registerOpcBean(OpcUaTemplate opcUaTemplate, String device, Class<T> clazz) throws Exception {
         T opcBean = ProxyFactory.createProxy(ReflectUtil.newInstance(clazz), new PointChangeInterceptor(device, opcUaTemplate));
         for (Field field : ReflectUtil.getFields(clazz)) {
             String alias = StrUtil.isBlank(ReflectUtils.getWriteAlias(field)) ? ReflectUtils.getReadAlias(field) : ReflectUtils.getWriteAlias(field);

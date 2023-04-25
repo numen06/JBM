@@ -77,12 +77,7 @@ public class OpcUaTemplate {
     }
 
     public <T extends OpcBean> T getOpcBean(String deviceId) {
-        OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcBean()) && ObjectUtil.isEmpty(opcUaClientBean.getOpcUaClient())) {
-            // OpcBean和OPC UA客户端都不存在的情况下，尝试重新注册
-            this.addClient(opcUaClientBean);
-        }
-        return (T) opcUaClientBean.getOpcBean();
+        return (T) this.clientMap.get(deviceId).getOpcBean();
     }
 
     public <T extends OpcBean> void setOpcBean(String deviceId, T opcBean) {
@@ -136,7 +131,12 @@ public class OpcUaTemplate {
     }
 
     public OpcUaClient getOpcUaClient(String deviceId) {
-        return this.getOpcUaClient(deviceId, null);
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcUaClient())) {
+            // OPC UA客户端不存在的情况下尝试重新注册
+            this.addClient(opcUaClientBean);
+        }
+        return opcUaClientBean.getOpcUaClient();
     }
 
     /**
@@ -302,8 +302,7 @@ public class OpcUaTemplate {
         try {
             log.info("OPCUA订阅点位:{}", opcPoint.getAlias());
             OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-//            client = getOpcUaClient(deviceId);
-            client = opcUaClientBean.getOpcUaClient();
+            client = getOpcUaClient(opcUaClientBean.getDeviceId());
             client.connect().get();
             List<UaMonitoredItem> items = this.createItemMonitored(opcUaClientBean, opcPoint);
             //循环设置回调事件
