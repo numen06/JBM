@@ -33,7 +33,7 @@ public class OpcBeanFactory {
      * @return OPC UA的读写Bean
      * @throws Exception 获取时发生异常
      */
-    public static <T extends OpcBean> T get(ApplicationContext applicationContext, String device, Class<T> clazz) throws Exception {
+    public static <T extends OpcBean> T getBean(ApplicationContext applicationContext, String device, Class<T> clazz) throws Exception {
         OpcUaTemplate opcUaTemplate = applicationContext.getBean(OpcUaTemplate.class);
         if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
             OpcBeanFactory.registerOpcBean(opcUaTemplate, device, clazz);
@@ -53,7 +53,8 @@ public class OpcBeanFactory {
     private static <T extends OpcBean> void registerOpcBean(OpcUaTemplate opcUaTemplate, String device, Class<T> clazz) throws Exception {
         T opcBean = ProxyFactory.createProxy(ReflectUtil.newInstance(clazz), new PointChangeInterceptor(device, opcUaTemplate));
         for (Field field : ReflectUtil.getFields(clazz)) {
-            String alias = StrUtil.isBlank(ReflectUtils.getWriteAlias(field)) ? ReflectUtils.getReadAlias(field) : ReflectUtils.getWriteAlias(field);
+            // 优先获取OPC UA的读取点位
+            String alias = StrUtil.isBlank(ReflectUtils.getReadAlias(field)) ? ReflectUtils.getWriteAlias(field) : ReflectUtils.getReadAlias(field);
             ReflectUtils.setFieldValue(opcBean, field, opcUaTemplate.readItem(device, alias));
             if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
                 opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcBean, device, alias));
