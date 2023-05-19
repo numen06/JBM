@@ -121,7 +121,7 @@ public class OpcUaTemplate {
     public Map<String, OpcPoint> loadPoints(OpcUaSource opcUaSource) {
         if (StrUtil.isNotBlank(opcUaSource.getPointFile())) {
             OpcPointsRead opcPointsRead = new OpcPointsRead();
-            return opcPointsRead.readPoints(opcUaSource.getPointFile());
+            return opcPointsRead.readPoints(opcUaSource.getPointFile(), opcUaSource.getCarryQuote());
         }
         return Maps.newConcurrentMap();
     }

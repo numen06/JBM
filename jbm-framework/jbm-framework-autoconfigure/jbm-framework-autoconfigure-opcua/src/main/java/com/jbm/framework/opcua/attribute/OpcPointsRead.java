@@ -6,6 +6,7 @@ import cn.hutool.core.text.csv.CsvData;
 import cn.hutool.core.text.csv.CsvReadConfig;
 import cn.hutool.core.text.csv.CsvRow;
 import cn.hutool.core.text.csv.CsvUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
@@ -19,7 +20,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class OpcPointsRead {
 
-    public Map<String, OpcPoint> readPoints(String fileName) {
+    public Map<String, OpcPoint> readPoints(String fileName, Boolean carryQuote) {
         Map<String, OpcPoint> points = Maps.newConcurrentMap();
         try {
             CsvReadConfig csvReadConfig = CsvReadConfig.defaultConfig();
@@ -49,13 +50,15 @@ public class OpcPointsRead {
                     if (StrUtil.contains(tagName, ".")) {
                         List<String> nameArr = StrUtil.split(tagName, ".");
                         //默认读取最后一个字段
-                        if (StrUtil.isBlank(alias))
+                        if (StrUtil.isBlank(alias)) {
                             alias = CollUtil.getLast(nameArr);
+                        }
                         //如果存在别名则读取
-                        tagName = StrUtil.concat(true, "\"", StrUtil.join("\".\"", nameArr), "\"");
+                        tagName = BooleanUtil.isFalse(carryQuote) ? tagName : StrUtil.concat(true, "\"", StrUtil.join("\".\"", nameArr), "\"");
                     }
-                    if (StrUtil.isBlank(alias))
+                    if (StrUtil.isBlank(alias)) {
                         alias = tagName;
+                    }
                     OpcPoint attributeInfo = new OpcPoint(namespace, tagName, dataType);
                     attributeInfo.setAlias(alias);
                     points.put(alias, attributeInfo);

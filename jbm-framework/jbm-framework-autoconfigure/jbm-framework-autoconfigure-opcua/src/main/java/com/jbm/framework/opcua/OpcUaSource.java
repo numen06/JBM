@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class OpcUaSource {
+    private Boolean carryQuote = true;
     private Boolean enabled = false;
     private String url;
     private String host;
