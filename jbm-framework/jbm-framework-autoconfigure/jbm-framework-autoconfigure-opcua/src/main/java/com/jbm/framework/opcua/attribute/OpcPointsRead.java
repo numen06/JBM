@@ -1,7 +1,8 @@
 package com.jbm.framework.opcua.attribute;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.io.resource.ClassPathResource;
+import cn.hutool.core.io.resource.Resource;
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.text.csv.CsvData;
 import cn.hutool.core.text.csv.CsvReadConfig;
 import cn.hutool.core.text.csv.CsvRow;
@@ -25,8 +26,8 @@ public class OpcPointsRead {
         try {
             CsvReadConfig csvReadConfig = CsvReadConfig.defaultConfig();
             csvReadConfig.setContainsHeader(true);
-            ClassPathResource resource = new ClassPathResource(fileName);
-            log.info("开始读取文件:{}", resource.getAbsolutePath());
+            Resource resource = ResourceUtil.getResourceObj(fileName);
+            log.info("开始读取文件:{}", resource.getUrl().getPath());
             CsvData csvData = CsvUtil.getReader(csvReadConfig).read(resource.getReader(Charsets.UTF_8));
             csvData.forEach(new Consumer<CsvRow>() {
                 @Override
