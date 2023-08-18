@@ -37,11 +37,17 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         return super.selectEntitys(pageRequestBody);
     }
 
+
     @Override
-    public DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform) {
-        DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.findUserPushMessage(pushMessageform);
+    public DataPaging<PushMessageResult> selectPushMessagePageList(PushMessageForm pushMessageform) {
+        DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.selectEntitys(pushMessageform,pushMessageform.getPageForm());
+        List<PushMessageResult> pushMessageBodyList = buildPushMessage(pushMessageItemDataPaging.getContents());
+        return new DataPaging<>(pushMessageBodyList, pushMessageItemDataPaging);
+    }
+
+    public List<PushMessageResult> buildPushMessage(List<PushMessageItem> pushMessageItems){
         List<PushMessageResult> pushMessageBodyList = Lists.newArrayList();
-        pushMessageItemDataPaging.getContents().forEach(new Consumer<PushMessageItem>() {
+        pushMessageItems.forEach(new Consumer<PushMessageItem>() {
             @Override
             public void accept(PushMessageItem pushMessageItem) {
                 PushMessageResult pushMessageResult = new PushMessageResult();
@@ -51,6 +57,13 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
                 pushMessageBodyList.add(pushMessageResult);
             }
         });
+        return pushMessageBodyList;
+    }
+
+    @Override
+    public DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform) {
+        DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.findUserPushMessage(pushMessageform);
+        List<PushMessageResult> pushMessageBodyList = buildPushMessage(pushMessageItemDataPaging.getContents());
         return new DataPaging<>(pushMessageBodyList, pushMessageItemDataPaging);
 
     }

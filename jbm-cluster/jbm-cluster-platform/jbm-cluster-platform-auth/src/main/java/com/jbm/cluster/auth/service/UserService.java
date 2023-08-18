@@ -1,7 +1,10 @@
 package com.jbm.cluster.auth.service;
 
+import cn.dev33.satoken.exception.SaTokenException;
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
@@ -28,8 +31,26 @@ public class UserService {
         });
     }
 
+    public JbmLoginUser loginAndRegisterMobileUser(String userName, String password) {
+
+        ThirdPartyUserForm thirdPartyUserForm =new ThirdPartyUserForm();
+        thirdPartyUserForm.setPassword(password);
+        thirdPartyUserForm.setAccount(userName);
+        thirdPartyUserForm.setPhone(userName);
+        thirdPartyUserForm.setNickName(userName);
+        return baseUserServiceClient.loginAndRegisterMobileUser(thirdPartyUserForm).action(new Function<UserAccount, JbmLoginUser>() {
+            @Override
+            public JbmLoginUser apply(UserAccount userAccount) {
+                return userAccountToLoginUser(userAccount);
+            }
+        });
+    }
+
 
     public JbmLoginUser userAccountToLoginUser(UserAccount account) {
+        if (ObjectUtil.isEmpty(account)) {
+            throw new SaTokenException("用户授权不存在!");
+        }
         JbmLoginUser jbmLoginUser = null;
         jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());

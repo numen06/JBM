@@ -240,11 +240,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
         BaseUser query = pageRequestBody.tryGet(BaseUser.class);
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId())
-                .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType())
-                .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName())
-                .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
+        queryWrapper.lambda().eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId()).eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType()).eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName()).eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
         return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
     }
@@ -336,8 +332,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public BaseUser getUserByUsername(String username) {
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .eq(BaseUser::getUserName, username);
+        queryWrapper.lambda().eq(BaseUser::getUserName, username);
         BaseUser saved = baseUserMapper.selectOne(queryWrapper);
         return saved;
     }
@@ -410,10 +405,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public List<BaseUser> retrievalUsers(String keyword) {
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .or().like(BaseUser::getRealName, keyword)
-                .or().like(BaseUser::getMobile, keyword)
-                .or().like(BaseUser::getNickName, keyword).last("limit 10");
+        queryWrapper.lambda().or().like(BaseUser::getRealName, keyword).or().like(BaseUser::getMobile, keyword).or().like(BaseUser::getNickName, keyword).last("limit 10");
         return this.selectEntitys(queryWrapper);
     }
 
@@ -430,7 +422,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm) {
         try {
-            UserAccount userAccount = this.login(thirdPartyUserForm.getAccount(), thirdPartyUserForm.getPassword());
+            UserAccount userAccount = this.login(thirdPartyUserForm.getAccount(), "mobile");
             if (ObjectUtil.isNotEmpty(userAccount)) {
                 return userAccount;
             }

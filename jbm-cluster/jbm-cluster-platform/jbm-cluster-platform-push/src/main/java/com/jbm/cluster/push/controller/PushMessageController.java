@@ -4,11 +4,14 @@ import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.push.PushMessageResult;
+import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.message.PushMessageTest;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -49,6 +52,13 @@ public class PushMessageController {
         return ResultBody.success("标记未F读成功");
     }
 
+    @ApiOperation("查询消息列表")
+    @PostMapping("/pageList")
+    public ResultBody<DataPaging<PushMessageResult>> pageList(@RequestBody PushMessageForm pushMessageform) {
+        DataPaging<PushMessageResult> dataPaging = this.pushMessageBodyService.selectPushMessagePageList(pushMessageform);
+        return ResultBody.success(dataPaging, "查询消息列表成功");
+    }
+
 
     @ApiOperation("获取登录人的消息列表")
     @PostMapping("/findCurrMessagePage")
@@ -72,6 +82,24 @@ public class PushMessageController {
     public ResultBody<String> sendSysMessage(@RequestBody PushMessageBody pushMessageBody) {
         this.pushMessageBodyService.sendSysMessage(pushMessageBody);
         return ResultBody.ok();
+    }
+
+    @ApiOperation("删除站内信")
+    @PostMapping("/deleteByIds")
+    public ResultBody<String> deleteByIds(@RequestBody IdsForm idsForm) {
+        this.pushMessageItemService.removeByIds(idsForm.getIds());
+        return ResultBody.ok();
+    }
+
+
+    @Autowired
+    private JbmClusterNotification jbmClusterNotification;
+
+    @ApiOperation("发送推送消息")
+    @PostMapping("/sendPushMsg")
+    public ResultBody<String> sendPushMsg(@RequestBody PushMsg pushMsg) {
+        jbmClusterNotification.pushMsg(pushMsg);
+        return ResultBody.ok("发送推送消息成功");
     }
 
 

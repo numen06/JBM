@@ -30,7 +30,7 @@ public class SmsLoginAuthenticate implements ILoginAuthenticate {
             public JbmLoginUser get() {
                 Validator.validateMobile(username, "非法手机号");
                 pCoderService.verify(password, username);
-                return userService.findUserByUsername(username);
+                return userService.loginAndRegisterMobileUser(username,password);
             }
         });
     }

@@ -7,6 +7,7 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.menu.WxMpMenu;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -37,14 +38,15 @@ public class WxMenuTamplate {
                 if (wxMenuProperties.getClean()) {
                     mpMenu.getMenu().getButtons().forEach(wxMenuButton -> {
                         try {
+                            if (StringUtils.isBlank(wxMenuButton.getKey())) {
+                                return;
+                            }
                             this.wxService.getMenuService().menuDelete(wxMenuButton.getKey());
                         } catch (WxErrorException e) {
                             throw new RuntimeException(e);
                         }
                     });
 
-                } else {
-                    return;
                 }
             }
             this.create(wxMenuProperties);

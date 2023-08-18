@@ -17,6 +17,8 @@ public interface PushMessageBodyService extends IMasterDataService<PushMessageBo
 
     DataPaging<PushMessageBody> selectPageList(PageRequestBody pageRequestBody);
 
+    DataPaging<PushMessageResult> selectPushMessagePageList(PushMessageForm pushMessageform);
+
     DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform);
 
     void sendPushMsg(PushMsg pushMsg);
