@@ -15,4 +15,7 @@ public class MailTest {
     public void testMail() {
         MailUtil.send("jason.peng@feg.cn", "测试", "邮件来自Hutool测试" + DateUtil.now(), false);
     }
+
+
+
 }

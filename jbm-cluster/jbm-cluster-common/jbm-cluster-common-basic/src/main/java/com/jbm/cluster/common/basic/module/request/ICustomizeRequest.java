@@ -9,4 +9,9 @@ public interface ICustomizeRequest {
     HttpResponse request(HttpRequest httpRequest);
 
     String prefix();
+
+
+//    void requestAsync(HttpRequest httpRequest);
+
+
 }

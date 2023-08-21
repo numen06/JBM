@@ -20,10 +20,14 @@ import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,6 +46,12 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     @Autowired
     private WebhookTaskMapper webhookTaskMapper;
 
+
+    /***
+     * 异步执行线程池
+     */
+    private ExecutorService executorService = ThreadUtil.newExecutor(100);
+
     @Override
     public void sendEvent(WebhookTaskForm webhookTaskForm) {
         List<WebhookEventConfig> webhookEventConfigs = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
@@ -49,11 +59,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             return;
         }
         webhookEventConfigs.forEach(webhookEventConfig -> {
-            try {
-                sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
-            } catch (Exception e) {
-                log.error("推送Webhook事件错误", e);
-            }
+            sendEventAsync(webhookEventConfig, webhookTaskForm.getWebhookTask());
         });
     }
 
@@ -77,7 +83,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     @Override
     public void sendEvent(WebhookTask webhookTask) {
         WebhookEventConfig webhookEventConfig = webhookEventConfigService.selectByEventId(webhookTask.getEventId());
-        this.sendEvent(webhookEventConfig, webhookTask);
+        this.sendEventAsync(webhookEventConfig, webhookTask);
     }
 
     @Override
@@ -104,7 +110,25 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     private Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
 
-    public void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
+
+
+    private void sendEventAsync(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
+        Future<?> future = executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    log.info("推送任务开始:{}", webhookEventConfig.getEventName());
+                    sendEvent(webhookEventConfig, sourceWebhookTask);
+                } catch (Exception e) {
+                    log.error("推送Webhook事件错误", e);
+                } finally {
+                    log.info("推送任务完成:{}", webhookEventConfig.getEventName());
+                }
+            }
+        });
+    }
+
+    private void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
         WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
