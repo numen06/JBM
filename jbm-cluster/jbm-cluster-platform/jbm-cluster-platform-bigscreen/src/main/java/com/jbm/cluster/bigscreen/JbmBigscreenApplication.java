@@ -1,16 +1,22 @@
 package com.jbm.cluster.bigscreen;
 
+import com.jbm.cluster.api.constants.BaseConstants;
 import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.mapper.BigscreenViewMapper;
+import com.jbm.cluster.common.health.DependsOnHealth;
 import com.jbm.framework.masterdata.code.EnableCodeAutoGeneate;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +56,17 @@ public class JbmBigscreenApplication implements WebMvcConfigurer {
             log.error("获取静态地址错误");
         }
 //        registry.addResourceHandler("/static/**").addResourceLocations("file:" + baseDir.getCanonicalPath(), "classpath:/static/");
+    }
+
+    /**
+     * 启动监测
+     * @param discoveryClient
+     * @param applicationContext
+     * @return
+     */
+    @Bean
+    public DependsOnHealth dependsOnEndpoint(@Autowired DiscoveryClient discoveryClient, @Autowired ApplicationContext applicationContext) {
+        return new DependsOnHealth(discoveryClient,applicationContext, BaseConstants.DOC_SERVER);
     }
 
 }

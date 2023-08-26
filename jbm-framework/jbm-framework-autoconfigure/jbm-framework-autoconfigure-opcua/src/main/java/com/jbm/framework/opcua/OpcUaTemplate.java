@@ -3,6 +3,7 @@ package com.jbm.framework.opcua;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -105,7 +106,7 @@ public class OpcUaTemplate {
             }
         } catch (Exception e) {
             log.error("读取OPCUA设备失败", e);
-            throw e;
+//            throw e;
         }
     }
 
@@ -122,7 +123,12 @@ public class OpcUaTemplate {
     }
 
     public OpcUaClient getOpcUaClient(String deviceId) {
-        return this.getOpcUaClient(deviceId, null);
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        if (ObjectUtil.isEmpty(opcUaClientBean.getOpcUaClient())) {
+            // OPC UA客户端不存在的情况下尝试重新注册
+            this.addClient(opcUaClientBean);
+        }
+        return opcUaClientBean.getOpcUaClient();
     }
 
     /**
@@ -135,8 +141,9 @@ public class OpcUaTemplate {
      */
     public OpcUaClient getOpcUaClient(String deviceId, OpcUaSource driverInfo) {
         OpcUaClient opcUaClient = null;
-        if (clientMap.containsKey(deviceId))
+        if (clientMap.containsKey(deviceId) && clientMap.get(deviceId).getOpcUaClient() != null) {
             return clientMap.get(deviceId).getOpcUaClient();
+        }
         try {
             KeyLoader loader = new KeyLoader().load(Paths.get(FileUtil.getTmpDirPath()));
             if (null == opcUaClient) {
@@ -207,34 +214,25 @@ public class OpcUaTemplate {
 
     }
 
-    public void writeItem(String deviceId, String pointName, Object value) {
+    public void writeItem(String deviceId, String pointName, Object value) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        OpcPoint opcPoint = opcUaClientBean.findPoint(pointName);
-        opcPoint.setValue(value);
-        this.writeItem(deviceId, opcPoint);
+        OpcPoint point = opcUaClientBean.findPoint(pointName);
+        point.setValue(value);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
     }
 
+    public void writeItem(String deviceId, OpcPoint point) throws Exception {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
+    }
 
-    /**
-     * Write Opc Ua Point Value
-     *
-     * @param deviceId Device Id
-     * @param point    OpcPoint Info
-     * @throws UaException          UaException
-     * @throws ExecutionException   ExecutionException
-     * @throws InterruptedException InterruptedException
-     */
-    public void writeItem(String deviceId, OpcPoint point) {
+    public void writeItem(String deviceId, NodeId nodeId, DataValue dataValue) {
         OpcUaClient client;
         try {
-            log.debug("OPCUA写入点位:{}", JSON.toJSONString(point));
-            int namespace = point.getNamespace();
-            String tag = point.getTagName();
-            NodeId nodeId = new NodeId(namespace, tag);
+            log.debug("write point(ns={};s={})", nodeId.getNamespaceIndex(), nodeId.getIdentifier());
             client = getOpcUaClient(deviceId);
             client.connect().get();
             StatusCode statusCode = StatusCode.GOOD;
-            DataValue dataValue = this.convertData(point);
             statusCode = client.writeValue(nodeId, dataValue).get();
             if (!statusCode.isGood()) {
                 throw new RuntimeException(statusCode.toString());
@@ -281,8 +279,9 @@ public class OpcUaTemplate {
      */
     public UaSubscription getSubscription(OpcUaClient client) throws ExecutionException, InterruptedException {
         UaSubscription subscription = CollUtil.getFirst(client.getSubscriptionManager().getSubscriptions());
-        if (subscription == null)
+        if (subscription == null) {
             subscription = client.getSubscriptionManager().createSubscription(1000.0).get();
+        }
         return subscription;
     }
 
@@ -295,8 +294,7 @@ public class OpcUaTemplate {
         try {
             log.info("OPCUA订阅点位:{}", opcPoint.getAlias());
             OpcUaClientBean opcUaClientBean = this.clientMap.get(deviceId);
-//            client = getOpcUaClient(deviceId);
-            client = opcUaClientBean.getOpcUaClient();
+            client = getOpcUaClient(opcUaClientBean.getDeviceId());
             client.connect().get();
             List<UaMonitoredItem> items = this.createItemMonitored(opcUaClientBean, opcPoint);
             //循环设置回调事件
@@ -348,7 +346,6 @@ public class OpcUaTemplate {
 
     private DataValue convertData(OpcPoint point) {
         ValueType valueType = ValueType.valueOf(point.getDataType().toUpperCase());
-
         return this.convertData(valueType, point.getValue());
     }
 

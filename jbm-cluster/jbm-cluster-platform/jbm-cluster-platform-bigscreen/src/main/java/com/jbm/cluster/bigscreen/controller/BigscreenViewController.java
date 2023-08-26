@@ -1,22 +1,16 @@
 package com.jbm.cluster.bigscreen.controller;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpDownloader;
-import cn.hutool.http.HttpUtil;
 import com.jbm.cluster.api.model.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.http.HttpRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import sun.net.util.URLUtil;
 
 import javax.servlet.http.HttpServletRequest;
 

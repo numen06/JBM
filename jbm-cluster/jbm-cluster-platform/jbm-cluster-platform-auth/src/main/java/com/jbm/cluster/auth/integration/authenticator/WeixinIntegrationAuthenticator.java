@@ -11,6 +11,7 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +31,8 @@ public class WeixinIntegrationAuthenticator extends AbstractPreparableIntegratio
     @Autowired(required = false)
     private WeixinClient weixinClient;
 
-    @Autowired
+    @Autowired(required = false)
+    @Lazy
     private PasswordEncoder passwordEncoder;
 
     @Autowired

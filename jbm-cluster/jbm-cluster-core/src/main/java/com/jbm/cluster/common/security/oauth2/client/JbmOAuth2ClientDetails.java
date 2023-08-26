@@ -1,13 +1,17 @@
 package com.jbm.cluster.common.security.oauth2.client;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
  * 社交第三方账号客户端
+ *
  * @author: wesley.zhang
  * @date: 2019/2/14 14:56
  * @description:
  */
+@Data
 public class JbmOAuth2ClientDetails implements Serializable {
     private static final long serialVersionUID = -6103012432819993075L;
     /**
@@ -56,57 +60,5 @@ public class JbmOAuth2ClientDetails implements Serializable {
 
     public String getClientSecret() {
         return clientSecret;
-    }
-
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
-
-    public String getScope() {
-        return scope;
-    }
-
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
-
-    public String getAccessTokenUri() {
-        return accessTokenUri;
-    }
-
-    public void setAccessTokenUri(String accessTokenUri) {
-        this.accessTokenUri = accessTokenUri;
-    }
-
-    public String getUserAuthorizationUri() {
-        return userAuthorizationUri;
-    }
-
-    public void setUserAuthorizationUri(String userAuthorizationUri) {
-        this.userAuthorizationUri = userAuthorizationUri;
-    }
-
-    public String getUserInfoUri() {
-        return userInfoUri;
-    }
-
-    public void setUserInfoUri(String userInfoUri) {
-        this.userInfoUri = userInfoUri;
-    }
-
-    public String getRedirectUri() {
-        return redirectUri;
-    }
-
-    public void setRedirectUri(String redirectUri) {
-        this.redirectUri = redirectUri;
-    }
-
-    public String getLoginSuccessUri() {
-        return loginSuccessUri;
-    }
-
-    public void setLoginSuccessUri(String loginSuccessUri) {
-        this.loginSuccessUri = loginSuccessUri;
     }
 }

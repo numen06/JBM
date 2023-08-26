@@ -1,12 +1,9 @@
 package com.jbm.job.test;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.model.entitys.job.SysJob;
 import com.jbm.framework.usage.paging.DataPaging;
-import com.sun.corba.se.spi.ior.ObjectKey;
 import jbm.framework.boot.autoconfigure.fastjson.FastJsonConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpOutputMessage;

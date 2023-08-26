@@ -12,6 +12,12 @@ public class BaseConstants {
      */
     public static final String BASE_SERVER = "jbm-cluster-platform-center";
 
+
+    public static final String AUTH_SERVER = "jbm-cluster-platform-auth";
+
+
+    public static final String DOC_SERVER = "jbm-cluster-platform-doc";
+
     /**
      * 默认接口分类
      */
