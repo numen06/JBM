@@ -1,8 +1,5 @@
 package org.springframework.data.influx;
 
-import java.util.List;
-import java.util.Map;
-
 import cn.hutool.core.collection.CollectionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.mapping.BoundSql;
@@ -17,8 +14,9 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.influxdb.InfluxDB;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author wesley.zhang

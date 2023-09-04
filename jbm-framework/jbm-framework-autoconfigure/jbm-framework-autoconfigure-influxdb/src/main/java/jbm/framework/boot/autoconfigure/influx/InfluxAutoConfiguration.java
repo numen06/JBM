@@ -1,9 +1,6 @@
 package jbm.framework.boot.autoconfigure.influx;
 
-import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,11 +17,7 @@ public class InfluxAutoConfiguration {
 
     @Bean
     public SimpleInfluxTemplate simpleInfluxTemplate() {
-        final InfluxDB influxDB = InfluxDBFactory.connect(influxProperties.getUrl(), influxProperties.getUsername(), influxProperties.getPassword());
-        SimpleInfluxTemplate influxTemplate = new SimpleInfluxTemplate(influxDB);
-        if (StrUtil.isNotBlank(influxProperties.getDatabase())) {
-            influxTemplate.setDatabase(influxProperties.getDatabase());
-        }
+        SimpleInfluxTemplate influxTemplate = new SimpleInfluxTemplate(influxProperties);
         return influxTemplate;
     }
 
