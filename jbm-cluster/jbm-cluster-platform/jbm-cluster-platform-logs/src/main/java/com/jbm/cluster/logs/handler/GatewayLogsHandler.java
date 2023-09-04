@@ -72,6 +72,7 @@ public class GatewayLogsHandler {
                     }
                     applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
                     gatewayLogsService.save(logs);
+                    gatewayLogsService.saveGatewayLogs(logs);
                 }
                 return message;
             } catch (Exception e) {

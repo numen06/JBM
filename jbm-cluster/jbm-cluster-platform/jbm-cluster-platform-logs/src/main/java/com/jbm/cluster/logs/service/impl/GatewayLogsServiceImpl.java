@@ -1,5 +1,6 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -9,8 +10,10 @@ import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.influx.SimpleInfluxTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -57,6 +60,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
         Long total = mongoTemplate.count(query, GatewayLogs.class);
         return total;
     }
+
     @Override
     public Long todayAccess() {
         GatewayLogsForm gatewayLogsForm = new GatewayLogsForm();
@@ -119,6 +123,15 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
             }
         }
         return query;
+    }
+
+
+    @Autowired
+    private SimpleInfluxTemplate simpleInfluxTemplate;
+
+    @Override
+    public void saveGatewayLogs(GatewayLogs gatewayLogs) {
+        simpleInfluxTemplate.insert("gatewayLogs", null, BeanUtil.beanToMap(gatewayLogs), gatewayLogs.getRequestTime());
     }
 
 

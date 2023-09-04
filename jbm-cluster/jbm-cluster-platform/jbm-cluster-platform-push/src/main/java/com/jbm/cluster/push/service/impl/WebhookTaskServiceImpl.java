@@ -20,11 +20,9 @@ import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -111,7 +109,6 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     private Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
 
 
-
     private void sendEventAsync(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         Future<?> future = executorService.submit(new Runnable() {
             @Override
@@ -142,6 +139,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             try {
                 webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
+                if (response.getStatus() != 200) {
+                    throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
+                }
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
                 webhookTask.setErrorMsg("无");

@@ -12,6 +12,8 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
@@ -22,6 +24,7 @@ import org.springframework.util.PathMatcher;
  * @Date 2022/5/31 10:46
  * @Description TODO
  */
+@Slf4j
 public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
 
     private PathMatcher pathMatcher = new AntPathMatcher();
@@ -63,6 +66,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {
                     clientId = clientTokenModel.clientId;
+                    log.info("Client Token Info:{}", JSON.toJSONString(clientTokenModel));
 //                    SaOAuth2Util.checkClientToken(tokenValue);
                 }
             }

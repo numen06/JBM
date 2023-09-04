@@ -19,4 +19,6 @@ public interface GatewayLogsService extends BaseDataService<GatewayLogs> {
     Long totalAccess();
 
     Long todayAccess();
+
+    void saveGatewayLogs(GatewayLogs gatewayLogs);
 }

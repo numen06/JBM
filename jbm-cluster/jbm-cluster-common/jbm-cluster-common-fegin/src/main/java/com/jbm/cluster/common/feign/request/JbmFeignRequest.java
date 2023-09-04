@@ -17,6 +17,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.List;
 
 @Slf4j
@@ -39,10 +40,10 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
 
     @Override
-    public UrlBuilder buildUrl(String sourceUrl) {
+    public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
         String url = feignToUrl(sourceUrl);
         if (StrUtil.isEmpty(url)) {
-            throw new RuntimeException("远程服务没有启动");
+            throw new UnknownHostException("远程服务没有启动");
         }
         return UrlBuilder.of(url);
     }
