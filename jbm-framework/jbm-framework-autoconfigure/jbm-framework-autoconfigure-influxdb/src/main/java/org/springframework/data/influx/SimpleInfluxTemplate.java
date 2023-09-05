@@ -1,8 +1,9 @@
 package org.springframework.data.influx;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.Template;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @Slf4j
 public class SimpleInfluxTemplate {
@@ -146,42 +148,12 @@ public class SimpleInfluxTemplate {
      * 插入
      *
      * @param measurement 表
-     * @param tags        标签
-     * @param fields      字段
+     * @param item        插入对象
+     * @param timeField   插入的标记字段
+     * @param tagFields   tag字段
      */
-    public void insert(String measurement, Map<String, String> tags, Map<String, Object> fields, Date time) {
-        Point.Builder builder = Point.measurement(measurement);
-        if (MapUtil.isNotEmpty(tags)) {
-            builder.tag(tags);
-        }
-        JSONObject jsonObject = new JSONObject(fields);
-        fields.forEach(new BiConsumer<String, Object>() {
-            @Override
-            public void accept(String key, Object value) {
-                if (ObjectUtil.isEmpty(value)) {
-                    return;
-                }
-                if (value instanceof Number) {
-                    if (value instanceof Short) {
-                        builder.addField(key, ((Short) value).doubleValue());
-                    } else if (value instanceof Integer) {
-                        builder.addField(key, ((Integer) value).doubleValue());
-                    } else if (value instanceof Long) {
-                        builder.addField(key, ((Long) value).doubleValue());
-                    } else if (value instanceof BigInteger) {
-                        builder.addField(key, ((BigInteger) value).doubleValue());
-                    }
-                } else if (value instanceof String) {
-                    builder.addField(key, StrUtil.toString(value));
-                } else {
-                    builder.addField(key, JSON.toJSONString(value));
-                }
-            }
-        });
-
-//        if (ObjectUtil.isNotEmpty(time)) {
-        builder.time(time.getTime(), TimeUnit.MILLISECONDS);
-//        }
+    public void insert(String measurement, Object item, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+        Point.Builder builder = this.buildPoint(measurement, item, timeField, tagFields, influxFeatures);
         influxDB.write(database, retentionPolicy, builder.build());
     }
 
@@ -203,6 +175,95 @@ public class SimpleInfluxTemplate {
         this.query(sql);
     }
 
+
+    public Point.Builder buildPoint(String measurement, Object item, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+        Point.Builder builder = Point.measurement(measurement);
+        Map<String, Object> fields = Maps.newHashMap();
+        if (item instanceof Map) {
+            fields = (Map<String, Object>) item;
+        } else {
+            fields = BeanUtil.beanToMap(item);
+        }
+        JSONObject jsonObject = new JSONObject(fields);
+        if (timeField instanceof Date) {
+            //设置点位时间
+            builder.time(((Date) timeField).getTime(), TimeUnit.MILLISECONDS);
+        } else {
+            //设置点位时间
+            builder.time(jsonObject.getDate(timeField.toString()).getTime(), TimeUnit.MILLISECONDS);
+        }
+
+        fields.forEach(new BiConsumer<String, Object>() {
+            @Override
+            public void accept(String key, Object value) {
+                if (ObjectUtil.isEmpty(value)) {
+                    return;
+                }
+                String newKey = key;
+                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toUnderlineCase)) {
+                    newKey = StrUtil.toUnderlineCase(key);
+                }
+                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toCamelCase)) {
+                    newKey = StrUtil.toCamelCase(key);
+                }
+                //说明是tag
+                if (CollUtil.contains(tagFields, key)) {
+                    if (value instanceof Number) {
+                        builder.tag(newKey, StrUtil.toString(value));
+                    } else if (value instanceof String) {
+                        builder.tag(newKey, StrUtil.toString(value));
+                    } else {
+                        builder.tag(newKey, JSON.toJSONString(value));
+                    }
+                } else {
+                    if (value instanceof Number) {
+                        if (value instanceof Short) {
+                            builder.addField(newKey, ((Short) value).doubleValue());
+                        } else if (value instanceof Integer) {
+                            builder.addField(newKey, ((Integer) value).doubleValue());
+                        } else if (value instanceof Long) {
+                            builder.addField(newKey, ((Long) value).doubleValue());
+                        } else if (value instanceof BigInteger) {
+                            builder.addField(newKey, ((BigInteger) value).doubleValue());
+                        }
+                    } else if (value instanceof String) {
+                        builder.addField(newKey, StrUtil.toString(value));
+                    } else {
+                        builder.addField(newKey, JSON.toJSONString(value));
+                    }
+                }
+            }
+        });
+        return builder;
+    }
+
+    public void batchInsert(final String measurement, final List<Object> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+        this.batchInsert(measurement, this.retentionPolicy, items, timeField, tagFields, influxFeatures);
+    }
+
+    /**
+     * 批量写入测点
+     *
+     * @param items
+     */
+    public void batchInsert(final String measurement, final String retentionPolicy, final List<Object> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+        //设置数据库
+        BatchPoints.Builder batchBuilder = BatchPoints.database(database);
+        //设置保存策略
+        batchBuilder.retentionPolicy(retentionPolicy);
+        items.forEach(new Consumer<Object>() {
+            @Override
+            public void accept(Object item) {
+                Point.Builder builder = buildPoint(measurement, item, timeField, tagFields, influxFeatures);
+                batchBuilder.point(builder.build());
+            }
+        });
+        influxDB.write(batchBuilder.build());
+        // influxDB.enableGzip();
+        // influxDB.enableBatch(2000,100,TimeUnit.MILLISECONDS);
+        // influxDB.disableGzip();
+        // influxDB.disableBatch();
+    }
 
     /**
      * 批量写入测点
