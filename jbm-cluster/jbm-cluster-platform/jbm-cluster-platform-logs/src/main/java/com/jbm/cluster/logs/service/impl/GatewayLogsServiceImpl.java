@@ -1,6 +1,5 @@
 package com.jbm.cluster.logs.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -131,7 +130,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        simpleInfluxTemplate.insert("gatewayLogs", null, BeanUtil.beanToMap(gatewayLogs), gatewayLogs.getRequestTime());
+        simpleInfluxTemplate.insert("gatewayLogs", gatewayLogs, gatewayLogs.getRequestTime(), null);
     }
 
 
