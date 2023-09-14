@@ -42,6 +42,13 @@ public @interface BusinessEvent {
     long effectiveTime() default -1L;
 
     /**
+     * 全局唯一,随机分配其一
+     *
+     * @return
+     */
+    boolean global() default false;
+
+    /**
      * 描述信息
      *
      * @return

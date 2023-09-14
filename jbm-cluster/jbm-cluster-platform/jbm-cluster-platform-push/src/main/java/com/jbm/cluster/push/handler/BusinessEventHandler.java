@@ -1,7 +1,6 @@
 package com.jbm.cluster.push.handler;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
@@ -48,11 +47,20 @@ public class BusinessEventHandler {
         }).then();
     }
 
+    /**
+     * 接受集群事件推送
+     * @param jbmClusterBusinessEventBean
+     */
     public void sendEvent(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
         WebhookTaskForm webhookTaskForm = beanToWebHook(jbmClusterBusinessEventBean);
         webhookTaskService.sendEvent(webhookTaskForm);
     }
 
+    /**
+     * 接受应用程序推过来的事件
+     *
+     * @param jbmClusterBusinessEventResource
+     */
     public void receive(JbmClusterBusinessEventResource jbmClusterBusinessEventResource) {
         List<JbmClusterBusinessEventBean> jbmClusterBusinessEventBeans = jbmClusterBusinessEventResource.getJbmClusterBusinessEventBeans();
         final String batchTime = DateUtil.now();
@@ -65,7 +73,7 @@ public class BusinessEventHandler {
             webhookTaskForm.getWebhookEventConfig().setBatchTime(batchTime);
             webhookEventConfigService.saveEntity(webhookTaskForm.getWebhookEventConfig());
         });
-        webhookEventConfigService.deleteOldBatch(jbmClusterBusinessEventResource.getServiceId(),batchTime);
+        webhookEventConfigService.deleteOldBatch(jbmClusterBusinessEventResource.getServiceId(), batchTime);
     }
 
     /***
@@ -83,7 +91,12 @@ public class BusinessEventHandler {
         webhookEventConfig.setServiceName(jbmClusterBusinessEventBean.getServiceName());
         webhookEventConfig.setEventGroup(jbmClusterBusinessEventBean.getEventGroup());
         webhookEventConfig.setMethodType(jbmClusterBusinessEventBean.getMethodType());
-        webhookEventConfig.setEnable(true);
+        if (ObjectUtil.isEmpty(webhookEventConfig.getEnable())) {
+            webhookEventConfig.setEnable(true);
+        }
+        if (ObjectUtil.isEmpty(webhookEventConfig.getGlobal())) {
+            webhookEventConfig.setGlobal(false);
+        }
         WebhookTask webhookTask = new WebhookTask();
         webhookTask.setEventId(webhookEventConfig.getEventId());
         webhookTask.setRequest(jbmClusterBusinessEventBean.getEventBody());

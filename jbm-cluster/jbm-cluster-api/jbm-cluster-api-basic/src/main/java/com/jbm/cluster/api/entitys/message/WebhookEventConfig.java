@@ -49,6 +49,9 @@ public class WebhookEventConfig extends MultiPlatformEntity {
     @ApiModelProperty("是否启用")
     private Boolean enable;
 
+    @ApiModelProperty("是否全局唯一")
+    private Boolean global;
+
     @ApiModelProperty("反向推送URL")
     private String url;
 

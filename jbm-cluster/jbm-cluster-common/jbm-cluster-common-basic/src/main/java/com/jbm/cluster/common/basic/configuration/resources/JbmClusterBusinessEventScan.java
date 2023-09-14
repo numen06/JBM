@@ -83,6 +83,7 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
                 final String path = CollUtil.getFirst(handlerMethodEntry.getKey().getPatternsCondition().getPatterns());
                 JbmClusterBusinessEventBean jbmClusterBusinessEventBean = new JbmClusterBusinessEventBean();
                 jbmClusterBusinessEventBean.setEventName(businessEvent.name());
+                jbmClusterBusinessEventBean.setGlobal(businessEvent.global());
                 jbmClusterBusinessEventBean.setEventCode(ClassUtil.getClassName(businessEventListener.eventClass(), false));
                 jbmClusterBusinessEventBean.setEventGroup(businessEvent.group());
                 jbmClusterBusinessEventBean.setServiceName(serviceId);

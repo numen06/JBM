@@ -3,6 +3,7 @@ package com.jbm.cluster.push.controller;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.api.event.TestBusinessEvent;
 import com.jbm.cluster.api.event.annotation.BusinessEventListener;
+import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.result.WebhookTaskReslut;
 import com.jbm.cluster.push.service.WebhookTaskService;
@@ -54,6 +55,14 @@ public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, 
     @GetMapping("/retry")
     public ResultBody<String> retry(String taskId) {
         this.service.retryEventTask(taskId);
+        return ResultBody.success("重试成功");
+    }
+
+    @SchedulerJob(name = "每天零点清理多余的推送任务", cron = "0 0 0 * * ?")
+    @ApiOperation("清理")
+    @GetMapping("/clear")
+    public ResultBody<String> clear() {
+        this.service.clearTasks();
         return ResultBody.success("重试成功");
     }
 

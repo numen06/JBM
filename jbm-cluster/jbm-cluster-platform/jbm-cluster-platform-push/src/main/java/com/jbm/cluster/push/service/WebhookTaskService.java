@@ -13,6 +13,8 @@ import com.jbm.framework.usage.paging.DataPaging;
 public interface WebhookTaskService extends IMultiPlatformService<WebhookTask> {
 
 
+    boolean clearTasks();
+
     void sendEvent(WebhookTaskForm webhookTaskForm);
 
     WebhookTask selectByTaskId(String taskId);
