@@ -47,6 +47,7 @@
             <artifactId>sa-token-oauth2</artifactId>
             <version>${satoken.version}</version>
         </dependency>
+
     </dependencies>
 
 </project>

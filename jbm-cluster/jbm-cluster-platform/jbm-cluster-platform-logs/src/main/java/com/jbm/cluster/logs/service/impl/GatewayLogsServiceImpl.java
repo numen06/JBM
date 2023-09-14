@@ -47,7 +47,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
         // 查询
         List<GatewayLogs> list = mongoTemplate.find(query, GatewayLogs.class);
         // 将集合与分页结果封装
-//        Page<GatewayLogs> pagelist = new PageImpl<GatewayLogs>(list, pageable, count);
+//        Page<GatewayLogs> pagelist = new PageImpl<GatewayLogs>(list, ageable, count);
         return new DataPaging<GatewayLogs>(list, total, gatewayLogsForm.getPageForm());
     }
 

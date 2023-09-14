@@ -139,12 +139,12 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             try {
                 webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
-                if (response.getStatus() != 200) {
-                    throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
-                }
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
                 webhookTask.setErrorMsg("无");
+                if (response.getStatus() != 200) {
+                    throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
+                }
 //                this.saveEntity(webhookTask);
                 ok.set(false);
             } catch (Exception e) {

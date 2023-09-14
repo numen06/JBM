@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.util.Date;
 
 @Data
 @Entity
@@ -43,6 +44,9 @@ public class WebhookEventConfig extends MultiPlatformEntity {
     @ApiModelProperty("是否内部")
     private Boolean internal;
 
+    @ApiModelProperty("服务名称")
+    private String serviceName;
+
     @ApiModelProperty("反向推送URL")
     private String url;
 
@@ -51,6 +55,9 @@ public class WebhookEventConfig extends MultiPlatformEntity {
 
     @ApiModelProperty("推送方式:POST,GET")
     private String methodType;
+
+    @ApiModelProperty("批次时间")
+    private String batchTime;
 
 
 }

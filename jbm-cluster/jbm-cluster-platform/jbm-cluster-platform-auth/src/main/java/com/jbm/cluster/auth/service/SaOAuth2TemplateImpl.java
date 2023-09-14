@@ -6,8 +6,6 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
 
 /**
  * @Created wesley.zhang

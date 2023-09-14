@@ -24,6 +24,14 @@ public class WebhookEventConfigServiceImpl extends MultiPlatformServiceImpl<Webh
     }
 
     @Override
+    public boolean deleteOldBatch(String serviceName, String batchTime) {
+        QueryWrapper<WebhookEventConfig> queryWrapper = currentQueryWrapper();
+        queryWrapper.lambda().eq(WebhookEventConfig::getServiceName,serviceName).notIn(WebhookEventConfig::getBatchTime, batchTime);
+        return this.deleteByWapper(queryWrapper);
+    }
+
+
+    @Override
     public List<WebhookEventConfig> selectByEventCode(String code) {
         QueryWrapper<WebhookEventConfig> queryWrapper = currentQueryWrapper();
         queryWrapper.lambda().eq(WebhookEventConfig::getBusinessEventCode, code);
