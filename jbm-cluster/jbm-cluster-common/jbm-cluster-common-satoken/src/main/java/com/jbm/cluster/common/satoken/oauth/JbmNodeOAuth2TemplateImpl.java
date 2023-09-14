@@ -15,6 +15,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,11 +31,16 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
             .expireAfterWrite(1, TimeUnit.HOURS)
             .refreshAfterWrite(1, TimeUnit.HOURS)
-            .build(key -> super.generateClientToken(getClientModel(key).getClientId(), getClientModel(key).getContractScope()));
+            .build(key -> super.generateClientToken(key, "*"));
 
     @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
-        return clientTokenModelLoadingCache.get(clientId);
+        try {
+            return clientTokenModelLoadingCache.get(clientId);
+        } catch (Exception e) {
+            log.error("取应用程序TOKE失败", e);
+            throw e;
+        }
     }
 
     @Override
@@ -42,7 +48,7 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
         if (SpringUtil.getApplicationName().equals(clientId)) {
             return new SaClientModel()
                     .setClientId(clientId)
-                    .setClientSecret(SaIdUtil.getToken())
+                    .setClientSecret(UUID.randomUUID().toString())
                     .setAllowUrl("*")
                     .setContractScope("*")
                     .setIsAutoMode(true);
@@ -51,7 +57,7 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
         if (ObjectUtil.isNotEmpty(clientTokenModel)) {
             return new SaClientModel()
                     .setClientId(clientTokenModel.clientId)
-                    .setClientSecret(SaIdUtil.getToken())
+                    .setClientSecret(UUID.randomUUID().toString())
                     .setAllowUrl("*")
                     .setContractScope("*")
                     .setIsAutoMode(true);

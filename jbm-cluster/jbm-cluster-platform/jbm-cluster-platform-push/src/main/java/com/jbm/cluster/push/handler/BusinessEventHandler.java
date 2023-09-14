@@ -83,6 +83,7 @@ public class BusinessEventHandler {
         webhookEventConfig.setServiceName(jbmClusterBusinessEventBean.getServiceName());
         webhookEventConfig.setEventGroup(jbmClusterBusinessEventBean.getEventGroup());
         webhookEventConfig.setMethodType(jbmClusterBusinessEventBean.getMethodType());
+        webhookEventConfig.setEnable(true);
         WebhookTask webhookTask = new WebhookTask();
         webhookTask.setEventId(webhookEventConfig.getEventId());
         webhookTask.setRequest(jbmClusterBusinessEventBean.getEventBody());

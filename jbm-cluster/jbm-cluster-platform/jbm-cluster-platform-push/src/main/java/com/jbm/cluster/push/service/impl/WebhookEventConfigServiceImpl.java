@@ -1,6 +1,7 @@
 package com.jbm.cluster.push.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.framework.service.mybatis.MultiPlatformServiceImpl;
@@ -26,17 +27,25 @@ public class WebhookEventConfigServiceImpl extends MultiPlatformServiceImpl<Webh
     @Override
     public boolean deleteOldBatch(String serviceName, String batchTime) {
         QueryWrapper<WebhookEventConfig> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().eq(WebhookEventConfig::getServiceName,serviceName).notIn(WebhookEventConfig::getBatchTime, batchTime);
+        queryWrapper.lambda().eq(WebhookEventConfig::getServiceName, serviceName).notIn(WebhookEventConfig::getBatchTime, batchTime);
         return this.deleteByWapper(queryWrapper);
+    }
+
+    @Override
+    public boolean disableEvents(String serviceName) {
+        UpdateWrapper<WebhookEventConfig> updateWrapper = new UpdateWrapper();
+        updateWrapper.lambda().eq(WebhookEventConfig::getServiceName, serviceName).set(WebhookEventConfig::getEnable, false);
+        return this.update(updateWrapper);
     }
 
 
     @Override
     public List<WebhookEventConfig> selectByEventCode(String code) {
         QueryWrapper<WebhookEventConfig> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().eq(WebhookEventConfig::getBusinessEventCode, code);
+        queryWrapper.lambda().eq(WebhookEventConfig::getBusinessEventCode, code).eq( WebhookEventConfig::getEnable, true);
         return this.selectEntitysByWapper(queryWrapper);
     }
+
 
     @Override
     public WebhookEventConfig selectByCodeUrl(String code, String url) {

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -147,22 +148,36 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 }
 //                this.saveEntity(webhookTask);
                 ok.set(false);
+            } catch (UnknownHostException e) {
+                webhookTask.setHttpStatus(404);
+                //如果超出重试次数跳出
+                if (eventException(webhookTask, e)) {
+                    break;
+                }
             } catch (Exception e) {
-                ThreadUtil.safeSleep(500);
-                webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
-                log.error("执行远程业务事件错误", e);
-                webhookTask.setErrorMsg(e.getMessage());
-                if (webhookTask.getRetryNumber() >= 3) {
+                //如果超出重试次数跳出
+                if (eventException(webhookTask, e)) {
                     break;
                 }
             } finally {
                 if (ObjectUtil.isEmpty(webhookTask.getHttpStatus())) {
                     webhookTask.setHttpStatus(404);
                 }
+                //如果访问是404取消自动发送
+                if (webhookTask.getHttpStatus().equals(404)) {
+                    webhookEventConfigService.disableEvents(webhookEventConfig.getServiceName());
+                }
                 //保存信息
                 this.saveEntity(webhookTask);
                 webhookTaskCache.remove(webhookTask.getTaskId());
             }
         }
+    }
+
+    private boolean eventException(WebhookTask webhookTask, Exception e) {
+        webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
+        log.error("执行远程业务事件错误", e);
+        webhookTask.setErrorMsg(e.getMessage());
+        return webhookTask.getRetryNumber() >= 3;
     }
 }
