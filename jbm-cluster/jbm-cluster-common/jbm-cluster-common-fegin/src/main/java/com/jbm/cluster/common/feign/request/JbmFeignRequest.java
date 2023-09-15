@@ -2,6 +2,7 @@ package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.url.UrlBuilder;
@@ -52,6 +53,11 @@ public class JbmFeignRequest extends JbmBaseRequest {
     public HttpRequest buildRequest(HttpRequest httpRequest) {
         SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+        try {
+            SaOAuth2Util.checkClientToken(clientTokenModel.clientToken);
+        } catch (Exception e) {
+            log.warn("客户端Token验证失败", e);
+        }
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
         return httpRequest;
     }
