@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
 
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
+            .expireAfterWrite(1, TimeUnit.DAYS)
             .refreshAfterWrite(1, TimeUnit.HOURS)
             .build(key -> super.generateClientToken(key, "*"));
 
@@ -38,7 +38,7 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
         try {
             return clientTokenModelLoadingCache.get(clientId);
         } catch (Exception e) {
-            log.error("取应用程序TOKE失败", e);
+            log.error("取应用程序TOKEN失败", e);
             throw e;
         }
     }

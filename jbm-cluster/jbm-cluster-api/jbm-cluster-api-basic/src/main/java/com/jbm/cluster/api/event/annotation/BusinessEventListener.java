@@ -18,5 +18,12 @@ public @interface BusinessEventListener {
      */
     Class eventClass();
 
+    /**
+     * 监听事件分组设置
+     *
+     * @return
+     */
+    String eventGroup() default "";
+
 
 }

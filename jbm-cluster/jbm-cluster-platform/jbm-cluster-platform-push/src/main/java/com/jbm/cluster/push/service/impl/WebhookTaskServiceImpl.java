@@ -8,9 +8,11 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
+import com.jbm.cluster.api.event.annotation.BusinessEventConstant;
 import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
 import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.mapper.WebhookTaskMapper;
@@ -80,8 +82,11 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             @Override
             public void accept(String group, List<WebhookEventConfig> webhookEventConfigs) {
                 //系统分组默认发送全部
-                if ("SYSTEM".equals(group)) {
+                if (StrUtil.isEmpty(group) || BusinessEventConstant.SYSTEM.equals(group)) {
                     webhookEventConfigs.forEach(webhookEventConfig -> {
+                        if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+                            return;
+                        }
                         //如果是全局事件采用唯一性推送
                         if (BooleanUtil.isTrue(webhookEventConfig.getGlobal())) {
                             sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
@@ -92,9 +97,12 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 } else {
                     //分拨推送
                     for (WebhookEventConfig webhookEventConfig : webhookEventConfigs) {
+                        if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+                            continue;
+                        }
                         sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
                         //如果状态为200则为成功,跳出循环
-                        if (webhookTaskForm.getWebhookTask().getHttpStatus() == 200) {
+                        if (webhookTaskForm.getWebhookTask().getHttpStatus() == HttpStatus.HTTP_OK) {
                             break;
                         }
                     }
@@ -184,13 +192,13 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
                 webhookTask.setErrorMsg("无");
-                if (response.getStatus() != 200) {
+                if (response.getStatus() != HttpStatus.HTTP_OK) {
                     throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
                 }
 //                this.saveEntity(webhookTask);
                 ok.set(false);
             } catch (UnknownHostException e) {
-                webhookTask.setHttpStatus(404);
+                webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
                 //如果超出重试次数跳出
                 if (eventException(webhookTask, e)) {
                     break;
@@ -202,10 +210,10 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 }
             } finally {
                 if (ObjectUtil.isEmpty(webhookTask.getHttpStatus())) {
-                    webhookTask.setHttpStatus(404);
+                    webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
                 }
                 //如果访问是404取消自动发送
-                if (webhookTask.getHttpStatus().equals(404)) {
+                if (webhookTask.getHttpStatus().equals(HttpStatus.HTTP_NOT_FOUND)) {
                     webhookEventConfigService.disableEvents(webhookEventConfig.getServiceName());
                 }
                 //保存信息

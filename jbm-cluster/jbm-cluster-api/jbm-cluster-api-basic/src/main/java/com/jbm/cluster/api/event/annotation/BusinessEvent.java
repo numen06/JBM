@@ -19,12 +19,12 @@ public @interface BusinessEvent {
      */
     String name();
 
-    /**
-     * 分组
-     *
-     * @return
-     */
-    String group() default "SYSTEM";
+//    /**
+//     * 分组
+//     *
+//     * @return
+//     */
+//    String group() default "SYSTEM";
 
 
     /**
