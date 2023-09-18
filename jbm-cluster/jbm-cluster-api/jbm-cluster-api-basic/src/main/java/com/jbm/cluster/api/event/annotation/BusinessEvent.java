@@ -19,12 +19,12 @@ public @interface BusinessEvent {
      */
     String name();
 
-    /**
-     * 分组
-     *
-     * @return
-     */
-    String group() default "SYSTEM";
+//    /**
+//     * 分组
+//     *
+//     * @return
+//     */
+//    String group() default "SYSTEM";
 
 
     /**
@@ -40,6 +40,13 @@ public @interface BusinessEvent {
      * @return
      */
     long effectiveTime() default -1L;
+
+    /**
+     * 全局唯一,随机分配其一
+     *
+     * @return
+     */
+    boolean global() default false;
 
     /**
      * 描述信息

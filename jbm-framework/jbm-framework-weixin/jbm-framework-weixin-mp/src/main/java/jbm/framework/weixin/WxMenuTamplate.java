@@ -46,7 +46,6 @@ public class WxMenuTamplate {
                             throw new RuntimeException(e);
                         }
                     });
-
                 }
             }
             this.create(wxMenuProperties);

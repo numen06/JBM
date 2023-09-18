@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
+ *
+ * 请求追加Token
  * @Created wesley.zhang
  * @Date 2022/5/19 19:13
  * @Description TODO

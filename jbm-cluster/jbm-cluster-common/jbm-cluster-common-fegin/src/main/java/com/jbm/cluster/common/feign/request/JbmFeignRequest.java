@@ -2,6 +2,7 @@ package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.url.UrlBuilder;
@@ -17,6 +18,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.List;
 
 @Slf4j
@@ -39,10 +41,10 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
 
     @Override
-    public UrlBuilder buildUrl(String sourceUrl) {
+    public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
         String url = feignToUrl(sourceUrl);
         if (StrUtil.isEmpty(url)) {
-            throw new RuntimeException("远程服务没有启动");
+            throw new UnknownHostException("远程服务没有启动");
         }
         return UrlBuilder.of(url);
     }
@@ -51,6 +53,11 @@ public class JbmFeignRequest extends JbmBaseRequest {
     public HttpRequest buildRequest(HttpRequest httpRequest) {
         SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+//        try {
+//            SaOAuth2Util.checkClientToken(clientTokenModel.clientToken);
+//        } catch (Exception e) {
+//            log.warn("客户端Token验证失败", e);
+//        }
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
         return httpRequest;
     }

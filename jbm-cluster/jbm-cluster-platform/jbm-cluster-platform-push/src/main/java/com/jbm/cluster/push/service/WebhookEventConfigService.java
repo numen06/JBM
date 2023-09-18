@@ -14,6 +14,11 @@ public interface WebhookEventConfigService extends IMultiPlatformService<Webhook
 
     WebhookEventConfig selectByEventId(String eventId);
 
+
+    boolean deleteOldBatch(String serviceName, String batchTime);
+
+    boolean disableEvents(String serviceName);
+
     List<WebhookEventConfig> selectByEventCode(String code);
 
     WebhookEventConfig selectByCodeUrl(String code, String url);

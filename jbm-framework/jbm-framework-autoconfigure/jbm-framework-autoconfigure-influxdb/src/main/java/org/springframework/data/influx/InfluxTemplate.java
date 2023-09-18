@@ -30,6 +30,14 @@ public class InfluxTemplate {
 
     private String database;
 
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
+    }
+
     public InfluxTemplate(InfluxDB influxDB) {
         super();
         this.influxDB = influxDB;
@@ -45,47 +53,6 @@ public class InfluxTemplate {
         super();
         this.sqlSession = sqlSession;
         this.influxDB = influxDB;
-    }
-
-    private static String replaceParameter(String sql, Object value, JdbcType jdbcType, Class<?> javaType) {
-        String strValue = String.valueOf(value);
-        if (jdbcType != null) {
-            switch (jdbcType) {
-                // 数字
-                case BIT:
-                case TINYINT:
-                case SMALLINT:
-                case INTEGER:
-                case BIGINT:
-                case FLOAT:
-                case REAL:
-                case DOUBLE:
-                case NUMERIC:
-                case DECIMAL:
-                    break;
-                // 日期
-                case DATE:
-                case TIME:
-                case TIMESTAMP:
-                    // 其他，包含字符串和其他特殊类型
-                default:
-                    strValue = "'" + strValue + "'";
-
-            }
-        } else if (Number.class.isAssignableFrom(javaType)) {
-            // 不加单引号
-        } else {
-            strValue = "'" + strValue + "'";
-        }
-        return sql.replaceFirst("\\?", strValue);
-    }
-
-    public String getDatabase() {
-        return database;
-    }
-
-    public void setDatabase(String database) {
-        this.database = database;
     }
 
     public InfluxDB getInfluxDB() {
@@ -168,6 +135,39 @@ public class InfluxTemplate {
         }
         bean.setSql(sql);
         return bean;
+    }
+
+    private static String replaceParameter(String sql, Object value, JdbcType jdbcType, Class<?> javaType) {
+        String strValue = String.valueOf(value);
+        if (jdbcType != null) {
+            switch (jdbcType) {
+                // 数字
+                case BIT:
+                case TINYINT:
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
+                case FLOAT:
+                case REAL:
+                case DOUBLE:
+                case NUMERIC:
+                case DECIMAL:
+                    break;
+                // 日期
+                case DATE:
+                case TIME:
+                case TIMESTAMP:
+                    // 其他，包含字符串和其他特殊类型
+                default:
+                    strValue = "'" + strValue + "'";
+
+            }
+        } else if (Number.class.isAssignableFrom(javaType)) {
+            // 不加单引号
+        } else {
+            strValue = "'" + strValue + "'";
+        }
+        return sql.replaceFirst("\\?", strValue);
     }
 
 }

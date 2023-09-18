@@ -83,14 +83,17 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
                 final String path = CollUtil.getFirst(handlerMethodEntry.getKey().getPatternsCondition().getPatterns());
                 JbmClusterBusinessEventBean jbmClusterBusinessEventBean = new JbmClusterBusinessEventBean();
                 jbmClusterBusinessEventBean.setEventName(businessEvent.name());
+                jbmClusterBusinessEventBean.setGlobal(businessEvent.global());
                 jbmClusterBusinessEventBean.setEventCode(ClassUtil.getClassName(businessEventListener.eventClass(), false));
-                jbmClusterBusinessEventBean.setEventGroup(businessEvent.group());
+                //设定的监听分组
+                UrlBuilder eventGroupBuilder = UrlBuilder.of().addPath(businessEventListener.eventGroup()).addPath(path);
+                jbmClusterBusinessEventBean.setEventGroup(eventGroupBuilder.getPathStr());
                 jbmClusterBusinessEventBean.setServiceName(serviceId);
                 if (StrUtil.isNotBlank(businessEvent.url())) {
                     jbmClusterBusinessEventBean.setUrl(businessEvent.url());
                 } else {
-                    String url = UrlBuilder.create().setHost(serviceId).addPath(path).build();
-                    jbmClusterBusinessEventBean.setUrl(StrUtil.replace(url, UrlBuilder.create().getSchemeWithDefault(), "feign"));
+                    String url = UrlBuilder.of().setHost(serviceId).addPath(path).build();
+                    jbmClusterBusinessEventBean.setUrl(StrUtil.replace(url, UrlBuilder.of().getSchemeWithDefault(), "feign"));
                 }
                 jbmClusterBusinessEventBean.setMethodType(CollUtil.getFirst(handlerMethodEntry.getKey().getMethodsCondition().getMethods()).toString());
                 jbmClusterBusinessEventBean.setContentType(ContentType.JSON.getValue());

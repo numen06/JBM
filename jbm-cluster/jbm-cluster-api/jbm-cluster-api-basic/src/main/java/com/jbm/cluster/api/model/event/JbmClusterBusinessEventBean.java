@@ -43,6 +43,13 @@ public class JbmClusterBusinessEventBean implements Serializable {
     private String cron;
 
     /**
+     * 全局唯一,随机分配其一
+     *
+     * @return
+     */
+    private Boolean global;
+
+    /**
      * 是否启用
      */
     private Boolean enable;

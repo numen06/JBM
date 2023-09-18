@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.satoken.oauth;
 
 
-import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
@@ -11,12 +10,13 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * jbm默认自己节点的oauth认证
@@ -28,13 +28,27 @@ import javax.annotation.PostConstruct;
 @Slf4j
 public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
 
+    private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
+            .expireAfterWrite(1, TimeUnit.HOURS)
+//            .refreshAfterWrite(1, TimeUnit.HOURS)
+            .build(key -> super.generateClientToken(key, "*"));
+
+    @Override
+    public ClientTokenModel generateClientToken(String clientId, String scope) {
+        try {
+            return clientTokenModelLoadingCache.get(clientId);
+        } catch (Exception e) {
+            log.error("取应用程序TOKEN失败", e);
+            throw e;
+        }
+    }
 
     @Override
     public SaClientModel getClientModel(String clientId) {
         if (SpringUtil.getApplicationName().equals(clientId)) {
             return new SaClientModel()
                     .setClientId(clientId)
-                    .setClientSecret(SaIdUtil.getToken())
+                    .setClientSecret(UUID.randomUUID().toString())
                     .setAllowUrl("*")
                     .setContractScope("*")
                     .setIsAutoMode(true);
@@ -43,7 +57,7 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
         if (ObjectUtil.isNotEmpty(clientTokenModel)) {
             return new SaClientModel()
                     .setClientId(clientTokenModel.clientId)
-                    .setClientSecret(SaIdUtil.getToken())
+                    .setClientSecret(UUID.randomUUID().toString())
                     .setAllowUrl("*")
                     .setContractScope("*")
                     .setIsAutoMode(true);

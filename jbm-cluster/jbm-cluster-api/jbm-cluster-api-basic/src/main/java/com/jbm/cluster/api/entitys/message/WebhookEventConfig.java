@@ -43,6 +43,15 @@ public class WebhookEventConfig extends MultiPlatformEntity {
     @ApiModelProperty("是否内部")
     private Boolean internal;
 
+    @ApiModelProperty("服务名称")
+    private String serviceName;
+
+    @ApiModelProperty("是否启用")
+    private Boolean enable;
+
+    @ApiModelProperty("是否全局唯一")
+    private Boolean global;
+
     @ApiModelProperty("反向推送URL")
     private String url;
 
@@ -51,6 +60,9 @@ public class WebhookEventConfig extends MultiPlatformEntity {
 
     @ApiModelProperty("推送方式:POST,GET")
     private String methodType;
+
+    @ApiModelProperty("批次时间")
+    private String batchTime;
 
 
 }

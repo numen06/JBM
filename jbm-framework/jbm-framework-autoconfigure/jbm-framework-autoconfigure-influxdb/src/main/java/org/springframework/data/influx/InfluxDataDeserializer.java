@@ -2,6 +2,7 @@ package org.springframework.data.influx;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.dto.QueryResult;
@@ -62,15 +63,19 @@ public class InfluxDataDeserializer {
      */
     public List<Map<String, Object>> serializeSeries(List<Map<String, Object>> list, Series series) {
         List<String> columns = series.getColumns();
+        Map<String, String> tags = series.getTags();
         List<List<Object>> values = series.getValues();
         for (List<Object> row : values) {
-            list.add(serializRow(columns, row));
+            list.add(serializRow(tags, columns, row));
         }
         return list;
     }
 
-    public Map<String, Object> serializRow(List<String> columns, List<Object> row) {
+    public Map<String, Object> serializRow(Map<String, String> tags, List<String> columns, List<Object> row) {
         Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
+        if (MapUtil.isNotEmpty(tags)) {
+            resultMap.putAll(tags);
+        }
         Object relVal = null;
         for (int j = 0; j < row.size(); j++) {
             String col = columns.get(j);

@@ -1,10 +1,15 @@
 package com.jbm.cluster.push.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
@@ -20,15 +25,16 @@ import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * @Author: auto generate by jbm
@@ -52,14 +58,68 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
      */
     private ExecutorService executorService = ThreadUtil.newExecutor(100);
 
+
+    /**
+     * 删除两个月前的数据
+     */
+    @Override
+    public boolean clearTasks() {
+        QueryWrapper<WebhookTask> queryWrapper = currentQueryWrapper();
+        queryWrapper.lambda().le(WebhookTask::getCreateTime, DateUtil.offsetMonth(DateTime.now(), -2));
+        return this.deleteByWapper(queryWrapper);
+    }
+
+
     @Override
     public void sendEvent(WebhookTaskForm webhookTaskForm) {
-        List<WebhookEventConfig> webhookEventConfigs = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
-        if (CollUtil.isEmpty(webhookEventConfigs)) {
+        List<WebhookEventConfig> webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
+        if (CollUtil.isEmpty(webhookEventConfigList)) {
             return;
         }
-        webhookEventConfigs.forEach(webhookEventConfig -> {
-            sendEventAsync(webhookEventConfig, webhookTaskForm.getWebhookTask());
+        //系统分组默认发送全部
+//        List<WebhookEventConfig> defGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isEmpty(item.getEventGroup()) || BusinessEventConstant.SYSTEM.equals(item.getEventGroup())).collect(Collectors.toList());
+//        defGroup.forEach(new Consumer<WebhookEventConfig>() {
+//            @Override
+//            public void accept(WebhookEventConfig webhookEventConfig) {
+//                if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+//                    return;
+//                }
+//                //如果是全局事件采用唯一性推送
+//                if (BooleanUtil.isTrue(webhookEventConfig.getGlobal())) {
+//                    sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+//                } else {
+//                    sendEventAsync(webhookEventConfig, webhookTaskForm.getWebhookTask());
+//                }
+//            }
+//        });
+        Map<String, List<WebhookEventConfig>> groupEvnetGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
+        //遍历整个分组
+        groupEvnetGroup.forEach(new BiConsumer<String, List<WebhookEventConfig>>() {
+            @Override
+            public void accept(String group, List<WebhookEventConfig> webhookEventConfigs) {
+
+                executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        //分拨推送
+                        for (WebhookEventConfig webhookEventConfig : webhookEventConfigs) {
+                            if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+                                continue;
+                            }
+                            WebhookTask webhookTask = sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+                            //如果状态为200则为成功,跳出循环
+                            if (webhookTask.getHttpStatus() == HttpStatus.HTTP_OK) {
+                                log.info("分组名称:{},执行地址:{}", group, webhookTask.getEventId());
+                                return;
+                            }
+//                            if (webhookTask.getRetryNumber() >= 3) {
+//                                return;
+//                            }
+                        }
+                    }
+                });
+
+            }
         });
     }
 
@@ -83,7 +143,11 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     @Override
     public void sendEvent(WebhookTask webhookTask) {
         WebhookEventConfig webhookEventConfig = webhookEventConfigService.selectByEventId(webhookTask.getEventId());
-        this.sendEventAsync(webhookEventConfig, webhookTask);
+        WebhookTaskForm webhookTaskForm = new WebhookTaskForm();
+        webhookTaskForm.setWebhookTask(webhookTask);
+        webhookTaskForm.setWebhookEventConfig(webhookEventConfig);
+        this.sendEvent(webhookTaskForm);
+//        this.sendEventAsync(webhookEventConfig, webhookTask);
     }
 
     @Override
@@ -111,7 +175,6 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     private Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
 
 
-
     private void sendEventAsync(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         Future<?> future = executorService.submit(new Runnable() {
             @Override
@@ -128,7 +191,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         });
     }
 
-    private void sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
+    private WebhookTask sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
         WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
@@ -145,24 +208,43 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
                 webhookTask.setErrorMsg("无");
+                if (response.getStatus() != HttpStatus.HTTP_OK) {
+                    throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
+                }
 //                this.saveEntity(webhookTask);
                 ok.set(false);
+            } catch (UnknownHostException e) {
+                webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
+                //如果超出重试次数跳出
+                if (eventException(webhookTask, e)) {
+                    break;
+                }
             } catch (Exception e) {
-                ThreadUtil.safeSleep(500);
-                webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
-                log.error("执行远程业务事件错误", e);
-                webhookTask.setErrorMsg(e.getMessage());
-                if (webhookTask.getRetryNumber() >= 3) {
+                //如果超出重试次数跳出
+                if (eventException(webhookTask, e)) {
                     break;
                 }
             } finally {
                 if (ObjectUtil.isEmpty(webhookTask.getHttpStatus())) {
-                    webhookTask.setHttpStatus(404);
+                    webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
+                }
+                //如果访问是404取消自动发送
+                if (webhookTask.getHttpStatus().equals(HttpStatus.HTTP_NOT_FOUND)) {
+                    webhookEventConfigService.disableEvents(webhookEventConfig.getServiceName());
                 }
                 //保存信息
                 this.saveEntity(webhookTask);
                 webhookTaskCache.remove(webhookTask.getTaskId());
+//                BeanUtil.copyProperties(webhookEventConfig,sourceWebhookTask);
             }
         }
+        return webhookTask;
+    }
+
+    private boolean eventException(WebhookTask webhookTask, Exception e) {
+        webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
+        log.error("执行远程业务事件错误", e);
+        webhookTask.setErrorMsg(e.getMessage());
+        return webhookTask.getRetryNumber() >= 3;
     }
 }

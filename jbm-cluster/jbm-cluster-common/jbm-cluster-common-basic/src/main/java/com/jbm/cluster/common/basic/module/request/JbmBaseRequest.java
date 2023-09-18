@@ -8,7 +8,10 @@ import cn.hutool.http.HttpResponse;
 import cn.hutool.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpClientErrorException;
 
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
@@ -16,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 public abstract class JbmBaseRequest implements ICustomizeRequest {
 
     @Override
-    public HttpResponse request( String url, String methodType, String jsonBody) {
+    public HttpResponse request( String url, String methodType, String jsonBody) throws UnknownHostException {
         HttpRequest httpRequest = new HttpRequest(this.buildUrl(url));
         httpRequest.body(jsonBody);
         httpRequest.setMethod(Method.GET);
@@ -54,7 +57,7 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
         return httpRequest;
     }
 
-    public UrlBuilder buildUrl(String sourceUrl) {
+    public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
         return UrlBuilder.of(sourceUrl);
     }
 
