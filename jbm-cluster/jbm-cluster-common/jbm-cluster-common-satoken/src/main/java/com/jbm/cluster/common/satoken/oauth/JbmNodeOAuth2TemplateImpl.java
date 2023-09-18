@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
 
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
-            .expireAfterWrite(1, TimeUnit.DAYS)
-            .refreshAfterWrite(1, TimeUnit.HOURS)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+//            .refreshAfterWrite(1, TimeUnit.HOURS)
             .build(key -> super.generateClientToken(key, "*"));
 
     @Override
