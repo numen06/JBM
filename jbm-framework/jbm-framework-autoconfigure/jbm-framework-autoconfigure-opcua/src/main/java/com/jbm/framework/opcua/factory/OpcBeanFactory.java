@@ -35,8 +35,10 @@ public class OpcBeanFactory {
      */
     public static <T extends OpcBean> T getBean(ApplicationContext applicationContext, String device, Class<T> clazz) throws Exception {
         OpcUaTemplate opcUaTemplate = applicationContext.getBean(OpcUaTemplate.class);
-        if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
-            OpcBeanFactory.registerOpcBean(opcUaTemplate, device, clazz);
+        synchronized (device) {
+            if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
+                OpcBeanFactory.registerOpcBean(opcUaTemplate, device, clazz);
+            }
         }
         return opcUaTemplate.getOpcBean(device);
     }
