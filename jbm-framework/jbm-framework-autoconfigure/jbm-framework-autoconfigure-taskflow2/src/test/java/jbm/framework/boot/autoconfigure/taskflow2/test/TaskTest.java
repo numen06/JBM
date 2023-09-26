@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutionException;
 
 interface IEchoTask extends TaskInterface<IEchoTask> {
     CompletableFuture<String> echo(String s);
+
+    public CompletableFuture<String> test(String s);
 }
 
 interface ICombinerTask extends TaskInterface<ICombinerTask> {
@@ -20,6 +22,13 @@ class EchoTask implements IEchoTask {
     public CompletableFuture<String> echo(String s) {
         return complete(s);
     }
+
+    @Override
+    public CompletableFuture<String> test(String s) {
+        return complete(s);
+    }
+
+
 }
 
 class CombinerTask implements ICombinerTask {
@@ -32,7 +41,7 @@ public class TaskTest {
     @Test
     public void getMessage() throws ExecutionException, InterruptedException {
         Orchestrator $ = Orchestrator.create();
-        CompletableFuture<String> left = $.task(new EchoTask()).echo("Hello");
+        CompletableFuture<String> left = $.task(new EchoTask()).test("Hello");
         CompletableFuture<String> right = $.task(new EchoTask()).echo("world");
         CompletableFuture<String> combine = $.task(new CombinerTask()).combine(left, right);
         System.out.println(combine.get());
