@@ -7,9 +7,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class ProcessB implements FlowProcess<BaseData, String>{
 
-    public CompletableFuture<String> process(CompletableFuture<BaseData> source) {
+
+
+    @Override
+    public CompletableFuture<String> process(BaseData source) {
         return complete(JSON.toJSONString(source));
     }
-
 
 }
