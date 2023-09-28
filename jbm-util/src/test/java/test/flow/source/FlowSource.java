@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.taskflow2.test.dataflow.source;
+package test.flow.source;
 
 import com.ebay.bascomtask.core.TaskInterface;
 

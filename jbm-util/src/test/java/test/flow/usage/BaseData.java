@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.taskflow2.test.dataflow.usage;
+package test.flow.usage;
 
 import lombok.Data;
 

@@ -2,8 +2,10 @@ package test.util;
 
 import com.github.pfmiles.minvelocity.TemplateUtil;
 import com.github.pfmiles.org.apache.velocity.Template;
+import com.github.pfmiles.org.apache.velocity.VelocityContext;
+import com.github.pfmiles.org.apache.velocity.context.Context;
 import com.jbm.util.MapUtils;
-import com.jbm.util.TemplateUtils;
+import com.jbm.util.SimpleTemplateUtils;
 import junit.framework.TestCase;
 
 import java.io.StringReader;
@@ -13,10 +15,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TemplateUtilsTest extends TestCase {
+public class SimpleTemplateUtilsTest extends TestCase {
 
     public void testFileTest() {
-        System.out.println(TemplateUtils.render("text.tmp", MapUtils.newParamMap("name", "wesley")));
+        System.out.println(SimpleTemplateUtils.render("temps/text.tmp", MapUtils.newParamMap("name", "wesley")));
+    }
+
+    public void testFileTest2() {
+        Template template= SimpleTemplateUtils.getTemplate("temps/text.tmp");
+        System.out.println( TemplateUtil.renderTemplate(template, MapUtils.newParamMap("name", "wesley2")));
     }
 
     public void testRenderStringTemp() {

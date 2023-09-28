@@ -1,7 +1,7 @@
-package jbm.framework.boot.autoconfigure.taskflow2.test.dataflow.process;
+package test.flow.process;
 
 import com.alibaba.fastjson.JSON;
-import jbm.framework.boot.autoconfigure.taskflow2.test.dataflow.usage.BaseData;
+import test.flow.usage.BaseData;
 
 import java.util.concurrent.CompletableFuture;
 

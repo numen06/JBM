@@ -4,7 +4,6 @@ import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.util.StringUtils;
-import org.beetl.core.GroupTemplate;
 
 public class GenerateMapperCode extends BaseGenerateCodeImpl {
 

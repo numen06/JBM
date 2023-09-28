@@ -1,10 +1,10 @@
 package com.jbm.framework.masterdata.code.model;
 
+import com.github.pfmiles.org.apache.velocity.Template;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
 import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-import org.beetl.core.Template;
 
 import java.io.File;
 import java.nio.file.Path;

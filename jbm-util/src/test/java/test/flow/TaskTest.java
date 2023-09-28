@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.taskflow2.test;
+package test.flow;
 
 
 import cn.hutool.core.util.StrUtil;
@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 
 interface IEchoTask extends TaskInterface<IEchoTask> {
     CompletableFuture<String> echo(String s);

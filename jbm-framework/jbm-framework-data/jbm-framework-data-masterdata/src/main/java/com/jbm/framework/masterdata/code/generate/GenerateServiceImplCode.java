@@ -6,9 +6,6 @@ import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.*;
 import com.jbm.util.StringUtils;
 import lombok.SneakyThrows;
-import org.beetl.core.GroupTemplate;
-
-import java.nio.file.Path;
 
 public class GenerateServiceImplCode extends BaseGenerateCodeImpl {
 

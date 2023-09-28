@@ -39,7 +39,6 @@
         <module>jbm-framework-autoconfigure-canal</module>
         <module>jbm-framework-autoconfigure-amqp</module>
         <module>jbm-framework-autoconfigure-taskflow</module>
-        <module>jbm-framework-autoconfigure-taskflow2</module>
         <module>jbm-framework-autoconfigure-modbus</module>
         <module>jbm-framework-autoconfigure-fegin</module>
         <module>jbm-framework-autoconfigure-ip2region</module>

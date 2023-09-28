@@ -80,7 +80,8 @@ public class MqttProxyFactory {
         String str = StrUtil.concat(true, url);
         String[] vals = StrUtil.subBetweenAll(str, "${", "}");
         for (String val : vals) {
-            String result = new SpELEngine().eval(StrUtil.concat(true, "#", val, ""), BeanUtil.beanToMap(bean)).toString();
+            String expression = StrUtil.concat(true, "#", val, "");
+            String result = new SpELEngine().eval(expression, BeanUtil.beanToMap(bean),null).toString();
             str = StrUtil.replace(str, StrUtil.concat(true, "${", val, "}"), result);
         }
         return str;

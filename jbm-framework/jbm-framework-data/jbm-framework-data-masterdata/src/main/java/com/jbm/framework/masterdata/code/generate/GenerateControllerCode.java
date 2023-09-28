@@ -1,6 +1,5 @@
 package com.jbm.framework.masterdata.code.generate;
 
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.code.constants.CodeType;
