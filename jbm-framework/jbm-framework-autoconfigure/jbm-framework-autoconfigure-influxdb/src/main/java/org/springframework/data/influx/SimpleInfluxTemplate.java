@@ -13,7 +13,9 @@ import cn.hutool.extra.template.TemplateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
+import com.jbm.util.template.simple.SimpleTemplateEngine;
 import jbm.framework.boot.autoconfigure.influx.InfluxProperties;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
@@ -22,6 +24,7 @@ import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
@@ -34,8 +37,10 @@ import java.util.function.Consumer;
 public class SimpleInfluxTemplate {
 
     private InfluxDB influxDB;
+    @Getter
     private String database;
 
+    @Getter
     private String retentionPolicy = "autogen";
 
     private TemplateEngine templateEngine;
@@ -55,7 +60,7 @@ public class SimpleInfluxTemplate {
         this.influxDbBuild(influxProperties);
         this.database = StrUtil.isEmpty(influxProperties.getDatabase()) ? "data" : influxProperties.getDatabase();
         TemplateConfig templateConfig = new TemplateConfig(path, TemplateConfig.ResourceMode.CLASSPATH);
-        templateConfig.setCustomEngine(BeetlSqlEngine.class);
+        templateConfig.setCustomEngine(SimpleTemplateEngine.class);
         templateEngine = TemplateUtil.createEngine(templateConfig);
     }
 
@@ -191,6 +196,7 @@ public class SimpleInfluxTemplate {
         } else {
             //设置点位时间
             builder.time(jsonObject.getDate(timeField.toString()).getTime(), TimeUnit.MILLISECONDS);
+            jsonObject.remove(timeField);
         }
 
         fields.forEach(new BiConsumer<String, Object>() {
@@ -225,6 +231,8 @@ public class SimpleInfluxTemplate {
                             builder.addField(newKey, ((Long) value).doubleValue());
                         } else if (value instanceof BigInteger) {
                             builder.addField(newKey, ((BigInteger) value).doubleValue());
+                        } else if (value instanceof BigDecimal) {
+                            builder.addField(newKey, ((BigDecimal) value).doubleValue());
                         }
                     } else if (value instanceof String) {
                         builder.addField(newKey, StrUtil.toString(value));
@@ -237,16 +245,17 @@ public class SimpleInfluxTemplate {
         return builder;
     }
 
-    public void batchInsert(final String measurement, final List<Object> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
-        this.batchInsert(measurement, this.retentionPolicy, items, timeField, tagFields, influxFeatures);
+    public <T> void batchInsertItem(final String measurement, final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+        this.batchInsertForPolicy(measurement, this.retentionPolicy, items, timeField, tagFields, influxFeatures);
     }
+
 
     /**
      * 批量写入测点
      *
      * @param items
      */
-    public void batchInsert(final String measurement, final String retentionPolicy, final List<Object> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+    public <T> void batchInsertForPolicy(final String measurement, final String retentionPolicy, final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         //设置数据库
         BatchPoints.Builder batchBuilder = BatchPoints.database(database);
         //设置保存策略
