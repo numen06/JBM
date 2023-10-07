@@ -5,14 +5,13 @@ import test.flow.usage.BaseData;
 
 import java.util.concurrent.CompletableFuture;
 
-public class ProcessA implements FlowProcess<String, BaseData>{
+public class ProcessA implements FlowProcess<String, BaseData> {
 
 
     @Override
     public CompletableFuture<BaseData> process(String source) {
         return complete(JSON.parseObject(source, BaseData.class));
     }
-
 
 
 }

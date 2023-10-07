@@ -5,9 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
-import com.jbm.util.version.VersionDeserializer;
 import com.jbm.util.VersionUtils;
 import com.jbm.util.bean.Version;
+import com.jbm.util.version.VersionDeserializer;
 import org.junit.Test;
 
 public class VersionTest {

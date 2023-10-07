@@ -5,8 +5,7 @@ import test.flow.usage.BaseData;
 
 import java.util.concurrent.CompletableFuture;
 
-public class ProcessB implements FlowProcess<BaseData, String>{
-
+public class ProcessB implements FlowProcess<BaseData, String> {
 
 
     @Override

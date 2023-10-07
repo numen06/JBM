@@ -54,13 +54,11 @@ final class JarURLConnection extends java.net.JarURLConnection {
         }
     }
 
-    private final JarFile jarFile;    private static final JarURLConnection NOT_FOUND_CONNECTION = JarURLConnection.notFound();
-    private final JarEntryName jarEntryName;
+    private final JarFile jarFile;
+    private final JarEntryName jarEntryName;    private static final JarURLConnection NOT_FOUND_CONNECTION = JarURLConnection.notFound();
     private Permission permission;
-
     private URL jarFileUrl;
     private JarEntry jarEntry;
-
     private JarURLConnection(URL url, JarFile jarFile, JarEntryName jarEntryName) throws IOException {
         // What we pass to super is ultimately ignored
         super(EMPTY_JAR_URL);
@@ -365,6 +363,7 @@ final class JarURLConnection extends java.net.JarURLConnection {
         }
 
     }
+
 
 
 

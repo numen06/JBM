@@ -2,7 +2,6 @@ package com.jbm.util.version;
 
 import com.alibaba.fastjson.parser.DefaultJSONParser;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
-import com.alibaba.fastjson.util.TypeUtils;
 import com.jbm.util.bean.Version;
 
 import java.lang.reflect.Type;

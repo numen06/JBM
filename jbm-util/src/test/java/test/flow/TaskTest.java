@@ -12,8 +12,8 @@ import java.util.concurrent.ExecutionException;
 interface IEchoTask extends TaskInterface<IEchoTask> {
     CompletableFuture<String> echo(String s);
 
-      CompletableFuture<String> test(String s);
-    
+    CompletableFuture<String> test(String s);
+
 
 }
 
@@ -42,13 +42,14 @@ class CombinerTask implements ICombinerTask {
 
     @Override
     public CompletableFuture<String> concat(CompletableFuture<String> cfh, String s) throws ExecutionException, InterruptedException {
-        return complete(StrUtil.concat(true,cfh.get(), s));
+        return complete(StrUtil.concat(true, cfh.get(), s));
     }
 }
 
 public class TaskTest {
 
     private Orchestrator $ = Orchestrator.create();
+
     @Test
     public void getMessage() throws ExecutionException, InterruptedException {
         CompletableFuture<String> left = $.task(new EchoTask()).test("Hello");
@@ -56,10 +57,12 @@ public class TaskTest {
         CompletableFuture<String> combine = $.task(new CombinerTask()).combine(left, right);
         System.out.println(combine.get());
     }
+
     @Test
     public void appc() throws ExecutionException, InterruptedException {
         CompletableFuture cfh = CompletableFuture.supplyAsync(() -> "hello");
         CombinerTask concatTask = new CombinerTask();
 //        CompletableFuture cfw = $.task(concatTask).concat(cfh," world");
-        $.task(concatTask).activate().concat(cfh," world").thenAccept(System.out::println);}
+        $.task(concatTask).activate().concat(cfh, " world").thenAccept(System.out::println);
+    }
 }

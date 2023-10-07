@@ -2,14 +2,11 @@ package com.jbm.util;
 
 import com.github.pfmiles.minvelocity.TemplateUtil;
 import com.github.pfmiles.org.apache.velocity.Template;
-import com.github.pfmiles.org.apache.velocity.VelocityContext;
-import com.github.pfmiles.org.apache.velocity.context.Context;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 
 /**
  * 模板工具类
@@ -37,10 +34,6 @@ public class SimpleTemplateUtils extends TemplateUtil {
         Template temp = TemplateUtil.parseStringTemplate(templateString);
         return TemplateUtil.renderTemplate(temp, ctxPojo);
     }
-
-
-
-
 
 
 }
