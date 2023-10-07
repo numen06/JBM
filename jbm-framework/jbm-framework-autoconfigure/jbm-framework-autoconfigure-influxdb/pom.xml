@@ -36,10 +36,5 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>com.ibeetl</groupId>
-			<artifactId>beetl</artifactId>
-			<version>${beetl.version}</version>
-		</dependency>
 	</dependencies>
 </project>

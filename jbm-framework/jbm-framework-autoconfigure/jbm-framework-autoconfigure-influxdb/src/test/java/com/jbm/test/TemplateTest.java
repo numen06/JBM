@@ -6,7 +6,6 @@ import cn.hutool.extra.template.TemplateEngine;
 import cn.hutool.extra.template.TemplateUtil;
 import com.google.common.collect.Maps;
 import org.junit.Test;
-import org.springframework.data.influx.BeetlSqlEngine;
 
 public class TemplateTest {
 
