@@ -1,4 +1,4 @@
-package com.jbm.framework.test.bean;
+package com.jbm.framework.test;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.extra.template.Template;
