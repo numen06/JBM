@@ -66,7 +66,7 @@ public class BaseUserCertificationController extends MasterDataCollection<BaseUs
                 throw new ServiceException("检测到多张人脸");
             }
             FaceInfo faceInfo = CollUtil.getFirst(baiduResult.getResult().getFaceList());
-            if (!NumberUtil.equals(faceInfo.getFaceProbability(), 1)) {
+            if (!NumberUtil.equals(faceInfo.getFaceProbability().doubleValue(), 1.0)) {
                 throw new ServiceException("人脸可信度差请重新上传");
             }
             JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
