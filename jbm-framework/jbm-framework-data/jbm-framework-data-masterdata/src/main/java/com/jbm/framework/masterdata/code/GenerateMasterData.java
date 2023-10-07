@@ -1,15 +1,12 @@
 package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.ClassUtil;
-import com.github.pfmiles.minvelocity.TemplateUtil;
-import com.github.pfmiles.org.apache.velocity.Template;
-import com.github.pfmiles.org.apache.velocity.VelocityContext;
-import com.github.pfmiles.org.apache.velocity.context.Context;
+import cn.hutool.extra.template.Template;
+import cn.hutool.extra.template.TemplateConfig;
+import cn.hutool.extra.template.TemplateEngine;
+import cn.hutool.extra.template.TemplateUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
@@ -17,16 +14,16 @@ import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
 import com.jbm.framework.masterdata.code.generate.*;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
-import com.jbm.util.SimpleTemplateUtils;
+import com.jbm.util.template.simple.SimpleTemplateEngine;
 import io.swagger.annotations.ApiModel;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 
@@ -39,12 +36,20 @@ public class GenerateMasterData {
 
 //    private GroupTemplate groupTemplate;
 
+
+    private TemplateEngine templateEngine;
+
     private List<IGenerateCode> generateCodeList = new ArrayList<>();
 
-    private final static String MASTERDATA_TEMP_PATH =  "com/jbm/framework/masterdata/code/btl/";
+    private final static String MASTERDATA_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
 
     public GenerateMasterData() {
         try {
+            //构建模板引擎
+            TemplateConfig templateConfig = new TemplateConfig(MASTERDATA_TEMP_PATH, TemplateConfig.ResourceMode.CLASSPATH);
+            templateConfig = templateConfig.setCustomEngine(SimpleTemplateEngine.class);
+            templateEngine = TemplateUtil.createEngine(templateConfig);
+
 //            ClassPathResource resourceLoader = new ClassPathResource("/com/jbm/framework/masterdata/code/btl");
 //            Configuration cfg = Configuration.defaultConfiguration();
 //            groupTemplate = new GroupTemplate(resourceLoader, cfg);
@@ -55,6 +60,8 @@ public class GenerateMasterData {
             generateCodeList.add(new GenerateBusinessCode());
             generateCodeList.add(new GenerateBusinessImplCode());
             generateCodeList.add(new GenerateControllerCode());
+
+
         } catch (Exception e) {
             log.error("初始化代码构建器失败");
         }
@@ -108,7 +115,7 @@ public class GenerateMasterData {
         for (IGenerateCode iGenerateCode : this.generateCodeList) {
 //            generateSource = this.buildSource(entityClass, targetPackage);
             try {
-                Template template = SimpleTemplateUtils.getTemplate(MASTERDATA_TEMP_PATH + iGenerateCode.getTemplateName(generateSource) + ".btl");
+                Template template = templateEngine.getTemplate(iGenerateCode.getTemplateName(generateSource) + ".btl");
                 generateSource.setTemplate(template);
                 if (generateSource.getBussinessGroup() != null) {
                     //将业务范围加入模板
@@ -124,12 +131,7 @@ public class GenerateMasterData {
                 if (MapUtil.isNotEmpty(generateSource.getData())) {
                     generateSource.getData().putAll(generateSource.getData());
                 }
-                Writer writer  = FileUtil.getWriter(file, CharsetUtil.UTF_8,false);
-                try {
-                    SimpleTemplateUtils.renderTemplate(generateSource.getTemplate(), generateSource.getData(), writer);
-                } finally {
-                    writer.close();
-                }
+                template.render(generateSource.getData(), file);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
