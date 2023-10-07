@@ -4,35 +4,34 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * 同步对象
- * 
- * @author wesley
  *
+ * @author wesley
  */
 public class SyncBean extends CountDownLatch {
 
-	private final SyncFactory factory;
+    private final SyncFactory factory;
 
-	/**
-	 * 名字
-	 */
-	private final String name;
+    /**
+     * 名字
+     */
+    private final String name;
 
-	public SyncBean(String name, Integer count, SyncFactory factory) {
-		super(count);
-		this.name = name;
-		this.factory = factory;
-	}
+    public SyncBean(String name, Integer count, SyncFactory factory) {
+        super(count);
+        this.name = name;
+        this.factory = factory;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public void countDown() {
-		synchronized (this) {
-			super.countDown();
-			factory.remove(this);
-		}
-	}
+    @Override
+    public void countDown() {
+        synchronized (this) {
+            super.countDown();
+            factory.remove(this);
+        }
+    }
 
 }

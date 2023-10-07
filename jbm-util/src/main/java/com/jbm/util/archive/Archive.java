@@ -8,65 +8,70 @@ import java.util.jar.Manifest;
 
 
 /**
- *
  * @author Phillip Webb
  * @since 1.0.0
  */
 public interface Archive extends Iterable<Archive.Entry> {
 
-	/**
-	 * Returns a URL that can be used to load the archive.
-	 * @return the archive URL
-	 * @throws MalformedURLException if the URL is malformed
-	 */
-	URL getUrl() throws MalformedURLException;
+    /**
+     * Returns a URL that can be used to load the archive.
+     *
+     * @return the archive URL
+     * @throws MalformedURLException if the URL is malformed
+     */
+    URL getUrl() throws MalformedURLException;
 
-	/**
-	 * Returns the manifest of the archive.
-	 * @return the manifest
-	 * @throws IOException if the manifest cannot be read
-	 */
-	Manifest getManifest() throws IOException;
+    /**
+     * Returns the manifest of the archive.
+     *
+     * @return the manifest
+     * @throws IOException if the manifest cannot be read
+     */
+    Manifest getManifest() throws IOException;
 
-	/**
-	 * Returns nested {@link Archive}s for entries that match the specified filter.
-	 * @param filter the filter used to limit entries
-	 * @return nested archives
-	 * @throws IOException if nested archives cannot be read
-	 */
-	List<Archive> getNestedArchives(EntryFilter filter) throws IOException;
+    /**
+     * Returns nested {@link Archive}s for entries that match the specified filter.
+     *
+     * @param filter the filter used to limit entries
+     * @return nested archives
+     * @throws IOException if nested archives cannot be read
+     */
+    List<Archive> getNestedArchives(EntryFilter filter) throws IOException;
 
-	/**
-	 * Represents a single entry in the archive.
-	 */
-	interface Entry {
+    /**
+     * Represents a single entry in the archive.
+     */
+    interface Entry {
 
-		/**
-		 * Returns {@code true} if the entry represents a directory.
-		 * @return if the entry is a directory
-		 */
-		boolean isDirectory();
+        /**
+         * Returns {@code true} if the entry represents a directory.
+         *
+         * @return if the entry is a directory
+         */
+        boolean isDirectory();
 
-		/**
-		 * Returns the name of the entry.
-		 * @return the name of the entry
-		 */
-		String getName();
+        /**
+         * Returns the name of the entry.
+         *
+         * @return the name of the entry
+         */
+        String getName();
 
-	}
+    }
 
-	/**
-	 * Strategy interface to filter {@link Entry Entries}.
-	 */
-	interface EntryFilter {
+    /**
+     * Strategy interface to filter {@link Entry Entries}.
+     */
+    interface EntryFilter {
 
-		/**
-		 * Apply the jar entry filter.
-		 * @param entry the entry to filter
-		 * @return {@code true} if the filter matches
-		 */
-		boolean matches(Entry entry);
+        /**
+         * Apply the jar entry filter.
+         *
+         * @param entry the entry to filter
+         * @return {@code true} if the filter matches
+         */
+        boolean matches(Entry entry);
 
-	}
+    }
 
 }

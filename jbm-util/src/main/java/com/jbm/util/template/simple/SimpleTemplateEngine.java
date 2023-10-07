@@ -19,8 +19,36 @@ public class SimpleTemplateEngine implements TemplateEngine {
         this.init(config);
     }
 
-    public SimpleTemplateEngine(VelocityEngine engine) {
+    public SimpleTemplateEngine(com.github.pfmiles.org.apache.velocity.app.VelocityEngine engine) {
         this.init(engine);
+    }
+
+    private static VelocityEngine createEngine(TemplateConfig config) {
+        if (null == config) {
+            config = new TemplateConfig();
+        }
+
+        VelocityEngine ve = new VelocityEngine();
+        String charsetStr = config.getCharset().toString();
+        ve.setProperty("resource.default_encoding", charsetStr);
+        ve.setProperty("resource.loader.file.cache", true);
+        switch (config.getResourceMode()) {
+            case CLASSPATH:
+                ve.setProperty("resource.loader.file.class", "com.github.pfmiles.org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+                break;
+            case FILE:
+                String path = config.getPath();
+                if (null != path) {
+                    ve.setProperty("resource.loader.file.path", path);
+                }
+                break;
+            case STRING:
+                ve.setProperty("resource.loaders", "str");
+                ve.setProperty("resource.loader.str.class", SimpleStringResourceLoader.class.getName());
+        }
+
+        ve.init();
+        return ve;
     }
 
     public TemplateEngine init(TemplateConfig config) {
@@ -57,33 +85,5 @@ public class SimpleTemplateEngine implements TemplateEngine {
         }
 
         return SimpleTemplate.wrap(this.engine.getTemplate(resource, charsetStr));
-    }
-
-    private static VelocityEngine createEngine(TemplateConfig config) {
-        if (null == config) {
-            config = new TemplateConfig();
-        }
-
-        VelocityEngine ve = new VelocityEngine();
-        String charsetStr = config.getCharset().toString();
-        ve.setProperty("resource.default_encoding", charsetStr);
-        ve.setProperty("resource.loader.file.cache", true);
-        switch (config.getResourceMode()) {
-            case CLASSPATH:
-                ve.setProperty("resource.loader.file.class", "com.github.pfmiles.org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-                break;
-            case FILE:
-                String path = config.getPath();
-                if (null != path) {
-                    ve.setProperty("resource.loader.file.path", path);
-                }
-                break;
-            case STRING:
-                ve.setProperty("resource.loaders", "str");
-                ve.setProperty("resource.loader.str.class", SimpleStringResourceLoader.class.getName());
-        }
-
-        ve.init();
-        return ve;
     }
 }

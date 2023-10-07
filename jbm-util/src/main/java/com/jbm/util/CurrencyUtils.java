@@ -2,7 +2,6 @@ package com.jbm.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.NumberFormat;
 
 /**
  * 货币转换工具类
@@ -157,25 +156,5 @@ public class CurrencyUtils extends NumberUtils {
         }
         return result;
     }
-    /**
-     * 测试方法入口
-     *
-     * @param args
-     * @author
-     * @version 1.00.00
-     * @date 2018年1月18日
-     */
-    public static void main(String[] args) throws Exception {
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-        System.out.println(currencyFormat.format(222222222222L));
-        //554,545.4544;
-        System.out.println(yuan2fen(120.445));
-        System.out.println(formatAmountCny(1200.35));
-        System.out.println(formatAmountCny(12000.35));
-        System.out.println(formatAmountCny(120000.35));
-        System.out.println(formatAmountCny(1200000.35));
-        System.out.println(formatAmountCny(12000000.35));
-        System.out.println(formatAmountCny(120000000.35));
-        System.out.println(formatAmountCny(1200000000.35));
-    }
+
 }

@@ -11,6 +11,10 @@ public class Emptys {
     public Emptys() {
     }
 
+    public static Emptys create() {
+        return new Emptys();
+    }
+
     public Emptys and(Boolean... values) {
         for (Boolean v : values) {
             result = result && v;
@@ -23,10 +27,6 @@ public class Emptys {
             result = result || v;
         }
         return this;
-    }
-
-    public static Emptys create() {
-        return new Emptys();
     }
 
     public Emptys isEmpty(Object obj) {

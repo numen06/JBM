@@ -30,59 +30,58 @@ import java.util.zip.InflaterInputStream;
  */
 class ZipInflaterInputStream extends InflaterInputStream {
 
-	private int available;
+    private int available;
 
-	private boolean extraBytesWritten;
+    private boolean extraBytesWritten;
 
-	ZipInflaterInputStream(InputStream inputStream, int size) {
-		super(inputStream, new Inflater(true), getInflaterBufferSize(size));
-		this.available = size;
-	}
+    ZipInflaterInputStream(InputStream inputStream, int size) {
+        super(inputStream, new Inflater(true), getInflaterBufferSize(size));
+        this.available = size;
+    }
 
-	@Override
-	public int available() throws IOException {
-		if (this.available < 0) {
-			return super.available();
-		}
-		return this.available;
-	}
+    private static int getInflaterBufferSize(long size) {
+        size += 2; // inflater likes some space
+        size = (size > 65536) ? 8192 : size;
+        size = (size <= 0) ? 4096 : size;
+        return (int) size;
+    }
 
-	@Override
-	public int read(byte[] b, int off, int len) throws IOException {
-		int result = super.read(b, off, len);
-		if (result != -1) {
-			this.available -= result;
-		}
-		return result;
-	}
+    @Override
+    public int available() throws IOException {
+        if (this.available < 0) {
+            return super.available();
+        }
+        return this.available;
+    }
 
-	@Override
-	public void close() throws IOException {
-		super.close();
-		this.inf.end();
-	}
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        int result = super.read(b, off, len);
+        if (result != -1) {
+            this.available -= result;
+        }
+        return result;
+    }
 
-	@Override
-	protected void fill() throws IOException {
-		try {
-			super.fill();
-		}
-		catch (EOFException ex) {
-			if (this.extraBytesWritten) {
-				throw ex;
-			}
-			this.len = 1;
-			this.buf[0] = 0x0;
-			this.extraBytesWritten = true;
-			this.inf.setInput(this.buf, 0, this.len);
-		}
-	}
+    @Override
+    public void close() throws IOException {
+        super.close();
+        this.inf.end();
+    }
 
-	private static int getInflaterBufferSize(long size) {
-		size += 2; // inflater likes some space
-		size = (size > 65536) ? 8192 : size;
-		size = (size <= 0) ? 4096 : size;
-		return (int) size;
-	}
+    @Override
+    protected void fill() throws IOException {
+        try {
+            super.fill();
+        } catch (EOFException ex) {
+            if (this.extraBytesWritten) {
+                throw ex;
+            }
+            this.len = 1;
+            this.buf[0] = 0x0;
+            this.extraBytesWritten = true;
+            this.inf.setInput(this.buf, 0, this.len);
+        }
+    }
 
 }

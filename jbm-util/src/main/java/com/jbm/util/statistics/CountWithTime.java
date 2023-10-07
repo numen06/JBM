@@ -10,10 +10,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class CountWithTime extends AbstractScheduledService {
 
     private AtomicLong total = new AtomicLong(0);
+    private long start = 0;
+    private long end = 0;
+    private long avg = 0;
 
     public CountWithTime() {
         this(0L);
     }
+
+
+//    protected abstract long period();
+//
+//    protected abstract TimeUnit unit();
 
     public CountWithTime(long count) {
         this.total = new AtomicLong(count);
@@ -28,15 +36,6 @@ public abstract class CountWithTime extends AbstractScheduledService {
     public long getTotal() {
         return this.total.get();
     }
-
-
-//    protected abstract long period();
-//
-//    protected abstract TimeUnit unit();
-
-    private long start = 0;
-    private long end = 0;
-    private long avg = 0;
 
     @Override
     protected void runOneIteration() throws Exception {
