@@ -1,7 +1,6 @@
 package com.jbm.util;
 
 import cn.hutool.core.io.resource.ResourceUtil;
-import jodd.io.FileNameUtil;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -83,12 +82,12 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
         for (int i = 0; i < files.length; i++) {
             File path = files[i];
             if (file.exists() && file.isDirectory()) {
-                filesMatchingStemRegex(path, result, FileNameUtil.concat(prefix, path.getName(), true), stemRegex);
+                filesMatchingStemRegex(path, result, FileNameUtils.concat(prefix, path.getName(), true), stemRegex);
             }
         }
         File[] temp = file.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String tempName = FileNameUtil.concat(prefix, name, true);
+                String tempName = FileNameUtils.concat(prefix, name, true);
                 return tempName.matches(stemRegex);
             }
         });

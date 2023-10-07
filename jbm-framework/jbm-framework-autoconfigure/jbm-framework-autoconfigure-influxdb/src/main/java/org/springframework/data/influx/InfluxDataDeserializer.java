@@ -2,6 +2,7 @@ package org.springframework.data.influx;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.dto.QueryResult;
@@ -72,7 +73,9 @@ public class InfluxDataDeserializer {
 
     public Map<String, Object> serializRow(Map<String, String> tags, List<String> columns, List<Object> row) {
         Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
-        resultMap.putAll(tags);
+        if (MapUtil.isNotEmpty(tags)) {
+            resultMap.putAll(tags);
+        }
         Object relVal = null;
         for (int j = 0; j < row.size(); j++) {
             String col = columns.get(j);

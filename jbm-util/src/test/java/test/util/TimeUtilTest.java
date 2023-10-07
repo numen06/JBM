@@ -1,21 +1,18 @@
 package test.util;
 
+import cn.hutool.core.thread.ThreadUtil;
+import com.jbm.util.TimeUtils;
+import com.jbm.util.time.RuntimeTrack;
+import junit.framework.TestCase;
+import org.apache.commons.lang.time.DateFormatUtils;
+import org.junit.Test;
+
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-
-import cn.hutool.core.date.DateField;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import com.jbm.util.time.RuntimeTrack;
-import org.junit.Test;
-
-import com.jbm.util.TimeUtils;
-
-import junit.framework.TestCase;
 
 public class TimeUtilTest extends TestCase {
 
@@ -104,5 +101,44 @@ public class TimeUtilTest extends TestCase {
         ThreadUtil.safeSleep(1000);
         runtimeTrack.end();
         runtimeTrack.print();
+    }
+
+    @Test
+    public void testAll() {
+        String date = "2001-07-04T12:08:56.235-0700";
+        // // String cats[] = new String[] { FORMAT_LONG };
+        Calendar calendar = TimeUtils.calendar(date);
+        // calendar.clear(Calendar.DAY_OF_WEEK);
+        // // calendar.setFirstDayOfWeek(Calendar.SUNDAY);
+        //
+        // Calendar changeDate = calendar;
+
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.tomorrow()));
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.tomorrow(), TimeUtils.today()));
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.today()));
+
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.tomorrow(), -1));
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.tomorrow(), TimeUtils.today(), -1));
+        System.out.println("比较时间" + TimeUtils.compareDate(TimeUtils.today(), TimeUtils.today(), -1));
+
+        System.out.println("现在时间" + TimeUtils.format(TimeUtils.calendar(), TimeUtils.FORMAT_FULL_CN));
+        System.out.println("转换时间" + TimeUtils.format(calendar, TimeUtils.FORMAT_FULL_CN));
+        System.out.println("---------");
+        System.out.println("当天开始时间" + DateFormatUtils.format(TimeUtils.firstTimeOfDay(calendar), TimeUtils.FORMAT_LONG));
+        System.out.println("当天结束时间" + DateFormatUtils.format(TimeUtils.lastTimeOfDay(calendar), TimeUtils.FORMAT_LONG));
+        System.out.println("---------");
+        System.out.println("本周第一天" + DateFormatUtils.format(TimeUtils.firstDayOfWeek(calendar, Calendar.MONDAY), TimeUtils.FORMAT_LONG));
+        System.out.println("本周最后天" + DateFormatUtils.format(TimeUtils.lastDayOfWeek(calendar, Calendar.MONDAY), TimeUtils.FORMAT_LONG));
+        System.out.println("---------");
+        System.out.println("当月开始时间" + DateFormatUtils.format(TimeUtils.firstDayOfMonth(calendar), TimeUtils.FORMAT_LONG));
+        System.out.println("当月结束时间" + DateFormatUtils.format(TimeUtils.lastDayOfMonth(calendar), TimeUtils.FORMAT_LONG));
+        System.out.println("---------");
+        System.out.println("本年第一天" + DateFormatUtils.format(TimeUtils.firstDayOfYear(calendar), TimeUtils.FORMAT_LONG));
+        System.out.println("本年最后天" + DateFormatUtils.format(TimeUtils.lastDayOfYear(calendar), TimeUtils.FORMAT_LONG));
+
+        // String dateTime =
+        // MessageFormat.format("{0,date,yyyy-MM-dd-HH-mm:ss:ms}", new Object[]
+        // { new java.sql.Date(System.currentTimeMillis()) });
+        // System.out.println(dateTime);
     }
 }

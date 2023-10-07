@@ -1,9 +1,14 @@
 package test.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.jbm.util.VersionUtils;
-import org.junit.Test;
-
 import com.jbm.util.bean.Version;
+import com.jbm.util.version.VersionDeserializer;
+import org.junit.Test;
 
 public class VersionTest {
 
@@ -13,6 +18,7 @@ public class VersionTest {
         System.out.println(ver.toString());
         for (int i = 0; i < 100; i++) {
             ver.bugfix();
+            System.out.println(ver.toString());
         }
         System.out.println(ver.toString());
     }
@@ -56,6 +62,18 @@ public class VersionTest {
 
         String verStr1 = "1.0.0";
         String verStr2 = "1.0.0";
+        SerializeConfig serializeConfig = SerializeConfig.globalInstance;
+        serializeConfig.put(Version.class, ToStringSerializer.instance);
+
+        ParserConfig parserConfig = ParserConfig.getGlobalInstance();
+        parserConfig.putDeserializer(Version.class, new VersionDeserializer());
+
+        JSONObject jsonObject = JSON.parseObject("{\"test\":\"1.10.0\"}");
+        jsonObject.getObject("test", Version.class);
+
+        Version version = VersionUtils.create(verStr1);
+
+        System.out.println(JSON.toJSONString(version));
         System.out.println(ver.compareTo(ver1));
         System.out.println(VersionUtils.before(ver, ver1));
         System.out.println(VersionUtils.after(ver, ver1));

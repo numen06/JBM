@@ -8,13 +8,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @program: JBM6
+ * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-07-03 12:54
  **/
 public class PasswordUtils {
 
     private static final String DEFAULT_QUERY_REGEX = "[!$^&*+=|{}';'\",<>/?~！#￥%……&*——|{}【】‘；：”“'。，、？]";
+    private static final String[] DEFAULT_REGEX = new String[]{"\\d{2}", "[a-z]{2}", "[A-Z]+"};
 
     /**
      * 验证密码重复性
@@ -59,8 +60,6 @@ public class PasswordUtils {
         return matcher.find() && isStartWithSpecialSymbol;
     }
 
-    private static final String[] DEFAULT_REGEX = new String[]{"\\d{2}", "[a-z]{2}", "[A-Z]+"};
-
     public static int checkPassword(String passwordStr) {
         int sort = 0;
         try {
@@ -88,13 +87,6 @@ public class PasswordUtils {
         return sort;
     }
 
-    private enum CharactorType {
-        LOWERCASE,
-        UPPERCASE,
-        NUMBER,
-        SPECIAL_CHARACTOR
-    }
-
     public static String generatePassword(int passwordLength) {
         PasswordGenerator passwordGenerator = new PasswordGenerator(passwordLength);
         return passwordGenerator.generateRandomPassword();
@@ -103,6 +95,13 @@ public class PasswordUtils {
     public static String generatePassword() {
         PasswordGenerator passwordGenerator = new PasswordGenerator(10);
         return passwordGenerator.generateRandomPassword();
+    }
+
+    private enum CharactorType {
+        LOWERCASE,
+        UPPERCASE,
+        NUMBER,
+        SPECIAL_CHARACTOR
     }
 
 
