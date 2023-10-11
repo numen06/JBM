@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.mqtt.client;
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
+import com.jbm.util.FastJsonUtils;
 import jbm.framework.boot.autoconfigure.mqtt.MqttConnectProperties;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         }
         mqttClient.setCallback(this);
         log.info("MQTT简单客户端[{}]启动成功", mqttClient.getClientId());
+
     }
 
     public SimpleMqttClient(IMqttClient mqttClient, MqttConnectProperties mqttConnectProperties) {
@@ -66,7 +68,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
 
     public void publishObject(String topic, Object message) throws MqttException {
         MqttMessage mqttMessage = new MqttMessage();
-        mqttMessage.setPayload(JSON.toJSONBytes(message));
+        mqttMessage.setPayload(JSON.toJSONBytes(message, FastJsonUtils.defaultWebConfig()));
         mqttMessage.setQos(1);
         this.publish(topic, mqttMessage);
     }
@@ -92,10 +94,11 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         log.warn("MQTT Client:[{}]连接丢失", mqttClient.getClientId(), throwable);
         while (!mqttClient.isConnected()) {
             try {
-                if (throwable == null)
+                if (throwable == null) {
                     log.info("客户端[{}]，准备链接", mqttClient.getClientId());
-                else
+                } else {
                     log.warn("客户端[{}]错误，触发重连", mqttClient.getClientId(), throwable);
+                }
                 mqttClient.connect();
             } catch (MqttException e) {
                 log.error("reconnect error", e);

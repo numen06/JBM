@@ -54,8 +54,9 @@ public class MqttProxyFactory {
 
             Field[] fields = ClassUtil.getDeclaredFields(bean.getClass());
             for (Field field : fields) {
-                if (field.getType().equals(SimpleMqttClient.class))
+                if (field.getType().equals(SimpleMqttClient.class)) {
                     ReflectUtil.setFieldValue(bean, field, simpleMqttClient);
+                }
             }
 
             List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
@@ -81,7 +82,7 @@ public class MqttProxyFactory {
         String[] vals = StrUtil.subBetweenAll(str, "${", "}");
         for (String val : vals) {
             String expression = StrUtil.concat(true, "#", val, "");
-            String result = new SpELEngine().eval(expression, BeanUtil.beanToMap(bean),null).toString();
+            String result = new SpELEngine().eval(expression, BeanUtil.beanToMap(bean), null).toString();
             str = StrUtil.replace(str, StrUtil.concat(true, "${", val, "}"), result);
         }
         return str;

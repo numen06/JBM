@@ -122,8 +122,9 @@ public class ReflectUtils {
             }
         }
         for (int i = 0; i < paramTypes.length; i++) {
-            if (jumpIndex.contains(i))
+            if (jumpIndex.contains(i)) {
                 continue;
+            }
             Parameter p = paramTypes[i];
             Class<?> pz = p.getType();
             if (pz.isAssignableFrom(RequestHeaders.class)) {
