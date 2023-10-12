@@ -206,10 +206,10 @@ public class SimpleInfluxTemplate {
                     return;
                 }
                 String newKey = key;
-                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toUnderlineCase)) {
+                if (ArrayUtil.contains(influxFeatures, InfluxFeature.toUnderlineCase)) {
                     newKey = StrUtil.toUnderlineCase(key);
                 }
-                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toCamelCase)) {
+                if (ArrayUtil.contains(influxFeatures, InfluxFeature.toCamelCase)) {
                     newKey = StrUtil.toCamelCase(key);
                 }
                 //说明是tag
