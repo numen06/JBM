@@ -206,10 +206,10 @@ public class SimpleInfluxTemplate {
                     return;
                 }
                 String newKey = key;
-                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toUnderlineCase)) {
+                if (ArrayUtil.contains(influxFeatures, InfluxFeature.toUnderlineCase)) {
                     newKey = StrUtil.toUnderlineCase(key);
                 }
-                if (ArrayUtil.contains(InfluxFeature.values(), InfluxFeature.toCamelCase)) {
+                if (ArrayUtil.contains(influxFeatures, InfluxFeature.toCamelCase)) {
                     newKey = StrUtil.toCamelCase(key);
                 }
                 //说明是tag
@@ -224,11 +224,15 @@ public class SimpleInfluxTemplate {
                 } else {
                     if (value instanceof Number) {
                         if (value instanceof Short) {
-                            builder.addField(newKey, ((Short) value).doubleValue());
-                        } else if (value instanceof Integer) {
-                            builder.addField(newKey, ((Integer) value).doubleValue());
+                            builder.addField(newKey, ((Short) value));
+                        }else if (value instanceof Float) {
+                            builder.addField(newKey, ((Float) value));
+                        }else if (value instanceof Double) {
+                            builder.addField(newKey, ((Double) value));
+                        }else if (value instanceof Integer) {
+                            builder.addField(newKey, ((Integer) value));
                         } else if (value instanceof Long) {
-                            builder.addField(newKey, ((Long) value).doubleValue());
+                            builder.addField(newKey, ((Long) value));
                         } else if (value instanceof BigInteger) {
                             builder.addField(newKey, ((BigInteger) value).doubleValue());
                         } else if (value instanceof BigDecimal) {
