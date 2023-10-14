@@ -193,7 +193,9 @@ public class SimpleInfluxTemplate {
             fields = BeanUtil.beanToMap(item);
         }
         if (MapUtil.isEmpty(fields)) {
-            throw new NullPointerException("所有字段为空");
+//            String err="所有字段为空";
+            NullPointerException exception = new NullPointerException(StrUtil.format("所有字段为空:{}",JSON.toJSONString(item)));
+            throw exception;
         }
         JSONObject jsonObject = new JSONObject(fields);
         if (timeField instanceof Date) {
