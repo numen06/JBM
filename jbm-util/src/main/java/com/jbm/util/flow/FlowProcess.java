@@ -1,4 +1,4 @@
-package test.flow.process;
+package com.jbm.util.flow;
 
 import com.ebay.bascomtask.core.TaskInterface;
 
@@ -8,4 +8,5 @@ public interface FlowProcess<S, R> extends TaskInterface<FlowProcess> {
 
 
     CompletableFuture<R> process(S source);
+
 }
