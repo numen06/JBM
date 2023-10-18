@@ -88,6 +88,15 @@ public class CaptchaController {
         return ResultBody.success("验证码发送成功");
     }
 
+    @ApiOperation(value = "对比手机验证码")
+    @GetMapping(value = "/pcode/verify")
+    public ResultBody<Boolean> pcodeVerify(@RequestParam(required = true) String phone, @RequestParam(required = true) String vcode) throws IOException {
+        Validator.validateMobile(phone, "非法手机号");
+        pCoderService.verify(vcode, phone);
+        return ResultBody.success("手机验证码验证成功");
+    }
+
+
     /**
      * 生成图像验证码
      *

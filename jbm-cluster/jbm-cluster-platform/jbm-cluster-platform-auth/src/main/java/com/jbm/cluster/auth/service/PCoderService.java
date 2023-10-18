@@ -20,7 +20,7 @@ public class PCoderService {
     private JbmClusterNotification jbmClusterNotification;
 
     public String getPcodePath(String phone, String pcode) {
-        String key = StrUtil.format("/pcode/{}/{}", StrUtil.blankToDefault(phone, "system"), pcode);
+        String key = StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(phone, "pcode"), pcode);
         return key;
     }
 
