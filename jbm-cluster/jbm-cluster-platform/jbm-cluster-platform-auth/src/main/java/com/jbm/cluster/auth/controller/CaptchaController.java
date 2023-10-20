@@ -90,7 +90,6 @@ public class CaptchaController {
 
     @ApiOperation(value = "对比手机验证码")
     @GetMapping(value = "/pcode/verify")
-    \
     public ResultBody<Boolean> pcodeVerify(@RequestParam(required = true) String phone, @RequestParam(required = true) String vcode) throws IOException {
         Validator.validateMobile(phone, "非法手机号");
         pCoderService.verify(vcode, phone);
