@@ -35,8 +35,8 @@ public class OpcBeanFactory {
      */
     public static <T extends OpcBean> T getBean(ApplicationContext applicationContext, String device, Class<T> clazz) throws Exception {
         OpcUaTemplate opcUaTemplate = applicationContext.getBean(OpcUaTemplate.class);
-        synchronized (device) {
-            if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
+        if (ObjectUtil.isEmpty(opcUaTemplate.getOpcBean(device))) {
+            synchronized (device) {
                 OpcBeanFactory.registerOpcBean(opcUaTemplate, device, clazz);
             }
         }
@@ -53,18 +53,17 @@ public class OpcBeanFactory {
      * @throws Exception 初始化时发生异常
      */
     private static <T extends OpcBean> void registerOpcBean(OpcUaTemplate opcUaTemplate, String device, Class<T> clazz) throws Exception {
-        T opcBean = ProxyFactory.createProxy(ReflectUtil.newInstance(clazz), new PointChangeInterceptor(device, opcUaTemplate));
+        opcUaTemplate.setOpcBean(device, ProxyFactory.createProxy(ReflectUtil.newInstance(clazz), new PointChangeInterceptor(device, opcUaTemplate)));
         for (Field field : ReflectUtil.getFields(clazz)) {
             // 优先获取OPC UA的读取点位
             String alias = StrUtil.isBlank(ReflectUtils.getReadAlias(field)) ? ReflectUtils.getWriteAlias(field) : ReflectUtils.getReadAlias(field);
             if (StrUtil.isNotBlank(alias)) {
-                ReflectUtils.setFieldValue(opcBean, field, opcUaTemplate.readItem(device, alias));
+                ReflectUtils.setFieldValue(opcUaTemplate.getOpcBean(device), field, opcUaTemplate.readItem(device, alias));
                 if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
-                    opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcBean, device, alias));
+                    opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcUaTemplate.getOpcBean(device), device, alias));
                 }
             }
         }
-        opcUaTemplate.setOpcBean(device, opcBean);
     }
 
 }
