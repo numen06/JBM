@@ -1,16 +1,15 @@
 package test.flow.process;
 
 import com.alibaba.fastjson.JSON;
+import com.jbm.util.flow.AbstractFlowProcess;
 import test.flow.usage.BaseData;
 
-import java.util.concurrent.CompletableFuture;
-
-public class ProcessB implements FlowProcess<BaseData, String> {
+public class ProcessB extends AbstractFlowProcess<BaseData, String> {
 
 
     @Override
-    public CompletableFuture<String> process(BaseData source) {
-        return complete(JSON.toJSONString(source));
+    public String doProcess(BaseData source) {
+        return JSON.toJSONString(source);
     }
 
 }
