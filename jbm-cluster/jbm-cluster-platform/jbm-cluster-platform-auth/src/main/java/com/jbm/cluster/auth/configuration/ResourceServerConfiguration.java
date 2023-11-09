@@ -48,7 +48,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/captcha/**", "/login/**", "/oauth/**").permitAll()
+                .antMatchers("/captcha/**", "/login/**", "/oauth/**", "/admin/**").permitAll()
                 // 监控端点内部放行
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 .anyRequest().authenticated()
@@ -97,13 +97,14 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 
     /**
      * 启动监测
+     *
      * @param discoveryClient
      * @param applicationContext
      * @return
      */
     @Bean
     public DependsOnHealth dependsOnEndpoint(@Autowired DiscoveryClient discoveryClient, @Autowired ApplicationContext applicationContext) {
-        return new DependsOnHealth(discoveryClient,applicationContext, BaseConstants.BASE_SERVER);
+        return new DependsOnHealth(discoveryClient, applicationContext, BaseConstants.BASE_SERVER);
     }
 }
 
