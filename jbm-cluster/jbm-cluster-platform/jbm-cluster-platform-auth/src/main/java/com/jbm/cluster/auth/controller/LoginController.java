@@ -120,8 +120,9 @@ public class LoginController {
     @GetMapping("/token/logout")
     public ResultBody removeToken() {
         String token = JbmClusterHelper.getCurrenToken();
-        if (StrUtil.isEmpty(token))
+        if (StrUtil.isEmpty(token)) {
             ResultBody.failed().msg("令牌异常");
+        }
         tokenStore.removeAccessToken(tokenStore.readAccessToken(token));
         return ResultBody.ok().msg("退出成功");
     }
