@@ -33,7 +33,7 @@ public class JbmClusterProperties {
     /**
      * 后台部署地址
      */
-    private String adminServerAddr;
+    private String adminServerAddr = "jbm-cluster-platform-center:7777";
 
     /**
      * 网关客户端Id
