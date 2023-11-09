@@ -5,17 +5,18 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.ServletUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.jbm.cluster.auth.configuration.ServerConfig;
 import com.jbm.cluster.auth.service.VCoderService;
 import com.jbm.cluster.auth.service.feign.BaseUserServiceClient;
 import com.jbm.cluster.common.security.JbmClusterHelper;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientDetails;
 import com.jbm.cluster.common.security.oauth2.client.JbmOAuth2ClientProperties;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.WebUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
@@ -34,6 +36,7 @@ import java.util.Map;
  * @date: 2018/11/9 15:43
  * @description:
  */
+@Slf4j
 @Api(tags = "账号认证中心")
 @RestController
 @RequestMapping("/login")
@@ -128,9 +131,22 @@ public class LoginController {
     }
 
 
+
+//    @PostConstruct
+//    public void initTest() {
+//        try {
+//            HttpHeaders httpHeaders = new HttpHeaders();
+//            httpHeaders.add("Authorization", "Basic Y2xpZW50XzI6MTIzNDU2");
+//            JSONObject jsonObject = getToken("admin", "Admin@123", null, httpHeaders, null);
+//            log.info("获取登录信息:{}", jsonObject.toJSONString());
+//        } catch (Exception e) {
+//            log.error("测试本地登录失败", e);
+//        }
+//    }
+
     public JSONObject getToken(String userName, String password, String type, HttpHeaders headers, HttpServletRequest servletRequest) {
         JbmOAuth2ClientDetails clientDetails = clientProperties.getOauth2().get("admin");
-        String url = WebUtils.getServerUrl(WebUtils.getHttpServletRequest()) + "/oauth/token";
+        String url = StrUtil.format("http://127.0.0.1:{}/oauth/token", ServerConfig.getInstance().getServerPort());
         // 使用oauth2密码模式登录.
         MultiValueMap<String, Object> postParameters = new LinkedMultiValueMap<>();
 
