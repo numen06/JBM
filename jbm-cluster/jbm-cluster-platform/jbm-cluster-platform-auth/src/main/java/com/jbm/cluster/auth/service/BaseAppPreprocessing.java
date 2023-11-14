@@ -22,7 +22,7 @@ public class BaseAppPreprocessing {
     @Autowired
     private BaseAppServiceClient baseAppServiceClient;
 
-    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey")
+    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey", unless = "#result == null")
     public BaseApp getAppByKey(String appKey) {
         if (StrUtil.contains(appKey, "-")) {
             BaseApp app = new BaseApp();
