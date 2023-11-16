@@ -14,6 +14,7 @@ import com.jbm.cluster.api.model.event.JbmClusterBusinessEventBean;
 import com.jbm.cluster.api.model.event.JbmClusterBusinessEventResource;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.core.constant.QueueConstants;
+import jbm.framework.spring.SpelExpressionUtils;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,25 +100,7 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
 
 
                 //增加el的支持
-                String expr = businessEventListener.eventGroup();
-                String eventGroup = expr;
-                if(StrUtil.isNotBlank(expr)) {
-                    try {
-                        ExpressionParser expressionParser = new SpelExpressionParser();
-                        StandardEvaluationContext standardEvaluationContext = new StandardEvaluationContext(applicationContext);
-                        expr = applicationContext.getEnvironment().resolvePlaceholders(expr);
-
-                        if(StrUtil.contains(expr,"#")){
-                            Expression expression = expressionParser.parseExpression(expr);
-                            eventGroup = expression.getValue(standardEvaluationContext,String.class);
-                        }else{
-                            eventGroup = expr;
-                        }
-                    }catch (Exception e){
-                        throw new RuntimeException("识别分组错误",e);
-                    }
-                }
-
+                String eventGroup = SpelExpressionUtils.parseEnvironment( businessEventListener.eventGroup());
                 //设定的监听分组
                 UrlBuilder eventGroupBuilder = UrlBuilder.of().addPath(StrUtil.trim(eventGroup)).addPath(path);
                 jbmClusterBusinessEventBean.setEventGroup(eventGroupBuilder.getPathStr());
