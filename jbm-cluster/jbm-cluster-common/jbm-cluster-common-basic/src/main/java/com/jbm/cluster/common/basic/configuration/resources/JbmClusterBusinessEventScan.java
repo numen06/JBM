@@ -16,11 +16,19 @@ import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.core.constant.QueueConstants;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import javax.el.EvaluationListener;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +57,9 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
 
 //    private Map<String, JbmClusterBusinessEventBean> jbmClusterBusinessEventBeanMap = new ConcurrentHashMap<>();
 
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Override
     public JbmClusterBusinessEventResource scan() {
@@ -85,8 +96,30 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
                 jbmClusterBusinessEventBean.setEventName(businessEvent.name());
                 jbmClusterBusinessEventBean.setGlobal(businessEvent.global());
                 jbmClusterBusinessEventBean.setEventCode(ClassUtil.getClassName(businessEventListener.eventClass(), false));
+
+
+                //增加el的支持
+                String expr = businessEventListener.eventGroup();
+                String eventGroup = expr;
+                if(StrUtil.isNotBlank(expr)) {
+                    try {
+                        ExpressionParser expressionParser = new SpelExpressionParser();
+                        StandardEvaluationContext standardEvaluationContext = new StandardEvaluationContext(applicationContext);
+                        expr = applicationContext.getEnvironment().resolvePlaceholders(expr);
+
+                        if(StrUtil.contains(expr,"#")){
+                            Expression expression = expressionParser.parseExpression(expr);
+                            eventGroup = expression.getValue(standardEvaluationContext,String.class);
+                        }else{
+                            eventGroup = expr;
+                        }
+                    }catch (Exception e){
+                        throw new RuntimeException("识别分组错误",e);
+                    }
+                }
+
                 //设定的监听分组
-                UrlBuilder eventGroupBuilder = UrlBuilder.of().addPath(businessEventListener.eventGroup()).addPath(path);
+                UrlBuilder eventGroupBuilder = UrlBuilder.of().addPath(StrUtil.trim(eventGroup)).addPath(path);
                 jbmClusterBusinessEventBean.setEventGroup(eventGroupBuilder.getPathStr());
                 jbmClusterBusinessEventBean.setServiceName(serviceId);
                 if (StrUtil.isNotBlank(businessEvent.url())) {
