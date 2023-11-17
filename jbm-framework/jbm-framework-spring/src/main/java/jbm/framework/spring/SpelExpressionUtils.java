@@ -9,12 +9,19 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * el表达式的工具类
+ * @author wesley
  */
 public class SpelExpressionUtils {
 
-
-    public static <T> T parseExpression(String expr, Class<T> desiredR
-                                        esultType) {
+    /**
+     * 通过表达式转译
+     *
+     * @param expr
+     * @param desiredResultType
+     * @param <T>
+     * @return
+     */
+    public static <T> T parseExpression(String expr, Class<T> desiredResultType) {
         if (StrUtil.isNotBlank(expr)) {
             try {
                 ExpressionParser expressionParser = new SpelExpressionParser();
@@ -29,6 +36,38 @@ public class SpelExpressionUtils {
         return null;
     }
 
+    /**
+     * 通过表达式转译
+     *
+     * @param expr
+     * @return
+     */
+    public static String parseExpression(String expr) {
+        if (StrUtil.isNotBlank(expr)) {
+            try {
+                ExpressionParser expressionParser = new SpelExpressionParser();
+                StandardEvaluationContext standardEvaluationContext = new StandardEvaluationContext(SpringContextHolder.getApplicationContext());
+                expr = parseEnvironment(expr);
+                //如果存在#号代表的是表示
+                if (StrUtil.contains(expr, "#")) {
+                    Expression expression = expressionParser.parseExpression(expr);
+                    return expression.getValue(standardEvaluationContext, String.class);
+                } else {
+                    return expr;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("表达式识别错误", e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 通过表达式转译环境变量
+     *
+     * @param expr
+     * @return
+     */
     public static String parseEnvironment(String expr) {
         if (StrUtil.isNotBlank(expr)) {
             try {

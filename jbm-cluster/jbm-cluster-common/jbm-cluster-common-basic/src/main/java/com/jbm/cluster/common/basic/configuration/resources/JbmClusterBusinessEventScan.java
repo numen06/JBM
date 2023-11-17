@@ -19,17 +19,11 @@ import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import javax.el.EvaluationListener;
 import java.util.List;
 import java.util.Map;
 
@@ -100,7 +94,7 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
 
 
                 //增加el的支持
-                String eventGroup = SpelExpressionUtils.parseEnvironment( businessEventListener.eventGroup());
+                String eventGroup = SpelExpressionUtils.parseExpression(businessEventListener.eventGroup());
                 //设定的监听分组
                 UrlBuilder eventGroupBuilder = UrlBuilder.of().addPath(StrUtil.trim(eventGroup)).addPath(path);
                 jbmClusterBusinessEventBean.setEventGroup(eventGroupBuilder.getPathStr());
