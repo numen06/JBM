@@ -1,7 +1,6 @@
 package org.springframework.data.influx;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +9,10 @@ import org.influxdb.dto.QueryResult.Result;
 import org.influxdb.dto.QueryResult.Series;
 
 import java.text.ParseException;
-import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 根据数据解析
@@ -81,9 +82,7 @@ public class InfluxDataDeserializer {
             String col = columns.get(j);
             Object val = row.get(j);
             if (col.equals("time")) {
-//                relVal = Date.from(DateUtil.parseUTC(StrUtil.toString(val)).toLocalDateTime().atZone(ZonedDateTime.now().getZone()).toInstant());
-                relVal = Date.from(DateUtil.parseUTC(StrUtil.toString(val)).toInstant().atOffset(ZonedDateTime.now().getOffset()).toInstant());
-//                    relVal = fromInfluxDBTime(val.toString());
+                relVal = InfluxDateUtil.formUtcToDate(StrUtil.toString(val));
             } else {
                 relVal = val;
             }

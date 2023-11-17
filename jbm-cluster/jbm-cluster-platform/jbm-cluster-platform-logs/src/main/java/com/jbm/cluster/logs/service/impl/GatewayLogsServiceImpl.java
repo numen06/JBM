@@ -9,6 +9,7 @@ import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.batch.BatchTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @program: JBM7
@@ -128,9 +130,16 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     @Autowired
     private SimpleInfluxTemplate simpleInfluxTemplate;
 
+    private BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
+        @Override
+        public void accept(List<GatewayLogs> gatewayLogs) {
+            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", null);
+        }
+    });
+
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        simpleInfluxTemplate.insert("gatewayLogs", gatewayLogs, gatewayLogs.getRequestTime(), null);
+        batchTask.offer(gatewayLogs);
     }
 
 

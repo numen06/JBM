@@ -3,6 +3,7 @@ package org.springframework.data.influx;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -108,7 +109,9 @@ public class SimpleInfluxTemplate {
             map = BeanUtil.beanToMap(params);
         }
         String sql = template.render(map);
-        log.info("influx sql:\r\n{}", sql);
+        if (influxProperties.getShowSql()) {
+            log.info("influx sql:\r\n{}", sql);
+        }
         QueryResult queryResult = this.influxDB.query(new Query(sql, database));
         return influxDataDeserializer.deserializer(queryResult);
     }
@@ -163,6 +166,7 @@ public class SimpleInfluxTemplate {
     }
 
 
+
     /**
      * 创建自定义保留策略
      *
@@ -188,6 +192,11 @@ public class SimpleInfluxTemplate {
             fields = (Map<String, Object>) item;
         } else {
             fields = BeanUtil.beanToMap(item);
+        }
+        if (MapUtil.isEmpty(fields)) {
+//            String err="所有字段为空";
+            NullPointerException exception = new NullPointerException(StrUtil.format("所有字段为空:{}",JSON.toJSONString(item)));
+            throw exception;
         }
         JSONObject jsonObject = new JSONObject(fields);
         if (timeField instanceof Date) {
@@ -225,11 +234,11 @@ public class SimpleInfluxTemplate {
                     if (value instanceof Number) {
                         if (value instanceof Short) {
                             builder.addField(newKey, ((Short) value));
-                        }else if (value instanceof Float) {
+                        } else if (value instanceof Float) {
                             builder.addField(newKey, ((Float) value));
-                        }else if (value instanceof Double) {
+                        } else if (value instanceof Double) {
                             builder.addField(newKey, ((Double) value));
-                        }else if (value instanceof Integer) {
+                        } else if (value instanceof Integer) {
                             builder.addField(newKey, ((Integer) value));
                         } else if (value instanceof Long) {
                             builder.addField(newKey, ((Long) value));
