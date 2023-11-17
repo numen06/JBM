@@ -27,7 +27,6 @@ public class SimpleTemplateEngine implements TemplateEngine {
         if (null == config) {
             config = new TemplateConfig();
         }
-
         VelocityEngine ve = new VelocityEngine();
         String charsetStr = config.getCharset().toString();
         ve.setProperty("resource.default_encoding", charsetStr);
@@ -46,7 +45,6 @@ public class SimpleTemplateEngine implements TemplateEngine {
                 ve.setProperty("resource.loaders", "str");
                 ve.setProperty("resource.loader.str.class", SimpleStringResourceLoader.class.getName());
         }
-
         ve.init();
         return ve;
     }
@@ -73,7 +71,6 @@ public class SimpleTemplateEngine implements TemplateEngine {
         if (null == this.engine) {
             this.init(TemplateConfig.DEFAULT);
         }
-
         String charsetStr = null;
         if (null != this.config) {
             String root = this.config.getPath();
@@ -83,7 +80,6 @@ public class SimpleTemplateEngine implements TemplateEngine {
                 resource = StrUtil.addPrefixIfNot(resource, StrUtil.addSuffixIfNot(root, "/"));
             }
         }
-
         return SimpleTemplate.wrap(this.engine.getTemplate(resource, charsetStr));
     }
 }

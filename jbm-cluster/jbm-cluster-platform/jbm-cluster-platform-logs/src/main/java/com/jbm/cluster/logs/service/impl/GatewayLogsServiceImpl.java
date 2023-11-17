@@ -11,8 +11,7 @@ import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.influx.InfluxTemplate;
 import org.springframework.data.influx.SimpleInfluxTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -36,22 +35,32 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
-        Query query = this.buildQuery(gatewayLogsForm, isOperation);
-//        List<Sort.Order> orders = new ArrayList<Sort.Order>();  //排序
-//        orders.add(new Sort.Order(Sort.Direction.DESC, "requestTime"));
-//        Sort sort = new Sort(orders);
-        // 查询出一共的条数
-        Long total = mongoTemplate.count(query, GatewayLogs.class);
-        // 加上分页属性
-        PageRequest pageable = this.toPageRequest(gatewayLogsForm.getPageForm(), Sort.Order.desc("requestTime"));
-        query = query.with(pageable);
 
         // 查询
-        List<GatewayLogs> list = mongoTemplate.find(query, GatewayLogs.class);
-        // 将集合与分页结果封装
-//        Page<GatewayLogs> pagelist = new PageImpl<GatewayLogs>(list, ageable, count);
-        return new DataPaging<GatewayLogs>(list, total, gatewayLogsForm.getPageForm());
+        DataPaging<GatewayLogs> dataPaging = simpleInfluxTemplate.selectPageList("select_logs", "accessId", gatewayLogsForm.getPageForm(), GatewayLogs.class, gatewayLogsForm);
+
+
+        return dataPaging;
     }
+
+//    @Override
+//    public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
+//        Query query = this.buildQuery(gatewayLogsForm, isOperation);
+////        List<Sort.Order> orders = new ArrayList<Sort.Order>();  //排序
+////        orders.add(new Sort.Order(Sort.Direction.DESC, "requestTime"));
+////        Sort sort = new Sort(orders);
+//        // 查询出一共的条数
+//        Long total = mongoTemplate.count(query, GatewayLogs.class);
+//        // 加上分页属性
+//        PageRequest pageable = this.toPageRequest(gatewayLogsForm.getPageForm(), Sort.Order.desc("requestTime"));
+//        query = query.with(pageable);
+//
+//        // 查询
+//        List<GatewayLogs> list = mongoTemplate.find(query, GatewayLogs.class);
+//        // 将集合与分页结果封装
+////        Page<GatewayLogs> pagelist = new PageImpl<GatewayLogs>(list, ageable, count);
+//        return new DataPaging<GatewayLogs>(list, total, gatewayLogsForm.getPageForm());
+//    }
 
     @Override
     public Long totalAccess() {

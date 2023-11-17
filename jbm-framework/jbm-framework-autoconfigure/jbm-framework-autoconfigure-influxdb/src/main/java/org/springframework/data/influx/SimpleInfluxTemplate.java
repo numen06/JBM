@@ -2,11 +2,8 @@ package org.springframework.data.influx;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.*;
 import cn.hutool.extra.template.Template;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
@@ -14,6 +11,8 @@ import cn.hutool.extra.template.TemplateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.template.simple.SimpleTemplateEngine;
 import jbm.framework.boot.autoconfigure.influx.InfluxProperties;
 import lombok.Getter;
@@ -95,13 +94,77 @@ public class SimpleInfluxTemplate {
         return this.selectListByDB(this.database, mapper, params);
     }
 
+    public DataPaging<Map<String, Object>> selectPageList(String mapper, String field, PageForm pageForm, Object params) {
+        return this.selectPageList(mapper, field, pageForm, params);
+    }
+
+    public <T> DataPaging<T> selectPageList(String mapper, String field, PageForm pageForm, Class<T> clazz, Object params) {
+        // 查询出一共的条数
+        Long total = this.count(mapper, field, params);
+        String pageSql = this.buildPageSql(mapper, pageForm, params);
+        List<T> result = this.selectListBySql(this.database, pageSql, clazz);
+        return new DataPaging<T>(result, total, pageForm);
+    }
+
+    public Long count(String mapper, String field, Object params) {
+        Map<String, Object> result = this.selectOneBySql(this.database, this.buildCountSql(mapper, field, params), Map.class);
+        if (MapUtil.isEmpty(result)) {
+            return 0L;
+        }
+        JSONObject jsonObject = new JSONObject(result);
+        return ObjectUtil.defaultIfNull(jsonObject.getLong("count"), 0L);
+    }
+
     public Map<String, Object> selectOne(String mapper, Object params) {
         return this.selectOneByDB(this.database, mapper, params);
     }
 
-    public List<Map<String, Object>> selectListByDB(String database, String mapper, Object params) {
+
+    public String buildCountSql(String mapper, String field, Object params) {
+        String sql = this.buildSql(mapper, params);
+        //去除查询字段
+        String reg = "(?<=SELECT).*?(?=FROM)";
+        String ff = ReUtil.getGroup0(reg, sql);
+//        System.out.println(ff);
+        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", field));
+
+        //去除尾部的分页
+//        String reg2 = "(?<=LIMIT).*";
+//        String dd = ReUtil.getGroup0(reg2, sql);
+//        sql = StrUtil.replace(sql, dd, "");
+//        if (influxProperties.getShowSql()) {
+//            log.info("influx count sql:\r\n{}", sql);
+//        }
+        return vaSql(sql);
+    }
+
+
+    public String vaSql(String sql) {
+        String[] regs = new String[]{"(?<=WHERE).*?AND", "WHERE.*?(?=ORDER BY)"};
+        String[] jg = new String[]{"AND", "WHERE"};
+
+        for (int i = 0; i < regs.length; i++) {
+            String reg = regs[i];
+            String j = jg[i];
+            String dd = ReUtil.getGroup0(reg, sql);
+            if (StrUtil.trimToEmpty(dd).equals(j)) {
+                sql = StrUtil.replaceFirst(sql, dd, " ");
+            }
+        }
+        return sql;
+    }
+
+    public String buildPageSql(String mapper, PageForm pageForm, Object params) {
+        String sql = this.buildSql(mapper, params);
+        sql = StrUtil.format("{} LIMIT {} OFFSET {}", sql, pageForm.getPageSize(), PageUtil.getStart(pageForm.getCurrPage() - 1, pageForm.getPageSize()));
+        if (influxProperties.getShowSql()) {
+            log.info("influx page sql:\r\n{}", sql);
+        }
+        return vaSql(sql);
+    }
+
+    public String buildSql(String mapper, Object params) {
         Template template = templateEngine.getTemplate(mapper + ".sql");
-        InfluxDataDeserializer influxDataDeserializer = new InfluxDataDeserializer(Map.class);
         Map<?, ?> map = Maps.newHashMap();
         if (params instanceof Map) {
             map = (Map) params;
@@ -112,13 +175,29 @@ public class SimpleInfluxTemplate {
         if (influxProperties.getShowSql()) {
             log.info("influx sql:\r\n{}", sql);
         }
+        return vaSql(sql);
+    }
+
+    public <T> List<T> selectListBySql(String database, String sql, Class<?> clazz) {
+        InfluxDataDeserializer influxDataDeserializer = new InfluxDataDeserializer(clazz);
         QueryResult queryResult = this.influxDB.query(new Query(sql, database));
-        return influxDataDeserializer.deserializer(queryResult);
+        return influxDataDeserializer.deserializerObject(queryResult);
+    }
+
+
+    public <T> T selectOneBySql(String database, String sql, Class<?> clazz) {
+        List<T> list = this.selectListBySql(database, sql, clazz);
+        return CollUtil.getFirst(list);
+    }
+
+    public List<Map<String, Object>> selectListByDB(String database, String mapper, Object params) {
+        String sql = this.buildSql(mapper, params);
+        return this.selectListBySql(database, sql, Map.class);
     }
 
     public Map<String, Object> selectOneByDB(String database, String mapper, Object params) {
-        List<Map<String, Object>> list = this.selectListByDB(mapper, database, params);
-        return CollectionUtil.isEmpty(list) ? null : (Map) list.get(0);
+        List<Map<String, Object>> list = this.selectListByDB(database, mapper, params);
+        return CollUtil.getFirst(list);
     }
 
     /**
@@ -160,11 +239,11 @@ public class SimpleInfluxTemplate {
      * @param timeField   插入的标记字段
      * @param tagFields   tag字段
      */
-    public void insert(String measurement, Object item, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+    public void insert(String measurement, Object item, Object timeField, List<String> tagFields, InfluxFeature...
+            influxFeatures) {
         Point.Builder builder = this.buildPoint(measurement, item, timeField, tagFields, influxFeatures);
         influxDB.write(database, retentionPolicy, builder.build());
     }
-
 
 
     /**
@@ -185,7 +264,8 @@ public class SimpleInfluxTemplate {
     }
 
 
-    public Point.Builder buildPoint(String measurement, Object item, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+    public Point.Builder buildPoint(String measurement, Object item, Object
+            timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         Point.Builder builder = Point.measurement(measurement);
         Map<String, Object> fields = Maps.newHashMap();
         if (item instanceof Map) {
@@ -195,7 +275,7 @@ public class SimpleInfluxTemplate {
         }
         if (MapUtil.isEmpty(fields)) {
 //            String err="所有字段为空";
-            NullPointerException exception = new NullPointerException(StrUtil.format("所有字段为空:{}",JSON.toJSONString(item)));
+            NullPointerException exception = new NullPointerException(StrUtil.format("所有字段为空:{}", JSON.toJSONString(item)));
             throw exception;
         }
         JSONObject jsonObject = new JSONObject(fields);
@@ -258,7 +338,8 @@ public class SimpleInfluxTemplate {
         return builder;
     }
 
-    public <T> void batchInsertItem(final String measurement, final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+    public <T> void batchInsertItem(final String measurement, final List<T> items, Object
+            timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         this.batchInsertForPolicy(measurement, this.retentionPolicy, items, timeField, tagFields, influxFeatures);
     }
 
@@ -268,7 +349,8 @@ public class SimpleInfluxTemplate {
      *
      * @param items
      */
-    public <T> void batchInsertForPolicy(final String measurement, final String retentionPolicy, final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
+    public <T> void batchInsertForPolicy(final String measurement, final String retentionPolicy,
+                                         final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         //设置数据库
         BatchPoints.Builder batchBuilder = BatchPoints.database(database);
         //设置保存策略
@@ -308,7 +390,8 @@ public class SimpleInfluxTemplate {
      * @param consistency     一致性
      * @param records         要保存的数据（调用BatchPoints.lineProtocol()可得到一条record）
      */
-    public void batchInsert(final String database, final String retentionPolicy, final InfluxDB.ConsistencyLevel consistency,
+    public void batchInsert(final String database, final String retentionPolicy,
+                            final InfluxDB.ConsistencyLevel consistency,
                             final List<String> records) {
         influxDB.write(database, retentionPolicy, consistency, records);
     }

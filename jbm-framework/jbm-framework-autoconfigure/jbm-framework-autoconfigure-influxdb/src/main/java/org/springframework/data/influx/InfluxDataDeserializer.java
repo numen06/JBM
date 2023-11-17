@@ -3,6 +3,7 @@ package org.springframework.data.influx;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.influxdb.dto.QueryResult;
 import org.influxdb.dto.QueryResult.Result;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 根据数据解析
@@ -54,6 +57,22 @@ public class InfluxDataDeserializer {
         }
         return list;
     }
+
+    public <T> List<T> deserializerObject(QueryResult queryResult) {
+        List<Map<String, Object>> list = this.deserializer(queryResult);
+        List<T> result = list.stream().map(new Function<Map<String, Object>, T>() {
+            @Override
+            public T apply(Map<String, Object> stringObjectMap) {
+                if (clazz.equals(Map.class)) {
+                    return (T) stringObjectMap;
+                }
+                JSONObject jsonObject = new JSONObject(stringObjectMap);
+                return (T) jsonObject.toJavaObject(clazz);
+            }
+        }).collect(Collectors.toList());
+        return result;
+    }
+
 
     /**
      * 批量解析

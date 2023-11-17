@@ -1,6 +1,7 @@
 package com.jbm.util.template.simple;
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.CharsetUtil;
@@ -67,7 +68,9 @@ public class SimpleTemplate extends AbstractTemplate implements Serializable {
     private VelocityContext toContext(Map<?, ?> bindingMap) {
         final Map<String, Object> map = Convert.convert(new TypeReference<Map<String, Object>>() {
         }, bindingMap);
-        return new VelocityContext(map);
+        VelocityContext context = new VelocityContext(map);
+        context.put("DateUtil", DateUtil.class);
+        return context;
     }
 
     /**

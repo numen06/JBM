@@ -88,8 +88,9 @@ public class InfluxTemplate {
 
     public Map<String, Object> selectOneByDB(String database, String mapper, Object params) {
         List<Map<String, Object>> list = selectListByDB(mapper, database, params);
-        if (CollectionUtil.isEmpty(list))
+        if (CollectionUtil.isEmpty(list)) {
             return null;
+        }
         return list.get(0);
     }
 
