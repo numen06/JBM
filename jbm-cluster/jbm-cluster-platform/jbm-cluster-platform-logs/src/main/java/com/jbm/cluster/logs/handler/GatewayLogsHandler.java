@@ -1,5 +1,6 @@
 package com.jbm.cluster.logs.handler;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.logs.entity.GatewayLogs;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -63,6 +65,10 @@ public class GatewayLogsHandler {
                     if (StrUtil.isNotBlank(logs.getIp())) {
                         //设置IP属地
                         logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));
+                    }
+                    if (StrUtil.isEmpty(logs.getAccessId())) {
+                        //设置IP属地
+                        logs.setAccessId(IdUtil.fastSimpleUUID());
                     }
                     applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
 //                    gatewayLogsService.save(logs);

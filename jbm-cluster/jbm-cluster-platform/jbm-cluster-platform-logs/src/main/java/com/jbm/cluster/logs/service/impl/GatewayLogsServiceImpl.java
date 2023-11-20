@@ -37,7 +37,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
 
         // 查询
-        DataPaging<GatewayLogs> dataPaging = simpleInfluxTemplate.selectPageList("select_logs", "accessId", gatewayLogsForm.getPageForm(), GatewayLogs.class, gatewayLogsForm);
+        DataPaging<GatewayLogs> dataPaging = simpleInfluxTemplate.selectPageList("select_logs", gatewayLogsForm.getPageForm(), GatewayLogs.class, gatewayLogsForm);
 
 
         return dataPaging;

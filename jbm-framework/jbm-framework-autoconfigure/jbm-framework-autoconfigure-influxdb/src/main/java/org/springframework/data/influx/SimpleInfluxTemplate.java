@@ -94,25 +94,36 @@ public class SimpleInfluxTemplate {
         return this.selectListByDB(this.database, mapper, params);
     }
 
-    public DataPaging<Map<String, Object>> selectPageList(String mapper, String field, PageForm pageForm, Object params) {
-        return this.selectPageList(mapper, field, pageForm, params);
+    public DataPaging<Map<String, Object>> selectPageList(String mapper, PageForm pageForm, Object params) {
+        return this.selectPageList(mapper, pageForm, params);
     }
 
-    public <T> DataPaging<T> selectPageList(String mapper, String field, PageForm pageForm, Class<T> clazz, Object params) {
+    public <T> DataPaging<T> selectPageList(String mapper, PageForm pageForm, Class<T> clazz, Object params) {
         // 查询出一共的条数
-        Long total = this.count(mapper, field, params);
+        Long total = this.count(mapper, params);
         String pageSql = this.buildPageSql(mapper, pageForm, params);
         List<T> result = this.selectListBySql(this.database, pageSql, clazz);
         return new DataPaging<T>(result, total, pageForm);
     }
 
-    public Long count(String mapper, String field, Object params) {
-        Map<String, Object> result = this.selectOneBySql(this.database, this.buildCountSql(mapper, field, params), Map.class);
+    public Long count(String mapper, Object params) {
+        Map<String, Object> result = this.selectOneBySql(this.database, this.buildCountSql(mapper, params), Map.class);
+        final Long[] count = {0L};
         if (MapUtil.isEmpty(result)) {
-            return 0L;
+            return count[0];
         }
         JSONObject jsonObject = new JSONObject(result);
-        return ObjectUtil.defaultIfNull(jsonObject.getLong("count"), 0L);
+        result.forEach(new BiConsumer<String, Object>() {
+            @Override
+            public void accept(String key, Object val) {
+                if (!"count".equals(StrUtil.subBefore(key, "_", false))) {
+                    return;
+                }
+                Long v = jsonObject.getLong(key);
+                count[0] = NumberUtil.max(count[0], ObjectUtil.defaultIfNull(v, 0L));
+            }
+        });
+        return count[0];
     }
 
     public Map<String, Object> selectOne(String mapper, Object params) {
@@ -120,13 +131,14 @@ public class SimpleInfluxTemplate {
     }
 
 
-    public String buildCountSql(String mapper, String field, Object params) {
+    public String buildCountSql(String mapper, Object params) {
         String sql = this.buildSql(mapper, params);
         //去除查询字段
         String reg = "(?<=SELECT).*?(?=FROM)";
         String ff = ReUtil.getGroup0(reg, sql);
 //        System.out.println(ff);
-        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", field));
+//        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", field));
+        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", "*"));
 
         //去除尾部的分页
 //        String reg2 = "(?<=LIMIT).*";
