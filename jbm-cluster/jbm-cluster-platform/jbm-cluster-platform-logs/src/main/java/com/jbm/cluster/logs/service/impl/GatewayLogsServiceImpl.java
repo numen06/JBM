@@ -1,5 +1,6 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -11,7 +12,6 @@ import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.influx.InfluxTemplate;
 import org.springframework.data.influx.SimpleInfluxTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -142,7 +142,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     private BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
-            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", null);
+            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", ListUtil.list(false, "accessId"));
         }
     });
 

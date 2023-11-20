@@ -65,7 +65,7 @@ public class GatewayLogsHandler {
                         logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));
                     }
                     applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
-                    gatewayLogsService.save(logs);
+//                    gatewayLogsService.save(logs);
                     gatewayLogsService.saveGatewayLogs(logs);
                 }
                 return message;

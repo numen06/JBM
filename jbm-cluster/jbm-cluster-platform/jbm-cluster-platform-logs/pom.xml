@@ -28,10 +28,6 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-influxdb</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.jbm</groupId>-->
         <!--            <artifactId>jbm-framework-micro-mysql</artifactId>-->
