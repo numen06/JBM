@@ -1,5 +1,7 @@
 package org.springframework.data.influx;
 
+import cn.hutool.cache.CacheUtil;
+import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
@@ -106,6 +108,9 @@ public class SimpleInfluxTemplate {
         return new DataPaging<T>(result, total, pageForm);
     }
 
+
+    private TimedCache<String, String> mapCountCache = CacheUtil.newTimedCache(1000 * 60 * 60 * 24);
+
     public Long count(String mapper, Object params) {
         Map<String, Object> result = this.selectOneBySql(this.database, this.buildCountSql(mapper, params), Map.class);
         final Long[] count = {0L};
@@ -116,11 +121,19 @@ public class SimpleInfluxTemplate {
         result.forEach(new BiConsumer<String, Object>() {
             @Override
             public void accept(String key, Object val) {
+                if ("count".equals(key)) {
+                    count[0] = jsonObject.getLong(key);
+                    return;
+                }
                 if (!"count".equals(StrUtil.subBefore(key, "_", false))) {
                     return;
                 }
                 Long v = jsonObject.getLong(key);
-                count[0] = NumberUtil.max(count[0], ObjectUtil.defaultIfNull(v, 0L));
+                //如果是最大
+                if (NumberUtil.compare(v, count[0]) == 1) {
+                    count[0] = v;
+                    mapCountCache.put(mapper, StrUtil.removePrefix(key, "count_"));
+                }
             }
         });
         return count[0];
@@ -138,7 +151,8 @@ public class SimpleInfluxTemplate {
         String ff = ReUtil.getGroup0(reg, sql);
 //        System.out.println(ff);
 //        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", field));
-        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", "*"));
+        String fidleName = ObjectUtil.defaultIfNull(mapCountCache.get(mapper), "*");
+        sql = StrUtil.replace(sql, ff, StrUtil.format(" COUNT({}) ", fidleName));
 
         //去除尾部的分页
 //        String reg2 = "(?<=LIMIT).*";
@@ -293,11 +307,16 @@ public class SimpleInfluxTemplate {
         JSONObject jsonObject = new JSONObject(fields);
         if (timeField instanceof Date) {
             //设置点位时间
-            builder.time(((Date) timeField).getTime(), TimeUnit.MILLISECONDS);
+            Long nanoTime = System.nanoTime();
+            long t = ((Date) timeField).getTime() + (nanoTime - nanoTime / 1000000 * 1000000) / 1000;
+            builder.time(t, TimeUnit.MICROSECONDS);
         } else {
             //设置点位时间
-            builder.time(jsonObject.getDate(timeField.toString()).getTime(), TimeUnit.MILLISECONDS);
-            jsonObject.remove(timeField);
+            Long nanoTime = System.nanoTime();
+            long t = jsonObject.getDate(timeField.toString()).getTime() + (nanoTime - nanoTime / 1000000 * 1000000) / 1000;
+            builder.time(t, TimeUnit.MICROSECONDS);
+//            jsonObject.remove(timeField);
+            jsonObject.remove("time");
         }
 
         fields.forEach(new BiConsumer<String, Object>() {

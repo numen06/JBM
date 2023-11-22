@@ -142,7 +142,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     private BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
-            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", ListUtil.list(false, "accessId"));
+            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", ListUtil.list(false, "requestUserId", "appId", "appKey", "serviceId"));
         }
     });
 
