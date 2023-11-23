@@ -126,6 +126,14 @@ public class OpcUaTemplate {
         return Maps.newConcurrentMap();
     }
 
+    public Boolean hasClient(String deviceId) {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        if (ObjectUtil.isEmpty(opcUaClientBean)) {
+            return false;
+        }
+        return ObjectUtil.isNotEmpty(opcUaClientBean.getOpcUaClient());
+    }
+
     public List<String> getDeviceIds() {
         return Lists.newArrayList(clientMap.keySet());
     }
