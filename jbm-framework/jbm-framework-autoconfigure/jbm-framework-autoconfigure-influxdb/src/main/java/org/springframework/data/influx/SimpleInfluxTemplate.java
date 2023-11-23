@@ -35,6 +35,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * 简单的InfluxDB模板类
+ */
 @Slf4j
 public class SimpleInfluxTemplate {
 
@@ -57,6 +60,12 @@ public class SimpleInfluxTemplate {
 //        this(influxDB, "data", "influx/sqls");
 //    }
 
+    /**
+     * 使用给定的InfluxProperties和路径创建SimpleInfluxTemplate的构造函数。
+     *
+     * @param influxProperties InfluxProperties对象，用于配置InfluxDB连接属性。
+     * @param path             连接InfluxDB数据库的路径。
+     */
     public SimpleInfluxTemplate(InfluxProperties influxProperties, String path) {
         this.influxProperties = influxProperties;
         this.influxDbBuild(influxProperties);
@@ -92,14 +101,39 @@ public class SimpleInfluxTemplate {
         return this.influxDB;
     }
 
+    /**
+     * 选择查询列表
+     *
+     * @param mapper 映射器名称
+     * @param params 映射器参数
+     * @return 列表结果
+     */
     public List<Map<String, Object>> selectList(String mapper, Object params) {
         return this.selectListByDB(this.database, mapper, params);
     }
+
+    /**
+     * 选择分页列表
+     *
+     * @param mapper   数据库操作的接口名
+     * @param pageForm 分页参数对象
+     * @param params   查询参数
+     * @return 分页数据集合
+     */
 
     public DataPaging<Map<String, Object>> selectPageList(String mapper, PageForm pageForm, Object params) {
         return this.selectPageList(mapper, pageForm, params);
     }
 
+    /**
+     * 通过分页查询数据库中的数据，并返回分页数据对象
+     *
+     * @param mapper   数据库操作的mapper接口
+     * @param pageForm 分页信息对象，包含当前页码、每页显示条数等信息
+     * @param clazz    查询结果的数据类型
+     * @param params   数据库查询参数
+     * @return 分页数据对象，包含查询结果的数据列表和分页信息
+     */
     public <T> DataPaging<T> selectPageList(String mapper, PageForm pageForm, Class<T> clazz, Object params) {
         // 查询出一共的条数
         Long total = this.count(mapper, params);
@@ -111,6 +145,13 @@ public class SimpleInfluxTemplate {
 
     private TimedCache<String, String> mapCountCache = CacheUtil.newTimedCache(1000 * 60 * 60 * 24);
 
+    /**
+     * 计算满足条件的记录数量
+     *
+     * @param mapper 数据库操作的mapper接口
+     * @param params 查询参数
+     * @return 满足条件的记录数量
+     */
     public Long count(String mapper, Object params) {
         Map<String, Object> result = this.selectOneBySql(this.database, this.buildCountSql(mapper, params), Map.class);
         final Long[] count = {0L};
@@ -180,6 +221,14 @@ public class SimpleInfluxTemplate {
         return sql;
     }
 
+    /**
+     * 构建分页SQL语句
+     *
+     * @param mapper   数据源名
+     * @param pageForm 分页参数对象
+     * @param params   查询参数对象
+     * @return 构建完成的分页SQL语句
+     */
     public String buildPageSql(String mapper, PageForm pageForm, Object params) {
         String sql = this.buildSql(mapper, params);
         sql = StrUtil.format("{} LIMIT {} OFFSET {}", sql, pageForm.getPageSize(), PageUtil.getStart(pageForm.getCurrPage() - 1, pageForm.getPageSize()));
@@ -189,6 +238,13 @@ public class SimpleInfluxTemplate {
         return vaSql(sql);
     }
 
+    /**
+     * 构建SQL语句
+     *
+     * @param mapper 映射器
+     * @param params 参数
+     * @return 构建的SQL语句
+     */
     public String buildSql(String mapper, Object params) {
         Template template = templateEngine.getTemplate(mapper + ".sql");
         Map<?, ?> map = Maps.newHashMap();
@@ -204,23 +260,55 @@ public class SimpleInfluxTemplate {
         return vaSql(sql);
     }
 
+    /**
+     * 根据指定的数据库和 SQL 语句查询结果集并返回 List 对象。
+     *
+     * @param database 数据库名称
+     * @param sql      SQL 语句
+     * @param clazz    结果集中对象的类型
+     * @return 结果集的 List 对象
+     */
     public <T> List<T> selectListBySql(String database, String sql, Class<?> clazz) {
         InfluxDataDeserializer influxDataDeserializer = new InfluxDataDeserializer(clazz);
         QueryResult queryResult = this.influxDB.query(new Query(sql, database));
         return influxDataDeserializer.deserializerObject(queryResult);
     }
 
-
+    /**
+     * 根据给定的数据库名、SQL语句和类类型，在数据库中查询一条数据并返回。
+     *
+     * @param database 数据库名
+     * @param sql      SQL语句
+     * @param clazz    返回值的类类型
+     * @param <T>      返回值的类型
+     * @return 符合条件的一条数据，或者为null
+     */
     public <T> T selectOneBySql(String database, String sql, Class<?> clazz) {
         List<T> list = this.selectListBySql(database, sql, clazz);
         return CollUtil.getFirst(list);
     }
 
+    /**
+     * 根据指定的数据库、映射器和参数，在数据库中执行查询操作，并返回结果集。
+     *
+     * @param database 数据库名称
+     * @param mapper   映射器名称
+     * @param params   查询参数
+     * @return 查询结果集，以列表形式返回。每个结果使用键值对形式的Map表示。
+     */
     public List<Map<String, Object>> selectListByDB(String database, String mapper, Object params) {
         String sql = this.buildSql(mapper, params);
         return this.selectListBySql(database, sql, Map.class);
     }
 
+    /**
+     * 通过指定的数据库、mapper和参数，在数据库中执行选择一条记录的操作。
+     *
+     * @param database 数据库名称
+     * @param mapper   数据库mapper对象
+     * @param params   执行查询的参数
+     * @return 包含一条记录的映射（Map<String, Object>）。
+     */
     public Map<String, Object> selectOneByDB(String database, String mapper, Object params) {
         List<Map<String, Object>> list = this.selectListByDB(database, mapper, params);
         return CollUtil.getFirst(list);
@@ -290,6 +378,16 @@ public class SimpleInfluxTemplate {
     }
 
 
+    /**
+     * 构建点位
+     *
+     * @param measurement    测量名称
+     * @param item           数据项
+     * @param timeField      时间字段
+     * @param tagFields      标签字段列表
+     * @param influxFeatures InfluxDB特性列表
+     * @return Point.Builder对象
+     */
     public Point.Builder buildPoint(String measurement, Object item, Object
             timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         Point.Builder builder = Point.measurement(measurement);
@@ -369,6 +467,15 @@ public class SimpleInfluxTemplate {
         return builder;
     }
 
+    /**
+     * 批量插入数据点到指定的测量中。
+     *
+     * @param measurement    测量名称
+     * @param items          要插入的数据点列表
+     * @param timeField      时间字段
+     * @param tagFields      标签字段列表
+     * @param influxFeatures InfluxDB功能参数列表
+     */
     public <T> void batchInsertItem(final String measurement, final List<T> items, Object
             timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
         this.batchInsertForPolicy(measurement, this.retentionPolicy, items, timeField, tagFields, influxFeatures);
@@ -376,9 +483,15 @@ public class SimpleInfluxTemplate {
 
 
     /**
-     * 批量写入测点
+     * 批量插入数据到指定的策略下
      *
-     * @param items
+     * @param measurement     测量指标
+     * @param retentionPolicy 保留策略
+     * @param items           数据项列表
+     * @param timeField       时间字段
+     * @param tagFields       标签字段列表
+     * @param influxFeatures  InfluxDB功能参数
+     * @param <T>             数据类型
      */
     public <T> void batchInsertForPolicy(final String measurement, final String retentionPolicy,
                                          final List<T> items, Object timeField, List<String> tagFields, InfluxFeature... influxFeatures) {
@@ -401,9 +514,9 @@ public class SimpleInfluxTemplate {
     }
 
     /**
-     * 批量写入测点
+     * 批量插入数据点
      *
-     * @param batchPoints
+     * @param batchPoints 包含数据点的批处理对象
      */
     public void batchInsert(BatchPoints batchPoints) {
         influxDB.write(batchPoints);
