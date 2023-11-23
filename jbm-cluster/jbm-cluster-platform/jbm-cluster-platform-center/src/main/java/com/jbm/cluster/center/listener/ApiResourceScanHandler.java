@@ -3,6 +3,7 @@ package com.jbm.cluster.center.listener;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
@@ -63,11 +64,12 @@ public class ApiResourceScanHandler {
 //                return;
 //            }
             List<String> codes = Lists.newArrayList();
-            jbmApiResource.getJbmApiList().forEach(new Consumer<JbmApi>() {
+            jbmApiResource.getJbmApiList().parallelStream().forEach(new Consumer<JbmApi>() {
                 @Override
                 public void accept(JbmApi jbmApi) {
                     try {
                         BaseApi api = new BaseApi();
+                        api.setAccessLog(jbmApi.getAccessLog());
                         //复制Bean
                         BeanUtil.copyProperties(jbmApi, api);
                         api.setPath(CollUtil.getFirst(jbmApi.getPaths()));

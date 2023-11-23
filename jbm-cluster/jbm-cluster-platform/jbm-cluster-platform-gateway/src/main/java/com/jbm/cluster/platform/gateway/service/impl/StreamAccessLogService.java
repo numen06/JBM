@@ -25,14 +25,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 
 /**
@@ -63,8 +63,6 @@ public class StreamAccessLogService implements AccessLogService {
     );
     @Autowired
     private StreamBridge streamBridge;
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -132,6 +130,7 @@ public class StreamAccessLogService implements AccessLogService {
                 error = ex.getMessage();
             }
             GatewayLogInfo gatewayLogs = new GatewayLogInfo();
+            gatewayLogs.setLoglevel(1);
             gatewayLogs.setServiceId(StrUtil.isBlank(serviceId) ? SpringUtil.getApplicationName() : serviceId);
             gatewayLogs.setRequestTime(DateUtil.parseDateTime(requestTime));
             gatewayLogs.setHttpStatus(httpStatus);
@@ -147,25 +146,25 @@ public class StreamAccessLogService implements AccessLogService {
             //计算耗用时间秒
             Long userTime = DateUtil.between(gatewayLogs.getResponseTime(), gatewayLogs.getRequestTime(), DateUnit.SECOND);
             gatewayLogs.setUseTime(userTime);
-            Map<String, AccessLogFilter> unknownRuntimeExceptionFilterMap = applicationContext.getBeansOfType(AccessLogFilter.class);
-            List<CompletableFuture> cfs = new ArrayList<>();
-            unknownRuntimeExceptionFilterMap.forEach(new BiConsumer<String, AccessLogFilter>() {
+            Map<String, AccessLogFilter> accessLogFilterMap = applicationContext.getBeansOfType(AccessLogFilter.class);
+
+            //异步处理所有数据
+            accessLogFilterMap.values().parallelStream().forEach(new Consumer<AccessLogFilter>() {
                 @Override
-                public void accept(String s, AccessLogFilter accessLogFilter) {
-                    CompletableFuture cf = CompletableFuture.runAsync(() -> {
-                        try {
-                            accessLogFilter.filter(gatewayLogs, headers);
-                        } catch (Exception e) {
-                            log.error("日志过滤器[{}]失败", s, e);
-                        }
-                    }, threadPoolTaskExecutor);
-                    cfs.add(cf);
+                public void accept(AccessLogFilter accessLogFilter) {
+                    try {
+                        accessLogFilter.filter(gatewayLogs, headers);
+                    } catch (Exception e) {
+                        log.error("日志过滤器[{}]失败", accessLogFilter.getClass(), e);
+                    }
                 }
             });
-            // 等待所有线程执行完
-            CompletableFuture.allOf(cfs.toArray(new CompletableFuture[1])).join();
-            //发送数据
-            streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
+            //大于0代表记录日志
+            if (gatewayLogs.getLoglevel() >= 0) {
+                //发送数据
+                streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
+            }
+
         } catch (Exception e) {
             log.error("access logs save error:{}", e);
         }

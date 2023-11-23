@@ -17,8 +17,14 @@ public class GatewayLogInfo implements Serializable {
     @ApiModelProperty(value = "访问ID")
     private String accessId;
 
+    @ApiModelProperty(value = "日志等级")
+    private Integer loglevel;
+
     @ApiModelProperty(value = "路径")
     private String path;
+
+    @ApiModelProperty(value = "接口路径")
+    private String apiPath;
 
     @ApiModelProperty(value = "请求人ID")
     private Long requestUserId;

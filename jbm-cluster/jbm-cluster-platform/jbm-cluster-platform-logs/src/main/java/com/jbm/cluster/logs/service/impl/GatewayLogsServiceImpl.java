@@ -34,7 +34,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     }
 
     @Override
-    public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
+    public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm,Boolean isOperation) {
 
         // 查询
         DataPaging<GatewayLogs> dataPaging = simpleInfluxTemplate.selectPageList("select_logs", gatewayLogsForm.getPageForm(), GatewayLogs.class, gatewayLogsForm);

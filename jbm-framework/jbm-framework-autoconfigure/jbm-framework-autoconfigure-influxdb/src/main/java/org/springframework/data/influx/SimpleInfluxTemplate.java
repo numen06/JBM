@@ -406,12 +406,12 @@ public class SimpleInfluxTemplate {
         if (timeField instanceof Date) {
             //设置点位时间
             Long nanoTime = System.nanoTime();
-            long t = ((Date) timeField).getTime() + (nanoTime - nanoTime / 1000000 * 1000000) / 1000;
+            long t = ((Date) timeField).getTime();
             builder.time(t, TimeUnit.MICROSECONDS);
         } else {
             //设置点位时间
             Long nanoTime = System.nanoTime();
-            long t = jsonObject.getDate(timeField.toString()).getTime() + (nanoTime - nanoTime / 1000000 * 1000000) / 1000;
+            long t = jsonObject.getDate(timeField.toString()).getTime();
             builder.time(t, TimeUnit.MICROSECONDS);
 //            jsonObject.remove(timeField);
             jsonObject.remove("time");

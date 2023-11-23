@@ -2,6 +2,7 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
@@ -22,9 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author wesley.zhang
@@ -39,6 +37,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     private BaseAuthorityService baseAuthorityService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
+
     @Override
     public BaseApi saveEntity(BaseApi baseApi) {
         if (ObjectUtil.isEmpty(baseApi)) {
@@ -118,6 +117,8 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      */
     @Override
     public void addApi(BaseApi api) {
+        //默认记入日志
+        api.setAccessLog(ObjectUtil.defaultIfNull(api.getAccessLog(), true));
         if (isExist(api.getApiCode())) {
             throw new ServiceException(String.format("%s编码已存在!", api.getApiCode()));
         }
@@ -152,6 +153,7 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Override
     public void updateApi(BaseApi api) {
         BaseApi saved = getApi(api.getApiId());
+        saved.setAccessLog(ObjectUtil.defaultIfNull(saved.getAccessLog(), true));
         if (saved == null) {
             throw new ServiceException("信息不存在!");
         }
