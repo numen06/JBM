@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
@@ -8,6 +9,7 @@ import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.center.mapper.BaseApiMapper;
 import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -20,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author wesley.zhang
@@ -32,6 +37,18 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     private BaseApiMapper baseApiMapper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
+    @Autowired
+    private JbmClusterTemplate jbmClusterTemplate;
+    @Override
+    public BaseApi saveEntity(BaseApi baseApi) {
+        if (ObjectUtil.isEmpty(baseApi)) {
+            this.addApi(baseApi);
+        } else {
+            this.updateApi(baseApi);
+        }
+        jbmClusterTemplate.refreshGateway();
+        return baseApi;
+    }
 
     /**
      * 分页查询

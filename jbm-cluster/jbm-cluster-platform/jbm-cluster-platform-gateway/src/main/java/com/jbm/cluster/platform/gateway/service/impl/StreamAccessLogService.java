@@ -36,6 +36,8 @@ import java.util.function.BiConsumer;
 
 
 /**
+ * 将访问日志通过流的模式传输到MQ进行存储
+ *
  * @author: wesley.zhang
  * @date: 2019/5/8 11:27
  * @description:
@@ -47,6 +49,9 @@ public class StreamAccessLogService implements AccessLogService {
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
 
+    /**
+     * 忽略的路径
+     */
     @JsonIgnore
     private Set<String> ignores = Sets.newHashSet(
             "/**/oauth/check_token/**",
