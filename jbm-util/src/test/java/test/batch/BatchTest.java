@@ -37,4 +37,28 @@ public class BatchTest {
         batchTask.awaitTerminated();
 
     }
+
+    @Test
+    public void test2() {
+        BatchTask<String> batchTask = BatchTask.createBatchTask(new Consumer<List<String>>() {
+            @Override
+            public void accept(List list) {
+                log.info("处理{}条数据", list.size());
+            }
+        });
+        for (int i = 0; i < 100; i++) {
+            batchTask.offer(DateUtil.now());
+        }
+        ThreadUtil.execAsync(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    batchTask.offer(DateUtil.now());
+                    ThreadUtil.safeSleep(10);
+                }
+            }
+        });
+        batchTask.awaitTerminated();
+
+    }
 }
