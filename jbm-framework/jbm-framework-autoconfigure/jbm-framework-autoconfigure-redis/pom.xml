@@ -29,6 +29,12 @@
             <groupId>org.springframework.integration</groupId>
             <artifactId>spring-integration-redis</artifactId>
         </dependency>
+        <!--若使用redisTemplate作为分布式锁底层，则需要引入-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>lock4j-redis-template-spring-boot-starter</artifactId>
+            <version>2.2.5</version>
+        </dependency>
         <!--redisson-->
         <!--        <dependency>-->
         <!--            <groupId>org.redisson</groupId>-->

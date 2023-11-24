@@ -1,17 +1,16 @@
 package jbm.framework.boot.autoconfigure.redis;
 
-import cn.hutool.core.thread.ThreadUtil;
+import com.baomidou.lock.LockInfo;
+import com.baomidou.lock.LockTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundSetOperations;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.integration.redis.util.RedisLockRegistry;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
 /**
@@ -245,27 +244,26 @@ public class RedisService {
     }
 
     @Autowired
-    private RedisLockRegistry redisLockRegistry;
+    private LockTemplate lockTemplate;
 
     public void syncExecute(String key, long time, TimeUnit unit, Consumer<String> callback) {
-        Lock redisLock = redisLockRegistry.obtain(key);
+        final LockInfo redisLock = lockTemplate.lock(key, unit.toMillis(time) + 1000, unit.toMillis(time));
         try {
-            while (true) {
-                if (!redisLock.tryLock(time, unit)) {
-                    ThreadUtil.safeSleep(500);
-                    continue;
-                }
-                callback.accept(key);
-                break;
-            }
+//            while (true) {
+//                //获取不到锁，则继续等待
+//                if (null == redisLock) {
+//                    ThreadUtil.safeSleep(500);
+//                    continue;
+//                }
+//                callback.accept(key);
+//                break;
+//            }
+            callback.accept(key);
         } catch (Exception e) {
             log.error("execute locked method occured an exception", e);
             throw new RuntimeException(e);
         } finally {
-            try {
-                redisLock.unlock();
-            } catch (Exception e) {
-            }
+            lockTemplate.releaseLock(redisLock);
         }
     }
 

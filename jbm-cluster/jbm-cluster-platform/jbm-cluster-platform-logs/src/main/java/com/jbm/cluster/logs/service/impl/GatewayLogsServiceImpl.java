@@ -3,22 +3,31 @@ package com.jbm.cluster.logs.service.impl;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.lock.LockInfo;
+import com.baomidou.lock.LockTemplate;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
+import jbm.framework.boot.autoconfigure.redis.RedisService;
+import jbm.framework.boot.autoconfigure.redis.distributed.SerialNumberTamplete;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.influx.SimpleInfluxTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -27,6 +36,7 @@ import java.util.function.Consumer;
  * @create: 2021-05-06 16:56
  **/
 @Service
+@Slf4j
 public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, GatewayLogsRepository> implements GatewayLogsService {
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm) {
@@ -50,7 +60,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 ////        orders.add(new Sort.Order(Sort.Direction.DESC, "requestTime"));
 ////        Sort sort = new Sort(orders);
 //        // 查询出一共的条数
-//        Long total = mongoTemplate.count(query, GatewayLogs.class);
+//        Integer total = mongoTemplate.count(query, GatewayLogs.class);
 //        // 加上分页属性
 //        PageRequest pageable = this.toPageRequest(gatewayLogsForm.getPageForm(), Sort.Order.desc("requestTime"));
 //        query = query.with(pageable);
@@ -148,9 +158,64 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-
-            batchTask.offer(gatewayLogs);
+        batchTask.offer(gatewayLogs);
     }
+
+
+    @Resource
+    private SerialNumberTamplete serialNumberTamplete;
+
+    @Resource
+    private RedisService redisService;
+
+    @Resource
+    private LockTemplate lockTemplate;
+
+//    @PostConstruct
+//    public void testSn() {
+//        serialNumberTamplete.initAppSerialNumber(0, "test");
+//        for (int i = 0; i < 100; i++) {
+//            String number = serialNumberTamplete.createAppDaySerialNumber("test");
+//            log.info("测试序列号:{}", number);
+//        }
+//
+//        for (int i = 0; i < 2; i++) {
+//            ThreadUtil.execAsync(new Runnable() {
+//
+//                @Override
+//                public void run() {
+//                    redisService.syncExecute("test", 10000, TimeUnit.SECONDS, new Consumer<String>() {
+//                        @Override
+//                        public void accept(String key) {
+//                            log.info("我是任务");
+//                            ThreadUtil.safeSleep(5000);
+//                        }
+//                    });
+//                }
+//            });
+//
+//        }
+//
+//        lockTemplate.releaseLock(lockTemplate.lock("test2",0,-1));
+//        for (int i = 0; i < 10; i++) {
+//            ThreadUtil.execAsync(new Runnable() {
+//                @Override
+//                public void run() {
+//                    final LockInfo redisLock = lockTemplate.lock("test",0,-1);
+//                    if (ObjectUtil.isEmpty(redisLock)) {
+//                        log.info("正在处理中，请勿重复提交");
+//                        ThreadUtil.safeSleep(1000);
+//                        return;
+//                    }
+//                    log.info("我是任务2");
+//                    ThreadUtil.safeSleep(2000);
+//                    lockTemplate.releaseLock(redisLock);
+//                }
+//            });
+//        }
+//
+//
+//    }
 
 
 }

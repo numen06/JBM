@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import jbm.framework.boot.autoconfigure.redis.distributed.SerialNumberTamplete;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
@@ -63,5 +64,9 @@ public class RedisAutoConfiguration {
         return new RedisService();
     }
 
+    @Bean
+    public SerialNumberTamplete serialNumberTamplete() {
+        return new SerialNumberTamplete();
+    }
 
 }

@@ -10,6 +10,8 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.lock.LockInfo;
+import com.baomidou.lock.LockTemplate;
 import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.entitys.job.SysJob;
 import com.jbm.cluster.api.entitys.job.SysJobLog;
@@ -19,12 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.integration.redis.util.RedisLockRegistry;
 
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 /**
  * 抽象quartz调用
@@ -39,13 +37,13 @@ public abstract class AbstractQuartzJob implements Job {
      */
     private static ThreadLocal<Date> threadLocal = new ThreadLocal<>();
 
-    private RedisLockRegistry redisLockRegistry;
+    private LockTemplate lockTemplate;
 
     private final Date createTime = new Date();
 
 
     public AbstractQuartzJob() {
-        redisLockRegistry = SpringUtil.getBean(RedisLockRegistry.class);
+        lockTemplate = SpringUtil.getBean(LockTemplate.class);
         jbmRequestTemplate = SpringUtil.getBean(JbmRequestTemplate.class);
     }
 
@@ -59,12 +57,16 @@ public abstract class AbstractQuartzJob implements Job {
         //获取锁
 //        String key = jobKey + "_" + DateUtil.format(createTime, DatePattern.NORM_DATETIME_FORMAT);
         String key = jobKey;
-        Lock redisLock = redisLockRegistry.obtain(key);
+//        Lock redisLock = redisLockRegistry.obtain(key);
+        //建立一个十分钟的锁
+        final LockInfo redisLock = lockTemplate.lock(key, 1000 * 60, 1000);
+
         SysJob sysJob = null;
+
         String data = null;
         try {
             //锁定5秒
-            if (!redisLock.tryLock(5L, TimeUnit.SECONDS)) {
+            if (ObjectUtil.isEmpty(redisLock)) {
                 log.info("正在处理中，请勿重复提交");
                 return;
             }
@@ -95,7 +97,7 @@ public abstract class AbstractQuartzJob implements Job {
             final Date endTime = new DateTime();
             final Long runTime = endTime.getTime() - executeTime.getTime();
             ThreadUtil.safeSleep(runTime > 1000 ? 0 : 1000);
-            redisLock.unlock();
+            lockTemplate.releaseLock(redisLock);
         }
     }
 
