@@ -37,7 +37,7 @@ public class SerialNumberTamplete {
     class DaySerialNumber {
         private String dayForamt = "yyyyMMdd";
         private String snLong = "%04d";
-        private String snForamt = "{}-{}";
+        private String snForamt = "{}{}-{}";
     }
 
     /**
@@ -58,8 +58,12 @@ public class SerialNumberTamplete {
             throw new RuntimeException("创建序列号失败");
         }
         redisTemplate.expire(redisKey, 25, TimeUnit.HOURS);
+        String bus = "";
+        if (ArrayUtil.isNotEmpty(groups)) {
+            bus = ArrayUtil.get(groups, 0);
+        }
         // 组合  20221226 + 业务id + 0001(可以根据需要自由调整序列号的长度)
-        return StrUtil.format(daySerialNumber.snForamt, date, String.format(daySerialNumber.getSnLong(), increment));
+        return StrUtil.format(daySerialNumber.snForamt, bus, date, String.format(daySerialNumber.getSnLong(), increment));
     }
 
 
