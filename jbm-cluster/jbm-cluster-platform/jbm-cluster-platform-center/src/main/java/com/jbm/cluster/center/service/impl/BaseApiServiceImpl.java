@@ -60,9 +60,9 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         BaseApi query = pageRequestBody.tryGet(BaseApi.class);
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
-                .likeRight(ObjectUtils.isNotEmpty(query.getApiName()), BaseApi::getApiName, query.getApiName())
-                .likeRight(ObjectUtils.isNotEmpty(query.getApiCode()), BaseApi::getApiCode, query.getApiCode())
+                .like(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
+                .like(ObjectUtils.isNotEmpty(query.getApiName()), BaseApi::getApiName, query.getApiName())
+                .like(ObjectUtils.isNotEmpty(query.getApiCode()), BaseApi::getApiCode, query.getApiCode())
                 .eq(ObjectUtils.isNotEmpty(query.getServiceId()), BaseApi::getServiceId, query.getServiceId())
                 .eq(ObjectUtils.isNotEmpty(query.getStatus()), BaseApi::getStatus, query.getStatus())
                 .eq(ObjectUtils.isNotEmpty(query.getIsAuth()), BaseApi::getIsAuth, query.getIsAuth());
