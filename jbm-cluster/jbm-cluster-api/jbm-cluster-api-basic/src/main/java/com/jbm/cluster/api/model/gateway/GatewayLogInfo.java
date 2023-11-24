@@ -20,6 +20,9 @@ public class GatewayLogInfo implements Serializable {
     @ApiModelProperty(value = "日志等级")
     private Integer loglevel;
 
+//    @ApiModelProperty(value = "日志等级:DEBUG,INFO,WARN,ERROR")
+//    private String logType;
+
     @ApiModelProperty(value = "路径")
     private String path;
 

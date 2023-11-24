@@ -1,6 +1,7 @@
 package com.jbm.cluster.platform.gateway.logfilter;
 
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.benmanes.caffeine.cache.CacheLoader;
@@ -63,7 +64,7 @@ public class ApiFilter implements AccessLogFilter {
                 return;
             }
             gatewayLogInfo.setOperationType(baseApi.getBusinessScope());
-            if (!baseApi.getAccessLog()) {
+            if (BooleanUtil.isFalse(baseApi.getAccessLog())) {
                 gatewayLogInfo.setLoglevel(0);
             }
             gatewayLogInfo.setApiName(baseApi.getApiName());

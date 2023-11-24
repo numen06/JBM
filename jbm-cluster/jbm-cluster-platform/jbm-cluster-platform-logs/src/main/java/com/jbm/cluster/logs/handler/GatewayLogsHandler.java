@@ -1,5 +1,7 @@
 package com.jbm.cluster.logs.handler;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -61,7 +62,18 @@ public class GatewayLogsHandler {
             try {
                 countWithTime.add();
                 GatewayLogs logs = message.getPayload();
+                //如果日志等级不够1,则不记录
+
                 if (ObjectUtil.isNotEmpty(logs)) {
+                    logs.setLoglevel(ObjectUtil.defaultIfNull(logs.getLoglevel(), 0));
+                    if (logs.getLoglevel() <= 0) {
+                        return message;
+                    }
+                    int nowMillis = DateTime.now().getField(DateField.MILLISECOND);
+                    DateTime time = DateTime.of(logs.getRequestTime()).setField(DateField.MILLISECOND, nowMillis);
+                    logs.setRequestTime(time);
+
+
                     if (StrUtil.isNotBlank(logs.getIp())) {
                         //设置IP属地
                         logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));

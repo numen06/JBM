@@ -86,10 +86,10 @@ public class BatchTask<T> extends AbstractScheduledService {
         try {
             action.accept(list);
             endTime = DateTime.now();
-            log.info("批量任务执行成功，执行时间:{}",  DateUtil.between(startTime, endTime, DateUnit.MS));
+            log.debug("批量任务执行成功，执行时间:{}毫秒",  DateUtil.between(startTime, endTime, DateUnit.MS));
         } catch (Exception e) {
             endTime = DateTime.now();
-            log.error("批量任务执行失败，执行时间:{}", e, DateUtil.between(startTime, endTime, DateUnit.MS));
+            log.error("批量任务执行失败，执行时间:{}毫秒", e, DateUtil.between(startTime, endTime, DateUnit.MS));
         }
     }
 

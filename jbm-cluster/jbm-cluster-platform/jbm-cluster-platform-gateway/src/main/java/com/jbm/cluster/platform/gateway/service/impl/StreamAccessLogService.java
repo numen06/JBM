@@ -160,7 +160,7 @@ public class StreamAccessLogService implements AccessLogService {
                 }
             });
             //大于0代表记录日志
-            if (gatewayLogs.getLoglevel() >= 0) {
+            if (gatewayLogs.getLoglevel() > 0) {
                 //发送数据
                 streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
             }
