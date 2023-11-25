@@ -8,7 +8,8 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.event.AccessEvent;
 import com.jbm.cluster.logs.service.GatewayLogsService;
-import com.jbm.util.statistics.CountWithTime;
+import com.jbm.util.batch.ActionBean;
+import com.jbm.util.batch.RollingTask;
 import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,17 +38,14 @@ public class GatewayLogsHandler {
     @Autowired
     private GatewayLogsService gatewayLogsService;
 
-    private CountWithTime countWithTime = new CountWithTime() {
-        @Override
-        protected Scheduler scheduler() {
-            return Scheduler.newFixedRateSchedule(0, 1, TimeUnit.MINUTES);
-        }
+    private RollingTask countWithTime = RollingTask.createRollingTask( 1L,TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
 
         @Override
-        public void print() {
-            log.info("最近1分钟处理日志:{}", this.getAvg());
+        public Long apply(ActionBean<Long> actionBean) {
+            log.info("最近1分钟处理日志:{}", actionBean.getCurrQuantity());
+            return actionBean.getObj();
         }
-    };
+    });
 
 
     @Autowired
@@ -60,7 +58,7 @@ public class GatewayLogsHandler {
     public Function<Flux<Message<GatewayLogs>>, Mono<Void>> accessLogs() {
         return flux -> flux.map(message -> {
             try {
-                countWithTime.add();
+                countWithTime.offer();
                 GatewayLogs logs = message.getPayload();
                 //如果日志等级不够1,则不记录
 
