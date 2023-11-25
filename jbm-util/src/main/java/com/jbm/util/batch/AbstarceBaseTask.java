@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 批量定时加数量触发任务
+ *
  * @author wesley
  */
 @Slf4j
@@ -32,20 +33,33 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
     protected final AtomicInteger currQuantity = new AtomicInteger(0);
 
 
+    /**
+     * 构造函数
+     *
+     * @param maxSubmitTime     最大提交时间
+     * @param timeUnit          时间单位
+     * @param maxSubmitQuantity 最大提交数量
+     * @throws RuntimeException 如果批处理时间和数量同时为0，则抛出运行时异常
+     */
     public AbstarceBaseTask(Long maxSubmitTime, TimeUnit timeUnit, Integer maxSubmitQuantity) {
         this.maxSubmitTime = maxSubmitTime;
         this.timeUnit = timeUnit;
         this.maxSubmitQuantity = maxSubmitQuantity;
-        if(this.maxSubmitTime+ this.maxSubmitQuantity <=0) {
+        if (this.maxSubmitTime + this.maxSubmitQuantity <= 0) {
             throw new RuntimeException("批处理时间和数量不能同时为0");
         }
         //如果时间为0,则放弃定时执行方式
-        if (this.maxSubmitTime  > 0) {
+        if (this.maxSubmitTime > 0) {
             this.startAsync();
         }
     }
 
 
+    /**
+     * 运行一次迭代
+     *
+     * @throws Exception 可能抛出异常
+     */
     @Override
     protected void runOneIteration() throws Exception {
         try {
@@ -59,15 +73,29 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
     }
 
 
+    /**
+     * 获取调度器
+     *
+     * @return 调度器对象
+     */
     @Override
     protected Scheduler scheduler() {
         return Scheduler.newFixedRateSchedule(0, maxSubmitTime, timeUnit);
     }
-     /**
+
+    /**
      * 执行批量操作
+     *
+     * @param actionBean 批量操作信息
      */
     protected abstract <T> void asyncAction(ActionBean<T> actionBean);
 
+    /**
+     * 提交数据
+     *
+     * @param objs 待提交的数据
+     * @return 成功提交的数量
+     */
     public int offer(Object... objs) {
         int len = 0;
         try {
@@ -97,12 +125,21 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
     }
 
 
-    public int offerOfWait(long timeout, TimeUnit timeUnit ,Object... objs) throws InterruptedException {
+    /**
+     * 等待提交数据
+     *
+     * @param timeout  超时时间
+     * @param timeUnit 时间单位
+     * @param objs     待提交的数据
+     * @return 成功提交的数量
+     * @throws InterruptedException 如果线程中断，则抛出中断异常
+     */
+    public int offerOfWait(long timeout, TimeUnit timeUnit, Object... objs) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         while (true) {
             int w = this.offer(objs);
             // 尝试写入
-            if (w>0) {
+            if (w > 0) {
                 return w;
             }
             // 超时处理
@@ -114,6 +151,12 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
         }
     }
 
+    /**
+     * 添加数据
+     *
+     * @param objs 待添加的数据
+     * @throws RuntimeException 如果添加数量超过最大提交数量，则抛出运行时异常
+     */
     public void add(Object... objs) {
         if (this.offer(objs) <= 0) {
             throw new RuntimeException("添加数量超过最大提交数量");
@@ -121,6 +164,12 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
     }
 
 
+    /**
+     * 执行添加数据操作
+     *
+     * @param obj 待添加的数据
+     * @return 成功添加的数量
+     */
     protected abstract int doOffer(Object... obj);
 
 

@@ -14,7 +14,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-
+/**
+ * 批处理任务类
+ *
+ * @param <T> 任务类型
+ */
 @Slf4j
 public class BatchTask<T> extends AbstarceBaseTask {
 
@@ -22,20 +26,61 @@ public class BatchTask<T> extends AbstarceBaseTask {
 
     private BlockingQueue<T> blockingQueue;
 
-
-
-
+    /**
+     * 构造函数
+     *
+     * @param action 批量操作的消费函数
+     */
     public BatchTask(Consumer<List<T>> action) {
         this(5L, TimeUnit.SECONDS, 200, action);
     }
 
+    /**
+     * 构造函数
+     *
+     * @param maxSubmitTime     最大提交时间
+     * @param timeUnit          时间单位
+     * @param maxSubmitQuantity 最大提交数量
+     * @param action            批量操作的消费函数
+     */
     public BatchTask(long maxSubmitTime, TimeUnit timeUnit, int maxSubmitQuantity, Consumer<List<T>> action) {
         super(maxSubmitTime, timeUnit, maxSubmitQuantity);
         this.action = action;
-        blockingQueue = new ArrayBlockingQueue<>(maxSubmitQuantity< 1 ? 1: maxSubmitQuantity);
+        blockingQueue = new ArrayBlockingQueue<>(maxSubmitQuantity < 1 ? 1 : maxSubmitQuantity);
     }
 
+    /**
+     * 创建一个批处理任务实例
+     *
+     * @param action 批量操作的消费函数
+     * @return 批处理任务实例
+     */
+    public static <T> BatchTask<T> createBatchTask(final Consumer<List<T>> action) {
+        return new BatchTask<>(action);
+    }
 
+    /**
+     * 创建一个批处理任务实例
+     *
+     * @param maxSubmitTime 最大提交时间
+     * @param timeUnit      时间单位
+     * @param action        批量操作的消费函数
+     * @return 批处理任务实例
+     */
+    public static <T> BatchTask<T> createBatchTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Consumer<List<T>> action) {
+        return new BatchTask<>(maxSubmitTime, timeUnit, 200, action);
+    }
+
+    /**
+     * 创建一个批处理任务实例
+     *
+     * @param maxSubmitQuantity 最大提交数量
+     * @param action            批量操作的消费函数
+     * @return 批处理任务实例
+     */
+    public static <T> BatchTask<T> createBatchTask(Integer maxSubmitQuantity, final Consumer<List<T>> action) {
+        return new BatchTask<>(5L, TimeUnit.SECONDS, maxSubmitQuantity, action);
+    }
 
     /**
      * 执行批量操作
@@ -64,7 +109,8 @@ public class BatchTask<T> extends AbstarceBaseTask {
     /**
      * 追加元素
      *
-     * @param objs
+     * @param objs 待追加的元素
+     * @return 追加成功的元素个数
      */
     @Override
     protected int doOffer(Object... objs) {
@@ -72,26 +118,10 @@ public class BatchTask<T> extends AbstarceBaseTask {
             Object obj = objs[i];
             boolean a = this.blockingQueue.offer((T) obj);
             if (BooleanUtil.isFalse(a)) {
-                return i ;
+                return i;
             }
         }
         return objs.length;
-    }
-
-
-
-
-
-    public static <T> BatchTask<T> createBatchTask(final Consumer<List<T>> action) {
-        return new BatchTask<>(action);
-    }
-
-    public static <T> BatchTask<T> createBatchTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Consumer<List<T>> action) {
-        return new BatchTask<>(maxSubmitTime, timeUnit, 200, action);
-    }
-
-    public static <T> BatchTask<T> createBatchTask(Integer maxSubmitQuantity, final Consumer<List<T>> action) {
-        return new BatchTask<>(5L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
 }
