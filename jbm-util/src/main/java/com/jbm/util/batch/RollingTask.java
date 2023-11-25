@@ -92,6 +92,6 @@ public class RollingTask<T> extends AbstarceBaseTask {
      */
     @Override
     protected int doOffer(Object... obj) {
-        return 1;
+        return obj.length == 0 ? 1 : obj.length;
     }
 }
