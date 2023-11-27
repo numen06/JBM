@@ -53,12 +53,25 @@ public class DocumentController {
 //        System.out.println(FileNameUtil.getPath("/test/testwet/hsdad.xtew"));
 //    }
 
+    /**
+     * 获取处理后的请求路径
+     *
+     * @param request 请求对象
+     * @return 处理后的请求路径
+     */
     private static String getExtractPath(final HttpServletRequest request) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
     }
 
+    /**
+     * 上传随机文档
+     *
+     * @param file   上传的文件
+     * @param request 请求对象
+     * @return 上传结果
+     */
     @ApiOperation(value = "上传随机文档")
     @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
@@ -70,6 +83,13 @@ public class DocumentController {
         });
     }
 
+    /**
+     * 上传特定文档
+     *
+     * @param file   上传的文件
+     * @param request 请求对象
+     * @return 上传结果
+     */
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/upload")
     public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
@@ -81,6 +101,13 @@ public class DocumentController {
         });
     }
 
+    /**
+     * 删除文档
+     *
+     * @param filePath 文档路径
+     * @param request  请求对象
+     * @return 删除结果
+     */
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/{filePath}")
     public ResultBody<Void> remove(@PathVariable("filePath") String filePath, HttpServletRequest request) {
@@ -93,6 +120,15 @@ public class DocumentController {
         });
     }
 
+    /**
+     * 获取一个文档
+     *
+     * @param filePath 文档路径
+     * @param request  请求对象
+     * @param response 响应对象
+     * @throws MinioException       MinIO异常
+     * @throws IOException          IO异常
+     */
     @ApiOperation(value = "获取一个文档")
     @GetMapping("/get/{filePath}")
     public void get(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
@@ -107,6 +143,15 @@ public class DocumentController {
         response.flushBuffer();
     }
 
+    /**
+     * 下载一个文档
+     *
+     * @param filePath 文档路径
+     * @param request  请求对象
+     * @param response 响应对象
+     * @throws MinioException       MinIO异常
+     * @throws IOException          IO异常
+     */
     @ApiOperation(value = "下载一个文档")
     @GetMapping("/download/{filePath}")
     public void download(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
