@@ -21,6 +21,9 @@ WHERE
     #if(${gatewayLogs.serviceId})
 	AND serviceId =~/${gatewayLogs.serviceId}/
     #end
+    #if(${gatewayLogs.apiId})
+    AND apiId =${gatewayLogs.apiId}
+    #end
     #if(${gatewayLogs.method})
 	AND method ='${gatewayLogs.method}'
     #end
