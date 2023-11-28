@@ -36,6 +36,9 @@ public class BaseDoc extends MasterDataEntity {
     @ApiModelProperty(value = "文档大小")
     private Long size;
 
+    @ApiModelProperty(value = "文档分组ID")
+    private Long docGroupId;
+
     @ApiModelProperty(value = "文档分组")
     private String docGroup;
 
@@ -52,7 +55,7 @@ public class BaseDoc extends MasterDataEntity {
     private Long effectiveTime;
 
     @ApiModelProperty(value = "过期时间")
-    private Date ExpirationTime;
+    private Date expirationTime;
 
     @ApiModelProperty(value = "文档版本")
     @Convert(converter = StringConverter.class)

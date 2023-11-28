@@ -1,8 +1,8 @@
 package com.jbm.cluster.doc.controller;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
-import com.jbm.cluster.common.basic.annotation.AccessLogIgnore;
 import com.jbm.cluster.doc.model.Token;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.cluster.doc.service.WpsFileService;
@@ -13,15 +13,14 @@ import jbm.framework.boot.autoconfigure.minio.MinioException;
 import jbm.framework.web.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 /**
@@ -41,31 +40,6 @@ public class DocumentController {
     @Autowired
     private WpsFileService wpsFileService;
 
-//    @ApiOperation(value = "获取文档列表")
-//    @GetMapping("/list/{filePath}")
-//    public ResultBody list(@PathVariable("filePath") String filePath, HttpServletRequest request) throws MinioException {
-////        final String filePath = getExtractPath(request);
-//        return ResultBody.ok().data(minioService.getFullList(Paths.get(filePath)));
-//    }
-
-//    public static void main(String[] args) {
-//        System.out.println(FileNameUtil.getPath("/test"));
-//        System.out.println(FileNameUtil.getPath("/test/"));
-//        System.out.println(FileNameUtil.getPath("/test/testwet/hsdad.xtew"));
-//    }
-
-    /**
-     * 获取处理后的请求路径
-     *
-     * @param request 请求对象
-     * @return 处理后的请求路径
-     */
-    private static String getExtractPath(final HttpServletRequest request) {
-        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        return new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
-    }
-
     /**
      * 上传随机文档
      *
@@ -73,17 +47,17 @@ public class DocumentController {
      * @param request 请求对象
      * @return 上传结果
      */
-    @AccessLogIgnore
     @ApiOperation(value = "上传随机文档")
     @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
         return ResultBody.callback("上传文档成功", new Supplier<String>() {
             @Override
             public String get() {
-                return baseDocService.uploadDoc(file, request).getDocPath();
+                return baseDocService.uploadDoc(file, null, request).getDocPath();
             }
         });
     }
+
 
     /**
      * 上传特定文档
@@ -94,14 +68,17 @@ public class DocumentController {
      */
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/upload")
-    public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
+    public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, @RequestParam(value = "group", required = false) String group, HttpServletRequest request) {
         return ResultBody.callback("上传文档成功", new Supplier<String>() {
             @Override
             public String get() {
-                return baseDocService.uploadDoc(file, request).getDocPath();
+                BaseDoc baseDoc = new BaseDoc();
+                baseDoc.setDocGroup(group);
+                return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
             }
         });
     }
+
 
     /**
      * 删除文档
@@ -113,6 +90,19 @@ public class DocumentController {
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/{filePath}")
     public ResultBody<Void> remove(@PathVariable("filePath") String filePath, HttpServletRequest request) {
+        return ResultBody.callback("删除文档成功", new Supplier<Void>() {
+            @Override
+            public Void get() {
+                baseDocService.removeDoc(filePath);
+                return null;
+            }
+        });
+    }
+
+
+    @ApiOperation(value = "删除文档")
+    @GetMapping("/remove/{group}/{filePath}")
+    public ResultBody<Void> remove(@PathVariable("filePath") String filePath, @PathVariable("group") String group, HttpServletRequest request) {
         return ResultBody.callback("删除文档成功", new Supplier<Void>() {
             @Override
             public Void get() {
@@ -136,6 +126,7 @@ public class DocumentController {
     public void get(@PathVariable("filePath") String filePath, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
 //        filePath = getExtractPath(request);
         BaseDoc baseDoc = new BaseDoc();
+//        baseDoc.setDocId(FileNameUtil.getBaseName(filePath));
         baseDoc.setDocPath(filePath);
         InputStream inputStream = baseDocService.getDoc(baseDoc);
         response.setContentLength(baseDoc.getSize().intValue());
@@ -144,6 +135,39 @@ public class DocumentController {
         IoUtil.copy(inputStream, response.getOutputStream());
         response.flushBuffer();
     }
+
+    /**
+     * 获取一个文档
+     *
+     * @param filePath 文档路径
+     * @param request  请求对象
+     * @param response 响应对象
+     * @throws MinioException MinIO异常
+     * @throws IOException    IO异常
+     */
+    @ApiOperation(value = "获取一个文档")
+    @GetMapping("/get/{group}/{filePath}")
+    public void get(@PathVariable("filePath") String filePath, @PathVariable("group") String group, HttpServletRequest request, HttpServletResponse response) throws MinioException, IOException {
+        // 获取文档路径
+        // filePath = getExtractPath(request);
+        BaseDoc baseDoc = new BaseDoc();
+        // 设置文档路径
+        baseDoc.setDocPath(Paths.get(StrUtil.nullToDefault(group, ""), filePath).toString());
+        // 获取文档输入流
+        InputStream inputStream = baseDocService.getDoc(baseDoc);
+        // 设置文档大小
+        response.setContentLength(baseDoc.getSize().intValue());
+        // 设置文档名称
+        WebUtils.setFileInlineHeader(response, baseDoc.getDocName());
+        // 设置文档内容类型
+        response.setContentType(baseDoc.getContentType());
+        // 复制输入流到输出流
+        IoUtil.copy(inputStream, response.getOutputStream());
+        // 刷新响应缓冲区
+        response.flushBuffer();
+    }
+
+
 
     /**
      * 下载一个文档

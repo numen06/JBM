@@ -4,7 +4,10 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
+import com.jbm.cluster.api.entitys.doc.BaseDocToken;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -26,6 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -69,11 +73,14 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
     /**
      * 上传文档
      *
-     * @return
+     * @param file    上传的文件
+     * @param baseDoc 基础文档对象
+     * @param request HTTP请求对象
+     * @return 上传的文档对象
      */
     @Override
-    public BaseDoc uploadDoc(MultipartFile file, HttpServletRequest request) {
-        BaseDoc baseDoc = this.createDoc(file, request);
+    public BaseDoc uploadDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        baseDoc = this.createDoc(file, baseDoc, request);
         try {
             minioService.upload(Paths.get(baseDoc.getDocPath()), file.getInputStream());
         } catch (Exception e) {
@@ -82,6 +89,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         this.saveEntity(baseDoc);
         return baseDoc;
     }
+
 
     @Override
     public void removeDoc(String filePath) {
@@ -116,21 +124,33 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         }
     }
 
+    /**
+     * 创建一个Doc对象
+     *
+     * @param file 文件对象
+     * @return Doc对象
+     */
     @Override
     public BaseDoc createDoc(File file) {
         BaseDoc baseDoc = new BaseDoc();
         baseDoc.setDocId(FileNameUtil.getBaseName(file.getName()));
         baseDoc.setDocName(file.getName());
         baseDoc.setSize(FileUtil.size(file));
-        //文件版本
+        // 创建一个版本对象
         baseDoc.setVersion(new Version());
         baseDoc.setContentType(FileUtil.getMimeType(file.getName()));
-        //文件路径
+        // 设置文件路径
         baseDoc.setDocPath(file.getName());
         this.setCreator(baseDoc);
         return baseDoc;
     }
 
+
+    /**
+     * 设置创建者
+     *
+     * @param baseDoc 基础文档对象
+     */
     public void setCreator(BaseDoc baseDoc) {
         try {
             baseDoc.setCreator(LoginHelper.getLoginUser().getUserId());
@@ -139,32 +159,60 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         }
     }
 
+
+    /**
+     * 创建一个文档对象
+     *
+     * @param file    上传的文件
+     * @param request HTTP请求对象
+     * @return 创建的文档对象
+     */
     @Override
-    public BaseDoc createDoc(MultipartFile file, HttpServletRequest request) {
+    public BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
         if (ObjectUtil.isEmpty(file)) {
             throw new ServiceException("上传文件为空");
         }
         final String filePath = getExtractPath(request);
-        //扩展名
+        // 扩展名
         String extName = FileUtil.extName(file.getOriginalFilename());
-        //随机名称
-//        String mainName = IdUtil.objectId();
-
-
-        BaseDoc baseDoc = new BaseDoc();
+        // 随机名称
+        // String mainName = IdUtil.objectId();
+        if (ObjectUtil.isEmpty(baseDoc)) {
+            baseDoc = new BaseDoc();
+        }
         baseDoc.setDocId(IdUtil.objectId());
-
+        //如果为空的话置空
+        String group = StrUtil.emptyToNull(baseDoc.getDocGroup());
+        baseDoc.setDocGroup(group);
         String fileName = baseDoc.getDocId() + "." + extName;
         baseDoc.setDocName(file.getOriginalFilename());
         baseDoc.setSize(file.getSize());
-        //文件版本
+        // 文件版本
         baseDoc.setVersion(new Version());
-        Path path = Paths.get(filePath, fileName);
+        // 防止空文件夹
+        Path path = Paths.get(StrUtil.nullToDefault(group, ""), filePath, fileName);
         baseDoc.setContentType(FileUtil.getMimeType(path));
-        //文件路径
+        // 文件路径
         baseDoc.setDocPath(FileNameUtil.normalize(path.toString(), true));
         this.setCreator(baseDoc);
         return baseDoc;
     }
+
+    /**
+     * 根据路径查找分组项列表
+     *
+     * @param groupPath 分组路径
+     * @return 分组项列表
+     */
+    @Override
+    public List<BaseDoc> findGroupItemsByPath(String groupPath) {
+        QueryWrapper<BaseDoc> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseDoc::getDocGroup, groupPath);
+        //最多一百条
+        queryWrapper.last("LIMIT 100");
+        return this.selectEntitysByWapper(queryWrapper);
+    }
+
+
 
 }

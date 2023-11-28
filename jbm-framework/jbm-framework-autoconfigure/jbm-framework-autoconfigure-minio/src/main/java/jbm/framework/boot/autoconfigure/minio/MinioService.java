@@ -19,6 +19,7 @@ package jbm.framework.boot.autoconfigure.minio;
 
 import io.minio.*;
 import io.minio.messages.Item;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -93,7 +94,7 @@ public class MinioService {
     public List<Item> list(Path path) {
         ListObjectsArgs args = ListObjectsArgs.builder()
                 .bucket(configurationProperties.getBucket())
-                .prefix(path.toString())
+                .prefix(FilenameUtils.normalize(path.toString(), true))
                 .recursive(false)
                 .build();
         Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
@@ -111,7 +112,7 @@ public class MinioService {
     public List<Item> getFullList(Path path) {
         ListObjectsArgs args = ListObjectsArgs.builder()
                 .bucket(configurationProperties.getBucket())
-                .prefix(path.toString())
+                .prefix(FilenameUtils.normalize(path.toString(), true))
                 .build();
         Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
         return getItems(myObjects);
@@ -147,7 +148,7 @@ public class MinioService {
         try {
             GetObjectArgs args = GetObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(path.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .build();
             return minioClient.getObject(args);
         } catch (Exception e) {
@@ -166,7 +167,7 @@ public class MinioService {
         try {
             StatObjectArgs args = StatObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(path.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .build();
             return minioClient.statObject(args);
         } catch (Exception e) {
@@ -186,7 +187,7 @@ public class MinioService {
                     try {
                         StatObjectArgs args = StatObjectArgs.builder()
                                 .bucket(configurationProperties.getBucket())
-                                .object(path.toString())
+                                .object(FilenameUtils.normalize(path.toString(), true))
                                 .build();
                         return new HashMap.SimpleEntry<>(path, minioClient.statObject(args));
                     } catch (Exception e) {
@@ -199,15 +200,15 @@ public class MinioService {
     /**
      * Get a file from Minio, and save it in the {@code fileName} file
      *
-     * @param source   Path with prefix to the object. Object name must be included.
+     * @param path   Path with prefix to the object. Object name must be included.
      * @param fileName Filename
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while fetch object
      */
-    public void getAndSave(Path source, String fileName) throws jbm.framework.boot.autoconfigure.minio.MinioException {
+    public void getAndSave(Path path, String fileName) throws jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             DownloadObjectArgs args = DownloadObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .filename(fileName)
                     .build();
             minioClient.downloadObject(args);
@@ -219,17 +220,17 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source  Path with prefix to the object. Object name must be included.
+     * @param path  Path with prefix to the object. Object name must be included.
      * @param file    File as an inputstream
      * @param headers Additional headers to put on the file. The map MUST be mutable. All custom headers will start with 'x-amz-meta-' prefix when fetched with {@code getMetadata()} method.
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
-    public void upload(Path source, InputStream file, Map<String, String> headers) throws
+    public void upload(Path path, InputStream file, Map<String, String> headers) throws
             jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .stream(file, file.available(), -1)
                     .headers(headers)
                     .build();
@@ -242,16 +243,16 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source Path with prefix to the object. Object name must be included.
+     * @param path Path with prefix to the object. Object name must be included.
      * @param file   File as an inputstream
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
-    public void upload(Path source, InputStream file) throws
+    public void upload(Path path, InputStream file) throws
             jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .stream(file, file.available(), -1)
                     .build();
             minioClient.putObject(args);
@@ -263,18 +264,18 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source      Path with prefix to the object. Object name must be included.
+     * @param path      Path with prefix to the object. Object name must be included.
      * @param file        File as an inputstream
      * @param contentType MIME type for the object
      * @param headers     Additional headers to put on the file. The map MUST be mutable
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
-    public void upload(Path source, InputStream file, String contentType, Map<String, String> headers) throws
+    public void upload(Path path, InputStream file, String contentType, Map<String, String> headers) throws
             jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .stream(file, file.available(), -1)
                     .headers(headers)
                     .contentType(contentType)
@@ -289,17 +290,17 @@ public class MinioService {
     /**
      * Upload a file to Minio
      *
-     * @param source      Path with prefix to the object. Object name must be included.
+     * @param path      Path with prefix to the object. Object name must be included.
      * @param file        File as an inputstream
      * @param contentType MIME type for the object
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
-    public void upload(Path source, InputStream file, String contentType) throws
+    public void upload(Path path, InputStream file, String contentType) throws
             jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .stream(file, file.available(), -1)
                     .contentType(contentType)
                     .build();
@@ -314,16 +315,16 @@ public class MinioService {
      * Upload a file to Minio
      * upload file bigger than Xmx size
      *
-     * @param source Path with prefix to the object. Object name must be included.
+     * @param path Path with prefix to the object. Object name must be included.
      * @param file   File as an Filename
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while uploading object
      */
-    public void upload(Path source, File file) throws
+    public void upload(Path path, File file) throws
             jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             UploadObjectArgs args = UploadObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .filename(file.getAbsolutePath())
                     .build();
             minioClient.uploadObject(args);
@@ -336,14 +337,14 @@ public class MinioService {
     /**
      * Remove a file to Minio
      *
-     * @param source Path with prefix to the object. Object name must be included.
+     * @param path Path with prefix to the object. Object name must be included.
      * @throws jbm.framework.boot.autoconfigure.minio.MinioException if an error occur while removing object
      */
-    public void remove(Path source) throws jbm.framework.boot.autoconfigure.minio.MinioException {
+    public void remove(Path path) throws jbm.framework.boot.autoconfigure.minio.MinioException {
         try {
             RemoveObjectArgs args = RemoveObjectArgs.builder()
                     .bucket(configurationProperties.getBucket())
-                    .object(source.toString())
+                    .object(FilenameUtils.normalize(path.toString(), true))
                     .build();
             minioClient.removeObject(args);
         } catch (Exception e) {

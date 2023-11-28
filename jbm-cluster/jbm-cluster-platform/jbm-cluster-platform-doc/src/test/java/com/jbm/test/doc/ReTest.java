@@ -3,10 +3,12 @@ package com.jbm.test.doc;
 
 import cn.hutool.core.util.ReUtil;
 import com.jbm.util.PatternMatchUtils;
+import org.junit.jupiter.api.Test;
 
 public class ReTest {
 
-    public static void main(String[] args) {
+    @Test
+    public void testRe(String[] args) {
         String string = "/get/64e967af97ac478f2a919891.jpg";
 
         // 正则表达式
