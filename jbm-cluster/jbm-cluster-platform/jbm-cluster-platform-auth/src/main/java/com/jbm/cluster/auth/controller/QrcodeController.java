@@ -8,6 +8,7 @@ import cn.hutool.extra.qrcode.QrConfig;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.auth.model.AuthConfirmModel;
 import com.jbm.cluster.auth.service.ConfirmService;
+import com.jbm.cluster.common.basic.annotation.AccessLogIgnore;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,6 +48,7 @@ public class QrcodeController {
     }
 
 
+    @AccessLogIgnore
     @ApiOperation(value = "验证二维码登录")
     @GetMapping(value = "/check")
     public ResultBody check(@RequestParam String code) {

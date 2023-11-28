@@ -2,6 +2,7 @@ package com.jbm.cluster.doc.controller;
 
 import cn.hutool.core.io.IoUtil;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
+import com.jbm.cluster.common.basic.annotation.AccessLogIgnore;
 import com.jbm.cluster.doc.model.Token;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.cluster.doc.service.WpsFileService;
@@ -68,10 +69,11 @@ public class DocumentController {
     /**
      * 上传随机文档
      *
-     * @param file   上传的文件
+     * @param file    上传的文件
      * @param request 请求对象
      * @return 上传结果
      */
+    @AccessLogIgnore
     @ApiOperation(value = "上传随机文档")
     @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
@@ -86,7 +88,7 @@ public class DocumentController {
     /**
      * 上传特定文档
      *
-     * @param file   上传的文件
+     * @param file    上传的文件
      * @param request 请求对象
      * @return 上传结果
      */
@@ -126,8 +128,8 @@ public class DocumentController {
      * @param filePath 文档路径
      * @param request  请求对象
      * @param response 响应对象
-     * @throws MinioException       MinIO异常
-     * @throws IOException          IO异常
+     * @throws MinioException MinIO异常
+     * @throws IOException    IO异常
      */
     @ApiOperation(value = "获取一个文档")
     @GetMapping("/get/{filePath}")
@@ -149,8 +151,8 @@ public class DocumentController {
      * @param filePath 文档路径
      * @param request  请求对象
      * @param response 响应对象
-     * @throws MinioException       MinIO异常
-     * @throws IOException          IO异常
+     * @throws MinioException MinIO异常
+     * @throws IOException    IO异常
      */
     @ApiOperation(value = "下载一个文档")
     @GetMapping("/download/{filePath}")

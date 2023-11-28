@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.jbm.cluster.api.model.api.JbmApi;
+import com.jbm.cluster.common.basic.annotation.AccessLogIgnore;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
@@ -42,7 +43,7 @@ public class ApiBuild {
         Set<MediaType> mediaTypeSet = requestMappingInfo.getProducesCondition().getProducibleMediaTypes();
         for (MethodParameter params : handlerMethod.getMethodParameters()) {
             if (params.hasParameterAnnotation(RequestBody.class)) {
-                mediaTypeSet.add(MediaType.APPLICATION_JSON_UTF8);
+                mediaTypeSet.add(MediaType.APPLICATION_JSON);
                 break;
             }
         }
@@ -55,6 +56,8 @@ public class ApiBuild {
         String className = handlerMethod.getMethod().getDeclaringClass().getName();
         // 方法名
         String methodName = handlerMethod.getMethod().getName();
+        //主动忽略日志
+        Boolean accessLog = handlerMethod.hasMethodAnnotation(AccessLogIgnore.class);
         String md5 = DigestUtil.md5Hex(serviceId + url);
         String name = StrUtil.EMPTY;
         String desc = StrUtil.EMPTY;
@@ -69,6 +72,7 @@ public class ApiBuild {
         name = StringUtils.isBlank(name) ? methodName : name;
         api.apiName(name)
                 .methodName(methodName)
+                .accessLog(accessLog)
                 .apiCode(md5)
                 .apiDesc(desc)
                 .paths(requestMappingInfo.getPatternsCondition().getPatterns())
