@@ -67,6 +67,7 @@ public class ApiFilter implements AccessLogFilter {
             if (BooleanUtil.isFalse(baseApi.getAccessLog())) {
                 gatewayLogInfo.setLoglevel(0);
             }
+            gatewayLogInfo.setApiId(baseApi.getApiId());
             gatewayLogInfo.setApiName(baseApi.getApiName());
             gatewayLogInfo.setApiPath(baseApi.getPath());
         } catch (Exception e) {

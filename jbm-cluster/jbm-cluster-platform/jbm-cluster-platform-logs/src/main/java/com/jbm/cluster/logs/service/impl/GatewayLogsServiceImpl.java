@@ -3,10 +3,8 @@ package com.jbm.cluster.logs.service.impl;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.lock.LockInfo;
 import com.baomidou.lock.LockTemplate;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
@@ -23,11 +21,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -152,7 +148,7 @@ public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, Gat
     private BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
-            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", ListUtil.list(false, "requestUserId", "appId", "appKey", "serviceId"));
+            simpleInfluxTemplate.batchInsertItem("gatewayLogs", gatewayLogs, "requestTime", ListUtil.list(false, "requestUserId", "appId", "appKey", "serviceId", "apiId"));
         }
     });
 

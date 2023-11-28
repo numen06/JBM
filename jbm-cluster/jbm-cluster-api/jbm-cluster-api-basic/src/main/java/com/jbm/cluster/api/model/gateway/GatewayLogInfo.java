@@ -50,6 +50,9 @@ public class GatewayLogInfo implements Serializable {
     @ApiModelProperty(value = "应用Key")
     private String appKey;
 
+    @ApiModelProperty(value = "API接口的ID")
+    private Long apiId;
+
     @ApiModelProperty(value = "应用名称")
     private String appName;
 
