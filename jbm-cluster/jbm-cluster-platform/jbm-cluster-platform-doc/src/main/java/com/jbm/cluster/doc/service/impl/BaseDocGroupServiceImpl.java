@@ -1,5 +1,6 @@
 package com.jbm.cluster.doc.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -56,17 +57,23 @@ public class BaseDocGroupServiceImpl extends MasterDataServiceImpl<BaseDocGroup>
         return this.saveEntity(baseDocGroup);
     }
 
-//    @Override
-//    public Boolean checkGroup(String groupPath) {
-//        QueryWrapper<BaseDocGroup> queryWrapper = new QueryWrapper<>();
-//        queryWrapper.lambda().eq(BaseDocGroup::getGroupPath, groupPath);
-//        BaseDocGroup baseDocGroup = this.selectEntityByWapper(queryWrapper);
-//        return ObjectUtil.isNotNull(baseDocGroup);
-//    }
+    @Override
+    public BaseDocGroup checkGroupByToken(String token) {
+        if (BooleanUtil.isFalse(baseDocTokenService.checkToken(token))) {
+            throw new ServiceException("文档token失效或者无效");
+        }
+        QueryWrapper<BaseDocGroup> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseDocGroup::getTokenKey, token);
+        BaseDocGroup baseDocGroup = this.selectEntityByWapper(queryWrapper);
+        return baseDocGroup;
+    }
 
     @Override
-    public List<BaseDoc> findGroupItemsByPath(BaseDocGroup baseDocGroup ) {
-
-        return baseDocService.findGroupItemsByPath(baseDocGroup.getGroupPath());
+    public List<BaseDoc> findGroupItemsByPath(BaseDocGroup baseDocGroup) {
+        BaseDocGroup baseDocGroup2 = this.checkGroupByToken(baseDocGroup.getTokenKey());
+        if (ObjectUtil.isEmpty(baseDocGroup)) {
+            throw new ServiceException("没有找到对应的分组");
+        }
+        return baseDocService.findGroupItemsByPath(baseDocGroup2.getGroupPath());
     }
 }

@@ -17,7 +17,8 @@ public interface BaseDocGroupService extends IMasterDataService<BaseDocGroup> {
 
     BaseDocGroup createTempGroup(BaseDocGroup baseDocGroup);
 
-//    Boolean checkGroup(String tokenKey);
+
+    BaseDocGroup checkGroupByToken(String tokenKey);
 
     List<BaseDoc> findGroupItemsByPath(BaseDocGroup baseDocGroup);
 

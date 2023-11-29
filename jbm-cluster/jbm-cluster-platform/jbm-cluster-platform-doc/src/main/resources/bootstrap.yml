@@ -39,6 +39,9 @@ jbm:
     token-type: redis
     permit-all:
       - /get/**
+      - /baseDocGroup/findGroupItemByToken
+      - /baseDocGroup/uploadByToken
+      - /findGroupItemByToken
       - /download/**
       - /getViewUrl/**
       - /v1/3rd/file/**

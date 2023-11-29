@@ -1,6 +1,7 @@
 package com.jbm.cluster.doc.controller;
 
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
 import com.jbm.cluster.api.entitys.doc.BaseDocGroup;
 import com.jbm.cluster.doc.service.BaseDocGroupService;
@@ -40,7 +41,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
      * 创建临时组
      */
     @ApiOperation(value = "创建临时组")
-    @GetMapping("/createTempGroup")
+    @PostMapping("/createTempGroup")
     public ResultBody<BaseDocGroup> createTempGroup(@RequestBody(required = false) BaseDocGroup baseDocGroup) {
         return ResultBody.callback(() -> {
             return baseDocGroupService.createTempGroup(baseDocGroup);
@@ -55,7 +56,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
      * @return 结果对象
      */
     @ApiOperation(value = "查询组内文件")
-    @GetMapping("/findGroupItemByToken")
+    @PostMapping("/findGroupItemByToken")
     public ResultBody<List<BaseDoc>> findGroupItemByToken(@RequestBody(required = false) BaseDocGroup baseDocGroup) {
         return ResultBody.callback(() -> {
             if (BooleanUtil.isFalse(baseDocTokenService.checkToken(baseDocGroup.getTokenKey()))) {
@@ -69,24 +70,23 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
      * 上传组特定文档
      *
      * @param file    文件对象
-     * @param group   文档分组
+     * @param tokenKey   文档分组
      * @param request HTTP请求对象
      * @return 结果信息和文档路径
      */
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/uploadByToken")
-    public ResultBody<String> uploadByToken(@RequestParam(value = "file") MultipartFile file, @RequestParam(value = "group") String group, HttpServletRequest request) {
+    public ResultBody<String> uploadByToken(@RequestParam(value = "file") MultipartFile file, @RequestParam(value = "tokenKey") String tokenKey, HttpServletRequest request) {
         return ResultBody.callback("上传组文档成功", new Supplier<String>() {
             @Override
             public String get() {
-                if (BooleanUtil.isFalse(baseDocTokenService.checkToken(group))) {
-                    throw new ServiceException("文档token失效或者无效");
-                }
+                BaseDocGroup group = baseDocGroupService.checkGroupByToken(tokenKey);
 //                if (BooleanUtil.isFalse(baseGroupService.checkToken(group))) {
 //                    throw new ServiceException("文档token失效或者无效");
 //                }
                 BaseDoc baseDoc = new BaseDoc();
-                baseDoc.setDocGroup(group);
+                baseDoc.setDocGroupId(group.getId());
+                baseDoc.setDocGroup(group.getGroupPath());
                 return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
             }
         });
