@@ -19,6 +19,8 @@ public interface BaseDocService extends IMasterDataService<BaseDoc> {
 
     void removeDoc(String docId);
 
+    boolean removeByPaths(List<String> paths);
+
     InputStream getDoc(BaseDoc baseDoc);
 
     BaseDoc createDoc(File file);

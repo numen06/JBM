@@ -1,6 +1,5 @@
 package com.jbm.cluster.doc.service.impl;
 
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -24,21 +23,12 @@ import java.util.List;
 @Service
 public class BaseDocGroupServiceImpl extends MasterDataServiceImpl<BaseDocGroup> implements BaseDocGroupService {
 
-
     @Autowired
     private BaseDocTokenService baseDocTokenService;
 
     @Autowired
     private BaseDocService baseDocService;
 
-    @Override
-    public BaseDocGroup createTempGroup() {
-        BaseDocToken docToken = baseDocTokenService.createDayToken();
-        BaseDocGroup baseDocGroup = new BaseDocGroup();
-        baseDocGroup.setExpirationTime(docToken.getExpirationTime());
-        baseDocGroup.setTokenKey(docToken.getTokenKey());
-        return this.saveEntity(baseDocGroup);
-    }
 
     /**
      * @param baseDocGroup
@@ -47,33 +37,46 @@ public class BaseDocGroupServiceImpl extends MasterDataServiceImpl<BaseDocGroup>
     @Override
     public BaseDocGroup createTempGroup(BaseDocGroup baseDocGroup) {
         if (ObjectUtil.isEmpty(baseDocGroup)) {
-            throw new ServiceException("参数错误");
+//            throw new ServiceException("参数错误");
+            baseDocGroup = new BaseDocGroup();
         }
         if (ObjectUtil.isEmpty(baseDocGroup.getGroupPath())) {
             baseDocGroup.setGroupPath(IdUtil.fastSimpleUUID());
         }
-        BaseDocToken docToken = baseDocTokenService.createToken(baseDocGroup.getExpirationTime());
+        baseDocGroup = this.saveEntity(baseDocGroup);
+        BaseDocToken docToken = baseDocTokenService.createGroupToken(baseDocGroup.getExpirationTime(), baseDocGroup.getGroupId());
         baseDocGroup.setTokenKey(docToken.getTokenKey());
-        return this.saveEntity(baseDocGroup);
+        return baseDocGroup;
     }
 
     @Override
-    public BaseDocGroup checkGroupByToken(String token) {
-        if (BooleanUtil.isFalse(baseDocTokenService.checkToken(token))) {
-            throw new ServiceException("文档token失效或者无效");
+    public BaseDocGroup findGroupById(String groupId) {
+        if (ObjectUtil.isEmpty(groupId)) {
+            throw new ServiceException("分组ID为空");
         }
         QueryWrapper<BaseDocGroup> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BaseDocGroup::getTokenKey, token);
+        queryWrapper.lambda().eq(BaseDocGroup::getGroupId, groupId);
         BaseDocGroup baseDocGroup = this.selectEntityByWapper(queryWrapper);
         return baseDocGroup;
     }
 
     @Override
-    public List<BaseDoc> findGroupItemsByPath(BaseDocGroup baseDocGroup) {
-        BaseDocGroup baseDocGroup2 = this.checkGroupByToken(baseDocGroup.getTokenKey());
+    public List<BaseDoc> findGroupItems(String groupId) {
+        BaseDocGroup baseDocGroup = this.findGroupById(groupId);
         if (ObjectUtil.isEmpty(baseDocGroup)) {
             throw new ServiceException("没有找到对应的分组");
         }
-        return baseDocService.findGroupItemsByPath(baseDocGroup2.getGroupPath());
+        return baseDocService.findGroupItemsByPath(baseDocGroup.getGroupPath());
     }
+
+    @Override
+    public boolean removeGroupItemsByPath(List<String> paths) {
+        return baseDocService.removeByPaths(paths);
+    }
+
+    @Override
+    public boolean removeGroupItemsById(List<String> ids) {
+        return baseDocService.removeByIds(ids);
+    }
+
 }

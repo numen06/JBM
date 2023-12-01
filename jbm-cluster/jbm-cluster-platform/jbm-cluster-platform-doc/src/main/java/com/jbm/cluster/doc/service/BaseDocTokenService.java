@@ -12,10 +12,10 @@ import java.util.Date;
 public interface BaseDocTokenService extends IMasterDataService<BaseDocToken> {
 
 
-    BaseDocToken createToken(Date expirationTime);
+    BaseDocToken createGroupToken(Date expirationTime,String groupId);
 
 
-    BaseDocToken createDayToken();
+    BaseDocToken createGroupDayToken(String groupId);
 
-    Boolean checkToken(String tokenKey);
+    BaseDocToken checkToken(String tokenKey);
 }

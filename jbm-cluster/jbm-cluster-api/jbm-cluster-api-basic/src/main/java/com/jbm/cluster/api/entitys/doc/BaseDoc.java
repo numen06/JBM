@@ -37,7 +37,7 @@ public class BaseDoc extends MasterDataEntity {
     private Long size;
 
     @ApiModelProperty(value = "文档分组ID")
-    private Long docGroupId;
+    private String docGroupId;
 
     @ApiModelProperty(value = "文档分组")
     private String docGroup;

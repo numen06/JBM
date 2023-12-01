@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -147,12 +146,21 @@ public class ResultBody<T> implements Serializable {
     }
 
     public static <T> ResultBody<T> callback(Supplier<T> supplier) {
-        return ResultBody.ok().data(supplier.get());
+        try {
+            T res = supplier.get();
+            return ResultBody.ok().data(res);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
     }
 
-
     public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
-        return ResultBody.ok().data(supplier.get()).msg(msg);
+        try {
+            T res = supplier.get();
+            return ResultBody.ok().data(res).msg(msg);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
     }
 
     public ResultBody code(int code) {

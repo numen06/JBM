@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.entitys.doc;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
@@ -10,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import java.util.Date;
 
 @Data
@@ -18,9 +21,12 @@ import java.util.Date;
 @NoArgsConstructor
 @ApiModel("文档分组管理")
 @TableName
-public class BaseDocGroup extends MasterDataIdEntity {
+public class BaseDocGroup extends MasterDataEntity {
 
-
+    @Id
+    @TableId(type = IdType.ASSIGN_UUID)
+    @ApiModelProperty(value = "文档ID")
+    private String groupId;
     @ApiModelProperty(value = "分组路径")
     private String groupPath;
     @ApiModelProperty(value = "文档过期时间")

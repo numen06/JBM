@@ -23,17 +23,19 @@ public class BaseDocTokenServiceImpl extends MasterDataServiceImpl<BaseDocToken>
 
     /**
      * 创建一个BaseDocToken对象
-     * @Override 重写父类方法
+     *
      * @param expirationTime 有效期时间
      * @return BaseDocToken 返回创建的BaseDocToken对象
+     * @Override 重写父类方法
      */
-    public BaseDocToken createToken(Date expirationTime) {
+    public BaseDocToken createGroupToken(Date expirationTime, String groupId) {
         BaseDocToken baseDocToken = new BaseDocToken();
-        if (ObjectUtil.isNotNull(expirationTime)) {
-            throw new ServiceException("请设置有效时间");
+        if (ObjectUtil.isNull(expirationTime)) {
+            expirationTime = DateUtil.offsetDay(DateTime.now(), 1);
         }
+        baseDocToken.setDocGroupId(groupId);
         baseDocToken.setExpirationTime(expirationTime);
-        baseDocToken.setTokenKey(IdUtil.fastSimpleUUID());
+//        baseDocToken.setTokenKey(IdUtil.fastSimpleUUID());
         return this.saveEntity(baseDocToken);
     }
 
@@ -44,8 +46,8 @@ public class BaseDocTokenServiceImpl extends MasterDataServiceImpl<BaseDocToken>
      * @return 返回创建的Token对象
      */
     @Override
-    public BaseDocToken createDayToken() {
-        return this.createToken(DateUtil.offsetDay(DateTime.now(), 1));
+    public BaseDocToken createGroupDayToken(String groupId) {
+        return this.createGroupToken(DateUtil.offsetDay(DateTime.now(), 1), groupId);
     }
 
 
@@ -59,11 +61,11 @@ public class BaseDocTokenServiceImpl extends MasterDataServiceImpl<BaseDocToken>
      * @return 如果令牌存在则返回true，否则返回false
      */
     @Override
-    public Boolean checkToken(String tokenKey) {
+    public BaseDocToken checkToken(String tokenKey) {
         QueryWrapper<BaseDocToken> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BaseDocToken::getTokenKey, tokenKey);
         BaseDocToken baseDocToken = this.selectEntityByWapper(queryWrapper);
-        return ObjectUtil.isNotNull(baseDocToken);
+        return baseDocToken;
     }
 
 

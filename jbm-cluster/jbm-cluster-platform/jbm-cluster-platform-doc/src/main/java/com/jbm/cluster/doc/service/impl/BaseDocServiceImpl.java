@@ -7,7 +7,6 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
-import com.jbm.cluster.api.entitys.doc.BaseDocToken;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -98,9 +97,24 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         try {
             minioService.remove(Paths.get(filePath));
         } catch (Exception e) {
-            throw new ServiceException("上传文件错误");
+            throw new ServiceException("删除文件错误");
         }
         this.deleteEntity(baseDoc);
+    }
+
+    @Override
+    public boolean removeByPaths(List<String> paths) {
+
+        paths.forEach(new Consumer<String>() {
+            /**
+             * @param path the input argument
+             */
+            @Override
+            public void accept(String path) {
+                removeDoc(path);
+            }
+        });
+        return true;
     }
 
     @Override
@@ -212,7 +226,6 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         queryWrapper.last("LIMIT 100");
         return this.selectEntitysByWapper(queryWrapper);
     }
-
 
 
 }
