@@ -1,3 +1,4 @@
+
 package com.jbm.cluster.platform.gateway.filter;
 
 import com.alibaba.fastjson.JSONObject;
@@ -36,8 +37,9 @@ import java.util.Map;
 
 /**
  * SpringCloud Gateway 记录缓存请求Body和Form表单
- * GatewayContext gatewayContext = exchange.getAttribute(GatewayContext.CACHE_GATEWAY_CONTEXT);
- * https://github.com/chenggangpro/spring-cloud-gateway-plugin
+ * GatewayContext filter用于记录请求的Body和Form表单数据到GatewayContext中，
+ * 以便在后续的处理中使用。该过滤器会将GatewayContext放入
+ * exchange中，以便其他过滤器和处理程序可以访问。
  *
  * @author wesley.zhang
  */
@@ -45,11 +47,15 @@ import java.util.Map;
 @AllArgsConstructor
 @Component
 public class GatewayContextFilter implements WebFilter, Ordered {
+
     /**
      * default HttpMessageReader
      */
     private static final List<HttpMessageReader<?>> MESSAGE_READERS = HandlerStrategies.withDefaults().messageReaders();
 
+    /**
+     * 过滤器的执行顺序
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -57,10 +63,11 @@ public class GatewayContextFilter implements WebFilter, Ordered {
         HttpHeaders headers = request.getHeaders();
         gatewayContext.setRequestHeaders(headers);
         gatewayContext.getAllRequestData().addAll(request.getQueryParams());
-        /*
-         * save gateway context into exchange
-         */
+
+        // 将gateway context保存到exchange中
         exchange.getAttributes().put(GatewayContext.CACHE_GATEWAY_CONTEXT, gatewayContext);
+
+        // 根据Content-Type判断是否读取Body或Form数据
         MediaType contentType = headers.getContentType();
         if (headers.getContentLength() > 0) {
             if (MediaType.APPLICATION_JSON.equals(contentType) || MediaType.APPLICATION_JSON_UTF8.equals(contentType)) {
@@ -70,23 +77,25 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                 return readFormData(exchange, chain, gatewayContext);
             }
         }
+
         log.debug("[GatewayContext]ContentType:{},Gateway context is set with {}", contentType, gatewayContext);
         return chain.filter(exchange);
-
     }
 
-
+    /**
+     * 获取过滤器的顺序
+     */
     @Override
     public int getOrder() {
         return Integer.MIN_VALUE;
     }
 
-
     /**
-     * ReadFormData
+     * 读取Form数据
      *
      * @param exchange
      * @param chain
+     * @param gatewayContext
      * @return
      */
     private Mono<Void> readFormData(ServerWebExchange exchange, WebFilterChain chain, GatewayContext gatewayContext) {
@@ -102,9 +111,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                     charset = charset == null ? StandardCharsets.UTF_8 : charset;
                     String charsetName = charset.name();
                     MultiValueMap<String, String> formData = gatewayContext.getFormData();
-                    /*
-                     * formData is empty just return
-                     */
+                    // 如果formData为空，则直接返回
                     if (null == formData || formData.isEmpty()) {
                         return chain.filter(exchange);
                     }
@@ -112,9 +119,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                     String entryKey;
                     List<String> entryValue;
                     try {
-                        /*
-                         * repackage form result
-                         */
+                        // 根据formData重新组合成字符串
                         for (Map.Entry<String, List<String>> entry : formData.entrySet()) {
                             entryKey = entry.getKey();
                             entryValue = entry.getValue();
@@ -128,28 +133,20 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                         }
                     } catch (UnsupportedEncodingException e) {
                     }
-                    /*
-                     * substring with the last char '&'
-                     */
+                    // 字段字符串截取最后一个字符 '&'
                     String formDataBodyString = "";
                     if (formDataBodyBuilder.length() > 0) {
                         formDataBodyString = formDataBodyBuilder.substring(0, formDataBodyBuilder.length() - 1);
                     }
-                    /*
-                     * get result bytes
-                     */
+                    // 获取结果的字节数组
                     byte[] bodyBytes = formDataBodyString.getBytes(charset);
                     int contentLength = bodyBytes.length;
                     HttpHeaders httpHeaders = new HttpHeaders();
                     httpHeaders.putAll(exchange.getRequest().getHeaders());
                     httpHeaders.remove(HttpHeaders.CONTENT_LENGTH);
-                    /*
-                     * in case of content-length not matched
-                     */
+                    // 为httpHeaders设置Content-Length字段
                     httpHeaders.setContentLength(contentLength);
-                    /*
-                     * use BodyInserter to InsertFormData Body
-                     */
+                    // 使用BodyInserter将formData的Body插入到ReactiveHttpOutputMessage中
                     BodyInserter<String, ReactiveHttpOutputMessage> bodyInserter = BodyInserters.fromObject(formDataBodyString);
                     CachedBodyOutputMessage cachedBodyOutputMessage = new CachedBodyOutputMessage(exchange, httpHeaders);
                     log.debug("[GatewayContext]Rewrite Form Data :{}", formDataBodyString);
@@ -173,20 +170,19 @@ public class GatewayContextFilter implements WebFilter, Ordered {
     }
 
     /**
-     * ReadJsonBody
+     * 读取Json Body数据
      *
      * @param exchange
      * @param chain
+     * @param gatewayContext
      * @return
      */
     private Mono<Void> readBody(ServerWebExchange exchange, WebFilterChain chain, GatewayContext gatewayContext) {
         return DataBufferUtils.join(exchange.getRequest().getBody())
                 .flatMap(dataBuffer -> {
-                    /*
-                     * read the body Flux<DataBuffer>, and release the buffer
-                     * //TODO when SpringCloudGateway Version Release To G.SR2,this can be update with the new version's feature
-                     * see PR https://github.com/spring-cloud/spring-cloud-gateway/pull/1095
-                     */
+                    // 读取请求的Body Flux<DataBuffer>，并释放buffer
+                    // TODO: 使用SpringCloudGateway的最新版本，可以使用新版本的特性来替换此代码
+                    // see PR: https://github.com/spring-cloud/spring-cloud-gateway/pull/1095
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
@@ -195,9 +191,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                         DataBufferUtils.retain(buffer);
                         return Mono.just(buffer);
                     });
-                    /*
-                     * repackage ServerHttpRequest
-                     */
+                    // 根据重新组合的http请求创建新的ServerHttpRequest
                     ServerHttpRequest mutatedRequest = new ServerHttpRequestDecorator(exchange.getRequest()) {
                         @Override
                         public Flux<DataBuffer> getBody() {

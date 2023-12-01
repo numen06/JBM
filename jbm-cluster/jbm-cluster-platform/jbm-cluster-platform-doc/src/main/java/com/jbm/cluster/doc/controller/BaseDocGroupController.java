@@ -1,11 +1,13 @@
 package com.jbm.cluster.doc.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
 import com.jbm.cluster.api.entitys.doc.BaseDocGroup;
 import com.jbm.cluster.api.entitys.doc.BaseDocToken;
 import com.jbm.cluster.api.form.doc.DocPathForm;
+import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.cluster.doc.service.BaseDocGroupService;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.cluster.doc.service.BaseDocTokenService;
@@ -58,6 +60,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
      * @param baseDocGroup 组内文件信息
      * @return 结果对象
      */
+    @PermitAll
     @ApiOperation(value = "查询组内文件")
     @PostMapping("/findGroupItemByToken")
     public ResultBody<List<BaseDoc>> findGroupItemByToken(@RequestHeader(DEF_TOKEN_KEY_HEAD) String tokenKey, @RequestBody(required = false) BaseDocGroup baseDocGroup) {
@@ -70,7 +73,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
         });
     }
 
-
+    @PermitAll
     @ApiOperation(value = "删除组内文件")
     @PostMapping("/removeGroupItemByToken")
     public ResultBody<Boolean> removeGroupItemByToken(@RequestHeader(DEF_TOKEN_KEY_HEAD) String tokenKey, @RequestBody(required = false) DocPathForm docPathForm) {
@@ -98,6 +101,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
      * @param request  HTTP请求对象
      * @return 结果信息和文档路径
      */
+    @PermitAll
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/uploadByToken")
     public ResultBody<String> uploadByToken(@RequestHeader(DEF_TOKEN_KEY_HEAD) String tokenKey, @RequestParam(value = "file") MultipartFile file, HttpServletRequest request) {

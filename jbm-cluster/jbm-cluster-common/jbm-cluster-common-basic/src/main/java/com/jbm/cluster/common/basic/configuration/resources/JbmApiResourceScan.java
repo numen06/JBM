@@ -44,10 +44,10 @@ public class JbmApiResourceScan extends JbmClusterResourceScan<JbmApiResource> {
         // 获取url与类和方法的对应信息
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
         List<JbmApi> jbmApis = Lists.newArrayList();
-        for (Map.Entry<RequestMappingInfo, HandlerMethod> handlerMethodEntry : handlerMethods.entrySet()) {
+        handlerMethods.entrySet().parallelStream().forEach(handlerMethodEntry -> {
             ApiBuild apiBuild = new ApiBuild(handlerMethodEntry.getKey(), handlerMethodEntry.getValue(), serviceId);
             jbmApis.add(apiBuild.doBuild());
-        }
+        });
         JbmApiResource jbmApiResource = new JbmApiResource();
         jbmApiResource.setServiceId(serviceId);
         jbmApiResource.setJbmApiList(jbmApis);
