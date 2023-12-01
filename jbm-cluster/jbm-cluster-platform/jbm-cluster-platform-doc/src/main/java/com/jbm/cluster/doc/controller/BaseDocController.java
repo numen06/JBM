@@ -31,7 +31,7 @@ public class BaseDocController {
     @Autowired
     private BaseDocService baseDocService;
 
-    @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
+    @ApiOperation(value = "获取分页列表")
     @PostMapping("/pageList")
     public ResultBody<DataPaging<BaseDoc>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         return ResultBody.callback("查询分页列表成功", () -> {
@@ -42,7 +42,7 @@ public class BaseDocController {
         });
     }
 
-    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @ApiOperation(value = "通过id删除实体")
     @PostMapping("/deleteByIds")
     public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) DocPathForm docPathForm) {
         return ResultBody.callback("批量删除文件成功", () -> {
@@ -55,7 +55,7 @@ public class BaseDocController {
         });
     }
 
-    @ApiOperation(value = "通过path删除实体", notes = "通过id删除实体")
+    @ApiOperation(value = "通过path删除实体")
     @PostMapping("/deleteByPaths")
     public ResultBody<Boolean> deleteByPaths(@RequestBody(required = false) DocPathForm docPathForm) {
         return ResultBody.callback("批量删除文件成功", () -> {
