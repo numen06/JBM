@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -125,8 +126,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     @Override
     public List<BaseAuthorityAction> findAuthorityAction(Long actionId) {
         QueryWrapper<BaseAuthorityAction> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .eq(BaseAuthorityAction::getActionId, actionId);
+        queryWrapper.lambda().eq(BaseAuthorityAction::getActionId, actionId);
         return baseAuthorityActionMapper.selectList(queryWrapper);
     }
 
@@ -153,16 +153,21 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         if (ResourceType.menu.equals(resourceType)) {
             BaseMenu menu = baseMenuMapper.selectById(resourceId);
-            authority = JbmSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
-            //菜单保持authID和MenuId一致
-            baseAuthority.setAuthorityId(resourceId);
-            baseAuthority.setMenuId(resourceId);
-            baseAuthority.setStatus(menu.getStatus());
-            baseAuthority.setAuthority(authority);
-            try {
-                baseAuthorityMapper.insert(baseAuthority);
-            } catch (Exception e) {
+            if (ObjectUtil.isNotEmpty(menu)) {
+                authority = JbmSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
+                //如果数据不相等则新建
+                if (!authority.equals(baseAuthority.getAuthority())) {
+                    //菜单保持authID和MenuId一致
+                    baseAuthority.setAuthorityId(resourceId);
+                    baseAuthority.setMenuId(resourceId);
+                    baseAuthority.setStatus(menu.getStatus());
+                    baseAuthority.setAuthority(authority);
+                    try {
+                        baseAuthorityMapper.insert(baseAuthority);
+                    } catch (Exception e) {
 
+                    }
+                }
             }
         }
         if (ResourceType.action.equals(resourceType)) {
@@ -294,8 +299,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     @Override
     public void removeAuthorityAction(Long actionId) {
         QueryWrapper<BaseAuthorityAction> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .eq(BaseAuthorityAction::getActionId, actionId);
+        queryWrapper.lambda().eq(BaseAuthorityAction::getActionId, actionId);
         baseAuthorityActionMapper.delete(queryWrapper);
     }
 
@@ -436,9 +440,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         authority.setCreateTime(new Date());
         authority.setUpdateTime(authority.getCreateTime());
         QueryWrapper<BaseAuthorityApp> appQueryWrapper = new QueryWrapper();
-        appQueryWrapper.lambda()
-                .eq(BaseAuthorityApp::getAppId, appId)
-                .eq(BaseAuthorityApp::getAuthorityId, authorityId);
+        appQueryWrapper.lambda().eq(BaseAuthorityApp::getAppId, appId).eq(BaseAuthorityApp::getAuthorityId, authorityId);
         Long count = baseAuthorityAppMapper.selectCount(appQueryWrapper);
         if (count > 0) {
             return;
@@ -603,9 +605,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
             throw new ServiceException("roleIds is empty");
         }
         QueryWrapper<BaseAuthorityRole> roleQueryWrapper = new QueryWrapper();
-        roleQueryWrapper.lambda()
-                .in(BaseAuthorityRole::getRoleId, roleIds)
-                .eq(BaseAuthorityRole::getAuthorityId, authorityId);
+        roleQueryWrapper.lambda().in(BaseAuthorityRole::getRoleId, roleIds).eq(BaseAuthorityRole::getAuthorityId, authorityId);
         Long count = baseAuthorityRoleMapper.selectCount(roleQueryWrapper);
         return count > 0;
     }

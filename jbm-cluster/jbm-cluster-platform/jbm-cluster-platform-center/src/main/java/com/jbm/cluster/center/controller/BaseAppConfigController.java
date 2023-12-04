@@ -3,6 +3,7 @@ package com.jbm.cluster.center.controller;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
 import com.jbm.cluster.center.service.BaseAppConfigService;
+import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
 @RestController
 @RequestMapping("/baseAppConfig")
 public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig, BaseAppConfigService> {
-
+    @PermitAll
     @ApiOperation("获取应用配置")
     @GetMapping("/getAppConfigByKey")
     public ResultBody<String> getAppConfigByKey(@RequestParam(required = true) String appKey) {

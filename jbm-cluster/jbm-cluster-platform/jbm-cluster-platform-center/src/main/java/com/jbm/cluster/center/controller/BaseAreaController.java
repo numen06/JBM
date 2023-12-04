@@ -3,6 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.api.entitys.basic.BaseArea;
 import com.jbm.cluster.api.service.IBaseAreaServiceClient;
 import com.jbm.cluster.center.service.BaseAreaService;
+import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -24,6 +25,7 @@ public class BaseAreaController extends MasterDataCollection<BaseArea, BaseAreaS
 
     @ApiOperation("获取地区字典")
     @GetMapping("/getChinaAreaList")
+    @PermitAll
     @Override
     public ResultBody<List<BaseArea>> getChinaAreaList() {
         List<BaseArea> result = this.service.getChinaAreaList();

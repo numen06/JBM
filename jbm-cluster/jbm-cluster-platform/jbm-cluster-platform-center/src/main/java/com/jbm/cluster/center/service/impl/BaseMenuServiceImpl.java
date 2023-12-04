@@ -131,7 +131,6 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         return count > 0 ? true : false;
     }
 
-
     @Override
     public BaseMenu saveEntity(BaseMenu menu) {
         //获取当前用户的APPID
