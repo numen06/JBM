@@ -97,8 +97,10 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 //                }
 //            }
 //        });
+        //过滤掉不启用的配置
+        webhookEventConfigList = webhookEventConfigList.stream().filter(item -> BooleanUtil.isTrue(item.getEnable())).collect(Collectors.toList());
         if (CollUtil.isEmpty(webhookEventConfigList)) {
-            throw new ServiceException("不存在可用的时间配置");
+            throw new ServiceException("不存在可用的发送配置");
         }
         Map<String, List<WebhookEventConfig>> groupEvnetGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
         //遍历整个分组
@@ -269,7 +271,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     private boolean eventException(WebhookTask webhookTask, Exception e) {
         webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
         log.error("执行远程业务事件错误", e);
-        this.buildErrorMsg(webhookTask,e.getMessage());
+        this.buildErrorMsg(webhookTask, e.getMessage());
 //        webhookTask.setErrorMsg(e.getMessage());
         return webhookTask.getRetryNumber() >= 3;
     }
