@@ -7,6 +7,9 @@ import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.dev33.satoken.oauth2.model.SaClientModel;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -31,7 +34,8 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
             .expireAfterWrite(1, TimeUnit.HOURS)
 //            .refreshAfterWrite(1, TimeUnit.HOURS)
-            .build(key -> super.generateClientToken(key, "*"));
+            .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
+            );
 
     @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
@@ -45,7 +49,7 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
 
     @Override
     public SaClientModel getClientModel(String clientId) {
-        if (SpringUtil.getApplicationName().equals(clientId)) {
+        if (StrUtil.contains(clientId, SpringUtil.getApplicationName())) {
             return new SaClientModel()
                     .setClientId(clientId)
                     .setClientSecret(UUID.randomUUID().toString())

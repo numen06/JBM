@@ -3,7 +3,6 @@ package com.jbm.cluster.push.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -72,9 +71,15 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     @Override
     public void sendEvent(WebhookTaskForm webhookTaskForm) {
-        List<WebhookEventConfig> webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
-        if (CollUtil.isEmpty(webhookEventConfigList)) {
-            return;
+        List<WebhookEventConfig> webhookEventConfigList = CollUtil.newArrayList();
+        //如果传输过来的数据中已经有配置则不再搜索
+        if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig())) {
+            //根据事件ID查询
+            if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig().getEventId())) {
+                webhookEventConfigList = CollUtil.newArrayList(webhookTaskForm.getWebhookEventConfig());
+            } else {
+                webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
+            }
         }
         //系统分组默认发送全部
 //        List<WebhookEventConfig> defGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isEmpty(item.getEventGroup()) || BusinessEventConstant.SYSTEM.equals(item.getEventGroup())).collect(Collectors.toList());
@@ -92,6 +97,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 //                }
 //            }
 //        });
+        if (CollUtil.isEmpty(webhookEventConfigList)) {
+            throw new ServiceException("不存在可用的时间配置");
+        }
         Map<String, List<WebhookEventConfig>> groupEvnetGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
         //遍历整个分组
         groupEvnetGroup.forEach(new BiConsumer<String, List<WebhookEventConfig>>() {
@@ -103,9 +111,6 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                     public void run() {
                         //分拨推送
                         for (WebhookEventConfig webhookEventConfig : webhookEventConfigs) {
-                            if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
-                                continue;
-                            }
                             WebhookTask webhookTask = sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
                             //如果状态为200则为成功,跳出循环
                             if (webhookTask.getHttpStatus() == HttpStatus.HTTP_OK) {
@@ -191,6 +196,17 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         });
     }
 
+    private void buildErrorMsg(WebhookTask webhookTask, String... errorMsg) {
+        String format = "{} : {}";
+        StringBuilder sb = new StringBuilder();
+        sb.append(webhookTask.getErrorMsg());
+        for (String s : errorMsg) {
+            String msg = StrUtil.format(format, DateUtil.now(), StrUtil.emptyToDefault(s, "无"));
+            sb.append("\r\n").append(msg);
+        }
+        webhookTask.setErrorMsg(sb.toString());
+    }
+
     private WebhookTask sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
         WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
@@ -200,14 +216,23 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
             webhookTask.setRetryNumber(0);
         }
+        //如果事件则标注错误
+        if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+            //如果不启用则跳出
+            this.buildErrorMsg(webhookTask, "事件未启用");
+        }
         this.saveEntity(webhookTask);
+        //如果事件未启用则跳出
+        if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+            return webhookTask;
+        }
         while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
             try {
                 webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
                 HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
                 webhookTask.setResponse(response.body());
                 webhookTask.setHttpStatus(response.getStatus());
-                webhookTask.setErrorMsg("无");
+                this.buildErrorMsg(webhookTask);
                 if (response.getStatus() != HttpStatus.HTTP_OK) {
                     throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
                 }
@@ -244,7 +269,8 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     private boolean eventException(WebhookTask webhookTask, Exception e) {
         webhookTask.setRetryNumber(webhookTask.getRetryNumber() + 1);
         log.error("执行远程业务事件错误", e);
-        webhookTask.setErrorMsg(e.getMessage());
+        this.buildErrorMsg(webhookTask,e.getMessage());
+//        webhookTask.setErrorMsg(e.getMessage());
         return webhookTask.getRetryNumber() >= 3;
     }
 }

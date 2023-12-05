@@ -1,6 +1,7 @@
 package com.jbm.cluster.push;
 
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
+import com.jbm.cluster.api.entitys.push.EmailPushConfig;
 import com.jbm.cluster.api.event.UserLoginEvent;
 import com.jbm.cluster.api.service.feign.client.BaseUserServiceClient;
 import com.jbm.cluster.api.service.feign.weixin.clinet.WeixinMpClient;
@@ -33,7 +34,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @MapperScan(basePackageClasses = {PushConfigInfoMapper.class})
 @RemoteApplicationEventScan(basePackageClasses = UserLoginEvent.class)
-@EnableCodeAutoGeneate(entityPackageClasses = {PushMessageBody.class}, targetPackage = "com.jbm.cluster.push")
+@EnableCodeAutoGeneate(entityPackageClasses = {PushMessageBody.class, EmailPushConfig.class}, targetPackage = "com.jbm.cluster.push")
 public class JbmPushApplication {
 
     public static void main(String[] args) {

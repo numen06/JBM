@@ -71,7 +71,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 }
             }
             if (ObjectUtil.isEmpty(clientId)) {
-                throw new SaOAuth2Exception("无效的访问客户端");
+                throw new SaOAuth2Exception(StrUtil.format("无效的访问客户端:{}", clientId));
             }
         } catch (Exception e) {
             throw e;

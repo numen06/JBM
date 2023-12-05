@@ -42,7 +42,7 @@ public class WebhookEventConfigServiceImpl extends MultiPlatformServiceImpl<Webh
     @Override
     public List<WebhookEventConfig> selectByEventCode(String code) {
         QueryWrapper<WebhookEventConfig> queryWrapper = currentQueryWrapper();
-        queryWrapper.lambda().eq(WebhookEventConfig::getBusinessEventCode, code).eq( WebhookEventConfig::getEnable, true);
+        queryWrapper.lambda().eq(WebhookEventConfig::getBusinessEventCode, code);
         return this.selectEntitysByWapper(queryWrapper);
     }
 

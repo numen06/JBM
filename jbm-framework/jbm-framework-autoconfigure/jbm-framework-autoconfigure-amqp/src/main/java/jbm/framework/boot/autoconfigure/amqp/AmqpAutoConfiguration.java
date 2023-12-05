@@ -31,6 +31,11 @@ public class AmqpAutoConfiguration {
         return template;
     }
 
+    @Bean
+    public DynamicRabbitMQ dynamicRabbitMQ(RabbitTemplate rabbitTemplate) {
+        return new DynamicRabbitMQ(rabbitTemplate, applicationContext);
+    }
+
     @Bean(name = "rabbitListenerContainerFactory")
     @Primary
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {

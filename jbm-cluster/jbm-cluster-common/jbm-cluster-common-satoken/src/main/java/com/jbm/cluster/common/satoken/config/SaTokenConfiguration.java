@@ -3,11 +3,13 @@ package com.jbm.cluster.common.satoken.config;
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * 功能点	Simple 简单模式	Mixin 混入模式	Stateless 无状态模式
@@ -70,7 +72,8 @@ public class SaTokenConfiguration {
 
 
     @Bean
-    public JbmNodeOAuth2TemplateImpl jbmNodeOAuth2Template(RedisSaTokenDao redisSaTokenDao) {
+    @Primary
+    public SaOAuth2Template jbmNodeOAuth2Template(RedisSaTokenDao redisSaTokenDao) {
         SaManager.setSaTokenDao(redisSaTokenDao);
         return new JbmNodeOAuth2TemplateImpl();
     }

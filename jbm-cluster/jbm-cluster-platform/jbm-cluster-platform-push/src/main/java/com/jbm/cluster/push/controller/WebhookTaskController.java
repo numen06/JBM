@@ -39,31 +39,29 @@ public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, 
 
     @ApiOperation("触发")
     @GetMapping("/run")
-    public ResultBody<String> run(String eventId) {
-        this.service.sendEvent(eventId);
-        return ResultBody.success("触发成功");
+    public ResultBody run(String eventId) {
+        return ResultBody.call("触发成功", () -> this.service.sendEvent(eventId));
     }
 
     @ApiOperation("请求")
     @PostMapping("/req")
-    public ResultBody<String> run(@RequestBody WebhookTask webhookTask) {
-        this.service.sendEvent(webhookTask);
-        return ResultBody.success("请求成功");
+    public ResultBody<Void> run(@RequestBody WebhookTask webhookTask) {
+        return ResultBody.call("请求成功", () -> service.sendEvent(webhookTask));
     }
 
     @ApiOperation("重试")
     @GetMapping("/retry")
-    public ResultBody<String> retry(String taskId) {
-        this.service.retryEventTask(taskId);
-        return ResultBody.success("重试成功");
+    public ResultBody<Void> retry(String taskId) {
+        return ResultBody.call("重试成功", () -> service.retryEventTask(taskId));
     }
 
     @SchedulerJob(name = "每天零点清理多余的推送任务", cron = "0 0 0 * * ?")
     @ApiOperation("清理")
     @GetMapping("/clear")
-    public ResultBody<String> clear() {
-        this.service.clearTasks();
-        return ResultBody.success("重试成功");
+    public ResultBody<Boolean> clear() {
+        return ResultBody.callback("清理成功", () -> {
+            return service.clearTasks();
+        });
     }
 
     @ApiOperation(value = "获取单个实体", notes = "获取单个实体")

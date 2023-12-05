@@ -26,9 +26,10 @@ import java.util.function.Supplier;
 @Data
 @NoArgsConstructor
 public class ResultBody<T> implements Serializable {
-    public static final Integer SUCCESS = HttpStatus.HTTP_INTERNAL_ERROR;
-    public static final Integer FAIL = HttpStatus.HTTP_OK;
+    public static final Integer SUCCESS = HttpStatus.HTTP_OK;
+    public static final Integer FAIL = HttpStatus.HTTP_INTERNAL_ERROR;
     private static final long serialVersionUID = 1L;
+
     /**
      * 响应编码
      */
@@ -162,6 +163,25 @@ public class ResultBody<T> implements Serializable {
             return ResultBody.error(e);
         }
     }
+
+    public static <T> ResultBody<T> call(Runnable runnable) {
+        try {
+            runnable.run();
+            return ResultBody.ok().data(null);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    public static <T> ResultBody<T> call(String msg, Runnable runnable) {
+        try {
+            runnable.run();
+            return ResultBody.ok().data(null).msg(msg);
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
 
     public ResultBody code(int code) {
         this.code = code;
