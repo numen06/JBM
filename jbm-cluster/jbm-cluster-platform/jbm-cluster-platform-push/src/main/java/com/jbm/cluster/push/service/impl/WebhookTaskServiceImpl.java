@@ -200,13 +200,13 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     private void buildErrorMsg(WebhookTask webhookTask, String... errorMsg) {
         String format = "{} : {}";
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("");
         sb.append(StrUtil.emptyIfNull(webhookTask.getErrorMsg()));
         for (String s : errorMsg) {
             String msg = StrUtil.format(format, DateUtil.now(), StrUtil.emptyToDefault(s, "无"));
             sb.append("\r\n").append(msg);
         }
-        webhookTask.setErrorMsg(sb.toString());
+        webhookTask.setErrorMsg(StrUtil.trimToEmpty(sb.toString()));
     }
 
     private WebhookTask sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {

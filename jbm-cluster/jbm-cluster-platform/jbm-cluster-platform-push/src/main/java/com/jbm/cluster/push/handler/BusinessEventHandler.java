@@ -10,6 +10,7 @@ import com.jbm.cluster.api.model.event.JbmClusterBusinessEventResource;
 import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.cluster.push.service.WebhookTaskService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 @Configuration
 public class BusinessEventHandler {
 
@@ -49,11 +51,16 @@ public class BusinessEventHandler {
 
     /**
      * 接受集群事件推送
+     *
      * @param jbmClusterBusinessEventBean
      */
     public void sendEvent(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
-        WebhookTaskForm webhookTaskForm = beanToWebHook(jbmClusterBusinessEventBean);
-        webhookTaskService.sendEvent(webhookTaskForm);
+        try {
+            WebhookTaskForm webhookTaskForm = beanToWebHook(jbmClusterBusinessEventBean);
+            webhookTaskService.sendEvent(webhookTaskForm);
+        } catch (Exception e) {
+            log.error("接受集群事件推送失败", e);
+        }
     }
 
     /**
