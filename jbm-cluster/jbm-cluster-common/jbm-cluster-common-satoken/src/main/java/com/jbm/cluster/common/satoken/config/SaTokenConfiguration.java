@@ -7,6 +7,7 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
+import com.jbm.cluster.common.satoken.oauth.NodeClientModelSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -72,10 +73,15 @@ public class SaTokenConfiguration {
 
 
     @Bean
-    @Primary
+//    @Primary
     public SaOAuth2Template jbmNodeOAuth2Template(RedisSaTokenDao redisSaTokenDao) {
         SaManager.setSaTokenDao(redisSaTokenDao);
         return new JbmNodeOAuth2TemplateImpl();
+    }
+
+    @Bean
+    public NodeClientModelSource nodeClientModelSource() {
+        return new NodeClientModelSource();
     }
 
 }

@@ -3,18 +3,19 @@ package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.oauth2.model.SaClientModel;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
+import com.jbm.cluster.common.satoken.oauth.ClientModelSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
+ * @author wesley
  * @Created wesley.zhang
  * @Date 2022/5/15 13:08
  * @Description TODO
  */
 @Slf4j
 //@Service
-public class SaOAuth2TemplateImpl extends JbmNodeOAuth2TemplateImpl {
+public class JbmPlatformClientModelSource implements ClientModelSource {
 
     @Autowired
     private BaseAppPreprocessing baseAppPreprocessing;

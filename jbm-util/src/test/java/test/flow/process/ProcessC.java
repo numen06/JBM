@@ -1,6 +1,16 @@
 package test.flow.process;
 
-import com.ebay.bascomtask.core.TaskInterface;
+import com.jbm.util.flow.AbstractFlowProcess;
 
-public class ProcessC implements TaskInterface<ProcessC> {
+public class ProcessC extends AbstractFlowProcess<String, Void> {
+
+    /**
+     * @param source
+     * @return
+     */
+    @Override
+    public Void doProcess(String source) {
+        System.out.println(source);
+        return null;
+    }
 }

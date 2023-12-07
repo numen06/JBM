@@ -1,12 +1,11 @@
 package test.flow;
 
-import com.alibaba.fastjson.JSON;
 import com.ebay.bascomtask.core.Orchestrator;
 import org.junit.jupiter.api.Test;
 import test.flow.process.ProcessA;
 import test.flow.process.ProcessB;
+import test.flow.process.ProcessC;
 import test.flow.source.JsonDataFlowSource;
-import test.flow.usage.BaseData;
 
 public class DataFlowTest {
 
@@ -14,12 +13,12 @@ public class DataFlowTest {
 
     @Test
     public void test() {
-
         JsonDataFlowSource source = new JsonDataFlowSource();
         ProcessA processA = new ProcessA();
         ProcessB processB = new ProcessB();
-        $.activate(source.load()).thenApply(json -> JSON.parseObject(json, BaseData.class)).thenApply(s -> JSON.toJSONString(s))
-                .thenAccept(System.out::println);
+        ProcessC processC = new ProcessC();
+        $.activate(source.load()).thenApply(json -> processA.process(json)).thenApply(s -> processB.process(s))
+                .thenAccept(s -> processC.process(s));
 
     }
 

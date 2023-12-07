@@ -17,8 +17,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,13 +30,14 @@ import java.util.concurrent.TimeUnit;
  * @Description TODO
  */
 @Slf4j
-public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
+public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements InitializingBean {
 
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
             .expireAfterWrite(1, TimeUnit.HOURS)
 //            .refreshAfterWrite(1, TimeUnit.HOURS)
             .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
             );
+
 
     @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
@@ -49,24 +51,28 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
 
     @Override
     public SaClientModel getClientModel(String clientId) {
-        if (StrUtil.contains(clientId, SpringUtil.getApplicationName())) {
-            return new SaClientModel()
-                    .setClientId(clientId)
-                    .setClientSecret(UUID.randomUUID().toString())
-                    .setAllowUrl("*")
-                    .setContractScope("*")
-                    .setIsAutoMode(true);
-        }
-        ClientTokenModel clientTokenModel = getClientToken(getClientTokenValue(clientId));
-        if (ObjectUtil.isNotEmpty(clientTokenModel)) {
-            return new SaClientModel()
-                    .setClientId(clientTokenModel.clientId)
-                    .setClientSecret(UUID.randomUUID().toString())
-                    .setAllowUrl("*")
-                    .setContractScope("*")
-                    .setIsAutoMode(true);
+        try {
+            Map<String, ClientModelSource> clientModelSourceMap = SpringUtil.getBeansOfType(ClientModelSource.class);
+            for (Map.Entry<String, ClientModelSource> entry : clientModelSourceMap.entrySet()) {
+                ClientModelSource v = entry.getValue();
+                SaClientModel saClientModel = v.getClientModel(clientId);
+                if (ObjectUtil.isNotEmpty(saClientModel)) {
+                    return saClientModel;
+                }
+            }
+        } catch (Exception e) {
+            log.error("取应用程序TOKEN失败", e);
         }
         return null;
+//        ClientTokenModel clientTokenModel = getClientToken(getClientTokenValue(clientId));
+//        if (ObjectUtil.isNotEmpty(clientTokenModel)) {
+//            return new SaClientModel()
+//                    .setClientId(clientTokenModel.clientId)
+//                    .setClientSecret(UUID.randomUUID().toString())
+//                    .setAllowUrl("*")
+//                    .setContractScope("*")
+//                    .setIsAutoMode(true);
+//        }
     }
 
     @Override
@@ -126,5 +132,14 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template {
         final String idToken = SaIdUtil.getToken();
 //        SaIdUtil.saIdTemplate.saveToken(idToken);
         return idToken;
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        log.info("初始化当前应用的默认的ClientToken");
+        this.generateClientToken(SpringUtil.getApplicationName(), "*");
     }
 }
