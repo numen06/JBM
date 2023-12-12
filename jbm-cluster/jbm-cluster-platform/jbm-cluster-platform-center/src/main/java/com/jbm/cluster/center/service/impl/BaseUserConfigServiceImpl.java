@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseUserConfig;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.center.service.BaseUserConfigService;
@@ -24,9 +25,11 @@ public class BaseUserConfigServiceImpl extends MasterDataServiceImpl<BaseUserCon
     public BaseUserConfig saveEntity(BaseUserConfig entity) {
 //        LoginHelper.getLoginUser().getAppId();
         entity.setAppId(LoginHelper.getLoginUser().getAppId());
-        if (ObjectUtil.isNotEmpty(entity.getUserId())) {
+        if (ObjectUtil.isEmpty(entity.getId())) {
 //            entity.setAppId(LoginHelper.getLoginUser().getAppId());
-            BaseUserConfig baseUserConfig = this.selectEntity(entity);
+            QueryWrapper<BaseUserConfig> wrapper = new QueryWrapper();
+            wrapper.lambda().eq(BaseUserConfig::getUserId, entity.getUserId()).eq(BaseUserConfig::getAppId, entity.getAppId());
+            BaseUserConfig baseUserConfig = this.selectEntityByWapper(wrapper);
             if (ObjectUtil.isNotEmpty(baseUserConfig)) {
                 entity.setId(baseUserConfig.getId());
             }
