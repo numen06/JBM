@@ -23,6 +23,7 @@ public class BaseUserConfigServiceImpl extends MasterDataServiceImpl<BaseUserCon
     @Override
     public BaseUserConfig saveEntity(BaseUserConfig entity) {
 //        LoginHelper.getLoginUser().getAppId();
+        entity.setAppId(LoginHelper.getLoginUser().getAppId());
         if (ObjectUtil.isNotEmpty(entity.getUserId())) {
 //            entity.setAppId(LoginHelper.getLoginUser().getAppId());
             BaseUserConfig baseUserConfig = this.selectEntity(entity);

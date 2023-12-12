@@ -26,7 +26,7 @@ public class BaseUserConfig extends MasterDataIdEntity {
     private String roleId;
 
     @ApiModelProperty(value = "应用ID")
-    private String appId;
+    private Long appId;
 
     @Column(columnDefinition = "TEXT")
     @ApiModelProperty(value = "配置内容")
