@@ -7,11 +7,13 @@ import java.util.Date;
 @Data
 public class NetworkInfo {
     private String name;
-    private String ips;
-    private Double send;
-    private String sendStr;
-    private Double receive;
-    private String receiveStr;
+    private String type;
+    private String macAddr;
+    private String ipV4Addr;
+    private Double upload;
+    private String uploadStr;
+    private Double download;
+    private String downloadStr;
     private Date time;
 
 
