@@ -20,9 +20,9 @@ public class MasterDataSqlInjector extends DefaultSqlInjector {
     @Override
     public List<AbstractMethod> getMethodList(Class<?> mapperClass, TableInfo tableInfo) {
         List<AbstractMethod> methods = super.getMethodList(mapperClass, tableInfo);
-        methods.add(new SelectByCode());
-        methods.add(new UpdateByCode());
-        methods.add(new DeleteByCode());
+        methods.add(new SelectByCode(SELECT_BY_CODE));
+        methods.add(new UpdateByCode(UPDATE_BY_CODE));
+        methods.add(new DeleteByCode(DELETE_BY_CODE));
         return methods;
     }
 }

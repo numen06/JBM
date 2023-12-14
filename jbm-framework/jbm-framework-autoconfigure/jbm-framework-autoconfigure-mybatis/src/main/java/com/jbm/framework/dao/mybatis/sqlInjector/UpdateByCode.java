@@ -17,6 +17,14 @@ public class UpdateByCode extends AbstractMethod {
     private final String sqlScript = "<script>\\nUPDATE %s %s WHERE %s=#{%s} %s\\n</script>";
     private final String column = "code";
 
+    /**
+     * @param methodName 方法名
+     * @since 3.5.0
+     */
+    protected UpdateByCode(String methodName) {
+        super(methodName);
+    }
+
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
         boolean logicDelete = tableInfo.isLogicDelete();

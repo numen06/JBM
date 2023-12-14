@@ -10,6 +10,14 @@ public class DeleteByCode extends AbstractMethod {
     private final String method = "deleteByCode";
     private final String sqlScript = "<script>\\nDELETE FROM %s WHERE %s=#{%s}\\n</script>";
 
+    /**
+     * @param methodName 方法名
+     * @since 3.5.0
+     */
+    protected DeleteByCode(String methodName) {
+        super(methodName);
+    }
+
     @Override
     public MappedStatement injectMappedStatement(Class<?> mapperClass, Class<?> modelClass, TableInfo tableInfo) {
 //		SqlMethod sqlMethod = SqlMethod.DELETE_BY_ID;
