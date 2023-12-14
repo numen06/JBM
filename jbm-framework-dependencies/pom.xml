@@ -55,16 +55,16 @@
         <jpush.version>3.2.7</jpush.version>
         <jodd.version>5.0.6</jodd.version>
         <camel.version>2.17.1</camel.version>
-        <guava.version>25.1-jre</guava.version>
+        <guava.version>32.1.3-jre</guava.version>
         <kryo.version>0.42</kryo.version>
         <hessian.version>4.0.51</hessian.version>
         <curator.version>4.0.1</curator.version>
         <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
-        <mybatis-plus.version>3.5.2</mybatis-plus.version>
+        <mybatis-plus.version>3.5.4.1</mybatis-plus.version>
         <hutool.version>5.8.22</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
-        <lombok.version>1.18.24</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <jjwt.version>0.9.1</jjwt.version>
         <redisson.version>3.17.0</redisson.version>
