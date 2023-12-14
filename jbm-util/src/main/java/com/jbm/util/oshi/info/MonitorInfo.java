@@ -22,12 +22,10 @@ public class MonitorInfo {
 	
 	/** 内存使用率. */
 	private String memRatio;
-
 	/**
 	 * cpu数量
 	 */
 	private Integer cpuCount;
-
 	/**
 	 * 线程数量
 	 */
