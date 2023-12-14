@@ -11,6 +11,7 @@ import oshi.software.os.OSFileStore;
 import oshi.util.FormatUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -44,8 +45,10 @@ public class SysInfoUtils {
         return infoBean;
 
     }
+
     /**
      * 获取磁盘信息
+     *
      * @return 返回磁盘信息列表
      */
     public static List<DiskInfo> getDiskInfo() {
@@ -69,7 +72,7 @@ public class SysInfoUtils {
 
 
     public static List<NetworkInfo> getNetworkInfo() {
-        List<NetworkInfo> networkInfos = new ArrayList<>();
+        List<NetworkInfo> networkInfos = Collections.synchronizedList(new ArrayList<>());
         OshiUtil.getNetworkIFs().parallelStream().forEach(net -> {
             NetworkInfo networkInfo = new NetworkInfo();
             networkInfo.setName(net.getName());
