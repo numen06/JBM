@@ -31,16 +31,16 @@ public class NotificationDispatcher implements ApplicationContextAware {
 
     private Collection<NotificationExchanger> exchangers;
 
-    private ExecutorService executorService;
+//    private ExecutorService executorService;
 
     @Autowired
     private StreamBridge streamBridge;
 
     public NotificationDispatcher() {
-        Integer availableProcessors = Runtime.getRuntime().availableProcessors();
-        Integer numOfThreads = availableProcessors * 2;
-        executorService = new ThreadPoolExecutor(numOfThreads, numOfThreads, 0, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
-        log.info("Init Notification ExecutorService , numOfThread : " + numOfThreads);
+//        Integer availableProcessors = Runtime.getRuntime().availableProcessors();
+//        Integer numOfThreads = availableProcessors * 2;
+//        executorService = new ThreadPoolExecutor(numOfThreads, numOfThreads, 0, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
+//        log.info("Init Notification ExecutorService , numOfThread : " + numOfThreads);
     }
 
     public void sendNotification(Notification notification) {
@@ -58,10 +58,9 @@ public class NotificationDispatcher implements ApplicationContextAware {
 
     public void dispatch(Notification notification) {
         if (notification != null && exchangers != null) {
-            exchangers.forEach((exchanger) -> {
+            exchangers.parallelStream().forEach(exchanger -> {
                 if (exchanger.support(notification)) {
-                    //添加到线程池进行处理
-                    executorService.submit(new NotificationTask(exchanger, notification));
+                    exchanger.send(notification);
                 }
             });
         }

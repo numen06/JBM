@@ -16,8 +16,12 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
+/**
+ * 通知处理器配置类
+ */
 @Configuration
 public class NotificationHandler {
+
 
     @Autowired
     private NotificationDispatcher notificationDispatcher;
