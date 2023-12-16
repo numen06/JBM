@@ -7,6 +7,7 @@ import jbm.framework.boot.autoconfigure.taskflow.useage.JbmEndProcessor;
 import jbm.framework.boot.autoconfigure.taskflow.useage.JbmStartProcessor;
 import jbm.framework.boot.autoconfigure.taskflow.useage.JbmStepProcessor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -53,6 +54,7 @@ public class JbmTestTask extends JbmTaskFlow {
     /**
      * 考试
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     class Test extends JbmStepProcessor<Examination> {
 
@@ -67,8 +69,9 @@ public class JbmTestTask extends JbmTaskFlow {
     /**
      * 公布考试结果
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
-    class End extends JbmEndProcessor<Test> {
+     class End extends JbmEndProcessor<Test> {
 
         @Work
         public void execute(Test test, Student student) {
