@@ -17,6 +17,7 @@ public class JbmTestTask extends JbmTaskFlow {
     /**
      * 学习
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     class Learn extends JbmStartProcessor<Student> {
         private Student student;
@@ -32,6 +33,7 @@ public class JbmTestTask extends JbmTaskFlow {
     /**
      * 进入考场
      */
+    @EqualsAndHashCode(callSuper = true)
     @Data
     class Examination extends JbmStepProcessor<Learn> {
 
