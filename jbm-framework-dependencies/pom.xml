@@ -42,6 +42,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+        <maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
@@ -70,8 +71,10 @@
         <redisson.version>3.17.0</redisson.version>
         <lock4j.version>2.2.1</lock4j.version>
         <!--6.0 add-->
+        <commons-collections-version>3.2.2</commons-collections-version>
+        <commons-codec.version>1.15</commons-codec.version>
+        <commons-io-version>2.11.0</commons-io-version>
         <apache.commons-lang3.version>3.12.0</apache.commons-lang3.version>
-        <apache.commons-io.version>2.11.0</apache.commons-io.version>
         <apache.commons.beanutils>1.9.4</apache.commons.beanutils>
         <com.google.zxing.version>3.1.0</com.google.zxing.version>
         <swagger.version>3.0.0</swagger.version>
