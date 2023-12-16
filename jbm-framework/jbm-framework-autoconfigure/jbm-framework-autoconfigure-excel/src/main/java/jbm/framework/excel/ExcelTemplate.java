@@ -1,5 +1,6 @@
 package jbm.framework.excel;
 
+import cn.hutool.core.date.DateUtil;
 import com.jbm.util.BeanUtils;
 import com.jbm.util.ConvertUtils;
 import com.jbm.util.TimeUtils;
@@ -515,7 +516,7 @@ public class ExcelTemplate {
     private void createCell(Workbook workbook, Row row, Integer j, ExcelHeader h, Object value) {
         Cell cell = row.createCell(j);
         if (h.getFiledClazz().equals(Date.class)) {
-            cell.setCellValue(TimeUtils.format((Date) value, h.getFormat()));
+            cell.setCellValue(DateUtil.format((Date) value, h.getFormat()));
         } else {
             cell.setCellValue(ConvertUtils.converts(value, String.class));
         }

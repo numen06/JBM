@@ -94,7 +94,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
      * @return
      */
     public static <E> ArrayList<E> newArrayListIfNull(List<E> list) {
-        return list == null ? new ArrayList<E>() : ObjectUtils.softCast(list, new ArrayList<E>());
+        return list == null ? new ArrayList<E>() : (ArrayList<E>) list;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.jbm.framework.mvc.web;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
@@ -14,7 +15,6 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
-import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
 
 
     protected void validator(BaseRequsetBody baseRequsetBody) throws Exception {
-        if (ObjectUtils.isNull(baseRequsetBody)) {
+        if (ObjectUtil.isNull(baseRequsetBody)) {
             throw new ServiceException("参数错误");
         }
 
@@ -47,7 +47,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
         Entity entity = baseRequsetBody.tryGet(service.currentEntityClass());
         if (valNull) {
-            if (ObjectUtils.isNull(entity)) {
+            if (ObjectUtil.isNull(entity)) {
                 throw new ServiceException("参数错误");
             }
         }
@@ -60,7 +60,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
             }
-            if (ObjectUtils.isNull(entitys)) {
+            if (ObjectUtil.isNull(entitys)) {
                 throw new ServiceException("参数错误");
             }
         }

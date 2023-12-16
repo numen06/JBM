@@ -1,6 +1,6 @@
 package pres.lnk.springframework;
 
-import com.jbm.util.ClassUtils;
+import org.mapstruct.ap.shaded.freemarker.template.utility.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -31,7 +31,7 @@ public class SchedulingClusterConfiguration {
     @ConditionalOnMissingBean(AbstractScheduler.class)
     public AbstractScheduler getScheduler() {
         try {
-            ClassUtils.forName("org.springframework.data.redis.core.RedisTemplate", ClassUtils.getDefaultClassLoader());
+            ClassUtil.forName("org.springframework.data.redis.core.RedisTemplate");
             logger.info("启用Redis集群环境的定时任务");
             return new RedisSchedulerImpl();
         } catch (ClassNotFoundException e) {

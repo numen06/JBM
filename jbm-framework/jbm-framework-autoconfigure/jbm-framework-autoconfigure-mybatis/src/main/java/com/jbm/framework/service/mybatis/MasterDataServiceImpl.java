@@ -27,7 +27,6 @@ import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.CollectionUtils;
-import com.jbm.util.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.session.SqlSession;
@@ -218,7 +217,7 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
 
     @Override
     public Entity selectEntity(Map<String, Object> parameter, Entity def) {
-        return ObjectUtils.nullToDefault(this.selectEntity(parameter), def);
+        return ObjectUtil.defaultIfNull(this.selectEntity(parameter), def);
     }
 
     @Override

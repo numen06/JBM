@@ -1,7 +1,7 @@
 package jbm.framework.boot.autoconfigure.redis;
 
 import cn.hutool.core.collection.CollUtil;
-import com.jbm.util.ObjectUtils;
+import cn.hutool.core.util.ObjectUtil;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
@@ -100,7 +100,7 @@ public class RedisUtils<T> {
     public String getString(String key) {
         String str = "";
         Object obj = redisTemplate.opsForValue().get(key);
-        if (ObjectUtils.isNotNull(obj)) {
+        if (ObjectUtil.isNotNull(obj)) {
             str = obj.toString();
         }
         return key == null ? null : str;

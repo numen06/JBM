@@ -11,6 +11,27 @@ import java.text.NumberFormat;
  */
 public class NumberUtils extends cn.hutool.core.util.NumberUtil {
 
+
+    /**
+     * 默认的Short:0
+     */
+    public static final Short SHORT_DEF = 0;
+    /**
+     * 默认的Float:0
+     */
+    public static final Float FLOAT_DEF = 0f;
+    /**
+     * 默认的Double:0
+     */
+    public static final Double DOUBLE_DEF = 0d;
+    /**
+     * 默认的Long:0
+     */
+    public static final Long LONG_DEF = 0L;
+    /**
+     * 默认的Number:0
+     */
+    public static final Number NUMBER_DEF = 0;
     /**
      * 格式化数字称字符串(-1代表不格式化)
      *

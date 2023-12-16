@@ -1,11 +1,11 @@
 package com.jbm.cluster.push.controller;
 
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.push.service.PinService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ public class PinController {
     @ApiOperation("判断验证是否正确")
     @PostMapping("/vif")
     public ResultBody vidCode(String phoneNumber, String code) {
-        if (ObjectUtils.isNull(code)) {
+        if (ObjectUtil.isNull(code)) {
             return ResultBody.error(null, "验证码错误");
         }
         if (!Validator.isMobile(phoneNumber)) {

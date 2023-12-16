@@ -1,5 +1,6 @@
 package com.jbm.framework.mvc.web;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
@@ -7,7 +8,6 @@ import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
-import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +27,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws Exception {
         Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {
-            if (ObjectUtils.isNull(entity)) {
+            if (ObjectUtil.isNull(entity)) {
                 throw new ServiceException("参数错误");
             }
         }

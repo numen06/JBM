@@ -2,8 +2,8 @@ package jbm.framework.spring.config;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.util.ClassUtils;
 import com.jbm.util.PropertiesUtils;
 import jbm.framework.spring.config.annotation.ProloadConfig;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public abstract class AbstractEnvironmentPostProcessor implements EnvironmentPos
      * 预设值
      */
     public void proloadProperties(ConfigurableEnvironment environment, String propertiesName) {
-        final String propertySourceName = ClassUtils.getShortNameAsProperty(getClass()) + "Properties";
+        final String propertySourceName = StrUtil.toCamelCase(ClassUtil.getClassName(getClass(),true))+ "Properties";
         if (environment.containsProperty(propertySourceName)) {
             if (Boolean.FALSE.toString()
                     .equalsIgnoreCase(environment.getProperty(propertySourceName))) {

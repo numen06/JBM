@@ -1,7 +1,7 @@
 package com.jbm.framework.metadata.bean;
 
-import com.jbm.util.ClassUtils;
 import org.apache.commons.collections.FastHashMap;
+import org.mapstruct.ap.shaded.freemarker.template.utility.ClassUtil;
 
 import java.util.Map;
 
@@ -31,7 +31,7 @@ public class DaoConfig {
         classConfigMap = new FastHashMap();
         for (String key : config.keySet()) {
             try {
-                classConfigMap.put(ClassUtils.forName(key, ClassUtils.getDefaultClassLoader()), config.get(key));
+                classConfigMap.put(ClassUtil.forName(key), config.get(key));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             } catch (LinkageError e) {

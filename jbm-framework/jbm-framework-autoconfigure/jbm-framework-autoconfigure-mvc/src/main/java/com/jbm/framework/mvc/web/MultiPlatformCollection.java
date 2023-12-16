@@ -1,6 +1,7 @@
 package com.jbm.framework.mvc.web;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
@@ -13,7 +14,6 @@ import com.jbm.framework.usage.form.EntityPageSearchForm;
 import com.jbm.framework.usage.form.EntityRequsetForm;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
-import com.jbm.util.ObjectUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
 
 
     protected void validator(EntityRequsetForm<Entity> entityRequsetForm) throws Exception {
-        if (ObjectUtils.isNull(entityRequsetForm)) {
+        if (ObjectUtil.isNull(entityRequsetForm)) {
             throw new ServiceException("参数错误");
         }
 
@@ -46,7 +46,7 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     protected Entity validatorMasterData(EntityRequsetForm<Entity> entityRequsetForm, Boolean valNull) throws Exception {
         Entity entity = entityRequsetForm.tryGet(service.currentEntityClass());
         if (valNull) {
-            if (ObjectUtils.isNull(entity)) {
+            if (ObjectUtil.isNull(entity)) {
                 throw new ServiceException("参数错误");
             }
         }
@@ -59,7 +59,7 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
             }
-            if (ObjectUtils.isNull(entitys)) {
+            if (ObjectUtil.isNull(entitys)) {
                 throw new ServiceException("参数错误");
             }
         }
