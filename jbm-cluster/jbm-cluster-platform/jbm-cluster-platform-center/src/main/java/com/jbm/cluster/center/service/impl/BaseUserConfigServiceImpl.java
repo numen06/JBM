@@ -27,7 +27,7 @@ public class BaseUserConfigServiceImpl extends MasterDataServiceImpl<BaseUserCon
         entity.setAppId(LoginHelper.getLoginUser().getAppId());
         if (ObjectUtil.isEmpty(entity.getId())) {
 //            entity.setAppId(LoginHelper.getLoginUser().getAppId());
-            QueryWrapper<BaseUserConfig> wrapper = new QueryWrapper();
+            QueryWrapper<BaseUserConfig> wrapper = new QueryWrapper<>();
             wrapper.lambda().eq(BaseUserConfig::getUserId, entity.getUserId()).eq(BaseUserConfig::getAppId, entity.getAppId());
             BaseUserConfig baseUserConfig = this.selectEntityByWapper(wrapper);
             if (ObjectUtil.isNotEmpty(baseUserConfig)) {
