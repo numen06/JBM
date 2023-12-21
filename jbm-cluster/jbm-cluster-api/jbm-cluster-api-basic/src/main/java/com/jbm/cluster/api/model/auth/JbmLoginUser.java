@@ -146,7 +146,7 @@ public class JbmLoginUser implements Serializable {
         if (StrUtil.isEmpty(userType)) {
             userType = "user";
         }
-        return userType + JbmCacheConstants.LOGINID_JOIN_CODE + userId;
+        return StrUtil.format("{}:{}:{}", userType, appId, userId);
     }
 
 }

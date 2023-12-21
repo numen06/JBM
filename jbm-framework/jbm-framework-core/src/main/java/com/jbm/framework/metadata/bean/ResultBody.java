@@ -3,6 +3,7 @@ package com.jbm.framework.metadata.bean;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.http.HttpStatus;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
@@ -134,6 +135,9 @@ public class ResultBody<T> implements Serializable {
 
     public static <T> ResultBody<T> error(Exception e) {
         if (e instanceof ServiceException) {
+            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
+        }
+        if (e instanceof ValidateException) {
             return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
         }
         return ResultBody.failed().exception(e);

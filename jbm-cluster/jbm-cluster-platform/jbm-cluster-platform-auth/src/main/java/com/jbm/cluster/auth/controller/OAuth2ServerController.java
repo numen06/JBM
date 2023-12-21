@@ -137,7 +137,7 @@ public class OAuth2ServerController {
     // 获取Userinfo信息：昵称、头像、性别等等
     @SaCheckLogin
     @RequestMapping("/userinfo")
-    public ResultBody<JbmLoginUser> userinfo() {
+    public ResultBody userinfo() {
         JbmLoginUser jbmLoginUser = null;
         if (StpUtil.isLogin()) {
             jbmLoginUser = LoginHelper.getLoginUser();
