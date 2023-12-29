@@ -1,5 +1,7 @@
 package com.jbm.cluster.common.basic.module;
 
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.message.EmailNotification;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.Notification;
@@ -7,14 +9,17 @@ import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.core.constant.QueueConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 @Slf4j
-public class JbmClusterNotification {
+public class JbmClusterNotification implements InitializingBean {
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -25,10 +30,33 @@ public class JbmClusterNotification {
     public JbmClusterNotification() {
     }
 
+
+    private AtomicBoolean active = new AtomicBoolean(false);
+
+    /**
+     * @throws Exception
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        while (ObjectUtil.isNull(streamBridge)) {
+            ThreadUtil.safeSleep(500);
+        }
+        streamBridge.afterSingletonsInstantiated();
+        active.set(true);
+    }
+
     public void sendNotification(Notification notification) {
-        final Message<Notification> message = MessageBuilder.withPayload(notification)
-                .build();
-        streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
+        if (active.get()) {
+            try {
+                final Message<Notification> message = MessageBuilder.withPayload(notification)
+                        .build();
+                streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
+            }catch (Exception e) {
+                streamBridge.afterSingletonsInstantiated();
+            }
+        } else {
+            throw new RuntimeException("通知服务未启动");
+        }
     }
 
 
@@ -78,5 +106,6 @@ public class JbmClusterNotification {
     public void sendSmsNotification(SmsNotification smsNotification) {
         this.sendNotification(smsNotification);
     }
+
 
 }

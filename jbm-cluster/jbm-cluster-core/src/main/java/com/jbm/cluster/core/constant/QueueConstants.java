@@ -54,6 +54,9 @@ public class QueueConstants {
     public static final String SCHEDULED_JOB_STREAM = "scheduledJob-in-0";
 
 
+    /**
+     * 通知通道
+     */
     public static final String NOTIFICATION_STREAM = "notification-in-0";
     /**
      * 访问日志

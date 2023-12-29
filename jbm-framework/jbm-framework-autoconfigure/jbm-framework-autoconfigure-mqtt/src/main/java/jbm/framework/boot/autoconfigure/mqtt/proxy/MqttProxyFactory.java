@@ -2,47 +2,80 @@ package jbm.framework.boot.autoconfigure.mqtt.proxy;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.*;
+import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.expression.engine.spel.SpELEngine;
-import com.alibaba.fastjson.JSON;
 import com.jbm.util.proxy.ReflectUtils;
-import com.jbm.util.proxy.wapper.RequestHeaders;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
-import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.Charsets;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
-public class MqttProxyFactory {
+public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
+
 
     private final ApplicationContext applicationContext;
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
-    private ThreadPoolExecutor threadPoolExecutor = ThreadUtil.newExecutor(5, 20);
 
-//    private SimpleMqttClient simpleMqttClient;
+
+    private List<RequiredBean> requiredBeans = new ArrayList<>();
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
         this.mqttPahoClientFactory = mqttPahoClientFactory;
     }
 
-    @PostConstruct
+
+    class RequiredBean {
+        private final SimpleMqttClient simpleMqttClient;
+        private final MqttRequsetBean mqttRequsetBean;
+
+        public RequiredBean(SimpleMqttClient simpleMqttClient, MqttRequsetBean mqttRequsetBean) {
+            this.simpleMqttClient = simpleMqttClient;
+            this.mqttRequsetBean = mqttRequsetBean;
+        }
+
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        try {
+            subscribe();
+        } catch (Exception e) {
+            log.error("subscribe error", e);
+        }
+
+    }
+
+    /**
+     * 订阅方法
+     */
+    public void subscribe() {
+        requiredBeans.forEach(requiredBean -> {
+            try {
+                subscribeMethod(requiredBean.mqttRequsetBean, requiredBean.simpleMqttClient);
+            } catch (Exception e) {
+                log.error("subscribe error", e);
+            }
+        });
+    }
+
     public void find() throws MqttException {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         for (String name : mqttProxys.keySet()) {
@@ -72,7 +105,9 @@ public class MqttProxyFactory {
 //                MqttResponse mqttResponse = AnnotationUtil.getAnnotation(method, MqttResponse.class);
 //                if (mqttResponse != null)
 //                    mqttRequsetBean.setResponseTopic(mqttResponse.topic());
-                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
+                this.requiredBeans.add(new RequiredBean(simpleMqttClient, mqttRequsetBean));
+                //到系统准备好了之后再监听
+//                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
             }
         }
     }
@@ -90,43 +125,20 @@ public class MqttProxyFactory {
 
     public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) throws MqttException {
         log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());
-        simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), new IMqttMessageListener() {
-            @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-                threadPoolExecutor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            RequestHeaders requestHeader = new RequestHeaders();
-                            requestHeader.set("topic", topic);
-                            Object result = ReflectUtils.invokeMethodFromJsonData(mqttRequsetBean.getBean(), mqttRequsetBean.getMethod(), StrUtil.str(message.getPayload(), Charsets.UTF_8), requestHeader);
-                            if (ObjectUtil.isNotEmpty(result) && result instanceof MqttResponseBean) {
-                                MqttResponseBean mqttResponseBean = (MqttResponseBean) result;
-                                MqttMessage mqttMessage = new MqttMessage();
-                                if (ObjectUtil.isNotEmpty(mqttResponseBean.getBody()) && mqttResponseBean.getBody() instanceof String) {
-                                    mqttMessage.setPayload(StrUtil.bytes(mqttResponseBean.getBody().toString()));
-                                } else {
-                                    mqttMessage.setPayload(JSON.toJSONBytes(mqttResponseBean.getBody()));
-                                }
-                                mqttMessage.setQos(mqttResponseBean.getQos());
-                                simpleMqttClient.publish(mqttResponseBean.getTopic(), mqttMessage);
-                            } else if (ObjectUtil.isAllNotEmpty(mqttRequsetBean.getResponseTopic())) {
-                                if (String.class.equals(mqttRequsetBean.getMethod().getReturnType())) {
-                                    MqttMessage mqttMessage = new MqttMessage();
-                                    mqttMessage.setPayload(JSON.toJSONBytes(StrUtil.bytes(StrUtil.toString(result))));
-                                    simpleMqttClient.publish(mqttRequsetBean.getResponseTopic(), mqttMessage);
-                                } else {
-                                    simpleMqttClient.publishObject(mqttRequsetBean.getResponseTopic(), result);
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.error("执行MQTT代理方法失败", e);
-                        }
-                    }
-                });
-            }
-        });
+        simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), new MqttRequestListener(mqttRequsetBean, simpleMqttClient));
     }
 
 
+    /**
+     * @throws Exception
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try {
+            //系统已经准备
+            this.find();
+        } catch (Exception e) {
+            log.error("find mqtt proxy error", e);
+        }
+    }
 }
