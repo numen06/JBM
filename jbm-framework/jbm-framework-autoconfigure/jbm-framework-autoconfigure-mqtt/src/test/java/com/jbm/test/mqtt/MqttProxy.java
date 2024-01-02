@@ -38,7 +38,7 @@ public class MqttProxy {
 
     @Test
     public void test() {
-        mqttSender.testfrom(JSON.toJSONString(MapUtil.of("ttest","1212")));
+        mqttSender.testfrom(MapUtil.of("ttest","1212"));
         mqttSender2.toTwo("test2");
         ThreadUtil.waitForDie();
     }
