@@ -20,7 +20,7 @@ public class MqttScannerRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry beanDefinitionRegistry) {
         // 获取SpringBootApplication自定义注解CkScan值
-        AnnotationAttributes attrs = AnnotationAttributes.fromMap(annotationMetadata.getAnnotationAttributes(MqttMapper.class.getName()));
+        AnnotationAttributes attrs = AnnotationAttributes.fromMap(annotationMetadata.getAnnotationAttributes(EnableMqttMapperScan.class.getName()));
 
         if (attrs != null) {
             ArrayList<String> basePackages = new ArrayList<>();

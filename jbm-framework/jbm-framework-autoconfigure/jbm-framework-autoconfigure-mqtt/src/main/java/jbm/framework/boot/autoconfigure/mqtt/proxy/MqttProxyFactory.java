@@ -12,6 +12,8 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
+import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperBeanFactory;
+import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperInterfaceProxy;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -22,12 +24,13 @@ import org.springframework.context.ApplicationListener;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent>   {
+public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
 
 
     private final ApplicationContext applicationContext;
@@ -77,7 +80,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
 
-//    public void proxySend() throws MqttException {
+    //    public void proxySend() throws MqttException {
 //        Set<Class<?>> sss = ClassUtil.scanPackageByAnnotation("com.jbm.test.mqtt.proxy", MqttMapper.class);
 //        sss.forEach(clazz -> {
 //            if (clazz.isInterface()) {
@@ -90,12 +93,27 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
 //            }
 //        });
 //    }
+    public boolean isProxyClass(Class<?> clazz) {
+        // 判断是否为代理类
+        if (clazz.getName().contains("Proxy")) {
+            return true;
+        }
+        // 如果不是代理类，则递归判断父类
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !superClass.getName().contains("Proxy")) {
+            return isProxyClass(superClass);
+        }
+        return false;
+    }
 
     public void find() throws MqttException {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         for (String name : mqttProxys.keySet()) {
             log.debug("class {} find mqtt proxy", name);
             Object bean = mqttProxys.get(name);
+            if (isProxyClass(bean.getClass())) {
+                continue;
+            }
             MqttMapper mqttMapper = AnnotationUtil.getAnnotation(bean.getClass(), MqttMapper.class);
             String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
             SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);

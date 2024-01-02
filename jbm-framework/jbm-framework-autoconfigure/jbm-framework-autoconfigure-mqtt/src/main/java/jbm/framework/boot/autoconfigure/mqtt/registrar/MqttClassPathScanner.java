@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.mqtt.registrar;
 
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -10,6 +11,10 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 
 import java.util.Set;
 
+/**
+ * @author wesley
+ */
+@Slf4j
 public class MqttClassPathScanner  extends ClassPathBeanDefinitionScanner {
 
 
@@ -19,7 +24,7 @@ public class MqttClassPathScanner  extends ClassPathBeanDefinitionScanner {
 
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-        // 增加过滤，为接口类，并且接口上包含CkInterfaceAnnotation注解
+        // 增加过滤，为接口类，并且接口上包含MqttMapperAnnotation注解
         return beanDefinition.getMetadata().isInterface() &&
                 beanDefinition.getMetadata().isIndependent() &&
                 beanDefinition.getMetadata().hasAnnotation(MqttMapper.class.getName());
@@ -42,7 +47,7 @@ public class MqttClassPathScanner  extends ClassPathBeanDefinitionScanner {
 
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
         if (beanDefinitions.isEmpty()) {
-            System.out.println("未扫描到有CkInterfaceAnnotation注解接口");
+            System.out.println("未扫描到有MqttMapperAnnotation注解接口");
         } else {
             this.processBeanDefinitions(beanDefinitions);
         }
@@ -52,16 +57,17 @@ public class MqttClassPathScanner  extends ClassPathBeanDefinitionScanner {
 
     private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
 
-        // 此段作用,将所有带CkInterfaceAnnotation注解接口,定义成beanDefinition对象
+        // 此段作用,将所有带MqttMapperAnnotation注解接口,定义成beanDefinition对象
         // beanDefinitions中的bean对象指向接口的代理类
         // 在使用@Autowired注解注入接口时,其实注入的是接口代理对象
         beanDefinitions.forEach((BeanDefinitionHolder holder) -> {
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
             String beanClassName = definition.getBeanClassName();
-            System.out.println("接口名称" + beanClassName);
-
+//            System.out.println("接口名称" + beanClassName);
             // 设置CkFactoryBean构造方法参数
-            definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
+            if (beanClassName != null) {
+                definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
+            }
             definition.setBeanClass(MqttMapperBeanFactory.class);
             definition.setAutowireMode(GenericBeanDefinition.AUTOWIRE_BY_TYPE);
         });

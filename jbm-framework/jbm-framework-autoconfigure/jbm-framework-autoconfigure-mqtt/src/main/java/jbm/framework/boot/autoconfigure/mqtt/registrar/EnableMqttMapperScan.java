@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Documented
 @Import({MqttScannerRegistrar.class})
-public @interface MqttMapperScan {
+public @interface EnableMqttMapperScan {
     String[] value() default {};
 
     String[] basePackages() default {};

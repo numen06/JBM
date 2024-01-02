@@ -1,27 +1,40 @@
 package jbm.framework.boot.autoconfigure.mqtt.registrar;
 
+import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
+import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
+import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.Proxy;
+import org.springframework.context.ApplicationContext;
+
+import javax.annotation.Resource;
 
 public class MqttMapperBeanFactory<T> implements FactoryBean<T> {
 
-    private Class<T> ckInterface;
+
+    private Class<T> mqttMapper;
+
+    @Resource
+
+    private RealMqttPahoClientFactory mqttPahoClientFactory;
 
     public MqttMapperBeanFactory() {
     }
-    public MqttMapperBeanFactory(Class<T> ckInterface) {
-        this.ckInterface = ckInterface;
+    public MqttMapperBeanFactory(Class<T> mqttMapper) {
+        this.mqttMapper = mqttMapper;
     }
+
 
     /**
      * bean实例化对象,指向代理类即可
      */
     @Override
     public T getObject() throws Exception {
-        // 返回CkInterfaceProxy代理对象
-        return (T) Proxy.newProxyInstance(ckInterface.getClassLoader(),
-                new Class[]{ckInterface},
-                new MqttInterfaceProxy<>(ckInterface));
+        // 返回MqttMapperProxy代理对象
+        return (T) Proxy.newProxyInstance(mqttMapper.getClassLoader(),
+                new Class[]{mqttMapper},
+                new MqttMapperInterfaceProxy<>(mqttMapper, mqttPahoClientFactory));
     }
 
     /**
@@ -29,7 +42,7 @@ public class MqttMapperBeanFactory<T> implements FactoryBean<T> {
      */
     @Override
     public Class<T> getObjectType() {
-        return this.ckInterface;
+        return this.mqttMapper;
     }
 
     @Override

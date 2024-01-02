@@ -30,6 +30,11 @@ public class MqttExecuteImpl implements MqttExecute {
         log.info("do it");
     }
 
+    @MqttRequest(fromTopic = "/test/to")
+    public void test( String msg) {
+        log.info("我只是来打印的,{}", msg);
+    }
+
     @Override
     @MqttRequest(fromTopic = "/test/from", toTopic = "/test/to")
     public String to(@RequestBody String msg) {

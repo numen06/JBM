@@ -44,6 +44,7 @@ public class MqttRequestListener implements IMqttMessageListener {
         try {
             RequestHeaders requestHeader = new RequestHeaders();
             requestHeader.set("topic", topic);
+
             Object result = ReflectUtils.invokeMethodFromJsonData(mqttRequsetBean.getBean(), mqttRequsetBean.getMethod(), StrUtil.str(message.getPayload(), Charsets.UTF_8), requestHeader);
             if (ObjectUtil.isNotEmpty(result) && result instanceof MqttResponseBean) {
                 MqttResponseBean mqttResponseBean = (MqttResponseBean) result;
