@@ -1,6 +1,7 @@
 package com.jbm.util.proxy;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.annotation.scanner.AnnotationScanner;
 import cn.hutool.core.exceptions.UtilException;
 import cn.hutool.core.lang.Filter;
 import cn.hutool.core.util.ReflectUtil;

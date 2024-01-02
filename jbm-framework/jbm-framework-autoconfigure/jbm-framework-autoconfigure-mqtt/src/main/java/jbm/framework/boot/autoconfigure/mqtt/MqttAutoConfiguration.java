@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
 import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
+import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

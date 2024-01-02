@@ -1,6 +1,7 @@
 package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.jbm.test.mqtt.proxy.MqttSender;
 import com.jbm.test.mqtt.proxy.impl.MqttExecuteImpl;
 import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
@@ -21,12 +22,15 @@ public class MqttProxy {
     @Autowired
     private MqttProxyFactory mqttProxyFactory;
 
+    @Autowired
+    private MqttSender mqttSender;
     @BeforeEach
     public void testClient() throws Exception {
     }
 
     @Test
     public void test() {
+        mqttSender.to("test");
         ThreadUtil.waitForDie();
     }
 

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
+public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent>   {
 
 
     private final ApplicationContext applicationContext;
@@ -60,8 +60,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         } catch (Exception e) {
             log.error("subscribe error", e);
         }
-
     }
+
 
     /**
      * 订阅方法
@@ -75,6 +75,21 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
             }
         });
     }
+
+
+//    public void proxySend() throws MqttException {
+//        Set<Class<?>> sss = ClassUtil.scanPackageByAnnotation("com.jbm.test.mqtt.proxy", MqttMapper.class);
+//        sss.forEach(clazz -> {
+//            if (clazz.isInterface()) {
+//                // ClassName 是 interface
+//                Object obj = ProxyUtil.newProxyInstance(new MqttSendInvocationHandler(),
+//                        new Class<?>[]{clazz});
+//                System.out.println(obj);
+//                String beanName = ClassUtil.getClassName(clazz, true);
+//                SpringUtil.registerBean(beanName, obj);
+//            }
+//        });
+//    }
 
     public void find() throws MqttException {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
@@ -137,6 +152,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         try {
             //系统已经准备
             this.find();
+//            this.proxySend();
         } catch (Exception e) {
             log.error("find mqtt proxy error", e);
         }
