@@ -13,8 +13,6 @@ import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.event.MqttMapperSubscribeEvent;
-import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperBeanFactory;
-import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperInterfaceProxy;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -25,7 +23,6 @@ import org.springframework.context.ApplicationListener;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,27 +42,15 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         this.mqttPahoClientFactory = mqttPahoClientFactory;
     }
 
-
-    class RequiredBean {
-        private final SimpleMqttClient simpleMqttClient;
-        private final MqttRequsetBean mqttRequsetBean;
-
-        public RequiredBean(SimpleMqttClient simpleMqttClient, MqttRequsetBean mqttRequsetBean) {
-            this.simpleMqttClient = simpleMqttClient;
-            this.mqttRequsetBean = mqttRequsetBean;
-        }
-
-    }
-
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         try {
             subscribe();
+            applicationContext.publishEvent(new MqttMapperSubscribeEvent(mqttPahoClientFactory));
         } catch (Exception e) {
             log.error("subscribe error", e);
         }
     }
-
 
     /**
      * 订阅方法
@@ -78,9 +63,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 log.error("subscribe error", e);
             }
         });
-        applicationContext.publishEvent(new MqttMapperSubscribeEvent(this));
     }
-
 
     //    public void proxySend() throws MqttException {
 //        Set<Class<?>> sss = ClassUtil.scanPackageByAnnotation("com.jbm.test.mqtt.proxy", MqttMapper.class);
@@ -163,7 +146,6 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), new MqttRequestListener(mqttRequsetBean, simpleMqttClient));
     }
 
-
     /**
      * @throws Exception
      */
@@ -176,5 +158,16 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         } catch (Exception e) {
             log.error("find mqtt proxy error", e);
         }
+    }
+
+    class RequiredBean {
+        private final SimpleMqttClient simpleMqttClient;
+        private final MqttRequsetBean mqttRequsetBean;
+
+        public RequiredBean(SimpleMqttClient simpleMqttClient, MqttRequsetBean mqttRequsetBean) {
+            this.simpleMqttClient = simpleMqttClient;
+            this.mqttRequsetBean = mqttRequsetBean;
+        }
+
     }
 }
