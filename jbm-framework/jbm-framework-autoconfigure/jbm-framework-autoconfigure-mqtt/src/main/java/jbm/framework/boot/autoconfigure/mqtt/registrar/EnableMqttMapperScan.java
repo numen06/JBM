@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.mqtt.registrar;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
@@ -10,6 +11,8 @@ import java.lang.annotation.*;
 @Import({MqttScannerRegistrar.class})
 public @interface EnableMqttMapperScan {
     String[] value() default {};
+
+    Class<?>[] basePackageClasses() default {};
 
     String[] basePackages() default {};
 }

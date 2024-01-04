@@ -12,6 +12,7 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
+import jbm.framework.boot.autoconfigure.mqtt.event.MqttMapperSubscribeEvent;
 import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperBeanFactory;
 import jbm.framework.boot.autoconfigure.mqtt.registrar.MqttMapperInterfaceProxy;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
@@ -77,6 +78,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 log.error("subscribe error", e);
             }
         });
+        applicationContext.publishEvent(new MqttMapperSubscribeEvent(this));
     }
 
 

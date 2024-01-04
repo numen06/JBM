@@ -21,6 +21,8 @@ import org.springframework.integration.mqtt.core.ConsumerStopAction;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 
+import javax.annotation.Resource;
+
 @Slf4j
 public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 
@@ -40,7 +42,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 //                    return messageHandler;
 //                }
 //            });
-    @Autowired
+    @Resource
     private ApplicationContext applicationContext;
     private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
 
