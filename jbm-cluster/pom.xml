@@ -56,6 +56,48 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- 集群节点依赖 -->
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-node-basic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-node-dubbo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-node-mysql</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- 集群依赖 -->
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-api-basic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-common-satoken</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-common-fegin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-common-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-cluster-common-basic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -69,7 +111,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <properties>
         <!--aliyun镜像前缀-->
         <docker.image.prefix>registry.cn-hangzhou.aliyuncs.com/51jbm</docker.image.prefix>

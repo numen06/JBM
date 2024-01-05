@@ -6,22 +6,25 @@ server:
       cookie:
         name: OAUTH2SESSION
 spring:
+  main:
+    allow-bean-definition-overriding: false
   application:
     name: ${artifactId}
   cloud:
     #手动配置Bus id,
     bus:
       id: ${spring.application.name}:${server.port}
-  resources:
-    add-mappings: false
   profiles:
     active: ${profile.name}
-
+  web:
+    resources:
+      add-mappings: false
 management:
   endpoints:
     web:
       exposure:
         include: '*'
+
 
 swagger2:
   enabled: true

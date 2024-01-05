@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.KeyPair;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -162,10 +163,10 @@ public class SysLoginService {
     public String decryptPassword(String clientId, String key) {
         try {
             BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
-            KeyPair keyPair = SecurityUtils.generateRSAKey(baseApp.getSecretKey());
-            RSA rsa = SecureUtil.rsa(keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded());
+            RSA rsa = SecureUtil.rsa(baseApp.getPrivateKey(), baseApp.getPublicKey());
             return rsa.decryptStr(key, KeyType.PrivateKey);
         } catch (Exception e) {
+            log.error("解密错误", e);
             throw new ServiceException("处理登录信息异常");
         }
     }

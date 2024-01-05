@@ -11,10 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * 系统应用-基础信息
@@ -106,5 +103,13 @@ public class BaseApp extends MasterDataEntity {
      */
     @ApiModelProperty(value = "保留数据0-否 1-是 不允许删除")
     private Integer isPersist;
+
+    @ApiModelProperty(value = "公钥")
+    @Column(columnDefinition = "TEXT")
+    private String publicKey;
+
+    @ApiModelProperty(value = "私钥")
+    @Column(columnDefinition = "TEXT")
+    private String privateKey;
 
 }

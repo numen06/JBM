@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Primary;
  * 模式总结	Token风格替换	jwt 与 Redis 逻辑混合	完全舍弃Redis，只用jwt
  * Sa-Token 配置
  *
- * @author Lion Li
+ * @author wesley
  */
 @Configuration
 public class SaTokenConfiguration {
@@ -73,7 +73,7 @@ public class SaTokenConfiguration {
 
 
     @Bean
-//    @Primary
+    @Primary
     public SaOAuth2Template jbmNodeOAuth2Template(RedisSaTokenDao redisSaTokenDao) {
         SaManager.setSaTokenDao(redisSaTokenDao);
         return new JbmNodeOAuth2TemplateImpl();

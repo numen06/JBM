@@ -6,8 +6,11 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 /**
  * APP信息调用预处理
@@ -37,6 +40,18 @@ public class BaseAppPreprocessing {
         }
         return baseApp;
     }
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    /**
+     * 清理缓存
+     */
+    @PostConstruct
+    public void clearCache() {
+        cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE).clear();
+    }
+
 
 
 }

@@ -19,43 +19,25 @@ import org.springframework.messaging.Message;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-public class JbmClusterNotification implements InitializingBean {
+public class JbmClusterNotification {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+//    @Autowired
+//    private ApplicationContext applicationContext;
 
-    @Autowired
+    @Autowired(required = false)
     private StreamBridge streamBridge;
 
     public JbmClusterNotification() {
     }
 
 
-    private AtomicBoolean active = new AtomicBoolean(false);
-
-    /**
-     * @throws Exception
-     */
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        while (ObjectUtil.isNull(streamBridge)) {
-            ThreadUtil.safeSleep(500);
-        }
-        streamBridge.afterSingletonsInstantiated();
-        active.set(true);
-    }
-
     public void sendNotification(Notification notification) {
-        if (active.get()) {
-            try {
-                final Message<Notification> message = MessageBuilder.withPayload(notification)
-                        .build();
-                streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
-            }catch (Exception e) {
-                streamBridge.afterSingletonsInstantiated();
-            }
-        } else {
-            throw new RuntimeException("通知服务未启动");
+        try {
+            final Message<Notification> message = MessageBuilder.withPayload(notification)
+                    .build();
+            streamBridge.send(QueueConstants.NOTIFICATION_STREAM, message);
+        } catch (Exception e) {
+            log.error("发送消息错误", e);
         }
     }
 

@@ -20,27 +20,26 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-api-basic</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-basic</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-satoken</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-fegin</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-security</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>

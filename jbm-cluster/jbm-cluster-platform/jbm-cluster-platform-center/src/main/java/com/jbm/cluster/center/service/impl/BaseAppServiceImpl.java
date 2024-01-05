@@ -3,6 +3,8 @@ package com.jbm.cluster.center.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.asymmetric.RSA;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
@@ -10,6 +12,7 @@ import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.center.mapper.BaseAppMapper;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -27,6 +30,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.List;
 
@@ -48,7 +52,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * token有效期，默认7天
      */
     public static final int REFRESH_TOKEN_VALIDITY_SECONDS = 60 * 60 * 24 * 7;
-//    @Autowired
+    //    @Autowired
 //    private JdbcClientDetailsService jdbcClientDetailsService;
     @Autowired
     private BaseAppMapper baseAppMapper;
@@ -109,7 +113,16 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         QueryWrapper<BaseApp> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseApp::getApiKey, appKey);
         List<BaseApp> list = baseAppMapper.selectList(queryWrapper);
-        return CollUtil.getFirst(list);
+        BaseApp baseApp = CollUtil.getFirst(list);
+
+        if (ObjectUtil.hasEmpty(baseApp.getPrivateKey(), baseApp.getPublicKey())) {
+            KeyPair keyPair = SecurityUtils.generateRSAKey(baseApp.getSecretKey());
+            RSA rsa = SecureUtil.rsa(keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded());
+            baseApp.setPrivateKey(rsa.getPrivateKeyBase64());
+            baseApp.setPublicKey(rsa.getPublicKeyBase64());
+            this.saveEntity(baseApp);
+        }
+        return baseApp;
     }
 
     /**
