@@ -15,9 +15,7 @@ import org.apache.commons.io.Charsets;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * @author wesley
@@ -34,11 +32,7 @@ public class MqttRequestListener implements IMqttMessageListener {
         this.simpleMqttClient = simpleMqttClient;
     }
 
-    private ExecutorService executor = ExecutorBuilder.create()
-            .setCorePoolSize(5)
-            .setMaxPoolSize(10)
-            .setWorkQueue(new LinkedBlockingQueue<>(100))
-            .build();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
 
     public void executeMqttRequest(String topic, MqttMessage message) {
         try {
