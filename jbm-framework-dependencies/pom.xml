@@ -35,7 +35,7 @@
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <!--加入alibaba cloud-->
         <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
-        <alibaba.nacos.version>2.1.0</alibaba.nacos.version>
+        <alibaba.nacos.version>2.3.0</alibaba.nacos.version>
         <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
         <!-- 7.0add-->
         <arthas.version>3.6.2</arthas.version>

@@ -54,6 +54,29 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <layout>ZIP</layout>
+                    <finalName>${project.build.finalName}-nothing</finalName>
+                    <includes>
+                        <!-- 不包含任何jar包 -->
+                        <include>
+                            <groupId>nothing</groupId>
+                            <artifactId>nothing</artifactId>
+                        </include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <configuration>
@@ -98,6 +121,34 @@
                             <stripVersion>true</stripVersion>
                         </configuration>
                     </execution>
+                        <execution>
+                            <id>copy-dependencies</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/tmp</outputDirectory>
+                                <!-- 需要排除的jar的 groupId -->
+                                <includeGroupIds>
+                                    com.jbm
+                                </includeGroupIds>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>copy-guding-dependencies</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                <!-- 需要排除的jar的 groupId -->
+                                <excludeGroupIds>
+                                    com.jbm
+                                </excludeGroupIds>
+                            </configuration>
+                        </execution>
                 </executions>
             </plugin>
             <!--maven deploy 忽略发布插件-->
