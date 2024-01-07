@@ -66,7 +66,7 @@
         <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis-plus.version>3.5.4.1</mybatis-plus.version>
-        <hutool.version>5.8.22</hutool.version>
+        <hutool.version>5.8.24</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <lombok.version>1.18.30</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
@@ -76,15 +76,19 @@
         <!--6.0 add-->
         <commons-collections-version>3.2.2</commons-collections-version>
         <commons-codec.version>1.15</commons-codec.version>
-        <commons-io-version>2.11.0</commons-io-version>
+        <commons-io.version>2.11.0</commons-io.version>
+        <commons-codec.version>1.15</commons-codec.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
         <apache.commons-lang3.version>3.12.0</apache.commons-lang3.version>
         <apache.commons.beanutils>1.9.4</apache.commons.beanutils>
         <com.google.zxing.version>3.1.0</com.google.zxing.version>
+        <disruptor.version>3.3.4</disruptor.version>
         <swagger.version>3.0.0</swagger.version>
         <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
         <satoken.version>1.30.0.RC</satoken.version>
         <mapstruct.version>1.5.0.RC1</mapstruct.version>
+        <bascomtask.version>2.1.0</bascomtask.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>

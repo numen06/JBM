@@ -25,6 +25,10 @@
         <oshi-core.version>6.4.2</oshi-core.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
         <!-- 基础包 -->
         <!--        <dependency>-->
         <!--            <groupId>org.jodd</groupId>-->
@@ -37,6 +41,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
@@ -45,6 +50,7 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
@@ -57,6 +63,7 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
+            <version>${commons-collections.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -66,7 +73,7 @@
         <dependency>
             <groupId>com.ebay.bascomtask</groupId>
             <artifactId>bascomtask-core</artifactId>
-            <version>2.1.0</version>
+            <version>${bascomtask.version}</version>
         </dependency>
         <!-- 系统信息 -->
         <dependency>
@@ -101,6 +108,12 @@
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>${disruptor.version}</version>
+        </dependency>
+
         <!--二维码-->
         <!--        <dependency>-->
         <!--            <groupId>com.google.zxing</groupId>-->
@@ -122,10 +135,7 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
