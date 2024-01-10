@@ -14,12 +14,12 @@
     <modules>
         <module>jbm-cluster-platform-center</module>
         <module>jbm-cluster-platform-gateway</module>
+        <module>jbm-cluster-platform-auth</module>
         <module>jbm-cluster-platform-doc</module>
         <module>jbm-cluster-platform-push</module>
         <module>jbm-cluster-platform-logs</module>
         <module>jbm-cluster-platform-bigscreen</module>
         <module>jbm-cluster-platform-weixin</module>
         <module>jbm-cluster-platform-job</module>
-        <module>jbm-cluster-platform-auth</module>
     </modules>
 </project>
