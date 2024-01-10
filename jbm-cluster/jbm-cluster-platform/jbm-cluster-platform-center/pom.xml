@@ -121,34 +121,6 @@
                             <stripVersion>true</stripVersion>
                         </configuration>
                     </execution>
-                        <execution>
-                            <id>copy-dependencies</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-dependencies</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/tmp</outputDirectory>
-                                <!-- 需要排除的jar的 groupId -->
-                                <includeGroupIds>
-                                    com.jbm
-                                </includeGroupIds>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>copy-guding-dependencies</id>
-                            <phase>prepare-package</phase>
-                            <goals>
-                                <goal>copy-dependencies</goal>
-                            </goals>
-                            <configuration>
-                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                <!-- 需要排除的jar的 groupId -->
-                                <excludeGroupIds>
-                                    com.jbm
-                                </excludeGroupIds>
-                            </configuration>
-                        </execution>
                 </executions>
             </plugin>
             <!--maven deploy 忽略发布插件-->
