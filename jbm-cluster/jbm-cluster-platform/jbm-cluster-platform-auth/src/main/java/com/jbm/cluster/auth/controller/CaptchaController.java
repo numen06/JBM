@@ -37,7 +37,7 @@ public class CaptchaController {
             @Override
             public String get() {
                 BaseApp baseApp = baseAppPreprocessing.getAppByKey(appKey);
-                return baseApp.getSecretKey();
+                return baseApp.getPublicKey();
             }
         });
     }
