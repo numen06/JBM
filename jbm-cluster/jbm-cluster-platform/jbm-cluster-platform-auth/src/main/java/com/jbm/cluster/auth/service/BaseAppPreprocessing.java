@@ -5,12 +5,14 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Objects;
 
 /**
  * APP信息调用预处理
@@ -19,6 +21,7 @@ import javax.annotation.PostConstruct;
  * @Date 2022/6/17 11:43
  * @Description TODO
  */
+@Slf4j
 @Service
 public class BaseAppPreprocessing {
 
@@ -49,9 +52,11 @@ public class BaseAppPreprocessing {
      */
     @PostConstruct
     public void clearCache() {
-        cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE).clear();
+        if (cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE) != null) {
+            log.info("清理{}缓存", JbmCacheConstants.APP_CACHE_NAMESPACE);
+            Objects.requireNonNull(cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE)).clear();
+        }
     }
-
 
 
 }

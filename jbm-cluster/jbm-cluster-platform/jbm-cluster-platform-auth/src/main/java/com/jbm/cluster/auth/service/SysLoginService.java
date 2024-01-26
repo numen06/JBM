@@ -161,8 +161,15 @@ public class SysLoginService {
      * @return
      */
     public String decryptPassword(String clientId, String key) {
+        BaseApp baseApp = null;
         try {
-            BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
+            baseApp = baseAppPreprocessing.getAppByKey(clientId);
+            if (ObjectUtil.isNull(baseApp)) {
+                throw new ServiceException("获取到的客户端信息为空");
+            }
+            if (ObjectUtil.hasNull(baseApp.getPrivateKey(), baseApp.getPublicKey())) {
+                throw new ServiceException("公钥私钥可能存在为空");
+            }
             RSA rsa = SecureUtil.rsa(baseApp.getPrivateKey(), baseApp.getPublicKey());
             return rsa.decryptStr(key, KeyType.PrivateKey);
         } catch (Exception e) {
