@@ -110,7 +110,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         if (ObjectUtils.isEmpty(appKey)) {
             throw new ServiceException("key为空");
         }
-        QueryWrapper<BaseApp> queryWrapper = new QueryWrapper();
+        QueryWrapper<BaseApp> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BaseApp::getApiKey, appKey);
         List<BaseApp> list = baseAppMapper.selectList(queryWrapper);
         BaseApp baseApp = CollUtil.getFirst(list);
