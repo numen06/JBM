@@ -169,6 +169,9 @@ public class SysLoginService {
             }
             if (ObjectUtil.hasNull(baseApp.getPrivateKey(), baseApp.getPublicKey())) {
                 throw new ServiceException("公钥私钥可能存在为空");
+            } else {
+                log.info("私钥:{}", baseApp.getPrivateKey());
+                log.info("公钥:{}", baseApp.getPublicKey());
             }
             RSA rsa = SecureUtil.rsa(baseApp.getPrivateKey(), baseApp.getPublicKey());
             return rsa.decryptStr(key, KeyType.PrivateKey);

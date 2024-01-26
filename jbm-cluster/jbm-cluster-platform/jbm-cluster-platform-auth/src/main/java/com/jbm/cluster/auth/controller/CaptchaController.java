@@ -37,8 +37,7 @@ public class CaptchaController {
             @Override
             public String get() {
                 BaseApp baseApp = baseAppPreprocessing.getAppByKey(appKey);
-                String pkey = SecurityUtils.generateRSAPublicKey(baseApp.getSecretKey());
-                return pkey;
+                return SecurityUtils.generateRSAPublicKey(baseApp.getSecretKey());
             }
         });
     }
