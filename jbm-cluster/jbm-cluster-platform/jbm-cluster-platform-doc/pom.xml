@@ -47,20 +47,6 @@
                     </nonFilteredFileExtensions>
                 </configuration>
             </plugin>
-            <!-- docker打包插件 -->
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>${maven-dockerfile-plugin.version}</version>
-                <configuration>
-                    <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
-                    <repository>${docker.image.prefix}/${project.artifactId}</repository>
-                    <tag>${docker.tag.version}</tag>
-                    <buildArgs>
-                        <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
-                    </buildArgs>
-                </configuration>
-            </plugin>
             <!--复制文件到DIST-->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
