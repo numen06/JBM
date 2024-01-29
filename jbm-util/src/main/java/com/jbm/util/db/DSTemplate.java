@@ -1,16 +1,21 @@
 package com.jbm.util.db;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
 import com.google.common.collect.Lists;
+import com.jbm.util.SimpleTemplateUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -44,10 +49,25 @@ public class DSTemplate {
         this.sqlPath = sqlPath;
     }
 
+
     private String loadSql(String sqlname) {
         String sqlFile = StrUtil.concat(true, sqlPath, sqlname, SQL_EXT);
         ClassPathResource resource = new ClassPathResource(sqlFile);
         return resource.readUtf8Str();
+    }
+
+    private String renderSql(String sqlname, Object... params) {
+        String inSql = this.loadSql(sqlname);
+        String outSql = inSql;
+        if (params.length==  1) {
+           Object ctxPojo = params[0];
+               try {
+                   outSql =  SimpleTemplateUtils.renderStringTemplate(inSql, ctxPojo);
+               } catch (IOException e) {
+                   throw new RuntimeException(e);
+               }
+        }
+        return outSql;
     }
 
 
@@ -55,7 +75,7 @@ public class DSTemplate {
         List<T> entities = Lists.newArrayList();
         //查询
         try {
-            String sql = this.loadSql(sqlname);
+            String sql = this.renderSql(sqlname,params);
             log.info("execute sql:{}", sql);
             List<Entity> result = db.query(sql, params);
             result.forEach(new Consumer<Entity>() {
@@ -75,7 +95,7 @@ public class DSTemplate {
 
     public int execute(String sqlname, Object... params) {
         try {
-            String sql = this.loadSql(sqlname);
+            String sql = this.renderSql(sqlname,params);
             log.info("execute sql:{}", sql);
             return db.execute(sqlname, params);
         } catch (SQLException e) {
