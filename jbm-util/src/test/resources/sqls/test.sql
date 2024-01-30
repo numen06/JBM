@@ -1,0 +1,1 @@
+select * from sql_initialize

@@ -16,6 +16,8 @@
 
 package com.jbm.util;
 
+import cn.hutool.core.lang.Assert;
+
 import java.lang.reflect.*;
 import java.sql.SQLException;
 import java.util.ArrayList;

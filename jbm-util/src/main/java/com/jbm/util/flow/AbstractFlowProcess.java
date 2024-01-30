@@ -1,10 +1,8 @@
 package com.jbm.util.flow;
 
-import com.ebay.bascomtask.core.Orchestrator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 @Slf4j
 public abstract class AbstractFlowProcess<S, R> implements FlowProcess<S, R> {
@@ -27,6 +25,14 @@ public abstract class AbstractFlowProcess<S, R> implements FlowProcess<S, R> {
 
 
     public abstract R doProcess(S source);
+
+    public CompletableFuture<Object> anyOf(CompletableFuture<?>... cfs) {
+        return CompletableFuture.anyOf(cfs);
+    }
+
+    public CompletableFuture<Void> allOf(CompletableFuture<?>... cfs) {
+        return CompletableFuture.allOf(cfs);
+    }
 
 
 }

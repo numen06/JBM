@@ -1,5 +1,6 @@
 package com.jbm.util;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -25,7 +26,13 @@ public class FastJsonUtils {
     private final static String st1 = "{\"username\":\"tom\",\"age\":18,\"addressTset\":[{\"provinceTest\":\"addressTset\"},{\"city\":\"上海市\"},{\"disrtictTest\":\"静安区\"}]}";
     private final static String st2 = "{username:\"tom\",age:18}";
 
+
+    private static SerializeConfig webSerializeConfig;
+
     public static SerializeConfig defaultWebConfig() {
+        if (ObjectUtil.isNotEmpty(webSerializeConfig)) {
+            return webSerializeConfig;
+        }
         //设置swagger ui
         SerializeConfig serializeConfig = new SerializeConfig();
         serializeConfig.put(BigInteger.class, ToStringSerializer.instance);
@@ -33,7 +40,8 @@ public class FastJsonUtils {
         serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
         serializeConfig.put(Long.TYPE, ToStringSerializer.instance);
         serializeConfig.put(Version.class, ToStringSerializer.instance);
-        return serializeConfig;
+        webSerializeConfig = serializeConfig;
+        return webSerializeConfig;
     }
 
     /**

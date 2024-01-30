@@ -863,7 +863,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
                 try {
                     timeValue = Long.parseLong(StringUtils.defaultIfBlank(object, "0"));
                 } catch (NumberFormatException e) {
-                    return ObjectUtils.LONG_DEF;
+                    return NumberUtils.LONG_DEF;
                 }
             }
         }
@@ -886,9 +886,9 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
      */
     public static double exchangeTime(double timeValue, String timeType, String toTimeType) {
         if (!ArrayUtils.contains(TIME_TYPES, timeType))
-            return ObjectUtils.LONG_DEF;
+            return NumberUtils.LONG_DEF;
         if (!ArrayUtils.contains(TIME_TYPES, toTimeType))
-            return ObjectUtils.LONG_DEF;
+            return NumberUtils.LONG_DEF;
         if (timeType == toTimeType)
             return timeValue;
         double one = getExchangeRate(timeType);
