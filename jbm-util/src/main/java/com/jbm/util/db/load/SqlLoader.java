@@ -21,8 +21,9 @@ public class SqlLoader extends AbstractFileLoader {
         SqlMeta sqlMeta = null;
         try {
             if (params.length == 1) {
-                String sql =  SimpleTemplateUtils.renderStringTemplate(fileContent, params[0]);
+                String sql = SimpleTemplateUtils.renderStringTemplate(fileContent, params[0]);
                 sqlMeta = new SqlMeta(sql, CollUtil.newArrayList(params));
+                return sqlMeta;
             }
             String sql =  SimpleTemplateUtils.renderStringTemplate(fileContent, params);
             sqlMeta = new SqlMeta(sql, CollUtil.newArrayList(params));
