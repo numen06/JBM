@@ -1,9 +1,6 @@
 package com.jbm.util.db;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.io.file.FileNameUtil;
-import cn.hutool.core.io.resource.ResourceUtil;
-import cn.hutool.core.lang.Filter;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
@@ -12,21 +9,12 @@ import com.google.common.collect.Lists;
 import com.jbm.util.db.load.FileLoader;
 import com.jbm.util.db.load.SqlLoader;
 import com.jbm.util.db.load.XmlLoader;
-import com.jbm.util.db.sqltemplate.Configuration;
-import com.jbm.util.db.sqltemplate.SqlMeta;
-import com.jbm.util.db.sqltemplate.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
-import java.net.URL;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 数据库模板
@@ -65,10 +53,10 @@ public class DSTemplate {
         fileLoaderList = CollUtil.newArrayList(new SqlLoader(xmlPath), new XmlLoader(sqlPath));
     }
 
-    private String getSql(String sqlname, Object... params) {
+    private String getSql(String sqlName, Object... params) {
         for (FileLoader fileLoader : fileLoaderList) {
-            if (fileLoader.canRead(sqlname)) {
-                String content = fileLoader.load(sqlname, params);
+            if (fileLoader.canRead(sqlName)) {
+                String content = fileLoader.load(sqlName, params);
                 if (StrUtil.isBlank(content)) {
                     log.error("sql文件内容为空");
                     continue;
@@ -80,11 +68,11 @@ public class DSTemplate {
     }
 
 
-    public <T> List<T> queryEntitys(String sqlname, Class<T> entityClass, Object... params) {
+    public <T> List<T> queryEntitys(String sqlName, Class<T> entityClass, Object... params) {
         List<T> entities = Lists.newArrayList();
         //查询
         try {
-            String sql = this.getSql(sqlname, params);
+            String sql = this.getSql(sqlName, params);
             log.info("execute sql:{}", sql);
             List<Entity> result = db.query(sql, params);
             result.forEach(new Consumer<Entity>() {
@@ -102,11 +90,11 @@ public class DSTemplate {
         return entities;
     }
 
-    public int execute(String sqlname, Object... params) {
+    public int execute(String sqlName, Object... params) {
         try {
-            String sql = this.getSql(sqlname, params);
+            String sql = this.getSql(sqlName, params);
             log.info("execute sql:{}", sql);
-            return db.execute(sqlname, params);
+            return db.execute(sqlName, params);
         } catch (SQLException e) {
             log.error("执行sql错误", e);
             return 0;

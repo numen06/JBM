@@ -1,15 +1,12 @@
 package test.db.sqltemplate;
 
-import java.util.HashMap;
-
-
-
-import java.util.List;
-import java.util.Map;
-
 import com.jbm.util.db.sqltemplate.*;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @create 2019-09-18 16:16

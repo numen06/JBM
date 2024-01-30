@@ -1,16 +1,10 @@
 package com.jbm.util.db.sqltemplate.script;
 
+import ognl.*;
+
 import java.io.StringReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import ognl.ExpressionSyntaxException;
-import ognl.Node;
-import ognl.Ognl;
-import ognl.OgnlException;
-import ognl.OgnlParser;
-import ognl.ParseException;
-import ognl.TokenMgrError;
 
 public class OgnlCache {
 

@@ -1,10 +1,10 @@
 package com.jbm.util.db.sqltemplate.script;
 
-import java.util.Map;
-
 import com.jbm.util.db.sqltemplate.Context;
 import com.jbm.util.db.sqltemplate.token.GenericTokenParser;
 import com.jbm.util.db.sqltemplate.token.TokenHandler;
+
+import java.util.Map;
 
 public class ForEachFragment implements SqlFragment {
 

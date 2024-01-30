@@ -4,8 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.jbm.util.flow.AbstractFlowProcess;
 import test.flow.usage.BaseData;
 
-import java.util.concurrent.CompletableFuture;
-
 public class ProcessB extends AbstractFlowProcess<BaseData, String> {
 
 

@@ -1,37 +1,23 @@
 package com.jbm.util.db.sqltemplate;
 
+import com.jbm.util.db.sqltemplate.script.*;
+import com.jbm.util.db.sqltemplate.token.GenericTokenParser;
+import com.jbm.util.db.sqltemplate.token.TokenHandler;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import com.jbm.util.db.sqltemplate.script.ChooseFragment;
-import com.jbm.util.db.sqltemplate.script.ForEachFragment;
-import com.jbm.util.db.sqltemplate.script.IfFragment;
-import com.jbm.util.db.sqltemplate.script.MixedSqlFragment;
-import com.jbm.util.db.sqltemplate.script.OgnlCache;
-import com.jbm.util.db.sqltemplate.script.SetFragment;
-import com.jbm.util.db.sqltemplate.script.SqlFragment;
-import com.jbm.util.db.sqltemplate.script.TextFragment;
-import com.jbm.util.db.sqltemplate.script.TrimFragment;
-import com.jbm.util.db.sqltemplate.script.WhereFragment;
-import com.jbm.util.db.sqltemplate.token.GenericTokenParser;
-import com.jbm.util.db.sqltemplate.token.TokenHandler;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * 

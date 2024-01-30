@@ -1,8 +1,8 @@
 package com.jbm.util.db.sqltemplate.script;
 
-import java.util.List;
-
 import com.jbm.util.db.sqltemplate.Context;
+
+import java.util.List;
 
 public class ChooseFragment implements SqlFragment {
 

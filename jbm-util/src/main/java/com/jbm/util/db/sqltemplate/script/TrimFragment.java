@@ -1,10 +1,10 @@
 package com.jbm.util.db.sqltemplate.script;
 
+import com.jbm.util.db.sqltemplate.Context;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import com.jbm.util.db.sqltemplate.Context;
 
 public class TrimFragment implements SqlFragment {
 
