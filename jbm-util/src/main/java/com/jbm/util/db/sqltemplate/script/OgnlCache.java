@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class OgnlCache {
 
-	private static final Map<String, ognl.Node> expressionCache = new ConcurrentHashMap<String, ognl.Node>();
+	private static final Map<String, Node> expressionCache = new ConcurrentHashMap<String, Node>();
 
 	public static Object getValue(String expression, Object root) {
 		try {
