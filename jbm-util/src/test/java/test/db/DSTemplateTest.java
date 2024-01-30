@@ -37,7 +37,7 @@ public class DSTemplateTest {
     public void testQueryEntitys2() {
         Map<String,Object> map= new LinkedHashMap<>();
         map.put("list", CollUtil.newArrayList("123","223","333"));
-        List<SqlInitialize> sqlInitializers = dst.queryEntitys("test-map", SqlInitialize.class,map);
+        List<SqlInitialize> sqlInitializers = dst.queryEntitys("test-map.selectByFileName", SqlInitialize.class,map);
         System.out.println(sqlInitializers);
     }
 
