@@ -34,11 +34,8 @@ public class Configuration {
 	}
 
 	public SqlTemplate getTemplate(final String content) {
-
 		if (cacheTemplate) {
-
 			FutureTask<SqlTemplate> f = templateCache.get(content);
-
 			if (f == null) {
 				FutureTask<SqlTemplate> ft = new FutureTask<SqlTemplate>(
 						new Callable<SqlTemplate>() {
@@ -47,7 +44,6 @@ public class Configuration {
 								return createTemplate(content);
 							}
 						});
-
 				f = templateCache.putIfAbsent(content, ft);
 
 				if (f == null) {

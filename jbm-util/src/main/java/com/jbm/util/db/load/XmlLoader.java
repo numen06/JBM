@@ -4,6 +4,7 @@ import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.XmlUtil;
 import com.jbm.util.db.sqltemplate.Configuration;
+import com.jbm.util.db.sqltemplate.SqlMeta;
 import com.jbm.util.db.sqltemplate.SqlTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.*;
@@ -37,7 +38,7 @@ public class XmlLoader extends AbstractFileLoader {
 
 
     @Override
-    public String renderSql(String sqlName, String fileContent, Object... params) {
+    public SqlMeta renderSql(String sqlName, String fileContent, Object... params) {
         List<String> ss = StrUtil.split(sqlName, ".");
         String sqlMethod = ss.get(1);
         Document doc = XmlUtil.readXML(fileContent);
@@ -45,9 +46,9 @@ public class XmlLoader extends AbstractFileLoader {
         SqlTemplate template = configuration
                 .getTemplate(inSql);
         if (params.length == 1) {
-            return template.process(params[0]).getSql();
+            return template.process(params[0]);
         }
-        return template.process(params).getSql();
+        return template.process(params);
     }
 
     @Override
