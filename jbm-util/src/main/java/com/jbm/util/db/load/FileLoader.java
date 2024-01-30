@@ -1,8 +1,10 @@
 package com.jbm.util.db.load;
 
+import com.jbm.util.db.sqltemplate.SqlMeta;
+
 public interface FileLoader {
 
-    String load(String sqlName, Object... params);
+    SqlMeta load(String sqlName, Object... params);
 
     boolean canRead(String sqlName);
 }

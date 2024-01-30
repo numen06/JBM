@@ -1,5 +1,6 @@
 package com.jbm.util.db.sqltemplate;
 
+import cn.hutool.core.bean.BeanUtil;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 import ognl.OgnlRuntime;
@@ -85,7 +86,7 @@ public class Context {
          * @throws OgnlException
          */
         @Override
-        public Object getProperty(OgnlContext ognlContext, Object target, Object name) throws OgnlException {
+        public Object getProperty(Map ognlContext, Object target, Object name) throws OgnlException {
             Map map = (Map) target;
             Object result = map.get(name);
             if (result != null) {
@@ -94,8 +95,10 @@ public class Context {
             Object parameterObject = map.get(BINDING_DATA);
             if (parameterObject instanceof Map) {
                 return ((Map) parameterObject).get(name);
+            } else {
+                return BeanUtil.getProperty(parameterObject, name.toString());
             }
-            return null;
+//            return null;
         }
 
         /**
@@ -106,19 +109,20 @@ public class Context {
          * @throws OgnlException
          */
         @Override
-        public void setProperty(OgnlContext ognlContext, Object target, Object name,
+        public void setProperty(Map ognlContext, Object target, Object name,
                                 Object value) throws OgnlException {
             Map map = (Map) target;
             map.put(name, value);
         }
 
-        public String getSourceAccessor(OgnlContext arg0, Object arg1,
-                                        Object arg2) {
+
+        public String getSourceAccessor(OgnlContext ognlContext,Object target,
+                                        Object value) {
             // TODO Auto-generated method stub
             return null;
         }
 
-        public String getSourceSetter(OgnlContext arg0, Object arg1, Object arg2) {
+        public String getSourceSetter(OgnlContext ognlContext, Object target, Object name) {
             // TODO Auto-generated method stub
             return null;
         }

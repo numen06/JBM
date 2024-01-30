@@ -1,7 +1,9 @@
 package com.jbm.util.db.load;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.util.SimpleTemplateUtils;
+import com.jbm.util.db.sqltemplate.SqlMeta;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -15,16 +17,19 @@ public class SqlLoader extends AbstractFileLoader {
     }
 
     @Override
-    public String renderSql(String sqlName, String fileContent, Object... params) {
+    public SqlMeta renderSql(String sqlName, String fileContent, Object... params) {
+        SqlMeta sqlMeta = null;
         try {
             if (params.length == 1) {
-                return SimpleTemplateUtils.renderStringTemplate(fileContent, params[0]);
+                String sql =  SimpleTemplateUtils.renderStringTemplate(fileContent, params[0]);
+                sqlMeta = new SqlMeta(sql, CollUtil.newArrayList(params));
             }
-            return SimpleTemplateUtils.renderStringTemplate(fileContent, params);
+            String sql =  SimpleTemplateUtils.renderStringTemplate(fileContent, params);
+            sqlMeta = new SqlMeta(sql, CollUtil.newArrayList(params));
         } catch (Exception e) {
             log.error("转换sql失败", e);
         }
-        return null;
+        return sqlMeta;
     }
 
     @Override

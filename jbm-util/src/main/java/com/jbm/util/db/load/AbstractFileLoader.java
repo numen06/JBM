@@ -1,6 +1,7 @@
 package com.jbm.util.db.load;
 
 import cn.hutool.core.io.resource.ResourceUtil;
+import com.jbm.util.db.sqltemplate.SqlMeta;
 
 public abstract class AbstractFileLoader implements FileLoader {
 
@@ -15,7 +16,7 @@ public abstract class AbstractFileLoader implements FileLoader {
         return ResourceUtil.readUtf8Str(fileName);
     }
 
-    public abstract String renderSql(String sqlName, String fileContent, Object... params);
+    public abstract SqlMeta renderSql(String sqlName, String fileContent, Object... params);
 
     public abstract String getExtension();
 
@@ -24,7 +25,7 @@ public abstract class AbstractFileLoader implements FileLoader {
      * @return
      */
     @Override
-    public String load(String sqlName, Object... params) {
+    public SqlMeta load(String sqlName, Object... params) {
         String fileContent = this.loadFile(sqlName);
         return this.renderSql(sqlName, fileContent, params);
     }
