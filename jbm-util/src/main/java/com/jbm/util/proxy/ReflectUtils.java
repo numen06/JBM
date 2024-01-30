@@ -86,16 +86,24 @@ public class ReflectUtils {
         if (method.getParameterCount() == 0) {
             return ReflectUtil.invoke(obj, method);
         }
-        Object jsonObject = JSON.parse(jsonStr);
+//        Object jsonObject = JSON.parse(jsonStr);
         Object[] params = new Object[method.getParameterCount()];
         Parameter[] paramTypes = method.getParameters();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        if(parameterAnnotations[0].length==0){
+            if(paramTypes.length==1 ) {
+                if(paramTypes[0].getType().equals(String.class)){
+                   return ReflectUtil.invokeWithCheck(obj, method, jsonStr);
+                }
+            }
+        }
         List<Integer> jumpIndex = new ArrayList<>();
         for (int i = 0; i < parameterAnnotations.length; i++) {
             Annotation[] annotations = parameterAnnotations[i];
             for (Annotation annotation : annotations) {//获取注解名
                 if (annotation.annotationType().isAssignableFrom(RequestBody.class)) {
                     Object pObject = null;
+                    Object jsonObject = JSON.parse(jsonStr);
                     if (jsonObject instanceof JSONObject) {
                         pObject = JSON.parseObject(jsonStr, paramTypes[i].getType());
                     }
@@ -109,6 +117,7 @@ public class ReflectUtils {
                 }
                 if (annotation.annotationType().isAssignableFrom(RequestParam.class)) {
                     String name = ((RequestParam) annotation).value();
+                    Object jsonObject = JSON.parse(jsonStr);
                     Object pObject = ((JSONObject) jsonObject).getObject(name, paramTypes[i].getType());
                     params[i] = pObject;
                     jumpIndex.add(i);
@@ -122,8 +131,9 @@ public class ReflectUtils {
             }
         }
         for (int i = 0; i < paramTypes.length; i++) {
-            if (jumpIndex.contains(i))
+            if (jumpIndex.contains(i)) {
                 continue;
+            }
             Parameter p = paramTypes[i];
             Class<?> pz = p.getType();
             if (pz.isAssignableFrom(RequestHeaders.class)) {

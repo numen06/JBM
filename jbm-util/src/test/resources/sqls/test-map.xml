@@ -1,0 +1,11 @@
+<mapper>
+    <select id="selectByFileName" >
+        select * from sql_initialize
+        <where>
+            file_name in
+            <foreach collection="list" item="item" separator="," open="(" close=")">
+                ${item}
+            </foreach>
+        </where>
+    </select>
+</mapper>

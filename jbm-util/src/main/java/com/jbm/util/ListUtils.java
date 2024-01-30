@@ -21,7 +21,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
     /**
      * 返回一个用逗号分开的字符串
      *
-     * @param array
+     * @param list
      * @return 1, 2, 3
      */
     public static <T> String toSimpleString(List<T> list) {
@@ -94,7 +94,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
      * @return
      */
     public static <E> ArrayList<E> newArrayListIfNull(List<E> list) {
-        return list == null ? new ArrayList<E>() : ObjectUtils.softCast(list, new ArrayList<E>());
+        return list == null ? new ArrayList<E>() : (ArrayList<E>) list;
     }
 
     /**
@@ -113,9 +113,9 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
     /**
      * 对List<Map<String, Object>> resultList 按照Map中的key进行降序排序，
      *
-     * @param resultList
+     * @param list
      * @param key        排序字段名称
-     * @param sortWay    排序方式：DESC 降序，ASC 升序 ；(默认升序)
+     * @param sort    排序方式：DESC 降序，ASC 升序 ；(默认升序)
      * @throws Exception
      */
     public static <K, V> void sort(List<Map<K, V>> list, final K key, final String sort) {
@@ -169,11 +169,11 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
         if (list == null) {
             list = new ArrayList<>();
         }
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[i] == null || list.contains(elements[i])) {
+        for (T element : elements) {
+            if (element == null || list.contains(element)) {
                 continue;
             } else {
-                list.add(elements[i]);
+                list.add(element);
             }
         }
         return list;

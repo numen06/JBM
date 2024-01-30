@@ -1,4 +1,4 @@
-package com.jbm.util.template.simple;
+package com.jbm.util.simple;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.Template;
@@ -6,6 +6,7 @@ import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
 import cn.hutool.extra.template.engine.velocity.SimpleStringResourceLoader;
 import com.github.pfmiles.org.apache.velocity.app.VelocityEngine;
+import com.jbm.util.template.simple.SimpleTemplate;
 
 public class SimpleTemplateEngine implements TemplateEngine {
 
@@ -19,7 +20,7 @@ public class SimpleTemplateEngine implements TemplateEngine {
         this.init(config);
     }
 
-    public SimpleTemplateEngine(com.github.pfmiles.org.apache.velocity.app.VelocityEngine engine) {
+    public SimpleTemplateEngine(VelocityEngine engine) {
         this.init(engine);
     }
 

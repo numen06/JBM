@@ -641,14 +641,14 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
         return map;
     }
 
-    public static void main(String[] args) {
-        String source = "1=1,2=2,3=3   ";
-        String source2 = "1:1;2:2;3:3;  ";
-        Map<String, String> map = MapUtils.split(source, null);
-        Map<String, String> map2 = MapUtils.split(source2);
-        System.out.println(map2);
-        System.out.println(MapUtils.toList(map));
-        System.out.println(MapUtils.fromArray(new Object[]{"1231", 123, "123123", 1231}));
-    }
+//    public static void main(String[] args) {
+//        String source = "1=1,2=2,3=3   ";
+//        String source2 = "1:1;2:2;3:3;  ";
+//        Map<String, String> map = MapUtils.split(source, null);
+//        Map<String, String> map2 = MapUtils.split(source2);
+//        System.out.println(map2);
+//        System.out.println(MapUtils.toList(map));
+//        System.out.println(MapUtils.fromArray(new Object[]{"1231", 123, "123123", 1231}));
+//    }
 
 }

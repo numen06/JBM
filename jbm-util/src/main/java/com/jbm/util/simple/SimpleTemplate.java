@@ -1,4 +1,4 @@
-package com.jbm.util.template.simple;
+package com.jbm.util.simple;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
@@ -31,17 +31,17 @@ public class SimpleTemplate extends AbstractTemplate implements Serializable {
      *
      * @param rawTemplate Velocity模板对象
      */
-    public SimpleTemplate(com.github.pfmiles.org.apache.velocity.Template rawTemplate) {
+    public SimpleTemplate(Template rawTemplate) {
         this.rawTemplate = rawTemplate;
     }
 
     /**
      * 包装Velocity模板
      *
-     * @param template Velocity的模板对象 {@link com.github.pfmiles.org.apache.velocity.Template}
+     * @param template Velocity的模板对象 {@link Template}
      * @return VelocityTemplate
      */
-    public static SimpleTemplate wrap(com.github.pfmiles.org.apache.velocity.Template template) {
+    public static SimpleTemplate wrap(Template template) {
         return (null == template) ? null : new SimpleTemplate(template);
     }
 
