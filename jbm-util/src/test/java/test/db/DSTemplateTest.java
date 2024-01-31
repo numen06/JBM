@@ -33,7 +33,7 @@ public class DSTemplateTest {
     public void setUp() {
         dst = new DSTemplate("test");
         dst.execute("create-db");
-//        dst.execute("db-init");
+        dst.execute("db-init");
     }
 
     @Test

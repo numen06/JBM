@@ -1,15 +1,11 @@
 package com.jbm.util.db;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.DbUtil;
 import cn.hutool.db.Entity;
-import cn.hutool.db.ds.DSFactory;
-import cn.hutool.db.meta.MetaUtil;
-import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.db.sql.SqlExecutor;
 import com.google.common.collect.Lists;
 import com.jbm.util.db.load.FileLoader;
@@ -69,7 +65,7 @@ public class DSTemplate {
             if (fileLoader.canRead(sqlName)) {
                 SqlMeta content = fileLoader.load(sqlName, params);
                 if (ObjectUtil.isNull(content)) {
-                    log.error("sql文件内容为空");
+                    log.error("SQL文件内容为空");
                     continue;
                 }
                 return content;
@@ -91,7 +87,6 @@ public class DSTemplate {
             if (sqlMeta != null) {
                 log.info("执行SQL:{}", sqlMeta.getSql());
             } else {
-                log.error("sql执行失败:{}", sqlName);
                 return entities;
             }
             List<Entity> result = db.query(sqlMeta.getSql(), sqlMeta.getParameter().toArray());
@@ -203,9 +198,9 @@ public class DSTemplate {
         try {
             SqlMeta sqlMeta = this.getSql(sqlName, params);
             if (sqlMeta != null) {
-                log.info("execute sql:{}", sqlMeta.getSql());
+                log.info("执行SQL:");
+                log.info("{}", sqlMeta.getSql());
             } else {
-                log.error("sql执行失败:{}", sqlName);
                 return 0;
             }
             conn = db.getConnection();
@@ -213,7 +208,7 @@ public class DSTemplate {
             log.info("影响行数：{}", count);
             return count;
         } catch (SQLException e) {
-            log.error("执行sql错误", e);
+            log.error("执行SQL错误", e);
             return 0;
         } finally {
             DbUtil.close(conn);
