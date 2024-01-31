@@ -1,18 +1,18 @@
 <mapper>
     <select id="selectByFileName" >
-        select * from sql_initialize
+        select * from student
         <where>
-            file_name in
+            name in
             <foreach collection="list" item="item" separator="," open="(" close=")">
-                ${item}
+                #{item}
             </foreach>
         </where>
     </select>
 
     <select id="selectByFileName2" >
-        select * from sql_initialize
+        select * from student
         <where>
-            file_name in
+            name in
             <foreach collection="list" item="item" separator="," open="(" close=")">
                 #{item.name}
             </foreach>
@@ -20,17 +20,17 @@
     </select>
 
     <select id="selectByFileName3" >
-        select * from sql_initialize
+        select * from student
         <where>
-            file_name = #{name}
+            name = #{name}
         </where>
     </select>
 
 
     <select id="selectByFileName4" >
-        select * from sql_initialize
+        select * from student
         <where>
-            file_name = #{student.name}
+            name = #{student.name}
         </where>
     </select>
 </mapper>

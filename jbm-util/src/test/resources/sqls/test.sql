@@ -1,1 +1,1 @@
-select * from sql_initialize
+select * from student where name = ?

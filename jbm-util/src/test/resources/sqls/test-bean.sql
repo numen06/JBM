@@ -1,2 +1,1 @@
-select * from sql_initialize
-         where file_name = ?
+select * from student where name like '$name'
