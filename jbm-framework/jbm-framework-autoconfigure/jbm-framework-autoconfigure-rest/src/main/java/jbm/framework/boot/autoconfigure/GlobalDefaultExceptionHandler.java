@@ -25,23 +25,6 @@ public class GlobalDefaultExceptionHandler {
 
 
     /**
-     * 统一异常处理
-     * AuthenticationException
-     *
-     * @param ex
-     * @param request
-     * @param response
-     * @return
-     */
-//    @ExceptionHandler({AuthenticationException.class})
-    public ResultBody authenticationException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
-        ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
-        response.setStatus(resultBody.getHttpStatus());
-        return resultBody;
-    }
-
-
-    /**
      * 自定义异常
      *
      * @param ex

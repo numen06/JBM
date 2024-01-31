@@ -378,6 +378,11 @@
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-rest</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
             <!--    cloud-->
             <dependency>
                 <groupId>com.jbm</groupId>

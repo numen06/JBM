@@ -13,7 +13,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.jbm</groupId>
-			<artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+			<artifactId>jbm-framework-autoconfigure-rest</artifactId>
 		</dependency>
 	</dependencies>
 </project>
