@@ -1,11 +1,13 @@
 package com.jbm.util.db;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.PageUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.db.*;
 import cn.hutool.db.handler.EntityListHandler;
+import cn.hutool.db.handler.HandleHelper;
 import cn.hutool.db.handler.RsHandler;
 import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.db.sql.SqlExecutor;
@@ -92,7 +94,7 @@ public class DSTemplate {
 //            SqlBuilder sqlBuilder = SqlBuilder.of(sqlMeta.getSql());
 //            sqlBuilder.addParams(sqlMeta.getParameter());
 
-            PageResult<Entity> result = db.page(sqlMeta.getSql(), page, sqlMeta.getParameter());
+            PageResult<Entity> result = db.page(sqlMeta.getSql(), page, sqlMeta.getParameter().toArray());
             pageResult.setTotal(result.getTotal());
             pageResult.addAll(this.entityToEntity(result, entityClass));
         } catch (SQLException e) {
