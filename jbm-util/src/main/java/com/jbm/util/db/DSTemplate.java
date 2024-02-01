@@ -2,10 +2,12 @@ package com.jbm.util.db;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.PageUtil;
 import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.db.Db;
-import cn.hutool.db.DbUtil;
-import cn.hutool.db.Entity;
+import cn.hutool.db.*;
+import cn.hutool.db.handler.EntityListHandler;
+import cn.hutool.db.handler.RsHandler;
+import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.db.sql.SqlExecutor;
 import com.google.common.collect.Lists;
 import com.jbm.util.db.load.FileLoader;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -74,9 +77,48 @@ public class DSTemplate {
         return null;
     }
 
+    public <T> PageResult<T> page(String sqlName, Class<T> entityClass, Page page, Object... params) {
+        PageResult<T> pageResult = new PageResult<>();
+        SqlMeta sqlMeta = null;
+        //查询
+        try {
+            sqlMeta = this.getSql(sqlName, params);
+            if (sqlMeta != null) {
+                log.info("执行SQL:");
+                log.info("{}", sqlMeta.getSql());
+            } else {
+                return pageResult;
+            }
+//            SqlBuilder sqlBuilder = SqlBuilder.of(sqlMeta.getSql());
+//            sqlBuilder.addParams(sqlMeta.getParameter());
+
+            PageResult<Entity> result = db.page(sqlMeta.getSql(), page, sqlMeta.getParameter());
+            pageResult.setTotal(result.getTotal());
+            pageResult.addAll(this.entityToEntity(result, entityClass));
+        } catch (SQLException e) {
+            log.error("查询数据库错误:{}", sqlName, e);
+        }
+        return pageResult;
+    }
+
+    public <T> List<T> entityToEntity(List<Entity> result, Class<T> entityClass) {
+        List<T> entities = Lists.newArrayList();
+        result.forEach(new Consumer<Entity>() {
+            @Override
+            public void accept(Entity entity) {
+                T t = ReflectUtil.newInstance(entityClass);
+                entity.toBean(t, true);
+                entities.add(t);
+            }
+        });
+        return entities;
+    }
+
+
     public <T> T queryEntity(String sqlName, Class<T> entityClass, Object... params) {
         return CollUtil.getFirst(this.queryEntitys(sqlName, entityClass, params));
     }
+
 
     public <T> List<T> queryEntitys(String sqlName, Class<T> entityClass, Object... params) {
         List<T> entities = Lists.newArrayList();
@@ -85,7 +127,8 @@ public class DSTemplate {
         try {
             sqlMeta = this.getSql(sqlName, params);
             if (sqlMeta != null) {
-                log.info("执行SQL:{}", sqlMeta.getSql());
+                log.info("执行SQL:");
+                log.info("{}", sqlMeta.getSql());
             } else {
                 return entities;
             }

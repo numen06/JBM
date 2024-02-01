@@ -14,8 +14,7 @@ public class PathWatchMonitorTest extends TestCase {
 
     public void testWatch() {
         PathWatchMonitor watch = new PathWatchMonitor();
-        watch.watch("sqls");
-        watch.start();
+        watch.watch();
         ThreadUtil.sleep(5, TimeUnit.MINUTES);
     }
 }

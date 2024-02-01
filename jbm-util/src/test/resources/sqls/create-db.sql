@@ -7,4 +7,3 @@ create table STUDENT
     TIME TIMESTAMP,
     PRIMARY KEY (`id`)
 );
-

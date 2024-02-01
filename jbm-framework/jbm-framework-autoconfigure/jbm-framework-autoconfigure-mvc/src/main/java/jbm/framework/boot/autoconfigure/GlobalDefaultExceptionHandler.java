@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.naming.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,7 +34,7 @@ public class GlobalDefaultExceptionHandler {
      * @param response
      * @return
      */
-//    @ExceptionHandler({AuthenticationException.class})
+    @ExceptionHandler({AuthenticationException.class})
     public ResultBody authenticationException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
         ResultBody resultBody = WebExceptionResolve.resolveException(ex, request.getRequestURI());
         response.setStatus(resultBody.getHttpStatus());

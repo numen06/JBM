@@ -49,7 +49,6 @@
         <module>jbm-framework-autoconfigure-mail</module>
         <module>jbm-framework-autoconfigure-opcua</module>
         <module>jbm-framework-autoconfigure-nacos</module>
-        <module>jbm-framework-autoconfigure-rest</module>
     </modules>
     <dependencies>
         <dependency>

@@ -1,21 +1,15 @@
 package com.jbm.micro.sb.test;
 
-import javax.annotation.PostConstruct;
-
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
-import com.jbm.micro.sb.test.service.SpringBootService;
-
-import java.util.Random;
+import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j

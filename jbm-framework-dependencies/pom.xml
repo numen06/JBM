@@ -56,7 +56,7 @@
         <c3p0.version>0.9.1.2</c3p0.version>
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis-plus.version>3.3.0</mybatis-plus.version>
-        <hutool.version>5.7.20</hutool.version>
+        <hutool.version>5.8.24</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <lombok.version>1.18.12</lombok.version>
@@ -70,6 +70,7 @@
         <io.swagger.version>1.5.20</io.swagger.version>
         <swagger-bootstrap-ui.version>1.9.5</swagger-bootstrap-ui.version>
         <oracle.version>10.2.0.4.0</oracle.version>
+        <ognl.version>3.1.2</ognl.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
@@ -335,11 +336,6 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-autoconfigure-rest</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-excel</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
@@ -587,6 +583,12 @@
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>3.3</version>
+            </dependency>
+            <!-- ognl -->
+            <dependency>
+                <groupId>ognl</groupId>
+                <artifactId>ognl</artifactId>
+                <version>${ognl.version}</version>
             </dependency>
             <!-- log -->
             <!-- <dependency> -->

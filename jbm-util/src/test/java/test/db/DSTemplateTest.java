@@ -3,6 +3,7 @@ package test.db;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.db.Page;
 import com.alibaba.fastjson.JSON;
 import com.jbm.util.db.DSTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,14 @@ public class DSTemplateTest {
         log.info("删除结果:{}", JSON.toJSONString(students));
 
 
+    }
+
+    @Test
+    public void testPageEntitys() {
+        String sqlName = "page";
+        log.info("开始查询:{}", sqlName);
+        List<Student> students = dst.page("page", Student.class, new Page(0, 3), "张三");
+        log.info("分页查询结果[{}]:{}", sqlName, students);
     }
 
 
