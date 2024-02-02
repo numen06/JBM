@@ -21,7 +21,6 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-data-masterdata</artifactId>
-            <scope>provided</scope>
         </dependency>
         <!--swagger2-->
         <dependency>

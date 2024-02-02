@@ -22,6 +22,21 @@ import java.util.ResourceBundle;
 @ApiModel(value = "响应结果")
 @Data
 public class ResultBody<T> implements Serializable {
+
+    /**
+     * 错误信息配置
+     */
+//    @JSONField(serialize = false, deserialize = false)
+    private static ResourceBundle resourceBundle;
+
+    static {
+        try {
+            resourceBundle = ResourceBundle.getBundle("error");
+        } catch (Exception e) {
+            System.out.println("error.properties文件不存在");
+        }
+    }
+
     /**
      * 响应编码
      */
@@ -123,12 +138,6 @@ public class ResultBody<T> implements Serializable {
     }
 
     /**
-     * 错误信息配置
-     */
-    @JSONField(serialize = false, deserialize = false)
-    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("error");
-
-    /**
      * 提示信息国际化
      *
      * @param message
@@ -137,6 +146,9 @@ public class ResultBody<T> implements Serializable {
      */
     @JSONField(serialize = false, deserialize = false)
     private static String i18n(String message, String defaultMessage) {
+        if (resourceBundle == null) {
+            return defaultMessage;
+        }
         return resourceBundle.containsKey(message) ? resourceBundle.getString(message) : defaultMessage;
     }
 

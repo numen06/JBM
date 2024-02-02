@@ -1,14 +1,16 @@
 ®## db.setting文件
 [test]
-url = jdbc:mysql://10.100.10.62:3306/jbm
-user = root
-pass = 1az2wsx3edc
+url = jdbc:h2:file:../h2/test;
+user = sa
+pass = sa
+# JDBC驱动名，可选（Hutool会自动识别）
+driver = org.h2.Driver
 
 ## 可选配置
 # 是否在日志中显示执行的SQL
 showSql = true
 # 是否格式化显示的SQL
-formatSql = false
+formatSql = true
 # 是否显示SQL参数
 showParams = true
 # 打印SQL的日志等级，默认debug，可以是info、warn、error

@@ -23,7 +23,6 @@
     </distributionManagement>
     <properties>
         <oshi-core.version>6.4.2</oshi-core.version>
-        <ognl.version>3.1.2</ognl.version>
         <QLExpress.version>3.2.0</QLExpress.version>
     </properties>
     <dependencies>
@@ -130,8 +129,9 @@
             <artifactId>lombok</artifactId>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -38,3 +38,4 @@ gradle-app.setting
 /static
 /views
 mqtt_paho/
+h2/

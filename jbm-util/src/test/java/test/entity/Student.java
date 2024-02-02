@@ -1,14 +1,15 @@
 package test.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-
+@Data
 public class Student implements Serializable {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
+
+    private Long id;
 
     private String name;
 
@@ -16,28 +17,25 @@ public class Student implements Serializable {
 
     private Date time;
 
-    public String getName() {
-        return name;
+
+    public Student() {
     }
 
-    public void setName(String name) {
+    public Student(String name, Integer age, Date time) {
         this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
         this.age = age;
-    }
-
-    public Date getTime() {
-        return time;
-    }
-
-    public void setTime(Date time) {
         this.time = time;
     }
 
+
+    public Student(Long id, String name, Integer age, Date time) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.time = time;
+    }
+
+    public Student(Long id) {
+        this.id = id;
+    }
 }

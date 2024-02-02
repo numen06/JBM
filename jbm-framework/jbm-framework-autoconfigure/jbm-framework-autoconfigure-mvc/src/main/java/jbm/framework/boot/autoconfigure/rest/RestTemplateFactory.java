@@ -30,8 +30,9 @@ public class RestTemplateFactory {
 	}
 
 	public static RestTemplateFactory getInstance() {
-		if (restTemplateFactory == null)
+		if (restTemplateFactory == null) {
 			restTemplateFactory = new RestTemplateFactory();
+		}
 		return restTemplateFactory;
 	}
 
