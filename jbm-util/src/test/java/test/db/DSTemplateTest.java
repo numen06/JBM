@@ -3,17 +3,15 @@ package test.db;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.db.Page;
 import com.alibaba.fastjson.JSON;
-import com.jbm.util.MapUtils;
 import com.jbm.util.db.DSTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import test.entity.GradeResult;
 import test.entity.Student;
-import test.entity.Student;
 
-import java.net.CookieHandler;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,6 +57,14 @@ public class DSTemplateTest {
 
     }
 
+    @Test
+    public void testPageEntitys() {
+        String sqlName = "page";
+        log.info("开始查询:{}", sqlName);
+        List<Student> students = dst.page("page", Student.class, new Page(0, 3), "张三");
+        log.info("分页查询结果[{}]:{}", sqlName, students);
+    }
+
 
     @Test
     public void testQueryEntitys() {
@@ -85,7 +91,7 @@ public class DSTemplateTest {
         Student student = new Student();
         student.setAge(12);
         student.setName("张三");
-        student.setTime(new java.util.Date());
+        student.setTime(new Date());
         List<Student> students = dst.queryEntitys("test-bean", Student.class, student);
         log.info("查询结果[{}]:{}", sqlName, students);
     }
@@ -97,7 +103,7 @@ public class DSTemplateTest {
         Student student = new Student();
         student.setAge(12);
         student.setName("张三");
-        student.setTime(new java.util.Date());
+        student.setTime(new Date());
         Map<String, Object> map = MapUtil.of("list", CollUtil.newArrayList(student));
         List<Student> students = dst.queryEntitys(sqlName, Student.class, map);
         log.info("查询结果[{}]:{}", sqlName, students);
@@ -110,7 +116,7 @@ public class DSTemplateTest {
         Student student = new Student();
         student.setAge(12);
         student.setName("张三");
-        student.setTime(new java.util.Date());
+        student.setTime(new Date());
         List<Student> students = dst.queryEntitys(sqlName, Student.class, student);
         log.info("查询结果[{}]:{}", sqlName, students);
     }
@@ -122,7 +128,7 @@ public class DSTemplateTest {
         Student student = new Student();
         student.setAge(12);
         student.setName("张三");
-        student.setTime(new java.util.Date());
+        student.setTime(new Date());
         GradeResult gradeResult = new GradeResult();
         gradeResult.setStudent(student);
         List<Student> students = dst.queryEntitys("test-map.selectByFileName4", Student.class, gradeResult);

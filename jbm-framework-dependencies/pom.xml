@@ -66,13 +66,14 @@
         <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis-plus.version>3.5.4.1</mybatis-plus.version>
-        <hutool.version>5.8.24</hutool.version>
+        <hutool.version>5.8.25</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <lombok.version>1.18.30</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <jjwt.version>0.9.1</jjwt.version>
         <redisson.version>3.17.0</redisson.version>
         <lock4j.version>2.2.1</lock4j.version>
+        <QLExpress.version>3.2.0</QLExpress.version>
         <!--6.0 add-->
         <commons-collections-version>3.2.2</commons-collections-version>
         <commons-codec.version>1.15</commons-codec.version>
@@ -89,6 +90,8 @@
         <satoken.version>1.30.0.RC</satoken.version>
         <mapstruct.version>1.5.0.RC1</mapstruct.version>
         <bascomtask.version>2.1.0</bascomtask.version>
+        <oshi-core.version>6.4.2</oshi-core.version>
+        <ognl.version>3.1.2</ognl.version>
         <!--plugin-->
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
