@@ -64,6 +64,7 @@
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
             <version>${oshi-core.version}</version>
+            <optional>true</optional>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>org.apache.commons</groupId>-->
@@ -132,6 +133,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.2.224</version>
+            <optional>true</optional>
             <scope>test</scope>
         </dependency>
     </dependencies>

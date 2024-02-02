@@ -56,7 +56,7 @@
         <c3p0.version>0.9.1.2</c3p0.version>
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis-plus.version>3.3.0</mybatis-plus.version>
-        <hutool.version>5.8.24</hutool.version>
+        <hutool.version>5.8.25</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <lombok.version>1.18.12</lombok.version>
