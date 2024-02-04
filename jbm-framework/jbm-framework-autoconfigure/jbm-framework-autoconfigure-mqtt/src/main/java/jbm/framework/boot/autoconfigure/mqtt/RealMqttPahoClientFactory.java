@@ -3,6 +3,9 @@ package jbm.framework.boot.autoconfigure.mqtt;
 import cn.hutool.cache.Cache;
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.core.util.StrUtil;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Maps;
 import com.jbm.util.BeanUtils;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttAsyncClientCallback;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttCallback;
@@ -19,10 +22,12 @@ import org.springframework.integration.mqtt.core.ConsumerStopAction;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 
+import java.util.Map;
+
 @Slf4j
 public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 
-    private MqttConnectProperties mqttConnectProperties;
+    private final MqttConnectProperties mqttConnectProperties;
 
 //    private LoadingCache<String, SimpleMqttPahoMessageHandler> mqttPahoClientCache = CacheBuilder.newBuilder().maximumSize(100)
 //            .build(new CacheLoader<String, SimpleMqttPahoMessageHandler>() {
@@ -60,39 +65,48 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         return mqttConnectProperties.toMqttConnectOptions();
     }
 
+
+    private final Map<String, SimpleMqttClient> simpleMqttClientMap = Maps.newConcurrentMap();
+
     @SneakyThrows
-    public SimpleMqttClient getClientInstance() throws MqttException {
-        MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        IMqttClient client = this.getClientInstance(properties);
-        SimpleMqttClient simpleMqttClient = new SimpleMqttClient(client, properties);
-        return simpleMqttClient;
+    public SimpleMqttClient getClientInstance() {
+        String clientId = mqttConnectProperties.getClientId();
+        if (StrUtil.isBlank(clientId)) {
+            clientId = "jbm_client_" + System.currentTimeMillis();
+        }
+        return getClientInstance(clientId);
     }
 
     @Autowired
     private ApplicationContext applicationContext;
 
+
     @SneakyThrows
-    public SimpleMqttClient getClientInstance(String clientId) throws MqttException {
+    public synchronized SimpleMqttClient getClientInstance(String clientId) {
+        if (simpleMqttClientMap.containsKey(clientId)) {
+            return simpleMqttClientMap.get(clientId);
+        }
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
         properties.setClientId(clientId);
         IMqttClient client = this.getClientInstance(properties);
-        SimpleMqttClient simpleMqttClient = new SimpleMqttClient(client, properties);
-        return simpleMqttClient;
+        return new SimpleMqttClient(client, properties);
     }
 
     @Override
     @SneakyThrows
-    public IMqttClient getClientInstance(String uri, String clientId) throws MqttException {
+    public IMqttClient getClientInstance(String uri, String clientId) {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        if (StrUtil.isNotBlank(uri))
+        if (StrUtil.isNotBlank(uri)) {
             properties.setUrl(uri);
-        if (StrUtil.isNotBlank(clientId))
+        }
+        if (StrUtil.isNotBlank(clientId)) {
             properties.setClientId(clientId);
+        }
         return this.getClientInstance(properties);
     }
 
 
-    private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
+    private final Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
 
 
     /**
@@ -137,10 +151,12 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
     @Override
     public IMqttAsyncClient getAsyncClientInstance(String uri, String clientId) throws MqttException {
         MqttConnectProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
-        if (StrUtil.isNotBlank(uri))
+        if (StrUtil.isNotBlank(uri)) {
             properties.setUrl(uri);
-        if (StrUtil.isNotBlank(clientId))
+        }
+        if (StrUtil.isNotBlank(clientId)) {
             properties.setClientId(clientId);
+        }
         return this.getAsyncClientInstance(properties);
     }
 

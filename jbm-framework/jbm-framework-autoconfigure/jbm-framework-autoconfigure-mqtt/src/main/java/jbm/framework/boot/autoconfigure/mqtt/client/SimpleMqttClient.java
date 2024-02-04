@@ -1,6 +1,8 @@
 package jbm.framework.boot.autoconfigure.mqtt.client;
 
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import jbm.framework.boot.autoconfigure.mqtt.MqttConnectProperties;
@@ -13,7 +15,7 @@ import java.util.Map;
 @Slf4j
 public class SimpleMqttClient extends SimpleMqttCallback {
 
-    private Map<String, IMqttMessageListener> topicFilterMap = Maps.newConcurrentMap();
+    private final Map<String, IMqttMessageListener> topicFilterMap = Maps.newConcurrentMap();
 
     private MqttConnectProperties mqttConnectProperties;
 
@@ -25,6 +27,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         mqttClient.setCallback(this);
         log.info("MQTT简单客户端[{}]启动成功", mqttClient.getClientId());
     }
+
 
     public SimpleMqttClient(IMqttClient mqttClient, MqttConnectProperties mqttConnectProperties) {
         super(mqttClient);
@@ -64,9 +67,20 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         this.mqttClient.publish(topic, message);
     }
 
+    /**
+     * 发送消息
+     *
+     * @param topic
+     * @param message
+     * @throws MqttException
+     */
     public void publishObject(String topic, Object message) throws MqttException {
         MqttMessage mqttMessage = new MqttMessage();
-        mqttMessage.setPayload(JSON.toJSONBytes(message));
+        if (message instanceof String) {
+            mqttMessage.setPayload(StrUtil.bytes(message.toString()));
+        } else {
+            mqttMessage.setPayload(JSON.toJSONBytes(message));
+        }
         mqttMessage.setQos(1);
         this.mqttClient.publish(topic, mqttMessage);
     }
@@ -92,10 +106,11 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         log.warn("MQTT Client:[{}]连接丢失", mqttClient.getClientId(), throwable);
         while (!mqttClient.isConnected()) {
             try {
-                if (throwable == null)
+                if (throwable == null) {
                     log.info("客户端[{}]，准备链接", mqttClient.getClientId());
-                else
+                } else {
                     log.warn("客户端[{}]错误，触发重连", mqttClient.getClientId(), throwable);
+                }
                 mqttClient.connect();
             } catch (MqttException e) {
                 log.error("reconnect error", e);
