@@ -1,5 +1,6 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
+import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,9 +31,13 @@ public class MqttAutoConfiguration {
     }
 
     @Bean
+    public SimpleMqttClient simpleMqttClient(RealMqttPahoClientFactory realMqttPahoClientFactory) {
+        return realMqttPahoClientFactory.getClientInstance();
+    }
+
+    @Bean
     public MqttProxyFactory mqttProxyFactory(RealMqttPahoClientFactory realMqttPahoClientFactory) {
-        MqttProxyFactory mqttProxyFactory = new MqttProxyFactory(applicationContext, realMqttPahoClientFactory);
-        return mqttProxyFactory;
+        return new MqttProxyFactory(applicationContext, realMqttPahoClientFactory);
     }
 
 }
