@@ -39,6 +39,7 @@ public class MqttConnectProperties {
         mqttConnectOptions.setKeepAliveInterval(this.getKeepAliveInterval());
         mqttConnectOptions.setAutomaticReconnect(this.getAutomaticReconnect());
         mqttConnectOptions.setCleanSession(this.getCleanSession());
+        mqttConnectOptions.setMaxInflight(1000);
         return mqttConnectOptions;
     }
 
