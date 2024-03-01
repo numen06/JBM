@@ -1,16 +1,14 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-
-import javax.net.SocketFactory;
-
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import javax.net.SocketFactory;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 @ConfigurationProperties(prefix = "spring.mqtt")
 @Data
