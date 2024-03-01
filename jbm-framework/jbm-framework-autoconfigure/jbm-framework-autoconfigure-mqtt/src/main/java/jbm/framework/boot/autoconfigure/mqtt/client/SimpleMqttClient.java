@@ -1,6 +1,5 @@
 package jbm.framework.boot.autoconfigure.mqtt.client;
 
-import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
