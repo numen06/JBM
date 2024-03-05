@@ -15,6 +15,8 @@ server:
       # 阻塞任务线程池, 当执行类似servlet请求阻塞操作, undertow会从这个线程池中取得线程,它的值设置取决于系统的负载
       worker: 256
 spring:
+  codec:
+    max-in-memory-size: 104857600
   main:
     allow-bean-definition-overriding: true
   mvc:
