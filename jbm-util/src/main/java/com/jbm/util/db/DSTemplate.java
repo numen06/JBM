@@ -115,7 +115,15 @@ public class DSTemplate {
         });
         return entities;
     }
+    public <T> T queryEntity(SqlBuilder sqlBuilder, Class<T> entityClass) {
+        return CollUtil.getFirst(this.queryEntitys(sqlBuilder, entityClass));
+    }
 
+    public <T> List<T> queryEntitys(SqlBuilder sqlBuilder, Class<T> entityClass) {
+        String sql = sqlBuilder.build();
+        SqlMeta sqlMeta = new SqlMeta(sql, sqlBuilder.getParamValues());
+        return queryEntitys(sqlMeta, entityClass);
+    }
 
     public <T> T queryEntity(String sqlName, Class<T> entityClass, Object... params) {
         return CollUtil.getFirst(this.queryEntitys(sqlName, entityClass, params));
@@ -123,11 +131,19 @@ public class DSTemplate {
 
 
     public <T> List<T> queryEntitys(String sqlName, Class<T> entityClass, Object... params) {
-        List<T> entities = Lists.newArrayList();
         SqlMeta sqlMeta = null;
-        //查询
         try {
             sqlMeta = this.getSql(sqlName, params);
+        } catch (Exception e) {
+            log.error("生产SQL错误:{}", sqlName, e);
+        }
+        return queryEntitys(sqlMeta, entityClass);
+    }
+
+    public <T> List<T> queryEntitys(SqlMeta sqlMeta, Class<T> entityClass) {
+        List<T> entities = Lists.newArrayList();
+        //查询
+        try {
             if (sqlMeta != null) {
                 log.info("执行SQL:");
                 log.info("{}", sqlMeta.getSql());
@@ -144,7 +160,7 @@ public class DSTemplate {
                 }
             });
         } catch (SQLException e) {
-            log.error("查询数据库错误:{}", sqlName, e);
+            log.error("查询数据库错误:", e);
 //            throw new RuntimeException(e);
         }
         return entities;

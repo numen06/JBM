@@ -9,14 +9,14 @@ import java.util.function.Function;
  *
  * @author wesley
  */
-public class RollingTask<T> extends AbstarceBaseTask {
+public class RollingTask<T> extends AbstarceBaseTask<T> {
 
     private final Function<ActionBean<T>, T> action;
 
     /**
      * 使用 AtomicReference 类来创建一个私有变量 atomicReference，该变量的初始值为 null
      */
-    private AtomicReference<T> atomicReference = new AtomicReference<>(null);
+    private final AtomicReference<T> atomicReference = new AtomicReference<>(null);
 
     /**
      * 构造一个滚动任务执行器
@@ -46,8 +46,8 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action 任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(final Function<ActionBean<T>, T> action) {
-        return new RollingTask(action);
+    public static <T> RollingTask<T> createRollingTask(final Function<ActionBean<T>, T> action) {
+        return new RollingTask<>(action);
     }
 
     /**
@@ -58,8 +58,8 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action        任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(maxSubmitTime, timeUnit, 0, action);
+    public static <T> RollingTask<T> createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
+        return new RollingTask<>(maxSubmitTime, timeUnit, 0, action);
     }
 
     /**
@@ -69,8 +69,8 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action            任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
+    public static <T> RollingTask<T> createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
+        return new RollingTask<>(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
     /**
@@ -79,19 +79,9 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param actionBean 任务
      */
     @Override
-    protected void asyncAction(ActionBean actionBean) {
+    protected void asyncAction(ActionBean<T> actionBean) {
         actionBean.setObj(atomicReference.get());
-        this.atomicReference.set((T) action.apply(actionBean));
+        this.atomicReference.set(action.apply(actionBean));
     }
 
-    /**
-     * 提交任务
-     *
-     * @param obj 参数
-     * @return 提交结果
-     */
-    @Override
-    protected int doOffer(Object... obj) {
-        return obj.length == 0 ? 1 : obj.length;
-    }
 }
