@@ -133,6 +133,11 @@ public class WebExceptionResolve {
             code = ErrorCode.ERROR;
         } else if (message.equalsIgnoreCase(ErrorCode.TOO_MANY_REQUESTS.name())) {
             code = ErrorCode.TOO_MANY_REQUESTS;
+        } else if (className.contains("NotLoginException") && superClassName.contains("SaTokenException")) {
+            if (StrUtil.isNotBlank(message) && message.contains("Token已过期")) {
+                httpStatus = HttpStatus.UNAUTHORIZED.value();
+                code = ErrorCode.EXPIRED_TOKEN;
+            }
         }
         return buildBody(ex, code, path, httpStatus);
     }
