@@ -101,10 +101,18 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
      */
     @Override
     public BaseAccount register(Long userId, String account, String password, String accountType, Integer status, String domain, String registerIp) {
+        if (PasswordUtils.checkPassword(password) < 1) {
+            throw new ServiceException("密码强度不够,请重新设置");
+        }
         BaseAccount baseAccount = this.getAccount(account, accountType, domain);
         if (ObjectUtil.isNotEmpty(baseAccount)) {
             // 账号已被注册
 //            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+            if (!ObjectUtil.equals(userId, baseAccount.getUserId())) {
+                baseAccount.setUserId(userId);
+                baseAccount.setPassword(SecurityUtils.encryptPassword(password));
+                baseAccountMapper.updateById(baseAccount);
+            }
             return baseAccount;
         }
         //如果没有密码随机注册一个
@@ -227,8 +235,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
      */
     @Override
     public int updatePasswordByUserId(Long userId, String domain, String password) {
-        if (PasswordUtils.checkPassword(password) < 1)
+        if (PasswordUtils.checkPassword(password) < 1) {
             throw new ServiceException("密码强度不够,请重新设置");
+        }
         BaseAccount baseAccount = new BaseAccount();
 //        baseAccount.setUpdateTime(new Date());
         baseAccount.setPassword(SecurityUtils.encryptPassword(password));

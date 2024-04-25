@@ -15,6 +15,7 @@ import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * 系统用户信息
@@ -129,8 +131,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     ) {
         try {
 //            Validator.validateEmpty(userName, "用户名为空");
-            if (userName.length() < 2) {
-                throw new ValidateException("用户名少于两个字符");
+            if (Pattern.matches(JbmConstants.ACCOUNT_REGEX, userName)) {
+                throw new ValidateException("用户名长度在 5 到 16 个字符");
             }
             PasswordUtils.validatorPassword("", password, confirmPassword);
             BaseUser user = new BaseUser();
@@ -237,7 +239,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "激活用户Email帐号", notes = "用户ID必传")
     @PostMapping("/activationEmailAccount")
-    public ResultBody activationEmailAccount(BaseUser baseUser) {
+    public ResultBody activationEmailAccount(@RequestBody BaseUser baseUser) {
         baseUserService.activationEmailAccount(baseUser);
         return ResultBody.ok().msg("激活用户Email帐号成功");
     }
@@ -250,7 +252,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "激活用户手机帐号", notes = "用户ID必传")
     @PostMapping("/activationMobileAccount")
-    public ResultBody activationMobileAccount(BaseUser baseUser) {
+    public ResultBody activationMobileAccount(@RequestBody BaseUser baseUser) {
         baseUserService.activationMobileAccount(baseUser);
         return ResultBody.ok().msg("激活用户手机帐号成功");
     }

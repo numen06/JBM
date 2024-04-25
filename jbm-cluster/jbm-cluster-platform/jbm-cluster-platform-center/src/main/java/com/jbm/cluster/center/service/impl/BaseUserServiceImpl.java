@@ -78,17 +78,19 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
         }
         PasswordUtils.checkPassword(baseUser.getPassword());
-        baseUser.setStatus(1);
-        //保存系统用户信息
+        baseUser.setStatus(JbmConstants.ACCOUNT_STATUS_NORMAL);
+        // 注册用户为普通管理员
+        baseUser.setUserType(JbmConstants.USER_TYPE_NORMAL);
+        // 保存系统用户信息
         baseUserMapper.insert(baseUser);
-        //默认注册用户名账户
+        // 默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         if (Validator.isEmail(baseUser.getEmail())) {
-            //注册email账号登陆
+            // 注册email账号登陆
             baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         }
         if (Validator.isMobile(baseUser.getMobile())) {
-            //注册手机号账号登陆
+            // 注册手机号账号登陆
             baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         }
     }
@@ -133,12 +135,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (!Validator.isEmail(dbUser.getEmail())) {
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+        BaseAccount userNameAccount = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
         //新建一个邮箱帐号
-        userNameAccunt.setAccountId(null);
-        userNameAccunt.setAccount(dbUser.getEmail());
-        userNameAccunt.setAccountType(AccountType.email.toString());
-        baseAccountService.register(userNameAccunt);
+        userNameAccount.setAccountId(null);
+        userNameAccount.setAccount(dbUser.getEmail());
+        userNameAccount.setAccountType(AccountType.email.toString());
+        baseAccountService.register(userNameAccount);
     }
 
     @Override
@@ -148,17 +150,17 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             throw new ServiceException("用户不存在!");
         }
         if (!Validator.isMobile(dbUser.getMobile())) {
-            throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
+            throw new ServiceException(AccountType.mobile.getValue() + "不符合规则！");
         }
-        BaseAccount userNameAccunt = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-        if (userNameAccunt == null) {
-            userNameAccunt = baseAccountService.registerUsernameAccount(baseUser);
+        BaseAccount userNameAccount = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+        if (userNameAccount == null) {
+            userNameAccount = baseAccountService.registerUsernameAccount(baseUser);
         }
         //新建一个手机帐号
-        userNameAccunt.setAccountId(null);
-        userNameAccunt.setAccount(StrUtil.toString(dbUser.getMobile()));
-        userNameAccunt.setAccountType(AccountType.mobile.toString());
-        baseAccountService.register(userNameAccunt);
+        userNameAccount.setAccountId(null);
+        userNameAccount.setAccount(StrUtil.toString(dbUser.getMobile()));
+        userNameAccount.setAccountType(AccountType.mobile.toString());
+        baseAccountService.register(userNameAccount);
     }
 
 

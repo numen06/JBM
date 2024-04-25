@@ -171,6 +171,12 @@ public class JbmConstants {
      */
     public final static String USER_TYPE_SUPER = "super";
     public final static String USER_TYPE_ADMIN = "admin";
+    public final static String USER_TYPE_NORMAL = "normal";
+
+    /**
+     * 验证账号的正则表达式
+     */
+    public final static String ACCOUNT_REGEX = "^.{5,16}$";
 
     /**
      * 账号状态

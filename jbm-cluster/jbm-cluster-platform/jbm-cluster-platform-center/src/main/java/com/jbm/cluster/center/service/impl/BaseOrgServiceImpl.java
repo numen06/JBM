@@ -35,9 +35,8 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
             }
             //已经是顶层节点直接返回
             if (ObjectUtil.isEmpty(dborg.getParentId())) {
-                porg = dborg;
+                return dborg;
             }
-            porg = this.selectById(dborg.getParentId());
         }
         while (true) {
             //已经是顶层节点直接返回
@@ -68,9 +67,8 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
             }
             //已经是顶层节点直接返回
             if (ObjectUtil.isEmpty(dborg.getParentId())) {
-                porg = dborg;
+                return dborg;
             }
-            porg = this.selectById(dborg.getParentId());
         }
         while (true) {
             //已经是顶层节点直接返回
