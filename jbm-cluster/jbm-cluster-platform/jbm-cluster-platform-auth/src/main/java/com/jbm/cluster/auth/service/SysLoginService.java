@@ -1,18 +1,23 @@
 package com.jbm.cluster.auth.service;
 
+import cn.dev33.satoken.context.SaHolder;
+import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.oauth2.config.SaOAuth2Config;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
+import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
@@ -24,11 +29,11 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.api.service.feign.RemoteUserService;
 import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
-import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -42,9 +47,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.KeyPair;
-import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -59,9 +63,9 @@ import java.util.function.Supplier;
 public class SysLoginService {
     @Autowired
     private IBaseUserServiceClient baseUserServiceClient;
-    //    @DubboReference
+//    @DubboReference
 //    private RemoteLogService remoteLogService;
-    //    @DubboReference
+//    @DubboReference
 //    private RemoteUserService remoteUserService;
     @Autowired
     private JbmClusterStreamTemplate jbmClusterStreamTemplate;
@@ -106,7 +110,8 @@ public class SysLoginService {
 
                     @Override
                     public void preCheck(LoginProcessModel loginProcessModel) {
-                        if (loginProcessModel.getLoginType().equals(LoginType.PASSWORD)) {
+                        List<LoginType> verifyTypes = Lists.newArrayList(LoginType.PASSWORD, LoginType.SMS);
+                        if (verifyTypes.contains(loginProcessModel.getLoginType()) && StrUtil.isNotBlank(loginProcessModel.getVcode())) {
                             vCoderService.verify(loginProcessModel.getVcode(), null);
                         }
                         SaOAuth2Util.checkClientModel(loginProcessModel.getClientId());
@@ -244,17 +249,24 @@ public class SysLoginService {
      * 注册
      */
     public void register(RegisterForm registerBody) {
-        String username = registerBody.getUsername();
-        String password = registerBody.getPassword();
-        // 校验用户类型是否存在
+//        // 校验用户类型是否存在
 //        String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
         // 注册用户信息
         BaseUser sysUser = new BaseUser();
-        sysUser.setUserName(username);
-        sysUser.setNickName(registerBody.getNickName());
-        sysUser.setPassword(LoginHelper.encryptPassword(password));
-//        sysUser.setUserType(userType);
-//        boolean regFlag = remoteUserService.registerUserInfo(sysUser);
+        sysUser.setUserName(registerBody.getUserName());
+        sysUser.setNickName(StrUtil.isBlank(registerBody.getNickName()) ? registerBody.getUserName() : registerBody.getNickName());
+        sysUser.setUserType(JbmConstants.USER_TYPE_NORMAL);
+        String originalPassword = registerBody.getPassword();
+        if (StrUtil.isNotBlank(originalPassword)) {
+            SaRequest req = SaHolder.getRequest();
+            String clientId = req.getParamNotNull(SaOAuth2Consts.Param.client_id);
+            String decryptPassword = decryptPassword(clientId, originalPassword);
+            sysUser.setPassword(decryptPassword);
+        }
+        ResultBody resultBody = this.baseUserServiceClient.register("", sysUser.getUserName(), sysUser.getNickName(), sysUser.getUserType(), sysUser.getPassword(), sysUser.getPassword());
+        if (!resultBody.getSuccess()) {
+            throw new ServiceException(resultBody.getMessage());
+        }
 //        if (!regFlag) {
 //            throw new UserException("user.register.error");
 //        }

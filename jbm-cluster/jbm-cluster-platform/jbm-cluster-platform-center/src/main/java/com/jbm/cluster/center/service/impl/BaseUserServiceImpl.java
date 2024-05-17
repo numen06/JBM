@@ -364,11 +364,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             //用户名登录
             baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_USERNAME, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             // 手机号登陆
-            if (Validator.isMobile(account)) {
+            if (ObjectUtil.isEmpty(baseAccount) && Validator.isMobile(account)) {
                 baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             }
             // 邮箱登陆
-            if (Validator.isEmail(account)) {
+            if (ObjectUtil.isEmpty(baseAccount) && Validator.isEmail(account)) {
                 baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             }
         }
@@ -440,7 +440,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 user.setPassword(thirdPartyUserForm.getPassword());
                 user.setAvatar(thirdPartyUserForm.getAvatar());
                 user.setMobile(thirdPartyUserForm.getPhone());
-                //新增用户
+                // 新增用户
                 this.addUser(user);
             }
             if (ObjectUtil.isEmpty(user.getPassword())) {

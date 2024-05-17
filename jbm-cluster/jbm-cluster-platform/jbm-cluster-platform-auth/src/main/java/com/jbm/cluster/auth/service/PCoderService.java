@@ -1,5 +1,6 @@
 package com.jbm.cluster.auth.service;
 
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -9,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.validation.ValidationException;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -49,7 +49,7 @@ public class PCoderService {
         String key = this.getPcodePath(phone, pcode);
         boolean has = stringRedisTemplate.hasKey(key);
         if (!has) {
-            throw new ValidationException("验证码错误");
+            throw new ValidateException("验证码错误");
         }
 //        if (has) {
 //            try {

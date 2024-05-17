@@ -9,6 +9,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.util.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,8 +34,8 @@ public class UserService {
 
     public JbmLoginUser loginAndRegisterMobileUser(String userName, String password) {
 
-        ThirdPartyUserForm thirdPartyUserForm =new ThirdPartyUserForm();
-        thirdPartyUserForm.setPassword(password);
+        ThirdPartyUserForm thirdPartyUserForm = new ThirdPartyUserForm();
+        thirdPartyUserForm.setPassword(PasswordUtils.generatePassword(10));
         thirdPartyUserForm.setAccount(userName);
         thirdPartyUserForm.setPhone(userName);
         thirdPartyUserForm.setNickName(userName);

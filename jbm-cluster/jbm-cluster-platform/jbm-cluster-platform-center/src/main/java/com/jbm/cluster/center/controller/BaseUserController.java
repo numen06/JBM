@@ -131,7 +131,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     ) {
         try {
 //            Validator.validateEmpty(userName, "用户名为空");
-            if (Pattern.matches(JbmConstants.ACCOUNT_REGEX, userName)) {
+            if (!Pattern.matches(JbmConstants.ACCOUNT_REGEX, userName)) {
                 throw new ValidateException("用户名长度在 5 到 16 个字符");
             }
             PasswordUtils.validatorPassword("", password, confirmPassword);
@@ -404,6 +404,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
 
     @ApiOperation(value = "获取用户帐号信息")
     @GetMapping("/getUserAccounts")
+    @Override
     public ResultBody<List<BaseAccount>> getUserAccounts(@RequestParam(value = "userId") Long userId) {
         return ResultBody.callback("查询用户帐号列表成功", () -> {
             return baseAccountService.getUserAccounts(userId);

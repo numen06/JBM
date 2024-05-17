@@ -28,7 +28,7 @@ public class PasswordLoginWay extends LoginWay {
     @NotBlank(message = "{user.username.not.blank}")
     @Length(min = UserConstants.USERNAME_MIN_LENGTH, max = UserConstants.USERNAME_MAX_LENGTH, message = "{user.username.length.valid}")
     @ApiModelProperty(value = "用户名")
-    private String username;
+    private String userName;
 
     /**
      * 用户密码
@@ -41,11 +41,11 @@ public class PasswordLoginWay extends LoginWay {
 
     @Override
     public String getAccountType() {
-        if (ObjectUtil.isEmpty(this.username)) {
+        if (ObjectUtil.isEmpty(this.userName)) {
             return null;
-        } else if (Validator.isEmail(this.username)) {
-            return AccountType.mobile.toString();
-        } else if (Validator.isMobile(this.username)) {
+        } else if (Validator.isEmail(this.userName)) {
+            return AccountType.email.toString();
+        } else if (Validator.isMobile(this.userName)) {
             return AccountType.mobile.toString();
         } else {
             return AccountType.username.toString();
@@ -54,7 +54,7 @@ public class PasswordLoginWay extends LoginWay {
 
     @Override
     public String getAccount() {
-        return this.getUsername();
+        return this.getUserName();
     }
 
 }
