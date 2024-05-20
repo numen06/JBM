@@ -106,6 +106,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (getUserByUsername(baseUser.getUserName()) != null) {
             throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
         }
+        if (Validator.isMobile(baseUser.getUserName()) && baseAccountService.isExist(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN)) {
+            throw new ServiceException("手机号:" + baseUser.getUserName() + "已存在对应用户!");
+        }
+        if (Validator.isEmail(baseUser.getUserName()) && baseAccountService.isExist(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN)) {
+            throw new ServiceException("邮箱:" + baseUser.getUserName() + "已存在对应用户!");
+        }
 //        baseUser.setCreateTime(new Date());
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
         if (ObjectUtil.isEmpty(baseUser.getStatus())) {
