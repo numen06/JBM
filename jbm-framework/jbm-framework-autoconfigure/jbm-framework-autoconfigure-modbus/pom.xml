@@ -11,6 +11,10 @@
 
     <artifactId>jbm-framework-autoconfigure-modbus</artifactId>
 
+    <properties>
+        <modbus4j.version>3.0.3</modbus4j.version>
+    </properties>
+
     <repositories>
         <repository>
             <releases>
@@ -39,22 +43,15 @@
         <dependency>
             <groupId>com.infiniteautomation</groupId>
             <artifactId>modbus4j</artifactId>
-            <version>3.0.3</version>
+            <version>${modbus4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.t-io</groupId>
-            <artifactId>tio-core</artifactId>
-            <version>3.0.7.v20180628-RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.t-io</groupId>
-            <artifactId>tio-core</artifactId>
-            <version>3.0.7.v20180628-RELEASE</version>
-            <scope>compile</scope>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
     </dependencies>
 </project>
