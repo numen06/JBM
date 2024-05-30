@@ -11,7 +11,7 @@ import java.util.Map;
  * @createTime 2024/5/28 20:54
  */
 @Data
-@ConfigurationProperties(prefix = "irkalla.modbus")
+@ConfigurationProperties(prefix = "modbus")
 public class ModbusProperties {
     private Map<String, ModbusSource> clients;
 }
