@@ -288,6 +288,11 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-modbus</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-opcua</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
