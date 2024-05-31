@@ -26,6 +26,7 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-util</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
