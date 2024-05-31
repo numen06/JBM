@@ -1,7 +1,6 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
-import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
@@ -23,7 +22,6 @@ import java.util.List;
 @RequestMapping("/baseOrg")
 public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgService> {
 
-
     @ApiOperation(value = "获取顶层公司", notes = "获取顶层公司")
     @PostMapping("/findTopCompany")
     public ResultBody<BaseOrg> findTopCompany(@RequestBody BaseOrg baseOrg) {
@@ -31,11 +29,9 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
     }
 
 
-    @ApiOperation(value = "获取上级公司", notes = "获取上级公司")
+    @ApiOperation(value = "获取下级公司", notes = "获取下级公司")
     @PostMapping("/findRelegationCompany")
-    public ResultBody<List<BaseRole>> findRelegationCompany(@RequestBody BaseOrg baseOrg) {
+    public ResultBody<List<BaseOrg>> findRelegationCompany(@RequestBody BaseOrg baseOrg) {
         return ResultBody.ok().data(this.service.findRelegationCompany(baseOrg));
     }
-
-
 }

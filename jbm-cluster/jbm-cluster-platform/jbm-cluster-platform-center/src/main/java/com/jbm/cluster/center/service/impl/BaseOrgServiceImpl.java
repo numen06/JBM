@@ -1,12 +1,16 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
-import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @Author: wesley.zhang
@@ -15,73 +19,57 @@ import org.springframework.stereotype.Service;
 @Service
 public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> implements BaseOrgService {
 
-    /***
-     * 找到顶层公司
-     * @return
-     */
+    @Override
+    public List<BaseOrg> selectEntitys(BaseOrg org) {
+        // 获取当前公司的顶层公司
+        BaseOrg baseOrg = this.selectById(LoginHelper.getDeptId());
+        BaseOrg parentOrg = this.findTopCompany(baseOrg);
+        // 获取顶层公司下的所有公司
+        return this.findRelegationCompany(parentOrg);
+    }
+
     @Override
     public BaseOrg findTopCompany(BaseOrg org) {
-        BaseOrg porg = null;
-        //查询出上级节点
+        BaseOrg baseOrg;
         if (ObjectUtil.isNotEmpty(org.getParentId())) {
-            porg = this.selectById(org.getParentId());
+            // 查询上级公司
+            baseOrg = this.selectById(org.getParentId());
         } else {
-            if (ObjectUtil.isEmpty(org.getId())) {
-                throw new ServiceException("没有部门ID");
-            }
-            BaseOrg dborg = this.selectById(org.getId());
-            if (ObjectUtil.isEmpty(dborg)) {
-                throw new ServiceException("上机机构失效");
-            }
-            //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(dborg.getParentId())) {
-                return dborg;
-            }
+            Assert.notNull(org.getId(), () -> new ServiceException("没有部门ID"));
+            baseOrg = this.selectById(org.getId());
+            Assert.notNull(baseOrg, () -> new ServiceException("未查询到对应部门"));
         }
         while (true) {
-            //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(porg.getParentId())) {
-                return porg;
+            // 已经是顶层节点直接返回
+            if (ObjectUtil.isEmpty(baseOrg.getParentId())) {
+                return baseOrg;
             }
-            porg = this.selectById(porg.getParentId());
+            baseOrg = this.selectById(baseOrg.getParentId());
         }
+    }
+
+    @Override
+    public List<BaseOrg> findRelegationCompany(BaseOrg org) {
+        Assert.notNull(org.getId(), () -> new ServiceException("没有部门ID"));
+        BaseOrg baseOrg = this.selectById(org.getId());
+        Assert.notNull(baseOrg, () -> new ServiceException("未查询到对应部门"));
+        return findRelegationCompany(baseOrg, ListUtil.toList(baseOrg));
     }
 
     /***
-     * 找到上级公司
+     * 获取下级公司
+     * @param org 当前组织
+     * @param baseOrgs 组织合集
      * @return
      */
-    @Override
-    public BaseOrg findRelegationCompany(BaseOrg org) {
-        BaseOrg porg = null;
-        //查询出上级节点
-        if (ObjectUtil.isNotEmpty(org.getParentId())) {
-            porg = this.selectById(org.getParentId());
-        } else {
-            if (ObjectUtil.isEmpty(org.getId())) {
-                throw new ServiceException("没有部门ID");
-            }
-            BaseOrg dborg = this.selectById(org.getId());
-            if (ObjectUtil.isEmpty(dborg)) {
-                throw new ServiceException("上机机构失效");
-            }
-            //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(dborg.getParentId())) {
-                return dborg;
-            }
+    private List<BaseOrg> findRelegationCompany(BaseOrg org, List<BaseOrg> baseOrgs) {
+        BaseOrg orgPram = new BaseOrg();
+        orgPram.setParentId(org.getId());
+        List<BaseOrg> subOrgs = this.selectEntitys(orgPram);
+        for (BaseOrg subOrg : subOrgs) {
+            baseOrgs.add(subOrg);
+            this.findRelegationCompany(subOrg, baseOrgs);
         }
-        while (true) {
-            //已经是顶层节点直接返回
-            if (ObjectUtil.isEmpty(porg.getParentId())) {
-                return porg;
-            }
-            //如果是公司则返回
-            if (OrgType.company.toString().equals(porg.getOrgType())) {
-                return porg;
-            }
-            porg = this.selectById(porg.getParentId());
-        }
+        return baseOrgs;
     }
-
-
 }

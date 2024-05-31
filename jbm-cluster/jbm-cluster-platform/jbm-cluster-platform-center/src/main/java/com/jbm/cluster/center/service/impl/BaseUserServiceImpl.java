@@ -60,9 +60,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
             BaseOrg baseOrg = new BaseOrg();
             baseOrg.setId(baseUser.getDepartmentId());
-            //查询上级公司
-            BaseOrg rCompany = orgService.findRelegationCompany(baseOrg);
-            baseUser.setCompanyId(rCompany.getId());
+            // 获取顶层公司
+            BaseOrg parentOrg = orgService.findTopCompany(baseOrg);
+            baseUser.setCompanyId(parentOrg.getId());
         }
         if (ObjectUtil.isEmpty(baseUser.getUserId())) {
             this.addUser(baseUser);
