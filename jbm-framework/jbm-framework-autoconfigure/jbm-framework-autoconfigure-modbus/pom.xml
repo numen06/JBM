@@ -12,7 +12,7 @@
     <artifactId>jbm-framework-autoconfigure-modbus</artifactId>
 
     <properties>
-        <modbus4j.version>3.0.3</modbus4j.version>
+        <modbus4j.version>3.1.0</modbus4j.version>
     </properties>
 
     <dependencies>
