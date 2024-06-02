@@ -19,6 +19,10 @@ public class PCoderService {
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
 
+    public String getCacheKey(String phone) {
+        return "/vcode/" + phone;
+    }
+
     public String getPcodePath(String phone, String pcode) {
         String key = StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(phone, "pcode"), pcode);
         return key;
@@ -26,7 +30,11 @@ public class PCoderService {
 
     public String build(String phone) {
         final String code = RandomUtil.randomNumbers(6);
-        String key = this.getPcodePath(phone, code);
+        String key = this.getCacheKey(phone);
+        if (!(300 - stringRedisTemplate.getExpire(key) > 60)) {
+            throw new ValidateException("验证码获取操作频繁，请稍后再试");
+        }
+//        String key = this.getPcodePath(phone, code);
         stringRedisTemplate.opsForValue().set(key, code, 5, TimeUnit.MINUTES);
         return code;
     }
@@ -46,18 +54,24 @@ public class PCoderService {
         if ("99999".equals(pcode)) {
             return true;
         }
-        String key = this.getPcodePath(phone, pcode);
+        String key = this.getCacheKey(phone);
         boolean has = stringRedisTemplate.hasKey(key);
-        if (!has) {
+        if (!has || !StrUtil.equals(pcode, stringRedisTemplate.opsForValue().get(key))) {
             throw new ValidateException("验证码错误");
         }
-//        if (has) {
-//            try {
-//                stringRedisTemplate.delete(key);
-//            } catch (Exception e) {
-//
-//            }
+        return true;
+//        String key = this.getPcodePath(phone, pcode);
+//        boolean has = stringRedisTemplate.hasKey(key);
+//        if (!has) {
+//            throw new ValidateException("验证码错误");
 //        }
-        return has;
+////        if (has) {
+////            try {
+////                stringRedisTemplate.delete(key);
+////            } catch (Exception e) {
+////
+////            }
+////        }
+//        return has;
     }
 }
