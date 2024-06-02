@@ -7,6 +7,7 @@ import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import org.springframework.stereotype.Service;
 
@@ -63,9 +64,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
      * @return
      */
     private List<BaseOrg> findRelegationCompany(BaseOrg org, List<BaseOrg> baseOrgs) {
-        BaseOrg orgPram = new BaseOrg();
-        orgPram.setParentId(org.getId());
-        List<BaseOrg> subOrgs = this.selectEntitys(orgPram);
+        List<BaseOrg> subOrgs = this.lambdaQuery().eq(MultiPlatformTreeEntity::getParentId, org.getId()).list();
         for (BaseOrg subOrg : subOrgs) {
             baseOrgs.add(subOrg);
             this.findRelegationCompany(subOrg, baseOrgs);
