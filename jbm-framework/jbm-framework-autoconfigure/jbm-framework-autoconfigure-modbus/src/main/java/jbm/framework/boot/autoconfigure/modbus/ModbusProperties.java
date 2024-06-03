@@ -4,6 +4,7 @@ import com.jbm.framework.modbus.ModbusSource;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,5 +14,5 @@ import java.util.Map;
 @Data
 @ConfigurationProperties(prefix = "modbus")
 public class ModbusProperties {
-    private Map<String, ModbusSource> clients;
+    private Map<String, ModbusSource> clients = new HashMap<>();
 }
