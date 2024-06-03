@@ -103,10 +103,10 @@ public class ModbusTemplate {
             }
 
         });
-        ModbusMaster modbusMaster = this.getModbusMaster(clientId);
         ReadHoldingRegistersRequest request = new ReadHoldingRegistersRequest(slaveId, startOffset, numberOfRegisters);
         ThreadUtil.schedule(SCHEDULED_THREAD_POOL_EXECUTOR, () -> {
             try {
+                ModbusMaster modbusMaster = this.getModbusMaster(clientId);
                 ReadHoldingRegistersResponse response = (ReadHoldingRegistersResponse) modbusMaster.send(request);
                 if (response.isException()) {
                     throw new ErrorResponseException(request, response);
@@ -119,7 +119,11 @@ public class ModbusTemplate {
     }
 
     private ModbusMaster getModbusMaster(String clientId) {
-        return this.getModbusMaster(clientId, null);
+        ModbusClientBean modbusClientBean = MODBUS_CLIENT_MAP.get(clientId);
+        if (ObjectUtil.isEmpty(modbusClientBean.getClient())) {
+            this.addClient(modbusClientBean);
+        }
+        return modbusClientBean.getClient();
     }
 
     private ModbusMaster getModbusMaster(String clientId, ModbusSource modbusSource) {
