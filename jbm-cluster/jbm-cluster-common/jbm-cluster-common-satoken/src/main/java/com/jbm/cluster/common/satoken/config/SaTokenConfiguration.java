@@ -4,6 +4,7 @@ import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
+import com.jbm.cluster.common.satoken.core.StpLogicJwtForCustom;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
@@ -46,8 +47,9 @@ public class SaTokenConfiguration {
 //        SaManager.putStpLogic(userLogicJwt);
 //        SaManager.putStpLogic(new AdminLogicJwt());
 //        return userLogicJwt;
-        StpLogicJwtForSimple stpLogicJwtForSimple = new StpLogicJwtForSimple();
-        return stpLogicJwtForSimple;
+        return new StpLogicJwtForCustom();
+//        StpLogicJwtForSimple stpLogicJwtForSimple = new StpLogicJwtForSimple();
+//        return stpLogicJwtForSimple;
     }
 
 //    @Bean
