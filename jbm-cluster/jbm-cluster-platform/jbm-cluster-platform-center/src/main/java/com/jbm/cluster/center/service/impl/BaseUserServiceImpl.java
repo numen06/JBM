@@ -12,17 +12,20 @@ import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: wesley.zhang
@@ -70,6 +75,42 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             this.updateUser(baseUser);
         }
         return baseUser;
+    }
+
+    @Override
+    public List<BaseUser> selectEntitys(BaseUserForm baseUserForm) {
+        // 超级管理员账号查询所有数据
+        if (LoginHelper.isAdmin()) {
+            return super.selectEntitys(baseUserForm);
+        }
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            // 用户不存在部门的情况下，仅查询自己的数据
+            baseUserForm.setUserId(LoginHelper.getUserId());
+            return super.selectEntitys(baseUserForm);
+        }
+        // 仅查询用户所属组织的数据
+        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
+        baseUserForm.setCompanyId(parentOrg.getId());
+        return this.baseUserMapper.selectData(baseUserForm);
+    }
+
+    @Override
+    public DataPaging<BaseUser> selectEntitys(BaseUserForm baseUserForm, PageForm pageForm) {
+        // 超级管理员账号查询所有数据
+        if (LoginHelper.isAdmin()) {
+            return super.selectEntitys(baseUserForm, pageForm);
+        }
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            // 用户不存在部门的情况下，仅查询自己的数据
+            baseUserForm.setUserId(LoginHelper.getUserId());
+            return super.selectEntitys(baseUserForm, pageForm);
+        }
+        // 仅查询用户所属组织的数据
+        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
+        baseUserForm.setCompanyId(parentOrg.getId());
+        return super.selectPageList(pageForm, (page) -> this.baseUserMapper.selectData(baseUserForm, page));
     }
 
     @Override
@@ -248,6 +289,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
         BaseUser query = pageRequestBody.tryGet(BaseUser.class);
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            // 用户不存在部门的情况下，仅查询自己的数据
+            query.setUserId(LoginHelper.getUserId());
+        }
+        // 仅查询用户所属组织的数据
+        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
+        queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
         queryWrapper.lambda().eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId()).eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType()).eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName()).eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
         queryWrapper.orderByDesc("create_time");
         return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
@@ -413,7 +462,15 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public List<BaseUser> retrievalUsers(String keyword) {
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda().or().like(BaseUser::getRealName, keyword).or().like(BaseUser::getMobile, keyword).or().like(BaseUser::getNickName, keyword).last("limit 10");
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            // 用户不存在部门的情况下，仅查询自己的数据
+            queryWrapper.lambda().eq(BaseUser::getUserId, LoginHelper.getUserId());
+        }
+        // 仅查询用户所属组织的数据
+        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
+        queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
+        queryWrapper.lambda().like(BaseUser::getRealName, keyword).or().like(BaseUser::getMobile, keyword).last("limit 10");
         return this.selectEntitys(queryWrapper);
     }
 
@@ -467,6 +524,28 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             log.error("添加登录日志失败:{}", e);
             throw new ServiceException(e);
         }
+    }
+
+    @Override
+    public List<BaseRole> getUserRoles(Long userId) {
+        List<BaseRole> roles = this.roleService.getUserRoles(userId);
+        if (LoginHelper.isAdmin()) {
+            return roles;
+        }
+        // 仅返回当前用户拥有的角色
+        Set<Long> currentUserRoleIds = LoginHelper.getLoginUser().getRoleIds();
+        return roles.stream().filter(role -> currentUserRoleIds.contains(role.getRoleId())).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Long> getUserRoleIds(Long userId) {
+        List<Long> roleIds = this.roleService.getUserRoleIds(userId);
+        if (LoginHelper.isAdmin()) {
+            return roleIds;
+        }
+        // 仅返回当前用户拥有的角色
+        Set<Long> currentUserRoleIds = LoginHelper.getLoginUser().getRoleIds();
+        return roleIds.stream().filter(role -> currentUserRoleIds.contains(role)).collect(Collectors.toList());
     }
 
 }

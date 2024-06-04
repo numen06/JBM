@@ -1,19 +1,23 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseRoleForm;
 import com.jbm.cluster.center.mapper.BaseRoleMapper;
 import com.jbm.cluster.center.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -44,13 +49,23 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      */
     @Override
     public DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody) {
-        BaseRole query = pageRequestBody.tryGet(BaseRole.class);
-        QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getRoleCode()), BaseRole::getRoleCode, query.getRoleCode())
-                .likeRight(ObjectUtils.isNotEmpty(query.getRoleName()), BaseRole::getRoleName, query.getRoleName());
-        queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+//        BaseRole query = pageRequestBody.tryGet(BaseRole.class);
+//        QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
+//        queryWrapper.lambda()
+//                .likeRight(ObjectUtils.isNotEmpty(query.getRoleCode()), BaseRole::getRoleCode, query.getRoleCode())
+//                .likeRight(ObjectUtils.isNotEmpty(query.getRoleName()), BaseRole::getRoleName, query.getRoleName());
+//        queryWrapper.orderByDesc("create_time");
+//        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = pageRequestBody.getPageForm();
+        pageForm.setSortRule("base_role.create_time");
+        BaseRoleForm roleForm = pageRequestBody.tryGet(BaseRoleForm.class);
+        roleForm.setUserId(LoginHelper.isAdmin() ? null : LoginHelper.getUserId());
+        // 根据时间过滤
+        if (ObjectUtil.isNotEmpty(roleForm.getDateRange())) {
+            roleForm.setBeginTime(roleForm.getDateRange()[0]);
+            roleForm.setEndTime(roleForm.getDateRange()[1]);
+        }
+        return super.selectPageList(pageForm, (page) -> this.baseRoleMapper.selectData(roleForm, page));
     }
 
     /**
@@ -60,8 +75,11 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      */
     @Override
     public List<BaseRole> findAllList() {
-        List<BaseRole> list = baseRoleMapper.selectList(new QueryWrapper<>());
-        return list;
+//        List<BaseRole> list = baseRoleMapper.selectList(new QueryWrapper<>());
+//        return list;
+        BaseRoleForm roleForm = new BaseRoleForm();
+        roleForm.setUserId(LoginHelper.getUserId());
+        return this.baseRoleMapper.selectData(roleForm);
     }
 
     /**
@@ -276,6 +294,11 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     public void removeUserRoles(Long userId) {
         QueryWrapper<BaseRoleUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseRoleUser::getUserId, userId);
+        if (!LoginHelper.isAdmin()) {
+            // 仅移除当前用户拥有的角色
+            Set<Long> roleIds = LoginHelper.getLoginUser().getRoleIds();
+            queryWrapper.lambda().in(CollectionUtil.isNotEmpty(roleIds), BaseRoleUser::getRoleId, roleIds);
+        }
         baseRoleUserMapper.delete(queryWrapper);
     }
 

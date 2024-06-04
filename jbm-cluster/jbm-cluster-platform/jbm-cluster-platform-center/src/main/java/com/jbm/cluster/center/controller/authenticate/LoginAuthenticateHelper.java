@@ -40,6 +40,8 @@ public class LoginAuthenticateHelper {
         jbmLoginUser.setDeptId(account.getDepartmentId());
         Set<String> roles = account.getRoles().stream().map(BaseRole::getRoleCode).collect(Collectors.toSet());
         jbmLoginUser.setRoles(roles);
+        Set<Long> roleIds = account.getRoles().stream().map(BaseRole::getRoleId).collect(Collectors.toSet());
+        jbmLoginUser.setRoleIds(roleIds);
         Set<String> menuPermission = account.getAuthorities().stream().map(OpenAuthority::getAuthority).collect(Collectors.toSet());
         jbmLoginUser.setMenuPermission(menuPermission);
         return jbmLoginUser;

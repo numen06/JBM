@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * @program: JBM7
  * @author: wesley.zhang
@@ -15,10 +17,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class BaseUserForm extends BaseUser {
-
-    /**
-     * 角色IDS
-     */
     @ApiModelProperty("权限ID数组")
     private String[] roleIds;
     @ApiModelProperty("旧密码")
@@ -27,5 +25,10 @@ public class BaseUserForm extends BaseUser {
     private String currentPassword;
     @ApiModelProperty("确认密码")
     private String confirmPassword;
-
+    @ApiModelProperty("时间范围")
+    private Date[] dateRange;
+    @ApiModelProperty("开始时间")
+    private Date beginTime;
+    @ApiModelProperty("结束时间")
+    private Date endTime;
 }

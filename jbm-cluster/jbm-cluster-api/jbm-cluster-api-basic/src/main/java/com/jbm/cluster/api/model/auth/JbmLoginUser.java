@@ -2,7 +2,6 @@ package com.jbm.cluster.api.model.auth;
 
 
 import cn.hutool.core.util.StrUtil;
-import com.jbm.cluster.core.constant.JbmCacheConstants;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -115,6 +114,11 @@ public class JbmLoginUser implements Serializable {
      * 角色列表
      */
     private Set<String> roles;
+
+    /**
+     * 角色列表主键
+     */
+    private Set<Long> roleIds;
 
 //    /**
 //     * 数据权限 当前角色ID

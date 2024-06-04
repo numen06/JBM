@@ -8,6 +8,8 @@ import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,15 +22,48 @@ import java.util.List;
 public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> implements BaseOrgService {
 
     @Override
-    public List<BaseOrg> selectEntitys(BaseOrg org) {
-        if (ObjectUtil.isNotEmpty(org)) {
-            return super.selectEntitys(org);
+    public List<BaseOrg> selectEntitys(BaseOrg baseOrg) {
+        // 超级管理员账号查询所有数据
+        if (LoginHelper.isAdmin()) {
+            return super.selectEntitys(baseOrg);
+        }
+        BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            return null;
         }
         // 获取当前公司的顶层公司
-        BaseOrg baseOrg = this.selectById(LoginHelper.getDeptId());
-        BaseOrg parentOrg = this.findTopCompany(baseOrg);
-        // 获取顶层公司下的所有公司
-        return this.findRelegationCompany(parentOrg);
+        BaseOrg parentOrg = this.findTopCompany(currentOrg);
+        // 避免查询条件为空的情况
+        baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;
+        // 根据顶层公司进行过滤
+        baseOrg.setGroupId(parentOrg.getId().toString());
+        return super.selectEntitys(baseOrg);
+    }
+
+    @Override
+    public DataPaging<BaseOrg> selectEntitys(BaseOrg baseOrg, PageForm pageForm) {
+        // 超级管理员账号查询所有数据
+        if (LoginHelper.isAdmin()) {
+            return super.selectEntitys(baseOrg, pageForm);
+        }
+        BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            return null;
+        }
+        // 获取当前公司的顶层公司
+        BaseOrg parentOrg = this.findTopCompany(currentOrg);
+        // 避免查询条件为空的情况
+        baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;
+        // 根据顶层公司进行过滤
+        baseOrg.setGroupId(parentOrg.getId().toString());
+        return super.selectEntitys(baseOrg, pageForm);
+    }
+
+    @Override
+    public BaseOrg saveEntity(BaseOrg baseOrg) {
+        BaseOrg rootOrg = this.findTopCompany(baseOrg);
+        baseOrg.setGroupId(rootOrg.getId().toString());
+        return super.saveEntity(baseOrg);
     }
 
     @Override
@@ -68,7 +103,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     private List<BaseOrg> findRelegationCompany(BaseOrg org, List<BaseOrg> baseOrgs) {
         BaseOrg orgPram = new BaseOrg();
         orgPram.setParentId(org.getId());
-        List<BaseOrg> subOrgs = this.selectEntitys(orgPram);
+        List<BaseOrg> subOrgs = super.selectEntitys(orgPram);
         for (BaseOrg subOrg : subOrgs) {
             baseOrgs.add(subOrg);
             this.findRelegationCompany(subOrg, baseOrgs);

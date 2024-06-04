@@ -1,12 +1,15 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
@@ -18,6 +21,10 @@ import java.util.List;
  * @description:
  */
 public interface BaseUserService extends IMasterDataService<BaseUser> {
+
+    List<BaseUser> selectEntitys(BaseUserForm baseUserForm);
+
+    DataPaging<BaseUser> selectEntitys(BaseUserForm baseUserForm, PageForm pageForm);
 
     void register(BaseUser baseUser, String registerIp);
 
@@ -114,4 +121,20 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     UserAccount registerAccountByPhone(String phone, String username, String password, String accountType);
 
     UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm);
+
+    /**
+     * 获取用户角色列表
+     *
+     * @param userId
+     * @return
+     */
+    List<BaseRole> getUserRoles(Long userId);
+
+    /**
+     * 获取用户角色ID列表
+     *
+     * @param userId
+     * @return
+     */
+    List<Long> getUserRoleIds(Long userId);
 }

@@ -2,6 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.exceptions.ValidateException;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
@@ -17,9 +18,11 @@ import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
@@ -47,6 +50,39 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     private BaseUserService baseUserService;
     @Autowired
     private BaseRoleService baseRoleService;
+
+    @Override
+    public ResultBody<List<BaseUser>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        try {
+            validator(masterDataRequsetBody);
+            BaseUserForm baseUserForm = masterDataRequsetBody.tryGet(BaseUserForm.class);
+            if (ObjectUtil.isNotEmpty(baseUserForm.getDateRange())) {
+                baseUserForm.setBeginTime(baseUserForm.getDateRange()[0]);
+                baseUserForm.setEndTime(baseUserForm.getDateRange()[1]);
+            }
+            List<BaseUser> list = this.service.selectEntitys(baseUserForm);
+            return ResultBody.success(list, "查询列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    @Override
+    public ResultBody<DataPaging<BaseUser>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        try {
+            validator(pageRequestBody);
+            BaseUserForm baseUserForm = pageRequestBody.tryGet(BaseUserForm.class);
+            if (ObjectUtil.isNotEmpty(baseUserForm.getDateRange())) {
+                baseUserForm.setBeginTime(baseUserForm.getDateRange()[0]);
+                baseUserForm.setEndTime(baseUserForm.getDateRange()[1]);
+            }
+            PageForm pageForm = pageRequestBody.getPageForm();
+            DataPaging<BaseUser> dataPaging = this.service.selectEntitys(baseUserForm, pageForm);
+            return ResultBody.success(dataPaging, "查询分页列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
 
     @ApiOperation(value = "通过id获取用户信息", notes = "仅限系统内部调用")
     @GetMapping("/getUserInfoById")
@@ -296,14 +332,14 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/roles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.ok().data(baseRoleService.getUserRoles(userId));
+        return ResultBody.ok().data(baseUserService.getUserRoles(userId));
     }
 
 
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/userRoles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestBody BaseUser baseUser) {
-        return ResultBody.ok().data(baseRoleService.getUserRoles(baseUser.getUserId()));
+        return ResultBody.ok().data(baseUserService.getUserRoles(baseUser.getUserId()));
     }
 
 

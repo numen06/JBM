@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.jbm.cluster.center.mapper.BaseRoleMapper">
-    <select id="selectRoleList" resultType="com.jbm.cluster.api.entitys.basic.BaseRole">
-        select *
-        from base_role
+    <select id="selectData" resultType="com.jbm.cluster.api.entitys.basic.BaseRole">
+        SELECT * FROM base_role
+        <where>
+            <if test="form.userId != null">
+                EXISTS(SELECT 1 FROM base_role_user WHERE base_role_user.user_id = #{form.userId}
+                AND base_role_user.role_id = base_role.role_id)
+            </if>
+            <if test="form.status != null">AND base_role.status = #{form.status}</if>
+            <if test="form.roleCode != null and form.roleCode != ''">
+                AND base_role.role_code LIKE concat(#{form.roleCode}, '%')
+            </if>
+            <if test="form.roleName != null and form.roleName != ''">
+                AND base_role.role_name LIKE concat(#{form.roleName}, '%')
+            </if>
+            <if test="form.beginTime != null">AND base_role.create_time &gt;= #{form.beginTime}</if>
+            <if test="form.endTime != null">AND base_role.create_time &lt;= #{form.endTime}</if>
+        </where>
     </select>
 </mapper>

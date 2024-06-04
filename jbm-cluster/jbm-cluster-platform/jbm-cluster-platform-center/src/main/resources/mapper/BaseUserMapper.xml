@@ -19,4 +19,20 @@
         <result column="status" property="status" jdbcType="TINYINT"/>
     </resultMap>
 
+    <select id="selectData" resultType="com.jbm.cluster.api.entitys.basic.BaseUser">
+        SELECT * FROM base_user WHERE base_user.company_id = #{form.companyId}
+        <if test="form.userName != null and form.userName != ''">
+            AND base_user.user_name LIKE concat(#{form.userName}, '%')
+        </if>
+        <if test="form.realName != null and form.realName != ''">
+            AND base_user.real_name = #{form.realName}
+        </if>
+        <if test="form.mobile != null and form.mobile != ''">
+            AND base_user.mobile LIKE concat(#{form.mobile}, '%')
+        </if>
+        <if test="form.status != null">AND base_user.status = #{form.status}</if>
+        <if test="form.beginTime != null">AND base_user.create_time &gt;= #{form.beginTime}</if>
+        <if test="form.endTime != null">AND base_user.create_time &lt;= #{form.endTime}</if>
+    </select>
+
 </mapper>

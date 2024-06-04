@@ -77,4 +77,11 @@ public class BaseOrg extends MultiPlatformTreeEntity {
      */
     @ApiModelProperty(value = "组织代码")
     private String orgCode;
+
+
+    /**
+     * 组织下可用账户数量 by wesley.zhang on 2019/04/03 13:57
+     */
+    @ApiModelProperty(value = "账户数量")
+    private Integer numberOfAccounts;
 }
