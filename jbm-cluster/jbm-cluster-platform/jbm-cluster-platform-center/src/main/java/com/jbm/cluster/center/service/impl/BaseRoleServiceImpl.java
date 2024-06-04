@@ -294,7 +294,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     public void removeUserRoles(Long userId) {
         QueryWrapper<BaseRoleUser> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(BaseRoleUser::getUserId, userId);
-        if (!LoginHelper.isAdmin()) {
+        if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser()) && !LoginHelper.isAdmin()) {
             // 仅移除当前用户拥有的角色
             Set<Long> roleIds = LoginHelper.getLoginUser().getRoleIds();
             queryWrapper.lambda().in(CollectionUtil.isNotEmpty(roleIds), BaseRoleUser::getRoleId, roleIds);

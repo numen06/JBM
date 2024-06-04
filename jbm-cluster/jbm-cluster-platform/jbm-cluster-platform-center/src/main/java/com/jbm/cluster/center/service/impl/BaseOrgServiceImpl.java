@@ -63,6 +63,10 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     public BaseOrg saveEntity(BaseOrg baseOrg) {
         BaseOrg rootOrg = this.findTopCompany(baseOrg);
         baseOrg.setGroupId(rootOrg.getId().toString());
+        // 账户数量为空的情况下写入默认一个账户
+        if (ObjectUtil.isEmpty(baseOrg.getNumberOfAccounts())) {
+            baseOrg.setNumberOfAccounts(1);
+        }
         return super.saveEntity(baseOrg);
     }
 

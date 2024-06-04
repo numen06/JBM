@@ -2,6 +2,7 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -157,6 +158,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
         if (ObjectUtil.isEmpty(baseUser.getStatus())) {
             baseUser.setStatus(1);
+        }
+        BaseOrg rootOrg = this.orgService.selectById(baseUser.getCompanyId());
+        QueryWrapper<BaseUser> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(BaseUser::getCompanyId, rootOrg.getId());
+        long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()));
+        if (NumberUtil.compare(rootOrg.getNumberOfAccounts(), existAccount) != 1) {
+            throw new ServiceException("企业下用户数已满");
         }
         //保存系统用户信息
         baseUserMapper.insert(baseUser);
@@ -529,7 +537,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public List<BaseRole> getUserRoles(Long userId) {
         List<BaseRole> roles = this.roleService.getUserRoles(userId);
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return roles;
         }
         // 仅返回当前用户拥有的角色
@@ -540,7 +548,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public List<Long> getUserRoleIds(Long userId) {
         List<Long> roleIds = this.roleService.getUserRoleIds(userId);
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return roleIds;
         }
         // 仅返回当前用户拥有的角色
