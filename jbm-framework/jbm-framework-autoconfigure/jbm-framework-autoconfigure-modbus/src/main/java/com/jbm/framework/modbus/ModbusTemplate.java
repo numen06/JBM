@@ -1,6 +1,7 @@
 package com.jbm.framework.modbus;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.framework.modbus.event.ValueChangeEvent;
 import com.serotonin.modbus4j.*;
@@ -79,43 +80,24 @@ public class ModbusTemplate {
         }
     }
 
-    public void writeItem(String clientId, int slaveId, int point, short[] shorts) throws Exception {
-        WriteRegistersRequest request = new WriteRegistersRequest(slaveId, point, shorts);
+    public void writeItem(String clientId, int slaveId, int writeOffset, short[] shorts) throws Exception {
+        WriteRegistersRequest request = new WriteRegistersRequest(slaveId, writeOffset, shorts);
         WriteRegistersResponse response = (WriteRegistersResponse) this.getModbusMaster(clientId).send(request);
         if (response.isException()) {
             throw new ErrorResponseException(request, response);
         }
     }
 
+    public void subscribeItem(String clientId, int slaveId, int[] offset) throws Exception {
+        ValueChangeProcessImage processImage = new ValueChangeProcessImage(slaveId);
+        Arrays.stream(offset).forEach(i -> processImage.setHoldingRegister(i, (short) 0));
+        this.createItemMonitored(processImage, clientId, slaveId, offset);
+    }
+
     public void subscribeItem(String clientId, int slaveId, int startOffset, int numberOfRegisters) throws Exception {
         ValueChangeProcessImage processImage = new ValueChangeProcessImage(slaveId);
         processImage.setHoldingRegister(startOffset, new short[numberOfRegisters]);
-        processImage.addListener(new ProcessImageListener() {
-
-            @Override
-            public void coilWrite(int offset, boolean oldValue, boolean newValue) {
-                applicationContext.publishEvent(new ValueChangeEvent(this, clientId, offset, newValue));
-            }
-
-            @Override
-            public void holdingRegisterWrite(int offset, short oldValue, short newValue) {
-                applicationContext.publishEvent(new ValueChangeEvent(this, clientId, offset, newValue));
-            }
-
-        });
-        ReadHoldingRegistersRequest request = new ReadHoldingRegistersRequest(slaveId, startOffset, numberOfRegisters);
-        ThreadUtil.schedule(SCHEDULED_THREAD_POOL_EXECUTOR, () -> {
-            try {
-                ModbusMaster modbusMaster = this.getModbusMaster(clientId);
-                ReadHoldingRegistersResponse response = (ReadHoldingRegistersResponse) modbusMaster.send(request);
-                if (response.isException()) {
-                    throw new ErrorResponseException(request, response);
-                }
-                processImage.writeHoldingRegisters(startOffset, response.getShortData());
-            } catch (Exception var3) {
-                log.error("modbus client [{}] error [{}]", clientId, var3.getMessage(), var3);
-            }
-        }, 500, 1000, Boolean.TRUE);
+        this.createItemMonitored(processImage, clientId, slaveId, ArrayUtil.range(startOffset, startOffset + numberOfRegisters));
     }
 
     private ModbusMaster getModbusMaster(String clientId) {
@@ -148,5 +130,32 @@ public class ModbusTemplate {
             }
         }
         return null;
+    }
+
+    private void createItemMonitored(ValueChangeProcessImage processImage, String clientId, int slaveId, int[] offset) {
+        processImage.addListener(new ProcessImageListener() {
+
+            @Override
+            public void coilWrite(int offset, boolean oldValue, boolean newValue) {
+                applicationContext.publishEvent(new ValueChangeEvent(this, clientId, offset, newValue));
+            }
+
+            @Override
+            public void holdingRegisterWrite(int offset, short oldValue, short newValue) {
+                applicationContext.publishEvent(new ValueChangeEvent(this, clientId, offset, newValue));
+            }
+
+        });
+        ThreadUtil.schedule(SCHEDULED_THREAD_POOL_EXECUTOR, () -> {
+            try {
+                BatchResults results = this.readItem(clientId, slaveId, offset);
+                for (int i : offset) {
+                    String objStr = ObjectUtil.isEmpty(results.getValue(i)) ? "0" : results.getValue(i).toString();
+                    processImage.writeHoldingRegister(i, Short.valueOf(objStr));
+                }
+            } catch (Exception var3) {
+                log.error("modbus client [{}] error [{}]", clientId, var3.getMessage(), var3);
+            }
+        }, 500, 1000, Boolean.TRUE);
     }
 }
