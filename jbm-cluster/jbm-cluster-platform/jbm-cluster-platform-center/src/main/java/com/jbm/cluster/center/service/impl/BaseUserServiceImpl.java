@@ -68,9 +68,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             baseOrg.setId(baseUser.getDepartmentId());
             // 获取顶层公司
             BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
-            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()));
+            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
             if (NumberUtil.compare(rootOrg.getNumberOfAccounts(), existAccount) != 1) {
-                throw new ServiceException("企业下用户数已满");
+                throw new ServiceException("企业下用户数已达上限");
             }
             baseUser.setCompanyId(rootOrg.getId());
         }
@@ -365,6 +365,10 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
         //查询系统用户资料
         BaseUser baseUser = getUserById(userId);
+
+        if (NumberUtil.equals(baseUser.getStatus().intValue(), JbmConstants.ACCOUNT_STATUS_DISABLE)) {
+            throw new ServiceException("用户已停用，请联系管理员");
+        }
 
         // 加入用户权限
         List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(baseUser.getUserName()));
