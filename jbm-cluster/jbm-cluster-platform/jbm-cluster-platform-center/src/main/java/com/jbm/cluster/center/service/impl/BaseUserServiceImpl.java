@@ -67,8 +67,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             BaseOrg baseOrg = new BaseOrg();
             baseOrg.setId(baseUser.getDepartmentId());
             // 获取顶层公司
-            BaseOrg parentOrg = orgService.findTopCompany(baseOrg);
-            baseUser.setCompanyId(parentOrg.getId());
+            BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
+            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()));
+            if (NumberUtil.compare(rootOrg.getNumberOfAccounts(), existAccount) != 1) {
+                throw new ServiceException("企业下用户数已满");
+            }
+            baseUser.setCompanyId(rootOrg.getId());
         }
         if (ObjectUtil.isEmpty(baseUser.getUserId())) {
             this.addUser(baseUser);
@@ -158,13 +162,6 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
         if (ObjectUtil.isEmpty(baseUser.getStatus())) {
             baseUser.setStatus(1);
-        }
-        BaseOrg rootOrg = this.orgService.selectById(baseUser.getCompanyId());
-        QueryWrapper<BaseUser> wrapper = new QueryWrapper<>();
-        wrapper.lambda().eq(BaseUser::getCompanyId, rootOrg.getId());
-        long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()));
-        if (NumberUtil.compare(rootOrg.getNumberOfAccounts(), existAccount) != 1) {
-            throw new ServiceException("企业下用户数已满");
         }
         //保存系统用户信息
         baseUserMapper.insert(baseUser);

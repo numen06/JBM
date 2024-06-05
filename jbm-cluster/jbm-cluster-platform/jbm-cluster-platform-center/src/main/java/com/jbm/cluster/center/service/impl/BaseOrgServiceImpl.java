@@ -3,6 +3,8 @@ package com.jbm.cluster.center.service.impl;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -64,7 +66,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
         BaseOrg rootOrg = this.findTopCompany(baseOrg);
         baseOrg.setGroupId(rootOrg.getId().toString());
         // 账户数量为空的情况下写入默认一个账户
-        if (ObjectUtil.isEmpty(baseOrg.getNumberOfAccounts())) {
+        if (StrUtil.equals(baseOrg.getOrgType(), OrgType.company.toString()) && ObjectUtil.isEmpty(baseOrg.getNumberOfAccounts())) {
             baseOrg.setNumberOfAccounts(1);
         }
         return super.saveEntity(baseOrg);
