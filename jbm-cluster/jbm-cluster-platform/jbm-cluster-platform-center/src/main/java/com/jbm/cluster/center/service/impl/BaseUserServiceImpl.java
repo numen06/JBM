@@ -85,7 +85,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public List<BaseUser> selectEntitys(BaseUserForm baseUserForm) {
         // 超级管理员账号查询所有数据
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return super.selectEntitys(baseUserForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
@@ -103,7 +103,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public DataPaging<BaseUser> selectEntitys(BaseUserForm baseUserForm, PageForm pageForm) {
         // 超级管理员账号查询所有数据
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return super.selectEntitys(baseUserForm, pageForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());

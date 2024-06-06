@@ -59,7 +59,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         PageForm pageForm = pageRequestBody.getPageForm();
         pageForm.setSortRule("base_role.create_time");
         BaseRoleForm roleForm = pageRequestBody.tryGet(BaseRoleForm.class);
-        roleForm.setUserId(LoginHelper.isAdmin() ? null : LoginHelper.getUserId());
+        roleForm.setUserId(ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin() ? null : LoginHelper.getUserId());
         // 根据时间过滤
         if (ObjectUtil.isNotEmpty(roleForm.getDateRange())) {
             roleForm.setBeginTime(roleForm.getDateRange()[0]);

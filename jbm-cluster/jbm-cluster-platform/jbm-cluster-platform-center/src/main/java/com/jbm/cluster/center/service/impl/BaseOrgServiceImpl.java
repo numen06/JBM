@@ -26,7 +26,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     @Override
     public List<BaseOrg> selectEntitys(BaseOrg baseOrg) {
         // 超级管理员账号查询所有数据
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return super.selectEntitys(baseOrg);
         }
         BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
@@ -45,7 +45,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     @Override
     public DataPaging<BaseOrg> selectEntitys(BaseOrg baseOrg, PageForm pageForm) {
         // 超级管理员账号查询所有数据
-        if (LoginHelper.isAdmin()) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return super.selectEntitys(baseOrg, pageForm);
         }
         BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
@@ -63,11 +63,13 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
 
     @Override
     public BaseOrg saveEntity(BaseOrg baseOrg) {
-        BaseOrg rootOrg = this.findTopCompany(baseOrg);
-        baseOrg.setGroupId(rootOrg.getId().toString());
         // 账户数量为空的情况下写入默认一个账户
         if (StrUtil.equals(baseOrg.getOrgType(), OrgType.company.toString()) && ObjectUtil.isEmpty(baseOrg.getNumberOfAccounts())) {
             baseOrg.setNumberOfAccounts(1);
+        }
+        if (ObjectUtil.isNotEmpty(baseOrg.getId()) || ObjectUtil.isNotEmpty(baseOrg.getParentId())) {
+            BaseOrg rootOrg = this.findTopCompany(baseOrg);
+            baseOrg.setGroupId(rootOrg.getId().toString());
         }
         return super.saveEntity(baseOrg);
     }
