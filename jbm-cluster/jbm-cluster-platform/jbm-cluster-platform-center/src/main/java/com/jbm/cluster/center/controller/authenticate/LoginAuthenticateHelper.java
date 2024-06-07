@@ -38,6 +38,7 @@ public class LoginAuthenticateHelper {
         jbmLoginUser.setAccount(account.getAccount());
         jbmLoginUser.setAccountType(account.getAccountType());
         jbmLoginUser.setDeptId(account.getDepartmentId());
+        jbmLoginUser.setCompanyId(account.getCompanyId());
         Set<String> roles = account.getRoles().stream().map(BaseRole::getRoleCode).collect(Collectors.toSet());
         jbmLoginUser.setRoles(roles);
         Set<Long> roleIds = account.getRoles().stream().map(BaseRole::getRoleId).collect(Collectors.toSet());

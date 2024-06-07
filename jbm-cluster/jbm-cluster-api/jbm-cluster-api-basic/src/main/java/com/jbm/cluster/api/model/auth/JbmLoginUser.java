@@ -141,6 +141,11 @@ public class JbmLoginUser implements Serializable {
     private String deptName;
 
     /**
+     * 公司
+     */
+    private Long companyId;
+
+    /**
      * 获取登录id
      */
     public String getLoginId() {

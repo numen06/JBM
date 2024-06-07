@@ -1,0 +1,14 @@
+package com.jbm.cluster.common.basic.configuration.config;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+/**
+ * @author fanscat
+ * @createTime 2024/6/6 16:31
+ */
+@Data
+@ConfigurationProperties(prefix = "spring.datasource.dynamic")
+public class TenantProperties {
+    private String initializeFile;
+}
