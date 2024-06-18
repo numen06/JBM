@@ -10,5 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "spring.datasource.dynamic")
 public class TenantProperties {
+    private Boolean enabled = true;
     private String initializeFile;
 }
