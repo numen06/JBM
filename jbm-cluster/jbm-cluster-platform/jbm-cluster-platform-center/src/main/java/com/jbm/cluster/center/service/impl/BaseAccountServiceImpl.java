@@ -139,10 +139,13 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         if (ObjectUtil.isNotEmpty(account)) {
             // 账号已被注册
 //            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
+            if (!ObjectUtil.equals(baseAccount.getUserId(), account.getUserId())) {
+                account.setUserId(baseAccount.getUserId());
+                account.setPassword(baseAccount.getPassword());
+                baseAccountMapper.updateById(account);
+            }
             return account;
         }
-        //加密
-        String encodePassword = SecurityUtils.encryptPassword(baseAccount.getPassword());
 //        BaseAccount baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
 //        baseAccount.setCreateTime(new Date());
 //        baseAccount.setUpdateTime(baseAccount.getCreateTime());

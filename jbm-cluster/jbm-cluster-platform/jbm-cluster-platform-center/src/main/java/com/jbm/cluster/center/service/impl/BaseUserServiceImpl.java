@@ -63,20 +63,21 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
-        if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
-            BaseOrg baseOrg = new BaseOrg();
-            baseOrg.setId(baseUser.getDepartmentId());
-            // 获取顶层公司
-            BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
-            // 企业下账户数量
-            Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
-            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
-            if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
-                throw new ServiceException("企业下用户数已达上限");
+        BaseUser user = this.selectById(baseUser.getUserId());
+        if (ObjectUtil.isEmpty(user)) {
+            if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
+                BaseOrg baseOrg = new BaseOrg();
+                baseOrg.setId(baseUser.getDepartmentId());
+                // 获取顶层公司
+                BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
+                // 企业下账户数量
+                Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
+                long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
+                if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
+                    throw new ServiceException("企业下用户数已达上限");
+                }
+                baseUser.setCompanyId(rootOrg.getId());
             }
-            baseUser.setCompanyId(rootOrg.getId());
-        }
-        if (ObjectUtil.isEmpty(baseUser.getUserId())) {
             this.addUser(baseUser);
         } else {
             this.updateUser(baseUser);
@@ -122,9 +123,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public void register(BaseUser baseUser, String registerIp) {
-        if (getUserByUsername(baseUser.getUserName()) != null) {
-            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
-        }
+        this.validationExist(baseUser);
         PasswordUtils.checkPassword(baseUser.getPassword());
         baseUser.setStatus(JbmConstants.ACCOUNT_STATUS_NORMAL);
         // 注册用户为普通管理员
@@ -151,15 +150,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
      */
     @Override
     public void addUser(BaseUser baseUser) {
-        if (getUserByUsername(baseUser.getUserName()) != null) {
-            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
-        }
-        if (Validator.isMobile(baseUser.getUserName()) && baseAccountService.isExist(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN)) {
-            throw new ServiceException("手机号:" + baseUser.getUserName() + "已存在对应用户!");
-        }
-        if (Validator.isEmail(baseUser.getUserName()) && baseAccountService.isExist(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN)) {
-            throw new ServiceException("邮箱:" + baseUser.getUserName() + "已存在对应用户!");
-        }
+        this.validationExist(baseUser);
 //        baseUser.setCreateTime(new Date());
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
         if (ObjectUtil.isEmpty(baseUser.getStatus())) {
@@ -179,6 +170,24 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //        }
     }
 
+    private void validationExist(BaseUser baseUser) {
+        if (getUserByUsername(baseUser.getUserName()) != null) {
+            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
+        }
+        if (Validator.isMobile(baseUser.getUserName())) {
+            BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+            if (ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+                throw new ServiceException("手机号:" + baseUser.getUserName() + "已存在对应用户!");
+            }
+        }
+        if (Validator.isEmail(baseUser.getUserName())) {
+            BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+            if (ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+                throw new ServiceException("邮箱:" + baseUser.getUserName() + "已存在对应用户!");
+            }
+        }
+    }
+
 
     @Override
     public void activationEmailAccount(BaseUser baseUser) {
@@ -190,6 +199,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             throw new ServiceException(AccountType.email.getValue() + "不符合规则！");
         }
         BaseAccount userNameAccount = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
+        userNameAccount.setUserId(dbUser.getUserId());
         //新建一个邮箱帐号
         userNameAccount.setAccountId(null);
         userNameAccount.setAccount(dbUser.getEmail());
@@ -207,9 +217,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             throw new ServiceException(AccountType.mobile.getValue() + "不符合规则！");
         }
         BaseAccount userNameAccount = baseAccountService.getAccount(dbUser.getUserName(), AccountType.username.toString(), JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-        if (userNameAccount == null) {
-            userNameAccount = baseAccountService.registerUsernameAccount(baseUser);
-        }
+        userNameAccount.setUserId(dbUser.getUserId());
         //新建一个手机帐号
         userNameAccount.setAccountId(null);
         userNameAccount.setAccount(StrUtil.toString(dbUser.getMobile()));
@@ -438,7 +446,6 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 baseAccount = baseAccountService.getAccount(account, JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
             }
         }
-
         // 获取用户详细信息
         if (baseAccount != null) {
             //添加登录日志
@@ -461,6 +468,12 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 //            } catch (Exception e) {
 //                log.error("添加登录日志失败:{}", e);
 //            }
+
+            // 查询系统用户资料
+            BaseUser baseUser = getUserById(baseAccount.getUserId());
+            if (ObjectUtil.isEmpty(baseUser)) {
+                return null;
+            }
             // 用户权限信息
             UserAccount userAccount = getUserAccount(baseAccount.getUserId());
             // 复制账号信息
@@ -508,14 +521,17 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             }
             BaseUser user = this.getUserByPhone(thirdPartyUserForm.getPhone());
             if (ObjectUtil.isEmpty(user)) {
-                user = new BaseUser();
-                user.setNickName(thirdPartyUserForm.getNickName());
-                user.setUserName(thirdPartyUserForm.getAccount());
-                user.setPassword(thirdPartyUserForm.getPassword());
-                user.setAvatar(thirdPartyUserForm.getAvatar());
+                user = this.getUserByUsername(thirdPartyUserForm.getPhone());
+                if (ObjectUtil.isEmpty(user)) {
+                    user = new BaseUser();
+                    user.setNickName(thirdPartyUserForm.getNickName());
+                    user.setUserName(StrUtil.isBlank(thirdPartyUserForm.getAccount()) ? thirdPartyUserForm.getPhone() : thirdPartyUserForm.getAccount());
+                    user.setPassword(thirdPartyUserForm.getPassword());
+                    user.setAvatar(thirdPartyUserForm.getAvatar());
+                    user.setMobile(thirdPartyUserForm.getPhone());
+                }
                 user.setMobile(thirdPartyUserForm.getPhone());
-                // 新增用户
-                this.addUser(user);
+                this.saveEntity(user);
             }
             if (ObjectUtil.isEmpty(user.getPassword())) {
                 user.setPassword(thirdPartyUserForm.getPassword());

@@ -29,7 +29,6 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
-import com.jbm.cluster.api.service.feign.RemoteUserService;
 import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
@@ -251,6 +250,8 @@ public class SysLoginService {
     public void register(RegisterForm registerBody) {
 //        // 校验用户类型是否存在
 //        String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
+        // 校验图形验证码
+        vCoderService.verify(registerBody.getVcode());
         // 注册用户信息
         BaseUser sysUser = new BaseUser();
         sysUser.setUserName(registerBody.getUserName());

@@ -33,7 +33,6 @@
             resultMap="UserAuthorityMenu">
         SELECT a.authority_id,
         a.authority,
-        a.`status`,
         m.*,
         ua.user_id,
         ua.expire_time
