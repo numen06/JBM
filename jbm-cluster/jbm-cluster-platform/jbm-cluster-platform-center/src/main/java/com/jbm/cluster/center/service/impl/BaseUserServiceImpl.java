@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -142,6 +143,18 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         }
     }
 
+    @Override
+    public Boolean close(BaseUser baseUser) {
+        Boolean success = this.lambdaUpdate().set(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_DISABLE).set(BaseUser::getCloseTime, DateTime.now()).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+//        SmsNotification smsNotification = new SmsNotification();
+//        smsNotification.setPhoneNumber(baseUser.getMobile());
+//        smsNotification.setParams(MapUtil.of("code", code));
+//        smsNotification.setSignName("甲佳智能");
+//        smsNotification.setTemplateCode("SMS_236340338");
+//        this.applicationContext.getBean(JbmClusterNotification.class).sendSmsNotification(smsNotification);
+        return success;
+    }
+
     /**
      * 添加系统用户
      *
@@ -176,13 +189,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         }
         if (Validator.isMobile(baseUser.getUserName())) {
             BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-            if (ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
                 throw new ServiceException("手机号:" + baseUser.getUserName() + "已存在对应用户!");
             }
         }
         if (Validator.isEmail(baseUser.getUserName())) {
             BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-            if (ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
                 throw new ServiceException("邮箱:" + baseUser.getUserName() + "已存在对应用户!");
             }
         }
