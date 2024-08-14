@@ -1,10 +1,13 @@
 package jbm.framework.boot.autoconfigure.mybatis;
 
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusProperties;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
 import com.google.common.collect.Sets;
 import com.jbm.framework.dao.JdbcDataSourceProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
@@ -12,6 +15,7 @@ import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
 import com.jbm.framework.dao.tenant.SpringTenantLineInnerInterceptor;
 import com.jbm.framework.dao.tenant.TenantProperties;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -42,7 +46,9 @@ import java.util.Set;
  * https://baomidou.com/pages/aef2f2/
  * DynamicTableNameInnerInterceptor 动态表名插件
  * https://baomidou.com/pages/2a45ff/
+ * @author wesley
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties({JdbcDataSourceProperties.class,TenantProperties.class})
 public class MybatisPlusConfig {
@@ -77,9 +83,14 @@ public class MybatisPlusConfig {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
-        if (Boolean.TRUE.equals(tenantProperties.getEnable())) {
-            // 启用多租户插件拦截
-            interceptor.addInnerInterceptor(new SpringTenantLineInnerInterceptor(tenantProperties, applicationContext));
+        try {
+            TenantLineHandler tenantLineHandler =  applicationContext.getBean(TenantLineHandler.class);
+            if (ObjectUtil.isNotNull(tenantLineHandler)) {
+                interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(tenantLineHandler));
+                log.info("租户拦截器注入成功:{}", tenantLineHandler.getClass());
+            }
+        }catch (Exception e) {
+            log.warn("没有找到租户拦截器");
         }
         return interceptor;
     }
