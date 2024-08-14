@@ -16,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.util.Date;
 
 /**
  * 系统用户-基础信息
@@ -110,4 +111,10 @@ public class BaseUser extends MasterDataEntity {
      */
     @ApiModelProperty("状态:0-禁用 1-正常 2-锁定")
     private Integer status;
+
+    /**
+     * 账号关闭时间
+     */
+    @ApiModelProperty("账号关闭时间")
+    private Date closeTime;
 }

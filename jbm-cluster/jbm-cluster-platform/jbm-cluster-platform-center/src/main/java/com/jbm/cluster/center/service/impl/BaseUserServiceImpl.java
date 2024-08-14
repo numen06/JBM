@@ -1,8 +1,11 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -145,14 +148,25 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public Boolean close(BaseUser baseUser) {
-        Boolean success = this.lambdaUpdate().set(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_DISABLE).set(BaseUser::getCloseTime, DateTime.now()).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+        DateTime currentDateTime = new DateTime();
+        if (BooleanUtil.toBoolean(ObjectUtil.isEmpty(baseUser.getStatus()) ? "0" : baseUser.getStatus().toString())) {
 //        SmsNotification smsNotification = new SmsNotification();
 //        smsNotification.setPhoneNumber(baseUser.getMobile());
 //        smsNotification.setParams(MapUtil.of("code", code));
 //        smsNotification.setSignName("甲佳智能");
 //        smsNotification.setTemplateCode("SMS_236340338");
 //        this.applicationContext.getBean(JbmClusterNotification.class).sendSmsNotification(smsNotification);
-        return success;
+            return this.lambdaUpdate().set(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_DISABLE).set(BaseUser::getCloseTime, currentDateTime).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+        } else {
+            DateTime closeTime = currentDateTime.offsetNew(DateField.DAY_OF_YEAR, 7);
+//        SmsNotification smsNotification = new SmsNotification();
+//        smsNotification.setPhoneNumber(baseUser.getMobile());
+//        smsNotification.setParams(MapUtil.of("code", code));
+//        smsNotification.setSignName("甲佳智能");
+//        smsNotification.setTemplateCode("SMS_236340338");
+//        this.applicationContext.getBean(JbmClusterNotification.class).sendSmsNotification(smsNotification);
+            return this.lambdaUpdate().set(BaseUser::getCloseTime, closeTime).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+        }
     }
 
     /**
@@ -184,8 +198,14 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     }
 
     private void validationExist(BaseUser baseUser) {
-        if (getUserByUsername(baseUser.getUserName()) != null) {
-            throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
+        BaseUser user = getUserByUsername(baseUser.getUserName());
+        if (ObjectUtil.isNotEmpty(user)) {
+            // 用户注销完成后再次创建时，删除原有用户信息
+            if (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
+                this.lambdaUpdate().eq(BaseUser::getUserId, user.getUserId()).remove();
+            } else {
+                throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
+            }
         }
         if (Validator.isMobile(baseUser.getUserName())) {
             BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
@@ -250,11 +270,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         if (baseUser == null || baseUser.getUserId() == null) {
             return;
         }
+        baseUserMapper.updateById(baseUser);
         if (baseUser.getStatus() != null) {
+            if (NumberUtil.equals(baseUser.getStatus().intValue(), JbmConstants.ACCOUNT_STATUS_NORMAL)) {
+                this.lambdaUpdate().set(BaseUser::getCloseTime, null).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+            }
             baseAccountService.updateStatusByUserId(baseUser.getUserId(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, baseUser.getStatus());
         }
-//        this.saveEntity(baseUser);
-        baseUserMapper.updateById(baseUser);
     }
 
     /**
@@ -390,6 +412,10 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         BaseUser baseUser = getUserById(userId);
 
         if (NumberUtil.equals(baseUser.getStatus().intValue(), JbmConstants.ACCOUNT_STATUS_DISABLE)) {
+//            throw new ServiceException("用户已停用，请联系管理员");
+            if (ObjectUtil.isNotEmpty(baseUser.getCloseTime()) && baseUser.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
+                throw new ServiceException("没有找到此用户");
+            }
             throw new ServiceException("用户已停用，请联系管理员");
         }
 
@@ -484,7 +510,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
             // 查询系统用户资料
             BaseUser baseUser = getUserById(baseAccount.getUserId());
-            if (ObjectUtil.isEmpty(baseUser)) {
+            if (ObjectUtil.isEmpty(baseUser) || ObjectUtil.isNotEmpty(baseUser.getCloseTime()) && baseUser.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
                 return null;
             }
             // 用户权限信息
@@ -533,9 +559,9 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 throw new ServiceException("手机为空");
             }
             BaseUser user = this.getUserByPhone(thirdPartyUserForm.getPhone());
-            if (ObjectUtil.isEmpty(user)) {
+            if (ObjectUtil.isEmpty(user) || user.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
                 user = this.getUserByUsername(thirdPartyUserForm.getPhone());
-                if (ObjectUtil.isEmpty(user)) {
+                if (ObjectUtil.isEmpty(user) || (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now())))) {
                     user = new BaseUser();
                     user.setNickName(thirdPartyUserForm.getNickName());
                     user.setUserName(StrUtil.isBlank(thirdPartyUserForm.getAccount()) ? thirdPartyUserForm.getPhone() : thirdPartyUserForm.getAccount());
