@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.NumberUtil;
@@ -149,6 +150,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Override
     public Boolean close(BaseUser baseUser) {
         DateTime currentDateTime = new DateTime();
+        BaseUser user = this.selectById(baseUser.getUserId());
+        Assert.notNull(user, () -> new ServiceException("用户不存在"));
+        if (LoginHelper.isAdmin(user.getUserId())) {
+            throw new ServiceException("管理员不允许注销");
+        }
         if (BooleanUtil.toBoolean(ObjectUtil.isEmpty(baseUser.getStatus()) ? "0" : baseUser.getStatus().toString())) {
 //        SmsNotification smsNotification = new SmsNotification();
 //        smsNotification.setPhoneNumber(baseUser.getMobile());
