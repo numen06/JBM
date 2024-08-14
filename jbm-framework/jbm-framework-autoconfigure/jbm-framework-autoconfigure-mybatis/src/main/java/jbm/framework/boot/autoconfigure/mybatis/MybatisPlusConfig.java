@@ -9,6 +9,8 @@ import com.google.common.collect.Sets;
 import com.jbm.framework.dao.JdbcDataSourceProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
+import com.jbm.framework.dao.tenant.SpringTenantLineInnerInterceptor;
+import com.jbm.framework.dao.tenant.TenantProperties;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +44,19 @@ import java.util.Set;
  * https://baomidou.com/pages/2a45ff/
  */
 @Configuration
-@EnableConfigurationProperties({JdbcDataSourceProperties.class})
+@EnableConfigurationProperties({JdbcDataSourceProperties.class,TenantProperties.class})
 public class MybatisPlusConfig {
 
 
     @Autowired
     private MybatisPlusProperties mybatisPlusProperties;
 
+
+    @Autowired
+    private TenantProperties tenantProperties;
+
+    @Autowired
+    private ApplicationContext applicationContext;
     /**
      * 自动填充字段
      *
@@ -69,6 +77,10 @@ public class MybatisPlusConfig {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+        if (Boolean.TRUE.equals(tenantProperties.getEnable())) {
+            // 启用多租户插件拦截
+            interceptor.addInnerInterceptor(new SpringTenantLineInnerInterceptor(tenantProperties, applicationContext));
+        }
         return interceptor;
     }
 
@@ -110,6 +122,7 @@ public class MybatisPlusConfig {
 
         return mybatisMapperRefresh;
     }
+
 
 
 }
