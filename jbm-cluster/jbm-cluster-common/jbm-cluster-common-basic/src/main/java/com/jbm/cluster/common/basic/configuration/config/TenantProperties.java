@@ -8,7 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @createTime 2024/6/6 16:31
  */
 @Data
-@ConfigurationProperties(prefix = "spring.datasource.dynamic")
+@ConfigurationProperties(prefix = "jbm.tenant")
 public class TenantProperties {
+    private Boolean enabled = true;
     private String initializeFile;
 }

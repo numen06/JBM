@@ -21,6 +21,9 @@
 
     <select id="selectData" resultType="com.jbm.cluster.api.entitys.basic.BaseUser">
         SELECT * FROM base_user WHERE base_user.company_id = #{form.companyId}
+        <if test="form.departmentId != null and form.departmentId != ''">
+            AND base_user.department_id LIKE concat(#{form.departmentId}, '%')
+        </if>
         <if test="form.userName != null and form.userName != ''">
             AND base_user.user_name LIKE concat(#{form.userName}, '%')
         </if>

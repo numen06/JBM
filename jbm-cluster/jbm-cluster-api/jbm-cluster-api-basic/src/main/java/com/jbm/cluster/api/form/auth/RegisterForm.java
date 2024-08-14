@@ -42,4 +42,8 @@ public class RegisterForm extends PasswordLoginWay {
     @ApiModelProperty("昵称")
     private String nickName;
 
+    /**
+     * 验证码
+     */
+    private String vcode;
 }

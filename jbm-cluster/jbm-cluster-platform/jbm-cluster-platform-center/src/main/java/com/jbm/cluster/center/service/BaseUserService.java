@@ -29,6 +29,14 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     void register(BaseUser baseUser, String registerIp);
 
     /**
+     * 注销账号
+     *
+     * @param baseUser 用户信息
+     * @return 是否成功
+     */
+    Boolean close(BaseUser baseUser);
+
+    /**
      * 添加用户信息
      *
      * @param baseUser

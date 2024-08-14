@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 /**
@@ -84,4 +85,12 @@ public class BaseOrg extends MultiPlatformTreeEntity {
      */
     @ApiModelProperty(value = "账户数量")
     private Integer numberOfAccounts;
+
+
+    /**
+     * 组织地址 by wesley.zhang on 2019/04/03 13:57
+     */
+    @ApiModelProperty("组织地址")
+    @Column(columnDefinition = "TEXT")
+    private String orgAddress;
 }

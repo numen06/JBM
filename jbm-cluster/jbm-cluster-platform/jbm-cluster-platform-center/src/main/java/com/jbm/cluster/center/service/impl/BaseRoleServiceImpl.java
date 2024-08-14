@@ -78,7 +78,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
 //        List<BaseRole> list = baseRoleMapper.selectList(new QueryWrapper<>());
 //        return list;
         BaseRoleForm roleForm = new BaseRoleForm();
-        roleForm.setUserId(LoginHelper.getUserId());
+        roleForm.setUserId(ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin() ? null : LoginHelper.getUserId());
         return this.baseRoleMapper.selectData(roleForm);
     }
 

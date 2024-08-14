@@ -186,6 +186,12 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @ApiOperation(value = "注销账号", notes = "申请注销账号")
+    @PostMapping("/close")
+    public ResultBody<Boolean> close(@RequestBody BaseUser baseUser) {
+        return ResultBody.callback(() -> this.service.close(baseUser));
+    }
+
     /**
      * 添加系统用户
      *
