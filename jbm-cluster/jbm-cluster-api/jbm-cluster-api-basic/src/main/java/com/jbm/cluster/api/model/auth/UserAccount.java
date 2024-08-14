@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * @author: wesley.zhang
@@ -53,5 +54,9 @@ public class UserAccount extends BaseAccount implements Serializable {
      */
     private Long departmentId;
 
+    /**
+     * 账号关闭时间
+     */
+    private Date closeTime;
 
 }
