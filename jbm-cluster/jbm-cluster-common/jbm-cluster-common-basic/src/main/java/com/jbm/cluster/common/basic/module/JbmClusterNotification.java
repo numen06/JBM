@@ -1,7 +1,8 @@
 package com.jbm.cluster.common.basic.module;
 
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.net.url.UrlBuilder;
+import cn.hutool.extra.spring.SpringUtil;
+import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.entitys.message.EmailNotification;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.Notification;
@@ -9,14 +10,10 @@ import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.core.constant.QueueConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.ApplicationContext;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class JbmClusterNotification {
@@ -70,6 +67,13 @@ public class JbmClusterNotification {
         this.sendNotification(mqttNotification);
     }
 
+
+    public void sendMqttNotificationByApp(String topic, Object body) {
+        MqttNotification mqttNotification = new MqttNotification();
+        mqttNotification.setTopic(UrlBuilder.of(SpringUtil.getApplicationName()).addPath(topic).build());
+        mqttNotification.setBody(JSON.toJSON(body));
+        sendMqttNotification(mqttNotification);
+    }
 
     /**
      * 发送邮件通知
