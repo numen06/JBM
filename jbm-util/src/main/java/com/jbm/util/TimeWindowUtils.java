@@ -5,14 +5,13 @@ import lombok.Data;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 /**
  * 时间窗口工具类
  * @author wesley
  */
 @Data
-public class TimeWindowUtil {
+public class TimeWindowUtils {
 
     /**
      * 获取时间窗口的起始时间
