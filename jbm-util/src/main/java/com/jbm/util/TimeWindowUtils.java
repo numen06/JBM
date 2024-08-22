@@ -32,7 +32,7 @@ public class TimeWindowUtils {
 
         // 如果当前时间不在区间的末尾，则减少当前时间到最近的区间的起始时间
         if (minutesSinceStartOfInterval != 0 || secondsSinceStartOfInterval != 0 || nanosSinceStartOfInterval != 0) {
-            localDateTime =  localDateTime.minusMinutes(minutesSinceStartOfInterval).minusSeconds(secondsSinceStartOfInterval).withNano(0);
+            localDateTime = localDateTime.minusMinutes(minutesSinceStartOfInterval).minusSeconds(secondsSinceStartOfInterval).withNano(0);
             // 转换为java.util.Date
             // 默认时区，通常是系统时区
             ZoneId defaultZoneId = ZoneId.systemDefault();
