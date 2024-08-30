@@ -8,7 +8,6 @@ import com.jbm.util.StringUtils;
 public class GenerateMapperCode extends BaseGenerateCodeImpl {
 
 
-
     @Override
     public String getSuperClass(GenerateSource generateSource) {
         String extClass = SuperMapper.class.getName();

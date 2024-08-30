@@ -13,31 +13,40 @@ public class GenerateServiceCode extends BaseGenerateCodeImpl {
 
     @SneakyThrows
     public String getSuperClass(GenerateSource generateSource) {
-        Class superclass = generateSource.getSuperclass();
         String extClass = null;
-        if (superclass.equals(MasterDataEntity.class)) {
-            extClass = IMasterDataService.class.getName();
-        }
-        if (superclass.equals(MasterDataIdEntity.class)) {
-            extClass = IMasterDataService.class.getName();
-        }
-        if (superclass.equals(MasterDataCodeEntity.class)) {
-            extClass = IMasterDataService.class.getName();
-        }
-        if (superclass.equals(MasterDataTreeEntity.class)) {
-            extClass = IMasterDataTreeService.class.getName();
-        }
-        if (superclass.equals(MultiPlatformEntity.class)) {
-            extClass = IMultiPlatformService.class.getName();
-        }
-        if (superclass.equals(MultiPlatformIdEntity.class)) {
-            extClass = IMultiPlatformService.class.getName();
-        }
-        if (superclass.equals(MultiPlatformTreeEntity.class)) {
-            extClass = IMultiPlatformService.class.getName();
+        Class<?> superclass = generateSource.getSuperclass();
+        while (true) {
+            if (superclass.equals(MasterDataEntity.class)) {
+                extClass = IMasterDataService.class.getName();
+            }
+            if (superclass.equals(MasterDataIdEntity.class)) {
+                extClass = IMasterDataService.class.getName();
+            }
+            if (superclass.equals(MasterDataCodeEntity.class)) {
+                extClass = IMasterDataService.class.getName();
+            }
+            if (superclass.equals(MasterDataTreeEntity.class)) {
+                extClass = IMasterDataTreeService.class.getName();
+            }
+            if (superclass.equals(MultiPlatformEntity.class)) {
+                extClass = IMultiPlatformService.class.getName();
+            }
+            if (superclass.equals(MultiPlatformIdEntity.class)) {
+                extClass = IMultiPlatformService.class.getName();
+            }
+            if (superclass.equals(MultiPlatformTreeEntity.class)) {
+                extClass = IMultiPlatformService.class.getName();
+            }
+            if (StrUtil.isNotBlank(extClass)) {
+                break;
+            }
+            if (Object.class.equals(superclass)) {
+                break;
+            }
+            superclass = superclass.getSuperclass();
         }
         if (StrUtil.isBlank(extClass)) {
-            throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
+            throw new ClassNotFoundException(StrUtil.format("未发现匹配的父类:{}", generateSource.getEntityClass()));
         }
         generateSource.getData().put("extClass", extClass);
         generateSource.getData().put("extClassName", StrUtil.subAfter(extClass, ".", true));

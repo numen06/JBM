@@ -34,31 +34,40 @@ public class GenerateControllerCode extends BaseGenerateCodeImpl {
 
     @SneakyThrows
     public String getSuperClass(GenerateSource generateSource) {
-        Class superclass = generateSource.getSuperclass();
         String extClass = null;
-        if (superclass.equals(MasterDataEntity.class)) {
-            extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
-        }
-        if (superclass.equals(MasterDataIdEntity.class)) {
-            extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
-        }
-        if (superclass.equals(MasterDataCodeEntity.class)) {
-            extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
-        }
-        if (superclass.equals(MasterDataTreeEntity.class)) {
-            extClass = "com.jbm.framework.mvc.web.MasterDataTreeCollection";
-        }
-        if (superclass.equals(MultiPlatformEntity.class)) {
-            extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
-        }
-        if (superclass.equals(MultiPlatformIdEntity.class)) {
-            extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
-        }
-        if (superclass.equals(MultiPlatformTreeEntity.class)) {
-            extClass = "com.jbm.framework.service.mybatis.MultiPlatformTreeCollection";
+        Class<?> superclass = generateSource.getSuperclass();
+        while (true) {
+            if (superclass.equals(MasterDataEntity.class)) {
+                extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+            }
+            if (superclass.equals(MasterDataIdEntity.class)) {
+                extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+            }
+            if (superclass.equals(MasterDataCodeEntity.class)) {
+                extClass = "com.jbm.framework.mvc.web.MasterDataCollection";
+            }
+            if (superclass.equals(MasterDataTreeEntity.class)) {
+                extClass = "com.jbm.framework.mvc.web.MasterDataTreeCollection";
+            }
+            if (superclass.equals(MultiPlatformEntity.class)) {
+                extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
+            }
+            if (superclass.equals(MultiPlatformIdEntity.class)) {
+                extClass = "com.jbm.framework.service.mybatis.MultiPlatformCollection";
+            }
+            if (superclass.equals(MultiPlatformTreeEntity.class)) {
+                extClass = "com.jbm.framework.service.mybatis.MultiPlatformTreeCollection";
+            }
+            if (StrUtil.isNotBlank(extClass)) {
+                break;
+            }
+            if (Object.class.equals(superclass)) {
+                break;
+            }
+            superclass = superclass.getSuperclass();
         }
         if (StrUtil.isBlank(extClass)) {
-            throw new ClassNotFoundException("未发现匹配的父类" + superclass.getName());
+            throw new ClassNotFoundException(StrUtil.format("未发现匹配的父类:{}", generateSource.getEntityClass()));
         }
         generateSource.getData().put("extClass", extClass);
         generateSource.getData().put("extClassName", StringUtils.substringAfterLast(extClass, "."));

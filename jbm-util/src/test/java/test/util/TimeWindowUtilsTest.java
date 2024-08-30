@@ -2,7 +2,6 @@ package test.util;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.lang.Console;
-import cn.hutool.log.dialect.console.ConsoleLog;
 import com.jbm.util.TimeWindowUtils;
 import org.junit.Before;
 import org.junit.Test;

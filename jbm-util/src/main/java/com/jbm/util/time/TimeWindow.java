@@ -1,5 +1,6 @@
 package com.jbm.util.time;
 
+import cn.hutool.core.date.DateTime;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -18,7 +19,7 @@ public class TimeWindow implements Serializable {
     public TimeWindow() {}
 
     public TimeWindow(Date startTime, Date endTime) {
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.startTime = DateTime.of(startTime);
+        this.endTime = DateTime.of(endTime);
     }
 }

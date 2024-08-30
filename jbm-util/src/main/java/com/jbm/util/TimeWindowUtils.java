@@ -39,10 +39,10 @@ public class TimeWindowUtils {
             // 转换为ZonedDateTime
             ZonedDateTime zonedDateTime = localDateTime.atZone(defaultZoneId);
             // 转换为java.util.Date
-            return Date.from(zonedDateTime.toInstant());
+            return DateTime.from(zonedDateTime.toInstant());
         } else {
             // 如果当前时间正好在区间的末尾，则保持不变
-            return currentTime;
+            return DateTime.of(currentTime);
         }
     }
 

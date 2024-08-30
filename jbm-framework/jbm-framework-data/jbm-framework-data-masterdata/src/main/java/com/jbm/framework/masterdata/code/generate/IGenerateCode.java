@@ -25,7 +25,7 @@ public interface IGenerateCode {
 
     String getTemplateName(GenerateSource generateSource);
 
-    Map<String,Object> getData();
+    Map<String, Object> getData();
 
     String getSuperClass(GenerateSource generateSource);
 
