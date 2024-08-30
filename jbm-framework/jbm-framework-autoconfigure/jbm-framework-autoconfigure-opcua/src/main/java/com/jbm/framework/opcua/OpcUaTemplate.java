@@ -30,6 +30,8 @@ import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
+import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UByte;
+import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UShort;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
@@ -371,7 +373,14 @@ public class OpcUaTemplate {
      * @return
      */
     private DataValue convertData(ValueType valueType, Object value) {
-        return buildDataValue(DriverUtils.value(valueType, value.toString()));
+        switch (valueType) {
+            case UBYTE:
+                return buildDataValue(UByte.valueOf(value.toString()));
+            case USHORT:
+                return buildDataValue(UShort.valueOf(value.toString()));
+            default:
+                return buildDataValue(DriverUtils.value(valueType, value.toString()));
+        }
     }
 
 
