@@ -11,7 +11,6 @@ import java.util.Map;
  */
 public class KeyObject implements Serializable {
 
-    @Getter
     private final JSONObject data = new JSONObject();
 
     public KeyObject() {

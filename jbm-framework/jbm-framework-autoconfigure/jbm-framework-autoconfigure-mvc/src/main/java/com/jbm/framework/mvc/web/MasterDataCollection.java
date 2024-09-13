@@ -37,14 +37,14 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     }
 
 
-    protected void validator(BaseRequsetBody baseRequsetBody) throws Exception {
+    protected void validator(BaseRequsetBody baseRequsetBody) throws RuntimeException {
         if (ObjectUtil.isNull(baseRequsetBody)) {
             throw new ServiceException("参数错误");
         }
 
     }
 
-    protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+    protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws RuntimeException {
         Entity entity = baseRequsetBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtil.isNull(entity)) {
@@ -54,7 +54,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         return entity;
     }
 
-    protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws Exception {
+    protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws RuntimeException {
         List<Entity> entitys = baseRequsetBody.tryGetList(service.currentEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {

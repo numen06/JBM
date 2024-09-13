@@ -24,7 +24,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     }
 
     @Override
-    protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws Exception {
+    protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws RuntimeException {
         Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtil.isNull(entity)) {
