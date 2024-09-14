@@ -1,5 +1,6 @@
 package com.jbm.util;
 
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -1090,6 +1091,47 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
             sb.append(String.format(title, val));
         }
         return sb.toString();
+    }
+
+    /**
+     * 判断时间是否在某个时间段内
+     * @param startTime
+     * @param endTime
+     * @param checkTime
+     * @return
+     */
+    public static boolean timeInRange(String startTime, String endTime, String checkTime) {
+        // 定义时间格式
+        DateTime startHour = DateUtil.parseTimeToday(startTime);
+        DateTime endHour = DateUtil.parseTimeToday(endTime);
+        DateTime checkHour = DateUtil.parseTimeToday(checkTime);
+        if (startHour.equals(endHour)){
+            return true;
+        }
+        // 考虑到时间可能是跨天的，即结束时间小于开始时间
+        // 例如，开始时间是23:00，结束时间是01:00
+        boolean isOverMidnight = endHour.isBefore(startHour);
+
+        if (isOverMidnight) {
+            endHour.offset(DateField.DAY_OF_MONTH, 1);
+//            checkHour.offset(DateField.DAY_OF_MONTH, 1);
+        }
+
+        for (int i=0; i < 2; i++) {
+            // 如果不是跨天，则直接比较
+            if (checkHour.equals(startHour)) {
+                return true;
+            } else if (checkHour.equals(endHour)) {
+                return true;
+            }
+            boolean result = checkHour.isAfter(startHour) && checkHour.isBefore(endHour);
+            if (result) {
+                return true;
+            }else{
+                checkHour.offset(DateField.DAY_OF_MONTH, 1);
+            }
+        }
+        return false;
     }
 
 }

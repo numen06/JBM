@@ -25,7 +25,7 @@ public class KeyObject implements Serializable, IKey {
     }
 
     public KeyObject(Map<String, Object> map) {
-       this.of(map);
+        this.of(map);
     }
 
     public <T> T to(Class<T> clazz) {

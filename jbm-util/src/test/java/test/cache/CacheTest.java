@@ -4,7 +4,6 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.IdUtil;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.util.cache.Caches;
-import com.jbm.util.key.IKey;
 import com.jbm.util.key.KeyBean;
 import com.jbm.util.key.KeyObject;
 import com.jbm.util.key.Keys;

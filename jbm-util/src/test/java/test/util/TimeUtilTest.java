@@ -1,9 +1,12 @@
 package test.util;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.thread.ThreadUtil;
 import com.jbm.util.TimeUtils;
 import com.jbm.util.time.RuntimeTrack;
-import junit.framework.TestCase;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.junit.Test;
 
@@ -14,7 +17,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-public class TimeUtilTest extends TestCase {
+public class TimeUtilTest {
 
     public void testZone() {
         // create default time zone object
@@ -101,6 +104,25 @@ public class TimeUtilTest extends TestCase {
         ThreadUtil.safeSleep(1000);
         runtimeTrack.end();
         runtimeTrack.print();
+    }
+
+    @Test
+    public void checkHour() {
+        String startTime = "02:00";
+        String endTime = "01:00";
+        for (int i = 0; i < 24; i++) {
+            Console.log("小时{}->{}", i + ":00", TimeUtils.timeInRange(startTime, endTime, i + ":01"));
+        }
+    }
+
+    @Test
+    public void testTime() {
+        Console.log(DateUtil.parse("00:00", "HH:mm"));
+    }
+
+    @Test
+    public void rangeToList() {
+        Console.log(DateUtil.rangeToList(DateTime.now().offset(DateField.DAY_OF_MONTH, -1), DateTime.now(), DateField.HOUR));
     }
 
     @Test
