@@ -1,7 +1,7 @@
 package com.jbm.util.key;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONObject;
-import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * @author wesley
  */
-public class KeyObject implements Serializable {
+public class KeyObject implements Serializable, IKey {
 
     private final JSONObject data = new JSONObject();
 
@@ -17,18 +17,34 @@ public class KeyObject implements Serializable {
     }
 
     public KeyObject(String key, Object value) {
-        data.put(key, value);
+        this.of(key, value);
+    }
+
+    public KeyObject(Object obj) {
+        this.of(obj);
     }
 
     public KeyObject(Map<String, Object> map) {
+       this.of(map);
+    }
+
+    public <T> T to(Class<T> clazz) {
+        return JSONObject.parseObject(this.data.toJSONString(), clazz);
+    }
+
+    @Override
+    public IKey of(Object obj) {
+        return of(BeanUtil.beanToMap(obj));
+    }
+
+    @Override
+    public IKey of(Map<String, Object> map) {
         data.putAll(map);
+        return this;
     }
 
-    public static KeyObject from(String json) {
-        return new KeyObject(JSONObject.parseObject(json));
-    }
-
-    public KeyObject of(String key, Object value) {
+    @Override
+    public IKey of(String key, Object value) {
         data.put(key, value);
         return this;
     }

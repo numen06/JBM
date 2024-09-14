@@ -5,6 +5,15 @@ package com.jbm.util.key;
  */
 public class Keys {
 
+
+    public static <T> KeyBean<T> ofBean(T value) {
+        return new KeyBean<>(value);
+    }
+
+    public static KeyObject of(Object value) {
+        return new KeyObject(value);
+    }
+
     public static KeyObject ofObj(String key, Object value) {
         return new KeyObject(key, value);
     }
@@ -13,8 +22,8 @@ public class Keys {
         return new KeyArray(keys);
     }
 
-    public static KeyObject fromObj(String json) {
-        return KeyObject.from(json);
+    public static IKey fromObj(String json) {
+        return IKey.from(json);
     }
 
     public static KeyArray fromArray(String json) {
