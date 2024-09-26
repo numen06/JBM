@@ -13,6 +13,7 @@ public class KeyBean<T> extends KeyObject {
 
     public KeyBean(T value) {
         super(value);
+        this.beanType = (Class<T>) value.getClass();
     }
 
     public Class<T> getBeanType() {
