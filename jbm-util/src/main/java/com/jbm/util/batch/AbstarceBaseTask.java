@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author wesley
  */
 @Slf4j
-public abstract class AbstarceBaseTask extends AbstractScheduledService {
+public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
 
     /**
      * 最大提交时间:毫秒
@@ -88,7 +88,7 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
      *
      * @param actionBean 批量操作信息
      */
-    protected abstract <T> void asyncAction(ActionBean<T> actionBean);
+    protected abstract void asyncAction(ActionBean<T> actionBean);
 
     /**
      * 提交数据
@@ -96,7 +96,7 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
      * @param objs 待提交的数据
      * @return 成功提交的数量
      */
-    public int offer(Object... objs) {
+    public int offer(T... objs) {
         int len = 0;
         try {
             len = this.doOffer(objs);
@@ -134,7 +134,7 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
      * @return 成功提交的数量
      * @throws InterruptedException 如果线程中断，则抛出中断异常
      */
-    public int offerOfWait(long timeout, TimeUnit timeUnit, Object... objs) throws InterruptedException {
+    public int offerOfWait(long timeout, TimeUnit timeUnit, T... objs) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         while (true) {
             int w = this.offer(objs);
@@ -157,7 +157,7 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
      * @param objs 待添加的数据
      * @throws RuntimeException 如果添加数量超过最大提交数量，则抛出运行时异常
      */
-    public void add(Object... objs) {
+    public void add(T... objs) {
         if (this.offer(objs) <= 0) {
             throw new RuntimeException("添加数量超过最大提交数量");
         }
@@ -170,7 +170,7 @@ public abstract class AbstarceBaseTask extends AbstractScheduledService {
      * @param obj 待添加的数据
      * @return 成功添加的数量
      */
-    protected abstract int doOffer(Object... obj);
+    protected abstract int doOffer(T... obj);
 
 
 }

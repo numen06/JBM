@@ -1,5 +1,8 @@
 package com.jbm.util.batch;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -9,7 +12,7 @@ import java.util.function.Function;
  *
  * @author wesley
  */
-public class RollingTask<T> extends AbstarceBaseTask {
+public class RollingTask<T> extends AbstarceBaseTask<T> {
 
     private final Function<ActionBean<T>, T> action;
 
@@ -46,7 +49,7 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action 任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(final Function<ActionBean<T>, T> action) {
+    public static <T> RollingTask<T> createRollingTask(final Function<ActionBean<T>, T> action) {
         return new RollingTask(action);
     }
 
@@ -58,7 +61,7 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action        任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
+    public static <T> RollingTask<T> createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
         return new RollingTask(maxSubmitTime, timeUnit, 0, action);
     }
 
@@ -69,7 +72,7 @@ public class RollingTask<T> extends AbstarceBaseTask {
      * @param action            任务执行函数
      * @return 滚动任务执行器实例
      */
-    public static <T> RollingTask createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
+    public static <T> RollingTask<T> createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
         return new RollingTask(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
@@ -87,11 +90,14 @@ public class RollingTask<T> extends AbstarceBaseTask {
     /**
      * 提交任务
      *
-     * @param obj 参数
+     * @param objs 参数
      * @return 提交结果
      */
     @Override
-    protected int doOffer(Object... obj) {
-        return obj.length == 0 ? 1 : obj.length;
+    protected int doOffer(T... objs) {
+        CollUtil.newArrayList(objs).forEach(obj -> {
+            atomicReference.set((T) obj);
+        });
+        return objs.length == 0 ? 1 : objs.length;
     }
 }

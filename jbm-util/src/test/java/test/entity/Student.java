@@ -1,10 +1,13 @@
 package test.entity;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.RandomUtil;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+
 @Data
 public class Student implements Serializable {
 
@@ -20,6 +23,10 @@ public class Student implements Serializable {
 
 
     public Student() {
+    }
+
+    public Student(Date time) {
+        this.time = time;
     }
 
     public Student(String name, Integer age, Date time) {
@@ -38,5 +45,9 @@ public class Student implements Serializable {
 
     public Student(Long id) {
         this.id = id;
+    }
+
+    public static Student newStudent() {
+        return new Student(IdUtil.getSnowflakeNextId(), "测试", RandomUtil.randomInt(10, 100), new DateTime());
     }
 }
