@@ -1,5 +1,6 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -30,9 +31,12 @@ public class MqttConnectProperties {
 
     public MqttConnectOptions toMqttConnectOptions() {
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+
         mqttConnectOptions.setServerURIs(StrUtil.splitToArray(this.getUrl(), ","));
         mqttConnectOptions.setUserName(this.getUsername());
-        mqttConnectOptions.setPassword(this.getPassword().toCharArray());
+        if (StrUtil.isNotBlank(this.getPassword())) {
+            mqttConnectOptions.setPassword(this.getPassword().toCharArray());
+        }
         mqttConnectOptions.setConnectionTimeout(this.getConnectionTimeout());
         mqttConnectOptions.setKeepAliveInterval(this.getKeepAliveInterval());
         mqttConnectOptions.setAutomaticReconnect(this.getAutomaticReconnect());
@@ -42,7 +46,9 @@ public class MqttConnectProperties {
 
 
     public MqttConnectProperties fromMqttConnectOptions(MqttConnectOptions mqttConnectOptions) {
-        this.setUrl(StrUtil.join(",", mqttConnectOptions.getServerURIs()));
+        if (ObjectUtil.isNotEmpty(mqttConnectOptions.getServerURIs())) {
+            this.setUrl(StrUtil.join(",", mqttConnectOptions.getServerURIs()));
+        }
         this.setUsername(mqttConnectOptions.getUserName());
         this.setPassword(StrUtil.str(mqttConnectOptions.getPassword(), StandardCharsets.UTF_8));
         this.setConnectionTimeout(mqttConnectOptions.getConnectionTimeout());
