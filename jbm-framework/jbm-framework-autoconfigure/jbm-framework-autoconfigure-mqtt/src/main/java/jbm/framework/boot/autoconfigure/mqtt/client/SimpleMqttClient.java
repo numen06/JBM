@@ -1,16 +1,25 @@
 package jbm.framework.boot.autoconfigure.mqtt.client;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.google.common.collect.Maps;
 import com.jbm.util.FastJsonUtils;
 import jbm.framework.boot.autoconfigure.mqtt.MqttConnectProperties;
 import jbm.framework.boot.autoconfigure.mqtt.callback.SimpleMqttCallback;
+import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttRequestListener;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * @author wesley
+ */
 @Slf4j
 public class SimpleMqttClient extends SimpleMqttCallback {
 
@@ -60,6 +69,48 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         IMqttToken mqttToken = this.mqttClient.subscribeWithResponse(topicFilter, messageListener);
         this.topicFilterMap.put(topicFilter, messageListener);
         return mqttToken;
+    }
+
+    public String sendAndResponse(String requsetTopic,String responseTopic, Object requestMessage) throws MqttException {
+        // 使用CountDownLatch来同步等待响应
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<String> response = new AtomicReference<>();
+        this.mqttClient.subscribeWithResponse(responseTopic, new IMqttMessageListener() {
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                String payload = new String(message.getPayload());
+                if (topic.equals(responseTopic)) {
+                    // 这里可以添加处理响应的逻辑
+                    // 通知主线程可以结束了
+                    latch.countDown();
+                    response.set(payload);
+                    mqttClient.unsubscribe(responseTopic); // 取消订阅响应主题
+                } else {
+                    log.error("not my response:{}",payload);
+                }
+            }
+        });
+        // 构建请求消息
+        String requestPayload = null;
+        if (requestMessage instanceof String) {
+            requestPayload = (String) requestMessage;
+        }else{
+            requestPayload =JSON.toJSONString(requestMessage);
+        }
+        if (StrUtil.isBlank(requestPayload)) {
+            throw new IllegalArgumentException("requestMessage must not be null");
+        }
+        MqttMessage mqttMessage = new MqttMessage(requestPayload.getBytes());
+        mqttMessage.setQos(1);
+        // 发送请求消息
+        this.mqttClient.publish(requsetTopic, mqttMessage);
+        // 在这里等待响应
+        try {
+            latch.await(30, TimeUnit.SECONDS);
+            return response.get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void publish(String topic, MqttMessage message) throws MqttException {

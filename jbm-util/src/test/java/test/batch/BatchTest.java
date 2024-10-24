@@ -1,10 +1,13 @@
 package test.batch;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.jbm.util.batch.ActionBean;
+import com.jbm.util.batch.BatchMapTask;
 import com.jbm.util.batch.BatchTask;
 import com.jbm.util.batch.RollingTask;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.junit.Test;
 import test.entity.Student;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -79,6 +83,75 @@ public class BatchTest {
                 while (true) {
                     batchTask.offer();
                     ThreadUtil.safeSleep(1000);
+                }
+            }
+        });
+        batchTask.awaitTerminated();
+
+    }
+
+    @Test
+    public void test3() {
+        RollingTask<Student> batchTask = RollingTask.createRollingTask(5L,TimeUnit.SECONDS,new Function<ActionBean<Student>,Student>() {
+            @Override
+            public Student apply(ActionBean<Student> rollingBean) {
+                Student student = rollingBean.getObj();
+                if(ObjectUtil.isNull(student)){
+                    student = new Student();
+                    student.setAge(0);
+                }
+                if (ObjectUtil.isNull(student.getAge())) {
+                    student.setAge(0);
+                }
+                student.setAge(student.getAge()+1);
+                log.info("处理数据{},单次循环数量为{}",student,rollingBean.getCurrQuantity());
+                return student;
+            }
+        });
+        for (int i = 0; i < 100; i++) {
+            batchTask.add(new Student("张三",i, DateTime.now()));
+        }
+        ThreadUtil.execAsync(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    Student student = new Student(IdUtil.getSnowflakeNextId());
+                    student.setTime(DateTime.now());
+                    batchTask.add(student);
+                    ThreadUtil.safeSleep(1000);
+                }
+            }
+        });
+        batchTask.awaitTerminated();
+
+    }
+
+    @Test
+    public void test4() {
+        BatchMapTask<Student> batchTask = BatchMapTask.createBatchTask(5L, TimeUnit.SECONDS, new Consumer<Map<Integer, Student>>() {
+            @Override
+            public void accept(Map<Integer, Student> studentMap) {
+                for (Student student : studentMap.values()) {
+                    log.info("处理数据{}",student);
+                }
+            }
+        });
+        log.info("开始批处理添加");
+        for (int i = 0; i < 100; i++) {
+            int a = batchTask.offer(Student.newStudent());
+            log.info("追加数量为:{}",a);
+        }
+        log.info("开始批处理多线程添加");
+        ThreadUtil.execAsync(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        batchTask.offerOfWait(2, TimeUnit.SECONDS,Student.newStudent());
+                    } catch (InterruptedException e) {
+                        log.error("超时加入了",e);
+                    }
+                    ThreadUtil.safeSleep(10);
                 }
             }
         });

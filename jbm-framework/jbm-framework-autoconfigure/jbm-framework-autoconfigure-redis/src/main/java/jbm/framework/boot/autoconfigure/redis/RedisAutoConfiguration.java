@@ -1,26 +1,37 @@
 package jbm.framework.boot.autoconfigure.redis;
 
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import jbm.framework.boot.autoconfigure.redis.cache.CustomizedRedisCacheManager;
+import jbm.framework.boot.autoconfigure.redis.cache.JbmKeyGenerator;
 import jbm.framework.boot.autoconfigure.redis.distributed.SerialNumberTamplete;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.net.UnknownHostException;
+import java.time.Duration;
 
 /**
  * 默认的缓存注入
@@ -32,7 +43,7 @@ import java.net.UnknownHostException;
 @AutoConfigureAfter(RedisConfiguration.class)
 @ConditionalOnClass(RedisOperations.class)
 @EnableConfigurationProperties(RedisProperties.class)
-public class RedisAutoConfiguration {
+public class RedisAutoConfiguration extends CachingConfigurerSupport {
 
     @Bean
     @Primary
@@ -69,4 +80,19 @@ public class RedisAutoConfiguration {
         return new SerialNumberTamplete();
     }
 
+    @Override
+    public KeyGenerator keyGenerator() {
+        return new JbmKeyGenerator();
+    }
+
+    @Bean
+    @Primary
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        FastJson2JsonRedisSerializer<Object> valuesSerializer = new FastJson2JsonRedisSerializer<>(Object.class);
+
+        RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(1)).prefixCacheNameWith("jbm-cache:")
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(valuesSerializer));
+        return new CustomizedRedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory), defaultCacheConfig);
+    }
 }

@@ -7,16 +7,19 @@ import java.util.Date;
 /**
  * 操作对象
  *
- * @author wesley
  * @param <T> 通用类型
+ * @author wesley
  */
 @Data
 public class ActionBean<T> {
-
-    private final ActionType actionType;    // 操作类型
-    private final Integer currQuantity;    // 当前数量
-    private final Date date;    // 日期
-    private T obj;    // 对象
+    // 操作类型
+    private final ActionType actionType;
+    // 当前数量
+    private final Integer currQuantity;
+    // 日期
+    private final Date date;
+    // 对象
+    private T obj;
 
     /**
      * 构造函数
