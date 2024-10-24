@@ -68,10 +68,10 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         return mqttToken;
     }
 
-    public <T> T sendAndResponse(String requsetTopic,String responseTopic, Object requestMessage) throws MqttException {
+    public String sendAndResponse(String requsetTopic,String responseTopic, Object requestMessage) throws MqttException {
         // 使用CountDownLatch来同步等待响应
         final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<T> response = new AtomicReference<>();
+        final AtomicReference<String> response = new AtomicReference<>();
         this.mqttClient.subscribeWithResponse(responseTopic, new IMqttMessageListener() {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -80,7 +80,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
                     // 这里可以添加处理响应的逻辑
                     // 通知主线程可以结束了
                     latch.countDown();
-                    response.set(JSON.parseObject(payload, new TypeReference<T>(){}));
+                    response.set(payload);
                     mqttClient.unsubscribe(responseTopic); // 取消订阅响应主题
                 } else {
                     log.error("not my response:{}",payload);
