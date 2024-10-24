@@ -143,7 +143,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
 
     public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) throws MqttException {
         log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());
-        MqttRequestListener mqttRequestListener = new MqttRequestListener(mqttRequsetBean, mqttPahoClientFactory.getClientInstance());
+        MqttRequestListener mqttRequestListener = new MqttRequestListener(mqttRequsetBean, simpleMqttClient);
         simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), mqttRequestListener);
     }
 
