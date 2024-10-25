@@ -38,4 +38,8 @@ public abstract class MasterDataTreeEntity extends MasterDataIdEntity {
     @TableField(exist = false)
     @ApiModelProperty("树状结构是否叶子节点")
     private Boolean leaf;
+
+    @TableField(exist = false)
+    @ApiModelProperty("树状结构的路径")
+    private String leafPath;
 }

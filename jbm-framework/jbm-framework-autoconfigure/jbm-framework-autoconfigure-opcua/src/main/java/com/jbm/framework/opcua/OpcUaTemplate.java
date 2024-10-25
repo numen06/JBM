@@ -197,21 +197,26 @@ public class OpcUaTemplate {
         return opcUaClient;
     }
 
+    public String readItem(String deviceId, String pointName, long timeout) throws Exception {
+        OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName), timeout);
+    }
+
     public <T> T readItem(String deviceId, String pointName, Class<T> dataType) throws Exception {
         return JSON.parseObject(this.readItem(deviceId, pointName), dataType);
     }
 
     public String readItem(String deviceId, String pointName) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName));
+        return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName), 3L);
     }
 
     public String readItem(String deviceId, OpcPoint point) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
-        return this.readItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()));
+        return this.readItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), 3L);
     }
 
-    public String readItem(String deviceId, NodeId nodeId) throws Exception {
+    public String readItem(String deviceId, NodeId nodeId, long timeout) throws Exception {
         CompletableFuture<String> value = new CompletableFuture<>();
         OpcUaClient client = getOpcUaClient(deviceId);
         log.debug("start read point(ns={};s={})", nodeId.getNamespaceIndex(), nodeId.getIdentifier());
@@ -226,7 +231,7 @@ public class OpcUaTemplate {
                 log.error("accept point(ns={};s={}) value error", nodeId.getNamespaceIndex(), nodeId.getIdentifier(), e);
             }
         });
-        String rawValue = value.get(3, TimeUnit.SECONDS);
+        String rawValue = value.get(timeout, TimeUnit.SECONDS);
         log.debug("end read point(ns={};s={}) value: {}", nodeId.getNamespaceIndex(), nodeId.getIdentifier(), rawValue);
         return rawValue;
 
