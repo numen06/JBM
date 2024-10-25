@@ -15,16 +15,16 @@ public class SimpleMqttCallback implements MqttCallbackExtended {
 
     @Override
     public void connectComplete(boolean reconnect, String serverURI) {
-        log.info("MQTT Client:[{}]连接成功", mqttClient.getClientId());
+        log.info("MQTT Client:[{}]连接[{}]成功", mqttClient.getClientId(), mqttClient.getServerURI());
     }
 
 
     @Override
     public void connectionLost(Throwable throwable) {
-        log.warn("MQTT Client:[{}]连接丢失", mqttClient.getClientId(), throwable);
+        log.warn("MQTT Client:[{}]连接[{}]丢失", mqttClient.getClientId(), mqttClient.getServerURI(), throwable);
         while (!mqttClient.isConnected()) {
             try {
-                log.info("客户端[{}]触发重连", mqttClient.getClientId());
+                log.info("客户端[{}]触发[{}]重连", mqttClient.getClientId(), mqttClient.getServerURI());
                 mqttClient.reconnect();
                 ThreadUtil.safeSleep(3000);
             } catch (MqttException e) {

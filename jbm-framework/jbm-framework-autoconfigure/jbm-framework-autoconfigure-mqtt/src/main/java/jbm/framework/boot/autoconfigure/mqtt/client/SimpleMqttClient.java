@@ -46,7 +46,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         } catch (Exception e) {
             connectionLost(e);
         }
-        log.info("simple client [{}] start", mqttClient.getClientId());
+//        log.info("simple client [{}] start", mqttClient.getClientId());
     }
 
 

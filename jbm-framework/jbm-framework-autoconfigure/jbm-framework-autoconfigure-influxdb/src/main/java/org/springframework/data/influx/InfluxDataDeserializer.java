@@ -1,6 +1,7 @@
 package org.springframework.data.influx;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -91,6 +92,9 @@ public class InfluxDataDeserializer {
         return list;
     }
 
+    private final static String UTC_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSS'Z'";
+    private final static String UTC_FORMAT_2 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
     public Map<String, Object> serializRow(Map<String, String> tags, List<String> columns, List<Object> row) {
         Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
         if (MapUtil.isNotEmpty(tags)) {
@@ -101,7 +105,7 @@ public class InfluxDataDeserializer {
             String col = columns.get(j);
             Object val = row.get(j);
             if (col.equals("time")) {
-                relVal = InfluxDateUtil.formUtcToDate(StrUtil.toString(val));
+                relVal = DateUtil.parse(StrUtil.toString(val), UTC_FORMAT, UTC_FORMAT_2);
             } else {
                 relVal = val;
             }
@@ -124,6 +128,17 @@ public class InfluxDataDeserializer {
 //        System.out.println(DateUtil.parseUTC(str).getZoneId());
 //        System.out.println(DateUtil.parseUTC(str).toLocalDateTime().atZone(ZonedDateTime.now().getZone()));
 //        System.out.println(DateUtil.parseUTC(str).toInstant().atOffset(ZonedDateTime.now().getOffset()));
+//    }
+
+//    public static void main(String[] args) {
+//        String str = "2024-10-19T16:00:00.000000001Z";
+//
+//        System.out.println(DateUtil.parse(str, UTC_FORMAT, UTC_FORMAT_2));
+//        str = "2024-10-19T16:00:00.00Z";
+//        System.out.println(DateUtil.parse(str, UTC_FORMAT, UTC_FORMAT_2));
+//        str = "2024-10-19T16:00:00Z";
+//        System.out.println(DateUtil.parse(str, UTC_FORMAT, UTC_FORMAT_2));
+//
 //    }
 
 

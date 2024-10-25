@@ -16,7 +16,7 @@ import java.util.Properties;
 public class MqttConnectProperties {
 
     private Integer keepAliveInterval = MqttConnectOptions.KEEP_ALIVE_INTERVAL_DEFAULT;
-    private Integer maxInflight = MqttConnectOptions.MAX_INFLIGHT_DEFAULT;
+    private Integer maxInflight = 1000;
     private String willDestination = null;
     private String username = MqttClient.generateClientId();
     private String password = "";
@@ -31,7 +31,6 @@ public class MqttConnectProperties {
 
     public MqttConnectOptions toMqttConnectOptions() {
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-
         mqttConnectOptions.setServerURIs(StrUtil.splitToArray(this.getUrl(), ","));
         mqttConnectOptions.setUserName(this.getUsername());
         if (StrUtil.isNotBlank(this.getPassword())) {
@@ -41,6 +40,7 @@ public class MqttConnectProperties {
         mqttConnectOptions.setKeepAliveInterval(this.getKeepAliveInterval());
         mqttConnectOptions.setAutomaticReconnect(this.getAutomaticReconnect());
         mqttConnectOptions.setCleanSession(this.getCleanSession());
+        mqttConnectOptions.setMaxInflight(this.getMaxInflight());
         return mqttConnectOptions;
     }
 
@@ -55,6 +55,12 @@ public class MqttConnectProperties {
         this.setKeepAliveInterval(mqttConnectOptions.getKeepAliveInterval());
         this.setAutomaticReconnect(mqttConnectOptions.isAutomaticReconnect());
         this.setCleanSession(mqttConnectOptions.isCleanSession());
+        if (mqttConnectOptions.getMaxInflight() >= 1000) {
+            this.setMqttVersion(mqttConnectOptions.getMqttVersion());
+        } else {
+            this.setMaxInflight(1000);
+        }
+
         return this;
     }
 
