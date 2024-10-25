@@ -33,13 +33,11 @@ public abstract class MasterDataTreeEntity extends MasterDataIdEntity {
     @ApiModelProperty("树状结构层级")
     private Integer level;
 
+    @ApiModelProperty("树状结构的路径")
+    private String leafPath;
 
     //	@Transient
     @TableField(exist = false)
     @ApiModelProperty("树状结构是否叶子节点")
     private Boolean leaf;
-
-    @TableField(exist = false)
-    @ApiModelProperty("树状结构的路径")
-    private String leafPath;
 }
