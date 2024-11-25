@@ -73,8 +73,9 @@ public class InfluxTemplate {
         if (params instanceof InfluxQueryParam) {
             InfluxQueryParam param = (InfluxQueryParam) params;
             mapperConfigBean = getMapperBean(mapper, param.getParams());
-            if (param.getDatabase() != null)
+            if (param.getDatabase() != null) {
                 database = param.getDatabase();
+            }
             influxDataDeserializer = new InfluxDataDeserializer(mapperConfigBean.getClass(), param.getSupplementColumns());
         } else {
             mapperConfigBean = getMapperBean(mapper, params);

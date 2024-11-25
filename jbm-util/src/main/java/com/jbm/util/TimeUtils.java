@@ -1,6 +1,7 @@
 package com.jbm.util;
 
 import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -1095,6 +1096,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
 
     /**
      * 判断时间是否在某个时间段内
+     *
      * @param startTime
      * @param endTime
      * @param checkTime
@@ -1105,7 +1107,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
         DateTime startHour = DateUtil.parseTimeToday(startTime);
         DateTime endHour = DateUtil.parseTimeToday(endTime);
         DateTime checkHour = DateUtil.parseTimeToday(checkTime);
-        if (startHour.equals(endHour)){
+        if (startHour.equals(endHour)) {
             return true;
         }
         // 考虑到时间可能是跨天的，即结束时间小于开始时间
@@ -1117,7 +1119,7 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
 //            checkHour.offset(DateField.DAY_OF_MONTH, 1);
         }
 
-        for (int i=0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             // 如果不是跨天，则直接比较
             if (checkHour.equals(startHour)) {
                 return true;
@@ -1127,11 +1129,16 @@ public class TimeUtils extends org.apache.commons.lang.time.DateUtils {
             boolean result = checkHour.isAfter(startHour) && checkHour.isBefore(endHour);
             if (result) {
                 return true;
-            }else{
+            } else {
                 checkHour.offset(DateField.DAY_OF_MONTH, 1);
             }
         }
         return false;
+    }
+
+
+    public static String formatToUTC(Date date) {
+        return DateUtil.format(DateTime.of(date).setTimeZone(TimeZone.getTimeZone("UTC")), DatePattern.UTC_FORMAT);
     }
 
 }
