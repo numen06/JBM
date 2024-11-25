@@ -8,6 +8,7 @@ import com.jbm.framework.opcua.annotation.OpcUaHeartBeat;
 import com.jbm.framework.opcua.util.ReflectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.Interceptor;
+import org.springframework.scheduling.annotation.Async;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -27,6 +28,7 @@ public class PointChangeInterceptor extends SimpleAspect implements Interceptor 
         this.opcUaTemplate = opcUaTemplate;
     }
 
+    @Async
     @Override
     public boolean after(Object target, Method method, Object[] args, Object returnVal) {
         if (!ReflectUtil.isGetterOrSetterIgnoreCase(method)) {
