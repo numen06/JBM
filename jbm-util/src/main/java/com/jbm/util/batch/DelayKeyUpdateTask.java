@@ -3,7 +3,6 @@ package com.jbm.util.batch;
 import cn.hutool.core.lang.Pair;
 import cn.hutool.core.util.ObjectUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,13 +18,13 @@ import java.util.function.Supplier;
  * @author wesley
  */
 @Slf4j
-public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractScheduledService {
+public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractScheduledService {
 
     private final long delay;
     private final TimeUnit unit;
-    public Consumer<Pair<K,T>> commitFunction;
-    public Consumer<Pair<K,T>> updateFunction;
-    private final Map<K,DelayBean<T>> data = new ConcurrentHashMap<>();
+    public Consumer<Pair<K, T>> commitFunction;
+    public Consumer<Pair<K, T>> updateFunction;
+    private final Map<K, DelayBean<T>> data = new ConcurrentHashMap<>();
 
     @Getter
     public static class DelayBean<D> implements Serializable {
@@ -47,7 +46,7 @@ public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractSchedu
         }
     }
 
-    public DelayKeyUpdateTask(long delay, TimeUnit unit, Consumer<Pair<K,T>> updateFunction, Consumer<Pair<K,T>> commitFunction) {
+    public DelayKeyUpdateTask(long delay, TimeUnit unit, Consumer<Pair<K, T>> updateFunction, Consumer<Pair<K, T>> commitFunction) {
         this.delay = delay;
         this.unit = unit;
         this.updateFunction = updateFunction;
@@ -60,7 +59,7 @@ public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractSchedu
     }
 
 
-    public void delayUpdate(K key ,T obj) {
+    public void delayUpdate(K key, T obj) {
         this.data.putIfAbsent(key, new DelayBean<>(obj));
         DelayBean<T> delayBean = data.get(key);
         delayBean.decrementAndGet(obj);
@@ -70,21 +69,21 @@ public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractSchedu
     }
 
 
-    public void delayUpdate(Supplier<Pair<K,T>> supplier, Consumer<Pair<K,T>> commitFunction) {
-        Pair<K,T> pair = supplier.get();
+    public void delayUpdate(Supplier<Pair<K, T>> supplier, Consumer<Pair<K, T>> commitFunction) {
+        Pair<K, T> pair = supplier.get();
         this.delayUpdate(pair.getKey(), pair.getValue(), null, commitFunction);
     }
 
 
-    public void delayUpdate(K key,T obj, Consumer<Pair<K,T>> commitFunction) {
-        this.delayUpdate(() -> Pair.of(key, obj) , commitFunction);
+    public void delayUpdate(K key, T obj, Consumer<Pair<K, T>> commitFunction) {
+        this.delayUpdate(() -> Pair.of(key, obj), commitFunction);
     }
 
-    public void delayUpdate(K key,T obj,Consumer<Pair<K,T>> updateFunction, Consumer<Pair<K,T>> commitFunction) {
-        if(ObjectUtil.isNotNull(commitFunction)) {
+    public void delayUpdate(K key, T obj, Consumer<Pair<K, T>> updateFunction, Consumer<Pair<K, T>> commitFunction) {
+        if (ObjectUtil.isNotNull(commitFunction)) {
             this.commitFunction = commitFunction;
         }
-        if(ObjectUtil.isNotNull(updateFunction)) {
+        if (ObjectUtil.isNotNull(updateFunction)) {
             this.updateFunction = updateFunction;
         }
         this.delayUpdate(key, obj);
@@ -107,10 +106,10 @@ public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractSchedu
     }
 
     public void callCommit() {
-        data.forEach(this::callCommit);
+        data.entrySet().parallelStream().forEach(e -> this.callCommit(e.getKey(), e.getValue()));
     }
 
-    public void callCommit(K k,DelayBean<T> d) {
+    public void callCommit(K k, DelayBean<T> d) {
         if (d.getCounter().getAndSet(1) > 0) {
             return;
         }

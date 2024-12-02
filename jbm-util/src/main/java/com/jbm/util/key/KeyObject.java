@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author wesley
@@ -56,11 +57,11 @@ public class KeyObject implements Serializable, IKey {
 
     @Override
     public int hashCode() {
-        return this.toString().hashCode();
+        return Objects.hash(data.toJSONString());
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return this.toString().equals(obj.toString());
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//        return this.hashCode().equals(obj.toString());
+//    }
 }
