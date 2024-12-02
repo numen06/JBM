@@ -19,18 +19,17 @@ import java.util.function.Supplier;
  * @author wesley
  */
 @Slf4j
-public class DelayKeyUpdateTask<T> extends AbstractScheduledService {
+public class DelayKeyUpdateTask<K extends Serializable,T> extends AbstractScheduledService {
 
     private final long delay;
     private final TimeUnit unit;
-    public Consumer<T> commitFunction;
-    public Consumer<T> updateFunction;
-    private final Map<Serializable,DelayBean<T>> data = new ConcurrentHashMap<>();
+    public Consumer<Pair<K,T>> commitFunction;
+    public Consumer<Pair<K,T>> updateFunction;
+    private final Map<K,DelayBean<T>> data = new ConcurrentHashMap<>();
 
+    @Getter
     public static class DelayBean<D> implements Serializable {
-        @Getter
         private final AtomicInteger counter = new AtomicInteger(1);
-        @Getter
         private D data;
 
         public DelayBean(D data) {
@@ -48,7 +47,7 @@ public class DelayKeyUpdateTask<T> extends AbstractScheduledService {
         }
     }
 
-    public DelayKeyUpdateTask(long delay, TimeUnit unit, Consumer<T> updateFunction, Consumer<T> commitFunction) {
+    public DelayKeyUpdateTask(long delay, TimeUnit unit, Consumer<Pair<K,T>> updateFunction, Consumer<Pair<K,T>> commitFunction) {
         this.delay = delay;
         this.unit = unit;
         this.updateFunction = updateFunction;
@@ -61,27 +60,27 @@ public class DelayKeyUpdateTask<T> extends AbstractScheduledService {
     }
 
 
-    public void delayUpdate(Serializable key ,T obj) {
+    public void delayUpdate(K key ,T obj) {
         this.data.putIfAbsent(key, new DelayBean<>(obj));
-        DelayBean<T> delayBean  = data.get(key);
+        DelayBean<T> delayBean = data.get(key);
         delayBean.decrementAndGet(obj);
         if (updateFunction != null) {
-            updateFunction.accept(delayBean.getData());
+            updateFunction.accept(Pair.of(key, delayBean.getData()));
         }
     }
 
 
-    public void delayUpdate(Supplier<Pair<Serializable,T>> supplier, Consumer<T> commitFunction) {
-        Pair<Serializable,T> pair = supplier.get();
+    public void delayUpdate(Supplier<Pair<K,T>> supplier, Consumer<Pair<K,T>> commitFunction) {
+        Pair<K,T> pair = supplier.get();
         this.delayUpdate(pair.getKey(), pair.getValue(), null, commitFunction);
     }
 
 
-    public void delayUpdate(Serializable key,T obj, Consumer<T> commitFunction) {
+    public void delayUpdate(K key,T obj, Consumer<Pair<K,T>> commitFunction) {
         this.delayUpdate(() -> Pair.of(key, obj) , commitFunction);
     }
 
-    public void delayUpdate(Serializable key,T obj,Consumer<T> updateFunction, Consumer<T> commitFunction) {
+    public void delayUpdate(K key,T obj,Consumer<Pair<K,T>> updateFunction, Consumer<Pair<K,T>> commitFunction) {
         if(ObjectUtil.isNotNull(commitFunction)) {
             this.commitFunction = commitFunction;
         }
@@ -108,12 +107,10 @@ public class DelayKeyUpdateTask<T> extends AbstractScheduledService {
     }
 
     public void callCommit() {
-        data.forEach((k, v) -> {
-            callCommit(v);
-        });
+        data.forEach(this::callCommit);
     }
 
-    public void callCommit(DelayBean<T> d) {
+    public void callCommit(K k,DelayBean<T> d) {
         if (d.getCounter().getAndSet(1) > 0) {
             return;
         }
@@ -121,7 +118,7 @@ public class DelayKeyUpdateTask<T> extends AbstractScheduledService {
             return;
         }
         try {
-            commitFunction.accept(d.getData());
+            commitFunction.accept(Pair.of(k, d.getData()));
         } catch (Exception e) {
             log.error("commit error", e);
         } finally {

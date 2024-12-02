@@ -43,7 +43,7 @@ public class DelayTest {
 
     @Test
     public void testMap() {
-        DelayKeyUpdateTask<Integer> task = new DelayKeyUpdateTask<>(5, TimeUnit.SECONDS, (o) -> {
+        DelayKeyUpdateTask<Integer,Integer> task = new DelayKeyUpdateTask<>(5, TimeUnit.SECONDS, (o) -> {
             log.info("update:{}", o);
         },null);
         for (int i = 0; i < 100; i++) {
