@@ -24,7 +24,7 @@ public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractSched
     private final TimeUnit unit;
     public Consumer<Pair<K, T>> commitFunction;
     public Consumer<Pair<K, T>> updateFunction;
-    private final Map<K, DelayBean<T>> data = new ConcurrentHashMap<>();
+    private final Map<K, DelayBean<T>> data = new ConcurrentHashMap<>(1000);
 
     @Getter
     public static class DelayBean<D> implements Serializable {
