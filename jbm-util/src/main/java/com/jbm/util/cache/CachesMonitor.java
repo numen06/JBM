@@ -46,6 +46,11 @@ public class CachesMonitor<T> {
             this.function = function;
         }
 
+        public void reload(List<T> beans) {
+            beans.forEach(this::reload);
+        }
+
+
         public void reload(T bean) {
             this.reloadByKey(function.apply(bean));
         }
@@ -74,7 +79,7 @@ public class CachesMonitor<T> {
         }
     }
 
-    public <K,V> CachesMonitor addCache(Cache<K,V> cache,Function<T,K> function) {
+    public <K,V> CachesMonitor<T> addCache(Cache<K,V> cache,Function<T,K> function) {
         caches.add(new CacheMonitorBean<>(cache, function));
         return this;
     }
@@ -84,7 +89,7 @@ public class CachesMonitor<T> {
     /**
      * 启动
      */
-    public CachesMonitor start() {
+    public CachesMonitor<T> start() {
         // 防止重复启动
         if (started.compareAndSet(false, true)) {
             return this;
@@ -106,7 +111,7 @@ public class CachesMonitor<T> {
             if (CollUtil.isEmpty(lostKeys)) {
                 return;
             }
-            lostKeys.forEach(bean -> caches.forEach(cache -> cache.reload(bean)));
+            caches.forEach(cache -> cache.reload(lostKeys));
             log.info("check cache success, lostKeys:{}", lostKeys);
         } catch (Exception e) {
             log.error("check cache error", e);
