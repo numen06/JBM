@@ -1,14 +1,11 @@
 package com.jbm.util.key;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.alibaba.fastjson.JSONObject;
+import cn.hutool.json.JSONObject;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -41,7 +38,7 @@ public class KeyObject implements Serializable, IKey {
     }
 
     public <T> T to(Class<T> clazz) {
-        return JSONObject.parseObject(this.data.toJSONString(), clazz);
+        return this.data.toBean(clazz);
     }
 
     @Override
@@ -63,12 +60,12 @@ public class KeyObject implements Serializable, IKey {
 
     @Override
     public String toString() {
-        return data.toJSONString();
+        return data.toString();
     }
 
     @Override
     public int hashCode() {
-        return this.data.toJSONString().hashCode();
+        return this.data.toString().hashCode();
     }
 
     @Override
@@ -76,6 +73,6 @@ public class KeyObject implements Serializable, IKey {
         if (obj == null) {
             return false;
         }
-        return this.hashCode() == obj.hashCode();
+        return this.toString().equals(obj.toString());
     }
 }
