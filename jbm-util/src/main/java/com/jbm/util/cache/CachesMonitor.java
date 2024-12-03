@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 
@@ -74,19 +74,27 @@ public class CachesMonitor<T> {
         }
     }
 
-    public <K,V> void addCache(Cache<K,V> cache,Function<T,K> function) {
+    public <K,V> CachesMonitor addCache(Cache<K,V> cache,Function<T,K> function) {
         caches.add(new CacheMonitorBean<>(cache, function));
+        return this;
     }
 
 
+    private final AtomicBoolean started = new AtomicBoolean(false);
     /**
      * 启动
      */
-    public void start() {
+    public CachesMonitor start() {
+        // 防止重复启动
+        if (started.compareAndSet(false, true)) {
+            return this;
+        }
         CronUtil.schedule(this.cron, (Task) this::checkTask);
         // 支持秒级别定时任务
         CronUtil.setMatchSecond(true);
         CronUtil.start();
+        this.started.set(true);
+        return this;
     }
 
     /**
