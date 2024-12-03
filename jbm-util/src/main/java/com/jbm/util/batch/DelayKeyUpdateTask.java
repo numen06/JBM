@@ -1,6 +1,7 @@
 package com.jbm.util.batch;
 
 import cn.hutool.core.lang.Pair;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
@@ -153,7 +154,7 @@ public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractSched
                 commitData.put(e.getKey(), e.getValue().getData());
                 data.remove(e.getKey());
             });
-            if (commitData.isEmpty()) {
+            if (MapUtil.isEmpty(commitData)) {
                 return;
             }
             log.debug("commit data size:{}", commitData.size());
