@@ -1,14 +1,15 @@
 package com.jbm.util.key;
 
 import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.TypeUtil;
+
+import java.io.Serializable;
+import java.util.function.Function;
 
 
 /**
  * @author wesley
  */
 public class KeyBean<T> extends KeyObject {
-
 
     private Class<T> beanType;
 
@@ -24,4 +25,6 @@ public class KeyBean<T> extends KeyObject {
     public T to() {
         return super.to(this.getBeanType());
     }
+
+
 }

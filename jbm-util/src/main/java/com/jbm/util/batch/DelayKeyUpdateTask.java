@@ -5,17 +5,20 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author wesley
@@ -25,8 +28,14 @@ public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractSched
 
     private final long delay;
     private final TimeUnit unit;
+    @Setter
+    @Getter
     public Consumer<Pair<K, T>> commitFunction;
+    @Setter
+    @Getter
     public Consumer<Map<K, T>> commitBatchFunction;
+    @Setter
+    @Getter
     public Consumer<Pair<K, T>> updateFunction;
     private final Map<K, DelayBean<T>> data = new ConcurrentHashMap<>(1000);
 
@@ -91,6 +100,11 @@ public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractSched
     }
 
 
+    public void delayUpdate(Supplier<Pair<K, T>> supplier) {
+        delayUpdate(supplier.get().getKey(), supplier.get().getValue());
+    }
+
+
     public void delayUpdate(Supplier<Pair<K, T>> supplier, Consumer<Pair<K, T>> commitFunction) {
         Pair<K, T> pair = supplier.get();
         this.delayUpdate(pair.getKey(), pair.getValue(), null, commitFunction);
@@ -133,22 +147,37 @@ public class DelayKeyUpdateTask<K extends Serializable, T> extends AbstractSched
         if (isRunning.getAndSet(true)) {
             return;
         }
-        Set<K> keys = data.keySet();
-        //找出需要提交的数据，处理完成后移除
-        data.entrySet().stream().filter((entry) -> entry.getValue().getCounter().getAndDecrement() <= 0).forEach(e -> {
-            keys.add(e.getKey());
-            callCommit(e.getKey(), e.getValue());
-        });
-        keys.forEach(data::remove);
-        //data.forEach(this::callCommit);
+        try {
+            Map<K, T> commitData = new HashMap<>();
+            data.entrySet().stream().filter((entry) -> entry.getValue().getCounter().getAndSet(1) <= 0).collect(Collectors.toList()).forEach(e -> {
+                commitData.put(e.getKey(), e.getValue().getData());
+                data.remove(e.getKey());
+            });
+            if (commitData.isEmpty()) {
+                return;
+            }
+            log.debug("commit data size:{}", commitData.size());
+            if (commitBatchFunction != null) {
+                //找出需要提交的数据，处理完成后移除
+                try {
+                    commitBatchFunction.accept(commitData);
+                } catch (Exception e) {
+                    log.error("batch commit error", e);
+                }
+                return;
+            }
+            commitData.forEach(this::callCommit);
+        } finally {
+            isRunning.set(false);
+        }
     }
 
-    public void callCommit(K k, DelayBean<T> d) {
+    public void callCommit(K k, T d) {
         if (commitFunction == null) {
             return;
         }
         try {
-            commitFunction.accept(Pair.of(k, d.getData()));
+            commitFunction.accept(Pair.of(k, d));
         } catch (Exception e) {
             log.error("commit error", e);
         }

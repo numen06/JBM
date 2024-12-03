@@ -1,5 +1,6 @@
 package com.jbm.util.key;
 
+import java.io.Serializable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 

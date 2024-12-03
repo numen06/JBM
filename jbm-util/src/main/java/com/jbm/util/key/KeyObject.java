@@ -6,6 +6,8 @@ import com.alibaba.fastjson.JSONObject;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author wesley
@@ -13,6 +15,7 @@ import java.util.Objects;
 public class KeyObject implements Serializable, IKey {
 
     private final JSONObject data = new JSONObject();
+
 
     public KeyObject() {
     }
@@ -24,6 +27,7 @@ public class KeyObject implements Serializable, IKey {
     public KeyObject(Object obj) {
         this.of(obj);
     }
+
 
     public KeyObject(Map<String, Object> map) {
         this.of(map);
@@ -57,11 +61,11 @@ public class KeyObject implements Serializable, IKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(data.toJSONString());
+        return Objects.hash(this.data.toJSONString());
     }
 
 //    @Override
 //    public boolean equals(Object obj) {
-//        return this.hashCode().equals(obj.toString());
+//        return this.hashCode() == obj.hashCode();
 //    }
 }
