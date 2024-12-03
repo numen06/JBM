@@ -2,6 +2,8 @@ package com.jbm.util.key;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONObject;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -14,10 +16,15 @@ import java.util.function.Supplier;
  */
 public class KeyObject implements Serializable, IKey {
 
+    @Getter
     private final JSONObject data = new JSONObject();
 
 
     public KeyObject() {
+    }
+
+    public KeyObject(Supplier<Map<String, Object>> map) {
+        this.of(map.get());
     }
 
     public KeyObject(String key, Object value) {
@@ -61,11 +68,14 @@ public class KeyObject implements Serializable, IKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.data.toJSONString());
+        return this.data.toJSONString().hashCode();
     }
 
-//    @Override
-//    public boolean equals(Object obj) {
-//        return this.hashCode() == obj.hashCode();
-//    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        return this.hashCode() == obj.hashCode();
+    }
 }

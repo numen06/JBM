@@ -47,6 +47,11 @@ public class Student implements Serializable {
         this.id = id;
     }
 
+    public Student(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public static Student newStudent() {
         return new Student(IdUtil.getSnowflakeNextId(), "测试", RandomUtil.randomInt(10, 100), new DateTime());
     }
