@@ -17,29 +17,30 @@ import java.util.function.Function;
 
 /**
  * 缓存监控器
+ *
  * @author wesley
  */
 @Slf4j
 public class CachesMonitor<T> {
 
-    private final List<CacheMonitorBean<?,?>> caches = new ArrayList<>();
+    private final List<CacheMonitorBean<?, ?>> caches = new ArrayList<>();
     private final Callable<List<T>> ckeckKeysCallable;
     // 定时任务表达式
     private final String cron;
 
-    public CachesMonitor( Callable<List<T>> ckeckKeysCallable) {
-        this( ckeckKeysCallable, null);
+    public CachesMonitor(Callable<List<T>> ckeckKeysCallable) {
+        this(ckeckKeysCallable, null);
     }
 
-    public CachesMonitor( Callable<List<T>> ckeckKeysCallable, String cron) {
+    public CachesMonitor(Callable<List<T>> ckeckKeysCallable, String cron) {
         this.ckeckKeysCallable = ckeckKeysCallable;
         // 默认每5秒执行一次
         this.cron = StrUtil.isBlank(cron) ? "0/5 * * * * ?" : cron;
     }
 
-    public  class CacheMonitorBean<K,V>   {
+    public class CacheMonitorBean<K, V> {
         private final Cache<K, V> cache;
-        private final Function<T,  K> function;
+        private final Function<T, K> function;
 
         public CacheMonitorBean(Cache<K, V> cache, Function<T, K> function) {
             this.cache = cache;
@@ -57,10 +58,11 @@ public class CachesMonitor<T> {
 
         /**
          * 丢失缓存重新获取
+         *
          * @param key
          */
         public void reloadByKey(K key) {
-            if (ObjectUtil.isNull(key) ) {
+            if (ObjectUtil.isNull(key)) {
                 return;
             }
             // 移除缓存
@@ -71,6 +73,7 @@ public class CachesMonitor<T> {
 
         /**
          * 更新缓存
+         *
          * @param key
          * @param value
          */
@@ -79,13 +82,14 @@ public class CachesMonitor<T> {
         }
     }
 
-    public <K,V> CachesMonitor<T> addCache(Cache<K,V> cache,Function<T,K> function) {
+    public <K, V> CachesMonitor<T> addCache(Cache<K, V> cache, Function<T, K> function) {
         caches.add(new CacheMonitorBean<>(cache, function));
         return this;
     }
 
 
     private final AtomicBoolean started = new AtomicBoolean(false);
+
     /**
      * 启动
      */

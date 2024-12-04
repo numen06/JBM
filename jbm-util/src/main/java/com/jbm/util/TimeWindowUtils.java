@@ -5,7 +5,9 @@ import cn.hutool.core.date.DateUtil;
 import com.jbm.util.time.TimeWindow;
 import lombok.Data;
 
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 /**
@@ -56,7 +58,7 @@ public class TimeWindowUtils {
     public static Date getTimeWindowEnd(Date currentTime, int intervalLength) {
         // 计算当前时间所在的区间
         Date intervalStart = getTimeWindowStart(currentTime, intervalLength);
-        return DateUtil.offsetMinute(intervalStart,intervalLength);
+        return DateUtil.offsetMinute(intervalStart, intervalLength);
     }
 
     /**

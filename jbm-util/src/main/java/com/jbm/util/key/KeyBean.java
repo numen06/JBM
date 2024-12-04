@@ -4,10 +4,8 @@ import cn.hutool.core.lang.func.Func1;
 import cn.hutool.core.lang.func.LambdaUtil;
 import cn.hutool.core.util.ClassUtil;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 
 /**
@@ -48,8 +46,6 @@ public class KeyBean<T> extends KeyObject {
     public T to() {
         return super.to(this.getBeanType());
     }
-
-
 
 
 }

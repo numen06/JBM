@@ -6,9 +6,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.BooleanUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -19,13 +17,13 @@ import java.util.function.Consumer;
 /**
  * 批处理任务类
  *
- * @author wesley
  * @param <T> 任务类型
+ * @author wesley
  */
 @Slf4j
 public class BatchMapTask<T> extends AbstarceBaseTask<T> {
 
-    private final Consumer<Map<Integer,T>> action;
+    private final Consumer<Map<Integer, T>> action;
 
     private final BlockingQueue<T> blockingQueue;
 
@@ -34,7 +32,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      *
      * @param action 批量操作的消费函数
      */
-    public BatchMapTask(Consumer<Map<Integer,T>> action) {
+    public BatchMapTask(Consumer<Map<Integer, T>> action) {
         this(5L, TimeUnit.SECONDS, 200, action);
     }
 
@@ -46,7 +44,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @param maxSubmitQuantity 最大提交数量
      * @param action            批量操作的消费函数
      */
-    public BatchMapTask(long maxSubmitTime, TimeUnit timeUnit, int maxSubmitQuantity, Consumer<Map<Integer,T>> action) {
+    public BatchMapTask(long maxSubmitTime, TimeUnit timeUnit, int maxSubmitQuantity, Consumer<Map<Integer, T>> action) {
         super(maxSubmitTime, timeUnit, maxSubmitQuantity);
         this.action = action;
         blockingQueue = new ArrayBlockingQueue<>(maxSubmitQuantity < 1 ? 1 : maxSubmitQuantity);
@@ -58,7 +56,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @param action 批量操作的消费函数
      * @return 批处理任务实例
      */
-    public static <T> BatchMapTask<T> createBatchTask(final Consumer<Map<Integer,T>> action) {
+    public static <T> BatchMapTask<T> createBatchTask(final Consumer<Map<Integer, T>> action) {
         return new BatchMapTask<>(action);
     }
 
@@ -70,7 +68,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @param action        批量操作的消费函数
      * @return 批处理任务实例
      */
-    public static <T> BatchMapTask<T> createBatchTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Consumer<Map<Integer,T>> action) {
+    public static <T> BatchMapTask<T> createBatchTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Consumer<Map<Integer, T>> action) {
         return new BatchMapTask<>(maxSubmitTime, timeUnit, 200, action);
     }
 
@@ -81,7 +79,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @param action            批量操作的消费函数
      * @return 批处理任务实例
      */
-    public static <T> BatchMapTask<T> createBatchTask(Integer maxSubmitQuantity, final Consumer<Map<Integer,T>> action) {
+    public static <T> BatchMapTask<T> createBatchTask(Integer maxSubmitQuantity, final Consumer<Map<Integer, T>> action) {
         return new BatchMapTask<>(5L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
@@ -91,7 +89,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
     @Override
     protected void asyncAction(ActionBean<T> actionBean) {
         Date startTime = DateTime.now();
-        Map<Integer,T> list = new ConcurrentHashMap<>();
+        Map<Integer, T> list = new ConcurrentHashMap<>();
         if (actionBean.getCurrQuantity() <= 0) {
             return;
         }
@@ -100,7 +98,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
             if (obj == null) {
                 break;
             }
-            list.put(obj.hashCode(),obj);
+            list.put(obj.hashCode(), obj);
         }
         Date endTime;
         try {

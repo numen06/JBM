@@ -4,27 +4,27 @@ import com.jbm.util.db.sqltemplate.Context;
 
 public class IfFragment implements SqlFragment {
 
-	private String test;
+    private String test;
 
-	private SqlFragment contents;
+    private SqlFragment contents;
 
-	private ExpressionEvaluator expression ;
+    private ExpressionEvaluator expression;
 
-	public IfFragment(SqlFragment contents, String test) {
-		
-		this.expression = new ExpressionEvaluator();
-		this.contents = contents;
-		this.test = test;
-	}
+    public IfFragment(SqlFragment contents, String test) {
 
-	public boolean apply(Context context) {
-		if (expression.evaluateBoolean(test, context.getBinding())) {
+        this.expression = new ExpressionEvaluator();
+        this.contents = contents;
+        this.test = test;
+    }
 
-			this.contents.apply(context);
+    public boolean apply(Context context) {
+        if (expression.evaluateBoolean(test, context.getBinding())) {
 
-			return true;
-		}
-		return false;
-	}
+            this.contents.apply(context);
+
+            return true;
+        }
+        return false;
+    }
 
 }

@@ -4,7 +4,6 @@ import cn.hutool.core.date.DateTime;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalTime;
 import java.util.Date;
 
 /**
@@ -16,7 +15,8 @@ public class TimeWindow implements Serializable {
     private Date startTime;
     private Date endTime;
 
-    public TimeWindow() {}
+    public TimeWindow() {
+    }
 
     public TimeWindow(Date startTime, Date endTime) {
         this.startTime = DateTime.of(startTime);

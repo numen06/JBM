@@ -17,8 +17,8 @@ import java.util.function.Consumer;
 /**
  * 批处理任务类
  *
- * @author wesley
  * @param <T> 任务类型
+ * @author wesley
  */
 @Slf4j
 public class BatchTask<T> extends AbstarceBaseTask<T> {

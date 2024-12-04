@@ -30,10 +30,11 @@ import java.util.Map;
  *
  * @author wesley
  */
-public class SimpleTemplateUtils   {
+public class SimpleTemplateUtils {
 
     protected static ExtendedProperties props = new ExtendedProperties();
     protected static final VelocityEngine tempEngine = new VelocityEngine();
+
     static {
         try {
             InputStream propStream = ImplHelper.getCurrentClsLoader().getResourceAsStream("min-velocity.properties");
@@ -50,10 +51,8 @@ public class SimpleTemplateUtils   {
     /**
      * 传入模板路径(classpath中的路径)，以及任意pojo或map形式的context，返回merge好的String结果
      *
-     * @param tempPath
-     *            模板路径, 以classpath根为起始, 模板需以utf-8编码
-     * @param ctxPojo
-     *            任意自定义pojo context，需提供符合javaBean规范的getter方法, 或map
+     * @param tempPath 模板路径, 以classpath根为起始, 模板需以utf-8编码
+     * @param ctxPojo  任意自定义pojo context，需提供符合javaBean规范的getter方法, 或map
      * @return merge好的String结果
      */
     public static <T> String render(String tempPath, T ctxPojo) {
@@ -73,12 +72,9 @@ public class SimpleTemplateUtils   {
      * 该方法每次都会解析传入的模板内容；若希望节省模板解析成本，请考虑结合使用'parseStringTemplate' +
      * 'renderTemplate' api
      *
-     * @param templateString
-     *            模板，以内存String的形式
-     * @param ctxPojo
-     *            任意自定义pojo context，需提供符合javaBean规范的getter方法, 或map
-     * @param out
-     *            渲染结果输出writer
+     * @param templateString 模板，以内存String的形式
+     * @param ctxPojo        任意自定义pojo context，需提供符合javaBean规范的getter方法, 或map
+     * @param out            渲染结果输出writer
      */
     public static <T> void renderString(String templateString, T ctxPojo, Writer out) {
         Context ctx = new VelocityContext();
@@ -93,8 +89,7 @@ public class SimpleTemplateUtils   {
     /**
      * 将传入的String类型的模板内容，解析为Template对象，可供缓存起来，重复多次渲染使用，以节省模板解析成本
      *
-     * @param templateString
-     *            模板内容
+     * @param templateString 模板内容
      * @return 解析好的template对象
      */
     public static Template parseStringTemplate(String templateString) {
@@ -104,8 +99,7 @@ public class SimpleTemplateUtils   {
     /**
      * 根据tempPath找到对应的模板，解析后返回
      *
-     * @param tempPath
-     *            模板路径
+     * @param tempPath 模板路径
      * @return 解析好的template对象
      */
     public static Template getTemplate(String tempPath) {
@@ -115,12 +109,9 @@ public class SimpleTemplateUtils   {
     /**
      * 渲染模板
      *
-     * @param temp
-     *            传入的模板对象
-     * @param ctxPojo
-     *            模板上下文对象，可为pojo也可为map
-     * @param out
-     *            用于渲染结果输出的writer
+     * @param temp    传入的模板对象
+     * @param ctxPojo 模板上下文对象，可为pojo也可为map
+     * @param out     用于渲染结果输出的writer
      */
     public static <T> void renderTemplate(Template temp, T ctxPojo, Writer out) {
         Context ctx = new VelocityContext();
@@ -138,9 +129,9 @@ public class SimpleTemplateUtils   {
     }
 
     private static <T> void prepareCtx(T ctxPojo, Context ctx) {
-        List<Class<?>> defaultStaticUtils =CollUtil.newArrayList(ParseUtil.class,StrUtil.class);
+        List<Class<?>> defaultStaticUtils = CollUtil.newArrayList(ParseUtil.class, StrUtil.class);
         for (Class<?> c : defaultStaticUtils) {
-            ctx.put(ClassUtil.getClassName(c,true),c);
+            ctx.put(ClassUtil.getClassName(c, true), c);
         }
         putAllDefaultStaticUtils(ctx);
         putAllPojoVals(ctxPojo, ctx);
@@ -190,6 +181,7 @@ public class SimpleTemplateUtils   {
             }
         }
     }
+
     /**
      * 通过文件生成执行模板
      *
@@ -213,7 +205,7 @@ public class SimpleTemplateUtils   {
 
     public static <T> String renderResourceTemplate(Resource resource, T ctxPojo) {
         String templateString = IoUtil.readUtf8(resource.getStream());
-        Template temp =parseStringTemplate(templateString);
+        Template temp = parseStringTemplate(templateString);
         return renderTemplate(temp, ctxPojo);
     }
 

@@ -8,136 +8,136 @@ import java.util.Map;
 
 public class TrimFragment implements SqlFragment {
 
-	private SqlFragment contents;
-	private String prefix;
-	private String suffix;
-	private List<String> prefixesToOverride;
-	private List<String> suffixesToOverride;
+    private SqlFragment contents;
+    private String prefix;
+    private String suffix;
+    private List<String> prefixesToOverride;
+    private List<String> suffixesToOverride;
 
-	public TrimFragment(SqlFragment contents, String prefix, String suffix,
-			String prefixesToOverride, String suffixesToOverride) {
-		this(contents, prefix, suffix, prefixesToOverride == null ? null  :  Arrays.asList(prefixesToOverride
-				.split("\\|")), suffixesToOverride == null  ?  null  : Arrays.asList(suffixesToOverride.split("\\|")));
-	}
+    public TrimFragment(SqlFragment contents, String prefix, String suffix,
+                        String prefixesToOverride, String suffixesToOverride) {
+        this(contents, prefix, suffix, prefixesToOverride == null ? null : Arrays.asList(prefixesToOverride
+                .split("\\|")), suffixesToOverride == null ? null : Arrays.asList(suffixesToOverride.split("\\|")));
+    }
 
-	public TrimFragment(SqlFragment contents, String prefix, String suffix,
-			List<String> prefixesToOverride, List<String> suffixesToOverride) {
-		this.contents = contents;
-		this.prefix = prefix;
-		this.suffix = suffix;
-		this.prefixesToOverride = prefixesToOverride;
-		this.suffixesToOverride = suffixesToOverride;
-	}
+    public TrimFragment(SqlFragment contents, String prefix, String suffix,
+                        List<String> prefixesToOverride, List<String> suffixesToOverride) {
+        this.contents = contents;
+        this.prefix = prefix;
+        this.suffix = suffix;
+        this.prefixesToOverride = prefixesToOverride;
+        this.suffixesToOverride = suffixesToOverride;
+    }
 
-	public boolean apply(Context context) {
-		FilteredContent fContext = new FilteredContent(context);
+    public boolean apply(Context context) {
+        FilteredContent fContext = new FilteredContent(context);
 
-		contents.apply(fContext);
+        contents.apply(fContext);
 
-		fContext.applyAll();
+        fContext.applyAll();
 
-		return false;
-	}
+        return false;
+    }
 
-	private class FilteredContent extends Context {
-		private Context delegate;
+    private class FilteredContent extends Context {
+        private Context delegate;
 
-		private boolean trimed = false;
+        private boolean trimed = false;
 
-		private StringBuilder sql = new StringBuilder();
+        private StringBuilder sql = new StringBuilder();
 
-		public FilteredContent(Context delegate) {
-			super(null, null);
-			this.delegate = delegate;
-		}
+        public FilteredContent(Context delegate) {
+            super(null, null);
+            this.delegate = delegate;
+        }
 
-		public void applyAll() {
+        public void applyAll() {
 
-			if (trimed)
-				return;
+            if (trimed)
+                return;
 
-			sql = new StringBuilder(sql.toString().trim());
+            sql = new StringBuilder(sql.toString().trim());
 
-			String upperSql = sql.toString().toUpperCase();
+            String upperSql = sql.toString().toUpperCase();
 
-			if (upperSql.length() > 0) {
-				applyPrefix(upperSql);
-				applySuffix(upperSql);
-			}
+            if (upperSql.length() > 0) {
+                applyPrefix(upperSql);
+                applySuffix(upperSql);
+            }
 
-			delegate.appendSql(sql.toString());
+            delegate.appendSql(sql.toString());
 
-		}
+        }
 
-		private void applySuffix(String upperSql) {
+        private void applySuffix(String upperSql) {
 
-			if (suffixesToOverride != null) {
-				for (String toRemove : suffixesToOverride) {
-					if (upperSql.endsWith(toRemove)) {
-						// sql.delete(0, toRemove.trim().length()) ;
+            if (suffixesToOverride != null) {
+                for (String toRemove : suffixesToOverride) {
+                    if (upperSql.endsWith(toRemove)) {
+                        // sql.delete(0, toRemove.trim().length()) ;
 
-						int start = sql.length() - toRemove.length();
-						int end = sql.length();
+                        int start = sql.length() - toRemove.length();
+                        int end = sql.length();
 
-						sql.delete(start, end);
+                        sql.delete(start, end);
 
-						break ;
-					}
-				}
-			}
+                        break;
+                    }
+                }
+            }
 
-			if (suffix != null) {
-				this.appendSql(suffix);
-			}
+            if (suffix != null) {
+                this.appendSql(suffix);
+            }
 
-		}
+        }
 
-		private void applyPrefix(String upperSql) {
-			if (prefixesToOverride != null) {
-				for (String toRemove : prefixesToOverride) {
-					if (upperSql.startsWith(toRemove.toUpperCase())) {
-						sql.delete(0, toRemove.length());
-						break ;
-					}
-				}
-			}
+        private void applyPrefix(String upperSql) {
+            if (prefixesToOverride != null) {
+                for (String toRemove : prefixesToOverride) {
+                    if (upperSql.startsWith(toRemove.toUpperCase())) {
+                        sql.delete(0, toRemove.length());
+                        break;
+                    }
+                }
+            }
 
-			if (prefix != null) {
-				sql.insert(0, prefix + " ");
-			}
+            if (prefix != null) {
+                sql.insert(0, prefix + " ");
+            }
 
-		}
+        }
 
-		@Override
-		public void bind(String key, Object value) {
-			delegate.bind(key, value);
-		}
+        @Override
+        public void bind(String key, Object value) {
+            delegate.bind(key, value);
+        }
 
-		@Override
-		public void appendSql(String sqlFragement) {
-			sql.append(sqlFragement).append(" ");
-		}
+        @Override
+        public void appendSql(String sqlFragement) {
+            sql.append(sqlFragement).append(" ");
+        }
 
-		@Override
-		public Map<String, Object> getBinding() {
-			return delegate.getBinding();
-		}
+        @Override
+        public Map<String, Object> getBinding() {
+            return delegate.getBinding();
+        }
 
-		@Override
-		public List<Object> getParameter() {
-			return delegate.getParameter();
-		}
+        @Override
+        public List<Object> getParameter() {
+            return delegate.getParameter();
+        }
 
-		@Override
-		public void addParameter(Object parameter) {
-			delegate.addParameter(parameter);
-		}
+        @Override
+        public void addParameter(Object parameter) {
+            delegate.addParameter(parameter);
+        }
 
-		@Override
-		public String getSql() {
-			return delegate.toString();
-		}
+        @Override
+        public String getSql() {
+            return delegate.toString();
+        }
 
-	}
+    }
 
 }

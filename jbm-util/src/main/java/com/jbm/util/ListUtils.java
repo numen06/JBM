@@ -114,8 +114,8 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
      * 对List<Map<String, Object>> resultList 按照Map中的key进行降序排序，
      *
      * @param list
-     * @param key        排序字段名称
-     * @param sort    排序方式：DESC 降序，ASC 升序 ；(默认升序)
+     * @param key  排序字段名称
+     * @param sort 排序方式：DESC 降序，ASC 升序 ；(默认升序)
      * @throws Exception
      */
     public static <K, V> void sort(List<Map<K, V>> list, final K key, final String sort) {

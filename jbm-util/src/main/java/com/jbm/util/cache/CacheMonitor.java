@@ -9,16 +9,16 @@ import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 
 /**
  * 缓存监控器
+ *
  * @author wesley
  */
 @Slf4j
-public class CacheMonitor<K,V> {
+public class CacheMonitor<K, V> {
 
     private final Cache<K, V> cache;
     private final Callable<List<K>> ckeckKeysCallable;
@@ -48,10 +48,11 @@ public class CacheMonitor<K,V> {
 
     /**
      * 丢失缓存重新获取
+     *
      * @param key
      */
     public void reload(K key) {
-        if (ObjectUtil.isNull(key) ) {
+        if (ObjectUtil.isNull(key)) {
             return;
         }
         // 移除缓存
@@ -62,6 +63,7 @@ public class CacheMonitor<K,V> {
 
     /**
      * 更新缓存
+     *
      * @param key
      * @param value
      */

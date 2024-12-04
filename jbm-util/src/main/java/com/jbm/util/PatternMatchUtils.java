@@ -74,7 +74,8 @@ public abstract class PatternMatchUtils {
      * String string = "/get/64e967af97ac478f2a919891.jpg";
      * String pattern = "/get/{filePath}";
      * 判断给定的url是否与指定的url模式匹配
-     * @param str 要匹配的url
+     *
+     * @param str     要匹配的url
      * @param pattern url模式，可以包含占位符 {@{参数名}}
      * @return 如果url与url模式匹配，则返回true；否则返回false
      */

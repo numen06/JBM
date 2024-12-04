@@ -1,13 +1,11 @@
 package com.jbm.util.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -31,6 +29,7 @@ public class CachePool {
 
     /**
      * 创建缓存
+     *
      * @param function
      * @return
      */
@@ -42,11 +41,12 @@ public class CachePool {
 
     /**
      * 创建缓存
+     *
      * @param function
      * @param loader
      * @return
      */
-    public <K, V> LoadingCache<K, V> createLoadingCache(Function<Caffeine<K, V>,  Caffeine<K, V>> function, Function<K, V> loader) {
+    public <K, V> LoadingCache<K, V> createLoadingCache(Function<Caffeine<K, V>, Caffeine<K, V>> function, Function<K, V> loader) {
         LoadingCache<K, V> cache = Caffeine.newBuilder().build(loader::apply);
         this.cacheList.add(cache);
         return cache;

@@ -90,10 +90,10 @@ public class ReflectUtils {
         Object[] params = new Object[method.getParameterCount()];
         Parameter[] paramTypes = method.getParameters();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-        if(parameterAnnotations[0].length==0){
-            if(paramTypes.length==1 ) {
-                if(paramTypes[0].getType().equals(String.class)){
-                   return ReflectUtil.invokeWithCheck(obj, method, jsonStr);
+        if (parameterAnnotations[0].length == 0) {
+            if (paramTypes.length == 1) {
+                if (paramTypes[0].getType().equals(String.class)) {
+                    return ReflectUtil.invokeWithCheck(obj, method, jsonStr);
                 }
             }
         }

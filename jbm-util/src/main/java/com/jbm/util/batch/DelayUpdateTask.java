@@ -2,20 +2,16 @@ package com.jbm.util.batch;
 
 import cn.hutool.core.lang.Pair;
 import cn.hutool.core.util.IdUtil;
-import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
  * @author wesley
  */
 @Slf4j
-public class DelayUpdateTask<T> extends DelayKeyUpdateTask<String,T> {
+public class DelayUpdateTask<T> extends DelayKeyUpdateTask<String, T> {
 
 //    private final static String DEFAULT_KEY = "jbm";
 

@@ -32,6 +32,7 @@ public class NumberUtils extends cn.hutool.core.util.NumberUtil {
      * 默认的Number:0
      */
     public static final Number NUMBER_DEF = 0;
+
     /**
      * 格式化数字称字符串(-1代表不格式化)
      *
