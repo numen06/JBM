@@ -1,5 +1,6 @@
 package com.jbm.util;
 
+import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.jbm.util.time.TimeWindow;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 时间窗口工具类
@@ -74,4 +76,26 @@ public class TimeWindowUtils {
         Date intervalEnd = DateUtil.offsetMinute(intervalStart, intervalLength);
         return new TimeWindow(intervalStart, intervalEnd);
     }
+
+    public static TimeWindow getTimeWindow(Date currentTime, DateField dateField, long intervalLength) {
+        switch (dateField) {
+            case HOUR:
+                Date intervalStartHour = DateUtil.beginOfHour(currentTime);
+                Date intervalEndHour = DateTime.of(intervalStartHour).offset(dateField, new Long(intervalLength).intValue());
+                return new TimeWindow(intervalStartHour, intervalEndHour);
+            case MINUTE:
+                return getTimeWindow(currentTime, new Long(intervalLength).intValue());
+            case DAY_OF_MONTH:
+                Date intervalStartDay = DateUtil.beginOfDay(currentTime);
+                Date intervalEndDay = DateTime.of(intervalStartDay).offset(dateField, new Long(intervalLength).intValue());
+                return new TimeWindow(intervalStartDay, intervalEndDay);
+            case YEAR:
+                Date intervalStartYear = DateUtil.beginOfYear(currentTime);
+                Date intervalEndYear = DateTime.of(intervalStartYear).offset(dateField, new Long(intervalLength).intValue());
+                return new TimeWindow(intervalStartYear, intervalEndYear);
+            default:
+                throw new IllegalArgumentException("Unsupported TimeUnit");
+        }
+    }
+
 }
