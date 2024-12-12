@@ -26,7 +26,7 @@ public class TimeWindowUtils {
      * @param intervalLength
      * @return
      */
-    public static Date getTimeWindowStart(Date currentTime, int intervalLength) {
+    public static Date getTimeWindowMinuteStart(Date currentTime, int intervalLength) {
         LocalDateTime localDateTime = DateTime.of(currentTime).toLocalDateTime();
         // 计算当前时间与最近的区间起始时间之间的分钟数
         int minutesSinceStartOfInterval = localDateTime.getMinute() % intervalLength;
@@ -56,9 +56,9 @@ public class TimeWindowUtils {
      * @param intervalLength
      * @return
      */
-    public static Date getTimeWindowEnd(Date currentTime, int intervalLength) {
+    public static Date getTimeWindowMinuteEnd(Date currentTime, int intervalLength) {
         // 计算当前时间所在的区间
-        Date intervalStart = getTimeWindowStart(currentTime, intervalLength);
+        Date intervalStart = getTimeWindowMinuteStart(currentTime, intervalLength);
         return DateUtil.offsetMinute(intervalStart, intervalLength);
     }
 
@@ -69,9 +69,9 @@ public class TimeWindowUtils {
      * @param intervalLength
      * @return
      */
-    public static TimeWindow getTimeWindow(Date currentTime, int intervalLength) {
+    public static TimeWindow getMinuteTimeWindow(Date currentTime, int intervalLength) {
         // 计算当前时间所在的区间
-        Date intervalStart = getTimeWindowStart(currentTime, intervalLength);
+        Date intervalStart = getTimeWindowMinuteStart(currentTime, intervalLength);
         Date intervalEnd = DateUtil.offsetMinute(intervalStart, intervalLength);
         return new TimeWindow(intervalStart, intervalEnd);
     }
@@ -79,7 +79,7 @@ public class TimeWindowUtils {
     public static TimeWindow getTimeWindow(Date currentTime, DateField dateField, long intervalLength) {
         switch (dateField) {
             case MINUTE:
-                return getTimeWindow(currentTime, new Long(intervalLength).intValue());
+                return getMinuteTimeWindow(currentTime, new Long(intervalLength).intValue());
             case HOUR:
                 Date intervalStartHour = DateUtil.beginOfHour(currentTime);
                 Date intervalEndHour = DateTime.of(intervalStartHour).offset(dateField, new Long(intervalLength).intValue());
