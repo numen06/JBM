@@ -82,15 +82,15 @@ public class TimeWindowUtils {
                 return getMinuteTimeWindow(currentTime, new Long(intervalLength).intValue());
             case HOUR:
                 Date intervalStartHour = DateUtil.beginOfHour(currentTime);
-                Date intervalEndHour = DateTime.of(intervalStartHour).offset(dateField, new Long(intervalLength).intValue());
+                Date intervalEndHour = DateUtil.offset(intervalStartHour, dateField, new Long(intervalLength).intValue());
                 return new TimeWindow(intervalStartHour, intervalEndHour);
             case DAY_OF_MONTH:
                 Date intervalStartDay = DateUtil.beginOfDay(currentTime);
-                Date intervalEndDay = DateTime.of(intervalStartDay).offset(dateField, new Long(intervalLength).intValue());
+                Date intervalEndDay = DateUtil.offset(intervalStartDay, dateField, new Long(intervalLength).intValue());
                 return new TimeWindow(intervalStartDay, intervalEndDay);
             case YEAR:
                 Date intervalStartYear = DateUtil.beginOfYear(currentTime);
-                Date intervalEndYear = DateTime.of(intervalStartYear).offset(dateField, new Long(intervalLength).intValue());
+                Date intervalEndYear = DateUtil.offset(intervalStartYear, dateField, new Long(intervalLength).intValue());
                 return new TimeWindow(intervalStartYear, intervalEndYear);
             default:
                 throw new IllegalArgumentException("Unsupported TimeUnit");
