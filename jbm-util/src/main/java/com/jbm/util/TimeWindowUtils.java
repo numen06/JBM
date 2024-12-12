@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 时间窗口工具类
@@ -79,12 +78,12 @@ public class TimeWindowUtils {
 
     public static TimeWindow getTimeWindow(Date currentTime, DateField dateField, long intervalLength) {
         switch (dateField) {
+            case MINUTE:
+                return getTimeWindow(currentTime, new Long(intervalLength).intValue());
             case HOUR:
                 Date intervalStartHour = DateUtil.beginOfHour(currentTime);
                 Date intervalEndHour = DateTime.of(intervalStartHour).offset(dateField, new Long(intervalLength).intValue());
                 return new TimeWindow(intervalStartHour, intervalEndHour);
-            case MINUTE:
-                return getTimeWindow(currentTime, new Long(intervalLength).intValue());
             case DAY_OF_MONTH:
                 Date intervalStartDay = DateUtil.beginOfDay(currentTime);
                 Date intervalEndDay = DateTime.of(intervalStartDay).offset(dateField, new Long(intervalLength).intValue());
