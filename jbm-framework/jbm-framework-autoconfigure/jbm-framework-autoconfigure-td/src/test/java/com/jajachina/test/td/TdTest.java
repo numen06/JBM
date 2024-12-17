@@ -76,7 +76,49 @@ public class TdTest {
 
         executor.insertSubTableBatch((d) -> "device_type_" + d.get("device_type").toString(), list);
 
+    }
+
+    @Test
+    public void testMoreInsert() throws SQLException {
+
+//        (pt, voltage_unbalance, uc_harmonic_distortion_rate, power_factor, power_a, power_b, voltage_a, power_c,
+//        voltage_b, current_a, ib_harmonic_distortion_rate, voltage_c, ic_harmonic_distortion_rate,
+//        current_b, ub_harmonic_distortion_rate, current_c, current_unbalance, cumulative_energy,
+//        ia_harmonic_distortion_rate, ct, ua_harmonic_distortion_rate, power_no, power, ts)
+        StableExecutor executor = new StableExecutor(dataSource, "devices");
+
+        Map<String, Object> map = MapUtil.newHashMap();
+        map.put("device_id", "2");
+        map.put("device_type", "1816362047206592513");
+        map.put("device_code", "code2");
+        map.put("pt", RandomUtil.randomInt(1, 10));
+        map.put("voltage_unbalance", RandomUtil.randomDouble(1, 10));
+        map.put("uc_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
+        map.put("power_factor", RandomUtil.randomDouble(1, 10));
+        map.put("power_a", RandomUtil.randomDouble(1, 10));
+        map.put("power_b", RandomUtil.randomDouble(1, 10));
+        map.put("power_c", RandomUtil.randomDouble(1, 10));
+        map.put("voltage_a", RandomUtil.randomDouble(1, 10));
+        map.put("voltage_b", RandomUtil.randomDouble(1, 10));
+        map.put("voltage_c", RandomUtil.randomDouble(1, 10));
+        map.put("current_a", RandomUtil.randomDouble(1, 10));
+        map.put("current_b", RandomUtil.randomDouble(1, 10));
+        map.put("current_c", RandomUtil.randomDouble(1, 10));
+        map.put("ib_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
+        map.put("ic_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
+        map.put("ia_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
+        map.put("ua_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
+        map.put("current_unbalance", RandomUtil.randomDouble(1, 10));
+        map.put("cumulative_energy", RandomUtil.randomDouble(1, 10));
+        map.put("ct", RandomUtil.randomDouble(1, 10));
+        map.put("power_no", RandomUtil.randomDouble(1, 10));
+        map.put("power", RandomUtil.randomDouble(1, 10));
+        map.put("voltage", RandomUtil.randomDouble(1, 10));
+        map.put("ts", System.currentTimeMillis());
+
+        executor.insertSubTable((d) -> "device_type_" + d.get("device_type").toString(), map);
 
     }
+
 
 }
