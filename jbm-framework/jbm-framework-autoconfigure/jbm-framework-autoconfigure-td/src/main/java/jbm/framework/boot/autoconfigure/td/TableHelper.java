@@ -128,9 +128,7 @@ public class TableHelper {
         );
         List<Object> values = new ArrayList<>(buildTagValues(stableCache.getTagColumns(), data));
         try {
-            Db.use(dataSource).tx((db) -> {
-                db.execute(createTableSql, values.toArray());
-            });
+            Db.use(dataSource).execute(createTableSql, values.toArray());
         } catch (Exception e) {
             log.error("createSubTable error sql:{}", createTableSql, e);
         }
