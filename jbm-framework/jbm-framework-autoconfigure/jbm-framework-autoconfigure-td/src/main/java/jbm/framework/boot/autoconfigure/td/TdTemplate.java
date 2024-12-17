@@ -1,28 +1,28 @@
 package jbm.framework.boot.autoconfigure.td;
 
+import cn.hutool.db.ds.simple.SimpleDataSource;
 import jbm.framework.boot.autoconfigure.td.configuration.TDProperties;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 public class TdTemplate implements InitializingBean {
 
     private TDProperties tdProperties;
 
-    private Connection connection;
+    private DataSource dataSource;
 
     public TdTemplate(TDProperties tdProperties) {
         this.tdProperties = tdProperties;
     }
 
     public StableExecutor getSTableExecutor(String stableName) throws SQLException {
-        return new StableExecutor(this.connection, stableName);
+        return new StableExecutor(this.dataSource, stableName);
     }
 
-    public Connection createConnection(TDProperties properties) throws SQLException {
-        return DriverManager.getConnection(tdProperties.getUrl(), tdProperties.getUsername(), tdProperties.getPassword());
+    public DataSource createDataSource(TDProperties properties) throws SQLException {
+        return new SimpleDataSource(tdProperties.getUrl(), tdProperties.getUsername(), tdProperties.getPassword());
     }
 
     /**
@@ -30,6 +30,6 @@ public class TdTemplate implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.connection = createConnection(tdProperties);
+        this.dataSource = createDataSource(tdProperties);
     }
 }

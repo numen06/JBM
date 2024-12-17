@@ -3,16 +3,19 @@ package jbm.framework.boot.autoconfigure.td;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
+import cn.hutool.db.StatementUtil;
+import cn.hutool.db.dialect.Dialect;
+import cn.hutool.db.dialect.impl.H2Dialect;
+import cn.hutool.db.dialect.impl.MysqlDialect;
+import cn.hutool.db.dialect.impl.Sqlite3Dialect;
 import cn.hutool.db.handler.BeanListHandler;
 import cn.hutool.db.sql.SqlBuilder;
-import cn.hutool.db.sql.SqlExecutor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,24 +29,22 @@ public class TableHelper {
 
     private static final Map<String, TableCache> TABLE_CACHE = new ConcurrentHashMap<>();
 
-    public static List<TableColumn> getTableColumns(Connection conn, String tableName) throws SQLException {
+    public static List<TableColumn> getTableColumns(DataSource dataSource, String tableName) throws SQLException {
         String sql = StrUtil.format("DESCRIBE {}", tableName);
-        List<TableColumn> tableColumns = SqlExecutor.query(conn, sql, new BeanListHandler<>(TableColumn.class));
-        return tableColumns;
+        return Db.use(dataSource).query(sql, new BeanListHandler<>(TableColumn.class));
     }
 
-
-    public static TableCache getTableCache(Connection conn, String tableName, boolean reflush) throws SQLException {
+    public static TableCache getTableCache(DataSource dataSource, String tableName, boolean reflush) throws SQLException {
         if (!TABLE_CACHE.containsKey(tableName) || !reflush) {
-            List<TableColumn> tableColumns = getTableColumns(conn, tableName);
+            List<TableColumn> tableColumns = getTableColumns(dataSource, tableName);
             TableCache tableCache = new TableCache(tableName, tableColumns);
             TABLE_CACHE.put(tableName, tableCache);
         }
         return TABLE_CACHE.get(tableName);
     }
 
-    public static TableCache getTableCache(Connection conn, String tableName) throws SQLException {
-        return getTableCache(conn, tableName, false);
+    public static TableCache getTableCache(DataSource dataSource, String tableName) throws SQLException {
+        return getTableCache(dataSource, tableName, false);
     }
 
 //    public static TableCache getTableCache(String tableName) {
@@ -63,48 +64,35 @@ public class TableHelper {
         return tableColumns.stream().filter(column -> "TAG".equals(column.getNote())).map(TableColumn::getField).collect(Collectors.toList());
     }
 
-    public static void insert(Connection conn, String tableName, Map<String, Object> data) throws SQLException {
+    public static void insert(DataSource dataSource, String tableName, Map<String, Object> data) throws SQLException {
 //        String insertSql = StrUtil.format("INSERT INTO {} VALUES ({})", tableName, filedColumns.stream().map(tc -> "?").collect(Collectors.joining(",")));
-//        SqlExecutor.execute(conn, insertSql, buildFiledValues(data));
-        insertBatch(conn, tableName, Collections.singletonList(data));
+//        SqlExecutor.execute(dataSource, insertSql, buildFiledValues(data));
+        insertBatch(dataSource, tableName, Collections.singletonList(data));
     }
 
-    public static void insertBatch(Connection conn, String tableName, List<Map<String, Object>> dataList) throws SQLException {
+    private static TdSqlDialect tdSqlDialect = new TdSqlDialect();
+
+    public static void insertBatch(DataSource dataSource, String tableName, List<Map<String, Object>> dataList) throws SQLException {
         if (CollUtil.isEmpty(dataList)) {
             return;
         }
-        ArrayList<Object> values = new ArrayList<>();
-        StringBuilder sqlBuilder = new StringBuilder(StrUtil.format("INSERT INTO {} VALUES ", tableName));
-
-        TableCache tableCache = getTableCache(conn, tableName);
-
-        Iterable<Object[]> paramsBatch = new ArrayList<>();
-        final String insertParamSql = StrUtil.format("({})", tableCache.getFiledColumns().stream().map(tc -> "?").collect(Collectors.joining(",")));
-        dataList.forEach(data -> {
-            if (CollUtil.isEmpty(data)) {
-                return;
-            }
-//            sqlBuilder.append(insertParamSql);
-            paramsBatch.add(buildFiledValues(tableCache.getFiledColumns(), data).toArray());
-            List<Object> v = buildFiledValues(tableCache.getFiledColumns(), data);
-            values.addAll(v);
-        });
-        String sql = sqlBuilder.toString();
-        if (StrUtil.isBlank(sql)) {
-            return;
-        }
+        TableCache tableCache = getTableCache(dataSource, tableName);
+        List<Entity> entities = dataList.stream().map(data -> {
+            tableCache.getTagColumns().forEach(data::remove);
+            Entity entity = Entity.create(tableName);
+            entity.putAll(data);
+            return entity;
+        }).collect(Collectors.toList());
         try {
-            SqlExecutor.executeBatch(conn, sql, values.toArray());
+//            for (Entity entity : entities) {
+//                SqlBuilder insert = SqlBuilder.create().insert(entity);
+//                Db.use(dataSource).execute(insert.build(), insert.getParamValueArray());
+//            }
+            Db.use(dataSource, tdSqlDialect).insert(entities);
         } catch (SQLException e) {
-            log.error("insertBatch error sql:{}", sql, e);
+            log.error("insertBatch error", e);
             throw e;
         }
-    }
-
-    private String insertSql(String tableName, Map<String, Object> data) {
-        Entity entity = Entity.create(tableName);
-        entity.putAll(data);
-        return SqlBuilder.create().insert(entity).build();
     }
 
     protected static List<Object> buildTagValues(List<String> tagColumns, Map<String, Object> data) throws SQLException {
@@ -116,31 +104,23 @@ public class TableHelper {
         return filedColumns.stream().map(data::get).collect(Collectors.toList());
     }
 
-    public static TableCache createSubTableIfNotExists(Connection conn, String tableName, String stableName, Map<String, Object> data) throws SQLException {
+    public static TableCache createSubTableIfNotExists(DataSource dataSource, String tableName, String stableName, Map<String, Object> data) throws SQLException {
         TableCache tableCache = null;
         if (TABLE_CACHE.containsKey(tableName)) {
             tableCache = TABLE_CACHE.get(tableName);
         }
         if (ObjectUtil.isNotNull(tableCache)) {
-            return addTableColumn(conn, tableCache, data);
+            return addTableColumn(dataSource, tableCache, data);
         }
         final String checkTableSql = "SHOW TABLES LIKE \"?\"";
-        try (PreparedStatement pstmt = conn.prepareStatement(checkTableSql)) {
-            pstmt.setString(1, tableName);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    tableCache = getTableCache(conn, tableName);
-                    return tableCache;
-                }
-            }
-        }
-        return createSubTable(conn, tableName, stableName, data);
+        Db.use(dataSource).queryString(checkTableSql, tableName);
+        return createSubTable(dataSource, tableName, stableName, data);
     }
 
 
-    public static TableCache createSubTable(Connection conn, String tableName, String stableName, Map<String, Object> data) throws SQLException {
-        TableCache stableCache = getTableCache(conn, stableName);
-        addTableColumn(conn, stableCache, data);
+    public static TableCache createSubTable(DataSource dataSource, String tableName, String stableName, Map<String, Object> data) throws SQLException {
+        TableCache stableCache = getTableCache(dataSource, stableName);
+        addTableColumn(dataSource, stableCache, data);
         String createTableSql = StrUtil.format(
                 "CREATE TABLE IF NOT EXISTS {} USING {} TAGS ({});",
                 tableName, stableName,
@@ -148,26 +128,27 @@ public class TableHelper {
         );
         List<Object> values = new ArrayList<>(buildTagValues(stableCache.getTagColumns(), data));
         try {
-            SqlExecutor.execute(conn, createTableSql, values.toArray());
+            Db.use(dataSource).tx((db) -> {
+                db.execute(createTableSql, values.toArray());
+            });
         } catch (Exception e) {
             log.error("createSubTable error sql:{}", createTableSql, e);
         }
-        return getTableCache(conn, tableName);
+        return getTableCache(dataSource, tableName);
     }
 
-    public static TableCache addTableColumn(Connection conn, TableCache tableCache, Map<String, Object> data) throws SQLException {
+    public static TableCache addTableColumn(DataSource dataSource, TableCache tableCache, Map<String, Object> data) throws SQLException {
         List<String> newColumn = tableCache.hasNewColumn(data.keySet());
         List<String> alterTable = addTableColumnSql(tableCache.getTableName(), newColumn, data);
         if (CollUtil.isNotEmpty(alterTable)) {
             try {
-                SqlExecutor.executeBatch(conn, alterTable);
+                Db.use(dataSource).executeBatch(alterTable);
             } catch (SQLException e) {
                 log.error("addTableColumn error sql:{}", alterTable, e);
                 throw e;
             }
-
         }
-        return getTableCache(conn, tableCache.getTableName(), true);
+        return getTableCache(dataSource, tableCache.getTableName(), true);
     }
 
 

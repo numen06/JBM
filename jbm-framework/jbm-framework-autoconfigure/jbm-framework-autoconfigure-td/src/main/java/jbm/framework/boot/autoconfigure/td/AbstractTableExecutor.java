@@ -3,6 +3,7 @@ package jbm.framework.boot.autoconfigure.td;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractTableExecutor {
 
-    protected final Connection conn;
+    protected final DataSource dataSource;
 
     @Getter
     private final String tableName;
@@ -26,14 +27,14 @@ public abstract class AbstractTableExecutor {
 
     protected List<TableColumn> tableColumns = new ArrayList<>();
 
-    protected AbstractTableExecutor(Connection conn, String tableName) {
-        this.conn = conn;
+    protected AbstractTableExecutor(DataSource dataSource, String tableName) {
+        this.dataSource = dataSource;
         this.tableName = tableName;
     }
 
 
     public void initTable() throws SQLException {
-        this.tableColumns = TableHelper.getTableColumns(conn, this.tableName);
+        this.tableColumns = TableHelper.getTableColumns(dataSource, this.tableName);
         this.tagColumns = TableHelper.getTagColumns(tableColumns);
         this.filedColumns = TableHelper.getFiledColumns(tableColumns);
         log.info("loadColumns: {}", tagColumns);
@@ -45,10 +46,10 @@ public abstract class AbstractTableExecutor {
 //    }
 
     protected void insertBatch(String tableName, List<Map<String, Object>> value) throws SQLException {
-        TableHelper.insertBatch(conn, tableName, value);
+        TableHelper.insertBatch(dataSource, tableName, value);
     }
 
     protected void insert(Map<String, Object> data) throws SQLException {
-        TableHelper.insert(conn, this.tableName, data);
+        TableHelper.insert(dataSource, this.tableName, data);
     }
 }

@@ -1,7 +1,9 @@
 package com.jajachina.test.td;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import cn.hutool.db.ds.simple.SimpleDataSource;
+import com.taosdata.jdbc.rs.RestfulDriver;
+
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 /**
@@ -12,7 +14,7 @@ public class TDengineConnection {
     private static final String USER = "root";
     private static final String PASSWORD = "taosdata";
 
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    public static DataSource getConnection() throws SQLException {
+        return new SimpleDataSource(URL, USER, PASSWORD, RestfulDriver.class.getName());
     }
 }

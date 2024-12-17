@@ -7,6 +7,7 @@ import jbm.framework.boot.autoconfigure.td.StableExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,16 +16,16 @@ import java.util.Map;
 
 public class TdTest {
 
-    private Connection conn;
+    private DataSource dataSource;
 
     @BeforeEach
     public void before() throws SQLException {
-        conn = TDengineConnection.getConnection();
+        dataSource = TDengineConnection.getConnection();
     }
 
     @Test
     public void test() {
-        try (Connection conn = TDengineConnection.getConnection()) {
+        try (Connection conn = TDengineConnection.getConnection().getConnection()) {
             String insertSQL = "insert into d1001 using devices tags ('测试','1','1') (ts, status)  values ( \"2018-10-03 14:38:05\", 1)";
             try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
                 pstmt.execute(insertSQL);
@@ -37,7 +38,7 @@ public class TdTest {
 
     @Test
     public void testInsert() throws SQLException {
-        StableExecutor executor = new StableExecutor(conn, "devices");
+        StableExecutor executor = new StableExecutor(dataSource, "devices");
         Map<String, Object> map = MapUtil.newHashMap();
         map.put("device_id", "1");
         map.put("device_type", "type1");
@@ -50,7 +51,7 @@ public class TdTest {
     @Test
     public void testInsertBatch() throws SQLException {
 
-        StableExecutor executor = new StableExecutor(conn, "devices");
+        StableExecutor executor = new StableExecutor(dataSource, "devices");
 
         List<Map<String, Object>> list = CollUtil.newArrayList();
 

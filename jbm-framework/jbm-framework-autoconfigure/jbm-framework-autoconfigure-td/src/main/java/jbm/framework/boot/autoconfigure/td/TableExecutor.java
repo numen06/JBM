@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.td;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -12,8 +13,8 @@ import java.sql.SQLException;
 public class TableExecutor extends AbstractTableExecutor {
 
 
-    public TableExecutor(Connection conn, String tableName) throws SQLException {
-        super(conn, tableName);
+    public TableExecutor(DataSource dataSource, String tableName) throws SQLException {
+        super(dataSource, tableName);
         this.initTable();
     }
 
