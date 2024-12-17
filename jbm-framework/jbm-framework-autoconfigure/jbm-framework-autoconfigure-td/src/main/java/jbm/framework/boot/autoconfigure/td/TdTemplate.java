@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.td;
 
 import cn.hutool.db.ds.simple.SimpleDataSource;
+import com.taosdata.jdbc.rs.RestfulDriver;
 import jbm.framework.boot.autoconfigure.td.configuration.TDProperties;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -22,7 +23,7 @@ public class TdTemplate implements InitializingBean {
     }
 
     public DataSource createDataSource(TDProperties properties) throws SQLException {
-        return new SimpleDataSource(tdProperties.getUrl(), tdProperties.getUsername(), tdProperties.getPassword());
+        return new SimpleDataSource(properties.getUrl(), properties.getUsername(), properties.getPassword(), RestfulDriver.class.getName());
     }
 
     /**

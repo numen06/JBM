@@ -20,8 +20,7 @@ public class TDConfiguration {
 
     @Bean
     public TdTemplate tdTemplate() {
-        TdTemplate tdTemplate = new TdTemplate(tdProperties);
-        return tdTemplate;
+        return new TdTemplate(tdProperties);
     }
 
 }
