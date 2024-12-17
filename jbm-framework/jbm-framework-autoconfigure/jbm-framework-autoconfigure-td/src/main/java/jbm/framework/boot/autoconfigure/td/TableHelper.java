@@ -1,9 +1,13 @@
 package jbm.framework.boot.autoconfigure.td;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.Entity;
 import cn.hutool.db.handler.BeanListHandler;
+import cn.hutool.db.sql.SqlBuilder;
 import cn.hutool.db.sql.SqlExecutor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -17,6 +21,7 @@ import java.util.stream.Collectors;
 /**
  * @author wesley
  */
+@Slf4j
 public class TableHelper {
 
     private static final Map<String, TableCache> TABLE_CACHE = new ConcurrentHashMap<>();
@@ -65,16 +70,41 @@ public class TableHelper {
     }
 
     public static void insertBatch(Connection conn, String tableName, List<Map<String, Object>> dataList) throws SQLException {
+        if (CollUtil.isEmpty(dataList)) {
+            return;
+        }
         ArrayList<Object> values = new ArrayList<>();
         StringBuilder sqlBuilder = new StringBuilder(StrUtil.format("INSERT INTO {} VALUES ", tableName));
+
         TableCache tableCache = getTableCache(conn, tableName);
+
+        Iterable<Object[]> paramsBatch = new ArrayList<>();
         final String insertParamSql = StrUtil.format("({})", tableCache.getFiledColumns().stream().map(tc -> "?").collect(Collectors.joining(",")));
         dataList.forEach(data -> {
-            sqlBuilder.append(insertParamSql);
+            if (CollUtil.isEmpty(data)) {
+                return;
+            }
+//            sqlBuilder.append(insertParamSql);
+            paramsBatch.add(buildFiledValues(tableCache.getFiledColumns(), data).toArray());
             List<Object> v = buildFiledValues(tableCache.getFiledColumns(), data);
             values.addAll(v);
         });
-        SqlExecutor.execute(conn, sqlBuilder.toString(), values.toArray());
+        String sql = sqlBuilder.toString();
+        if (StrUtil.isBlank(sql)) {
+            return;
+        }
+        try {
+            SqlExecutor.executeBatch(conn, sql, values.toArray());
+        } catch (SQLException e) {
+            log.error("insertBatch error sql:{}", sql, e);
+            throw e;
+        }
+    }
+
+    private String insertSql(String tableName, Map<String, Object> data) {
+        Entity entity = Entity.create(tableName);
+        entity.putAll(data);
+        return SqlBuilder.create().insert(entity).build();
     }
 
     protected static List<Object> buildTagValues(List<String> tagColumns, Map<String, Object> data) throws SQLException {
@@ -107,6 +137,7 @@ public class TableHelper {
         return createSubTable(conn, tableName, stableName, data);
     }
 
+
     public static TableCache createSubTable(Connection conn, String tableName, String stableName, Map<String, Object> data) throws SQLException {
         TableCache stableCache = getTableCache(conn, stableName);
         addTableColumn(conn, stableCache, data);
@@ -116,38 +147,47 @@ public class TableHelper {
                 stableCache.getTagColumns().stream().map(tc -> "?").collect(Collectors.joining(","))
         );
         List<Object> values = new ArrayList<>(buildTagValues(stableCache.getTagColumns(), data));
-
-        SqlExecutor.execute(conn, createTableSql, values.toArray());
+        try {
+            SqlExecutor.execute(conn, createTableSql, values.toArray());
+        } catch (Exception e) {
+            log.error("createSubTable error sql:{}", createTableSql, e);
+        }
         return getTableCache(conn, tableName);
     }
 
     public static TableCache addTableColumn(Connection conn, TableCache tableCache, Map<String, Object> data) throws SQLException {
         List<String> newColumn = tableCache.hasNewColumn(data.keySet());
-        String alterTable = addTableColumnSql(tableCache.getTableName(), newColumn, data);
-        if (ObjectUtil.isNotEmpty(alterTable)) {
-            SqlExecutor.execute(conn, alterTable);
+        List<String> alterTable = addTableColumnSql(tableCache.getTableName(), newColumn, data);
+        if (CollUtil.isNotEmpty(alterTable)) {
+            try {
+                SqlExecutor.executeBatch(conn, alterTable);
+            } catch (SQLException e) {
+                log.error("addTableColumn error sql:{}", alterTable, e);
+                throw e;
+            }
+
         }
         return getTableCache(conn, tableCache.getTableName(), true);
     }
 
 
-    public static String addTableColumnSql(String tableName, List<String> filedColumns, Map<String, Object> data) {
-        StringBuilder alart = new StringBuilder();
+    public static List<String> addTableColumnSql(String tableName, List<String> filedColumns, Map<String, Object> data) {
+        List<String> sqls = new ArrayList<>();
         for (String column : filedColumns) {
             if (!data.containsKey(column)) {
                 continue;
             }
             Object value = data.get(column);
             String columnSql = addColumnSql(tableName, column, value);
-            if (ObjectUtil.isNotEmpty(columnSql)) {
-                alart.append(columnSql).append("\r\n");
+            if (StrUtil.isNotBlank(columnSql)) {
+                sqls.add(columnSql);
             }
         }
-        return alart.toString();
+        return sqls;
     }
 
     private static String addColumnSql(String tableName, String column, Object value) {
-        String temp = StrUtil.format("alter TABLE {} ADD COLUMN {} {}", tableName);
+        String temp = StrUtil.format("alter TABLE {} ADD COLUMN {} {};", tableName);
         if (value instanceof String) {
             return StrUtil.format(temp, column, "VARCHAR(100)");
         }
