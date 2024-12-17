@@ -27,11 +27,9 @@ public class TdSqlDialect  extends AnsiSqlDialect {
         } catch (SQLException e) {
             String sql = insert.build();
             // 逐个替换占位符
-            for (Object param : insert.getParamValues()) {
-                //替换第一个占位符，防止替换多次导致索引错乱
-                sql = StrUtil.replace(sql, "?", "{}");
-                sql = StrUtil.format(sql, param);
-            }
+            //替换第一个占位符，防止替换多次导致索引错乱
+            sql = StrUtil.replace(sql, "?", "{}");
+            sql = StrUtil.format(sql, insert.getParamValueArray());
             log.error("TDSQL方言插入数据异常:{}", sql, e);
             throw e;
         }
