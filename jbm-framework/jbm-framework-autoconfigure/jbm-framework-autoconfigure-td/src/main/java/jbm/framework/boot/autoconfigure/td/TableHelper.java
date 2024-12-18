@@ -5,13 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Db;
 import cn.hutool.db.Entity;
-import cn.hutool.db.StatementUtil;
-import cn.hutool.db.dialect.Dialect;
-import cn.hutool.db.dialect.impl.H2Dialect;
-import cn.hutool.db.dialect.impl.MysqlDialect;
-import cn.hutool.db.dialect.impl.Sqlite3Dialect;
 import cn.hutool.db.handler.BeanListHandler;
-import cn.hutool.db.sql.SqlBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
@@ -31,7 +25,7 @@ public class TableHelper {
 
     public static List<TableColumn> getTableColumns(DataSource dataSource, String tableName) throws SQLException {
         String sql = StrUtil.format("DESCRIBE {}", tableName);
-        return Db.use(dataSource).query(sql, new BeanListHandler<>(TableColumn.class));
+        return useTDengine(dataSource).query(sql, new BeanListHandler<>(TableColumn.class));
     }
 
     public static TableCache getTableCache(DataSource dataSource, String tableName, boolean reflush) throws SQLException {
@@ -86,7 +80,7 @@ public class TableHelper {
         try {
 //            for (Entity entity : entities) {
 //                SqlBuilder insert = SqlBuilder.create().insert(entity);
-//                Db.use(dataSource).execute(insert.build(), insert.getParamValueArray());
+//                useTDengine(dataSource).execute(insert.build(), insert.getParamValueArray());
 //            }
             Db.use(dataSource, tdSqlDialect).insert(entities);
         } catch (SQLException e) {
@@ -104,6 +98,11 @@ public class TableHelper {
         return filedColumns.stream().map(data::get).collect(Collectors.toList());
     }
 
+    private static Db useTDengine(DataSource dataSource) {
+        return Db.use(dataSource, tdSqlDialect);
+    }
+
+
     public static TableCache createSubTableIfNotExists(DataSource dataSource, String tableName, String stableName, Map<String, Object> data) throws SQLException {
         TableCache tableCache = null;
         if (TABLE_CACHE.containsKey(tableName)) {
@@ -113,7 +112,7 @@ public class TableHelper {
             return addTableColumn(dataSource, tableCache, data);
         }
         final String checkTableSql = "SHOW TABLES LIKE \"?\"";
-        Db.use(dataSource).queryString(checkTableSql, tableName);
+        useTDengine(dataSource).queryString(checkTableSql, tableName);
         return createSubTable(dataSource, tableName, stableName, data);
     }
 
@@ -128,7 +127,7 @@ public class TableHelper {
         );
         List<Object> values = new ArrayList<>(buildTagValues(stableCache.getTagColumns(), data));
         try {
-            Db.use(dataSource).execute(createTableSql, values.toArray());
+            useTDengine(dataSource).execute(createTableSql, values.toArray());
         } catch (Exception e) {
             log.error("createSubTable error sql:{}", createTableSql, e);
         }
@@ -140,7 +139,7 @@ public class TableHelper {
         List<String> alterTable = addTableColumnSql(tableCache.getTableName(), newColumn, data);
         if (CollUtil.isNotEmpty(alterTable)) {
             try {
-                Db.use(dataSource).executeBatch(alterTable);
+                useTDengine(dataSource).executeBatch(alterTable);
             } catch (SQLException e) {
                 log.error("addTableColumn error sql:{}", alterTable, e);
                 throw e;

@@ -4,10 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.RandomUtil;
 import jbm.framework.boot.autoconfigure.td.StableExecutor;
+import jbm.framework.boot.autoconfigure.td.TdTemplate;
+import jbm.framework.boot.autoconfigure.td.configuration.TDProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -16,16 +19,22 @@ import java.util.Map;
 
 public class TdTest {
 
-    private DataSource dataSource;
+    private TdTemplate tdTemplate;
 
     @BeforeEach
-    public void before() throws SQLException {
-        dataSource = TDengineConnection.getConnection();
+    public void before() throws Exception {
+
+        TDProperties tdProperties = new TDProperties();
+        tdProperties.setUrl("jdbc:TAOS-RS://10.100.10.62:6041/iot");
+        tdProperties.setUsername("root");
+        tdProperties.setPassword("taosdata");
+        tdTemplate = new TdTemplate(tdProperties);
+        tdTemplate.afterPropertiesSet();
     }
 
     @Test
     public void test() {
-        try (Connection conn = TDengineConnection.getConnection().getConnection()) {
+        try (Connection conn = tdTemplate.getDataSource().getConnection()) {
             String insertSQL = "insert into d1001 using devices tags ('测试','1','1') (ts, status)  values ( \"2018-10-03 14:38:05\", 1)";
             try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
                 pstmt.execute(insertSQL);
@@ -38,7 +47,7 @@ public class TdTest {
 
     @Test
     public void testInsert() throws SQLException {
-        StableExecutor executor = new StableExecutor(dataSource, "devices");
+        StableExecutor executor = tdTemplate.getSTableExecutor("devices");
         Map<String, Object> map = MapUtil.newHashMap();
         map.put("device_id", "1");
         map.put("device_type", "type1");
@@ -51,7 +60,7 @@ public class TdTest {
     @Test
     public void testInsertBatch() throws SQLException {
 
-        StableExecutor executor = new StableExecutor(dataSource, "devices");
+        StableExecutor executor = tdTemplate.getSTableExecutor("devices");
 
         List<Map<String, Object>> list = CollUtil.newArrayList();
 
@@ -85,7 +94,7 @@ public class TdTest {
 //        voltage_b, current_a, ib_harmonic_distortion_rate, voltage_c, ic_harmonic_distortion_rate,
 //        current_b, ub_harmonic_distortion_rate, current_c, current_unbalance, cumulative_energy,
 //        ia_harmonic_distortion_rate, ct, ua_harmonic_distortion_rate, power_no, power, ts)
-        StableExecutor executor = new StableExecutor(dataSource, "devices");
+        StableExecutor executor = tdTemplate.getSTableExecutor("devices");
 
         Map<String, Object> map = MapUtil.newHashMap();
         map.put("device_id", "2");
@@ -95,7 +104,7 @@ public class TdTest {
         map.put("voltage_unbalance", RandomUtil.randomDouble(1, 10));
         map.put("uc_harmonic_distortion_rate", RandomUtil.randomDouble(1, 10));
         map.put("power_factor", RandomUtil.randomDouble(1, 10));
-        map.put("power_a", RandomUtil.randomDouble(1, 10));
+        map.put("power_a", RandomUtil.randomBigDecimal(BigDecimal.valueOf(1), BigDecimal.valueOf(10)));
         map.put("power_b", RandomUtil.randomDouble(1, 10));
         map.put("power_c", RandomUtil.randomDouble(1, 10));
         map.put("voltage_a", RandomUtil.randomDouble(1, 10));

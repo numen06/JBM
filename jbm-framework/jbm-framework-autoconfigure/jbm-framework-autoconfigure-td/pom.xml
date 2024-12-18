@@ -18,6 +18,10 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-util</artifactId>
         </dependency>
