@@ -9,7 +9,21 @@ import com.jbm.framework.masterdata.service.IMultiPlatformService;
 import com.jbm.framework.masterdata.usage.entity.*;
 import lombok.SneakyThrows;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class GenerateServiceCode extends BaseGenerateCodeImpl {
+
+
+    @Override
+    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws URISyntaxException {
+        if (generateSource.getDaoModule() != null) {
+            return Paths.get(url.toURI()).getParent().getParent().getParent().resolve(generateSource.getServiceModule());
+        }
+        return Paths.get(url.toURI()).getParent().getParent();
+    }
 
     @SneakyThrows
     public String getSuperClass(GenerateSource generateSource) {

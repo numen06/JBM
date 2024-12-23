@@ -46,6 +46,16 @@ public class GenerateSource {
     private String targetPackage;
 
     /**
+     * 模块名
+     */
+    private String serviceModule;
+
+    /**
+     * dao模块名
+     */
+    private String daoModule;
+
+    /**
      * 具体包的位置
      */
     private String codePackage;

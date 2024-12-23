@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,6 +53,9 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         return file;
     }
 
+    public Path getModuleRootPath(URL url,GenerateSource generateSource) throws URISyntaxException {
+        return Paths.get(url.toURI()).getParent().getParent();
+    }
 
     @SneakyThrows
     @Override
@@ -61,7 +65,7 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         String codeInPackge = StrUtil.replace(StrUtil.toUnderlineCase(this.getCodeType().name()), "_", "/");
         String codePackage = StrUtil.replace(StrUtil.concat(true, temp, "/", codeInPackge), "/", ".");
         generateSource.getData().put("codePackage", codePackage);
-        Path wp = Paths.get(url.toURI()).getParent().getParent().resolve("src").resolve("main").resolve("java").resolve(temp).resolve(codeInPackge);
+        Path wp = getModuleRootPath(url, generateSource).resolve("src").resolve("main").resolve("java").resolve(temp).resolve(codeInPackge);
         PathUtil.mkdir(wp);
         return wp;
     }

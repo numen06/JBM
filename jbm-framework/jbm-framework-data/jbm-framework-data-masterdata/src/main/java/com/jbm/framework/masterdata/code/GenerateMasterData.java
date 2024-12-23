@@ -2,7 +2,7 @@ package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.Template;
 import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
@@ -16,10 +16,10 @@ import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.util.template.simple.SimpleTemplateEngine;
 import io.swagger.annotations.ApiModel;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.nio.file.FileSystemNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,14 +32,20 @@ import java.util.function.Consumer;
  * @date:2019/4/18
  */
 @Slf4j
+@Data
 public class GenerateMasterData {
 
 //    private GroupTemplate groupTemplate;
 
-
     private TemplateEngine templateEngine;
 
-    private List<IGenerateCode> generateCodeList = new ArrayList<>();
+    private String targetPackage;
+
+    private String serviceModule;
+
+    private String daoModule;
+
+    private final List<IGenerateCode> generateCodeList = new ArrayList<>();
 
     private final static String MASTERDATA_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
 
@@ -67,33 +73,10 @@ public class GenerateMasterData {
         }
     }
 
-    public static void scanGnerate(String entityPackage, String targetPackage) {
-        GenerateMasterData generateMasterData = new GenerateMasterData();
-        try {
-            Set<Class<?>> entitys = ClassUtil.scanPackage(entityPackage);
-            List<GenerateSource> generateSourceList = generateMasterData.filter(entitys, targetPackage);
-            generateSourceList.forEach(generateSource -> {
-                try {
-                    generateMasterData.generate(generateSource);
-                } catch (FileSystemNotFoundException e) {
-                    //没找到文件就说明没有在开发环境
-                    return;
-                } catch (Exception e) {
-                    log.error("生成代码错误Class:{}", generateSource.getEntityClass(), e);
-                }
-            });
-        } catch (Exception e) {
-            log.error("生成代码错误", e);
-        }
-        // TODO: 2022/7/29
-//        throw new RuntimeException("测试结束");
-    }
+    private final Map<Class, List<Class>> businessGroups = Maps.newConcurrentMap();
 
-    private Map<Class, List<Class>> businessGroups = Maps.newConcurrentMap();
-
-    public List<GenerateSource> filter(Set<Class<?>> entitys, String targetPackage) throws Exception {
+    public List<GenerateSource> filter(Set<Class<?>> entitys) throws Exception {
         List<GenerateSource> generateSourceList = new ArrayList<>();
-
         entitys.forEach(new Consumer<Class<?>>() {
             @Override
             public void accept(Class<?> entity) {
@@ -105,6 +88,8 @@ public class GenerateMasterData {
                         businessGroups.put(generateSource.getBussinessGroup().businessClass(), Lists.newArrayList(entity));
                     }
                 }
+                generateSource.setServiceModule(StrUtil.trimToNull(serviceModule));
+                generateSource.setDaoModule(StrUtil.trimToNull(daoModule));
                 generateSourceList.add(generateSource);
             }
         });

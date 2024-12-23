@@ -1,7 +1,7 @@
 package com.jbm.framework.masterdata.code.annotation;
 
 import cn.hutool.core.util.StrUtil;
-import com.jbm.framework.masterdata.code.GenerateMasterData;
+import com.jbm.framework.masterdata.code.GenerateHelper;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -47,12 +47,12 @@ public class AutoScanCodePackages {
         }
     }
 
-    public static void gnerate(BeanDefinitionRegistry registry, String targetPackage,
+    public static void gnerate(BeanDefinitionRegistry registry, Map<String, Object> attributes,
                                Collection<String> packageNames) {
         Assert.notNull(registry, "Registry must not be null");
         Assert.notNull(packageNames, "PackageNames must not be null");
         for (String pk : packageNames) {
-            GenerateMasterData.scanGnerate(pk, targetPackage);
+            GenerateHelper.scanGnerate(pk, attributes);
         }
     }
 
@@ -67,22 +67,19 @@ public class AutoScanCodePackages {
         return StringUtils.toStringArray(merged);
     }
 
-    public List<String> getPackageNames() {
-        return this.packageNames;
-    }
-
     static class CodeRegistrar implements ImportBeanDefinitionRegistrar {
 
         @Override
         public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-            gnerate(registry, getPackagesToGeneate(metadata), getPackagesToScan(metadata));
+            Map<String, Object> attributes = metadata.getAnnotationAttributes(EnableCodeAutoGeneate.class.getName());
+            gnerate(registry, attributes, getPackagesToScan(metadata));
         }
 
-        private String getPackagesToGeneate(AnnotationMetadata metadata) {
-            AnnotationAttributes attributes = AnnotationAttributes.fromMap(
-                    metadata.getAnnotationAttributes(EnableCodeAutoGeneate.class.getName()));
-            return attributes.getString("targetPackage");
-        }
+//        private String getPackagesToGeneate(AnnotationMetadata metadata) {
+//            AnnotationAttributes attributes = AnnotationAttributes.fromMap(
+//                    metadata.getAnnotationAttributes(EnableCodeAutoGeneate.class.getName()));
+//            return attributes.getString("targetPackage");
+//        }
 
         private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
             AnnotationAttributes attributes = AnnotationAttributes.fromMap(
