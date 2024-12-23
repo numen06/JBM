@@ -8,6 +8,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
+
 /**
  * @author wesley
  */
@@ -22,5 +25,10 @@ public class TDConfiguration {
     public TdTemplate tdTemplate() {
         return new TdTemplate(tdProperties);
     }
+
+//    @Bean("tdDataSource")
+//    public DataSource getDataSource(TdTemplate tdTemplate) throws SQLException {
+//        return tdTemplate().getDataSource();
+//    }
 
 }

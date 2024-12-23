@@ -84,12 +84,12 @@ public class MybatisPlusConfig {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         try {
-            TenantLineHandler tenantLineHandler =  applicationContext.getBean(TenantLineHandler.class);
+            TenantLineHandler tenantLineHandler = applicationContext.getBean(TenantLineHandler.class);
             if (ObjectUtil.isNotNull(tenantLineHandler)) {
                 interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(tenantLineHandler));
                 log.info("租户拦截器注入成功:{}", tenantLineHandler.getClass());
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.warn("没有找到租户拦截器");
         }
         return interceptor;
