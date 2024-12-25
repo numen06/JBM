@@ -199,6 +199,10 @@ public class OpcUaTemplate {
 
     public String readItem(String deviceId, String pointName, long timeout) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        OpcPoint point = opcUaClientBean.findPoint(pointName);
+        if (ObjectUtil.isEmpty(point)) {
+            return null;
+        }
         return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName), timeout);
     }
 
@@ -208,6 +212,10 @@ public class OpcUaTemplate {
 
     public String readItem(String deviceId, String pointName) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
+        OpcPoint point = opcUaClientBean.findPoint(pointName);
+        if (ObjectUtil.isEmpty(point)) {
+            return null;
+        }
         return this.readItem(deviceId, opcUaClientBean.getNodeId(pointName), 3L);
     }
 
@@ -240,8 +248,10 @@ public class OpcUaTemplate {
     public void writeItem(String deviceId, String pointName, Object value) throws Exception {
         OpcUaClientBean opcUaClientBean = clientMap.get(deviceId);
         OpcPoint point = opcUaClientBean.findPoint(pointName);
-        point.setValue(value);
-        this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
+        if (ObjectUtil.isNotEmpty(point)) {
+            point.setValue(value);
+            this.writeItem(deviceId, opcUaClientBean.getNodeId(point.getAlias()), this.convertData(point));
+        }
     }
 
     public void writeItem(String deviceId, OpcPoint point) throws Exception {
