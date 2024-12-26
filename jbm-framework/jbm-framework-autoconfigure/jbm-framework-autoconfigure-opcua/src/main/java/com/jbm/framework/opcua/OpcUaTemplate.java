@@ -362,8 +362,10 @@ public class OpcUaTemplate {
                         try {
                             log.debug("OPC数据变化回调:subscription value received: item={}, value={}", item.getReadValueId().getNodeId(), value.getValue());
                             ValueChanageEvent valueChanageEvent = opcUaClientBean.getSubscriptionPoints().get(opcPoint.getAlias());
-                            valueChanageEvent.putData(item, value);
-                            applicationContext.publishEvent(valueChanageEvent);
+                            // 判断数据是否发生变化后再执行回调事件
+                            if (valueChanageEvent.putData(item, value)) {
+                                applicationContext.publishEvent(valueChanageEvent);
+                            }
                         } catch (Exception e) {
 
                         }
