@@ -1,6 +1,7 @@
 package com.jbm.framework.dao.mybatis.sqlInjector;
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.dao.mybatis.RawMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
 import org.apache.ibatis.plugin.*;
@@ -8,6 +9,9 @@ import org.apache.ibatis.plugin.*;
 import java.sql.Statement;
 import java.util.*;
 
+/**
+ * @author wesley
+ */
 @Intercepts(
         @Signature(
                 type = ResultSetHandler.class,
@@ -23,6 +27,9 @@ public class CameHumpInterceptor implements Interceptor {
 //        log.info("驼峰转换器进行拦截");
         List<Object> list = (List<Object>) invocation.proceed();
         for (Object object : list) {
+            if (object instanceof RawMap) {
+                break;
+            }
             //如果结果是Map类型，就对Map的key进行转换
             if (object instanceof Map) {
                 processMap((Map) object);
