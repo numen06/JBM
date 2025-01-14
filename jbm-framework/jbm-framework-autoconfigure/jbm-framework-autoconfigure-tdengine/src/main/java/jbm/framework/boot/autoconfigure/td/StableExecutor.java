@@ -53,10 +53,14 @@ public class StableExecutor extends AbstractTableExecutor {
 
     public void insertSubTableBatch(Function<Map<String, Object>, String> function, List<Map<String, Object>> data) throws SQLException {
         Map<String, List<Map<String, Object>>> map = data.stream().map(MapUtil::removeNullValue).collect(Collectors.groupingBy(function));
-        for (Map.Entry<String, List<Map<String, Object>>> entry : map.entrySet()) {
-            TableCache tableCache = TableHelper.createSubTableIfNotExists(dataSource, entry.getKey(), this.getTableName(), CollUtil.getFirst(entry.getValue()));
-            TableHelper.insertBatch(dataSource, tableCache.getTableName(), entry.getValue());
-        }
+        map.entrySet().parallelStream().forEach(entry -> {
+            try {
+                TableCache tableCache = TableHelper.createSubTableIfNotExists(dataSource, entry.getKey(), this.getTableName(), CollUtil.getFirst(entry.getValue()));
+                TableHelper.insertBatch(dataSource, tableCache.getTableName(), entry.getValue());
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 }
