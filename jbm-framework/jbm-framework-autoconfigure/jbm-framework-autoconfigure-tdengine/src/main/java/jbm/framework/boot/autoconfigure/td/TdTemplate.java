@@ -29,8 +29,14 @@ public class TdTemplate implements InitializingBean {
 
     private DSFactory dsFactory;
 
+    private DataSource dataSource;
+
     public TdTemplate(TDProperties tdProperties) {
         this.tdProperties = tdProperties;
+    }
+
+    public TdTemplate(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public StableExecutor getSTableExecutor(String stableName) throws SQLException {
@@ -38,6 +44,9 @@ public class TdTemplate implements InitializingBean {
     }
 
     public DataSource getDataSource() throws SQLException {
+        if (dataSource != null) {
+            return dataSource;
+        }
         return dsFactory.getDataSource();
 //        return new SimpleDataSource(properties.getUrl(), properties.getUsername(), properties.getPassword(), RestfulDriver.class.getName());
     }
@@ -47,6 +56,9 @@ public class TdTemplate implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() throws Exception {
+        if (tdProperties == null) {
+            return;
+        }
         Setting setting = new Setting();
         setting.put("url", tdProperties.getUrl());
         setting.put("driver", RestfulDriver.class.getName());

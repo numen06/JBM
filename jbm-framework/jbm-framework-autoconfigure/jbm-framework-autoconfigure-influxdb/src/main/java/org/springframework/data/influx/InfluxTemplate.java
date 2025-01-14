@@ -1,6 +1,12 @@
 package org.springframework.data.influx;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.PageResult;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -68,23 +74,10 @@ public class InfluxTemplate {
     }
 
     public List<Map<String, Object>> selectListByDB(String database, String mapper, Object params) {
-        MapperConfigBean mapperConfigBean = null;
-        InfluxDataDeserializer influxDataDeserializer = null;
-        if (params instanceof InfluxQueryParam) {
-            InfluxQueryParam param = (InfluxQueryParam) params;
-            mapperConfigBean = getMapperBean(mapper, param.getParams());
-            if (param.getDatabase() != null) {
-                database = param.getDatabase();
-            }
-            influxDataDeserializer = new InfluxDataDeserializer(mapperConfigBean.getClass(), param.getSupplementColumns());
-        } else {
-            mapperConfigBean = getMapperBean(mapper, params);
-            influxDataDeserializer = new InfluxDataDeserializer(mapperConfigBean.getClass());
-        }
-        String sql = mapperConfigBean.getSql();
-        log.info("influx sql:{}", sql);
-        QueryResult queryResult = influxDB.query(new Query(sql, database));
-        return influxDataDeserializer.deserializer(queryResult);
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        log.info("influx sql:{}", influxQueryBean.getMapperConfigBean().getSql());
+        QueryResult queryResult = influxDB.query(new Query(influxQueryBean.getMapperConfigBean().getSql(), database));
+        return influxQueryBean.getInfluxDataDeserializer().deserializer(queryResult);
     }
 
     public Map<String, Object> selectOneByDB(String database, String mapper, Object params) {
@@ -93,6 +86,100 @@ public class InfluxTemplate {
             return null;
         }
         return list.get(0);
+    }
+
+    public Long selectCount(String mapper, Object params) {
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        return influxQueryBean.queryCount();
+    }
+
+    public PageResult<Map<String, Object>> selectPage(String mapper, Object params) {
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        String countSql = StrUtil.replace(influxQueryBean.getSql(), "select .*", "SELECT COUNT(*)");
+        log.info("influx count sql:{}", countSql);
+        Long total = influxQueryBean.queryCount(countSql);
+        log.info("influx sql:{}", influxQueryBean.getSql());
+        List<Map<String, Object>> list = influxQueryBean.selectList();
+        PageResult<Map<String, Object>> pageResult = new PageResult<>(1, 20, total.intValue());
+        pageResult.addAll(list);
+        return pageResult;
+    }
+
+    InfluxQueryBean getInfluxQueryBean(String mapper, Object params) {
+        InfluxQueryBean influxQueryBean = new InfluxQueryBean(influxDB, database);
+        if (params instanceof InfluxQueryParam) {
+            InfluxQueryParam param = (InfluxQueryParam) params;
+            influxQueryBean.setMapperConfigBean(getMapperBean(mapper, param.getParams()));
+            if (param.getDatabase() != null) {
+                influxQueryBean.setDatabase(param.getDatabase());
+            }
+            influxQueryBean.setInfluxDataDeserializer(new InfluxDataDeserializer(influxQueryBean.getMapperConfigBean().getClass(), param.getSupplementColumns()));
+        } else {
+            influxQueryBean.setMapperConfigBean(getMapperBean(mapper, params));
+            influxQueryBean.setInfluxDataDeserializer(new InfluxDataDeserializer(influxQueryBean.getMapperConfigBean().getClass()));
+        }
+        return influxQueryBean;
+    }
+
+
+    @Data
+    @AllArgsConstructor
+    static class InfluxQueryBean {
+        private org.springframework.data.influx.MapperConfigBean mapperConfigBean = null;
+        private InfluxDataDeserializer influxDataDeserializer = null;
+        private String database;
+        private final InfluxDB influxDB;
+
+        InfluxQueryBean(InfluxDB influxDB, String database) {
+            this.influxDB = influxDB;
+            this.database = database;
+        }
+
+        public String getSql() {
+            return mapperConfigBean.getSql();
+        }
+
+        public List<Map<String, Object>> selectList() {
+            return selectList(this.getSql());
+        }
+
+        public List<Map<String, Object>> selectList(String sql) {
+            QueryResult queryResult = influxDB.query(new Query(sql, database));
+            return influxDataDeserializer.deserializer(queryResult);
+        }
+
+
+        public Map<String, Object> selectOne() {
+            List<Map<String, Object>> list = selectList();
+            return CollUtil.getFirst(list);
+        }
+
+        public Map<String, Object> selectOne(String sql) {
+            List<Map<String, Object>> list = selectList();
+            return CollUtil.getFirst(list);
+        }
+
+        public QueryResult query() {
+            return this.query(this.getSql());
+        }
+
+        public QueryResult query(String sql) {
+            return influxDB.query(new Query(sql, database));
+        }
+
+        public Long queryCount() {
+            return this.queryCount(this.getSql());
+        }
+
+        public Long queryCount(String sql) {
+            long total = 0L;
+            Map<String, Object> map = this.selectOne(sql);
+            for (Object v : map.values()) {
+                total = NumberUtil.parseLong(StrUtil.toString(v), 0L);
+                break;
+            }
+            return total;
+        }
     }
 
     public MapperConfigBean getMapperBean(String namespace) {

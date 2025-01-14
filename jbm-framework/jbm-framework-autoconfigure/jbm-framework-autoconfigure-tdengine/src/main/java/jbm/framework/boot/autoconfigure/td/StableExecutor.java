@@ -2,11 +2,11 @@ package jbm.framework.boot.autoconfigure.td;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,7 @@ public class StableExecutor extends AbstractTableExecutor {
     }
 
     public void insertSubTableBatch(Function<Map<String, Object>, String> function, List<Map<String, Object>> data) throws SQLException {
-        Map<String, List<Map<String, Object>>> map = data.stream().collect(Collectors.groupingBy(function));
+        Map<String, List<Map<String, Object>>> map = data.stream().map(MapUtil::removeNullValue).collect(Collectors.groupingBy(function));
         for (Map.Entry<String, List<Map<String, Object>>> entry : map.entrySet()) {
             TableCache tableCache = TableHelper.createSubTableIfNotExists(dataSource, entry.getKey(), this.getTableName(), CollUtil.getFirst(entry.getValue()));
             TableHelper.insertBatch(dataSource, tableCache.getTableName(), entry.getValue());

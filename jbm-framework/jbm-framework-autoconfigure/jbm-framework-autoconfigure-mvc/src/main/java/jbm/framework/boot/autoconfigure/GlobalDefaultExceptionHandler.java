@@ -51,7 +51,11 @@ public class GlobalDefaultExceptionHandler {
     public ResultBody returnResult(ResultBody resultBody, HttpServletResponse response) {
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         if (ObjectUtil.isNotEmpty(resultBody.getHttpStatus())) {
-            response.setStatus(resultBody.getHttpStatus());
+            if (resultBody.getSuccess() != null && !resultBody.getSuccess()) {
+                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            } else {
+                response.setStatus(resultBody.getHttpStatus());
+            }
         }
         if (StrUtil.isBlank(resultBody.getMessage())) {
             resultBody.setMessage(WebExceptionResolve.DEF_ERROR_MSG);
