@@ -1,9 +1,12 @@
 package org.springframework.data.influx;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
@@ -104,13 +107,16 @@ public class InfluxTemplate {
         if (params instanceof Map) {
             paramsMap = (Map<String, Object>) params;
         } else {
-            paramsMap = BeanUtil.beanToMap(params);
+             BeanUtil.beanToMap(params,paramsMap, CopyOptions.create().ignoreNullValue());
         }
         paramsMap.put("page", page);
-        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
-        String countSql = StrUtil.replace(influxQueryBean.getSql(), "select .*", "SELECT COUNT(*)");
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        String regex = "(?i)SELECT\\s+.*?\\s+FROM";
+        // 使用正则表达式替换
+        String countSql = ReUtil.replaceAll(influxQueryBean.getSql(), regex, "SELECT count(*) FROM");
         log.info("influx count sql:{}", countSql);
         Long total = influxQueryBean.queryCount(countSql);
+          influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
         log.info("influx sql:{}", influxQueryBean.getSql());
         List<Map<String, Object>> list = influxQueryBean.selectList();
         PageResult<Map<String, Object>> pageResult = new PageResult<>(page.getPageNumber(), page.getPageSize(), total.intValue());
