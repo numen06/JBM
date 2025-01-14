@@ -1,10 +1,14 @@
 package org.springframework.data.influx;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +24,9 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.influxdb.InfluxDB;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
+import org.springframework.cglib.beans.BeanMap;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,14 +99,21 @@ public class InfluxTemplate {
         return influxQueryBean.queryCount();
     }
 
-    public PageResult<Map<String, Object>> selectPage(String mapper, Object params) {
-        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+    public PageResult<Map<String, Object>> selectPage(String mapper, Object params, Page page) {
+        Map<String, Object> paramsMap = new HashMap<>();
+        if (params instanceof Map) {
+            paramsMap = (Map<String, Object>) params;
+        } else {
+            paramsMap = BeanUtil.beanToMap(params);
+        }
+        paramsMap.put("page", page);
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
         String countSql = StrUtil.replace(influxQueryBean.getSql(), "select .*", "SELECT COUNT(*)");
         log.info("influx count sql:{}", countSql);
         Long total = influxQueryBean.queryCount(countSql);
         log.info("influx sql:{}", influxQueryBean.getSql());
         List<Map<String, Object>> list = influxQueryBean.selectList();
-        PageResult<Map<String, Object>> pageResult = new PageResult<>(1, 20, total.intValue());
+        PageResult<Map<String, Object>> pageResult = new PageResult<>(page.getPageNumber(), page.getPageSize(), total.intValue());
         pageResult.addAll(list);
         return pageResult;
     }
