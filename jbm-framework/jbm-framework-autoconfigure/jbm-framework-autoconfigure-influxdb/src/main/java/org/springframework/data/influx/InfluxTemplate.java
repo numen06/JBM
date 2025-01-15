@@ -1,17 +1,14 @@
 package org.springframework.data.influx;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
+import com.jbm.util.MapUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +24,11 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.influxdb.InfluxDB;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
-import org.springframework.cglib.beans.BeanMap;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author wesley.zhang
@@ -102,21 +99,24 @@ public class InfluxTemplate {
         return influxQueryBean.queryCount();
     }
 
-    public PageResult<Map<String, Object>> selectPage(String mapper, Object params, Page page) {
+    public PageResult<Map<String, Object>> selectPage(String mapper, Object params, Page page, String tag) {
         Map<String, Object> paramsMap = new HashMap<>();
         if (params instanceof Map) {
             paramsMap = (Map<String, Object>) params;
         } else {
-             BeanUtil.beanToMap(params,paramsMap, CopyOptions.create().ignoreNullValue());
+            paramsMap = MapUtils.beanToMap(params);
         }
-        paramsMap.put("page", page);
-        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
         String regex = "(?i)SELECT\\s+.*?\\s+FROM";
         // 使用正则表达式替换
         String countSql = ReUtil.replaceAll(influxQueryBean.getSql(), regex, "SELECT count(*) FROM");
+        regex = "(?i)ORDER BY.*?$";
+        countSql = ReUtil.replaceAll(countSql, regex, "");
+        countSql = StrUtil.format("{} group by {}", countSql, tag);
         log.info("influx count sql:{}", countSql);
         Long total = influxQueryBean.queryCount(countSql);
-          influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
+        paramsMap.put("page", page);
+        influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
         log.info("influx sql:{}", influxQueryBean.getSql());
         List<Map<String, Object>> list = influxQueryBean.selectList();
         PageResult<Map<String, Object>> pageResult = new PageResult<>(page.getPageNumber(), page.getPageSize(), total.intValue());
@@ -191,13 +191,22 @@ public class InfluxTemplate {
         }
 
         public Long queryCount(String sql) {
-            long total = 0L;
-            Map<String, Object> map = this.selectOne(sql);
-            for (Object v : map.values()) {
-                total = NumberUtil.parseLong(StrUtil.toString(v), 0L);
-                break;
-            }
-            return total;
+            AtomicLong total = new AtomicLong(0L);
+            List<Map<String, Object>> list = this.selectList(sql);
+            //累加所有最大值
+            list.forEach(map -> {
+                //取出每个元素的最大值
+                Long maxValue = map.entrySet().stream().filter(entry -> StrUtil.startWith(entry.getKey(), "count"))
+                        .filter(entry -> ObjectUtil.isNotEmpty(entry.getValue()))
+                        .map(entry -> NumberUtil.parseLong(entry.getValue().toString(), 0L))
+                        .max(Long::compareTo).orElse(0L);
+                total.addAndGet(maxValue);
+            });
+//            for (Object v : map.values()) {
+//                total = NumberUtil.parseLong(StrUtil.toString(v), 0L);
+//                break;
+//            }
+            return total.get();
         }
     }
 

@@ -218,6 +218,16 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
         return BeanUtils.describe(object);
     }
 
+    public static Map<String, Object> beanToMap(Object object) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            map.putAll(BeanUtils.describe(object));
+        } catch (Exception ignored) {
+
+        }
+        return map;
+    }
+
     /**
      * 转换为Collection<Map<K, V>>
      *
