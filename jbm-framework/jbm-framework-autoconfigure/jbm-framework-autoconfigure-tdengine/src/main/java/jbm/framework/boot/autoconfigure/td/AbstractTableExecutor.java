@@ -37,7 +37,7 @@ public abstract class AbstractTableExecutor {
         this.tableColumns = TableHelper.getTableColumns(dataSource, this.tableName);
         this.tagColumns = TableHelper.getTagColumns(tableColumns);
         this.filedColumns = TableHelper.getFiledColumns(tableColumns);
-        log.info("loadColumns: {}", tagColumns);
+//        log.info("loadColumns: {}", tagColumns);
     }
 
 
