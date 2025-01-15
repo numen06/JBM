@@ -99,28 +99,17 @@ public class InfluxTemplate {
         return influxQueryBean.queryCount();
     }
 
-    public PageResult<Map<String, Object>> selectPage(String mapper, Object params, Page page, String tag) {
-        Map<String, Object> paramsMap = new HashMap<>();
-        if (params instanceof Map) {
-            paramsMap = (Map<String, Object>) params;
-        } else {
-            paramsMap = MapUtils.beanToMap(params);
+    public PageResult<Map<String, Object>> selectPage(String mapper, Object params, Page page) {
+        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, params);
+        String sql = StrUtil.format("{} limit {} offset {}", influxQueryBean.getSql(), page.getPageSize(), page.getStartIndex());
+        log.info("influx sql:{}", sql);
+        List<Map<String, Object>> list = influxQueryBean.selectList(sql);
+        int total = 0;
+        if (CollectionUtil.isNotEmpty(list)) {
+            total = list.size() < page.getPageSize() ? list.size() : page.getPageSize() * (page.getPageNumber() + 1);
         }
-        InfluxQueryBean influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
-        String regex = "(?i)SELECT\\s+.*?\\s+FROM";
-        // 使用正则表达式替换
-        String countSql = ReUtil.replaceAll(influxQueryBean.getSql(), regex, "SELECT count(*) FROM");
-        regex = "(?i)ORDER BY.*?$";
-        countSql = ReUtil.replaceAll(countSql, regex, "");
-        countSql = StrUtil.format("{} group by {}", countSql, tag);
-        log.info("influx count sql:{}", countSql);
-        Long total = influxQueryBean.queryCount(countSql);
-        paramsMap.put("page", page);
-        influxQueryBean = getInfluxQueryBean(mapper, paramsMap);
-        log.info("influx sql:{}", influxQueryBean.getSql());
-        List<Map<String, Object>> list = influxQueryBean.selectList();
-        PageResult<Map<String, Object>> pageResult = new PageResult<>(page.getPageNumber(), page.getPageSize(), total.intValue());
-        pageResult.addAll(list);
+        PageResult<Map<String, Object>> pageResult = new PageResult<>(page.getPageNumber(), page.getPageSize(), total);
+        CollUtil.addAll(pageResult, list);
         return pageResult;
     }
 
