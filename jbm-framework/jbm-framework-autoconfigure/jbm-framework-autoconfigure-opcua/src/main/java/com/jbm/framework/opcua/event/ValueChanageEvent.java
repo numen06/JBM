@@ -26,10 +26,11 @@ public class ValueChanageEvent extends ApplicationEvent {
         super(source);
     }
 
-    public void putData(UaMonitoredItem uaMonitoredItem, DataValue dataValue) {
+    public boolean putData(UaMonitoredItem uaMonitoredItem, DataValue dataValue) {
         this.uaMonitoredItem = uaMonitoredItem;
         this.dataValue = dataValue;
         sendTime = DateTime.now();
+        return true;
     }
 
 }

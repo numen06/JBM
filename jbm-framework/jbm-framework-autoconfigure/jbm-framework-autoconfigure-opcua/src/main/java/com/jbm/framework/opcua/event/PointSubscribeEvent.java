@@ -17,9 +17,10 @@ public class PointSubscribeEvent extends ValueChanageEvent {
         this.opcPoint = point;
     }
 
-    public void putData(UaMonitoredItem uaMonitoredItem, DataValue dataValue) {
+    public boolean putData(UaMonitoredItem uaMonitoredItem, DataValue dataValue) {
         super.putData(uaMonitoredItem, dataValue);
         this.opcPoint.setValue(dataValue.getValue().getValue());
+        return true;
     }
 
 }

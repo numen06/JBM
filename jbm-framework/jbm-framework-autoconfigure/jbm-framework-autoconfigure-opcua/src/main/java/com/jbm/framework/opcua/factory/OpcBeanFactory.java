@@ -57,8 +57,11 @@ public class OpcBeanFactory {
         for (Field field : ReflectUtil.getFields(clazz)) {
             // 优先获取OPC UA的读取点位
             String alias = StrUtil.isBlank(ReflectUtils.getReadAlias(field)) ? ReflectUtils.getWriteAlias(field) : ReflectUtils.getReadAlias(field);
+            Object obj = opcUaTemplate.readItem(device, alias);
+            if (ObjectUtil.isNotEmpty(obj)) {
+                ReflectUtils.setFieldValue(opcUaTemplate.getOpcBean(device), field, obj);
+            }
             if (StrUtil.isNotBlank(alias)) {
-                ReflectUtils.setFieldValue(opcUaTemplate.getOpcBean(device), field, opcUaTemplate.readItem(device, alias));
                 if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
                     opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcUaTemplate.getOpcBean(device), device, alias));
                 }
