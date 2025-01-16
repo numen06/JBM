@@ -103,21 +103,35 @@ public class OpcUaTemplate {
 
 
     public void loadClients(Map<String, OpcUaSource> opcUaSourceMap) {
-        try {
-            for (String deviceId : opcUaSourceMap.keySet()) {
+        // 避免某个客户端连接不上时，所有客户端都不初始化问题
+        for (String deviceId : opcUaSourceMap.keySet()) {
+            try {
                 OpcUaSource source = opcUaSourceMap.get(deviceId);
-                OpcUaClient opcUaClient = this.getOpcUaClient(deviceId, source);
                 OpcUaClientBean opcUaClientBean = new OpcUaClientBean();
                 opcUaClientBean.setOpcUaSource(source);
                 opcUaClientBean.setPoints(this.loadPoints(source));
                 opcUaClientBean.setDeviceId(deviceId);
-                opcUaClientBean.setOpcUaClient(opcUaClient);
                 this.addClient(opcUaClientBean);
-            }
-        } catch (Exception e) {
-            log.error("读取OPCUA设备失败", e);
+            } catch (Exception e) {
+                log.error("读取OPC UA设备失败", e);
 //            throw e;
+            }
         }
+//        try {
+//            for (String deviceId : opcUaSourceMap.keySet()) {
+//                OpcUaSource source = opcUaSourceMap.get(deviceId);
+//                OpcUaClient opcUaClient = this.getOpcUaClient(deviceId, source);
+//                OpcUaClientBean opcUaClientBean = new OpcUaClientBean();
+//                opcUaClientBean.setOpcUaSource(source);
+//                opcUaClientBean.setPoints(this.loadPoints(source));
+//                opcUaClientBean.setDeviceId(deviceId);
+//                opcUaClientBean.setOpcUaClient(opcUaClient);
+//                this.addClient(opcUaClientBean);
+//            }
+//        } catch (Exception e) {
+//            log.error("读取OPCUA设备失败", e);
+////            throw e;
+//        }
     }
 
     public Map<String, OpcPoint> loadPoints(OpcUaSource opcUaSource) {
