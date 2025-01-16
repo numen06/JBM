@@ -34,7 +34,9 @@ public class PointChangeEvent<T extends OpcBean> extends PointSubscribeEvent {
         super.putData(uaMonitoredItem, dataValue);
         final Field field = ReflectUtils.getReadField(this.getTarget(), super.getOpcPoint().getAlias());
         Object oldValue = ReflectUtils.getFieldValue(this.getTarget(), field), newValue = super.getOpcPoint().getValue();
-        if (!field.isAnnotationPresent(OpcUaHeartBeat.class) && !ObjectUtil.equals(oldValue, newValue)) {
+        if (field.isAnnotationPresent(OpcUaHeartBeat.class)) {
+            ReflectUtils.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
+        } else if (!ObjectUtil.equals(oldValue, newValue)) {
             // 心跳点位读写频率太高，输出日志时排除心跳
             log.info("设备[{}]点位[{}]数据发生变化[{}]==>[{}]", getDevice(), getSource(), ReflectUtils.getFieldValue(this.getTarget(), field), super.getOpcPoint().getValue());
             ReflectUtils.setFieldValue(this.getTarget(), field, super.getOpcPoint().getValue());
