@@ -14,11 +14,15 @@ public class Callback {
     }
 
     public static <T> T call(Supplier<Object> supplier, T defaultValue) {
+        return call(supplier, () -> defaultValue);
+    }
+
+    public static <T> T call(Supplier<Object> supplier, Supplier<T> defaultSupplier) {
         try {
             Object obj = supplier.get();
-            return Objects.isNull(obj) ? defaultValue : (T) obj;
+            return Objects.isNull(obj) ? defaultSupplier.get() : (T) obj;
         } catch (Exception e) {
-            return defaultValue;
+            return defaultSupplier.get();
         }
     }
 }

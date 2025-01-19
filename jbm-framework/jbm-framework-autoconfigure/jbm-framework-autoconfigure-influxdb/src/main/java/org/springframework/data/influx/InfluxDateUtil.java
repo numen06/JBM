@@ -32,7 +32,7 @@ public class InfluxDateUtil {
                 timeStr = StrUtil.sub(utcString, 0, dotIndex + 3) + "Z";
             }
         }
-        return DateUtil.parseUTC(timeStr).setTimeZone(TimeZone.getDefault());
+        return DateUtil.parseUTC(timeStr).setTimeZone(TimeZone.getDefault()).toJdkDate();
     }
 
 
