@@ -25,6 +25,7 @@ import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
+import org.springframework.beans.factory.InitializingBean;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -39,7 +40,7 @@ import java.util.function.Consumer;
  * 简单的InfluxDB模板类
  */
 @Slf4j
-public class SimpleInfluxTemplate {
+public class SimpleInfluxTemplate implements InitializingBean {
 
     private InfluxDB influxDB;
     @Getter
@@ -68,8 +69,8 @@ public class SimpleInfluxTemplate {
      */
     public SimpleInfluxTemplate(InfluxProperties influxProperties, String path) {
         this.influxProperties = influxProperties;
-        this.influxDbBuild(influxProperties);
         this.database = StrUtil.isEmpty(influxProperties.getDatabase()) ? "data" : influxProperties.getDatabase();
+        this.influxDbBuild(influxProperties);
         TemplateConfig templateConfig = new TemplateConfig(path, TemplateConfig.ResourceMode.CLASSPATH);
         templateConfig.setCustomEngine(SimpleTemplateEngine.class);
         templateEngine = TemplateUtil.createEngine(templateConfig);
@@ -77,15 +78,15 @@ public class SimpleInfluxTemplate {
 
     /**
      * 连接时序数据库 ，若不存在则创建
-     *
-     * @return
      */
-    public InfluxDB influxDbBuild(InfluxProperties influxProperties) {
+    public void influxDbBuild(InfluxProperties influxProperties) {
         try {
             if (influxDB == null) {
                 influxDB = InfluxDBFactory.connect(influxProperties.getUrl(), influxProperties.getUsername(), influxProperties.getPassword());
             }
-            this.createDB(database);
+            if (!influxDB.databaseExists(this.database)) {
+               this.createDB(this.database);
+            }
         } catch (Exception e) {
             // 该数据库可能设置动态代理，不支持创建数据库
             // e.printStackTrace();
@@ -93,7 +94,6 @@ public class SimpleInfluxTemplate {
             influxDB.setRetentionPolicy(retentionPolicy);
         }
         influxDB.setLogLevel(InfluxDB.LogLevel.NONE);
-        return influxDB;
     }
 
 
@@ -552,4 +552,14 @@ public class SimpleInfluxTemplate {
     }
 
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+            QueryResult queryResult = this.query("SHOW DATABASES");
+            if (StrUtil.isNotEmpty(queryResult.getError())) {
+                throw new RuntimeException(queryResult.getError());
+            }
+            if (CollUtil.size(queryResult.getResults()) <= 0) {
+                throw new RuntimeException("数据库不存在");
+            }
+    }
 }
