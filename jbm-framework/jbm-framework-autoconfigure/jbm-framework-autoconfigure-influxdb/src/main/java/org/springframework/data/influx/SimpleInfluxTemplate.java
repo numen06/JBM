@@ -554,12 +554,12 @@ public class SimpleInfluxTemplate implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-            QueryResult queryResult = this.query("SHOW DATABASES");
-            if (StrUtil.isNotEmpty(queryResult.getError())) {
-                throw new RuntimeException(queryResult.getError());
-            }
-            if (CollUtil.size(queryResult.getResults()) <= 0) {
-                throw new RuntimeException("数据库不存在");
-            }
+        QueryResult queryResult = this.query("SHOW DATABASES");
+        if (StrUtil.isNotEmpty(queryResult.getError())) {
+            throw new RuntimeException(queryResult.getError());
+        }
+        if (CollUtil.size(queryResult.getResults()) <= 0) {
+            throw new RuntimeException("数据库不存在");
+        }
     }
 }
