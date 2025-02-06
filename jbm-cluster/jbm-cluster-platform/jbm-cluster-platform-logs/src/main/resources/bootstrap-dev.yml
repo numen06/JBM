@@ -4,9 +4,7 @@ spring:
       config:
         namespace: ${config.namespace}
         #        group: ${config.group}
-        refreshable-dataids: common.properties
         server-addr: ${config.server-addr}
-        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties
       discovery:
         namespace: ${config.namespace}
         #        group: ${config.group}
