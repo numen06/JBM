@@ -51,6 +51,10 @@ public class ServiceException extends RuntimeException {
 //        return new ServiceException(code, null);
 //    }
 
+    public static ServiceException of(Exception e, String msg, Object... args) {
+        return new ServiceException(StrUtil.format(msg, args), e);
+    }
+
     public static ServiceException of(String msg, Object... args) {
         return new ServiceException(StrUtil.format(msg, args));
     }
