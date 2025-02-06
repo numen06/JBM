@@ -4,9 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * @Created wesley.zhang
- * @Date 2022/5/11 19:53
- * @Description TODO
+ * @author wesley
  */
 @ConfigurationProperties(
         prefix = "spring.datasource"

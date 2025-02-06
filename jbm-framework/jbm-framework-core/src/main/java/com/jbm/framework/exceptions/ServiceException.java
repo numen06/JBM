@@ -1,5 +1,6 @@
 package com.jbm.framework.exceptions;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
 
 /**
@@ -44,6 +45,18 @@ public class ServiceException extends RuntimeException {
 
     public void setCode(int code) {
         this.code = code;
+    }
+
+//    public static ServiceException of(int code) {
+//        return new ServiceException(code, null);
+//    }
+
+    public static ServiceException of(String msg, Object... args) {
+        return new ServiceException(StrUtil.format(msg, args));
+    }
+
+    public static ServiceException of(Exception e) {
+        return new ServiceException(e);
     }
 
 }
