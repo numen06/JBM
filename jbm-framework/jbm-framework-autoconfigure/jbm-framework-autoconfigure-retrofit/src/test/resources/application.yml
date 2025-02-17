@@ -1,0 +1,15 @@
+retrofit:
+  global-log:
+    enable: true
+  interceptors:
+    - beanName: signatureInterceptor
+      pathPatterns:
+        - "/**"
+
+platforms:
+  platformA:
+    base-url: http://127.0.0.1:8089
+    signature-strategy: HMAC_SHA256
+  platformB:
+    base-url: http://127.0.0.1:8089
+    signature-strategy: RSA

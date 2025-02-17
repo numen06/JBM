@@ -50,6 +50,7 @@
         <module>jbm-framework-autoconfigure-nacos</module>
         <module>jbm-framework-autoconfigure-eventbus</module>
         <module>jbm-framework-autoconfigure-rules</module>
+        <module>jbm-framework-autoconfigure-retrofit</module>
     </modules>
     <dependencies>
         <dependency>
