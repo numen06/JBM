@@ -84,10 +84,10 @@ public class FluxHttpResponseDecorator extends ServerHttpResponseDecorator {
                         }
                         return jsonObject.toJSONString();
                     } else {
-                        return StrUtil.str(content, Charsets.UTF_8);
+                        return responseBody;
                     }
                 }else{
-                    return StrUtil.str(content, Charsets.UTF_8);
+                    return responseBody;
                 }
             }
         }
