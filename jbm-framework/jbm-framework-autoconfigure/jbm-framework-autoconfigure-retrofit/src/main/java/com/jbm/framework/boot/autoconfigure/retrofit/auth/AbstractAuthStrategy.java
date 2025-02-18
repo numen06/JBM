@@ -8,10 +8,6 @@ import okhttp3.Request;
  */
 public abstract class AbstractAuthStrategy extends AbstractStrategy implements AuthStrategy {
 
-
-    public <T> T getService(final Class<T> service) {
-        return retrofit.create(service);
-    }
     /**
      * @param originalRequest
      * @param authRequestBuilder

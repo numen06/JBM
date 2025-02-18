@@ -6,8 +6,10 @@ import com.jbm.framework.boot.autoconfigure.retrofit.StrategyFactory;
 import com.jbm.framework.boot.autoconfigure.retrofit.auth.AuthStrategy;
 import okhttp3.Request;
 import okhttp3.Response;
+import retrofit2.Invocation;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author wesley
@@ -26,8 +28,8 @@ public class AuthInterceptor extends AbstractInterceptor {
     @Override
     protected Response doIntercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
-
-        PlatformsProperties.Platform platform = getPlatform(originalRequest);
+        Invocation invocation = Objects.requireNonNull(originalRequest.tag(Invocation.class));
+        PlatformsProperties.Platform platform = getPlatform(invocation,originalRequest);
         // 获取平台信息
         if (platform == null) {
             return chain.proceed(originalRequest);

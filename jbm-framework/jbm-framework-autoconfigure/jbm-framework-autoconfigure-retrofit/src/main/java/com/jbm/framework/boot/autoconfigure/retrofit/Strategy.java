@@ -10,7 +10,4 @@ public interface Strategy {
 
     void setPlatform(PlatformsProperties.Platform platform);
 
-    void setClient(OkHttpClient client);
-
-    void setRetrofit(Retrofit retrofit);
 }

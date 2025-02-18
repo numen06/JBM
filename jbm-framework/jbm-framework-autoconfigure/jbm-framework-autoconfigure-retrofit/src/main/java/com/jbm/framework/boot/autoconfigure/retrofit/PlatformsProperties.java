@@ -31,6 +31,8 @@ public class PlatformsProperties implements InitializingBean {
     public static class Platform {
         private String name;
         private String baseUrl;
+        private String clientId;
+        private String clientSecret;
         private Set<String> strategys = new LinkedHashSet<>();
         //        private String signatureStrategy;
 //        private String authStrategy;
