@@ -59,7 +59,7 @@ public class FluxHttpResponseDecorator extends ServerHttpResponseDecorator {
         return super.writeWith(body);
     }
 
-    private final static boolean enableII18n = false;
+    private final static boolean ENABLE_I18N = false;
 
     private final static String MESSAGE_KEY = "message";
 
@@ -71,7 +71,7 @@ public class FluxHttpResponseDecorator extends ServerHttpResponseDecorator {
                     return null;
                 }
                 //国际化处理
-                if(enableII18n) {
+                if(ENABLE_I18N) {
                     JSONObject jsonObject = JSONObject.parseObject(responseBody);
                     String message = jsonObject.getString(MESSAGE_KEY);
                     if (StrUtil.isNotBlank(message)) {
