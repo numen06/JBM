@@ -66,6 +66,7 @@ public class PlatformApiTest {
         stubFor(post(urlEqualTo("/create"))
                 .withHeader("Authorization", equalTo("Bearer " + token))
                 .willReturn(aResponse()
+                        .withBody("wo shi body")
                         .withStatus(200)
                         .withBody("{\"platform\":\"B\", \"message\":\"Hello from Platform B\"}")));
 

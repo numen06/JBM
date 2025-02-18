@@ -3,14 +3,15 @@ package com.jbm.test.retrofit;
 
 import com.github.lianjiatech.retrofit.spring.boot.core.RetrofitClient;
 import com.github.lianjiatech.retrofit.spring.boot.interceptor.Intercept;
-import com.jbm.util.proxy.annotation.RequestHeader;
+import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.AuthInterceptor;
+import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.SignatureInterceptor;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.POST;
 
-@RetrofitClient(baseUrl = "${platforms.platformB.base-url}")
-@Intercept(handler = SignatureInterceptor.class, include = {"/**"}, exclude = "/token")
+@RetrofitClient(baseUrl = "${retrofit.platforms.platformB.base-url}")
+@Intercept(handler = SignatureInterceptor.class, exclude = "/token")
+@Intercept(handler = AuthInterceptor.class, exclude = "/token")
 public interface PlatformBApi {
 
     @GET("/token")

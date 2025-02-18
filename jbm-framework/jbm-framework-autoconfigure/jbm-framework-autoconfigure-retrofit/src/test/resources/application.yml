@@ -1,15 +1,20 @@
 retrofit:
   global-log:
     enable: true
-  interceptors:
-    - beanName: signatureInterceptor
-      pathPatterns:
-        - "/**"
-
-platforms:
-  platformA:
-    base-url: http://127.0.0.1:8089
-    signature-strategy: HMAC_SHA256
-  platformB:
-    base-url: http://127.0.0.1:8089
-    signature-strategy: RSA
+  platforms:
+    platformA:
+      base-url: http://127.0.0.1:8082
+#      signature-strategy: HMAC_SHA256
+#      auth-strategy: oauth2
+      extend:
+        client-id: client_id
+        client-secret: client_secret
+        token-url: http://127.0.0.1:8089/oauth/token
+    platformB:
+      base-url: http://127.0.0.1:8089
+#      signature-strategy: RSA
+      strategys: com.jbm.test.retrofit.TestAuthStrategy
+      extend:
+        client-id: client_id
+        client-secret: client_secret
+        token-url: http://127.0.0.1:8089/oauth/token

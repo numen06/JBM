@@ -5,7 +5,7 @@ import com.github.lianjiatech.retrofit.spring.boot.core.RetrofitClient;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 
-@RetrofitClient(baseUrl = "${platforms.platformA.base-url}")
+@RetrofitClient(baseUrl = "${retrofit.platforms.platformA.base-url}")
 public interface PlatformAApi {
 
     @GET("/data")
