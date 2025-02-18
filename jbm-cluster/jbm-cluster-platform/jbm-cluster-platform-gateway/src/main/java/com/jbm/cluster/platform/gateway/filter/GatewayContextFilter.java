@@ -204,9 +204,10 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                             .doOnNext(objectValue -> {
                                 gatewayContext.setRequestBody(objectValue);
                                 try {
-                                    gatewayContext.getAllRequestData().setAll(JSONObject.parseObject(objectValue, Map.class));
+                                    Map<String, String> jsonObject = JSONObject.parseObject(objectValue,Map.class);
+                                    gatewayContext.getAllRequestData().setAll(jsonObject);
                                 } catch (Exception e) {
-                                    log.error("[GatewayContext]Read JsonBody error:{}", e);
+                                    log.error("[GatewayContext]Read JsonBody error", e);
                                 }
                                 log.debug("[GatewayContext]Read JsonBody Success");
                             }).then(chain.filter(mutatedExchange));

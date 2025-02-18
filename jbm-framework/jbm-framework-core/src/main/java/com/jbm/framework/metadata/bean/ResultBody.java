@@ -7,6 +7,7 @@ import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.http.HttpStatus;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
+import com.jbm.util.throwing.ThrowingCallback;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * @author wesley
@@ -81,16 +81,21 @@ public class ResultBody<T> implements Serializable {
     @ApiModelProperty(value = "错误信息")
     private String exception;
 
-    public static ResultBody ok() {
-        return new ResultBody().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
+    public static <D> ResultBody<D> ok() {
+        return new ResultBody<D>().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage());
     }
 
-    public static ResultBody ok(Object data) {
-        return new ResultBody().code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage()).data(data);
+    public static <D> ResultBody<D> ok(D data) {
+        ResultBody<D> resultBody = new ResultBody<>();
+        return resultBody.code(ErrorCode.OK.getCode()).msg(ErrorCode.OK.getMessage()).data(data);
     }
 
-    public static ResultBody failed() {
-        return new ResultBody().code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
+    public static <D> ResultBody<D> failed() {
+        return new ResultBody<D>().code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
+    }
+
+    public static <D> ResultBody<D> failed(D data) {
+        return new ResultBody<D>().data(data).code(ErrorCode.FAIL.getCode()).msg(ErrorCode.FAIL.getMessage());
     }
 
     public static <T> ResultBody<T> success() {
@@ -102,19 +107,19 @@ public class ResultBody<T> implements Serializable {
     }
 
     public static <T> ResultBody<T> success(T data, String msg) {
-        return ResultBody.ok().data(data).msg(msg);
+        return ResultBody.ok(data).msg(msg);
     }
 
     public static <T> ResultBody<T> success(String msg) {
-        return ResultBody.ok().data(null).msg(msg);
+        return new ResultBody<T>().code(ErrorCode.OK.getCode()).msg(msg).data(null);
     }
 
     public static <T> ResultBody<T> error(T data, String msg) {
-        return ResultBody.failed().data(data).msg(msg);
+        return new ResultBody<T>().code(ErrorCode.ERROR.getCode()).msg(msg).data(data);
     }
 
     public static <T> ResultBody<T> error(String e) {
-        return ResultBody.failed().msg(e);
+        return new ResultBody<T>().code(ErrorCode.FAIL.getCode()).msg(e);
     }
 
 //    /**
@@ -135,34 +140,34 @@ public class ResultBody<T> implements Serializable {
 
     public static <T> ResultBody<T> error(Exception e) {
         if (e instanceof ServiceException) {
-            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
+            return ResultBody.error(e.getMessage());
         }
         if (e instanceof ValidateException) {
-            return ResultBody.failed().data(null).msg(e.getMessage()).exception(e);
+            return ResultBody.error(e.getMessage());
         }
-        return ResultBody.failed().exception(e);
+        return ResultBody.failed();
     }
 
     public static <T> ResultBody<T> error(T data, String msg, Exception e) {
         if (e instanceof ServiceException) {
-            return ResultBody.failed().data(data).msg(e.getMessage()).exception(e);
+            return ResultBody.failed(data).msg(e.getMessage());
         }
-        return ResultBody.failed().data(data).msg(msg).exception(e);
+        return ResultBody.failed(data).msg(msg).exception(e);
     }
 
-    public static <T> ResultBody<T> callback(Supplier<T> supplier) {
+    public static <T> ResultBody<T> callback(ThrowingCallback<T> supplier) {
         try {
             T res = supplier.get();
-            return ResultBody.ok().data(res);
+            return ResultBody.ok(res);
         } catch (Exception e) {
             return ResultBody.error(e);
         }
     }
 
-    public static <T> ResultBody<T> callback(String msg, Supplier<T> supplier) {
+    public static <T> ResultBody<T> callback(String msg, ThrowingCallback<T> supplier) {
         try {
             T res = supplier.get();
-            return ResultBody.ok().data(res).msg(msg);
+            return ResultBody.ok(res).msg(msg);
         } catch (Exception e) {
             return ResultBody.error(e);
         }
@@ -171,7 +176,7 @@ public class ResultBody<T> implements Serializable {
     public static <T> ResultBody<T> call(Runnable runnable) {
         try {
             runnable.run();
-            return ResultBody.ok().data(null);
+            return ResultBody.ok(null);
         } catch (Exception e) {
             return ResultBody.error(e);
         }
@@ -180,40 +185,40 @@ public class ResultBody<T> implements Serializable {
     public static <T> ResultBody<T> call(String msg, Runnable runnable) {
         try {
             runnable.run();
-            return ResultBody.ok().data(null).msg(msg);
+            return ResultBody.success(msg);
         } catch (Exception e) {
             return ResultBody.error(e);
         }
     }
 
 
-    public ResultBody code(int code) {
+    public ResultBody<T> code(int code) {
         this.code = code;
         this.success = this.code == ErrorCode.OK.getCode();
         return this;
     }
 
-    public ResultBody msg(String message) {
+    public ResultBody<T> msg(String message) {
         this.message = message;
         return this;
     }
 
-    public ResultBody data(T data) {
+    public ResultBody<T> data(T data) {
         this.result = data;
         return this;
     }
 
-    public ResultBody path(String path) {
+    public ResultBody<T> path(String path) {
         this.path = path;
         return this;
     }
 
-    public ResultBody httpStatus(Integer httpStatus) {
+    public ResultBody<T> httpStatus(Integer httpStatus) {
         this.httpStatus = httpStatus;
         return this;
     }
 
-    public ResultBody put(String key, Object value) {
+    public ResultBody<T> put(String key, Object value) {
         if (this.extra == null) {
             this.extra = new HashMap<>();
         }
@@ -234,7 +239,7 @@ public class ResultBody<T> implements Serializable {
                 '}';
     }
 
-    public ResultBody exception(Throwable e) {
+    public ResultBody<T> exception(Throwable e) {
         if (e == null) {
             exception = null;
         } else {
@@ -244,8 +249,7 @@ public class ResultBody<T> implements Serializable {
     }
 
     public Map<String, Object> toMap() {
-        Map<String, Object> result = BeanUtil.beanToMap(this, false, true);
-        return result;
+        return BeanUtil.beanToMap(this, false, true);
     }
 
     public <R> R action(Function<? super T, ? super R> function) {

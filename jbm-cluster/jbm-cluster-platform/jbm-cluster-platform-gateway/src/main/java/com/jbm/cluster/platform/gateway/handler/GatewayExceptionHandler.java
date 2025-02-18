@@ -62,7 +62,9 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
         //保存错误日志
         accessLogService.sendLog(exchange, ex);
-        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        if (resultBody.getHttpStatus() == null || resultBody.getHttpStatus() == 200) {
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         DataBuffer dataBuffer = response.bufferFactory().wrap(JSON.toJSONBytes(resultBody));
         return response.writeWith(Mono.just(dataBuffer));

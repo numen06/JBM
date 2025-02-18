@@ -7,6 +7,7 @@ import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
 import com.jbm.cluster.platform.gateway.handler.WebExceptionResolve;
 import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
 import com.jbm.cluster.platform.gateway.locator.DynamicRouteDefinitionLocator;
+import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.service.RouteDataSource;
 import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class GatewayConfig {
         // 设置限制 100MB
         serverDefaultCodecs.maxInMemorySize(100 * 1024 * 1024);
     }
+
     /**
      * Sentinel负载均衡器
      *
@@ -126,6 +128,10 @@ public class GatewayConfig {
         return new I18nConfig();
     }
 
+    @Bean(name = "databaseMessageSource")
+    public DatabaseMessageSource databaseMessageSource(JdbcDataSourceProperties jdbcDataSourceProperties) {
+        return new DatabaseMessageSource(jdbcDataSourceProperties);
+    }
 
     /**
      * 该访问配置跨域访问执行
