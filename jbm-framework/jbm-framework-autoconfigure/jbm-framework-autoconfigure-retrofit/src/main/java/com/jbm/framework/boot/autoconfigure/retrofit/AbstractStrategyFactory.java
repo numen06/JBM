@@ -1,6 +1,9 @@
 package com.jbm.framework.boot.autoconfigure.retrofit;
 
 import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.util.ReflectUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import retrofit2.Invocation;
@@ -13,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author wesley
  */
+@Slf4j
 public class AbstractStrategyFactory implements InitializingBean {
 
     protected final Map<String, List<BaseStrategy>> strategies = new ConcurrentHashMap<>();
@@ -52,11 +56,8 @@ public class AbstractStrategyFactory implements InitializingBean {
 
 
     public List<BaseStrategy> getStrategys(String platformName) {
-        List<BaseStrategy> st = strategies.get(platformName);
-        if (st == null) {
-            return new ArrayList<>();
-        }
-        return st;
+        strategies.computeIfAbsent(platformName, k -> new ArrayList<>());
+        return strategies.get(platformName);
     }
 
     public <T extends BaseStrategy> T getStrategy(Invocation invocation, Class<T> strategyClass) {
@@ -82,14 +83,19 @@ public class AbstractStrategyFactory implements InitializingBean {
 //        strategy.setClient(okHttpClient);
 //        strategy.setRetrofit(retrofit);
         List<BaseStrategy> baseStrategyList = this.getStrategys(platform.getName());
-        if (baseStrategyList == null) {
-            baseStrategyList = new ArrayList<>();
-        }
-        strategies.putIfAbsent(platform.getName(), baseStrategyList);
         for (Class<? extends BaseStrategy> baseStrategyClass : baseStrategyClassArray) {
-            BaseStrategy baseStrategy = applicationContext.getAutowireCapableBeanFactory().createBean(baseStrategyClass);
-            baseStrategy.setPlatform(platform);
-            baseStrategyList.add(baseStrategy);
+            try {
+                if (applicationContext.containsBean(baseStrategyClass.getSimpleName())) {
+                    continue;
+                }
+                BaseStrategy baseStrategy = ReflectUtil.newInstance(baseStrategyClass);
+                baseStrategy.setPlatform(platform);
+                applicationContext.getAutowireCapableBeanFactory().initializeBean(baseStrategy, baseStrategyClass.getSimpleName());
+                applicationContext.getAutowireCapableBeanFactory().autowireBean(baseStrategy);
+                baseStrategyList.add(baseStrategy);
+            }  catch (Exception e) {
+                log.error("registerStrategy error", e);
+            }
         }
 
     }

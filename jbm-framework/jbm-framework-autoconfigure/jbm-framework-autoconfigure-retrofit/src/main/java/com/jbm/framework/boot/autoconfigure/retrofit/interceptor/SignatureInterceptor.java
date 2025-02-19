@@ -7,8 +7,10 @@ import com.jbm.framework.boot.autoconfigure.retrofit.StrategyFactory;
 import com.jbm.framework.boot.autoconfigure.retrofit.signature.SignatureStrategy;
 import okhttp3.Request;
 import okhttp3.Response;
+import retrofit2.Invocation;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author wesley
@@ -27,12 +29,8 @@ public class SignatureInterceptor extends AbstractInterceptor {
         if (MapUtil.isEmpty(platformsProperties.getPlatforms())) {
             return chain.proceed(originalRequest);
         }
-        String url = originalRequest.url().toString();
-        String method = originalRequest.method();
-        String body = originalRequest.body() != null ? originalRequest.body().toString() : "";
-        PlatformsProperties.Platform platform = getPlatform(originalRequest);
-        // 生成签名
-        SignatureStrategy strategy = strategyFactory.getStrategy(platform, SignatureStrategy.class);
+        Invocation invocation = Objects.requireNonNull(originalRequest.tag(Invocation.class));
+        SignatureStrategy strategy = strategyFactory.getStrategy(invocation, SignatureStrategy.class);
         if (strategy == null) {
             return chain.proceed(originalRequest);
         }

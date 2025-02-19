@@ -1,5 +1,6 @@
 package com.jbm.framework.boot.autoconfigure.retrofit;
 
+import com.alibaba.fastjson.support.retrofit.Retrofit2ConverterFactory;
 import com.github.lianjiatech.retrofit.spring.boot.config.RetrofitProperties;
 import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.AuthInterceptor;
 import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.SignatureInterceptor;
@@ -31,6 +32,10 @@ public class RetrofitAutoConfiguration {
     @Resource
     private PlatformsProperties platformsProperties;
 
+    @Bean
+    public Retrofit2ConverterFactory retrofit2ConverterFactory() {
+        return com.alibaba.fastjson.support.retrofit.Retrofit2ConverterFactory.create();
+    }
 
 
     @Bean
