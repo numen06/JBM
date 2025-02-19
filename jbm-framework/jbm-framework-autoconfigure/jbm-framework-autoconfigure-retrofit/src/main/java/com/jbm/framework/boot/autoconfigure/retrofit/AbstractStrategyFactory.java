@@ -1,10 +1,9 @@
 package com.jbm.framework.boot.autoconfigure.retrofit;
 
-import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.annotation.AnnotationUtil;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
-import retrofit2.Retrofit;
+import retrofit2.Invocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AbstractStrategyFactory implements InitializingBean {
 
-    protected final Map<String, List<Strategy>> strategies = new ConcurrentHashMap<>();
+    protected final Map<String, List<BaseStrategy>> strategies = new ConcurrentHashMap<>();
 
     protected final ApplicationContext applicationContext;
 
@@ -32,46 +31,67 @@ public class AbstractStrategyFactory implements InitializingBean {
         this.platformsProperties = platformsProperties;
     }
 
-    public List<Strategy> getStrategys(String platformName) {
-        List<Strategy> st = strategies.get(platformName);
+
+    private final Map<Class<?>, PlatformsProperties.Platform> CLASS_PLATFORM_CACHE = new ConcurrentHashMap<>();
+
+    public PlatformsProperties.Platform getPlatform(Invocation invocation) {
+        Class<?> declaringClass = invocation.method().getDeclaringClass();
+        if (CLASS_PLATFORM_CACHE.containsKey(declaringClass)) {
+            return CLASS_PLATFORM_CACHE.get(declaringClass);
+        }
+        ApiPlatform apiPlatform = AnnotationUtil.getAnnotation(declaringClass, ApiPlatform.class);
+        if (apiPlatform == null) {
+            return null;
+        }
+        String platformName = apiPlatform.name();
+        PlatformsProperties.Platform platform = platformsProperties.getPlatforms().get(platformName);
+        this.registerStrategy(platform, apiPlatform.strategys());
+        CLASS_PLATFORM_CACHE.put(declaringClass, platform);
+        return platform;
+    }
+
+
+    public List<BaseStrategy> getStrategys(String platformName) {
+        List<BaseStrategy> st = strategies.get(platformName);
         if (st == null) {
             return new ArrayList<>();
         }
         return st;
     }
 
-    public <T extends Strategy> T getStrategy(PlatformsProperties.Platform platform, Class<T> strategyClass) {
-        List<Strategy> strategyList = this.getStrategys(platform.getName());
-        for (Strategy strategy : strategyList)
-            if (strategyClass.isInstance(strategy)) {
-                T t =  (T) strategy;
-                applicationContext.getAutowireCapableBeanFactory().autowireBean(t);
-//                Retrofit retrofit=   applicationContext.getBean(Retrofit.class);
-//                t.setRetrofit(retrofit);
-                return t;
+    public <T extends BaseStrategy> T getStrategy(Invocation invocation, Class<T> strategyClass) {
+        PlatformsProperties.Platform platform = this.getPlatform(invocation);
+        if (platform == null) {
+            return null;
+        }
+        return this.getStrategy(platform, strategyClass);
+    }
+
+
+    public <T extends BaseStrategy> T getStrategy(PlatformsProperties.Platform platform, Class<T> strategyClass) {
+        List<BaseStrategy> baseStrategyList = this.getStrategys(platform.getName());
+        for (BaseStrategy baseStrategy : baseStrategyList) {
+            if (strategyClass.isInstance(baseStrategy)) {
+                return (T) baseStrategy;
             }
+        }
         return null;
     }
 
-
-    public void registerStrategy(PlatformsProperties.Platform platform) {
-        platform.getStrategys().forEach((strategyName) -> {
-            Class<Strategy> strategyClass = ClassUtil.loadClass(strategyName);
-            if (strategyClass == null) {
-                throw new IllegalArgumentException("策略类不存在");
-            }
-            Strategy strategy = ReflectUtil.newInstance(strategyClass);
-            this.registerStrategy(platform, strategy);
-        });
-    }
-
-    public void registerStrategy(PlatformsProperties.Platform platform, Strategy strategy) {
+    public void registerStrategy(PlatformsProperties.Platform platform, Class<? extends BaseStrategy>[] baseStrategyClassArray) {
 //        strategy.setClient(okHttpClient);
 //        strategy.setRetrofit(retrofit);
-        strategy.setPlatform(platform);
-        List<Strategy> strategyList = this.getStrategys(platform.getName());
-        strategyList.add(strategy);
-        strategies.putIfAbsent(platform.getName(), strategyList);
+        List<BaseStrategy> baseStrategyList = this.getStrategys(platform.getName());
+        if (baseStrategyList == null) {
+            baseStrategyList = new ArrayList<>();
+        }
+        strategies.putIfAbsent(platform.getName(), baseStrategyList);
+        for (Class<? extends BaseStrategy> baseStrategyClass : baseStrategyClassArray) {
+            BaseStrategy baseStrategy = applicationContext.getAutowireCapableBeanFactory().createBean(baseStrategyClass);
+            baseStrategy.setPlatform(platform);
+            baseStrategyList.add(baseStrategy);
+        }
+
     }
 
     /**
@@ -79,6 +99,7 @@ public class AbstractStrategyFactory implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        platformsProperties.getPlatforms().values().forEach(this::registerStrategy);
+//        platformsProperties.getPlatforms().values().forEach(this::registerStrategy);
     }
+
 }

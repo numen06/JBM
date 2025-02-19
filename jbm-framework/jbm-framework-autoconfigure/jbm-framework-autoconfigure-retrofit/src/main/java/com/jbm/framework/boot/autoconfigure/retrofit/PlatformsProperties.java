@@ -33,7 +33,6 @@ public class PlatformsProperties implements InitializingBean {
         private String baseUrl;
         private String clientId;
         private String clientSecret;
-        private Set<String> strategys = new LinkedHashSet<>();
         //        private String signatureStrategy;
 //        private String authStrategy;
         private Map<String, String> extend;

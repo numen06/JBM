@@ -1,11 +1,11 @@
 package com.jbm.test.retrofit;
 
-import com.jbm.framework.boot.autoconfigure.retrofit.signature.AbstractSinatureStrategy;
+import com.jbm.framework.boot.autoconfigure.retrofit.signature.AbstractSignatureStrategy;
 import okhttp3.Request;
 import org.springframework.stereotype.Component;
 
 @Component("HMAC_SHA256")
-public class HMACSignatureStrategy extends AbstractSinatureStrategy {
+public class HMACSignatureSignatureStrategy extends AbstractSignatureStrategy {
 
 
     @Override

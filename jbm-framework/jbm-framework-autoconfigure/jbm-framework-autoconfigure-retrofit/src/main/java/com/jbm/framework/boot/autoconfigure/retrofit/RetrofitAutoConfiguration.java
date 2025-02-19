@@ -34,7 +34,7 @@ public class RetrofitAutoConfiguration {
 
 
     @Bean
-    public StrategyFactory authStrategyFactory(@Autowired ApplicationContext applicationContext) {
+    public StrategyFactory strategyFactory(@Autowired ApplicationContext applicationContext) {
         return new StrategyFactory(applicationContext, platformsProperties);
     }
 

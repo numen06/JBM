@@ -1,12 +1,9 @@
 package com.jbm.framework.boot.autoconfigure.retrofit;
 
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-
 /**
  * @author wesley
  */
-public interface Strategy {
+public interface BaseStrategy {
 
     void setPlatform(PlatformsProperties.Platform platform);
 

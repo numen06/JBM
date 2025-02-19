@@ -15,7 +15,5 @@ retrofit:
       client-id: client_id
       client-secret: client_secret
 #      signature-strategy: RSA
-      strategys: com.jbm.test.retrofit.TestAuthStrategy
       extend:
-
         token-url: http://127.0.0.1:8089/oauth/token

@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author wesley
  */
-public abstract class AbstractStrategy implements Strategy {
+public abstract class AbstractStrategy implements BaseStrategy {
 
     protected PlatformsProperties.Platform platform;
 

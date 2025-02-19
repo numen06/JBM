@@ -1,6 +1,5 @@
 package com.jbm.framework.boot.autoconfigure.retrofit;
 
-import com.jbm.framework.boot.autoconfigure.retrofit.auth.AuthStrategy;
 import org.springframework.context.ApplicationContext;
 
 /**

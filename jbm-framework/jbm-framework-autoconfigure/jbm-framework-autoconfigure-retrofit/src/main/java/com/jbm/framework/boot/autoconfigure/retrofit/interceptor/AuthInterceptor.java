@@ -29,12 +29,7 @@ public class AuthInterceptor extends AbstractInterceptor {
     protected Response doIntercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
         Invocation invocation = Objects.requireNonNull(originalRequest.tag(Invocation.class));
-        PlatformsProperties.Platform platform = getPlatform(invocation,originalRequest);
-        // 获取平台信息
-        if (platform == null) {
-            return chain.proceed(originalRequest);
-        }
-        AuthStrategy authStrategy = strategyFactory.getStrategy(platform, AuthStrategy.class);
+        AuthStrategy authStrategy = strategyFactory.getStrategy(invocation, AuthStrategy.class);
         if (authStrategy == null) {
             return chain.proceed(originalRequest);
         }
