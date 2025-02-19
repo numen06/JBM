@@ -27,4 +27,36 @@ public class Caches {
     }
 
 
+    public static <K, T> void putExpiredValue(Cache<K, ExpiringValue<T>> cache, K key, T value, int expireTime) {
+        putExpiredValue(cache, key, new ExpiringValue<>(value, expireTime));
+    }
+
+    public static <K, T> void putExpiredValue(Cache<K, ExpiringValue<T>> cache, K key, ExpiringValue<T> expiringValue) {
+        cache.put(key, expiringValue);
+    }
+
+    /**
+     * 获取值并检查是否过期
+     *
+     * @param cache
+     * @param key
+     * @param <T>
+     * @return
+     */
+    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, String key) {
+        return getIfNotExpired(cache, key, null);
+    }
+
+    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, String key, T defaultValue) {
+        ExpiringValue<T> expiringValue = cache.getIfPresent(key);
+        if (expiringValue != null && !expiringValue.isExpired()) {
+            return expiringValue.get();
+        }
+        // 如果过期，删除缓存项
+        if (expiringValue != null && expiringValue.isExpired()) {
+            cache.invalidate(key);
+        }
+        return defaultValue;
+    }
+
 }
