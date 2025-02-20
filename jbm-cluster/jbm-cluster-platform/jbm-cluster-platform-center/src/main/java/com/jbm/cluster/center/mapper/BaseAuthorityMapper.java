@@ -27,7 +27,10 @@ public interface BaseAuthorityMapper extends SuperMapper<BaseAuthority> {
     List<AuthorityResource> selectAllAuthorityResource();
 
     @Delete("DELETE FROM base_account WHERE  user_id NOT IN (SELECT user_id FROM base_user)")
-    int clearAccount();
+    void clearAccount();
+
+    @Delete("DELETE FROM base_account_logs WHERE  user_id NOT IN (SELECT user_id FROM base_user)")
+    void clearAccountLogs();
 
 
     /**

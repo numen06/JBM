@@ -79,6 +79,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     @Scheduled(cron = "0 0 1 * * ?")
     public void clearAccount() {
         baseAuthorityMapper.clearAccount();
+        baseAuthorityMapper.clearAccountLogs();
     }
 
     /**
