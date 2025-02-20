@@ -66,6 +66,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
     @Autowired
     private BaseAccountService baseAccountService;
 
+
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
         BaseUser user = this.selectById(baseUser.getUserId());

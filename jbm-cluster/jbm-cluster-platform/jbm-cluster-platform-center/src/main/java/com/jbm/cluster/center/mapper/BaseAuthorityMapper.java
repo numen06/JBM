@@ -7,6 +7,7 @@ import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.BaseAuthority;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
+import org.apache.ibatis.annotations.Delete;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,6 +25,10 @@ public interface BaseAuthorityMapper extends SuperMapper<BaseAuthority> {
      * @return
      */
     List<AuthorityResource> selectAllAuthorityResource();
+
+    @Delete("DELETE FROM base_account WHERE  user_id NOT IN (SELECT user_id FROM base_user)")
+    int clearAccount();
+
 
     /**
      * 查询已授权权限列表

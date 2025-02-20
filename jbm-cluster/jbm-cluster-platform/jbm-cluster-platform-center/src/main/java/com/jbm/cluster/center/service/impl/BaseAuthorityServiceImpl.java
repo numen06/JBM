@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +71,15 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
 
     @Value("${spring.application.name}")
     private String DEFAULT_SERVICE_ID;
+
+
+    /**
+     * 每天凌晨清理没用的角色权限
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void clearAccount() {
+        baseAuthorityMapper.clearAccount();
+    }
 
     /**
      * 获取访问权限列表
