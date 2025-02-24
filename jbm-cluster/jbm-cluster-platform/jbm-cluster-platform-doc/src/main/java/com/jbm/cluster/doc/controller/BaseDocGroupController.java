@@ -1,6 +1,5 @@
 package com.jbm.cluster.doc.controller;
 
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
@@ -22,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * @Author: auto generate by jbm
@@ -105,22 +103,19 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/uploadByToken")
     public ResultBody<String> uploadByToken(@RequestHeader(DEF_TOKEN_KEY_HEAD) String tokenKey, @RequestParam(value = "file") MultipartFile file, HttpServletRequest request) {
-        return ResultBody.callback("上传组文档成功", new Supplier<String>() {
-            @Override
-            public String get() {
-                BaseDocToken baseDocToken2 = baseDocTokenService.checkToken(tokenKey);
-                if (ObjectUtil.isNull(baseDocToken2)) {
-                    throw new ServiceException("文档token失效或者无效");
-                }
-                BaseDocGroup group = baseDocGroupService.getById(baseDocToken2.getDocGroupId());
+        return ResultBody.callback("上传组文档成功", () -> {
+            BaseDocToken baseDocToken2 = baseDocTokenService.checkToken(tokenKey);
+            if (ObjectUtil.isNull(baseDocToken2)) {
+                throw new ServiceException("文档token失效或者无效");
+            }
+            BaseDocGroup group = baseDocGroupService.getById(baseDocToken2.getDocGroupId());
 //                if (BooleanUtil.isFalse(baseGroupService.checkToken(group))) {
 //                    throw new ServiceException("文档token失效或者无效");
 //                }
-                BaseDoc baseDoc = new BaseDoc();
-                baseDoc.setDocGroupId(group.getGroupId());
-                baseDoc.setDocGroup(group.getGroupPath());
-                return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
-            }
+            BaseDoc baseDoc = new BaseDoc();
+            baseDoc.setDocGroupId(group.getGroupId());
+            baseDoc.setDocGroup(group.getGroupPath());
+            return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
         });
     }
 

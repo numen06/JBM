@@ -21,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.function.Supplier;
 
 /**
  * @program: JBM7
@@ -50,11 +49,8 @@ public class DocumentController {
     @ApiOperation(value = "上传随机文档")
     @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
-        return ResultBody.callback("上传文档成功", new Supplier<String>() {
-            @Override
-            public String get() {
-                return baseDocService.uploadDoc(file, null, request).getDocPath();
-            }
+        return ResultBody.callback("上传文档成功", () -> {
+            return baseDocService.uploadDoc(file, null, request).getDocPath();
         });
     }
 
@@ -69,13 +65,10 @@ public class DocumentController {
     @ApiOperation(value = "上传特定文档")
     @PostMapping("/upload")
     public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, @RequestParam(value = "group", required = false) String group, HttpServletRequest request) {
-        return ResultBody.callback("上传文档成功", new Supplier<String>() {
-            @Override
-            public String get() {
-                BaseDoc baseDoc = new BaseDoc();
-                baseDoc.setDocGroup(group);
-                return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
-            }
+        return ResultBody.callback("上传文档成功", () -> {
+            BaseDoc baseDoc = new BaseDoc();
+            baseDoc.setDocGroup(group);
+            return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
         });
     }
 
@@ -90,12 +83,9 @@ public class DocumentController {
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/{filePath}")
     public ResultBody<Void> remove(@PathVariable("filePath") String filePath, HttpServletRequest request) {
-        return ResultBody.callback("删除文档成功", new Supplier<Void>() {
-            @Override
-            public Void get() {
-                baseDocService.removeDoc(filePath);
-                return null;
-            }
+        return ResultBody.callback("删除文档成功", () -> {
+            baseDocService.removeDoc(filePath);
+            return null;
         });
     }
 
@@ -103,12 +93,9 @@ public class DocumentController {
     @ApiOperation(value = "删除文档")
     @GetMapping("/remove/{group}/{filePath}")
     public ResultBody<Void> remove(@PathVariable("filePath") String filePath, @PathVariable("group") String group, HttpServletRequest request) {
-        return ResultBody.callback("删除文档成功", new Supplier<Void>() {
-            @Override
-            public Void get() {
-                baseDocService.removeDoc(filePath);
-                return null;
-            }
+        return ResultBody.callback("删除文档成功", () -> {
+            baseDocService.removeDoc(filePath);
+            return null;
         });
     }
 
@@ -168,7 +155,6 @@ public class DocumentController {
     }
 
 
-
     /**
      * 下载一个文档
      *
@@ -203,7 +189,7 @@ public class DocumentController {
     public ResultBody<Token> getViewUrlWebPath(String fileUrl) {
         log.info("getViewUrlWebPath：fileUrl={}", fileUrl);
         Token t = wpsFileService.getViewUrl(fileUrl, true);
-        return ResultBody.ok().data(t);
+        return ResultBody.callback(() -> t);
     }
 
 }

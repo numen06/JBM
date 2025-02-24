@@ -57,7 +57,7 @@ public class FileCallBackController {
     public ResultBody<Map<String, Object>> fileSave(@RequestBody MultipartFile file, String _w_userid) {
         log.info("上传文件新版本");
         Map<String, Object> map = wpsFileService.fileSave(file, _w_userid);
-        return ResultBody.ok().data(map);
+        return ResultBody.callback(() -> map);
     }
 
     /**
@@ -67,7 +67,7 @@ public class FileCallBackController {
     public ResultBody<Map<String, Object>> fileVersion(@PathVariable Integer version) {
         log.info("获取特定版本的文件信息version:{}", version);
         Map<String, Object> res = wpsFileService.fileVersion(version);
-        return ResultBody.ok().data(res);
+        return ResultBody.callback(() -> res);
     }
 
     /**
@@ -87,7 +87,7 @@ public class FileCallBackController {
     public ResultBody<Map<String, Object>> fileHistory(@RequestBody FileReqBody fileReqBody) {
         log.info("获取所有历史版本文件信息param:{}", JSON.toJSON(fileReqBody));
         Map<String, Object> result = wpsFileService.fileHistory(fileReqBody);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -97,7 +97,7 @@ public class FileCallBackController {
     public ResultBody<Map<String, Object>> fileNew(@RequestBody MultipartFile file, String _w_userid) {
         log.info("新建文件_w_userid:{}", _w_userid);
         Map<String, Object> res = wpsFileService.fileNew(file, _w_userid);
-        return ResultBody.ok().data(res);
+        return ResultBody.callback(() -> res);
     }
 
 //    /**
