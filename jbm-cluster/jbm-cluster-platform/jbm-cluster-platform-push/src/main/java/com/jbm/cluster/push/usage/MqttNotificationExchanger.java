@@ -14,9 +14,9 @@ import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.util.FastJsonUtils;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
+import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
