@@ -17,7 +17,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * @author wesley.zhang
@@ -39,7 +38,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
 //    @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
 //    @GetMapping(value = "/api")
 //    public ResultBody<IPage<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
-//        return ResultBody.ok().data(apiService.findListPage(PageRequestBody.from(map)));
+//        return ResultBody.callback(() -> apiService.findListPage(PageRequestBody.from(map)));
 //    }
 
 
@@ -52,18 +51,15 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
     @GetMapping("/all")
     @Override
     public ResultBody<List<BaseApi>> getApiAllList(String serviceId) {
-        return ResultBody.ok().data(apiService.findAllList(serviceId));
+        return ResultBody.callback(() -> apiService.findAllList(serviceId));
     }
 
     @ApiOperation(value = "根据路径查询API")
     @GetMapping("/findApiByPath")
     @Override
     public ResultBody<BaseApi> findApiByPath(String serviceId, String path) {
-        return ResultBody.callback(new Supplier<BaseApi>() {
-            @Override
-            public BaseApi get() {
-                return apiService.findApiByPath(serviceId, path);
-            }
+        return ResultBody.callback(() -> {
+            return apiService.findApiByPath(serviceId, path);
         });
     }
 
@@ -81,7 +77,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
     })
     @GetMapping("/{apiId}/info")
     public ResultBody<BaseApi> getApi(@PathVariable("apiId") Long apiId) {
-        return ResultBody.ok().data(apiService.getApi(apiId));
+        return ResultBody.callback(() -> apiService.getApi(apiId));
     }
 
     /**
@@ -95,7 +91,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
     public ResultBody<BaseApi> addApi(BaseApi baseApi) {
         apiService.addApi(baseApi);
         jbmClusterTemplate.refreshGateway();
-        return ResultBody.ok().data(baseApi);
+        return ResultBody.callback(() -> baseApi);
     }
 
     /**

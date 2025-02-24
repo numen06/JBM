@@ -88,7 +88,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @GetMapping("/getUserInfoById")
     @Override
     public ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.ok().data(this.service.selectById(userId));
+        return ResultBody.callback(() -> this.service.selectById(userId));
     }
 
     /**
@@ -105,7 +105,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Override
     public ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username) {
         UserAccount account = baseUserService.login(username);
-        return ResultBody.ok().data(account);
+        return ResultBody.callback(() -> account);
     }
 
     /**
@@ -124,7 +124,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
                                                    @RequestParam(value = "loginType") String loginType) {
         UserAccount account = baseUserService.login(username, loginType);
-        return ResultBody.ok().data(account);
+        return ResultBody.callback(() -> account);
     }
 
 
@@ -135,8 +135,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("")
-    public ResultBody<IPage<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseUserService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
+        return ResultBody.callback(() -> baseUserService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -146,8 +146,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
     @PostMapping("/all")
-    public ResultBody<List<BaseRole>> getUserAllList() {
-        return ResultBody.ok().data(baseUserService.findAllList());
+    public ResultBody<List<BaseUser>> getUserAllList() {
+        return ResultBody.callback(() -> baseUserService.findAllList());
     }
 
     /**
@@ -338,14 +338,14 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/roles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.ok().data(baseUserService.getUserRoles(userId));
+        return ResultBody.callback(() -> baseUserService.getUserRoles(userId));
     }
 
 
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/userRoles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestBody BaseUser baseUser) {
-        return ResultBody.ok().data(baseUserService.getUserRoles(baseUser.getUserId()));
+        return ResultBody.callback(() -> baseUserService.getUserRoles(baseUser.getUserId()));
     }
 
 
@@ -382,7 +382,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm) {
         try {
             UserAccount userAccount = baseUserService.loginAndRegisterMobileUser(thirdPartyUserForm);
-            return ResultBody.ok().data(userAccount);
+            return ResultBody.callback(() -> userAccount);
         } catch (Exception e) {
             return ResultBody.error(e);
         }

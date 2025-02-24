@@ -68,7 +68,7 @@ public class CurrentUserController {
     @GetMapping("/user/account")
     public ResultBody<UserAccount> userAccount() {
         UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
-        return ResultBody.ok().data(userAccount);
+        return ResultBody.callback(() -> userAccount);
     }
 
     /**
@@ -125,6 +125,6 @@ public class CurrentUserController {
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(), SecurityUtils.getLoginUser().getAppId(),
                 LoginHelper.isAdmin());
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 }

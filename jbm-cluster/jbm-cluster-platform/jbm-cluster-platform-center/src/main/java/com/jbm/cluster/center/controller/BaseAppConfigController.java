@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.function.Supplier;
-
 /**
  * @Author: wesley.zhang
  * @Create: 2022-06-27 12:55:11
@@ -27,15 +25,12 @@ public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig,
     @ApiOperation("获取应用配置")
     @GetMapping("/getAppConfigByKey")
     public ResultBody<String> getAppConfigByKey(@RequestParam(required = true) String appKey) {
-        return ResultBody.callback(new Supplier<String>() {
-            @Override
-            public String get() {
-                BaseAppConfig baseAppConfig = service.getAppConfigByKey(appKey);
-                if (ObjectUtil.isEmpty(baseAppConfig)) {
-                    return null;
-                }
-                return baseAppConfig.getConfigContent();
+        return ResultBody.callback(() -> {
+            BaseAppConfig baseAppConfig = service.getAppConfigByKey(appKey);
+            if (ObjectUtil.isEmpty(baseAppConfig)) {
+                return null;
             }
+            return baseAppConfig.getConfigContent();
         });
     }
 

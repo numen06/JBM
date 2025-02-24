@@ -46,7 +46,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
     @GetMapping("/")
     public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseResourceMenuService.findListPage(PageRequestBody.from(map)));
+        return ResultBody.callback(() -> baseResourceMenuService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -76,7 +76,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
         JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
         BaseMenu baseMenu = new BaseMenu();
         baseMenu.setAppId(jbmLoginUser.getAppId());
-        return ResultBody.ok().data(baseResourceMenuService.findAllList(baseMenu));
+        return ResultBody.callback(() -> baseResourceMenuService.findAllList(baseMenu));
     }
 
 
@@ -92,7 +92,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     })
     @GetMapping("/action")
     public ResultBody<List<BaseAction>> getMenuAction(Long menuId) {
-        return ResultBody.ok().data(baseResourceOperationService.findListByMenuId(menuId));
+        return ResultBody.callback(() -> baseResourceOperationService.findListByMenuId(menuId));
     }
 
     /**
@@ -107,7 +107,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     })
     @GetMapping("/{menuId}/info")
     public ResultBody<BaseMenu> getMenu(@PathVariable("menuId") Long menuId) {
-        return ResultBody.ok().data(baseResourceMenuService.getMenu(menuId));
+        return ResultBody.callback(() -> baseResourceMenuService.getMenu(menuId));
     }
 
     /**
@@ -151,23 +151,25 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc
     ) {
-        BaseMenu menu = new BaseMenu();
-        menu.setMenuCode(menuCode);
-        menu.setMenuName(menuName);
-        menu.setIcon(icon);
-        menu.setPath(path);
-        menu.setScheme(scheme);
-        menu.setTarget(target);
-        menu.setStatus(status);
-        menu.setParentId(parentId);
-        menu.setPriority(priority);
-        menu.setMenuDesc(menuDesc);
-        Long menuId = null;
-        BaseMenu result = baseResourceMenuService.addMenu(menu);
-        if (result != null) {
-            menuId = result.getMenuId();
-        }
-        return ResultBody.ok().data(menuId);
+        return ResultBody.callback(() -> {
+            BaseMenu menu = new BaseMenu();
+            menu.setMenuCode(menuCode);
+            menu.setMenuName(menuName);
+            menu.setIcon(icon);
+            menu.setPath(path);
+            menu.setScheme(scheme);
+            menu.setTarget(target);
+            menu.setStatus(status);
+            menu.setParentId(parentId);
+            menu.setPriority(priority);
+            menu.setMenuDesc(menuDesc);
+            Long menuId = null;
+            BaseMenu result = baseResourceMenuService.addMenu(menu);
+            if (result != null) {
+                menuId = result.getMenuId();
+            }
+            return menuId;
+        });
     }
 
 
@@ -238,7 +240,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
 //        BaseMenu
 //                result = baseResourceMenuService.saveEntity(menu);
 //        openRestTemplate.refreshGateway();
-//        return ResultBody.ok().data(result);
+//        return ResultBody.callback(() -> result);
 //    }
 //
 //    /**

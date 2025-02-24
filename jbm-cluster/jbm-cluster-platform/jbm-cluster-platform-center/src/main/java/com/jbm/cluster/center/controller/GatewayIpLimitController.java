@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
+import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.center.service.GatewayIpLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,7 +42,7 @@ public class GatewayIpLimitController {
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/ip")
     public ResultBody<DataPaging<GatewayIpLimit>> getIpLimitListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayIpLimitService.findListPage(PageRequestBody.from(map)));
+        return ResultBody.callback(() -> gatewayIpLimitService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -55,10 +56,10 @@ public class GatewayIpLimitController {
             @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/ip/api/list")
-    public ResultBody<IPage<GatewayIpLimit>> getIpLimitApiList(
+    public ResultBody<List<GatewayIpLimitApi>> getIpLimitApiList(
             @RequestParam("policyId") Long policyId
     ) {
-        return ResultBody.ok().data(gatewayIpLimitService.findIpLimitApiList(policyId));
+        return ResultBody.callback(() -> gatewayIpLimitService.findIpLimitApiList(policyId));
     }
 
     /**
@@ -95,7 +96,7 @@ public class GatewayIpLimitController {
     })
     @GetMapping("/gateway/limit/ip/{policyId}/info")
     public ResultBody<GatewayIpLimit> getIpLimit(@PathVariable("policyId") Long policyId) {
-        return ResultBody.ok().data(gatewayIpLimitService.getIpLimitPolicy(policyId));
+        return ResultBody.callback(() -> gatewayIpLimitService.getIpLimitPolicy(policyId));
     }
 
     /**
@@ -118,16 +119,18 @@ public class GatewayIpLimitController {
             @RequestParam(value = "policyType") Integer policyType,
             @RequestParam(value = "ipAddress") String ipAddress
     ) {
-        GatewayIpLimit ipLimit = new GatewayIpLimit();
-        ipLimit.setPolicyName(policyName);
-        ipLimit.setPolicyType(policyType);
-        ipLimit.setIpAddress(ipAddress);
-        Long policyId = null;
-        GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
-        if (result != null) {
-            policyId = result.getPolicyId();
-        }
-        return ResultBody.ok().data(policyId);
+        return ResultBody.callback(() -> {
+            GatewayIpLimit ipLimit = new GatewayIpLimit();
+            ipLimit.setPolicyName(policyName);
+            ipLimit.setPolicyType(policyType);
+            ipLimit.setIpAddress(ipAddress);
+            Long policyId = null;
+            GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
+            if (result != null) {
+                policyId = result.getPolicyId();
+            }
+            return policyId;
+        });
     }
 
     /**

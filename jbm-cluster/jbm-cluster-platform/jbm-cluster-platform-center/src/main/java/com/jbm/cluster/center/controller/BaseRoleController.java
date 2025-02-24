@@ -35,7 +35,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @PostMapping("")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
-        return ResultBody.ok().data(baseRoleService.findListPage(pageRequestBody));
+        return ResultBody.callback(() -> baseRoleService.findListPage(pageRequestBody));
     }
 
     /**
@@ -46,7 +46,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @ApiOperation(value = "获取所有角色列表", notes = "获取所有角色列表")
     @PostMapping("/all")
     public ResultBody<List<BaseRole>> getRoleAllList() {
-        return ResultBody.ok().data(baseRoleService.findAllList());
+        return ResultBody.callback(() -> baseRoleService.findAllList());
     }
 
     /**
@@ -62,7 +62,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     @PostMapping("/{roleId}/info")
     public ResultBody<BaseRole> getRole(@PathVariable(value = "roleId") Long roleId) {
         BaseRole result = baseRoleService.getRole(roleId);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -84,12 +84,14 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
 //        role.setRoleName(roleName);
 //        role.setStatus(status);
 //        role.setRoleDesc(roleDesc);
-        Long roleId = null;
-        BaseRole result = baseRoleService.addRole(pageRequestBody.tryGet(BaseRole.class));
-        if (result != null) {
-            roleId = result.getRoleId();
-        }
-        return ResultBody.ok().data(roleId);
+        return ResultBody.callback(() -> {
+            Long roleId = null;
+            BaseRole result = baseRoleService.addRole(pageRequestBody.tryGet(BaseRole.class));
+            if (result != null) {
+                roleId = result.getRoleId();
+            }
+            return roleId;
+        });
     }
 
     /**
@@ -163,7 +165,6 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
     /**
      * 查询角色成员
      *
-     * @param roleId
      * @return
      */
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
@@ -173,7 +174,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @RequestBody(required = false) PageRequestBody pageRequestBody
     ) {
         BaseRole role = pageRequestBody.tryGet(BaseRole.class);
-        return ResultBody.ok().data(baseRoleService.findRoleUsers(role.getRoleId()));
+        return ResultBody.callback(() -> baseRoleService.findRoleUsers(role.getRoleId()));
     }
 
 }

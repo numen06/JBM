@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
+import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,7 +42,7 @@ public class GatewayRateLimitController {
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/rate")
     public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(gatewayRateLimitService.findListPage(PageRequestBody.from(map)));
+        return ResultBody.callback(() -> gatewayRateLimitService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -55,10 +56,10 @@ public class GatewayRateLimitController {
             @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/rate/api/list")
-    public ResultBody<IPage<GatewayRateLimit>> getRateLimitApiList(
+    public ResultBody<List<GatewayRateLimitApi>> getRateLimitApiList(
             @RequestParam("policyId") Long policyId
     ) {
-        return ResultBody.ok().data(gatewayRateLimitService.findRateLimitApiList(policyId));
+        return ResultBody.callback(() -> gatewayRateLimitService.findRateLimitApiList(policyId));
     }
 
     /**
@@ -95,7 +96,7 @@ public class GatewayRateLimitController {
     })
     @GetMapping("/gateway/limit/rate/{policyId}/info")
     public ResultBody<GatewayRateLimit> getRateLimit(@PathVariable("policyId") Long policyId) {
-        return ResultBody.ok().data(gatewayRateLimitService.getRateLimitPolicy(policyId));
+        return ResultBody.callback(() -> gatewayRateLimitService.getRateLimitPolicy(policyId));
     }
 
     /**
@@ -122,17 +123,19 @@ public class GatewayRateLimitController {
             @RequestParam(value = "intervalUnit") String intervalUnit
 
     ) {
-        GatewayRateLimit rateLimit = new GatewayRateLimit();
-        rateLimit.setPolicyName(policyName);
-        rateLimit.setLimitQuota(limitQuota);
-        rateLimit.setIntervalUnit(intervalUnit);
-        rateLimit.setPolicyType(policyType);
-        Long policyId = null;
-        GatewayRateLimit result = gatewayRateLimitService.addRateLimitPolicy(rateLimit);
-        if (result != null) {
-            policyId = result.getPolicyId();
-        }
-        return ResultBody.ok().data(policyId);
+        return ResultBody.callback(() -> {
+            GatewayRateLimit rateLimit = new GatewayRateLimit();
+            rateLimit.setPolicyName(policyName);
+            rateLimit.setLimitQuota(limitQuota);
+            rateLimit.setIntervalUnit(intervalUnit);
+            rateLimit.setPolicyType(policyType);
+            Long policyId = null;
+            GatewayRateLimit result = gatewayRateLimitService.addRateLimitPolicy(rateLimit);
+            if (result != null) {
+                policyId = result.getPolicyId();
+            }
+            return policyId;
+        });
     }
 
     /**

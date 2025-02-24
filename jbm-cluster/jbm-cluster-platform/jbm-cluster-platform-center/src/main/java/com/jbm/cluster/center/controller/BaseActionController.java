@@ -36,8 +36,8 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @GetMapping("/")
-    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseActionService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseAction>> findActionListPage(@RequestParam(required = false) Map map) {
+        return ResultBody.callback(() -> baseActionService.findListPage(PageRequestBody.from(map)));
     }
 
 
@@ -48,8 +48,8 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @PostMapping("/findListPage")
-    public ResultBody<DataPaging<AuthorityAction>> findActionListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
-        return ResultBody.ok().data(baseActionService.findListPage(pageRequestBody));
+    public ResultBody<DataPaging<BaseAction>> findActionListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return ResultBody.callback(() -> baseActionService.findListPage(pageRequestBody));
     }
 
 
@@ -64,8 +64,8 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
     })
     @GetMapping("/{actionId}/info")
-    public ResultBody<AuthorityAction> getAction(@PathVariable("actionId") Long actionId) {
-        return ResultBody.ok().data(baseActionService.getAction(actionId));
+    public ResultBody<BaseAction> getAction(@PathVariable("actionId") Long actionId) {
+        return ResultBody.callback(() -> baseActionService.getAction(actionId));
     }
 
     /**
@@ -97,20 +97,22 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
             @RequestParam(value = "actionDesc", required = false, defaultValue = "") String actionDesc
     ) {
-        BaseAction action = new BaseAction();
-        action.setActionCode(actionCode);
-        action.setActionName(actionName);
-        action.setMenuId(menuId);
-        action.setStatus(status);
-        action.setPriority(priority);
-        action.setActionDesc(actionDesc);
-        Long actionId = null;
-        BaseAction result = baseActionService.addAction(action);
-        if (result != null) {
-            actionId = result.getActionId();
-            jbmClusterTemplate.refreshGateway();
-        }
-        return ResultBody.ok().data(actionId);
+        return ResultBody.callback(() -> {
+            BaseAction action = new BaseAction();
+            action.setActionCode(actionCode);
+            action.setActionName(actionName);
+            action.setMenuId(menuId);
+            action.setStatus(status);
+            action.setPriority(priority);
+            action.setActionDesc(actionDesc);
+            Long actionId = null;
+            BaseAction result = baseActionService.addAction(action);
+            if (result != null) {
+                actionId = result.getActionId();
+                jbmClusterTemplate.refreshGateway();
+            }
+            return actionId;
+        });
     }
 
     /**

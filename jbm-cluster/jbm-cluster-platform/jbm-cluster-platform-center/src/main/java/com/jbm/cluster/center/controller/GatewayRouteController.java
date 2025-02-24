@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,8 +41,8 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取所有微服务", notes = "获取所有微服务")
     @GetMapping("/gateway/getMicroServices")
-    public ResultBody<String[]> getMicroServices() {
-        return ResultBody.ok().data(gatewayRouteService.getMicroServices());
+    public ResultBody<List<String>> getMicroServices() {
+        return ResultBody.callback(() -> gatewayRouteService.getMicroServices());
     }
 
     /**
@@ -54,7 +55,7 @@ public class GatewayRouteController {
     public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
         GatewayRoutePageForm gatewayRoutePageForm = new GatewayRoutePageForm();
         gatewayRoutePageForm.setPageForm(PageRequestBody.from(map).getPageForm());
-        return ResultBody.ok().data(gatewayRouteService.findListPage(gatewayRoutePageForm));
+        return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
     }
 
 
@@ -66,7 +67,7 @@ public class GatewayRouteController {
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @PostMapping("/gateway/routePage")
     public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestBody(required = false) GatewayRoutePageForm gatewayRoutePageForm) {
-        return ResultBody.ok().data(gatewayRouteService.findListPage(gatewayRoutePageForm));
+        return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
     }
 
 
@@ -82,7 +83,7 @@ public class GatewayRouteController {
     })
     @GetMapping("/gateway/route/{routeId}/info")
     public ResultBody<GatewayRoute> getRoute(@PathVariable("routeId") Long routeId) {
-        return ResultBody.ok().data(gatewayRouteService.getRoute(routeId));
+        return ResultBody.callback(() -> gatewayRouteService.getRoute(routeId));
     }
 
     /**

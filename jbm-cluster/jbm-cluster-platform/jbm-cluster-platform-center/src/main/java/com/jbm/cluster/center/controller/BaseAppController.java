@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseAppService;
@@ -39,8 +40,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
     @GetMapping("/")
     public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) Map map) {
-        DataPaging<BaseApp> IPage = baseAppService.findListPage(PageRequestBody.from(map));
-        return ResultBody.ok().data(IPage);
+        return ResultBody.callback(() -> baseAppService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -59,7 +59,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @PathVariable("appId") Long appId
     ) {
         BaseApp appInfo = baseAppService.getAppInfo(appId);
-        return ResultBody.ok().data(appInfo);
+        return ResultBody.callback(() -> appInfo);
     }
 
     @ApiOperation(value = "通过appKey获取应用详情")
@@ -67,7 +67,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
     @Override
     public ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey) {
         BaseApp appInfo = baseAppService.getAppInfoByKey(appKey);
-        return ResultBody.ok().data(appInfo);
+        return ResultBody.callback(() -> appInfo);
     }
 
 //    /**
@@ -86,7 +86,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
 //            @PathVariable("clientId") String clientId
 //    ) {
 //        OpenClientDetails clientInfo = baseAppService.getAppClientInfo(clientId);
-//        return ResultBody.ok().data(clientInfo);
+//        return ResultBody.callback(() -> clientInfo);
 //    }
 
     /**
@@ -100,7 +100,6 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param appDesc   应用说明
      * @param status    状态
      * @param website   官网地址
-     * @param userId    开发者
      * @return
      */
     @ApiOperation(value = "添加应用信息", notes = "添加应用信息")
@@ -127,22 +126,24 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @RequestParam(value = "website", required = false) String website,
             @RequestParam(value = "developerId", required = false) Long developerId
     ) {
-        BaseApp app = new BaseApp();
-        app.setAppName(appName);
-        app.setAppNameEn(appNameEn);
-        app.setAppType(appType);
-        app.setAppOs(appOs);
-        app.setAppIcon(appIcon);
-        app.setAppDesc(appDesc);
-        app.setStatus(status);
-        app.setWebsite(website);
-        app.setDeveloperId(developerId);
-        BaseApp result = baseAppService.addAppInfo(app);
-        Long appId = null;
-        if (result != null) {
-            appId = result.getAppId();
-        }
-        return ResultBody.ok().data(appId);
+        return ResultBody.callback(() -> {
+            BaseApp app = new BaseApp();
+            app.setAppName(appName);
+            app.setAppNameEn(appNameEn);
+            app.setAppType(appType);
+            app.setAppOs(appOs);
+            app.setAppIcon(appIcon);
+            app.setAppDesc(appDesc);
+            app.setStatus(status);
+            app.setWebsite(website);
+            app.setDeveloperId(developerId);
+            BaseApp result = baseAppService.addAppInfo(app);
+            Long appId = null;
+            if (result != null) {
+                appId = result.getAppId();
+            }
+            return StrUtil.toString(appId);
+        });
     }
 
     /**
@@ -264,7 +265,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
             @RequestParam("appId") Long appId
     ) {
         String result = baseAppService.restSecret(appId);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**

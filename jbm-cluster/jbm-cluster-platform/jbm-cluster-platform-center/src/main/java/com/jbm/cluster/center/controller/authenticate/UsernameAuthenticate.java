@@ -11,6 +11,7 @@ import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -39,34 +40,36 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
 
     @Override
     public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
-        UserAccount account = baseUserService.login(username, LoginType.PASSWORD.toString().equals(loginType) ? null : loginType.toLowerCase());
-        if (account == null) {
-            //小程序自动注册
-            if (LoginType.MINIAPP.toString().equals(loginType)) {
-                String key = password + "-PHONE";
-                if (stringRedisTemplate.hasKey(key)) {
-                    String phone = stringRedisTemplate.opsForValue().get(key);
-                    account = baseUserService.registerAccountByPhone(phone, username, password, loginType.toLowerCase());
+        return ResultBody.callback(() -> {
+            UserAccount account = baseUserService.login(username, LoginType.PASSWORD.toString().equals(loginType) ? null : loginType.toLowerCase());
+            if (account == null) {
+                //小程序自动注册
+                if (LoginType.MINIAPP.toString().equals(loginType)) {
+                    String key = password + "-PHONE";
+                    if (stringRedisTemplate.hasKey(key)) {
+                        String phone = stringRedisTemplate.opsForValue().get(key);
+                        account = baseUserService.registerAccountByPhone(phone, username, password, loginType.toLowerCase());
+                    }
+                } else {
+                    throw new ServiceException("没有找到此用户");
                 }
-            } else {
-                return ResultBody.error("没有找到此用户");
             }
-        }
-        JbmLoginUser jbmLoginUser = null;
-        if (LoginType.MINIAPP.toString().equals(loginType)) {
-            jbmLoginUser = findUserByAccount(account);
-            return ResultBody.ok().data(jbmLoginUser);
-        }
-        if (LoginType.WECHAT.toString().equals(loginType)) {
-            jbmLoginUser = findUserByAccount(account);
-            return ResultBody.ok().data(jbmLoginUser);
-        }
-        if (SecurityUtils.getPasswordEncoder().matches(password, account.getPassword())) {
-            jbmLoginUser = findUserByAccount(account);
-            return ResultBody.ok().data(jbmLoginUser);
-        } else {
-            return ResultBody.error("密码错误");
-        }
+            JbmLoginUser jbmLoginUser = null;
+            if (LoginType.MINIAPP.toString().equals(loginType)) {
+                jbmLoginUser = findUserByAccount(account);
+                return jbmLoginUser;
+            }
+            if (LoginType.WECHAT.toString().equals(loginType)) {
+                jbmLoginUser = findUserByAccount(account);
+                return jbmLoginUser;
+            }
+            if (SecurityUtils.getPasswordEncoder().matches(password, account.getPassword())) {
+                jbmLoginUser = findUserByAccount(account);
+                return jbmLoginUser;
+            } else {
+                throw new ServiceException("密码错误");
+            }
+        });
     }
 
     public JbmLoginUser findUserByAccount(UserAccount account) {

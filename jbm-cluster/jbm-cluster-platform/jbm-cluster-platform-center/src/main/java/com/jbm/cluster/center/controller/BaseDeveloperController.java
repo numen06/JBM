@@ -47,7 +47,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @Override
     public ResultBody<UserAccount> developerLogin(@RequestParam(value = "username") String username) {
         UserAccount account = baseDeveloperService.login(username);
-        return ResultBody.ok().data(account);
+        return ResultBody.callback(() -> account);
     }
 
     /**
@@ -58,7 +58,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("/developer")
     public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.ok().data(baseDeveloperService.findListPage(PageRequestBody.from(map)));
+        return ResultBody.callback(() -> baseDeveloperService.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -68,8 +68,8 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
      */
     @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
     @GetMapping("/developer/all")
-    public ResultBody<List<BaseRole>> getUserAllList() {
-        return ResultBody.ok().data(baseDeveloperService.findAllList());
+    public ResultBody<List<BaseDeveloper>> getUserAllList() {
+        return ResultBody.callback(() -> baseDeveloperService.findAllList());
     }
 
     /**

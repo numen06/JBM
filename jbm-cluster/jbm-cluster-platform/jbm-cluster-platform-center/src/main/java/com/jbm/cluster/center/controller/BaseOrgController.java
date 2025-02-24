@@ -25,13 +25,13 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
     @ApiOperation(value = "获取顶层公司", notes = "获取顶层公司")
     @PostMapping("/findTopCompany")
     public ResultBody<BaseOrg> findTopCompany(@RequestBody BaseOrg baseOrg) {
-        return ResultBody.ok().data(this.service.findTopCompany(baseOrg));
+        return ResultBody.callback(() -> this.service.findTopCompany(baseOrg));
     }
 
 
     @ApiOperation(value = "获取下级公司", notes = "获取下级公司")
     @PostMapping("/findRelegationCompany")
     public ResultBody<List<BaseOrg>> findRelegationCompany(@RequestBody BaseOrg baseOrg) {
-        return ResultBody.ok().data(this.service.findRelegationCompany(baseOrg));
+        return ResultBody.callback(() -> this.service.findRelegationCompany(baseOrg));
     }
 }

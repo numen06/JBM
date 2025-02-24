@@ -56,7 +56,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @Override
     public ResultBody<List<AuthorityResource>> findAuthorityResource() {
         List<AuthorityResource> result = baseAuthorityService.findAuthorityResource();
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -70,7 +70,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "serviceId", required = false) String serviceId
     ) {
         List<AuthorityApi> result = baseAuthorityService.findAuthorityApi(serviceId);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
 
@@ -84,7 +84,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @Override
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -94,10 +94,11 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/menu/treeList")
-    public ResultBody<List<AuthorityMenu>> findAuthorityMenuTreeList(@RequestParam(value = "appId", required = false) Long appId) {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1, appId);
-        List<Map<String, Object>> result2 = ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
-        return ResultBody.ok().data(result2).msg("查询列表成功");
+    public ResultBody<List<Map<String, Object>>> findAuthorityMenuTreeList(@RequestParam(value = "appId", required = false) Long appId) {
+        return ResultBody.callback(() -> {
+            List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1, appId);
+            return ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
+        }).msg("查询列表成功");
     }
 
     /**
@@ -115,7 +116,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "actionId") Long actionId
     ) {
         List<BaseAuthorityAction> list = baseAuthorityService.findAuthorityAction(actionId);
-        return ResultBody.ok().data(list);
+        return ResultBody.callback(() -> list);
     }
 
 
@@ -132,7 +133,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @GetMapping("/role")
     public ResultBody<List<OpenAuthority>> findAuthorityRole(Long roleId) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(roleId);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -144,7 +145,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @PostMapping("/byRole")
     public ResultBody<List<OpenAuthority>> findAuthorityRoles(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(baseAuthorityRoleForm.getRoleId());
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
 
@@ -161,7 +162,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
         BaseUser user = baseUserService.getUserById(baseAuthorityUserForm.getUserId());
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), JbmConstants.ROOT.equals(user.getUserName()));
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
@@ -180,7 +181,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     ) {
         BaseUser user = baseUserService.getUserById(userId);
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(user.getUserName()));
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
 
@@ -199,13 +200,12 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
             @RequestParam(value = "appId") Long appId
     ) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(appId);
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**
      * 获取应用已分配接口权限
      *
-     * @param appId 角色ID
      * @return
      */
     @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
@@ -215,7 +215,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @PostMapping("/byApp")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(@RequestBody(required = false) BaseAuthorityApp baseAuthorityApp) {
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(baseAuthorityApp.getAppId());
-        return ResultBody.ok().data(result);
+        return ResultBody.callback(() -> result);
     }
 
     /**

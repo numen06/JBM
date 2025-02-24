@@ -203,7 +203,7 @@ public class ResultBody<T> implements Serializable {
         return this;
     }
 
-    public ResultBody<T> data(T data) {
+    public  ResultBody<T> data(T data) {
         this.result = data;
         return this;
     }
