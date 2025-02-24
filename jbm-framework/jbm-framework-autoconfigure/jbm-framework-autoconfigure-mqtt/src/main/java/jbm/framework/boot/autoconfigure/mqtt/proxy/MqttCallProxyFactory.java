@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class MqttCallProxyFactory {
 
-    private Cache<Class<?>, RequiredBean> MQTTCALL_CACHE = Caffeine.newBuilder().build();
+    private Cache<Class<?>, Object> MQTTCALL_CACHE = Caffeine.newBuilder().build();
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
 
     private MqttCallProxyFactory(RealMqttPahoClientFactory mqttPahoClientFactory) {
@@ -67,22 +67,24 @@ public class MqttCallProxyFactory {
     private void fromBean(Object bean) {
         MqttCallClient mqttCallClient = AnnotationUtil.getAnnotation(bean.getClass(), MqttCallClient.class);
         SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(mqttCallClient.clientId());
-        List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
-        for (Method method : methods) {
-            MqttRequsetBean mqttRequsetBean = new MqttRequsetBean();
-            mqttRequsetBean.setMethod(method);
-            mqttRequsetBean.setBean(bean);
-            //如果方法上有注解说明需要监听来源
-            MqttRequest mqttRequest = AnnotationUtil.getAnnotation(method, MqttRequest.class);
-            mqttRequsetBean.setRequestTopic(mqttCallClient.requestTopic());
-            mqttRequsetBean.setResponseTopic(mqttCallClient.responseTopic());
-            log.debug("mqtt request [{}]", mqttRequsetBean);
-            MQTTCALL_CACHE.put(bean.g
-                    etClass(), new RequiredBean(simpleMqttClient, mqttRequsetBean));
-            //到系统准备好了之后再监听
-//                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
-        }
     }
+
+//    public void callMethod(Object bean){
+//        List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
+//        for (Method method : methods) {
+//            MqttRequsetBean mqttRequsetBean = new MqttRequsetBean();
+//            mqttRequsetBean.setMethod(method);
+//            mqttRequsetBean.setBean(bean);
+//            //如果方法上有注解说明需要监听来源
+//            MqttRequest mqttRequest = AnnotationUtil.getAnnotation(method, MqttRequest.class);
+//            mqttRequsetBean.setRequestTopic(mqttCallClient.requestTopic());
+//            mqttRequsetBean.setResponseTopic(mqttCallClient.responseTopic());
+//            log.debug("mqtt request [{}]", mqttRequsetBean);
+//            MQTTCALL_CACHE.put(bean.getClass(), new RequiredBean(simpleMqttClient, mqttRequsetBean));
+//            //到系统准备好了之后再监听
+////                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
+//        }
+//    }
 
 
     public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
