@@ -6,7 +6,6 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.PCoderService;
 import com.jbm.cluster.auth.service.VCoderService;
-import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.function.Supplier;
 
 @Api(tags = "验证码中心")
 @RestController
@@ -33,12 +31,9 @@ public class CaptchaController {
     @ApiOperation(value = "获取应用公钥", notes = "")
     @GetMapping(value = "/pkey")
     public ResultBody<String> getPKey(@RequestParam(required = true) String appKey) {
-        return ResultBody.callback(new Supplier<String>() {
-            @Override
-            public String get() {
-                BaseApp baseApp = baseAppPreprocessing.getAppByKey(appKey);
-                return baseApp.getPublicKey();
-            }
+        return ResultBody.callback(() -> {
+            BaseApp baseApp = baseAppPreprocessing.getAppByKey(appKey);
+            return baseApp.getPublicKey();
         });
     }
 
@@ -47,7 +42,7 @@ public class CaptchaController {
     public ResultBody<String> vcode64(@RequestParam(required = false) Integer width, @RequestParam(required = false) Integer height, HttpServletRequest request, HttpServletResponse response) throws IOException {
         //定义图形验证码的长和宽
         LineCaptcha lineCaptcha = vCoderService.build(null, width, height, 5);
-        return ResultBody.ok().data(lineCaptcha.getImageBase64Data());
+        return ResultBody.callback(() -> lineCaptcha.getImageBase64Data());
     }
 
     /**
@@ -75,7 +70,7 @@ public class CaptchaController {
     @ApiOperation(value = "对比验证码", notes = "")
     @GetMapping(value = "/verify")
     public ResultBody<Boolean> verify(@RequestParam(required = false) String vcode, HttpServletRequest request) throws IOException {
-        return ResultBody.ok().data(vCoderService.verify(vcode, "system"));
+        return ResultBody.callback(() -> vCoderService.verify(vcode, "system"));
     }
 
     @ApiOperation(value = "发送验证码")
@@ -122,7 +117,7 @@ public class CaptchaController {
     @ApiOperation(value = "对比验证码", notes = "")
     @GetMapping(value = "/{scope}/verify")
     public ResultBody<Boolean> verify(@PathVariable(value = "scope") String scope, @RequestParam(required = false) String vcode, HttpServletRequest request) throws IOException {
-        return ResultBody.ok().data(vCoderService.verify(vcode, scope));
+        return ResultBody.callback(() -> vCoderService.verify(vcode, scope));
     }
 
 
@@ -132,7 +127,7 @@ public class CaptchaController {
 //    @PostMapping("/blockPuzzle")
 //    public ResultBody<Object> blockPuzzle(@RequestBody CaptchaVO captchaVO) {
 //        ResponseModel responseModel = captchaService.get(captchaVO);
-//        return ResultBody.ok().data(responseModel.getRepData());
+//        return ResultBody.callback(() -> responseModel.getRepData());
 //    }
 //
 //    @PostMapping("/checkBlock")

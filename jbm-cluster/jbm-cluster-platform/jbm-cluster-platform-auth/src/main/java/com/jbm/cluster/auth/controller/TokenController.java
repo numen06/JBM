@@ -31,7 +31,7 @@ public class TokenController {
     @ApiOperation("获取角色信息")
     @GetMapping("role")
     public ResultBody<JbmLoginUser> testRole() {
-        return ResultBody.ok().data(LoginHelper.getLoginUser());
+        return ResultBody.callback(LoginHelper::getLoginUser);
     }
 
 
@@ -48,7 +48,7 @@ public class TokenController {
 //        // 生成令牌
 //        String token = sysLoginService.smsLogin(smsLoginBody.getPhonenumber(), smsLoginBody.getSmsCode());
 //        ajax.put(Constants.TOKEN, token);
-//        return ResultBody.ok().data(ajax);
+//        return ResultBody.callback(() -> ajax);
 //    }
 
 //    /**
@@ -64,7 +64,7 @@ public class TokenController {
 //        // 生成令牌
 //        String token = sysLoginService.xcxLogin(xcxCode);
 //        ajax.put(Constants.TOKEN, token);
-//        return ResultBody.ok().data(ajax);
+//        return ResultBody.callback(() -> ajax);
 //    }
 
 

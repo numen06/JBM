@@ -18,6 +18,7 @@ import com.jbm.cluster.auth.form.AuthorizeForm;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -159,12 +160,16 @@ public class OAuth2ServerController {
     @ApiOperation("登出方法")
     @DeleteMapping("logout")
     public ResultBody<Void> logout() {
-        try {
-            sysLoginService.logout(null);
-        } catch (NotLoginException e) {
-            return ResultBody.failed().msg("还没有登录");
-        }
-        return ResultBody.ok();
+
+        return ResultBody.callback(() -> {
+            try {
+                sysLoginService.logout(null);
+            } catch (NotLoginException e) {
+                throw new ServiceException("还没有登录");
+            }
+            return null;
+        });
     }
+
 
 }

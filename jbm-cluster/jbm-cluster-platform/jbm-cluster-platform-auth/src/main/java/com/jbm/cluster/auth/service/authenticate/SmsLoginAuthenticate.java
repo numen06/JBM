@@ -12,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+/**
+ * @author wesley
+ */
 @Service
 public class SmsLoginAuthenticate implements ILoginAuthenticate {
 
@@ -25,13 +27,10 @@ public class SmsLoginAuthenticate implements ILoginAuthenticate {
 
     @Override
     public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
-        return ResultBody.callback("短信登录成功", new Supplier<JbmLoginUser>() {
-            @Override
-            public JbmLoginUser get() {
-                Validator.validateMobile(username, "非法手机号");
-                pCoderService.verify(password, username);
-                return userService.loginAndRegisterMobileUser(username, password);
-            }
+        return ResultBody.callback("短信登录成功", () -> {
+            Validator.validateMobile(username, "非法手机号");
+            pCoderService.verify(password, username);
+            return userService.loginAndRegisterMobileUser(username, password);
         });
     }
 
