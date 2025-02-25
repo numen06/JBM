@@ -23,6 +23,7 @@
         <module>jbm-framework-autoconfigure-freemark</module>
         <module>jbm-framework-autoconfigure-schedule</module>
         <module>jbm-framework-autoconfigure-mqtt</module>
+        <module>jbm-framework-autoconfigure-hivemq</module>
         <module>jbm-framework-autoconfigure-mvc</module>
         <module>jbm-framework-autoconfigure-dictionary</module>
         <module>jbm-framework-autoconfigure-actuator</module>

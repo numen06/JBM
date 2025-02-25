@@ -36,13 +36,13 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Data
-public class MqttProperties {
+public class HiveMqttProperties {
     private URI url = URI.create(String.format("tcp://%s:%s", MqttClient.DEFAULT_SERVER_HOST, MqttClient.DEFAULT_SERVER_PORT));
     private String clientId = null;
     private int mqttVersion = 5;
     private Duration connectionTimeout = Duration.ofSeconds(MqttClientTransportConfig.DEFAULT_MQTT_CONNECT_TIMEOUT_MS);
     private Boolean manualAcks = false;
-    private byte[] password = null;
+    private String password = null;
     private String userName = null;
     private Integer keepAliveInterval = Mqtt5Connect.DEFAULT_KEEP_ALIVE;
     private Long maxReconnectDelay = MqttClientAutoReconnect.DEFAULT_MAX_DELAY_S;
