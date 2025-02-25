@@ -15,6 +15,7 @@ import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.event.MqttMapperSubscribeEvent;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
@@ -26,9 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author wesley
- */
 @Slf4j
 public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
 
@@ -37,7 +35,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
 
 
-    private final List<RequiredBean> requiredBeans = new ArrayList<>();
+    private List<RequiredBean> requiredBeans = new ArrayList<>();
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
@@ -93,7 +91,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         return false;
     }
 
-    public void find() {
+    public void find() throws MqttException {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         for (String name : mqttProxys.keySet()) {
             log.debug("class {} find mqtt proxy", name);
@@ -143,12 +141,15 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         return str;
     }
 
-    public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
+    public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) throws MqttException {
         log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());
         MqttRequestListener mqttRequestListener = new MqttRequestListener(mqttRequsetBean, simpleMqttClient);
         simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), mqttRequestListener);
     }
 
+    /**
+     * @throws Exception
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
@@ -160,7 +161,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         }
     }
 
-    static class RequiredBean {
+    class RequiredBean {
         private final SimpleMqttClient simpleMqttClient;
         private final MqttRequsetBean mqttRequsetBean;
 

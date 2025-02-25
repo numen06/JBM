@@ -9,9 +9,9 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttSend;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.cglib.proxy.InvocationHandler;
 
 import java.io.Serializable;
