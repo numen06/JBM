@@ -1,13 +1,14 @@
 package com.jbm.test.mqtt;
 
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
 import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,17 +36,21 @@ public class MqttTest {
 
 
     @Test
-    public void testPublish() {
-        // 订阅主题
-        mqttClient.subscribe("test", (publish) -> {
-            log.info("接受topic:{},body:{}", publish.getTopic(), JSON.parse(publish.getPayloadAsBytes()));
+    public void testPublish() throws MqttException {
+        mqttClient.subscribe("test", new IMqttMessageListener() {
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                log.info("topic:{},body:{}", topic, JSON.parse(message.getPayload()));
+            }
         });
-        for (int i = 0; i < 1000; i++) {
+        while (true) {
             try {
                 MqttMessage mqttMessage = new MqttMessage();
-                mqttMessage.setPayload(JSON.toJSONBytes("我是测试消息-" + DateUtil.now()));
-                mqttClient.publish("test", mqttMessage);
-                ThreadUtil.safeSleep(1000);
+                mqttMessage.setPayload(JSON.toJSONBytes("test"));
+                while (true) {
+                    mqttClient.publish("test", mqttMessage);
+                    ThreadUtil.safeSleep(1000);
+                }
             } catch (Exception e) {
                 log.error("链接发生错误,休息一下重连");
                 ThreadUtil.safeSleep(1000);

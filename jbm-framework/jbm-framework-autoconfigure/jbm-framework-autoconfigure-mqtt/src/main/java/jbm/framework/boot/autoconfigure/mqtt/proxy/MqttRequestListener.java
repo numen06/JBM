@@ -1,26 +1,27 @@
 package jbm.framework.boot.autoconfigure.mqtt.proxy;
 
+import cn.hutool.core.thread.AsyncUtil;
+import cn.hutool.core.thread.ExecutorBuilder;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.util.proxy.ReflectUtils;
 import com.jbm.util.proxy.wapper.RequestHeaders;
-import jbm.framework.boot.autoconfigure.mqtt.AbstractMqttMessageListener;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
+import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * @author wesley
  */
 @Slf4j
-public class MqttRequestListener extends AbstractMqttMessageListener {
+public class MqttRequestListener implements IMqttMessageListener {
 
 
     private final MqttRequsetBean mqttRequsetBean;
@@ -69,6 +70,13 @@ public class MqttRequestListener extends AbstractMqttMessageListener {
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        executeMqttRequest(topic, message);
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                executeMqttRequest(topic, message);
+            }
+        });
+
+
     }
 }

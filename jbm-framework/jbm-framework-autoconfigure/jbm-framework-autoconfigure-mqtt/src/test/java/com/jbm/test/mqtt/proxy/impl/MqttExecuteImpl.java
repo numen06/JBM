@@ -9,6 +9,7 @@ import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class MqttExecuteImpl implements MqttExecute {
     }
 
     @MqttRequest(fromTopic = "/test/to")
-    public void test(String msg) {
+    public void test( String msg) {
         log.info("我只是来打印的,{}", msg);
     }
 
@@ -38,13 +39,21 @@ public class MqttExecuteImpl implements MqttExecute {
     @MqttRequest(fromTopic = "/test/from", toTopic = "/test/to")
     public String to(@RequestBody String msg) {
         log.info(msg);
-        simpleMqttClient.publishObject("/test/to", "test");
+        try {
+            simpleMqttClient.publishObject("/test/to", "test");
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
         return "我是测试";
     }
 
     @MqttRequest(fromTopic = "/test/from1", toTopic = "/test/to")
     public String to(@RequestBody List<String> msg) {
-        simpleMqttClient.publishObject("/test/to", "test");
+        try {
+            simpleMqttClient.publishObject("/test/to", "test");
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
         return "我是测试";
     }
 
