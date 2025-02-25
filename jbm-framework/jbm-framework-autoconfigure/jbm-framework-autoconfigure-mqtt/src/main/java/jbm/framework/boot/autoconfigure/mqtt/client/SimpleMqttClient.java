@@ -78,7 +78,7 @@ public class SimpleMqttClient extends SimpleMqttCallback {
         this.mqttClient.subscribeWithResponse(responseTopic, new IMqttMessageListener() {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                String payload = message.getPayloadStr();
+                String payload = new String(message.getPayload());
                 if (topic.equals(responseTopic)) {
                     // 这里可以添加处理响应的逻辑
                     // 通知主线程可以结束了
