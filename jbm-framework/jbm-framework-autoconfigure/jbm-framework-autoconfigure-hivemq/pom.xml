@@ -23,11 +23,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.eclipse.paho</groupId>
-            <artifactId>org.eclipse.paho.mqttv5.client</artifactId>
-            <version>1.2.5</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.eclipse.paho</groupId>-->
+<!--            <artifactId>org.eclipse.paho.mqttv5.client</artifactId>-->
+<!--            <version>1.2.5</version>-->
+<!--        </dependency>-->
         <!--        <dependency>-->
         <!--            <groupId>org.fusesource.mqtt-client</groupId>-->
         <!--            <artifactId>mqtt-client</artifactId>-->

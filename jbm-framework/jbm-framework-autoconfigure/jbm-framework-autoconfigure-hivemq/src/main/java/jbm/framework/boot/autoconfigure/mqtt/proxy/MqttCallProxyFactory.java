@@ -7,34 +7,47 @@ import cn.hutool.core.util.ReflectUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.jbm.util.proxy.ReflectUtils;
+import jbm.framework.boot.autoconfigure.mqtt.AbstractMqttMessageListener;
+import jbm.framework.boot.autoconfigure.mqtt.IMqttMessageListener;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttCallClient;
+import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttCallEvent;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
+import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class MqttCallProxyFactory {
 
-    private Cache<Class<?>, Object> MQTTCALL_CACHE = Caffeine.newBuilder().build();
+    private Cache<String, Object> MQTTCALL_CACHE = Caffeine.newBuilder().build();
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
 
     private MqttCallProxyFactory(RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.mqttPahoClientFactory = mqttPahoClientFactory;
     }
 
-    public <T> T getService(Class<T> clazz) {
-        return (T) MQTTCALL_CACHE.getIfPresent(clazz);
+    public <T> T getService(String name,Class<T> clazz) {
+        T service = (T) MQTTCALL_CACHE.getIfPresent(clazz);
+        if (service != null) {
+            return service;
+        }
+        service = this.registerService(name,clazz);
+        return service;
     }
 
-    public <T> T registerService(Class<T> clazz, String get, String set) {
+    public <T> T registerService(String name,Class<T> clazz) {
+
         T bean = ReflectUtil.newInstance(clazz);
         T proxy = ProxyUtil.proxy(bean, MqttCallAspect.class);
-        MQTTCALL_CACHE.put(clazz, proxy);
+        MQTTCALL_CACHE.put(name, proxy);
         return proxy;
     }
 
@@ -64,44 +77,80 @@ public class MqttCallProxyFactory {
     }
 
 
-    private void fromBean(Object bean) {
-        MqttCallClient mqttCallClient = AnnotationUtil.getAnnotation(bean.getClass(), MqttCallClient.class);
-        SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(mqttCallClient.clientId());
-    }
-
-//    public void callMethod(Object bean){
-//        List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
-//        for (Method method : methods) {
-//            MqttRequsetBean mqttRequsetBean = new MqttRequsetBean();
-//            mqttRequsetBean.setMethod(method);
-//            mqttRequsetBean.setBean(bean);
-//            //如果方法上有注解说明需要监听来源
-//            MqttRequest mqttRequest = AnnotationUtil.getAnnotation(method, MqttRequest.class);
-//            mqttRequsetBean.setRequestTopic(mqttCallClient.requestTopic());
-//            mqttRequsetBean.setResponseTopic(mqttCallClient.responseTopic());
-//            log.debug("mqtt request [{}]", mqttRequsetBean);
-//            MQTTCALL_CACHE.put(bean.getClass(), new RequiredBean(simpleMqttClient, mqttRequsetBean));
-//            //到系统准备好了之后再监听
-////                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
-//        }
+//    private void fromBean(Object bean) {
+//        MqttCallClient mqttCallClient = AnnotationUtil.getAnnotation(bean.getClass(), MqttCallClient.class);
+//        SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(mqttCallClient.clientId());
 //    }
 
+    public MqttCallClientBean buildRequiredBean(Object bean){
+        Class<?> clazz = bean.getClass();
+        MqttCallClient mqttCallClient = AnnotationUtil.getAnnotation(clazz, MqttCallClient.class);
+        if (mqttCallClient == null) {
+            throw new RuntimeException("未找到注解MqttCallClient");
+        }
+        SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(mqttCallClient.clientId());
+        MqttCallClientBean mqttCallClientBean = new MqttCallClientBean(
+                bean,
+                simpleMqttClient,
+                mqttCallClient.requestTopic(),
+                mqttCallClient.responseTopic()
+        );
+        List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
+        for (Method method : methods) {
+            MqttCallMethodBean mqttCallMethodBean = new MqttCallMethodBean();
+            mqttCallMethodBean.setMethod(method);
+//            mqttCallMethodBean.setBean(bean);
+            //如果方法上有注解说明需要监听来源
+            MqttCallEvent mqttRequest = AnnotationUtil.getAnnotation(method, MqttCallEvent.class);
+            mqttCallMethodBean.setEvent(mqttRequest.value());
+            log.debug("mqtt request [{}]", mqttCallMethodBean);
 
-    public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
-        log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());
-        MqttRequestListener mqttRequestListener = new MqttRequestListener(mqttRequsetBean, simpleMqttClient);
-        simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), mqttRequestListener);
+            mqttCallClientBean.getMethodMap().put(method.getName(), mqttCallMethodBean);
+        }
+        //到系统准备好了之后再监听
+        this.subscribeMethod(mqttCallClientBean);
+        return mqttCallClientBean;
     }
 
-    static class RequiredBean {
-        private final SimpleMqttClient simpleMqttClient;
-        private final MqttRequsetBean mqttRequsetBean;
 
-        public RequiredBean(SimpleMqttClient simpleMqttClient, MqttRequsetBean mqttRequsetBean) {
+    /**
+     * 订阅方法
+     */
+    public void subscribeMethod(MqttCallClientBean mqttCallClientBean) {
+        mqttCallClientBean.getSimpleMqttClient()
+                .subscribeWithResponse(mqttCallClientBean.getRequestTopic(),
+                        new AbstractMqttMessageListener() {
+
+                            @Override
+                            public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
+                                String methodName = mqttMessage.getPayloadStr();
+                                ReflectUtil.invoke(mqttCallClientBean.getBean(), methodName);
+                            }
+                        });
+    }
+
+    @Data
+  public static class MqttCallClientBean {
+        private final Object bean;
+        private final SimpleMqttClient simpleMqttClient;
+        private final String requestTopic;
+        private final String responseTopic;
+        private Map<String,MqttCallMethodBean> methodMap = new ConcurrentHashMap<>();
+
+        public MqttCallClientBean(Object bean, SimpleMqttClient simpleMqttClient, String requestTopic, String responseTopic) {
+            this.bean = bean;
             this.simpleMqttClient = simpleMqttClient;
-            this.mqttRequsetBean = mqttRequsetBean;
+            this.requestTopic = requestTopic;
+            this.responseTopic = responseTopic;
         }
 
+    }
+
+    @Data
+    public  static class MqttCallMethodBean {
+        private String event;
+        private Method method;
+//        private Object bean;
     }
 
 
