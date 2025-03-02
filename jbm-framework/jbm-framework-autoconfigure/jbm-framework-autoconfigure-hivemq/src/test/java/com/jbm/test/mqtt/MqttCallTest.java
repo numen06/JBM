@@ -27,22 +27,21 @@ public class MqttCallTest {
     }
 
 
-
     @Test
     public void testCall() {
         MqttCallService mqttCallService = mqttCallProxyFactory.getService("test", MqttCallServiceImpl.class);
         String msg = "{\"msg\":\"Hello\", \"id\":123, \"time\":\"2025-05-05\"}";
-        mqttCallProxyFactory.requestMqttEvent("test/request", "test.call", msg);
-        ThreadUtil.sleep(5000);
+        mqttCallProxyFactory.requestAndResponseEvent("test/request", "test/response", "test.call", msg, event -> {
+            System.out.println(event.getMessage());
+        });
     }
 
     @Test
     public void testIntCall() {
-        MqttCallServiceImpl mqttCallServiceImpl = mqttCallProxyFactory.getService("test", MqttCallServiceImpl.class);
-        while (true) {
-            MqttCallService mqttCallClient = mqttCallProxyFactory.getClient(MqttCallService.class);
-//            mqttCallClient.call("{\"msg\":\"Hello\", \"id\":123, \"extra\":\"ignored\"}");
-            ThreadUtil.sleep(1000);
-        }
+        MqttCallService mqttCallService = mqttCallProxyFactory.getService("test", MqttCallServiceImpl.class);
+        MqttCallService mqttCallClient = mqttCallProxyFactory.getClient(MqttCallService.class);
+        String body = mqttCallClient.call("{\"msg\":\"Hello\", \"id\":123, \"extra\":\"ignored\"}");
+        System.out.println(body);
+        ThreadUtil.safeSleep(2000);
     }
 }

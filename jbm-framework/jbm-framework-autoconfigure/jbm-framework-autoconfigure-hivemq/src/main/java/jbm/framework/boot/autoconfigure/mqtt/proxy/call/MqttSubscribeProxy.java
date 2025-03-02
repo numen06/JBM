@@ -1,18 +1,18 @@
 package jbm.framework.boot.autoconfigure.mqtt.proxy.call;
 
 import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.func.LambdaUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import com.jbm.util.proxy.ReflectUtils;
 import jbm.framework.boot.autoconfigure.mqtt.AbstractMqttMessageListener;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.*;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
-import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallEventBean;
+import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttCallProxyFactory;
+import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallBean;
+import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallContext;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,21 +31,27 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MqttSubscribeProxy {
 
     private final SimpleMqttClient simpleMqttClient;
-
     private final Class<?> clazz;
     private final MqttCallClient mqttCallClient;
     private final Object proxy;
+    private boolean isClient = false;
 
-    private MqttCallClientBean mqttCallClientBean   ;
+    private MqttCallClientBean mqttCallClientBean;
 
     public MqttSubscribeProxy(SimpleMqttClient simpleMqttClient, Class<?> clazz, MqttCallClient mqttCallClient, Object proxy) {
+        this(false, simpleMqttClient, clazz, mqttCallClient, proxy);
+    }
+
+    public MqttSubscribeProxy(Boolean isClient, SimpleMqttClient simpleMqttClient, Class<?> clazz, MqttCallClient mqttCallClient, Object proxy) {
         this.simpleMqttClient = simpleMqttClient;
         this.clazz = clazz;
         this.mqttCallClient = mqttCallClient;
         this.proxy = proxy;
+        this.isClient = isClient;
         this.buildRequiredBean();
         this.subscribeMethod();
     }
+
 
     public void buildRequiredBean() {
         this.mqttCallClientBean = new MqttCallClientBean(
@@ -62,7 +68,7 @@ public class MqttSubscribeProxy {
             //如果方法上有注解说明需要监听来源
             MqttCallEvent mqttRequest = AnnotationUtil.getAnnotation(method, MqttCallEvent.class);
             mqttCallMethodBean.setEventCode(mqttRequest.value());
-            log.debug("mqtt request [{}]", mqttCallMethodBean);
+//            log.debug("mqtt request [{}]", mqttCallMethodBean);
             mqttCallClientBean.getMethodMap().put(mqttCallMethodBean.getEventCode(), mqttCallMethodBean);
         }
     }
@@ -73,7 +79,7 @@ public class MqttSubscribeProxy {
      */
     public void subscribeMethod() {
         mqttCallClientBean.getSimpleMqttClient()
-                .subscribeWithResponse(mqttCallClientBean.getRequestTopic(),
+                .subscribeWithResponse(BooleanUtil.isTrue(isClient) ? mqttCallClientBean.getResponseTopic() : mqttCallClientBean.getRequestTopic(),
                         new AbstractMqttMessageListener() {
                             @Override
                             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
@@ -81,24 +87,26 @@ public class MqttSubscribeProxy {
                                 String body = mqttMessage.getPayloadStr();
                                 //事件bean
                                 JSONObject jsonBody = JSONObject.parseObject(body);
-                                MqttCallEventBean mqttCallEventBean = jsonBody.toJavaObject(MqttCallEventBean.class);
-                                mqttCallEventBean.setTopic(topic);
+                                //事件id
+                                MqttCallBean mqttCallBean = jsonBody.toJavaObject(MqttCallBean.class);
                                 //获取对应的方法
-                                MqttCallMethodBean mqttCallMethodBean = mqttCallClientBean.getMethodMap().get(mqttCallEventBean.getEventCode());
+                                MqttCallMethodBean mqttCallMethodBean = mqttCallClientBean.getMethodMap().get(mqttCallBean.getEventCode());
                                 // 提取带有注解的参数
-                                Map<String, Object> params = extractParameters(mqttCallMethodBean.getMethod(),  mqttCallEventBean, jsonBody);
+                                Map<String, Object> params = extractParameters(mqttCallMethodBean.getMethod(), mqttCallBean, jsonBody);
                                 Object[] args = new Object[mqttCallMethodBean.getMethod().getParameterCount()];
                                 // 将参数值填充到方法参数数组中
-                                fillArguments(args,  params);
+                                fillArguments(args, params);
+                                MqttCallContext mqttCallContext = MqttCallContext.fromRequestBean(topic, mqttCallBean);
+                                MqttCallContextHolder.set(mqttCallContext);
                                 //执行方法
                                 ReflectUtil.invoke(mqttCallClientBean.getBean(), mqttCallMethodBean.getMethod(), args);
                             }
                         });
     }
 
-    private Map<String, Object> extractParameters(Method method,MqttCallEventBean mqttCallEventBean, JSONObject jsonBody) {
+    private Map<String, Object> extractParameters(Method method, MqttCallBean mqttCallBean, JSONObject jsonBody) {
         Map<String, Object> params = new HashMap<>();
-        if (mqttCallEventBean.getMessage() == null) {
+        if (mqttCallBean.getMessage() == null) {
             return params;
         }
         // 使用 FastJSON 解析请求体为 JSONObject
@@ -108,12 +116,12 @@ public class MqttSubscribeProxy {
             Annotation[] annotations = parameter.getAnnotations();
             // 处理 @MqttBody 注解
             if (isAnnotatedWith(annotations, MqttBody.class)) {
-                Object body = jsonBody.getObject("message", parameter.getType());
+                Object body = jsonBody.getObject(LambdaUtil.getFieldName(MqttCallBean::getMessage), parameter.getType());
                 params.put("arg" + i, body);
             }
             // 处理 @MqttParam 注解
             else if (isAnnotatedWith(annotations, MqttParam.class)) {
-                JSONObject jsonMessage = jsonBody.getJSONObject("message");
+                JSONObject jsonMessage = jsonBody.getJSONObject(LambdaUtil.getFieldName(MqttCallBean::getMessage));
                 MqttParam mqttParam = parameter.getAnnotation(MqttParam.class);
                 String key = mqttParam.value();
                 Object value = jsonMessage.getObject(key, parameter.getType());
@@ -131,6 +139,7 @@ public class MqttSubscribeProxy {
         }
         return false;
     }
+
     private void fillArguments(Object[] args, Map<String, Object> params) {
         for (int i = 0; i < args.length; i++) {
             args[i] = params.getOrDefault("arg" + i, null);

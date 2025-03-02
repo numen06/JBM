@@ -1,23 +1,17 @@
 package jbm.framework.boot.autoconfigure.mqtt.proxy.call;
 
-import com.alibaba.fastjson.JSONObject;
-import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttBody;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallClient;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallEvent;
-import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttParam;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallEventBean;
+import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallBean;
+import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallContext;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.SuperCall;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 /**
  * 拦截器类，用于处理带有 @MqttCallEvent 注解的方法调用。
@@ -32,7 +26,6 @@ public class MqttCallServiceInterceptor {
         this.mqttCallClient = mqttCallClient;
     }
 
-
     @RuntimeType
     public Object intercept(
             @Origin Method method,
@@ -42,35 +35,25 @@ public class MqttCallServiceInterceptor {
             MqttCallEvent mqttCallEvent = method.getAnnotation(MqttCallEvent.class);
             // 方法调用前的逻辑
             System.out.println("Before calling method: " + method.getName());
-            if (args != null && args.length > 0) {
-                System.out.println("Method arguments: " +
-                        String.join(", ", java.util.Arrays.stream(args).map(Object::toString).collect(Collectors.toList())));
-            }
+            MqttCallContext mqttCallContext = MqttCallContextHolder.get();
             // 调用原始方法
             Object result = callable.call();
-            MqttCallEventBean mqttCallEventBean = new MqttCallEventBean();
+            // 构建MQTT消息内容
             String url = mqttCallClient.responseTopic();
-            // 发布消息到MQTT主题
-            mqttCallEventBean.setTopic(url);
-            mqttCallEventBean.setEventCode(mqttCallEvent.value());
-            // 发布消息到MQTT主题
-            mqttCallEventBean.setMessage(result);
-            // 发布消息到MQTT主题
-            this.responseMqttEvent(mqttCallEventBean);
-
+            mqttCallContext.setResponseTopic(url);
+            // 构建MQTT消息内容
+            mqttCallContext.putResponseBody(result);
+            this.responseMqttEvent(mqttCallContext);
             // 方法调用后的逻辑
             System.out.println("After calling method: " + method.getName());
-            System.out.println("Method returned: " + result);
             return result;
-        } else {
-            System.out.println("No @MqttCallEvent annotation found for method: " + method.getName());
         }
-        return null;
+        return callable.call();
     }
 
-    public void responseMqttEvent(MqttCallEventBean mqttCallEventBean) {
+    public void responseMqttEvent(MqttCallContext mqttCallContext) {
         // 发布消息到MQTT主题
-        simpleMqttClient.publishObject(mqttCallEventBean.getTopic(), mqttCallEventBean);
+        simpleMqttClient.publishObject(mqttCallContext.getResponseTopic(), mqttCallContext.getIfResponseBean());
     }
 
 
