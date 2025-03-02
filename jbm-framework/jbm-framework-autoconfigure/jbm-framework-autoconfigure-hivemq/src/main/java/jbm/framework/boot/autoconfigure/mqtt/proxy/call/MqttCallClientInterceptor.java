@@ -45,11 +45,8 @@ public class MqttCallClientInterceptor {
             System.out.println("Calling external URL: " + url);
             // 提取带有 @MqttParam 注解的参数
             Object params = extractParameters(method, args);
-            MqttCallContext mqttCallContext = MqttCallContextHolder.get();
-            if (mqttCallContext == null) {
-                mqttCallContext = new MqttCallContext(IdUtil.simpleUUID(),mqttCallEvent.value());
-                MqttCallContextHolder.set(mqttCallContext);
-            }
+            MqttCallContext mqttCallContext = new MqttCallContext(IdUtil.simpleUUID(), mqttCallEvent.value());
+            MqttCallContextHolder.set(mqttCallContext);
             // 发布消息到MQTT主题
             mqttCallContext.setRequestTopic(url);
             // 发布消息到MQTT主题

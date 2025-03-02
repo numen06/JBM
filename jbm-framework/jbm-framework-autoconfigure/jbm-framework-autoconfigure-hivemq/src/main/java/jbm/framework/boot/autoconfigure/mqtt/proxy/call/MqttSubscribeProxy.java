@@ -4,6 +4,7 @@ import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.lang.func.LambdaUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ReflectUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.util.proxy.ReflectUtils;
 import jbm.framework.boot.autoconfigure.mqtt.AbstractMqttMessageListener;
@@ -91,7 +92,7 @@ public class MqttSubscribeProxy {
                                 //获取对应的方法
                                 MqttCallMethodBean mqttCallMethodBean = mqttCallClientBean.getMethodMap().get(mqttCallBean.getEventCode());
                                 // 提取带有注解的参数
-                                Map<String, Object> params = extractParameters(mqttCallMethodBean.getMethod(), mqttCallBean, jsonBody);
+                                Map<String, Object> params = extractParameters(mqttCallMethodBean.getMethod(), mqttCallBean);
                                 Object[] args = new Object[mqttCallMethodBean.getMethod().getParameterCount()];
                                 // 将参数值填充到方法参数数组中
                                 fillArguments(args, params);
@@ -111,7 +112,7 @@ public class MqttSubscribeProxy {
                                     if (mqttCallContext == null) {
                                         return;
                                     }
-                                    log.info("mqtt response [{}]", mqttCallBean);
+//                                    log.info("mqtt response [{}]", mqttCallBean);
                                     mqttCallContext.receiveResponse(mqttCallBean);
                                 }
 
@@ -119,28 +120,29 @@ public class MqttSubscribeProxy {
                         });
     }
 
-    private Map<String, Object> extractParameters(Method method, MqttCallBean mqttCallBean, JSONObject jsonBody) {
+    private Map<String, Object> extractParameters(Method method, MqttCallBean mqttCallBean) {
         Map<String, Object> params = new HashMap<>();
         if (mqttCallBean.getMessage() == null) {
             return params;
         }
+        cn.hutool.json.JSONObject jsonBody = new cn.hutool.json.JSONObject(mqttCallBean.getMessage());
         // 使用 FastJSON 解析请求体为 JSONObject
         Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             Annotation[] annotations = parameter.getAnnotations();
+            final String paramId = "arg" + i;
             // 处理 @MqttBody 注解
             if (isAnnotatedWith(annotations, MqttBody.class)) {
-                Object body = jsonBody.getObject(LambdaUtil.getFieldName(MqttCallBean::getMessage), parameter.getType());
-                params.put("arg" + i, body);
+                Object body = jsonBody.toBean(parameter.getType());
+                params.put(paramId, body);
             }
             // 处理 @MqttParam 注解
             else if (isAnnotatedWith(annotations, MqttParam.class)) {
-                JSONObject jsonMessage = jsonBody.getJSONObject(LambdaUtil.getFieldName(MqttCallBean::getMessage));
                 MqttParam mqttParam = parameter.getAnnotation(MqttParam.class);
                 String key = mqttParam.value();
-                Object value = jsonMessage.getObject(key, parameter.getType());
-                params.put("arg" + i, value);
+                Object value = jsonBody.get(key, parameter.getType());
+                params.put(paramId, value);
             }
         }
         return params;

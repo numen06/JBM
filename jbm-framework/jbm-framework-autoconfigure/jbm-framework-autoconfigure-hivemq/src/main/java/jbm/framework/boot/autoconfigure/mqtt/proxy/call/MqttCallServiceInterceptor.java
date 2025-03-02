@@ -35,29 +35,38 @@ public class MqttCallServiceInterceptor {
             @AllArguments Object[] args,
             @SuperCall Callable<Object> callable) throws Exception {
         if (method.isAnnotationPresent(MqttCallEvent.class)) {
-            MqttCallEvent mqttCallEvent = method.getAnnotation(MqttCallEvent.class);
+            boolean isLocal = false;
             // 方法调用前的逻辑
-            log.info("Before calling method: {}" , method.getName());
-            MqttCallContext mqttCallContext = MqttCallContextHolder.get();
-            if(mqttCallContext == null) {
-                // 构建MQTT消息内容
-                MqttCallBean mqttCallBean = new MqttCallBean();
-                mqttCallBean.setEventCode(mqttCallEvent.value());
-                mqttCallContext = new MqttCallContext(mqttCallClient.requestTopic(), mqttCallClient.responseTopic(), mqttCallEvent.value());
-                mqttCallContext.setRequestBean(mqttCallBean);
-                MqttCallContextHolder.set(mqttCallContext);
+            log.info("Before calling method: {}", method.getName());
+            try {
+                MqttCallEvent mqttCallEvent = method.getAnnotation(MqttCallEvent.class);
+                MqttCallContext mqttCallContext = MqttCallContextHolder.get();
+                isLocal = mqttCallContext == null;
+                //如果是本地请求的则没有必要构建上下文
+                if (isLocal) {
+//                MqttCallBean mqttCallBean = new MqttCallBean();
+//                mqttCallBean.setEventCode(mqttCallEvent.value());
+//                mqttCallContext = new MqttCallContext(mqttCallClient.requestTopic(), mqttCallClient.responseTopic(), mqttCallEvent.value());
+//                mqttCallContext.setRequestBean(mqttCallBean);
+//                MqttCallContextHolder.set(mqttCallContext);
+                    // 调用原始方法
+                    return callable.call();
+                } else {
+                    Object result = callable.call();
+                    // 设置响应主题
+                    String url = mqttCallClient.responseTopic();
+                    // 设置响应主题
+                    mqttCallContext.setResponseTopic(url);
+                    // 设置返回值
+                    mqttCallContext.putResponseBody(result);
+                    // 发布MQTT事件
+                    this.responseMqttEvent(mqttCallContext);
+                    return result;
+                }
+            } finally {
+                // 方法调用后的逻辑
+                log.info("After {} calling method: {}", isLocal ? "local" : "remote", method.getName());
             }
-            // 调用原始方法
-            Object result = callable.call();
-            // 构建MQTT消息内容
-            String url = mqttCallClient.responseTopic();
-            mqttCallContext.setResponseTopic(url);
-            // 构建MQTT消息内容
-            mqttCallContext.putResponseBody(result);
-            this.responseMqttEvent(mqttCallContext);
-            // 方法调用后的逻辑
-            log.info("After calling method: {}" ,method.getName());
-            return result;
         }
         return callable.call();
     }

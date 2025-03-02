@@ -1,8 +1,6 @@
 package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
-import com.alibaba.fastjson.JSONObject;
-import com.jbm.test.mqtt.call.MqttCallService;
 import com.jbm.test.mqtt.call.MqttCallServiceImpl;
 import jbm.framework.boot.autoconfigure.mqtt.MqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
@@ -15,13 +13,13 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 
 @Slf4j
-public class MqttCallTest {
+public class MqttCallServiceTest {
 
-    private static MqttCallProxyFactory mqttCallProxyFactory;
     private static final MqttProperties mqttProperties = new MqttProperties();
+    private static MqttCallProxyFactory mqttCallProxyFactory;
     private static RealMqttPahoClientFactory realMqttPahoClientFactory;
 
-    private static MqttCallService mqttCallService;
+    private static com.jbm.test.mqtt.call.MqttCallService mqttCallService;
 
     @BeforeAll
     public static void testClient() throws Exception {
@@ -29,7 +27,6 @@ public class MqttCallTest {
         mqttProperties.setUrl(URI.create("tcp://www.51jbm.cn:1883"));
         realMqttPahoClientFactory = new RealMqttPahoClientFactory(mqtt5ClientFactory, mqttProperties);
         mqttCallProxyFactory = new MqttCallProxyFactory(realMqttPahoClientFactory);
-
         mqttCallService = mqttCallProxyFactory.getService("test", MqttCallServiceImpl.class);
     }
 
@@ -41,14 +38,8 @@ public class MqttCallTest {
             Object body = event.getMessage();
             log.info("mqtt call result: {}", body);
         });
-        ThreadUtil.sleep(1000);
+        ThreadUtil.waitForDie();
     }
 
-    @Test
-    public void testIntCall() {
-        MqttCallService mqttCallClient = mqttCallProxyFactory.getClient(MqttCallService.class);
-        JSONObject body = mqttCallClient.call("{\"msg\":\"Hello\", \"id\":123, \"extra\":\"ignored\"}");
-        log.info("mqtt call result: {}", body);
-        ThreadUtil.safeSleep(1000);
-    }
+
 }

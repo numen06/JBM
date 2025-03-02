@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 public class Callback {
 
     public static <T> T call(Supplier<Object> supplier) {
-        return call(supplier, null);
+        return call(supplier, () -> null);
     }
 
     public static <T> T call(Supplier<Object> supplier, T defaultValue) {
