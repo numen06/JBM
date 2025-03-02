@@ -10,7 +10,6 @@ import jbm.framework.boot.autoconfigure.mqtt.AbstractMqttMessageListener;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.*;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
-import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttCallProxyFactory;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallBean;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallContext;
 import lombok.Data;
@@ -43,11 +42,11 @@ public class MqttSubscribeProxy {
     }
 
     public MqttSubscribeProxy(Boolean isClient, SimpleMqttClient simpleMqttClient, Class<?> clazz, MqttCallClient mqttCallClient, Object proxy) {
+        this.isClient = isClient;
         this.simpleMqttClient = simpleMqttClient;
         this.clazz = clazz;
         this.mqttCallClient = mqttCallClient;
         this.proxy = proxy;
-        this.isClient = isClient;
         this.buildRequiredBean();
         this.subscribeMethod();
     }
@@ -96,10 +95,26 @@ public class MqttSubscribeProxy {
                                 Object[] args = new Object[mqttCallMethodBean.getMethod().getParameterCount()];
                                 // 将参数值填充到方法参数数组中
                                 fillArguments(args, params);
-                                MqttCallContext mqttCallContext = MqttCallContext.fromRequestBean(topic, mqttCallBean);
-                                MqttCallContextHolder.set(mqttCallContext);
-                                //执行方法
-                                ReflectUtil.invoke(mqttCallClientBean.getBean(), mqttCallMethodBean.getMethod(), args);
+                                // 如果是客户端，则不需要执行方法，只需要等待响应即可
+                                if (!isClient) {
+                                    MqttCallContext mqttCallContext = MqttCallContextHolder.get(mqttCallBean.getEventId());
+                                    //如果为空说明是请求，不为空说明是响应
+                                    if (mqttCallContext == null) {
+                                        mqttCallContext = new MqttCallContext(mqttCallBean.getEventId(),mqttCallBean.getEventCode());
+                                    }
+                                    mqttCallContext.fromRequestBean(topic, mqttCallBean);
+                                    MqttCallContextHolder.set(mqttCallContext);
+                                    //如果是监听执行则调用方法
+                                    ReflectUtil.invoke(mqttCallClientBean.getBean(), mqttCallMethodBean.getMethod(), args);
+                                } else {
+                                    MqttCallContext mqttCallContext = MqttCallContextHolder.get(mqttCallBean.getEventId());
+                                    if (mqttCallContext == null) {
+                                        return;
+                                    }
+                                    log.info("mqtt response [{}]", mqttCallBean);
+                                    mqttCallContext.receiveResponse(mqttCallBean);
+                                }
+
                             }
                         });
     }

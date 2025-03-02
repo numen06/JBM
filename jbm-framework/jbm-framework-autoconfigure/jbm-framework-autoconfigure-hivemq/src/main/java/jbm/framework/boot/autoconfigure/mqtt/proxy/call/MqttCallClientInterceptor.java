@@ -1,5 +1,9 @@
 package jbm.framework.boot.autoconfigure.mqtt.proxy.call;
 
+import cn.hutool.core.util.ClassUtil;
+import cn.hutool.core.util.IdUtil;
+import com.jbm.util.BeanUtils;
+import com.jbm.util.Callback;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallClient;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallEvent;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttParam;
@@ -9,13 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-import net.bytebuddy.implementation.bind.annotation.SuperCall;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 拦截器类，用于处理带有 @MqttCallEvent 注解的方法调用。
@@ -34,8 +37,7 @@ public class MqttCallClientInterceptor {
     @RuntimeType
     public Object intercept(
             @Origin Method method,
-            @AllArguments Object[] args,
-            @SuperCall Callable<Object> callable) throws Exception {
+            @AllArguments Object[] args) throws Exception {
         // 检查方法是否有 @MqttCallEvent 注解
         if (method.isAnnotationPresent(MqttCallEvent.class)) {
             MqttCallEvent mqttCallEvent = method.getAnnotation(MqttCallEvent.class);
@@ -43,25 +45,41 @@ public class MqttCallClientInterceptor {
             System.out.println("Calling external URL: " + url);
             // 提取带有 @MqttParam 注解的参数
             Object params = extractParameters(method, args);
-            MqttCallContext mqttCallContext = new MqttCallContext();
+            MqttCallContext mqttCallContext = MqttCallContextHolder.get();
+            if (mqttCallContext == null) {
+                mqttCallContext = new MqttCallContext(IdUtil.simpleUUID(),mqttCallEvent.value());
+                MqttCallContextHolder.set(mqttCallContext);
+            }
             // 发布消息到MQTT主题
             mqttCallContext.setRequestTopic(url);
-            mqttCallContext.setEventCode(mqttCallEvent.value());
             // 发布消息到MQTT主题
-            mqttCallContext.putResponseBody(params);
-            requestMqttEvent(mqttCallContext);
-
-            log.info("External call completed.");
-        } else {
-            log.info("No @MqttCallEvent annotation found for method: {}" , method.getName());
+            mqttCallContext.putRequestMessage(params);
+            return requestMqttEvent(mqttCallContext, method);
         }
-
         return null;
     }
 
-    public void requestMqttEvent(MqttCallContext mqttCallContext) {
+    public Object requestMqttEvent(MqttCallContext mqttCallContext, Method method) {
         // 发布消息到MQTT主题
-        simpleMqttClient.publishObject(mqttCallContext.getResponseTopic(), mqttCallContext.getResponseBean());
+        log.info("Sending MQTT event: {}", mqttCallContext.getEventId());
+        simpleMqttClient.publishObject(mqttCallContext.getRequestTopic(), mqttCallContext.getRequestBean());
+        try {
+            mqttCallContext.getLatch().await(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+
+        }
+        return Callback.call(() -> {
+            if (mqttCallContext.getResponseBean() == null) {
+                return null;
+            }
+            if (mqttCallContext.getResponseBean().getMessage() == null) {
+                return null;
+            }
+            if (mqttCallContext.getResponseBean().getMessage().getClass() ==  method.getReturnType()){
+                return mqttCallContext.getResponseBean().getMessage();
+            }
+            return new cn.hutool.json.JSONObject(mqttCallContext.getRequestBean()).get("message", method.getReturnType());
+        });
     }
 
     private Object extractParameters(Method method, Object[] args) {

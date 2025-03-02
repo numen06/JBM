@@ -5,6 +5,7 @@ import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallEvent;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallBean;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttCallContext;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -13,10 +14,12 @@ import net.bytebuddy.implementation.bind.annotation.SuperCall;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
+
 /**
  * 拦截器类，用于处理带有 @MqttCallEvent 注解的方法调用。
  * @author wesley
  */
+@Slf4j
 public class MqttCallServiceInterceptor {
     private final SimpleMqttClient simpleMqttClient;
     private final MqttCallClient mqttCallClient;
@@ -34,8 +37,16 @@ public class MqttCallServiceInterceptor {
         if (method.isAnnotationPresent(MqttCallEvent.class)) {
             MqttCallEvent mqttCallEvent = method.getAnnotation(MqttCallEvent.class);
             // 方法调用前的逻辑
-            System.out.println("Before calling method: " + method.getName());
+            log.info("Before calling method: {}" , method.getName());
             MqttCallContext mqttCallContext = MqttCallContextHolder.get();
+            if(mqttCallContext == null) {
+                // 构建MQTT消息内容
+                MqttCallBean mqttCallBean = new MqttCallBean();
+                mqttCallBean.setEventCode(mqttCallEvent.value());
+                mqttCallContext = new MqttCallContext(mqttCallClient.requestTopic(), mqttCallClient.responseTopic(), mqttCallEvent.value());
+                mqttCallContext.setRequestBean(mqttCallBean);
+                MqttCallContextHolder.set(mqttCallContext);
+            }
             // 调用原始方法
             Object result = callable.call();
             // 构建MQTT消息内容
@@ -45,7 +56,7 @@ public class MqttCallServiceInterceptor {
             mqttCallContext.putResponseBody(result);
             this.responseMqttEvent(mqttCallContext);
             // 方法调用后的逻辑
-            System.out.println("After calling method: " + method.getName());
+            log.info("After calling method: {}" ,method.getName());
             return result;
         }
         return callable.call();

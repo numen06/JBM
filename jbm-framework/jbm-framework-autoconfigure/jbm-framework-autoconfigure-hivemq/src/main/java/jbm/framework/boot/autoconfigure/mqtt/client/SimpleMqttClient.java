@@ -51,7 +51,7 @@ public class SimpleMqttClient {
                         System.err.println("Failed to subscribe to topic: " + throwable.getMessage());
                         return;
                     }
-                    System.out.println("Subscribed to topic: " + topicFilter);
+                    System.out.println(mqttClient.getConfig().getClientIdentifier()+"Subscribed to topic: " + topicFilter);
                 });
     }
 

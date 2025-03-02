@@ -4,15 +4,17 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.IdUtil;
 import lombok.Data;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author wesley
  */
 @Data
 public class MqttCallContext {
     private final String eventId;
-    private String eventCode;
-
-    private MqttCallBean requestBean ;
+    private final String eventCode;
+    private MqttCallBean requestBean;
     private MqttCallBean responseBean;
     private String requestTopic;
     private String responseTopic;
@@ -21,12 +23,16 @@ public class MqttCallContext {
 //    private Object requestMessage;
 //    private Object responseBody;
 
-    public MqttCallContext() {
-        this(IdUtil.simpleUUID());
-    }
+    private final CountDownLatch latch = new CountDownLatch(1);
 
-    public MqttCallContext(String eventId) {
+
+//    public MqttCallContext() {
+//        this(IdUtil.simpleUUID());
+//    }
+
+    public MqttCallContext(String eventId, String eventCode) {
         this.eventId = eventId;
+        this.eventCode = eventCode;
     }
 
     public MqttCallContext(String requestTopic, String responseTopic, String eventCode) {
@@ -54,20 +60,20 @@ public class MqttCallContext {
         return this.responseBean;
     }
 
-    public static MqttCallContext fromRequestBean(String requestTopic,MqttCallBean requestBean) {
-        MqttCallContext context = new MqttCallContext(requestTopic, null, requestBean.getEventCode());
-        context.setRequestBean(requestBean);
-        return context;
+    public  void fromRequestBean(String requestTopic, MqttCallBean requestBean) {
+//        MqttCallContext context = new MqttCallContext(requestBean.getEventId(),requestTopic, null, requestBean.getEventCode());
+        this.requestTopic = requestTopic;
+        this.setRequestBean(requestBean);
     }
 
     public void putRequestMessage(Object requestMessage) {
         if (this.requestBean == null) {
             this.requestBean = new MqttCallBean();
         }
-        if(this.requestBean.getEventId() == null) {
+        if (this.requestBean.getEventId() == null) {
             this.requestBean.setEventId(this.eventId);
         }
-        if(this.requestBean.getEventCode() == null) {
+        if (this.requestBean.getEventCode() == null) {
             this.requestBean.setEventCode(this.eventCode);
         }
         this.requestBean.setTime(DateTime.now());
@@ -78,14 +84,20 @@ public class MqttCallContext {
         if (this.responseBean == null) {
             this.responseBean = new MqttCallBean();
         }
-        if(this.responseBean.getEventId() == null) {
+        if (this.responseBean.getEventId() == null) {
             this.responseBean.setEventId(this.eventId);
         }
-        if(this.responseBean.getEventCode() == null) {
+        if (this.responseBean.getEventCode() == null) {
             this.responseBean.setEventCode(this.eventCode);
         }
         this.responseBean.setTime(DateTime.now());
         this.responseBean.setMessage(responseBody);
+
+    }
+
+    public void receiveResponse(MqttCallBean mqttCallBean) {
+        this.responseBean = mqttCallBean;
+        this.latch.countDown();
     }
 
 }

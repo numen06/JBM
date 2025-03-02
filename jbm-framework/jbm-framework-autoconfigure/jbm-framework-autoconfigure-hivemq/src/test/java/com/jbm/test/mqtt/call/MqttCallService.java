@@ -1,5 +1,7 @@
 package com.jbm.test.mqtt.call;
 
+import com.alibaba.fastjson.JSONObject;
+import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttBody;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallClient;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallEvent;
 
@@ -7,6 +9,6 @@ import jbm.framework.boot.autoconfigure.mqtt.annotation.call.MqttCallEvent;
 public interface MqttCallService {
 
     @MqttCallEvent("test.call")
-    String call( String message);
+    JSONObject call(@MqttBody String message);
 
 }
