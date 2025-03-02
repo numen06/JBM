@@ -127,5 +127,4 @@ public class SimpleMqttClient {
         this.mqttClient.unsubscribeWith().topicFilter(topicFilter).send();
     }
 
-
 }
