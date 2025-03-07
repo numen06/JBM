@@ -62,10 +62,8 @@ public class OpcBeanFactory {
                 if (ObjectUtil.isNotEmpty(obj)) {
                     ReflectUtils.setFieldValue(opcUaTemplate.getOpcBean(device), field, obj);
                 }
-                if (StrUtil.isNotBlank(alias)) {
-                    if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
-                        opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcUaTemplate.getOpcBean(device), device, alias));
-                    }
+                if (field.isAnnotationPresent(OpcUaHeartBeat.class) || field.isAnnotationPresent(OpcUaReadField.class)) {
+                    opcUaTemplate.subscribeItem(device, new PointChangeEvent(opcUaTemplate.getOpcBean(device), device, alias));
                 }
             }
         }
