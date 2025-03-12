@@ -1,5 +1,6 @@
 package com.jbm.cluster.platform.gateway.filter;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
@@ -47,11 +48,12 @@ public class FluxHttpResponseDecorator extends ServerHttpResponseDecorator {
                 //释放掉内存
                 DataBufferUtils.release(dataBuffer);
                 String responseBody = getResponseBody(exchange, this, content);
-                responseBodys.append(responseBody);
                 if (responseBody != null) {
                     // 修改响应体内容之前，需要设置响应体长度
                     getDelegate().getHeaders().setContentLength(responseBody.getBytes().length);
                     return bufferFactory.wrap(responseBody.getBytes(Charsets.UTF_8));
+                } else {
+                    responseBodys.append(responseBody);
                 }
                 return bufferFactory.wrap(content);
             }));
@@ -64,31 +66,34 @@ public class FluxHttpResponseDecorator extends ServerHttpResponseDecorator {
     private final static String MESSAGE_KEY = "message";
 
     private String getResponseBody(ServerWebExchange exchange, ServerHttpResponse response, byte[] content) {
+
+        //判断响应头是否为json类型
         if (response.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE)) {
-            if (StrUtil.contains(Objects.requireNonNull(response.getHeaders().get(HttpHeaders.CONTENT_TYPE)).toString(), MediaType.APPLICATION_JSON_VALUE)) {
-                String responseBody = StrUtil.str(content, Charsets.UTF_8);
-                if(StrUtil.isBlank(responseBody)) {
-                    return null;
-                }
-                //国际化处理
-                if(ENABLE_I18N) {
-                    JSONObject jsonObject = JSONObject.parseObject(responseBody);
-                    String message = jsonObject.getString(MESSAGE_KEY);
-                    if (StrUtil.isNotBlank(message)) {
-                        //将提示语message作为key记录下来，更具语言场景提供，对应的国际化语言包
-                        try {
-                            message = messageSource.resolveCodeWithoutArguments(exchange, message);
-                            jsonObject.put(MESSAGE_KEY, message);
-                        } catch (NoSuchMessageException ignored) {
-                            messageSource.insertMessage(message, message, exchange.getLocaleContext().getLocale());
-                        }
-                        return jsonObject.toJSONString();
-                    } else {
-                        return responseBody;
+            String responseBody = StrUtil.str(content, Charsets.UTF_8);
+            if (CollUtil.isEmpty(response.getHeaders().get(HttpHeaders.CONTENT_TYPE))) {
+                return responseBody;
+            }
+            if (!CollUtil.contains(response.getHeaders().get(HttpHeaders.CONTENT_TYPE), MediaType.APPLICATION_JSON_VALUE)) {
+                return responseBody;
+            }
+            //国际化处理
+            if (ENABLE_I18N) {
+                JSONObject jsonObject = JSONObject.parseObject(responseBody);
+                String message = jsonObject.getString(MESSAGE_KEY);
+                if (StrUtil.isNotBlank(message)) {
+                    //将提示语message作为key记录下来，更具语言场景提供，对应的国际化语言包
+                    try {
+                        message = messageSource.resolveCodeWithoutArguments(exchange, message);
+                        jsonObject.put(MESSAGE_KEY, message);
+                    } catch (NoSuchMessageException ignored) {
+                        messageSource.insertMessage(message, message, exchange.getLocaleContext().getLocale());
                     }
-                }else{
+                    return jsonObject.toJSONString();
+                } else {
                     return responseBody;
                 }
+            } else {
+                return responseBody;
             }
         }
         return null;
