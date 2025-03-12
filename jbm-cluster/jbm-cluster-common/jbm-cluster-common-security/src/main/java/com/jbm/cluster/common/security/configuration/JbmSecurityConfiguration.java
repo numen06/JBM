@@ -6,6 +6,7 @@ import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.router.SaRouter;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
@@ -93,10 +94,13 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
             Map<RequestMappingInfo, HandlerMethod> handlerMethods = requestMappingHandlerMapping.getHandlerMethods();
             handlerMethods.entrySet().parallelStream().forEach(handlerMethodEntry -> {
                 // 判断方法是否有@PermitAll注解
-                if (handlerMethodEntry.getValue().getMethodAnnotation(PermitAll.class) != null) {
-                    String url = StrUtil.join(StrUtil.COMMA, handlerMethodEntry.getKey().getPatternsCondition().getPatterns());
-                    // 将url添加到结果集合中
-                    strSet.add(url);
+                if (handlerMethodEntry.getValue().hasMethodAnnotation(PermitAll.class)) {
+                    if (ObjectUtil.isNotNull(handlerMethodEntry.getKey().getPathPatternsCondition())) {
+                        String url = StrUtil.join(StrUtil.COMMA, handlerMethodEntry.getKey().getPathPatternsCondition().getPatterns());
+                        // 将url添加到结果集合中
+                        strSet.add(url);
+                    }
+
                 }
             });
         } catch (Exception e) {
