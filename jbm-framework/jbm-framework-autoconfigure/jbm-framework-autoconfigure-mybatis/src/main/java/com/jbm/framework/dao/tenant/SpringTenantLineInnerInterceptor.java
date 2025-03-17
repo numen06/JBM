@@ -38,8 +38,12 @@ public class SpringTenantLineInnerInterceptor extends TenantLineInnerInterceptor
         if (this.getTenantLineHandler().ignoreTable(table.getName())) {
             return null;
         }
+        if (this.getTenantLineHandler().getTenantId() == null) {
+            return null;
+        }
         if (this.getTenantLineHandler().getTenantId() instanceof StringValue) {
-            return new NotEqualsTo(getAliasColumn(table), new LongValue(0L));
+//            return new NotEqualsTo(getAliasColumn(table), new LongValue(-1L));
+            return null;
         }
         return new EqualsTo(getAliasColumn(table), this.getTenantLineHandler().getTenantId());
     }
