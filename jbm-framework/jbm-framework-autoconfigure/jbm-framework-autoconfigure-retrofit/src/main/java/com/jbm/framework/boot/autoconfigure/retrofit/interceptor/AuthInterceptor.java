@@ -27,7 +27,7 @@ public class AuthInterceptor extends AbstractInterceptor {
      * @throws IOException
      */
     @Override
-    protected Response doIntercept(Chain chain) throws IOException {
+    protected void doIntercept2(Request originalRequest, Request.Builder authRequestBuilder) throws IOException {
         Request originalRequest = chain.request();
         if (MapUtil.isEmpty(platformsProperties.getPlatforms())) {
             return chain.proceed(originalRequest);
@@ -41,4 +41,5 @@ public class AuthInterceptor extends AbstractInterceptor {
         authStrategy.generateToken(originalRequest, authRequestBuilder);
         return chain.proceed(authRequestBuilder.build());
     }
+
 }
