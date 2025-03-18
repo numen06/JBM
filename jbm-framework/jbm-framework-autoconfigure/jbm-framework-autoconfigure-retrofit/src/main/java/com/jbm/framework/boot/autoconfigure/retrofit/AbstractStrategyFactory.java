@@ -2,8 +2,9 @@ package com.jbm.framework.boot.autoconfigure.retrofit;
 
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.AbstractInterceptor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import retrofit2.Invocation;
@@ -40,12 +41,25 @@ public class AbstractStrategyFactory implements InitializingBean {
 
     public PlatformsProperties.Platform getPlatform(Invocation invocation) {
         Class<?> declaringClass = invocation.method().getDeclaringClass();
+        return getPlatform(declaringClass);
+    }
+
+    public PlatformsProperties.Platform getPlatform(AbstractInterceptor interceptor) {
+        Class<?> declaringClass = interceptor.getClass();
+        return getPlatform(declaringClass);
+    }
+
+
+    public PlatformsProperties.Platform getPlatform(Class<?> declaringClass) {
         if (CLASS_PLATFORM_CACHE.containsKey(declaringClass)) {
             return CLASS_PLATFORM_CACHE.get(declaringClass);
         }
         ApiPlatform apiPlatform = AnnotationUtil.getAnnotation(declaringClass, ApiPlatform.class);
         if (apiPlatform == null) {
             return null;
+        }
+        if(StrUtil.isBlank(apiPlatform.name())){
+            return PlatformsProperties.NonePlatform();
         }
         String platformName = apiPlatform.name();
         PlatformsProperties.Platform platform = platformsProperties.getPlatforms().get(platformName);
@@ -62,6 +76,14 @@ public class AbstractStrategyFactory implements InitializingBean {
 
     public <T extends BaseStrategy> T getStrategy(Invocation invocation, Class<T> strategyClass) {
         PlatformsProperties.Platform platform = this.getPlatform(invocation);
+        if (platform == null) {
+            return null;
+        }
+        return this.getStrategy(platform, strategyClass);
+    }
+
+    public <T extends BaseStrategy> T getStrategy(AbstractInterceptor interceptor, Class<T> strategyClass) {
+        PlatformsProperties.Platform platform = this.getPlatform(interceptor);
         if (platform == null) {
             return null;
         }
@@ -93,7 +115,7 @@ public class AbstractStrategyFactory implements InitializingBean {
                 applicationContext.getAutowireCapableBeanFactory().initializeBean(baseStrategy, baseStrategyClass.getSimpleName());
                 applicationContext.getAutowireCapableBeanFactory().autowireBean(baseStrategy);
                 baseStrategyList.add(baseStrategy);
-            }  catch (Exception e) {
+            } catch (Exception e) {
                 log.error("registerStrategy error", e);
             }
         }

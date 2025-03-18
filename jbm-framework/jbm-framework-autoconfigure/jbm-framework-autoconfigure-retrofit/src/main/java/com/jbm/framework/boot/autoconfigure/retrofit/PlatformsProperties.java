@@ -38,4 +38,10 @@ public class PlatformsProperties implements InitializingBean {
         private Map<String, String> extend;
     }
 
+    public static Platform NonePlatform() {
+        Platform platform = new Platform();
+        platform.setName("None");
+        return platform;
+    }
+
 }

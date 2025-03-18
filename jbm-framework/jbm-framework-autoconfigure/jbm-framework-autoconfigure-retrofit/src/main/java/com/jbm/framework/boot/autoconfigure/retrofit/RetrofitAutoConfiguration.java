@@ -2,8 +2,6 @@ package com.jbm.framework.boot.autoconfigure.retrofit;
 
 import com.alibaba.fastjson.support.retrofit.Retrofit2ConverterFactory;
 import com.github.lianjiatech.retrofit.spring.boot.config.RetrofitProperties;
-import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.AuthInterceptor;
-import com.jbm.framework.boot.autoconfigure.retrofit.interceptor.SignatureInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -43,15 +41,15 @@ public class RetrofitAutoConfiguration {
         return new StrategyFactory(applicationContext, platformsProperties);
     }
 
-    @Bean
-    public SignatureInterceptor signatureInterceptor(StrategyFactory strategyFactory) {
-        return new SignatureInterceptor(strategyFactory, platformsProperties, retrofitProperties);
-    }
-
-    @Bean
-    public AuthInterceptor authInterceptor(StrategyFactory strategyFactory) {
-        return new AuthInterceptor(strategyFactory, platformsProperties, retrofitProperties);
-    }
+//    @Bean
+//    public SignatureInterceptor signatureInterceptor(StrategyFactory strategyFactory) {
+//        return new SignatureInterceptor(strategyFactory, platformsProperties, retrofitProperties);
+//    }
+//
+//    @Bean
+//    public AuthInterceptor authInterceptor(StrategyFactory strategyFactory) {
+//        return new AuthInterceptor(strategyFactory, platformsProperties, retrofitProperties);
+//    }
 
 
 }

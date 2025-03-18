@@ -9,28 +9,33 @@ import com.jbm.framework.boot.autoconfigure.retrofit.ApiPlatform;
 import com.jbm.framework.boot.autoconfigure.retrofit.BaseStrategy;
 import com.jbm.framework.boot.autoconfigure.retrofit.PlatformsProperties;
 import com.jbm.framework.boot.autoconfigure.retrofit.StrategyFactory;
-import com.jbm.framework.boot.autoconfigure.retrofit.auth.AuthStrategy;
+import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
-import retrofit2.Invocation;
+import org.springframework.beans.factory.InitializingBean;
 
+import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * @author wesley
  */
-public abstract class AbstractInterceptor extends BasePathMatchInterceptor {
+public abstract class AbstractInterceptor extends BasePathMatchInterceptor implements InitializingBean {
+    @Resource
+    protected StrategyFactory strategyFactory;
+    @Resource
+    protected PlatformsProperties platformsProperties;
+    @Resource
+    protected RetrofitProperties retrofitProperties;
 
-    protected final StrategyFactory strategyFactory;
-    protected final PlatformsProperties platformsProperties;
-    protected final RetrofitProperties retrofitProperties;
+    private final List<Class<? extends BaseStrategy>> strategys = new ArrayList<>();
 
-    public AbstractInterceptor(StrategyFactory strategyFactory, PlatformsProperties platformsProperties, RetrofitProperties retrofitProperties) {
-        this.strategyFactory = strategyFactory;
+    public AbstractInterceptor() {
+    }
+
+
+    public AbstractInterceptor(PlatformsProperties platformsProperties, RetrofitProperties retrofitProperties) {
         this.platformsProperties = platformsProperties;
         this.retrofitProperties = retrofitProperties;
     }
@@ -46,24 +51,32 @@ public abstract class AbstractInterceptor extends BasePathMatchInterceptor {
 
 
     @Override
-    protected Response doIntercept(Chain chain) throws IOException {
+    protected Response doIntercept(Interceptor.Chain chain) throws IOException {
         Request originalRequest = chain.request();
         if (MapUtil.isEmpty(platformsProperties.getPlatforms())) {
             return chain.proceed(originalRequest);
         }
-        Invocation invocation = Objects.requireNonNull(originalRequest.tag(Invocation.class));
-        AuthStrategy authStrategy = strategyFactory.getStrategy(invocation, AuthStrategy.class);
-        if (authStrategy == null) {
-            return chain.proceed(originalRequest);
-        }
+//        Invocation invocation = Objects.requireNonNull(originalRequest.tag(Invocation.class));
         Request.Builder authRequestBuilder = originalRequest.newBuilder();
-        authStrategy.generateToken(originalRequest, authRequestBuilder);
+        this.strategys.forEach(strategyClass -> {
+            BaseStrategy baseStrategy = strategyFactory.getStrategy(this, strategyClass);
+            if (baseStrategy == null) {
+                return;
+            }
+            baseStrategy.doStrategy(originalRequest, authRequestBuilder);
+        });
         return chain.proceed(authRequestBuilder.build());
     }
 
-
-    protected abstract void doIntercept2(List<BaseStrategy> strategyList, Request originalRequest, Request.Builder authRequestBuilder) ;
-
-
-
+    /**
+     * @throws Exception
+     */
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        ApiPlatform apiPlatform = AnnotationUtil.getAnnotation(this.getClass(), ApiPlatform.class);
+        if (apiPlatform == null) {
+            return;
+        }
+        this.strategys.addAll(Arrays.asList(apiPlatform.strategys()));
+    }
 }

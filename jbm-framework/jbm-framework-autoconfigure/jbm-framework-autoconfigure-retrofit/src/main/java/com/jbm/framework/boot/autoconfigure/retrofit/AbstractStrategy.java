@@ -46,4 +46,5 @@ public abstract class AbstractStrategy implements BaseStrategy {
 //                .addConverterFactory(Retrofit2ConverterFactory.create())
 //                .build();
     }
+
 }

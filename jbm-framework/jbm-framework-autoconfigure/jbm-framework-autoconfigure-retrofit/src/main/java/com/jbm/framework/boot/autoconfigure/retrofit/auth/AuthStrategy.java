@@ -3,6 +3,8 @@ package com.jbm.framework.boot.autoconfigure.retrofit.auth;
 import com.jbm.framework.boot.autoconfigure.retrofit.BaseStrategy;
 import okhttp3.Request;
 
+import java.util.function.Supplier;
+
 /**
  * @author wesley
  */
