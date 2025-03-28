@@ -20,9 +20,11 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
 
     @Override
-    public BaseAppConfig getAppConfigByKey(String appKey) {
-        QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey);
+    public BaseAppConfig getAppConfigByKey(String appKey, Long orgId) {
+        QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
+                .eq(orgId != null, BaseAppConfig::getOrgId, orgId)
+                .isNull(orgId == null, BaseAppConfig::getOrgId);
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
         return CollUtil.getFirst(list);
     }

@@ -28,19 +28,17 @@ public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig,
     @GetMapping("/getAppConfigByKey")
     public ResultBody<String> getAppConfigByKey(@RequestParam(required = true) String appKey) {
         return ResultBody.callback(() -> {
-            BaseAppConfig baseAppConfig = service.getAppConfigByKey(appKey);
+            BaseAppConfig baseAppConfig = service.getAppConfigByKey(appKey, null);
             if (ObjectUtil.isEmpty(baseAppConfig)) {
                 return null;
             }
-            if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser())) {
-                return baseAppConfig.getConfigContent();
+            if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
+                // 超级管理员账号查询所有数据
+                if (LoginHelper.isAdmin()) {
+                    return baseAppConfig.getConfigContent();
+                }
+                baseAppConfig = service.getAppConfigByKey(appKey, LoginHelper.getLoginUser().getCompanyId());
             }
-            // 超级管理员账号查询所有数据
-            if (LoginHelper.isAdmin()) {
-                return baseAppConfig.getConfigContent();
-            }
-            baseAppConfig = service.getAppConfigByKey(appKey);
-
             return baseAppConfig.getConfigContent();
         });
     }
