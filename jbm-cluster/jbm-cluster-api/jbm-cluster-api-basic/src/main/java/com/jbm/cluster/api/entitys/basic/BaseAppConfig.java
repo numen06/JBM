@@ -30,6 +30,9 @@ public class BaseAppConfig extends MasterDataEntity {
     private Long appId;
     @ApiModelProperty(value = "应用KEY")
     private String appKey;
+
+    @ApiModelProperty(value = "组织ID")
+    private Long orgId;
     /**
      * API访问key
      */
