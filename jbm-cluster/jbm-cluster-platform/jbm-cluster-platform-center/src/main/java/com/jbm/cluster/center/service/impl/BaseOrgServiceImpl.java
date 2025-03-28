@@ -24,12 +24,15 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     @Override
     public List<BaseOrg> selectEntitys(BaseOrg baseOrg) {
         // 超级管理员账号查询所有数据
-        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+        if (LoginHelper.isAdmin()) {
             return super.selectEntitys(baseOrg);
+        }
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser())) {
+            throw new ServiceException("用户没有登录");
         }
         BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
-            return null;
+            throw new ServiceException("未查询到对应部门");
         }
         // 获取当前公司的顶层公司
         BaseOrg parentOrg = this.findTopCompany(currentOrg);
