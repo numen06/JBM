@@ -24,9 +24,19 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
         QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
                 .eq(orgId != null, BaseAppConfig::getOrgId, orgId)
-                .isNull(orgId == null, BaseAppConfig::getOrgId);
+                .or().eq(orgId != null, BaseAppConfig::getOrgId, orgId);
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
-        return CollUtil.getFirst(list);
+        if (CollUtil.isEmpty(list)) {
+            throw new RuntimeException("当前APP找不到默认配置");
+        }
+        BaseAppConfig def = list.stream().filter(e -> e.getOrgId() == null).findFirst().orElse(null);
+        if (ObjectUtil.isEmpty(def)) {
+            throw new RuntimeException("当前APP找不到默认配置");
+        }
+        if (orgId != null) {
+            return list.stream().filter(e -> e.getOrgId().equals(orgId)).findFirst().orElse(def);
+        }
+        return def;
     }
 
     @Override
