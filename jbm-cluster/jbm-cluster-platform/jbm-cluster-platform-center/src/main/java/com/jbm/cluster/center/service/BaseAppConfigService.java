@@ -8,5 +8,6 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
  * @Create: 2022-06-27 12:55:11
  */
 public interface BaseAppConfigService extends IMasterDataService<BaseAppConfig> {
-    BaseAppConfig getAppConfigByKey(String appKey);
+
+    BaseAppConfig getAppConfigByKey(String appKey, Long orgId);
 }
