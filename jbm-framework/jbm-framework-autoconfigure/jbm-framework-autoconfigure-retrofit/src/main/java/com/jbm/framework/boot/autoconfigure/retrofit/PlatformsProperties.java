@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Data
 public class PlatformsProperties implements InitializingBean {
 
-    private Map<String, Platform> platforms;
+    private Map<String, Platform> platforms = new HashMap<>();
 
     /**
      * @throws Exception
