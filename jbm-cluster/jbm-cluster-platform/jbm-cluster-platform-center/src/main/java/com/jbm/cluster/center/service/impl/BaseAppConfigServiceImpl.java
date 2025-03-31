@@ -31,6 +31,10 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
             queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
                     .eq(BaseAppConfig::getOrgId, orgId);
             List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+            // 如果没有查到，则认为是默认配置
+            if (CollUtil.isEmpty(list)) {
+                return this.getAppDefConfigByKey(appKey);
+            }
             return CollUtil.getFirst(list);
         }
     }
