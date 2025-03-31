@@ -24,6 +24,7 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
         if (ObjectUtil.isEmpty(appKey)) {
             throw new RuntimeException("请求参数不能为空");
         }
+        // 如果没有组织ID，则认为是默认配置
         if (ObjectUtil.isEmpty(orgId)) {
             return this.getAppDefConfigByKey(appKey);
         } else {
@@ -44,6 +45,7 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
         queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
                 .isNull(BaseAppConfig::getOrgId);
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+        // 如果没有查到，则认为是默认配置
         if (CollUtil.isEmpty(list)) {
             throw new RuntimeException("当前APP找不到默认配置");
         }
@@ -52,14 +54,18 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
-        BaseAppConfig dbAppConfig = this.getAppDefConfigByKey(baseAppConfig.getAppKey());
-        if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            if (!LoginHelper.isAdmin()) {
-                dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), LoginHelper.softGetLoginUser().getCompanyId());
-            }
-        }
+        BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
         if (ObjectUtil.isNotEmpty(dbAppConfig)) {
-            baseAppConfig.setId(dbAppConfig.getId());
+            //用户是登录状态
+            if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
+                if (!LoginHelper.isAdmin()) {
+                    baseAppConfig.setId(null);
+                }else{
+                    baseAppConfig.setId(dbAppConfig.getId());
+                }
+            }else {
+                baseAppConfig.setId(dbAppConfig.getId());
+            }
         }
         return super.saveEntity(baseAppConfig);
     }
