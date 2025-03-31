@@ -31,12 +31,14 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
+        BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), null);
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            if (LoginHelper.isAdmin()) {
-                baseAppConfig.setOrgId(null);
-            } else {
-                baseAppConfig.setOrgId(LoginHelper.softGetLoginUser().getCompanyId());
+            if (!LoginHelper.isAdmin()) {
+                dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), LoginHelper.softGetLoginUser().getCompanyId());
             }
+        }
+        if (ObjectUtil.isNotEmpty(dbAppConfig)) {
+            baseAppConfig.setId(dbAppConfig.getId());
         }
         return super.saveEntity(baseAppConfig);
     }
