@@ -21,27 +21,34 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     @Override
     public BaseAppConfig getAppConfigByKey(String appKey, Long orgId) {
+        if (ObjectUtil.isEmpty(appKey)) {
+            throw new RuntimeException("请求参数不能为空");
+        }
+        BaseAppConfig def = this.getAppDefConfigByKey(appKey);
+        if (ObjectUtil.isEmpty(orgId)) {
+            return def;
+        }
         QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
-                .eq(orgId != null, BaseAppConfig::getOrgId, orgId)
-                .or().eq(orgId != null, BaseAppConfig::getOrgId, orgId);
+                .eq(BaseAppConfig::getOrgId, orgId);
+        List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+        return CollUtil.getFirst(list);
+    }
+
+    public BaseAppConfig getAppDefConfigByKey(String appKey) {
+        QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
+                .isNull(BaseAppConfig::getOrgId);
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
         if (CollUtil.isEmpty(list)) {
             throw new RuntimeException("当前APP找不到默认配置");
         }
-        BaseAppConfig def = list.stream().filter(e -> e.getOrgId() == null).findFirst().orElse(null);
-        if (ObjectUtil.isEmpty(def)) {
-            throw new RuntimeException("当前APP找不到默认配置");
-        }
-        if (orgId != null) {
-            return list.stream().filter(e -> e.getOrgId().equals(orgId)).findFirst().orElse(def);
-        }
-        return def;
+        return CollUtil.getFirst(list);
     }
 
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
-        BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), null);
+        BaseAppConfig dbAppConfig = this.getAppDefConfigByKey(baseAppConfig.getAppKey());
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
             if (!LoginHelper.isAdmin()) {
                 dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), LoginHelper.softGetLoginUser().getCompanyId());
