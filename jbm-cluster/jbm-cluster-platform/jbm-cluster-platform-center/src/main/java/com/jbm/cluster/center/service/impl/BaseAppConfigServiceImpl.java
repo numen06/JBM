@@ -24,15 +24,15 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
         if (ObjectUtil.isEmpty(appKey)) {
             throw new RuntimeException("请求参数不能为空");
         }
-        BaseAppConfig def = this.getAppDefConfigByKey(appKey);
         if (ObjectUtil.isEmpty(orgId)) {
-            return def;
+            return this.getAppDefConfigByKey(appKey);
+        } else {
+            QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
+                    .eq(BaseAppConfig::getOrgId, orgId);
+            List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+            return CollUtil.getFirst(list);
         }
-        QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
-                .eq(BaseAppConfig::getOrgId, orgId);
-        List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
-        return CollUtil.getFirst(list);
     }
 
     public BaseAppConfig getAppDefConfigByKey(String appKey) {
