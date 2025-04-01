@@ -54,19 +54,26 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
-        BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
-        if (ObjectUtil.isNotEmpty(dbAppConfig)) {
-            //用户是登录状态
-            if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
+
+        if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
+            baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
+            BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
+            if (dbAppConfig.getOrgId() == null) {
+                //用户是登录状态
                 if (!LoginHelper.isAdmin()) {
                     baseAppConfig.setId(null);
-                }else{
+                } else {
+                    baseAppConfig.setOrgId(null);
                     baseAppConfig.setId(dbAppConfig.getId());
                 }
-            }else {
+            } else {
                 baseAppConfig.setId(dbAppConfig.getId());
             }
+        } else {
+            BaseAppConfig dbAppConfig = this.getAppDefConfigByKey(baseAppConfig.getAppKey());
+            baseAppConfig.setId(dbAppConfig.getId());
         }
+
         return super.saveEntity(baseAppConfig);
     }
 }
