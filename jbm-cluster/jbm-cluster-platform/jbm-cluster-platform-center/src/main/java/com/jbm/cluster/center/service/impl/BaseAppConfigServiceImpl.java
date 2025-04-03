@@ -21,25 +21,59 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     @Override
     public BaseAppConfig getAppConfigByKey(String appKey, Long orgId) {
+        if (ObjectUtil.isEmpty(appKey)) {
+            throw new RuntimeException("请求参数不能为空");
+        }
+        // 如果没有组织ID，则认为是默认配置
+        if (ObjectUtil.isEmpty(orgId)) {
+            return this.getAppDefConfigByKey(appKey);
+        } else {
+            QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
+                    .eq(BaseAppConfig::getOrgId, orgId);
+            List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+            // 如果没有查到，则认为是默认配置
+            if (CollUtil.isEmpty(list)) {
+                return this.getAppDefConfigByKey(appKey);
+            }
+            return CollUtil.getFirst(list);
+        }
+    }
+
+    public BaseAppConfig getAppDefConfigByKey(String appKey) {
         QueryWrapper<BaseAppConfig> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(BaseAppConfig::getAppKey, appKey)
-                .eq(orgId != null, BaseAppConfig::getOrgId, orgId)
-                .isNull(orgId == null, BaseAppConfig::getOrgId);
+                .isNull(BaseAppConfig::getOrgId);
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
+        // 如果没有查到，则认为是默认配置
+        if (CollUtil.isEmpty(list)) {
+            throw new RuntimeException("当前APP找不到默认配置");
+        }
         return CollUtil.getFirst(list);
     }
 
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
-        BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), null);
+
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            if (!LoginHelper.isAdmin()) {
-                dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), LoginHelper.softGetLoginUser().getCompanyId());
+            baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
+            BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
+            if (dbAppConfig.getOrgId() == null) {
+                //用户是登录状态
+                if (!LoginHelper.isAdmin()) {
+                    baseAppConfig.setId(null);
+                } else {
+                    baseAppConfig.setOrgId(null);
+                    baseAppConfig.setId(dbAppConfig.getId());
+                }
+            } else {
+                baseAppConfig.setId(dbAppConfig.getId());
             }
-        }
-        if (ObjectUtil.isNotEmpty(dbAppConfig)) {
+        } else {
+            BaseAppConfig dbAppConfig = this.getAppDefConfigByKey(baseAppConfig.getAppKey());
             baseAppConfig.setId(dbAppConfig.getId());
         }
+
         return super.saveEntity(baseAppConfig);
     }
 }
