@@ -141,39 +141,44 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
             if (routeList != null) {
                 // 最后加载路由
                 routeList.forEach(gatewayRoute -> {
-                    RouteDefinition definition = new RouteDefinition();
-                    List<PredicateDefinition> predicates = Lists.newArrayList();
-                    List<FilterDefinition> filters = Lists.newArrayList();
-                    definition.setId(gatewayRoute.getRouteName());
-                    // 路由地址
-                    PredicateDefinition predicatePath = new PredicateDefinition();
-                    Map<String, String> predicatePathParams = new HashMap<>(8);
-                    predicatePath.setName("Path");
-                    predicatePathParams.put("name", StringUtils.isBlank(gatewayRoute.getRouteName()) ? gatewayRoute.getRouteId().toString() : gatewayRoute.getRouteName());
-                    predicatePathParams.put("pattern", gatewayRoute.getPath());
-                    predicatePathParams.put("pathPattern", gatewayRoute.getPath());
-                    predicatePath.setArgs(predicatePathParams);
-                    predicates.add(predicatePath);
-                    // 服务地址
-                    URI uri = UriComponentsBuilder.fromUriString(StringUtils.isNotBlank(gatewayRoute.getUrl()) ? gatewayRoute.getUrl() : "lb://" + gatewayRoute.getServiceId()).build().toUri();
+                    try {
+                        RouteDefinition definition = new RouteDefinition();
+                        List<PredicateDefinition> predicates = Lists.newArrayList();
+                        List<FilterDefinition> filters = Lists.newArrayList();
+                        definition.setId(gatewayRoute.getRouteName());
+                        // 路由地址
+                        PredicateDefinition predicatePath = new PredicateDefinition();
+                        Map<String, String> predicatePathParams = new HashMap<>(8);
+                        predicatePath.setName("Path");
+                        predicatePathParams.put("name", StringUtils.isBlank(gatewayRoute.getRouteName()) ? gatewayRoute.getRouteId().toString() : gatewayRoute.getRouteName());
+                        predicatePathParams.put("pattern", gatewayRoute.getPath());
+                        predicatePathParams.put("pathPattern", gatewayRoute.getPath());
+                        predicatePath.setArgs(predicatePathParams);
+                        predicates.add(predicatePath);
 
-                    FilterDefinition stripPrefixDefinition = new FilterDefinition();
-                    Map<String, String> stripPrefixParams = new HashMap<>(8);
-                    stripPrefixDefinition.setName("StripPrefix");
-                    stripPrefixParams.put(NameUtils.GENERATED_NAME_PREFIX + "0", "1");
-                    stripPrefixDefinition.setArgs(stripPrefixParams);
-                    filters.add(stripPrefixDefinition);
+                        // 服务地址
+                        URI uri = UriComponentsBuilder.fromUriString(StringUtils.isNotBlank(gatewayRoute.getUrl()) ? gatewayRoute.getUrl() : "lb://" + gatewayRoute.getServiceId()).build().toUri();
 
-                    definition.setPredicates(predicates);
-                    definition.setFilters(filters);
-                    definition.setUri(uri);
-                    this.repository.save(Mono.just(definition)).subscribe();
+                        FilterDefinition stripPrefixDefinition = new FilterDefinition();
+                        Map<String, String> stripPrefixParams = new HashMap<>(8);
+                        stripPrefixDefinition.setName("StripPrefix");
+                        stripPrefixParams.put(NameUtils.GENERATED_NAME_PREFIX + "0", "1");
+                        stripPrefixDefinition.setArgs(stripPrefixParams);
+                        filters.add(stripPrefixDefinition);
+
+                        definition.setPredicates(predicates);
+                        definition.setFilters(filters);
+                        definition.setUri(uri);
+                        this.repository.save(Mono.just(definition)).subscribe();
+                    } catch (Exception e) {
+                        log.error("加载动态路由错误,跳过当前路由:{}", gatewayRoute.getPath(), e);
+                    }
                 });
             }
             log.info("=============加载动态路由:{}==============", routeList.size());
             log.info("=============加载动态限流:{}==============", limitApiList.size());
         } catch (Exception e) {
-            log.error("加载动态路由错误:{}", e);
+            log.error("加载动态路由错误", e);
         }
         return Mono.empty();
     }
