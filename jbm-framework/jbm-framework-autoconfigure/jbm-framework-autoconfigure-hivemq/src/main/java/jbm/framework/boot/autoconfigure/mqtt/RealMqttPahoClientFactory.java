@@ -1,14 +1,20 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.jbm.util.BeanUtils;
+import com.jbm.util.StringUtils;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.factories.Mqtt5ClientFactory;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import java.lang.reflect.Array;
 
 /**
  * @author wesley
@@ -30,21 +36,42 @@ public class RealMqttPahoClientFactory {
     @SneakyThrows
     public SimpleMqttClient getClientInstance() {
         // 创建客户端
-        Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(mqttConnectProperties, null);
-        return new SimpleMqttClient(mqtt5AsyncClient, mqttConnectProperties);
+        String clientId = "simple:" + System.currentTimeMillis();
+        return this.getClientInstance(clientId);
     }
+
+    private final String mqttTag = IdUtil.simpleUUID();
+
+    /**
+     * 分布式程序的客户端创建，避免冲突
+     *
+     * @param clientId
+     * @return
+     */
+    public SimpleMqttClient getAppClientInstance(String clientId, Object... tags) {
+        MqttProperties properties = new MqttProperties();
+        BeanUtil.copyProperties(mqttConnectProperties, properties);
+        tags = ArrayUtil.insert(tags, 0, clientId);
+        tags = ArrayUtil.append(tags, mqttTag);
+        properties.setClientId(StrUtil.join(StrUtil.UNDERLINE, tags));
+        Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
+        return new SimpleMqttClient(mqtt5AsyncClient, properties);
+    }
+
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance(String clientId) {
-        MqttProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        MqttProperties properties = new MqttProperties();
+        BeanUtil.copyProperties(mqttConnectProperties, properties);
         properties.setClientId(clientId);
         Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
-        return new SimpleMqttClient(mqtt5AsyncClient, mqttConnectProperties);
+        return new SimpleMqttClient(mqtt5AsyncClient, properties);
     }
 
     @SneakyThrows
     public Mqtt5Client getClientInstance(String url, String clientId) {
-        MqttProperties properties = BeanUtils.cloneJavaBean(mqttConnectProperties);
+        MqttProperties properties = new MqttProperties();
+        BeanUtil.copyProperties(mqttConnectProperties, properties);
         if (StrUtil.isNotBlank(url)) {
             properties.setUrl(URLUtil.getStringURI(url));
         }

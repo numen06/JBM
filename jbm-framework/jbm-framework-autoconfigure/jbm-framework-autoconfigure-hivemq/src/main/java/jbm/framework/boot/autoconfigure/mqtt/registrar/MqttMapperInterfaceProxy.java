@@ -16,6 +16,7 @@ import org.springframework.cglib.proxy.InvocationHandler;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Date;
 
 public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializable {
 
@@ -28,14 +29,26 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
         this.mqttPahoClientFactory = mqttPahoClientFactory;
     }
 
+    /**
+     * 生成当前程序唯一的MQTT客户端ID
+     *
+     * @param mqttMapper
+     * @param mqttMapperInterface
+     * @return
+     */
+    private String getMqttClientId(MqttMapper mqttMapper, Class<T> mqttMapperInterface) {
+        if (StrUtil.isNotBlank(mqttMapper.clientId())) {
+            return mqttMapper.clientId();
+        }
+        return mqttMapperInterface.getSimpleName() ;
+    }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (this.mqttMapperInterface.isAnnotationPresent(MqttMapper.class)) {
             // 读取类上注解
             MqttMapper mqttMapper = this.mqttMapperInterface.getAnnotation(MqttMapper.class);
-            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
-            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);
+            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getAppClientInstance(getMqttClientId(mqttMapper, this.mqttMapperInterface));
             if (method.isAnnotationPresent(MqttSend.class)) {
                 // 读取方法上注解
                 MqttSend methodAnnotation = method.getAnnotation(MqttSend.class);
@@ -47,7 +60,7 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
                 } else {
                     mqttMessage.setPayload(JSON.toJSONBytes(mqttResponseBean.getBody()));
                 }
-                simpleMqttClient.publish(methodAnnotation.toTopic(),mqttMessage );
+                simpleMqttClient.publish(methodAnnotation.toTopic(), mqttMessage);
                 System.out.println("调用接口方法名:" + methodAnnotation.toTopic());
             }
         }

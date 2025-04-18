@@ -61,7 +61,7 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                 .transportConfig(buildTransportConfig(configuration));
 
         if (StrUtil.isNotBlank(configuration.getClientId())) {
-            clientBuilder.identifier("hivemq_client_" + configuration.getClientId());
+            clientBuilder.identifier("hivemq_" + configuration.getClientId());
         }
         if (configuration.isAutomaticReconnect()) {
             clientBuilder.automaticReconnect()

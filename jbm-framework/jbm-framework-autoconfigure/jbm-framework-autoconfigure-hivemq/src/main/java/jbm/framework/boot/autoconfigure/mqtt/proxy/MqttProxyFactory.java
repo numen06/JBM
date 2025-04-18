@@ -23,6 +23,7 @@ import org.springframework.context.ApplicationListener;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +94,19 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         return false;
     }
 
+    /**
+     * 生成当前程序唯一的MQTT客户端ID
+     *
+     * @param mqttMapper
+     * @return
+     */
+    private String getMqttClientId(MqttMapper mqttMapper, Class<?> bean) {
+        if (StrUtil.isNotBlank(mqttMapper.clientId())) {
+            return mqttMapper.clientId();
+        }
+        return bean.getSimpleName();
+    }
+
     public void find() {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         for (String name : mqttProxys.keySet()) {
@@ -102,8 +116,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 continue;
             }
             MqttMapper mqttMapper = AnnotationUtil.getAnnotation(bean.getClass(), MqttMapper.class);
-            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
-            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);
+            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getAppClientInstance(getMqttClientId(mqttMapper, bean.getClass()));
 
             Field[] fields = ClassUtil.getDeclaredFields(bean.getClass());
             for (Field field : fields) {
