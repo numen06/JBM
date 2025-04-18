@@ -92,6 +92,9 @@ public class BaseUser extends MasterDataEntity {
     @ApiModelProperty("手机号")
     private String mobile;
 
+
+    @ApiModelProperty("性别")
+    private Integer sex;
     /**
      * 描述
      */
@@ -117,4 +120,6 @@ public class BaseUser extends MasterDataEntity {
      */
     @ApiModelProperty("账号关闭时间")
     private Date closeTime;
+
+
 }

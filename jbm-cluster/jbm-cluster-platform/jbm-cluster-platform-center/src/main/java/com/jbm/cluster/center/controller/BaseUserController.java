@@ -108,6 +108,22 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.callback(() -> account);
     }
 
+    @ApiOperation(value = "保存用户信息")
+    @PostMapping("/save")
+    @Override
+    public ResultBody<BaseUser> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return ResultBody.callback("保存用户信息成功", () -> {
+            validator(masterDataRequsetBody);
+            BaseUser entity = validatorMasterData(masterDataRequsetBody, true);
+            entity = service.saveEntity(entity);
+            BaseUserForm baseUserForm = masterDataRequsetBody.toJavaObject(BaseUserForm.class);
+            if (ObjectUtil.isNotEmpty(baseUserForm.getRoleIds())) {
+                baseRoleService.saveUserRoles(entity.getUserId(), baseUserForm.getRoleIds());
+            }
+            return entity;
+        });
+    }
+
     /**
      * 获取登录账号信息
      *

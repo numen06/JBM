@@ -69,26 +69,20 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
-        BaseUser user = this.selectById(baseUser.getUserId());
-        if (ObjectUtil.isEmpty(user)) {
-            if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
-                BaseOrg baseOrg = new BaseOrg();
-                baseOrg.setId(baseUser.getDepartmentId());
-                // 获取顶层公司
-                BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
-                // 企业下账户数量
-                Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
-                long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
-                if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
-                    throw new ServiceException("企业下用户数已达上限");
-                }
-                baseUser.setCompanyId(rootOrg.getId());
+        if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
+            BaseOrg baseOrg = new BaseOrg();
+            baseOrg.setId(baseUser.getDepartmentId());
+            // 获取顶层公司
+            BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
+            // 企业下账户数量
+            Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
+            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
+            if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
+                throw new ServiceException("企业下用户数已达上限");
             }
-            this.addUser(baseUser);
-        } else {
-            this.updateUser(baseUser);
+            baseUser.setCompanyId(rootOrg.getId());
         }
-        return baseUser;
+        return super.saveEntity(baseUser);
     }
 
     @Override
