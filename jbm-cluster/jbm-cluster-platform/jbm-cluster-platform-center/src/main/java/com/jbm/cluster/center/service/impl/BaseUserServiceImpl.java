@@ -82,6 +82,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             }
             baseUser.setCompanyId(rootOrg.getId());
         }
+        if (ObjectUtil.isEmpty(baseUser.getUserId())) {
+            this.addUser(baseUser);
+        } else {
+            this.updateUser(baseUser);
+        }
         return super.saveEntity(baseUser);
     }
 
