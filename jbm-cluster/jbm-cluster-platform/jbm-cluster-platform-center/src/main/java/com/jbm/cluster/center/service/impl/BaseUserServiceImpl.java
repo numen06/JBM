@@ -87,7 +87,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         } else {
             this.updateUser(baseUser);
         }
-        return super.saveEntity(baseUser);
+        return baseUser;
     }
 
     @Override
