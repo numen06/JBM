@@ -122,7 +122,7 @@ public class DataPaging<E> implements Serializable {
 
 
     public static <E> DataPaging<E> of(PageForm pageForm) {
-        return new DataPaging<>(new ArrayList<>(), 0L, pageForm);
+        return new DataPaging<>(new ArrayList<>(), 0L, pageForm == null ? EMPTY_PAGEABLE : pageForm);
     }
 
 }
