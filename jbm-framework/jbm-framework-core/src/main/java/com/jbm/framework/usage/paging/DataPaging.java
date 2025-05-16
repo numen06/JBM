@@ -1,5 +1,6 @@
 package com.jbm.framework.usage.paging;
 
+import com.jbm.util.CollectionUtils;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -119,5 +120,9 @@ public class DataPaging<E> implements Serializable {
         this.totalPage = pages;
     }
 
+
+    public static <E> DataPaging<E> of(PageForm pageForm) {
+        return new DataPaging<>(new ArrayList<>(), 0L, pageForm);
+    }
 
 }
