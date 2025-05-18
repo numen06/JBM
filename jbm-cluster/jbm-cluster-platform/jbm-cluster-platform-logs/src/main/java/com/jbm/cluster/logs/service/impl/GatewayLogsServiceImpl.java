@@ -8,17 +8,12 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.lock.LockTemplate;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
-import com.jbm.cluster.logs.repository.GatewayLogsRepository;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import jbm.framework.boot.autoconfigure.redis.distributed.SerialNumberTamplete;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.influx.SimpleInfluxTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,7 +28,7 @@ import java.util.function.Consumer;
  **/
 @Service
 @Slf4j
-public class GatewayLogsServiceImpl extends BaseDataServiceImpl<GatewayLogs, GatewayLogsRepository> implements GatewayLogsService {
+public class GatewayLogsServiceImpl implements GatewayLogsService {
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm) {
         return this.findLogs(gatewayLogsForm, false);

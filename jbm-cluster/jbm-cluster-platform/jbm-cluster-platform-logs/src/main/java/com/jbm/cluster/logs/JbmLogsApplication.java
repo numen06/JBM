@@ -4,7 +4,6 @@ package com.jbm.cluster.logs;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 /**
  * 日志收集基础服务
@@ -13,7 +12,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
  */
 @EnableCaching
 @SpringBootApplication
-@EnableMongoRepositories(basePackages = "com.jbm.cluster.logs.repository")
 public class JbmLogsApplication {
 
     public static void main(String[] args) {

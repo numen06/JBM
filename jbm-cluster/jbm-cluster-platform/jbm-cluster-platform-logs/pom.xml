@@ -18,15 +18,11 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mongo</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-influxdb</artifactId>
+            <artifactId>jbm-framework-autoconfigure-tdengine</artifactId>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.jbm</groupId>-->
