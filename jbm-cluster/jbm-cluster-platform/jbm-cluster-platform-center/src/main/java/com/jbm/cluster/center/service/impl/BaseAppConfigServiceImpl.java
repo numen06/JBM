@@ -56,11 +56,14 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
     @Override
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
-            BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
-            if (ObjectUtil.isEmpty(dbAppConfig)) {
+            try {
+                // 如果默认配置不存在则创建
+                this.getAppDefConfigByKey(baseAppConfig.getAppKey());
+            } catch (ServiceException e) {
                 return super.saveEntity(baseAppConfig);
             }
+            baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
+            BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
             if (dbAppConfig.getOrgId() == null) {
                 //用户是登录状态
                 if (!LoginHelper.isAdmin()) {
