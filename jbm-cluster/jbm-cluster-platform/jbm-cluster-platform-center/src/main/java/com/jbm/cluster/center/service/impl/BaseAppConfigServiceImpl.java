@@ -3,8 +3,10 @@ package com.jbm.cluster.center.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
 import com.jbm.cluster.center.service.BaseAppConfigService;
+import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
@@ -12,6 +14,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -21,6 +24,8 @@ import java.util.List;
 @Service
 public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfig> implements BaseAppConfigService {
 
+    @Resource
+    private BaseAppService baseAppService;
 
     @Override
     @Cacheable(value = "appConfigByKey", key = "'appConfigByKey_'+#appKey+'_'+#orgId")
@@ -51,21 +56,26 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
         List<BaseAppConfig> list = this.baseMapper.selectList(queryWrapper);
         // 如果没有查到，则认为是默认配置
         if (CollUtil.isEmpty(list)) {
-            throw ServiceException.of("当前APP找不到默认配置，请通过管理员配置");
+           return this.createDefAppConfig(appKey);
         }
         return CollUtil.getFirst(list);
+    }
+
+    private BaseAppConfig createDefAppConfig(String appKey) {
+        BaseApp baseApp = baseAppService.getAppInfoByKey(appKey);
+        if (baseApp == null) {
+            throw ServiceException.of("当前没有配置APP信息，请通过管理员配置");
+        }
+        BaseAppConfig baseAppConfig = new BaseAppConfig();
+        baseAppConfig.setAppId(baseApp.getAppId());
+        baseAppConfig.setOrgId(null);
+        return super.saveEntity(baseAppConfig);
     }
 
     @Override
     @CacheEvict(value = "appConfigByKey", allEntries = true)
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            try {
-                // 如果默认配置不存在则创建
-                this.getAppDefConfigByKey(baseAppConfig.getAppKey());
-            } catch (ServiceException e) {
-                return super.saveEntity(baseAppConfig);
-            }
             baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
             BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
             if (dbAppConfig.getOrgId() == null) {
