@@ -63,9 +63,6 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
     private BaseAppConfig createDefAppConfig(String appKey) {
         BaseApp baseApp = baseAppService.getAppInfoByKey(appKey);
-        if (baseApp == null) {
-            throw ServiceException.of("当前没有配置APP信息，请通过管理员配置");
-        }
         BaseAppConfig baseAppConfig = new BaseAppConfig();
         baseAppConfig.setAppKey(appKey);
         baseAppConfig.setAppId(baseApp.getAppId());
