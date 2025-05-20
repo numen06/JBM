@@ -59,7 +59,7 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
             baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
             BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
             if (ObjectUtil.isEmpty(dbAppConfig)) {
-                super.saveEntity(baseAppConfig);
+                return super.saveEntity(baseAppConfig);
             }
             if (dbAppConfig.getOrgId() == null) {
                 //用户是登录状态
