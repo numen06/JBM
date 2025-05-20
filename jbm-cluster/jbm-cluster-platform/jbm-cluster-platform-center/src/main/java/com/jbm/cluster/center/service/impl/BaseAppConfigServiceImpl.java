@@ -8,6 +8,8 @@ import com.jbm.cluster.center.service.BaseAppConfigService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
 
 
     @Override
+    @Cacheable(value = "appConfigByKey", key = "'appConfigByKey_'+#appKey+'_'+#orgId")
     public BaseAppConfig getAppConfigByKey(String appKey, Long orgId) {
         if (ObjectUtil.isEmpty(appKey)) {
             throw ServiceException.of("请求参数不能为空");
@@ -54,6 +57,7 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
     }
 
     @Override
+    @CacheEvict(value = "appConfigByKey", allEntries = true)
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
             try {
