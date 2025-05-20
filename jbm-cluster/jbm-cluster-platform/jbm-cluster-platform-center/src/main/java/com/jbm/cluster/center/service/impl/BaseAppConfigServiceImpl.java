@@ -67,8 +67,8 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
             throw ServiceException.of("当前没有配置APP信息，请通过管理员配置");
         }
         BaseAppConfig baseAppConfig = new BaseAppConfig();
+        baseAppConfig.setAppKey(appKey);
         baseAppConfig.setAppId(baseApp.getAppId());
-        baseAppConfig.setOrgId(null);
         return super.saveEntity(baseAppConfig);
     }
 
