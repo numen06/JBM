@@ -2,7 +2,12 @@ package com.jbm.util.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.jbm.util.key.KeyBean;
+import com.jbm.util.key.Keys;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Supplier;
 
 /**
  * @author wesley
@@ -57,6 +62,17 @@ public class Caches {
             cache.invalidate(key);
         }
         return defaultValue;
+    }
+
+    public static <K, T> T getKeyBeanCache(LoadingCache<KeyBean<K>, T> cache, K key) {
+        return Caches.getKeyBeanCacheLambda(cache, () -> key);
+    }
+
+    public static <K, T> T getKeyBeanCacheLambda(LoadingCache<KeyBean<K>, T> cache, Supplier<K> key) {
+        if (cache == null) {
+            return null;
+        }
+        return cache.get(Keys.ofBean(key));
     }
 
 }
