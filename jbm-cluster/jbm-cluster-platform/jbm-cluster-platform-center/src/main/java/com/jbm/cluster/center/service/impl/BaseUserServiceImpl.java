@@ -530,7 +530,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public List<BaseUser> retrievalUsers(String keyword) {
-        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper<>();
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             // 用户不存在部门的情况下，仅查询自己的数据
