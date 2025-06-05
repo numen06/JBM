@@ -12,7 +12,7 @@ public enum ErrorCode {
      * 成功
      */
     OK(200, "成功"),
-    FAIL(1000, "系统错误,请联系管理员"),
+    FAIL(1000, "接口异常!"),
     ALERT(1001, "alert"),
 
     /**
