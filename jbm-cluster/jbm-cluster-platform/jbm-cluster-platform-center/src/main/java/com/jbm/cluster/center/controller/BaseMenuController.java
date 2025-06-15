@@ -99,7 +99,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
                 .body(jsonBytes);
     }
 
-    @ApiOperation(value = "导入菜单")
+    @ApiOperation(value = "导入菜单JSON文件")
     @GetMapping("/importMenu")
     public  void  importMenu(@RequestParam(required = false) Long appId) {
 
