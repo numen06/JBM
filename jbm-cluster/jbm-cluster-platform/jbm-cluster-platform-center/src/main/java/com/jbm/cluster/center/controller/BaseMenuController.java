@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
 
     @ApiOperation(value = "导出菜单JSON文件")
     @GetMapping("/exportMenu")
-    public ResponseEntity<byte[]> exportMenu(@RequestParam(required = false) Long appId) {
+    public void exportMenu(@RequestParam(required = false) Long appId,HttpServletResponse response ) throws IOException {
         String fileName = "menus.json";
         List<BaseMenu> list = new ArrayList<>();
         BaseMenu baseMenu = new BaseMenu();
@@ -90,13 +91,13 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             list = baseResourceMenuService.findAllList(baseMenu);
         }
         //将list写入response作为JSON导出
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setContentDispositionFormData("attachment", fileName);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        WebUtils.setFileDownloadHeader(response, fileName);
         byte[] jsonBytes = JSON.toJSONBytes(list);
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(jsonBytes);
+
+        // 写入响应输出流
+        response.getOutputStream().write(jsonBytes);
+        response.getOutputStream().flush();
     }
 
     @ApiOperation(value = "导入菜单JSON文件")
