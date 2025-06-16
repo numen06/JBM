@@ -25,15 +25,23 @@ public class CacheMonitor<K, V> {
     // 定时任务表达式
     private final String cron;
 
+    private boolean updateToClear = false;
+
     public CacheMonitor(Cache<K, V> cache, Callable<List<K>> ckeckKeysCallable) {
         this(cache, ckeckKeysCallable, null);
     }
 
     public CacheMonitor(Cache<K, V> cache, Callable<List<K>> ckeckKeysCallable, String cron) {
+        this(cache, ckeckKeysCallable, cron, false);
+    }
+
+
+    public CacheMonitor(Cache<K, V> cache, Callable<List<K>> ckeckKeysCallable, String cron, boolean updateToClear) {
         this.cache = cache;
         this.ckeckKeysCallable = ckeckKeysCallable;
         // 默认每5秒执行一次
         this.cron = StrUtil.isBlank(cron) ? "0/5 * * * * ?" : cron;
+        this.updateToClear = updateToClear;
     }
 
     /**
@@ -78,6 +86,11 @@ public class CacheMonitor<K, V> {
         try {
             List<K> lostKeys = ckeckKeysCallable.call();
             if (CollUtil.isEmpty(lostKeys)) {
+                return;
+            }
+            if (updateToClear) {
+                cache.cleanUp();
+                log.info("clear all cache success");
                 return;
             }
             for (K key : lostKeys) {
