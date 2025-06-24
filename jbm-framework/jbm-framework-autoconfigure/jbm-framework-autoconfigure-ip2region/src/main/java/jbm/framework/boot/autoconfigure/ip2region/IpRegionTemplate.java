@@ -26,7 +26,6 @@ public class IpRegionTemplate extends AbstractScheduledService implements Initia
      * 远程下载地址
      */
     public static final String DB_URL = "https://gitee.com/lionsoul/ip2region/blob/master/data/ip2region.xdb";
-    //    public static final String DB_URL = "https://numen-share.oss-cn-shanghai.aliyuncs.com/ip2region/ip2region.xdb";
     public static final String DB_PATH = "data/ip2region.xdb";
     public static final String DB_PATH_TEMP = "data/ip2region-temp.xdb";
     private Searcher searcher = null;
