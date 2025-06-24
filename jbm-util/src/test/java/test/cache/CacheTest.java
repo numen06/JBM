@@ -6,6 +6,7 @@ import cn.hutool.core.util.SerializeUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.util.cache.Caches;
 import com.jbm.util.key.KeyBean;
@@ -74,16 +75,30 @@ public class CacheTest {
     }
 
     @Test
+    public void testKey4() {
+        LoadingCache<KeyBean<Student>, String> cache = Caffeine.newBuilder().maximumSize(1000).build(
+                (key) -> {
+                    return UUID.randomUUID().toString();
+                }
+        );
+        Console.log("get val1:{}", Caches.getKeyBeanCache(cache, new Student(1L, "张三")));
+        Console.log("get val2:{}", Caches.getKeyBeanCacheLambda(cache, () -> {
+            return new Student(1L, "张三");
+        }));
+    }
+
+    @Test
     public void testSer() {
         KeyBean<Student> keyBean = Keys.ofBean(new Student(1L, "张三"), Student::getId);
         String json = JSONObject.toJSONString(keyBean);
-        KeyBean<Student> keyBean2 = JSON.parseObject(json, new TypeReference<KeyBean<Student>>() {});
+        KeyBean<Student> keyBean2 = JSON.parseObject(json, new TypeReference<KeyBean<Student>>() {
+        });
         if (keyBean.equals(keyBean2)) {
             Console.log("json equal");
         } else {
             Console.log("json not equal");
         }
-        byte[] b =  SerializeUtil.serialize(keyBean);
+        byte[] b = SerializeUtil.serialize(keyBean);
         KeyBean<Student> keyBean3 = SerializeUtil.deserialize(b);
         if (keyBean.equals(keyBean3)) {
             Console.log("byte equal");

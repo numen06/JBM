@@ -2,7 +2,6 @@ package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.RSA;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -114,7 +113,9 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         queryWrapper.lambda().eq(BaseApp::getApiKey, appKey);
         List<BaseApp> list = baseAppMapper.selectList(queryWrapper);
         BaseApp baseApp = CollUtil.getFirst(list);
-
+        if (baseApp == null) {
+            throw ServiceException.of("当前没有配置APP信息，请通过管理员配置");
+        }
         if (ObjectUtil.hasEmpty(baseApp.getPrivateKey(), baseApp.getPublicKey())) {
             KeyPair keyPair = SecurityUtils.generateRSAKey(baseApp.getSecretKey());
             RSA rsa = SecureUtil.rsa(keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded());

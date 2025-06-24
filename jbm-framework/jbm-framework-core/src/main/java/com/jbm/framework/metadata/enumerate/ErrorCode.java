@@ -1,17 +1,18 @@
 package com.jbm.framework.metadata.enumerate;
 
+import lombok.Getter;
+
 /**
  * 自定义返回码
  *
  * @author wesley
  */
-
 public enum ErrorCode {
     /**
      * 成功
      */
-    OK(200, "success"),
-    FAIL(1000, "fail"),
+    OK(200, "成功"),
+    FAIL(1000, "接口异常!"),
     ALERT(1001, "alert"),
 
     /**
@@ -63,7 +64,9 @@ public enum ErrorCode {
     SERVICE_UNAVAILABLE(5003, "service_unavailable");
 
 
+    @Getter
     private int code;
+    @Getter
     private String message;
 
     ErrorCode() {
@@ -90,15 +93,6 @@ public enum ErrorCode {
             }
         }
         return ERROR;
-    }
-
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
     }
 
 

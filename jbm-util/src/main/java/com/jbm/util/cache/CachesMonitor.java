@@ -28,15 +28,23 @@ public class CachesMonitor<T> {
     // 定时任务表达式
     private final String cron;
 
+    private boolean updateToClear = false;
+
     public CachesMonitor(Callable<List<T>> ckeckKeysCallable) {
         this(ckeckKeysCallable, null);
     }
 
     public CachesMonitor(Callable<List<T>> ckeckKeysCallable, String cron) {
+        this(ckeckKeysCallable, cron, false);
+    }
+
+    public CachesMonitor(Callable<List<T>> ckeckKeysCallable, String cron, boolean updateToClear) {
         this.ckeckKeysCallable = ckeckKeysCallable;
         // 默认每5秒执行一次
         this.cron = StrUtil.isBlank(cron) ? "0/5 * * * * ?" : cron;
+        this.updateToClear = updateToClear;
     }
+
 
     public class CacheMonitorBean<K, V> {
         private final Cache<K, V> cache;
@@ -54,6 +62,11 @@ public class CachesMonitor<T> {
 
         public void reload(T bean) {
             this.reloadByKey(function.apply(bean));
+        }
+
+
+        public void clear() {
+            cache.cleanUp();
         }
 
         /**
@@ -112,6 +125,11 @@ public class CachesMonitor<T> {
         try {
             List<T> lostKeys = ckeckKeysCallable.call();
             if (CollUtil.isEmpty(lostKeys)) {
+                return;
+            }
+            if (updateToClear) {
+                caches.forEach(CacheMonitorBean::clear);
+                log.info("clear all cache success");
                 return;
             }
             caches.forEach(cache -> cache.reload(lostKeys));
