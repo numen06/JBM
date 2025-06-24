@@ -1,5 +1,6 @@
 package com.jbm.cluster.logs.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -9,7 +10,7 @@ import com.jbm.framework.usage.paging.DataPaging;
  * @author: wesley.zhang
  * @create: 2021-05-06 16:55
  **/
-public interface GatewayLogsService extends BaseDataService<GatewayLogs> {
+public interface GatewayLogsService extends IService<GatewayLogs> {
 
 
     DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm);

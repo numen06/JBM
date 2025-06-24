@@ -18,9 +18,13 @@ spring:
       config:
         namespace: jbm
         #        group: ${config.group}
-        refreshable-dataids: common.properties
         server-addr: nacos2:8848
-        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,td-log-db.properties
+        shared-configs:
+          - { data-id: common.properties, refresh: true }
+          - { data-id: redis.properties }
+          - { data-id: rabbitmq.properties }
+          - { data-id: td-log-db.yml }
+        file-extension: yml
   resources:
     add-mappings: false
 management:

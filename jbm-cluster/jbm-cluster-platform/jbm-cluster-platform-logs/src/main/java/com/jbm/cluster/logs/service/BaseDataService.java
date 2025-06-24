@@ -1,5 +1,7 @@
 package com.jbm.cluster.logs.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+
 import java.util.List;
 
 /**
@@ -7,14 +9,11 @@ import java.util.List;
  * @author: wesley.zhang
  * @create: 2021-05-06 17:01
  **/
-public interface BaseDataService<Entity> {
+public interface BaseDataService<Entity> extends IService<Entity> {
 
-    long count();
 
-    Entity save(Entity commodity);
-
-    void delete(Entity commodity);
-
-    List<Entity> getAll();
+//    void delete(Entity commodity);
+//
+//    List<Entity> getAll();
 
 }
