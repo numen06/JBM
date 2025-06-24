@@ -42,4 +42,4 @@ gradle-app.setting
 mqtt_paho/
 .DS_Store
 h2/
-/jbm-framework/jbm-framework-autoconfigure/jbm-framework-autoconfigure-ip2region/data
+/jbm-framework/jbm-framework-autoconfigure/jbm-framework-autoconfigure-ip2region/data/
