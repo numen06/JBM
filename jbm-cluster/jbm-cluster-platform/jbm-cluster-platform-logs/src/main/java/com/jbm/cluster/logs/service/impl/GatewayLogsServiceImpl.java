@@ -81,9 +81,14 @@ public class GatewayLogsServiceImpl extends ServiceImpl<GatewayLogsMapper, Gatew
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
         try {
             StableExecutor executor = tdTemplate.getSTableExecutor(StrUtil.toUnderlineCase(GatewayLogs.class.getSimpleName()));
-            executor.insertSubTable((g) -> "app-" + g.getApiId(), gatewayLogs);
+            executor.insertSubTable((g) -> {
+                if (g.getApiId() == null) {
+                    return "app_system";
+                }
+                return StrUtil.format("app_{}", g.getApiId());
+            }, gatewayLogs);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            log.error("保存日志失败", e);
         }
     }
 

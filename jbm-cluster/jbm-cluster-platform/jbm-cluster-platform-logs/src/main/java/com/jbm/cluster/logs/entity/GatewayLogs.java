@@ -1,8 +1,9 @@
 package com.jbm.cluster.logs.entity;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
 import lombok.Data;
+
+import java.util.Date;
 
 /**
  * @program: JBM7
