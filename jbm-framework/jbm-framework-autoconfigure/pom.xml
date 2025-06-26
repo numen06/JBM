@@ -53,6 +53,7 @@
         <module>jbm-framework-autoconfigure-rules</module>
         <module>jbm-framework-autoconfigure-retrofit</module>
         <module>jbm-framework-autoconfigure-drools</module>
+        <module>jbm-framework-autoconfigure-openobserve</module>
     </modules>
     <dependencies>
         <dependency>
