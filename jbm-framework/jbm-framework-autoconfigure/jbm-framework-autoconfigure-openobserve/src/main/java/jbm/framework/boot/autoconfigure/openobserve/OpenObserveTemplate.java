@@ -8,6 +8,7 @@ import cn.hutool.http.Method;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.framework.exceptions.ServiceException;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -52,7 +53,7 @@ public class OpenObserveTemplate {
 
 
     public QueryResult selectLogs(QueryBean queryBean) {
-        String url = StrUtil.format("{}/api/{}/{}/_search", openObserveProperties.getBaseUrl(), openObserveProperties.getOrganization(), openObserveProperties.getStream());
+        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getBaseUrl(), openObserveProperties.getOrganization(), openObserveProperties.getStream());
         HttpRequest request = HttpRequest.of(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword()).method(Method.POST);
         request.contentType("application/json");
         JSONObject queryBeanJson = new JSONObject();

@@ -1,12 +1,9 @@
 import cn.hutool.core.io.resource.ResourceUtil;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
-import jbm.framework.boot.autoconfigure.openobserve.QueryBean;
-import org.apache.commons.io.Charsets;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import java.nio.charset.Charset;
 
 public class OpenObserveTest {
 
@@ -33,11 +30,11 @@ public class OpenObserveTest {
     @Test
     public void select() {
         QueryBean queryBean = new QueryBean();
-        queryBean.setSql("SELECT * FROM test");
-        queryBean.setFrom(0);
-        queryBean.setSize(10);
-        queryBean.setStartTime(0L);
-        queryBean.setEndTime(System.currentTimeMillis());
+        queryBean.getQuery().setSql("SELECT * FROM test");
+        queryBean.getQuery().setFrom(0);
+        queryBean.getQuery().setSize(10);
+        queryBean.getQuery().setStartTime(0L);
+        queryBean.getQuery().setEndTime(System.currentTimeMillis());
         openObserveTemplate.selectLogs(queryBean);
 
 

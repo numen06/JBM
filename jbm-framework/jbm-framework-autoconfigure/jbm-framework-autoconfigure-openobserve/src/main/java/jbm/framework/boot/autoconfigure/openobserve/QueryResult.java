@@ -9,6 +9,11 @@ import java.util.Map;
 public class QueryResult {
 
     private String took;
+    private Long total;
+    private Integer from;
+    private Integer size;
+    private Long scanSize;
+
 
     private List<Hit> hits;
 
