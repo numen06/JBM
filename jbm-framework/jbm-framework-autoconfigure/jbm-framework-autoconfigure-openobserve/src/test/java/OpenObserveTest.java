@@ -1,7 +1,6 @@
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
-import com.alibaba.fastjson.JSON;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
 import jbm.framework.boot.autoconfigure.openobserve.QueryResult;
@@ -19,7 +18,7 @@ public class OpenObserveTest {
     @BeforeAll
     public static void init() {
         OpenObserveProperties openObserveProperties = new OpenObserveProperties();
-        openObserveProperties.setBaseUrl("http://10.100.10.64:5080");
+        openObserveProperties.setUrl("http://10.100.10.64:5080");
         openObserveProperties.setOrganization("default");
         openObserveProperties.setStream("test");
         openObserveProperties.setUsername("admin@example.com");
@@ -31,7 +30,7 @@ public class OpenObserveTest {
     public void testAdd() {
         String log = ResourceUtil.readUtf8Str("gateway_logs.json");
 //        String log = ResourceUtil.readUtf8Str("test.json");
-        openObserveTemplate.postLogs(log);
+        openObserveTemplate.postLog(log);
     }
 
     @Test

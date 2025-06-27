@@ -1,25 +1,30 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.hutool.db.sql.Condition;
+import cn.hutool.db.sql.SqlBuilder;
+import cn.hutool.db.sql.SqlUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.service.GatewayLogsService;
-import com.jbm.cluster.logs.tdengine.mapper.GatewayLogsMapper;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
-import jbm.framework.boot.autoconfigure.td.StableExecutor;
-import jbm.framework.boot.autoconfigure.td.TdTemplate;
+import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
+import jbm.framework.boot.autoconfigure.openobserve.QueryResult;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @program: JBM7
@@ -28,11 +33,11 @@ import java.util.function.Consumer;
  **/
 @Service
 @Slf4j
-public class GatewayLogsServiceImpl extends ServiceImpl<GatewayLogsMapper, GatewayLogs> implements GatewayLogsService {
+public class GatewayLogsServiceImpl implements GatewayLogsService {
 
 
     @Resource
-    private GatewayLogsMapper gatewayLogsMapper;
+    private OpenObserveTemplate openObserveTemplate;
 
 
     @Override
@@ -43,8 +48,28 @@ public class GatewayLogsServiceImpl extends ServiceImpl<GatewayLogsMapper, Gatew
     @Override
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
         IPage<GatewayLogs> page = ServiceUtils.buildPage(gatewayLogsForm.getPageForm());
-        QueryWrapper<GatewayLogs> queryWrapper = new QueryWrapper<>(gatewayLogsForm.getGatewayLogs());
-        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
+//        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
+        QueryBean queryBean = new QueryBean();
+        // 生成 INSERT SQL
+        String sql = "select * from test where service_id = '"+gatewayLogsForm.getGatewayLogs().getServiceId()+"'";
+        queryBean.getQuery().setSql(sql);
+        queryBean.getQuery().setFrom(0);
+        queryBean.getQuery().setSize(gatewayLogsForm.getPageForm().getPageSize());
+        DateTime now = DateUtil.date();
+        if (gatewayLogsForm.getBeginTime() == null) {
+            gatewayLogsForm.setBeginTime(DateUtil.offsetDay(now, -1));
+        }
+        if (gatewayLogsForm.getEndTime() == null) {
+            gatewayLogsForm.setEndTime(now);
+        }
+        queryBean.getQuery().setStartTime(gatewayLogsForm.getBeginTime().getTime() * 1000);
+        queryBean.getQuery().setEndTime(gatewayLogsForm.getEndTime().getTime() * 1000);
+        QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
+        List<Map<String, Object>> hits = queryResult.getHits();
+        List<GatewayLogs> list = hits.stream().map(map -> {
+            JSONObject jsonObject = new JSONObject(map);
+            return jsonObject.toJavaObject(GatewayLogs.class);
+        }).collect(Collectors.toList());
         // 查询
         return new DataPaging<>(list, page.getTotal(), page.getPages(), gatewayLogsForm.getPageForm());
     }
@@ -65,31 +90,18 @@ public class GatewayLogsServiceImpl extends ServiceImpl<GatewayLogsMapper, Gatew
         return 0L;
     }
 
-    @Resource
-    private TdTemplate tdTemplate;
-
 
     private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
-//            gatewayLogsMapper.insert(gatewayLogs);
-            saveBatch(gatewayLogs, 100);
+            openObserveTemplate.postLogs(gatewayLogs);
         }
     });
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        try {
-            StableExecutor executor = tdTemplate.getSTableExecutor(StrUtil.toUnderlineCase(GatewayLogs.class.getSimpleName()));
-            executor.insertSubTable((g) -> {
-                if (g.getApiId() == null) {
-                    return "app_system";
-                }
-                return StrUtil.format("app_{}", g.getApiId());
-            }, gatewayLogs);
-        } catch (SQLException e) {
-            log.error("保存日志失败", e);
-        }
+        batchTask.add(gatewayLogs);
+
     }
 
 

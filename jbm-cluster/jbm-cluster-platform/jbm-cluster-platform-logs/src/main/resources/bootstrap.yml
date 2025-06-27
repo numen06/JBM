@@ -23,7 +23,7 @@ spring:
           - { data-id: common.properties, refresh: true }
           - { data-id: redis.properties }
           - { data-id: rabbitmq.properties }
-          - { data-id: td-log-db.yml }
+          - { data-id: openobserve.yml }
         file-extension: yml
   resources:
     add-mappings: false

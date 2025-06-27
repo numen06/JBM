@@ -22,17 +22,7 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-tdengine</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>${mybatis-plus.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
-            <version>3.5.2</version>
+            <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.jbm</groupId>-->
