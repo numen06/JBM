@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.openobserve;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,13 +14,5 @@ public class QueryResult {
     private Integer from;
     private Integer size;
     private Long scanSize;
-
-
-    private List<Hit> hits;
-
-    @Data
-    static class Hit {
-        private Long total;
-        private List<Map<String, Object>> hits;
-    }
+    private List<Map<String,Object>> hits = new ArrayList<>();
 }

@@ -1,9 +1,16 @@
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
+import com.alibaba.fastjson.JSON;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
+import jbm.framework.boot.autoconfigure.openobserve.QueryResult;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Date;
+import java.util.Map;
 
 public class OpenObserveTest {
 
@@ -16,7 +23,7 @@ public class OpenObserveTest {
         openObserveProperties.setOrganization("default");
         openObserveProperties.setStream("test");
         openObserveProperties.setUsername("admin@example.com");
-        openObserveProperties.setPassword("3BDG1Suys4emDlpP");
+        openObserveProperties.setPassword("Admin#123");
         openObserveTemplate = new OpenObserveTemplate(openObserveProperties);
     }
 
@@ -33,10 +40,17 @@ public class OpenObserveTest {
         queryBean.getQuery().setSql("SELECT * FROM test");
         queryBean.getQuery().setFrom(0);
         queryBean.getQuery().setSize(10);
-        queryBean.getQuery().setStartTime(0L);
-        queryBean.getQuery().setEndTime(System.currentTimeMillis());
-        openObserveTemplate.selectLogs(queryBean);
-
+        Date now = DateTime.now();
+        queryBean.getQuery().setStartTime(DateUtil.offsetDay(now,-1).getTime()*1000);
+        queryBean.getQuery().setEndTime(now.getTime()*1000);
+        QueryResult queryResult =  openObserveTemplate.selectLogs(queryBean);
+        if (queryResult.getTotal() > 0) {
+            System.out.println(queryResult.getTotal());
+        }
+        for (Map<String, Object> hit : queryResult.getHits()) {
+            System.out.println(hit);
+        }
+//        System.out.println(JSON.toJSONString(queryResult.getHits()));
 
     }
 }

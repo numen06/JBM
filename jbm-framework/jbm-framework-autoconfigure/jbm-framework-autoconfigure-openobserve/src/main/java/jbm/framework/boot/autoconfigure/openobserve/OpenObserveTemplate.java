@@ -1,15 +1,14 @@
 package jbm.framework.boot.autoconfigure.openobserve;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpStatus;
-import cn.hutool.http.Method;
+import cn.hutool.http.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.framework.exceptions.ServiceException;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.HttpCookie;
 
 @Slf4j
 public class OpenObserveTemplate {
@@ -29,6 +28,31 @@ public class OpenObserveTemplate {
             }
         }
         this.postLogStr(JSON.toJSONString(logs));
+    }
+
+    private String auth_tokens = null;
+
+    public void login() {
+        String url = StrUtil.format("{}/auth/login", openObserveProperties.getBaseUrl());
+        HttpRequest request = HttpRequest.of(url).method(Method.POST);
+        request.contentType("application/json");
+        JSONObject loginInfo = new JSONObject();
+        loginInfo.put("name", openObserveProperties.getUsername());
+        loginInfo.put("password", openObserveProperties.getPassword());
+        request.body(JSON.toJSONString(loginInfo));
+        HttpResponse response = request.execute();
+        if (response.getStatus() != HttpStatus.HTTP_OK) {
+            throw ServiceException.of("登录错误");
+        } else {
+            String body = response.body();
+            JSONObject jsonObject = JSON.parseObject(body);
+            boolean status = jsonObject.getBoolean("status");
+            if (!status) {
+                throw ServiceException.of("认证失败");
+            }
+        }
+
+        auth_tokens = response.getCookieValue("auth_tokens");
     }
 
     public void postLogStr(String logStr) {
@@ -51,16 +75,31 @@ public class OpenObserveTemplate {
         log.info("发送成功:{}", response.body());
     }
 
+    public HttpRequest getRequest(String url) {
+        return getRequest(url, Method.POST, ContentType.JSON);
+    }
+
+    public HttpRequest getRequest(String url, Method method, ContentType contentType) {
+        HttpRequest request = HttpRequest.of(url);
+        request.method(method);
+        request.contentType(contentType.getValue());
+        if (auth_tokens == null) {
+            login();
+        }
+        request.cookie(new HttpCookie("auth_tokens", auth_tokens));
+        return request;
+    }
 
     public QueryResult selectLogs(QueryBean queryBean) {
-        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getBaseUrl(), openObserveProperties.getOrganization(), openObserveProperties.getStream());
-        HttpRequest request = HttpRequest.of(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword()).method(Method.POST);
-        request.contentType("application/json");
-        JSONObject queryBeanJson = new JSONObject();
-        queryBeanJson.put("query", queryBean);
-        request.body(JSON.toJSONString(queryBeanJson));
+        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getBaseUrl(), openObserveProperties.getOrganization());
+        HttpRequest request = getRequest(url);
+//        JSONObject queryBeanJson = new JSONObject();
+//        queryBeanJson.put("query", queryBean);
+        String requestBody = JSON.toJSONString(queryBean);
+        request.body(requestBody);
         HttpResponse response = request.execute();
         if (response.getStatus() != HttpStatus.HTTP_OK) {
+            log.error("请求信息:{}",requestBody);
             log.error("错误信息:{}", response.body());
             throw ServiceException.of(response.body());
         }
