@@ -4,10 +4,10 @@
 <mapper namespace="com.jbm.cluster.logs.mapper.GatewayLogsMapper">
 
     <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
-        SELECT * FROM test
+        select * from test
         <where>
-            <if test="appId != null">
-                AND app_id = ${appId}
+            <if test="serviceId != null">
+                AND service_id = ${appId}
             </if>
         </where>
     </select>

@@ -1,7 +1,9 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.db.sql.Condition;
 import cn.hutool.db.sql.SqlBuilder;
@@ -49,22 +51,9 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
     public DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation) {
         IPage<GatewayLogs> page = ServiceUtils.buildPage(gatewayLogsForm.getPageForm());
 //        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
-        QueryBean queryBean = new QueryBean();
-        // 生成 INSERT SQL
-        String sql = "select * from test where service_id = '"+gatewayLogsForm.getGatewayLogs().getServiceId()+"'";
-        queryBean.getQuery().setSql(sql);
-        queryBean.getQuery().setFrom(0);
-        queryBean.getQuery().setSize(gatewayLogsForm.getPageForm().getPageSize());
-        DateTime now = DateUtil.date();
-        if (gatewayLogsForm.getBeginTime() == null) {
-            gatewayLogsForm.setBeginTime(DateUtil.offsetDay(now, -1));
-        }
-        if (gatewayLogsForm.getEndTime() == null) {
-            gatewayLogsForm.setEndTime(now);
-        }
-        queryBean.getQuery().setStartTime(gatewayLogsForm.getBeginTime().getTime() * 1000);
-        queryBean.getQuery().setEndTime(gatewayLogsForm.getEndTime().getTime() * 1000);
-        QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
+        String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs";
+        Map<String,Object> params = BeanUtil.beanToMap(gatewayLogsForm.getGatewayLogs());
+        QueryResult queryResult = openObserveTemplate.selectLogs(statement,params,gatewayLogsForm.getPageForm());
         List<Map<String, Object>> hits = queryResult.getHits();
         List<GatewayLogs> list = hits.stream().map(map -> {
             JSONObject jsonObject = new JSONObject(map);
