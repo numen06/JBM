@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.openobserve;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.*;
 import com.alibaba.fastjson.JSON;
@@ -10,19 +11,39 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.usage.paging.PageForm;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.TransactionFactory;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import javax.sql.DataSource;
+import java.io.IOException;
 import java.net.HttpCookie;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
-public class OpenObserveTemplate {
+public class OpenObserveTemplate implements InitializingBean {
 
     private final OpenObserveProperties openObserveProperties;
 
     public OpenObserveTemplate(OpenObserveProperties openObserveProperties) {
         this.openObserveProperties = openObserveProperties;
+
     }
 
     public void postLog(Object log) {
@@ -109,6 +130,29 @@ public class OpenObserveTemplate {
         return request;
     }
 
+    public QueryResult selectLogs(String statement, Map<String, Object> params, PageForm pageForm) {
+        return selectLogs(statement, params, null, null, pageForm);
+    }
+
+    public QueryResult selectLogs(String statement, Map<String, Object> params, Date beginTime,Date endTime, PageForm pageForm) {
+        QueryBean queryBean = new QueryBean();
+        String sql = getGeneratedSql(statement, params);
+        queryBean.getQuery().setSql(sql);
+        int from = (pageForm.getCurrPage() -1) * pageForm.getPageSize();
+        queryBean.getQuery().setFrom(Math.max(from, 0));
+        queryBean.getQuery().setSize(pageForm.getPageSize());
+        // 初始化时间
+        if (beginTime == null) {
+            beginTime = DateUtil.offsetDay(DateUtil.date(), -7);
+        }
+        if (endTime == null) {
+            endTime = DateUtil.date();
+        }
+        queryBean.getQuery().setStartTime(beginTime.getTime() * 1000);
+        queryBean.getQuery().setEndTime(endTime.getTime() * 1000);
+        return selectLogs(queryBean);
+    }
+
     public QueryResult selectLogs(QueryBean queryBean) {
         String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getUrl(), openObserveProperties.getOrganization());
         HttpRequest request = getRequest(url);
@@ -124,5 +168,52 @@ public class OpenObserveTemplate {
         }
         String body = response.body();
         return JSON.parseObject(body, QueryResult.class);
+    }
+
+
+    private SqlSessionFactory sqlSessionFactory;
+
+    public void initMapper() {
+        try {
+            // 1. 初始化 H2 内存数据库
+            String jdbcUrl = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1";
+            DataSource dataSource = new UnpooledDataSource("org.h2.Driver", jdbcUrl, null, null);
+            // 2. 创建事务工厂
+            TransactionFactory transactionFactory = new JdbcTransactionFactory();
+            // 3. 构建 Environment
+            Environment environment = new Environment("h2", transactionFactory, dataSource);
+            // 4. 创建 Configuration 对象
+            Configuration configuration = new Configuration(environment);
+            configuration.setMapUnderscoreToCamelCase(true);
+            // 5. 扫描 mapper/*.xml 文件并加载
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources("classpath*:mapper/**/*.xml");
+            for (Resource resource : resources) {
+                XMLMapperBuilder xmlMapperBuilder = new XMLMapperBuilder(resource.getInputStream(), configuration, resource.getFilename(), configuration.getSqlFragments());
+                xmlMapperBuilder.parse();
+            }
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
+        } catch (IOException e) {
+            throw new RuntimeException("加载 MyBatis 配置文件失败", e);
+        }
+    }
+
+    private String getGeneratedSql(String statement, Map<String, Object> params) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+            // 获取 Mapper 接口的代理对象
+//            Object mapper = sqlSession.getMapper(Class.forName(statement.split("\\.")[0]));
+//            if( params ==null ){
+//                params = new HashMap<>();
+//            }
+            // 获取 BoundSql 对象，包含生成的 SQL 语句和参数信息
+            BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statement).getBoundSql(params);
+            // 返回生成的 SQL 语句
+            return boundSql.getSql();
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        initMapper();
     }
 }

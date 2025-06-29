@@ -1,6 +1,7 @@
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
+import com.jbm.framework.usage.paging.PageForm;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
 import jbm.framework.boot.autoconfigure.openobserve.QueryResult;
@@ -16,14 +17,15 @@ public class OpenObserveTest {
    private static OpenObserveTemplate openObserveTemplate;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws Exception {
         OpenObserveProperties openObserveProperties = new OpenObserveProperties();
-        openObserveProperties.setUrl("http://10.100.10.64:5080");
+        openObserveProperties.setUrl("http://10.100.10.65:5080");
         openObserveProperties.setOrganization("default");
         openObserveProperties.setStream("test");
         openObserveProperties.setUsername("admin@example.com");
-        openObserveProperties.setPassword("Admin#123");
+        openObserveProperties.setPassword("Admin@123");
         openObserveTemplate = new OpenObserveTemplate(openObserveProperties);
+        openObserveTemplate.afterPropertiesSet();
     }
 
     @Test
@@ -51,5 +53,19 @@ public class OpenObserveTest {
         }
 //        System.out.println(JSON.toJSONString(queryResult.getHits()));
 
+    }
+
+    @Test
+    public void selectByMapper() {
+        String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs";
+        PageForm pageForm = new PageForm();
+        pageForm.setPageSize(20);
+        QueryResult queryResult =  openObserveTemplate.selectLogs(statement,null,pageForm);
+        if (queryResult.getTotal() > 0) {
+            System.out.println(queryResult.getTotal());
+        }
+        for (Map<String, Object> hit : queryResult.getHits()) {
+            System.out.println(hit);
+        }
     }
 }
