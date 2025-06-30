@@ -16,6 +16,7 @@ import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
@@ -110,6 +111,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
 
     @ApiOperation(value = "保存用户信息")
     @PostMapping("/save")
+    @OperatorLog
     @Override
     public ResultBody<BaseUser> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         return ResultBody.callback("保存用户信息成功", () -> {
@@ -223,6 +225,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @return
      */
     @ApiOperation(value = "添加系统用户", notes = "添加系统用户")
+    @OperatorLog
     @PostMapping("/add")
     public ResultBody<Long> addUser(
             @RequestParam(value = "userName") String userName,
