@@ -15,15 +15,15 @@ public class DroolsTest {
     public static void execute(KieContainer kc) {
         KieSession ksession = kc.newKieSession("HonestPoliticianKS");
 
-        final Politician p1 = new Politician("President of Umpa Lumpa", true);
-        final Politician p2 = new Politician("Prime Minster of Cheeseland", true);
-        final Politician p3 = new Politician("Tsar of Pringapopaloo", true);
-        final Politician p4 = new Politician("Omnipotence Om", true);
+//        final Politician p1 = new Politician("President of Umpa Lumpa", true);
+//        final Politician p2 = new Politician("Prime Minster of Cheeseland", true);
+//        final Politician p3 = new Politician("Tsar of Pringapopaloo", true);
+//        final Politician p4 = new Politician("Omnipotence Om", true);
 
-        ksession.insert(p1);
-        ksession.insert(p2);
-        ksession.insert(p3);
-        ksession.insert(p4);
+//        ksession.insert(p1);
+//        ksession.insert(p2);
+//        ksession.insert(p3);
+//        ksession.insert(p4);
 
         ksession.fireAllRules();
 
