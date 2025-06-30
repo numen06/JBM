@@ -195,8 +195,8 @@ public class OpenObserveTemplate implements InitializingBean {
         // 替换 SELECT 后的字段为 COUNT(*)
         String newSql = matcher.replaceFirst("$1COUNT(*) AS zo_sql_num $3");
 
-        log.info("原始SQL:{}", queryBean.getQuery().getSql());
-        log.info("替换后SQL:{}", newSql);
+//        log.info("原始SQL:{}", queryBean.getQuery().getSql());
+//        log.info("替换后SQL:{}", newSql);
         query.setSql(newSql);
         String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getUrl(), openObserveProperties.getOrganization());
         HttpRequest request = getRequest(url);
@@ -207,8 +207,8 @@ public class OpenObserveTemplate implements InitializingBean {
         String body;
         try (HttpResponse response = request.execute()) {
             if (response.getStatus() != HttpStatus.HTTP_OK) {
-                log.error("请求信息:{}", requestBody);
-                log.error("错误信息:{}", response.body());
+//                log.error("请求信息:{}", requestBody);
+//                log.error("错误信息:{}", response.body());
                 throw ServiceException.of(response.body());
             }
             body = response.body();
