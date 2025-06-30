@@ -47,15 +47,15 @@ public class OpenObserveTemplate implements InitializingBean {
 
     }
 
-    public void postLog(Object log) {
+    public void postLog(Object log, String stream) {
         if (log instanceof String) {
-            this.postLogStr((String) log);
+            this.postLogStr((String) log, stream);
             return;
         }
-        postLogs(CollUtil.newArrayList(log));
+        postLogs(CollUtil.newArrayList(log), stream);
     }
 
-    public void postLogs(List<?> logs) {
+    public void postLogs(List<?> logs, String stream) {
 //        if (logs.size() == 1) {
 //            Object log = logs.get(0);
 //            if (log instanceof String) {
@@ -68,7 +68,7 @@ public class OpenObserveTemplate implements InitializingBean {
         config.propertyNamingStrategy = PropertyNamingStrategy.SnakeCase;
         // 转换为下划线命名的JSON字符串
         String json = JSON.toJSONString(logs, config);
-        this.postLogStr(json);
+        this.postLogStr(json, stream);
     }
 
     private String auth_tokens = null;
@@ -97,15 +97,16 @@ public class OpenObserveTemplate implements InitializingBean {
         }
     }
 
-    public void postLogStr(String logStr) {
-        String firstChar = StrUtil.sub(logStr, 0, 1);
-        StringBuilder sb = new StringBuilder(logStr);
+    public void postLogStr(String json, String stream) {
+        String firstChar = StrUtil.sub(json, 0, 1);
+        StringBuilder sb = new StringBuilder(json);
         //如果不是数组则组成数组
         if (firstChar.equals("{")) {
             sb.insert(0, "[");
             sb.append("]");
         }
-        final String url = StrUtil.format("{}/api/{}/{}/_json", openObserveProperties.getUrl(), openObserveProperties.getOrganization(), openObserveProperties.getStream());
+        final String s = StrUtil.isNotEmpty(stream) ? stream : openObserveProperties.getStream();
+        final String url = StrUtil.format("{}/api/{}/{}/_json", openObserveProperties.getUrl(), openObserveProperties.getOrganization(), StrUtil.toUnderlineCase(s));
         HttpRequest request = HttpUtil.createPost(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword());
         request.contentType("application/json");
         request.body(sb.toString());

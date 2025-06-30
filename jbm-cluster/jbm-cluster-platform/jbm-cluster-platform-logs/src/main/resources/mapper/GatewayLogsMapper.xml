@@ -40,13 +40,13 @@
         </if>
     </sql>
     <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
-        select * from test
+        select * from gateway_logs
         <where>
             <include refid="WHERE_SQL"/>
         </where>
     </select>
     <select id="selectOperationLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
-        select * from test
+        select * from gateway_logs
         <where>
             <include refid="WHERE_SQL"/>
             and request_user_id is not null

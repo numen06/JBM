@@ -32,7 +32,7 @@ public class OpenObserveTest {
     public void testAdd() {
         String log = ResourceUtil.readUtf8Str("gateway_logs.json");
 //        String log = ResourceUtil.readUtf8Str("test.json");
-        openObserveTemplate.postLog(log);
+        openObserveTemplate.postLog(log,"test");
     }
 
     @Test

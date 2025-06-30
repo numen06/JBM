@@ -86,7 +86,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
     private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
-            openObserveTemplate.postLogs(gatewayLogs);
+            openObserveTemplate.postLogs(gatewayLogs, GatewayLogs.class.getSimpleName());
         }
     });
 
@@ -95,7 +95,6 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         batchTask.add(gatewayLogs);
 
     }
-
 
 
 }
