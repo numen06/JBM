@@ -17,6 +17,12 @@
         <if test="requestRealName != null">
             AND request_real_name like '%${requestRealName}%'
         </if>
+        <if test="useTime != null">
+            AND use_ime >= ${useTime}
+        </if>
+        <if test="httpStatus != null">
+            AND http_status >= ${httpStatus}
+        </if>
         <if test="apiName != null">
             AND apiName like '%${apiName}%'
         </if>
