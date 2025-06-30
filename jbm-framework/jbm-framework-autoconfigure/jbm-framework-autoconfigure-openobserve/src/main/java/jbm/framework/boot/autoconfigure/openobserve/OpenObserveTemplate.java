@@ -8,11 +8,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.PropertyNamingStrategy;
 import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.usage.paging.PageForm;
+import jbm.framework.boot.autoconfigure.openobserve.model.Query;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
@@ -32,9 +32,10 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class OpenObserveTemplate implements InitializingBean {
@@ -134,16 +135,16 @@ public class OpenObserveTemplate implements InitializingBean {
         return selectLogs(statement, params, null, null, pageForm);
     }
 
-    public QueryResult selectLogs(String statement, Map<String, Object> params, Date beginTime,Date endTime, PageForm pageForm) {
+    public QueryResult selectLogs(String statement, Map<String, Object> params, Date beginTime, Date endTime, PageForm pageForm) {
         QueryBean queryBean = new QueryBean();
         String sql = getGeneratedSql(statement, params);
         queryBean.getQuery().setSql(sql);
-        int from = (pageForm.getCurrPage() -1) * pageForm.getPageSize();
+        int from = (pageForm.getCurrPage() - 1) * pageForm.getPageSize();
         queryBean.getQuery().setFrom(Math.max(from, 0));
         queryBean.getQuery().setSize(pageForm.getPageSize());
         // 初始化时间
         if (beginTime == null) {
-            beginTime = DateUtil.offsetDay(DateUtil.date(), -7);
+            beginTime = DateUtil.offsetDay(DateUtil.date(), -1);
         }
         if (endTime == null) {
             endTime = DateUtil.date();
@@ -160,14 +161,66 @@ public class OpenObserveTemplate implements InitializingBean {
 //        queryBeanJson.put("query", queryBean);
         String requestBody = JSON.toJSONString(queryBean);
         request.body(requestBody);
-        HttpResponse response = request.execute();
-        if (response.getStatus() != HttpStatus.HTTP_OK) {
-            log.error("请求信息:{}", requestBody);
-            log.error("错误信息:{}", response.body());
-            throw ServiceException.of(response.body());
+        String body;
+        try (HttpResponse response = request.execute()) {
+            if (response.getStatus() != HttpStatus.HTTP_OK) {
+                log.error("请求信息:{}", requestBody);
+                log.error("错误信息:{}", response.body());
+                throw ServiceException.of(response.body());
+            }
+            body = response.body();
         }
-        String body = response.body();
-        return JSON.parseObject(body, QueryResult.class);
+        QueryResult queryResult = JSON.parseObject(body, QueryResult.class);
+        Long total = this.selectCount(queryBean);
+        queryResult.setScanRecords(total);
+//        queryBean.getQuery().setSqlMode("full");
+//        queryBean.getQuery().setStreamingOutput( true);
+//        PartitionResult partitionResult = this.selectCount(queryBean.getQuery());
+//        queryResult.setTotal(partitionResult.getRecords());
+        return queryResult;
+    }
+
+    public Long selectCount(QueryBean queryBean) {
+        Query query = queryBean.getQuery();
+        // 正则说明：
+        // - (?i) 忽略大小写
+        // - SELECT\s+ 匹配 SELECT 和后面的一个或多个空格
+        // - (.*?) 非贪婪匹配 SELECT 和 FROM 之间的内容
+        // - \s+FROM 匹配 FROM 前面可能有的空格和 FROM 关键字
+        String regex = "(?i)(SELECT\\s+)(.*?)(\\s+FROM)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(queryBean.getQuery().getSql());
+
+        // 替换 SELECT 后的字段为 COUNT(*)
+        String newSql = matcher.replaceFirst("$1COUNT(*) AS zo_sql_num $3");
+
+        log.info("原始SQL:{}", queryBean.getQuery().getSql());
+        log.info("替换后SQL:{}", newSql);
+        query.setSql(newSql);
+        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getUrl(), openObserveProperties.getOrganization());
+        HttpRequest request = getRequest(url);
+        queryBean.getQuery().setFrom(0);
+        queryBean.getQuery().setSize(-1);
+        String requestBody = JSON.toJSONString(queryBean);
+        request.body(requestBody);
+        String body;
+        try (HttpResponse response = request.execute()) {
+            if (response.getStatus() != HttpStatus.HTTP_OK) {
+                log.error("请求信息:{}", requestBody);
+                log.error("错误信息:{}", response.body());
+                throw ServiceException.of(response.body());
+            }
+            body = response.body();
+        }
+        QueryResult queryResult = JSON.parseObject(body, QueryResult.class);
+        List<Map<String, Object>> hits = queryResult.getHits();
+        Long total = 0L;
+        if (CollUtil.isNotEmpty(hits)) {
+            Map<String, Object> map = CollUtil.getFirst(hits);
+            JSONObject jsonObject = new JSONObject(map);
+            total = jsonObject.getLong("zo_sql_num");
+        }
+        return total;
     }
 
 

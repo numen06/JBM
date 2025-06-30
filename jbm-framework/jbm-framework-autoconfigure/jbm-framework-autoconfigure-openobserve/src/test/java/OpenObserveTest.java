@@ -4,8 +4,8 @@ import cn.hutool.core.io.resource.ResourceUtil;
 import com.jbm.framework.usage.paging.PageForm;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
-import jbm.framework.boot.autoconfigure.openobserve.QueryResult;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class OpenObserveTest {
 
-   private static OpenObserveTemplate openObserveTemplate;
+    private static OpenObserveTemplate openObserveTemplate;
 
     @BeforeAll
     public static void init() throws Exception {
@@ -42,9 +42,9 @@ public class OpenObserveTest {
         queryBean.getQuery().setFrom(0);
         queryBean.getQuery().setSize(10);
         Date now = DateTime.now();
-        queryBean.getQuery().setStartTime(DateUtil.offsetDay(now,-1).getTime()*1000);
-        queryBean.getQuery().setEndTime(now.getTime()*1000);
-        QueryResult queryResult =  openObserveTemplate.selectLogs(queryBean);
+        queryBean.getQuery().setStartTime(DateUtil.offsetDay(now, -1).getTime() * 1000);
+        queryBean.getQuery().setEndTime(now.getTime() * 1000);
+        QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
         if (queryResult.getTotal() > 0) {
             System.out.println(queryResult.getTotal());
         }
@@ -60,12 +60,25 @@ public class OpenObserveTest {
         String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs";
         PageForm pageForm = new PageForm();
         pageForm.setPageSize(20);
-        QueryResult queryResult =  openObserveTemplate.selectLogs(statement,null,pageForm);
+        QueryResult queryResult = openObserveTemplate.selectLogs(statement, null, pageForm);
         if (queryResult.getTotal() > 0) {
             System.out.println(queryResult.getTotal());
         }
         for (Map<String, Object> hit : queryResult.getHits()) {
             System.out.println(hit);
         }
+    }
+
+    @Test
+    public void selectByCount() {
+        QueryBean queryBean = new QueryBean();
+        queryBean.getQuery().setSql("select * FROM test");
+        queryBean.getQuery().setFrom(0);
+        queryBean.getQuery().setSize(10);
+        Date now = DateTime.now();
+        queryBean.getQuery().setStartTime(DateUtil.offsetDay(now, -1).getTime() * 1000);
+        queryBean.getQuery().setEndTime(now.getTime() * 1000);
+        Long queryResult = openObserveTemplate.selectCount(queryBean);
+        System.out.println(queryResult);
     }
 }

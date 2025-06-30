@@ -12,6 +12,9 @@ public class Query {
     private Long endTime;
     private Integer from = 0;
     private Integer size = 10;
+    private String orderBy = "desc";
+    private String sqlMode;
+    private Boolean streamingOutput;
 
 }
 

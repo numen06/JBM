@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.openobserve;
+package jbm.framework.boot.autoconfigure.openobserve.model;
 
 import lombok.Data;
 
@@ -14,5 +14,6 @@ public class QueryResult {
     private Integer from;
     private Integer size;
     private Long scanSize;
+    private Long scanRecords;
     private List<Map<String,Object>> hits = new ArrayList<>();
 }

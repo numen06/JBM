@@ -3,13 +3,55 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.logs.mapper.GatewayLogsMapper">
 
+
+    <sql id="WHERE_SQL">
+        <if test="serviceId != null">
+            AND service_id = '${serviceId}'
+        </if>
+        <if test="apiId != null">
+            AND api_id = '${apiId}'
+        </if>
+        <if test="path != null">
+            AND path like '%${path}%'
+        </if>
+        <if test="requestRealName != null">
+            AND request_real_name like '%${requestRealName}%'
+        </if>
+        <if test="apiName != null">
+            AND apiName like '%${apiName}%'
+        </if>
+        <if test="appName != null">
+            AND app_name like '%${appName}%'
+        </if>
+        <if test="region != null">
+            AND region like '%${region}%'
+        </if>
+        <if test="method != null">
+            AND method = '${method}'
+        </if>
+        <if test="ip != null">
+            AND ip like '%${ip}%'
+        </if>
+        <if test="operationType != null">
+            AND operation_type = '${operationType}'
+        </if>
+        <if test="appKey != null">
+            AND app_name = '%${appKey}%'
+        </if>
+    </sql>
     <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
         select * from test
         <where>
-            <if test="serviceId != null">
-                AND service_id = ${appId}
-            </if>
+            <include refid="WHERE_SQL"/>
         </where>
     </select>
+    <select id="selectOperationLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
+        select * from test
+        <where>
+            <include refid="WHERE_SQL"/>
+            and request_user_id is not null
+        </where>
+    </select>
+
 
 </mapper>
