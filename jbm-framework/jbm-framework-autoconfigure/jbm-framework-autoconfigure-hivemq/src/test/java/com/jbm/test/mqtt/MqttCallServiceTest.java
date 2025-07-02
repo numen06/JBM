@@ -24,7 +24,7 @@ public class MqttCallServiceTest {
     @BeforeAll
     public static void testClient() throws Exception {
         Mqtt5ClientFactory mqtt5ClientFactory = new Mqtt5ClientFactory();
-        mqttProperties.setUrl(URI.create("tcp://www.51jbm.cn:1883"));
+        mqttProperties.setUrl(URI.create("tcp://10.100.10.121:1883"));
         realMqttPahoClientFactory = new RealMqttPahoClientFactory(mqtt5ClientFactory, mqttProperties);
         mqttCallProxyFactory = new MqttCallProxyFactory(realMqttPahoClientFactory);
         mqttCallService = mqttCallProxyFactory.getService("test", MqttCallServiceImpl.class);
@@ -37,6 +37,13 @@ public class MqttCallServiceTest {
         mqttCallProxyFactory.requestAndResponseEvent("test/request", "test/response", "test.call", msg, event -> {
             Object body = event.getMessage();
             log.info("mqtt call result: {}", body);
+        });
+        ThreadUtil.waitForDie();
+    }
+    @Test
+    public void testSub() {
+        realMqttPahoClientFactory.getClientInstance("test").subscribe("testtopic/#", event -> {
+            log.info("mqtt call result: {}", event.getTopic() );
         });
         ThreadUtil.waitForDie();
     }

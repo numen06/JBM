@@ -107,12 +107,17 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                     .retain(willMessage.isRetained());
         }
 
-        final Mqtt5AsyncClient client = clientBuilder.buildAsync();
+        final Mqtt5AsyncClient client = clientBuilder
+                .addConnectedListener(connectedEvent -> {
+                    log.info("✅ Connected or Reconnected to MQTT Broker");
+                }).addDisconnectedListener(disconnectedEvent -> {
+                    log.warn("❌ Disconnected from MQTT Broker, reason: " + disconnectedEvent.getCause());
+                    log.warn("Reconnect attempts: " + disconnectedEvent.getReconnector().getAttempts());
+                }).buildAsync();
 
         if (log.isTraceEnabled()) {
             log.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
         }
-
         client.connect(connectBuilder.build())
                 .whenComplete((mqtt3ConnAck, throwable) -> {
                     if (throwable != null) {
