@@ -109,9 +109,9 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
 
         final Mqtt5AsyncClient client = clientBuilder
                 .addConnectedListener(connectedEvent -> {
-                    log.info("✅ Connected or Reconnected to MQTT Broker");
+                    log.info("✅ Connected or Reconnected to MQTT5 Broker");
                 }).addDisconnectedListener(disconnectedEvent -> {
-                    log.warn("❌ Disconnected from MQTT Broker, reason: " + disconnectedEvent.getCause());
+                    log.warn("❌ Disconnected from MQTT5 Broker, reason: " + disconnectedEvent.getCause());
                     log.warn("Reconnect attempts: " + disconnectedEvent.getReconnector().getAttempts());
                 }).buildAsync();
 

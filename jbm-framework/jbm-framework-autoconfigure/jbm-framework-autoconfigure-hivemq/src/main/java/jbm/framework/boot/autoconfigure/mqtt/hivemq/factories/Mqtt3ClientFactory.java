@@ -80,9 +80,9 @@ public final class Mqtt3ClientFactory implements IMqttClientFactory {
 
         final Mqtt3AsyncClient client = clientBuilder
                 .addConnectedListener(connectedEvent -> {
-                    log.info("✅ Connected or Reconnected to MQTT Broker");
+                    log.info("✅ Connected or Reconnected to MQTT3 Broker");
                 }).addDisconnectedListener(disconnectedEvent -> {
-                    log.warn("❌ Disconnected from MQTT Broker, reason: " + disconnectedEvent.getCause());
+                    log.warn("❌ Disconnected from MQTT3 Broker, reason: " + disconnectedEvent.getCause());
                     log.warn("Reconnect attempts: " + disconnectedEvent.getReconnector().getAttempts());
                 }).buildAsync();
 

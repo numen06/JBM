@@ -38,6 +38,7 @@ public class MqttAutoConfiguration {
 
     @Bean
     public RealMqttPahoClientFactory realMqttPahoClientFactory(final Mqtt5ClientFactory clientFactory) {
+        mqttProperties.setAutomaticReconnect(true);
         return new RealMqttPahoClientFactory(clientFactory, mqttProperties);
     }
 
@@ -59,6 +60,7 @@ public class MqttAutoConfiguration {
         if (mqttProperties.getMqttVersion() == 3) {
             throw new BeanCreationException("Mqtt5AsyncClient is not available for MQTT version 3. Use Mqtt3AsyncClient instead.");
         }
+        mqttProperties.setAutomaticReconnect( true);
         return clientFactory.mqttClient(mqttProperties, enhancedAuthMechanism);
     }
 
@@ -89,7 +91,7 @@ public class MqttAutoConfiguration {
         if (mqttProperties.getMqttVersion() == 5) {
             throw new BeanCreationException("Mqtt3AsyncClient is not available for MQTT version 5. Use Mqtt5AsyncClient instead.");
         }
-
+        mqttProperties.setAutomaticReconnect( true);
         return clientFactory.mqttClient(mqttProperties);
     }
 
