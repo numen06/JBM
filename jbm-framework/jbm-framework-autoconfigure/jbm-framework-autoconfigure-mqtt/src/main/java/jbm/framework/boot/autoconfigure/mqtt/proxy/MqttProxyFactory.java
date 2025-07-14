@@ -100,7 +100,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 continue;
             }
             MqttMapper mqttMapper = AnnotationUtil.getAnnotation(bean.getClass(), MqttMapper.class);
-            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
+            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? "MqttMapper_" + bean.getClass().getSimpleName() : mqttMapper.clientId();
+//            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
             SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);
 
             Field[] fields = ClassUtil.getDeclaredFields(bean.getClass());
