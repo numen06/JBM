@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -92,8 +93,11 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        batchTask.add(gatewayLogs);
-
+        try {
+            batchTask.offerOfWait(1, TimeUnit.MINUTES, gatewayLogs);
+        } catch (Exception e) {
+            log.error("保存日志失败", e);
+        }
     }
 
 
