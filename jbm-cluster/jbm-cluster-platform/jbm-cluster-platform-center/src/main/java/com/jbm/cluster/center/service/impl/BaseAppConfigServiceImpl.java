@@ -73,7 +73,11 @@ public class BaseAppConfigServiceImpl extends MasterDataServiceImpl<BaseAppConfi
     @CacheEvict(value = "appConfigByKey", allEntries = true)
     public BaseAppConfig saveEntity(BaseAppConfig baseAppConfig) {
         if (ObjectUtil.isNotEmpty(LoginHelper.softGetLoginUser())) {
-            baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
+            if(LoginHelper.isAdmin()){
+                baseAppConfig.setOrgId(null);
+            }else {
+                baseAppConfig.setOrgId(LoginHelper.getLoginUser().getCompanyId());
+            }
             BaseAppConfig dbAppConfig = this.getAppConfigByKey(baseAppConfig.getAppKey(), baseAppConfig.getOrgId());
             if (dbAppConfig.getOrgId() == null) {
                 //用户是登录状态
