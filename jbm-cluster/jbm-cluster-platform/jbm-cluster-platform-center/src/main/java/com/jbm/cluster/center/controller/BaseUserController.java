@@ -469,4 +469,12 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+    @ApiOperation(value = "小程序登录-更新用户openId信息")
+    @PostMapping("/updateOpenIdByPhone")
+    public ResultBody<BaseUser> updateOpenIdByPhone(@RequestParam(value = "openId") String openId,
+                                                    @RequestParam(value = "sessionKey") String sessionKey,
+                                                    @RequestParam(value = "accountType") String accountType,
+                                                    @RequestParam(value = "phone") String phone) {
+        return ResultBody.callback(() -> baseAccountService.updateOpenIdByPhone(openId, sessionKey, accountType, phone));
+    }
 }
