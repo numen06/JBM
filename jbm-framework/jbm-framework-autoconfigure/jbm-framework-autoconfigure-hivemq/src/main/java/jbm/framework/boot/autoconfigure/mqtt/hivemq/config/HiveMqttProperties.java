@@ -46,7 +46,7 @@ public class HiveMqttProperties {
     private String userName = null;
     private Integer keepAliveInterval = Mqtt5Connect.DEFAULT_KEEP_ALIVE;
     private Long maxReconnectDelay = MqttClientAutoReconnect.DEFAULT_MAX_DELAY_S;
-    private boolean automaticReconnect = false;
+    private boolean automaticReconnect = true;
     private Map<String, String> customWebSocketHeaders = null;
     private WillMessageProperties willMessage = null;
     private SslProperties sslProperties = null;

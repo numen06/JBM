@@ -24,8 +24,8 @@ import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientBuilder;
 import com.hivemq.client.mqtt.mqtt3.message.connect.Mqtt3Connect;
 import com.hivemq.client.mqtt.mqtt3.message.connect.Mqtt3ConnectBuilder;
-import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.exception.MqttClientException;
+import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.KeyManagerFactoryCreationException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.TrustManagerFactoryCreationException;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,13 @@ public final class Mqtt3ClientFactory implements IMqttClientFactory {
                     .retain(willMessage.isRetained());
         }
 
-        final Mqtt3AsyncClient client = clientBuilder.buildAsync();
+        final Mqtt3AsyncClient client = clientBuilder
+                .addConnectedListener(connectedEvent -> {
+                    log.info("✅ Connected or Reconnected to MQTT3 Broker");
+                }).addDisconnectedListener(disconnectedEvent -> {
+                    log.warn("❌ Disconnected from MQTT3 Broker, reason: " + disconnectedEvent.getCause());
+                    log.warn("Reconnect attempts: " + disconnectedEvent.getReconnector().getAttempts());
+                }).buildAsync();
 
         if (log.isTraceEnabled()) {
             log.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());

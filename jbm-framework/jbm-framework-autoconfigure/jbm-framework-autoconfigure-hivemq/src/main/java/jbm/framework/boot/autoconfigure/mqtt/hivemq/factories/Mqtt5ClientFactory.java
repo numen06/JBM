@@ -55,6 +55,7 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
      * @param enhancedAuthMechanism An optional implementation of {@link Mqtt5EnhancedAuthMechanism} to add enhanced authentication.
      * @return A new instance of {@link Mqtt5AsyncClient}
      */
+
     public Mqtt5AsyncClient mqttClient(final HiveMqttProperties configuration, @Nullable final Mqtt5EnhancedAuthMechanism enhancedAuthMechanism) {
         final Mqtt5ClientBuilder clientBuilder = MqttClient.builder()
                 .useMqttVersion5()
@@ -107,12 +108,19 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                     .retain(willMessage.isRetained());
         }
 
-        final Mqtt5AsyncClient client = clientBuilder.buildAsync();
+        final Mqtt5AsyncClient client = clientBuilder
+                .addConnectedListener(connectedEvent -> {
+                    log.info("✅ Connected or Reconnected to MQTT5 Client:{}", connectedEvent.getClientConfig().getClientIdentifier());
+                }).addDisconnectedListener(disconnectedEvent -> {
+                    log.warn("❌ Disconnected from MQTT5 Client:{},Reconnect attempts:{}",
+                            disconnectedEvent.getClientConfig().getClientIdentifier(),
+                            disconnectedEvent.getReconnector().getAttempts()
+                    );
+                }).buildAsync();
 
         if (log.isTraceEnabled()) {
             log.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
         }
-
         client.connect(connectBuilder.build())
                 .whenComplete((mqtt3ConnAck, throwable) -> {
                     if (throwable != null) {

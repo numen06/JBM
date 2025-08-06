@@ -1,7 +1,5 @@
 package jbm.framework.boot.autoconfigure.mqtt.registrar;
 
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -9,7 +7,6 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttSend;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.cglib.proxy.InvocationHandler;
@@ -34,7 +31,7 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
         if (this.mqttMapperInterface.isAnnotationPresent(MqttMapper.class)) {
             // 读取类上注解
             MqttMapper mqttMapper = this.mqttMapperInterface.getAnnotation(MqttMapper.class);
-            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
+            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? "MqttMapper_" + this.mqttMapperInterface.getSimpleName() : mqttMapper.clientId();
             SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);
             if (method.isAnnotationPresent(MqttSend.class)) {
                 // 读取方法上注解
@@ -47,7 +44,7 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
                 } else {
                     mqttMessage.setPayload(JSON.toJSONBytes(mqttResponseBean.getBody()));
                 }
-                simpleMqttClient.publish(methodAnnotation.toTopic(),mqttMessage );
+                simpleMqttClient.publish(methodAnnotation.toTopic(), mqttMessage);
                 System.out.println("调用接口方法名:" + methodAnnotation.toTopic());
             }
         }
