@@ -37,7 +37,7 @@ public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotif
 
     @Override
     public PushCallback apply(SmsNotification notification) {
-        //大于3分钟消息直接忽略
+        //大于5分钟消息直接忽略
         if (DateUtil.between(notification.getSendTime(), DateTime.now(), DateUnit.MINUTE) > 5) {
             return this.error(notification, "TIME_OUT", "消息已超时");
         }
