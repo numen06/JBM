@@ -24,4 +24,5 @@ public class PushCallback implements Serializable {
     @ApiModelProperty("发送渠道")
     private PushWay pushWay;
 
+
 }

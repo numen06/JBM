@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.jbm.cluster.api.constants.push.PushWay;
 import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
@@ -65,7 +66,9 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         }
         mqttClient.publish(mqttNotification.getTopic(), message);
 //            log.info("发送MQTT通知成功:{}", JSON.toJSONString(mqttNotification));
-        return this.success(mqttNotification);
+        PushCallback pushCallback = this.success(mqttNotification);
+        pushCallback.setPushWay(PushWay.mqtt);
+        return pushCallback;
     }
 
 

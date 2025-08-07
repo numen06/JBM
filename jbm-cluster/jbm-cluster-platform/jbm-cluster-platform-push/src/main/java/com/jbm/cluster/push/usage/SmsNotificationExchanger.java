@@ -1,5 +1,8 @@
 package com.jbm.cluster.push.usage;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.http.HttpException;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
@@ -34,6 +37,10 @@ public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotif
 
     @Override
     public PushCallback apply(SmsNotification notification) {
+        //大于3分钟消息直接忽略
+        if (DateUtil.between(notification.getSendTime(), DateTime.now(), DateUnit.MINUTE) > -3) {
+            return this.error(notification, "TIME_OUT", "消息已超时");
+        }
         Assert.notNull(aliyunSmsTemplate, "短信接口没有初始化");
         SmsNotification smsNotification = (SmsNotification) notification;
         AliyunSms aliyunSms = new AliyunSms();
