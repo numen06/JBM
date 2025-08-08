@@ -84,6 +84,15 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
     }
 
     /**
+     * @param obj
+     * @throws InterruptedException
+     */
+    @Override
+    protected void doOfferBlocking(T obj) throws InterruptedException {
+        this.blockingQueue.put((T) obj);
+    }
+
+    /**
      * 执行批量操作
      */
     @Override

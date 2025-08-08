@@ -25,57 +25,54 @@ public class BatchTest {
 
     @Test
     public void test() {
-        BatchTask<String> batchTask = new BatchTask(2L, TimeUnit.SECONDS,0,new Consumer<List>() {
+        BatchTask<String> batchTask = new BatchTask(1L, TimeUnit.SECONDS, 0, new Consumer<List>() {
             @Override
             public void accept(List list) {
                 log.info("处理{}条数据", list.size());
             }
         });
         log.info("开始批处理添加");
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             int a = batchTask.offer(DateUtil.now());
-            log.info("追加数量为:{}",a);
+            log.info("追加数量为:{}", a);
         }
         log.info("开始批处理多线程添加");
         ThreadUtil.execAsync(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    try {
-                        batchTask.offerOfWait(2, TimeUnit.SECONDS,DateUtil.now());
-                    } catch (InterruptedException e) {
-                        log.error("超时加入了",e);
-                    }
-                    ThreadUtil.safeSleep(10);
+                    batchTask.offer(DateUtil.now());
+                    ThreadUtil.safeSleep(200);
                 }
             }
         });
-        batchTask.awaitTerminated();
-
+        ThreadUtil.sleep(10, TimeUnit.SECONDS);
+        log.info("结束");
     }
 
+    /**
+     * 测试错误
+     */
     @Test
     public void test2() {
-
-
-        RollingTask batchTask = RollingTask.createRollingTask(5L,TimeUnit.SECONDS,new Function<ActionBean<Student>,Student>() {
+        RollingTask<Student> batchTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Student>, Student>() {
             @Override
             public Student apply(ActionBean<Student> rollingBean) {
                 Student student = rollingBean.getObj();
-                if(RandomUtil.randomInt(1,10)==2) {
-                     throw  new RuntimeException("随机失败");
+                if (RandomUtil.randomInt(1, 10) == 2) {
+                    throw new RuntimeException("随机失败");
                 }
-                if(ObjectUtil.isNull(student)){
+                if (ObjectUtil.isNull(student)) {
                     student = new Student();
                     student.setAge(0);
                 }
-                student.setAge(student.getAge()+1);
-                log.info("处理{}条数据,单次循环数量为{}",student.getAge(),rollingBean.getCurrQuantity());
+                student.setAge(student.getAge() + 1);
+                log.info("处理{}条数据,单次循环数量为{}", student.getAge(), rollingBean.getCurrQuantity());
                 return student;
             }
         });
         for (int i = 0; i < 100; i++) {
-            batchTask.offer(DateUtil.now());
+            batchTask.offer(new Student());
         }
         ThreadUtil.execAsync(new Runnable() {
             @Override
@@ -86,30 +83,30 @@ public class BatchTest {
                 }
             }
         });
-        batchTask.awaitTerminated();
-
+        ThreadUtil.sleep(10, TimeUnit.SECONDS);
+        log.info("结束");
     }
 
     @Test
     public void test3() {
-        RollingTask<Student> batchTask = RollingTask.createRollingTask(5L,TimeUnit.SECONDS,new Function<ActionBean<Student>,Student>() {
+        RollingTask<Student> batchTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Student>, Student>() {
             @Override
             public Student apply(ActionBean<Student> rollingBean) {
                 Student student = rollingBean.getObj();
-                if(ObjectUtil.isNull(student)){
+                if (ObjectUtil.isNull(student)) {
                     student = new Student();
                     student.setAge(0);
                 }
                 if (ObjectUtil.isNull(student.getAge())) {
                     student.setAge(0);
                 }
-                student.setAge(student.getAge()+1);
-                log.info("处理数据{},单次循环数量为{}",student,rollingBean.getCurrQuantity());
+                student.setAge(student.getAge() + 1);
+                log.info("处理数据{},单次循环数量为{}", student, rollingBean.getCurrQuantity());
                 return student;
             }
         });
         for (int i = 0; i < 100; i++) {
-            batchTask.add(new Student("张三",i, DateTime.now()));
+            batchTask.offerBlocking(new Student("张三", i, DateTime.now()));
         }
         ThreadUtil.execAsync(new Runnable() {
             @Override
@@ -117,12 +114,13 @@ public class BatchTest {
                 while (true) {
                     Student student = new Student(IdUtil.getSnowflakeNextId());
                     student.setTime(DateTime.now());
-                    batchTask.add(student);
+                    batchTask.offerBlocking(student);
                     ThreadUtil.safeSleep(1000);
                 }
             }
         });
-        batchTask.awaitTerminated();
+        ThreadUtil.sleep(10, TimeUnit.SECONDS);
+        log.info("结束");
 
     }
 
@@ -132,26 +130,22 @@ public class BatchTest {
             @Override
             public void accept(Map<Integer, Student> studentMap) {
                 for (Student student : studentMap.values()) {
-                    log.info("处理数据{}",student);
+                    log.info("处理数据{}", student);
                 }
             }
         });
         log.info("开始批处理添加");
         for (int i = 0; i < 100; i++) {
             int a = batchTask.offer(Student.newStudent());
-            log.info("追加数量为:{}",a);
+            log.info("追加数量为:{}", a);
         }
         log.info("开始批处理多线程添加");
         ThreadUtil.execAsync(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    try {
-                        batchTask.offerOfWait(2, TimeUnit.SECONDS,Student.newStudent());
-                    } catch (InterruptedException e) {
-                        log.error("超时加入了",e);
-                    }
-                    ThreadUtil.safeSleep(10);
+                    batchTask.offerBlocking(Student.newStudent());
+                    ThreadUtil.sleep(100);
                 }
             }
         });

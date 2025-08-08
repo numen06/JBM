@@ -6,12 +6,7 @@ package com.jbm.util.batch;
  * @author wesley
  */
 public enum ActionType {
-    /**
-     * 时间行动类型
-     */
-    TIME,
-    /**
-     * 数量行动类型
-     */
-    QUANTITY;
+    TIME,       // 定时触发
+    QUANTITY,   // 数量触发
+    FLUSH       // 强制刷新
 }
