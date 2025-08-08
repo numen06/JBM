@@ -87,7 +87,7 @@ public class GatewayLogsHandler {
                 return message;
             } catch (Exception e) {
                 log.error("格式化错误", e);
-                return null;
+                return Mono.empty();
             }
         }).then();
     }

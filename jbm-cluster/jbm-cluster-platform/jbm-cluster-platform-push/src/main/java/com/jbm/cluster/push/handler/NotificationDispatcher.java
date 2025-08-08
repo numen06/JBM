@@ -1,8 +1,11 @@
 package com.jbm.cluster.push.handler;
 
+import cn.hutool.core.date.DateTime;
 import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.push.usage.NotificationExchanger;
+import com.jbm.util.batch.ActionBean;
+import com.jbm.util.batch.RollingTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +17,10 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * @author wesley.zhang
@@ -51,9 +53,24 @@ public class NotificationDispatcher implements ApplicationContextAware {
     }
 
 
+    private final RollingTask<Long> countWithTime = RollingTask.createRollingTask(1L, TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
+
+        @Override
+        public Long apply(ActionBean<Long> actionBean) {
+            log.info("消息队列最近1分钟处理日志:{}", actionBean.getCurrQuantity());
+            return actionBean.getObj();
+        }
+    });
+
     public void receive(Message<Notification> message) {
         Notification notification = message.getPayload();
+        try {
+            notification.setSendTime(message.getHeaders().get("amqp_timestamp", Date.class));
+        } catch (Exception e) {
+            notification.setSendTime(DateTime.now());
+        }
         this.dispatch(notification);
+        countWithTime.offer();
     }
 
     public void dispatch(Notification notification) {
