@@ -1,6 +1,9 @@
 package com.jbm.cluster.job.business.impl;
 
 
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
 import com.jbm.cluster.api.entitys.job.DynamicClass;
 import com.jbm.cluster.job.service.DroolsRuleService;
@@ -44,11 +47,11 @@ public class RuleReloadService {
 
     @PostConstruct
     public void init() throws Exception {
-        loadDynamicClassService.generateClass();
+        //loadDynamicClassService.generateClass();
         reloadRules();
     }
 
-    public synchronized void reloadRules() throws Exception {
+    public synchronized void reloadRules() {
         // 1. 检查是否有变更
 //        boolean needsReload = checkRuleChanges();
 //        if (!needsReload) {
@@ -60,13 +63,14 @@ public class RuleReloadService {
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
 
         // 1. 生成并写入所有动态类
-        Map<String, byte[]> allClassBytes = writeDynamicClassesToKie(kieServices, kieFileSystem);
+        //Map<String, byte[]> allClassBytes = writeDynamicClassesToKie(kieServices, kieFileSystem);
 
-
-        List<DroolsRule> rules = droolsRuleService.list();
+        DroolsRule ruleParam = new DroolsRule();
+        ruleParam.setRuleStatus(true);
+        List<DroolsRule> rules = droolsRuleService.selectEntitys(ruleParam);
         rules.forEach(rule -> {
             String drlContent = processDynamicClassImports(rule.getRuleContent());
-            kieFileSystem.write("src/main/resources/" + rule.getRuleKey() + ".drl",
+            kieFileSystem.write("src/main/resources/" + rule.getRuleCode() + rule.getVersion() + ".drl",
                     kieServices.getResources()
                             .newReaderResource(new StringReader(drlContent)));
         });
@@ -123,6 +127,9 @@ public class RuleReloadService {
     private String processDynamicClassImports(String drlContent) {
         // 获取所有动态类定义
         List<DynamicClass> dynamicClasses = dynamicClassService.list();
+        if(CollUtil.isEmpty(dynamicClasses)){
+            return drlContent;
+        }
 
         StringBuilder imports = new StringBuilder();
         imports.append("// 自动生成的import语句\n");
@@ -155,7 +162,7 @@ public class RuleReloadService {
 
         // 规则内容变化
         return rules.stream().anyMatch(rule -> {
-            String currentChecksum = ruleChecksums.get(rule.getRuleKey());
+            String currentChecksum = ruleChecksums.get(rule.getRuleCode());
             String newChecksum = DigestUtils.md5DigestAsHex(rule.getRuleContent().getBytes());
             return !newChecksum.equals(currentChecksum);
         });

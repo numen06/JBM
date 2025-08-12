@@ -23,7 +23,10 @@ public class RuleEngineService {
         try {
             kieSession = ruleReloadService.newKieSession();
             kieSession.insert(fact);
-            kieSession.fireAllRules();
+            int res = kieSession.fireAllRules();
+            if(res == 0){
+                log.warn("{}没有匹配到规则", fact);
+            }
             return fact;
         }catch(Exception  e){
             throw new RuntimeException(e);

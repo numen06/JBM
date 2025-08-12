@@ -8,6 +8,12 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
  * @Create: 2025-08-12 14:03:24
  */
 public interface DroolsRuleService extends IMasterDataService<DroolsRule> {
-
+    /**
+     * 保存规则
+     *
+     * @param droolsRule
+     * @return
+     */
+    DroolsRule saveData(DroolsRule droolsRule);
 
 }
