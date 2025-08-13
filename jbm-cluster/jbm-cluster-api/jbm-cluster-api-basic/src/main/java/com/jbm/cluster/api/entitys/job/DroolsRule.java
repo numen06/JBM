@@ -3,7 +3,6 @@ package com.jbm.cluster.api.entitys.job;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.Entity;

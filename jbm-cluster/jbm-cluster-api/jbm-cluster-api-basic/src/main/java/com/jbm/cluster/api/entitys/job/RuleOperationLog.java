@@ -1,7 +1,5 @@
 package com.jbm.cluster.api.entitys.job;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
