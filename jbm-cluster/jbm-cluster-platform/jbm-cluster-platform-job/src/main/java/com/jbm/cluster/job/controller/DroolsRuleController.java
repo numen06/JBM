@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.map.MapUtil;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
 import com.jbm.cluster.api.entitys.message.drools.DroolsFeignTemplate;
-import com.jbm.cluster.api.service.feign.drools.client.DroolsRuleServiceClient;
+import com.jbm.cluster.api.service.feign.drools.DroolsRuleServiceClient;
 import com.jbm.cluster.job.business.impl.LoadDynamicClassService;
 import com.jbm.cluster.job.business.impl.RuleEngineService;
 import com.jbm.cluster.job.business.impl.RuleReloadService;
@@ -49,6 +49,12 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     @PostMapping("/saveData")
     public ResultBody<DroolsRule> saveData(@RequestBody(required = false) DroolsRule droolsRule) {
         return ResultBody.callback(() -> droolsRuleService.saveData(droolsRule));
+    }
+
+    @ApiOperation("升版")
+    @PostMapping("/updateVersion")
+    public ResultBody<DroolsRule> updateVersion(@RequestBody(required = false) DroolsRule droolsRule) {
+        return ResultBody.callback(() -> droolsRuleService.updateVersion(droolsRule));
     }
 
     /**

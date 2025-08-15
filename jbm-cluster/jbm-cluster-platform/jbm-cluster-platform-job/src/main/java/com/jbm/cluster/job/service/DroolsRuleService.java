@@ -16,4 +16,13 @@ public interface DroolsRuleService extends IMasterDataService<DroolsRule> {
      */
     DroolsRule saveData(DroolsRule droolsRule);
 
+    /**
+     * 升版
+     *
+     * @param droolsRule
+     * @return
+     */
+
+    DroolsRule updateVersion(DroolsRule droolsRule);
+
 }

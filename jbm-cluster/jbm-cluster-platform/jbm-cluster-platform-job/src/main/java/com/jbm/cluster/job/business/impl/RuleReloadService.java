@@ -65,9 +65,14 @@ public class RuleReloadService {
         // 1. 生成并写入所有动态类
         //Map<String, byte[]> allClassBytes = writeDynamicClassesToKie(kieServices, kieFileSystem);
 
-        DroolsRule ruleParam = new DroolsRule();
-        ruleParam.setRuleStatus(true);
-        List<DroolsRule> rules = droolsRuleService.selectEntitys(ruleParam);
+//        DroolsRule ruleParam = new DroolsRule();
+//        ruleParam.setRuleStatus(true);
+
+        QueryWrapper<DroolsRule> wrapper = new QueryWrapper<>();
+        wrapper.eq("rule_status", true);
+        wrapper.isNotNull("rule_content");
+
+        List<DroolsRule> rules = droolsRuleService.selectEntitys(wrapper);
         rules.forEach(rule -> {
             String drlContent = processDynamicClassImports(rule.getRuleContent());
             kieFileSystem.write("src/main/resources/" + rule.getRuleCode() + rule.getVersion() + ".drl",
