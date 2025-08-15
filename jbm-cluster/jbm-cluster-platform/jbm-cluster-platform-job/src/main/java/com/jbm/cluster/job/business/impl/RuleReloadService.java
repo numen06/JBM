@@ -48,7 +48,7 @@ public class RuleReloadService {
     @PostConstruct
     public void init() throws Exception {
         //loadDynamicClassService.generateClass();
-        reloadRules();
+        //reloadRules();
     }
 
     public synchronized void reloadRules() {
@@ -101,6 +101,8 @@ public class RuleReloadService {
 
         // 5. 原子更新容器
         kieContainerRef.set(kieServices.newKieContainer(releaseId));
+        // 将这些规则添加到guava缓存中
+
     }
 
     private Map<String, byte[]> writeDynamicClassesToKie(KieServices kieServices, KieFileSystem kieFileSystem)

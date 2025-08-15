@@ -1,6 +1,7 @@
 package com.jbm.cluster.job.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.map.MapUtil;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
 import com.jbm.cluster.api.entitys.message.drools.DroolsFeignTemplate;
@@ -71,25 +72,30 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
             validator(masterDataRequsetBody);
             DroolsRule entity = validatorMasterData(masterDataRequsetBody, true);
             droolsRuleService.deleteEntity(entity);
-            ruleReloadService.reloadRules();
+            //ruleReloadService.reloadRules();
         } catch (Exception e) {
             return ResultBody.error(e);
         }
         return ResultBody.success(true, "删除成功");
     }
 
+    /**
+     * 批量删除
+     *
+     * @param idsForm
+     * @return
+     */
     @ApiOperation(value = "通过ids批量删除实体", notes = "通过ids批量删除实体")
     @PostMapping("/deleteByIds")
     @Override
     public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
         try {
-            // 获取前端信息List<BusCompanyInfo>
             List<Long> ids = idsForm.getIds();
             if (CollectionUtil.isEmpty(ids)) {
                 return ResultBody.error(true, "ids为空");
             }
             if (droolsRuleService.removeByIds(ids)) {
-                ruleReloadService.reloadRules();
+                //ruleReloadService.reloadRules();
                 return ResultBody.success(false, "批量成功刪除");
             }
             return ResultBody.error(false, "批量成功刪除");
@@ -98,8 +104,31 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
         }
     }
 
+    @PostMapping({"/execute"})
+    @Override
+    public ResultBody<DroolsFeignTemplate> executeRule(@RequestBody(required = false) DroolsFeignTemplate droolsFeignTemplate)  {
+        Map<String, Object> factMap = droolsFeignTemplate.getFact();
+        try {
+            // 校验编号
+            Assert.notNull(droolsFeignTemplate.getRuleCode(), "请传入规则编号");
+            // 校验版本号
+            Assert.notNull(droolsFeignTemplate.getVersion(), "请传入版本号");
+            // 校验实例
+            if (MapUtil.isEmpty(factMap)) {
+                return ResultBody.error("请传入实例map");
+            }
+            //
 
+            // 执行规则引擎
+            Map<String, Object> result = ruleEngineService.executeRules(factMap);
 
+            // 返回执行结果
+            droolsFeignTemplate.setFact(result);
+            return ResultBody.success(droolsFeignTemplate, "执行成功");
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
 
     @PostMapping({"/test1"})
     public ResultBody<String> test1(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody)  {
@@ -154,29 +183,6 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
             throw new ServiceException(e);
         }
     }
-
-    @PostMapping({"/execute"})
-    @Override
-    public ResultBody<DroolsFeignTemplate> executeRule(@RequestBody(required = false) DroolsFeignTemplate droolsFeignTemplate)  {
-        System.out.println("测试execute开始-》》》》》》》》》》》》》》》》");
-        Map<String, Object> factMap = droolsFeignTemplate.getFact();
-        try {
-            // 如果没有传入参数，则使用默认值
-            if (MapUtil.isEmpty(factMap)) {
-                return ResultBody.error("请传入实例map");
-            }
-
-            // 执行规则引擎
-            Map<String, Object> result = ruleEngineService.executeRules(factMap);
-
-            // 返回执行结果
-            droolsFeignTemplate.setFact(result);
-            return ResultBody.success(droolsFeignTemplate, "执行成功");
-        } catch (Exception e) {
-            throw new ServiceException(e);
-        }
-    }
-
 
 
 }

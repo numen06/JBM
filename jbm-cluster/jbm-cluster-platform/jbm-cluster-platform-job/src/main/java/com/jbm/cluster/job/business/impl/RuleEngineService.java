@@ -23,6 +23,7 @@ public class RuleEngineService {
         try {
             kieSession = ruleReloadService.newKieSession();
             kieSession.insert(fact);
+            kieSession.getAgenda().getAgendaGroup("default").setFocus();
             int res = kieSession.fireAllRules();
             if(res == 0){
                 log.warn("{}没有匹配到规则", fact);

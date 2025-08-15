@@ -33,29 +33,34 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DroolsRule saveData(DroolsRule droolsRule){
-        Assert.notNull(droolsRule.getRuleName(), "规则名称不能为空");
-        //Assert.notNull(droolsRule.getRuleContent(), "规则内容不能为空");
 
-        if(StringUtil.isBlank(droolsRule.getRuleCode())){
-            droolsRule.setRuleCode("RULE_" + System.currentTimeMillis());
-        }
-
-        if(StringUtil.isBlank(droolsRule.getVersion())){
-            droolsRule.setVersion("1.0.0");
+        if(droolsRule.getId() == null){
+            //新增时校验
+            Assert.notNull(droolsRule.getRuleName(), ()-> new ServiceException("规则名称不能为空"));
+            //如果前端未传规则code，则自动生成
+            if(StringUtil.isBlank(droolsRule.getRuleCode())){
+                droolsRule.setRuleCode("RULE_" + System.currentTimeMillis());
+            }
+            //初始化版本号
+            if(StringUtil.isBlank(droolsRule.getVersion())){
+                droolsRule.setVersion("1.0.0");
+            }
         }
 
         super.saveEntity(droolsRule);
         //重新加载规则
         if(StringUtil.isNotEmpty(droolsRule.getRuleContent())){
-            DroolsUtil.checkRule(droolsRule.getRuleContent());
-            ruleReloadService.reloadRules();
+           // DroolsUtil.checkRule(droolsRule.getRuleContent());
+           // ruleReloadService.reloadRules();
         }
 
         //增加操作日志
+        DroolsRule copyRule = super.getById(droolsRule.getId());
         String username = LoginHelper.getLoginUser().getUsername();
         String realName = LoginHelper.getLoginUser().getRealName();
         RuleOperationLog log = new RuleOperationLog();
-        BeanUtil.copyProperties(droolsRule, log);
+        BeanUtil.copyProperties(copyRule, log);
+        log.setId(null);
         log.setRuleId(droolsRule.getId());
         log.setOperationTime(DateTime.now());
         log.setOperationUser(username);
