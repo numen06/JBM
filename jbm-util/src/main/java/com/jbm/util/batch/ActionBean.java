@@ -17,7 +17,7 @@ public class ActionBean<T> {
     // 当前数量
     private final Integer currQuantity;
     // 日期
-    private final Date date;
+    private final Date submitTime;
     // 对象
     private T obj;
 
@@ -26,12 +26,12 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param date         日期
+     * @param submitTime         日期
      */
-    public ActionBean(ActionType actionType, Integer currQuantity, Date date) {
+    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime) {
         this.actionType = actionType;
         this.currQuantity = currQuantity;
-        this.date = date;
+        this.submitTime = submitTime;
     }
 
     /**
@@ -39,13 +39,13 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param date         日期
+     * @param submitTime         日期
      * @param obj          对象
      */
-    public ActionBean(ActionType actionType, Integer currQuantity, Date date, T obj) {
+    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime, T obj) {
         this.actionType = actionType;
         this.currQuantity = currQuantity;
-        this.date = date;
+        this.submitTime = submitTime;
         this.obj = obj;
     }
 }

@@ -38,7 +38,7 @@ public class GatewayLogsHandler {
     @Autowired
     private GatewayLogsService gatewayLogsService;
 
-    private RollingTask countWithTime = RollingTask.createRollingTask( 1L,TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
+    private final RollingTask<Long> countWithTime = RollingTask.createRollingTask( 1L,TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
 
         @Override
         public Long apply(ActionBean<Long> actionBean) {
@@ -58,10 +58,8 @@ public class GatewayLogsHandler {
     public Function<Flux<Message<GatewayLogs>>, Mono<Void>> accessLogs() {
         return flux -> flux.map(message -> {
             try {
-                countWithTime.offer();
                 GatewayLogs logs = message.getPayload();
                 //如果日志等级不够1,则不记录
-
                 if (ObjectUtil.isNotEmpty(logs)) {
                     logs.setLoglevel(ObjectUtil.defaultIfNull(logs.getLoglevel(), 0));
                     if (logs.getLoglevel() <= 0) {
@@ -83,6 +81,8 @@ public class GatewayLogsHandler {
                     applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
 //                    gatewayLogsService.save(logs);
                     gatewayLogsService.saveGatewayLogs(logs);
+                    //统计
+                    countWithTime.offer();
                 }
                 return message;
             } catch (Exception e) {

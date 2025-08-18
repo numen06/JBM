@@ -99,4 +99,13 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
         });
         return objs.length == 0 ? 1 : objs.length;
     }
+
+    /**
+     * @param obj
+     * @throws InterruptedException
+     */
+    @Override
+    protected void doOfferBlocking(T obj) throws InterruptedException {
+        atomicReference.getAndSet((T) obj);
+    }
 }

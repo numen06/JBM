@@ -10,9 +10,14 @@ import com.alibaba.fastjson.PropertyNamingStrategy;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.usage.paging.PageForm;
+import com.jbm.util.token.TokenException;
+import com.jbm.util.token.TokenInfo;
+import com.jbm.util.token.TokenManager;
+import com.jbm.util.token.TokenProvider;
 import jbm.framework.boot.autoconfigure.openobserve.model.Query;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
+import jdk.nashorn.internal.parser.Token;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
@@ -27,6 +32,7 @@ import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.util.MimeType;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -38,13 +44,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class OpenObserveTemplate implements InitializingBean {
+public class OpenObserveTemplate implements InitializingBean, TokenProvider {
 
+    private final  TokenManager opobserveTokenManager ;
     private final OpenObserveProperties openObserveProperties;
 
     public OpenObserveTemplate(OpenObserveProperties openObserveProperties) {
         this.openObserveProperties = openObserveProperties;
-
+        this.opobserveTokenManager = new TokenManager(this);
     }
 
     public void postLog(Object log, String stream) {
@@ -71,9 +78,9 @@ public class OpenObserveTemplate implements InitializingBean {
         this.postLogStr(json, stream);
     }
 
-    private String auth_tokens = null;
+//    private String auth_tokens = null;
 
-    public void login() {
+    public String login() {
         String url = StrUtil.format("{}/auth/login", openObserveProperties.getUrl());
         HttpRequest request = HttpUtil.createPost(url);
         request.contentType("application/json");
@@ -93,7 +100,7 @@ public class OpenObserveTemplate implements InitializingBean {
                 }
             }
 
-            auth_tokens = response.getCookieValue("auth_tokens");
+            return response.getCookieValue("auth_tokens");
         }
     }
 
@@ -108,7 +115,7 @@ public class OpenObserveTemplate implements InitializingBean {
         final String s = StrUtil.isNotEmpty(stream) ? stream : openObserveProperties.getStream();
         final String url = StrUtil.format("{}/api/{}/{}/_json", openObserveProperties.getUrl(), openObserveProperties.getOrganization(), StrUtil.toUnderlineCase(s));
         HttpRequest request = HttpUtil.createPost(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword());
-        request.contentType("application/json");
+        request.contentType(ContentType.JSON.getValue());
         request.body(sb.toString());
         HttpResponse response = request.executeAsync();
         if (response.getStatus() != HttpStatus.HTTP_OK) {
@@ -125,10 +132,11 @@ public class OpenObserveTemplate implements InitializingBean {
     public HttpRequest getRequest(String url, Method method, ContentType contentType) {
         HttpRequest request = HttpUtil.createRequest(method, url);
         request.contentType(contentType.getValue());
-        if (auth_tokens == null) {
-            login();
+        try {
+            request.cookie(new HttpCookie("auth_tokens",  opobserveTokenManager.getTokenValue()));
+        } catch (Exception e) {
+            log.error("获取token失败", e);
         }
-        request.cookie(new HttpCookie("auth_tokens", auth_tokens));
         return request;
     }
 
@@ -269,5 +277,24 @@ public class OpenObserveTemplate implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         initMapper();
+    }
+
+    /**
+     * @return
+     * @throws TokenException
+     */
+    @Override
+    public TokenInfo getToken() throws TokenException {
+        String token = login();
+        return new TokenInfo(token);
+    }
+
+    /**
+     * @return
+     * @throws TokenException
+     */
+    @Override
+    public TokenInfo refreshToken() throws TokenException {
+        return getToken();
     }
 }

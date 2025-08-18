@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -88,16 +87,13 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
             openObserveTemplate.postLogs(gatewayLogs, GatewayLogs.class.getSimpleName());
+//            log.info("保存日志成功数量:{}", gatewayLogs.size());
         }
     });
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        try {
-            batchTask.offerOfWait(1, TimeUnit.MINUTES, gatewayLogs);
-        } catch (Exception e) {
-            log.error("保存日志失败", e);
-        }
+        batchTask.offerBlocking(gatewayLogs);
     }
 
 
