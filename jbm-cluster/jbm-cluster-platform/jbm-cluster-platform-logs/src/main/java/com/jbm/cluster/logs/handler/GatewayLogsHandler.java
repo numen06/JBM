@@ -60,7 +60,6 @@ public class GatewayLogsHandler {
             try {
                 GatewayLogs logs = message.getPayload();
                 //如果日志等级不够1,则不记录
-
                 if (ObjectUtil.isNotEmpty(logs)) {
                     logs.setLoglevel(ObjectUtil.defaultIfNull(logs.getLoglevel(), 0));
                     if (logs.getLoglevel() <= 0) {
