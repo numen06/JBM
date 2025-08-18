@@ -54,7 +54,6 @@ public class NotificationDispatcher implements ApplicationContextAware {
 
 
     private final RollingTask<Long> countWithTime = RollingTask.createRollingTask(1L, TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
-
         @Override
         public Long apply(ActionBean<Long> actionBean) {
             log.info("消息队列最近1分钟处理日志:{}", actionBean.getCurrQuantity());

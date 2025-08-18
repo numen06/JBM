@@ -49,7 +49,6 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         if (this.maxSubmitTime <= 0 && this.maxSubmitQuantity <= 0) {
             throw new IllegalArgumentException("批处理时间和数量不能同时为0或负数");
         }
-
         // 只有时间 > 0 才启动定时任务
         if (this.maxSubmitTime > 0) {
             this.startAsync();
@@ -122,13 +121,14 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
      */
     protected final void submitIfNotEmpty(ActionType triggerType) {
         int count = currQuantity.get();
-        if (count <= 0) return;
+        if (count <= 0 && ActionType.QUANTITY.equals(triggerType)) {
+            return;
+        }
 
         // CAS 尝试获取提交权，防止并发提交
         if (!submitting.compareAndSet(false, true)) {
             return; // 已有线程在提交
         }
-
         try {
             ActionBean<T> actionBean = new ActionBean<>(triggerType, count, DateTime.now());
             asyncAction(actionBean);

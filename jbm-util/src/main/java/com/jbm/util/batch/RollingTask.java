@@ -18,7 +18,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
     /**
      * 使用 AtomicReference 类来创建一个私有变量 atomicReference，该变量的初始值为 null
      */
-    private AtomicReference<T> atomicReference = new AtomicReference<>(null);
+    private final AtomicReference<T> atomicReference = new AtomicReference<>(null);
 
     /**
      * 构造一个滚动任务执行器
@@ -49,7 +49,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(final Function<ActionBean<T>, T> action) {
-        return new RollingTask(action);
+        return new RollingTask<T>(action);
     }
 
     /**
@@ -61,7 +61,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(maxSubmitTime, timeUnit, 0, action);
+        return new RollingTask<T>(maxSubmitTime, timeUnit, 0, action);
     }
 
     /**
@@ -72,7 +72,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
+        return new RollingTask<T>(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
     /**
