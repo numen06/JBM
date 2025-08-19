@@ -56,8 +56,8 @@ public class ApiBuild {
         String className = handlerMethod.getMethod().getDeclaringClass().getName();
         // 方法名
         String methodName = handlerMethod.getMethod().getName();
-        //主动忽略日志
-        Boolean accessLog = handlerMethod.hasMethodAnnotation(AccessLogIgnore.class);
+        //主动忽略日志,当有忽略注解的接口,则不记录日志
+        Boolean accessLog = !handlerMethod.hasMethodAnnotation(AccessLogIgnore.class);
         String md5 = DigestUtil.md5Hex(serviceId + url);
         String name = StrUtil.EMPTY;
         String desc = StrUtil.EMPTY;
