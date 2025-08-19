@@ -70,10 +70,11 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 提交数据：非阻塞，尝试添加到队列
      */
-    public int offer(T... objs) {
-        if (objs == null || objs.length == 0) {
-            return 0;
-        }
+    @SafeVarargs
+    public final int offer(T... objs) {
+//        if (objs == null || objs.length == 0) {
+//            return 0;
+//        }
 
         // 1. 先尝试入队（由子类实现，如 BlockingQueue.put 或 offer）
         int addedCount = doOffer(objs);

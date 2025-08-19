@@ -19,7 +19,7 @@ public class RollingTest {
 
         @Override
         public Long apply(ActionBean<Long> actionBean) {
-            log.info("消息队列最近5分钟处理日志:{}", actionBean.getCurrQuantity());
+            log.info("消息队列最近5秒处理日志:{}", actionBean.getCurrQuantity());
             return actionBean.getObj();
         }
     });
@@ -28,7 +28,7 @@ public class RollingTest {
     @Test
     public void test2() {
         for (int i = 0; i < 20; i++) {
-            countWithTime.offer(RandomUtil.randomLong());
+            countWithTime.offer();
             ThreadUtil.safeSleep(1000);
         }
     }
