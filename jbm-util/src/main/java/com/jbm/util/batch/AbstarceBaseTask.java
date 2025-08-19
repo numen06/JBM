@@ -121,7 +121,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
      */
     protected final void submitIfNotEmpty(ActionType triggerType) {
         int count = currQuantity.get();
-        if (count <= 0 && ActionType.QUANTITY.equals(triggerType)) {
+        if (count <= 0) {
             return;
         }
 
