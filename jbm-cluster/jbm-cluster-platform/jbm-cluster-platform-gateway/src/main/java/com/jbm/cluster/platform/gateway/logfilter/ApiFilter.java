@@ -70,8 +70,9 @@ public class ApiFilter implements AccessLogFilter {
             gatewayLogInfo.setApiId(baseApi.getApiId());
             gatewayLogInfo.setApiName(baseApi.getApiName());
             gatewayLogInfo.setApiPath(baseApi.getPath());
+            gatewayLogInfo.setPath(realPath);
         } catch (Exception e) {
-
+            log.error("获取API信息异常", e);
         }
     }
 }
