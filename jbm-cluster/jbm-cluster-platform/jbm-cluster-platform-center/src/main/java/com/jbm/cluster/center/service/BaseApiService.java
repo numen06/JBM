@@ -5,6 +5,7 @@ import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.util.List;
 
@@ -54,6 +55,8 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
      */
     void addApi(BaseApi api);
 
+    Integer batchUpdateOpen(List<String>  ids, Boolean open);
+
     /**
      * 修改接口
      *
@@ -88,4 +91,6 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
     Long getCount(QueryWrapper<BaseApi> queryWrapper);
 
     BaseApi findApiByPath(String serviceId, String path);
+
+    Integer batchUpdateAccessLog(List<String> ids, Boolean accessLog);
 }

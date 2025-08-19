@@ -1,9 +1,11 @@
 package com.jbm.cluster.center.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.service.IBaseApiServiceClient;
 import com.jbm.cluster.center.service.BaseApiService;
+import com.jbm.cluster.center.service.impl.BaseAppServiceImpl;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -29,6 +31,10 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
     private BaseApiService apiService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
+    @Autowired
+    private BaseAppServiceImpl baseAppServiceImpl;
+    @Autowired
+    private BaseApiService baseApiService;
 
 //    /**
 //     * 获取分页接口列表
@@ -160,23 +166,28 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @return
      */
     @ApiOperation(value = "批量修改公开状态", notes = "批量修改公开状态")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
-            @ApiImplicitParam(name = "open", required = true, value = "是否公开访问:0-否 1-是", paramType = "form")
-    })
     @PostMapping("/batch/update/open")
-    public ResultBody batchUpdateOpen(@RequestParam(value = "ids") String ids,
-                                      @RequestParam(value = "open") Integer open
+    public ResultBody<Integer> batchUpdateOpen(@RequestParam(value = "ids") List<String> ids,
+                                               @RequestParam(value = "open") Boolean open
     ) {
-        Assert.isTrue((open.intValue() != 1 || open.intValue() != 0), "isOpen只支持0,1");
-        QueryWrapper<BaseApi> wrapper = new QueryWrapper();
-        wrapper.lambda().in(BaseApi::getApiId, ids.split(","));
-        BaseApi entity = new BaseApi();
-        entity.setIsOpen(open);
-        apiService.update(entity, wrapper);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
-        return ResultBody.ok();
+        return ResultBody.callback(() -> {
+            return baseApiService.batchUpdateOpen(ids, open);
+        });
+    }
+
+    /**
+     * 批量修改日志状态
+     *
+     * @return
+     */
+    @ApiOperation(value = "批量修改日志状态", notes = "批量修改公开状态")
+    @PostMapping("/batch/update/log")
+    public ResultBody<Integer> batchUpdateAccessLog(@RequestParam(value = "ids")List<String> ids,
+                                               @RequestParam(value = "accessLog") Boolean accessLog
+    ) {
+        return ResultBody.callback(() -> {
+            return baseApiService.batchUpdateAccessLog(ids, accessLog);
+        });
     }
 
     /**
