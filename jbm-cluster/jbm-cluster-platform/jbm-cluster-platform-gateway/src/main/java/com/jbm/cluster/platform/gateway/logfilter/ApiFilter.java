@@ -31,7 +31,7 @@ public class ApiFilter implements AccessLogFilter {
     private BaseApiServiceClient baseApiServiceClient;
     LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
             //一小时没有读取释放
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterAccess(15, TimeUnit.MINUTES)
             .build(new CacheLoader<String, BaseApi>() {
                 @Override
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
