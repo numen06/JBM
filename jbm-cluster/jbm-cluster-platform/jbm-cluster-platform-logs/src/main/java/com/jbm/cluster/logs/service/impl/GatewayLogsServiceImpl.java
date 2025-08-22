@@ -88,7 +88,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
             openObserveTemplate.postLogs(gatewayLogs, GatewayLogs.class.getSimpleName());
-            log.info("保存日志成功数量:{}", gatewayLogs.size());
+//            log.info("保存日志成功数量:{}", gatewayLogs.size());
         }
     });
 

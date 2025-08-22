@@ -14,11 +14,14 @@ import com.jbm.util.token.TokenException;
 import com.jbm.util.token.TokenInfo;
 import com.jbm.util.token.TokenManager;
 import com.jbm.util.token.TokenProvider;
+import jbm.framework.boot.autoconfigure.openobserve.model.PostLogResult;
 import jbm.framework.boot.autoconfigure.openobserve.model.Query;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import jdk.nashorn.internal.parser.Token;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import org.apache.commons.io.Charsets;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 import org.apache.ibatis.mapping.BoundSql;
@@ -29,14 +32,17 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.HttpCookie;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +52,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class OpenObserveTemplate implements InitializingBean, TokenProvider {
 
-    private final  TokenManager opobserveTokenManager ;
+    private final TokenManager opobserveTokenManager;
     private final OpenObserveProperties openObserveProperties;
 
     public OpenObserveTemplate(OpenObserveProperties openObserveProperties) {
@@ -104,25 +110,74 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         }
     }
 
+    // 共享的 OkHttpClient 实例（推荐单例）
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+
     public void postLogStr(String json, String stream) {
         String firstChar = StrUtil.sub(json, 0, 1);
         StringBuilder sb = new StringBuilder(json);
         //如果不是数组则组成数组
-        if (firstChar.equals("{")) {
+        if ("{".equals(firstChar)) {
             sb.insert(0, "[");
             sb.append("]");
         }
         final String s = StrUtil.isNotEmpty(stream) ? stream : openObserveProperties.getStream();
         final String url = StrUtil.format("{}/api/{}/{}/_json", openObserveProperties.getUrl(), openObserveProperties.getOrganization(), StrUtil.toUnderlineCase(s));
-        HttpRequest request = HttpUtil.createPost(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword());
-        request.contentType(ContentType.JSON.getValue());
-        request.body(sb.toString());
-        HttpResponse response = request.executeAsync();
-        if (response.getStatus() != HttpStatus.HTTP_OK) {
-            log.error("错误信息:{}", response.body());
-            throw ServiceException.of(response.body());
-        }
-//        log.info("发送成功:{}", response.body());
+//            HttpRequest request = HttpUtil.createPost(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword());
+//            request.contentType(ContentType.JSON.getValue());
+//            request.body(sb.toString());
+//            try (HttpResponse response = request.execute()) {
+//                if (response.getStatus() != HttpStatus.HTTP_OK) {
+//                    log.error("发送日志错误信息:{}", response.body());
+//                    throw ServiceException.of(response.body());
+//                }else{
+//                    PostLogResult postLogResult = JSON.parseObject(response.body(), PostLogResult.class);
+//                    log.info("发送日志成功:{}条,失败:{}条。", postLogResult.getAllSuccessful(), postLogResult.getAllFailed());
+//                }
+//            }
+
+
+        final String credential = HttpUtil.buildBasicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword(), Charsets.UTF_8);
+        // 构建 Request Body
+        RequestBody requestBody = RequestBody.create(
+                sb.toString(),
+                MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
+        );
+
+
+        // 构建请求
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", credential)
+                .post(requestBody)
+                .build();
+
+        // 异步发送
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                // 网络错误、连接失败等
+                log.error("发送日志失败（网络错误）: {}", e.getMessage(), e);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    log.error("发送日志失败，HTTP状态码: {}, 响应: {}", response.code(), responseBody);
+                    // 可选：抛出异常或通知上层
+                } else {
+                    // 解析成功响应
+                    try {
+                        PostLogResult postLogResult = JSON.parseObject(responseBody, PostLogResult.class);
+                        log.info("发送日志成功: {}条, 失败: {}条。", postLogResult.getAllSuccessful(), postLogResult.getAllFailed());
+                    } catch (Exception parseException) {
+                        log.error("解析响应失败: {}", responseBody, parseException);
+                    }
+                }
+                response.close();
+            }
+        });
     }
 
     public HttpRequest getRequest(String url) {
@@ -133,7 +188,7 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         HttpRequest request = HttpUtil.createRequest(method, url);
         request.contentType(contentType.getValue());
         try {
-            request.cookie(new HttpCookie("auth_tokens",  opobserveTokenManager.getTokenValue()));
+            request.cookie(new HttpCookie("auth_tokens", opobserveTokenManager.getTokenValue()));
         } catch (Exception e) {
             log.error("获取token失败", e);
         }
