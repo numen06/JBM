@@ -2,6 +2,8 @@ package com.jbm.cluster.job.business.impl;
 
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
@@ -9,6 +11,7 @@ import com.jbm.cluster.api.entitys.job.DynamicClass;
 import com.jbm.cluster.job.service.DroolsRuleService;
 import com.jbm.cluster.job.service.DynamicClassService;
 import com.jbm.framework.exceptions.ServiceException;
+import lombok.val;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
 import org.kie.api.runtime.KieContainer;
@@ -48,7 +51,7 @@ public class RuleReloadService {
     @PostConstruct
     public void init() throws Exception {
         //loadDynamicClassService.generateClass();
-        //reloadRules();
+        reloadRules();
     }
 
     public synchronized void reloadRules() {
@@ -70,11 +73,11 @@ public class RuleReloadService {
 
         QueryWrapper<DroolsRule> wrapper = new QueryWrapper<>();
         wrapper.eq("rule_status", true);
-        wrapper.isNotNull("rule_content");
+        wrapper.isNotNull("drools_content");
 
         List<DroolsRule> rules = droolsRuleService.selectEntitys(wrapper);
         rules.forEach(rule -> {
-            String drlContent = processDynamicClassImports(rule.getRuleContent());
+            String drlContent = processDynamicClassImports(rule.getDroolsContent());
             kieFileSystem.write("src/main/resources/" + rule.getRuleCode() + rule.getVersion() + ".drl",
                     kieServices.getResources()
                             .newReaderResource(new StringReader(drlContent)));
@@ -104,6 +107,51 @@ public class RuleReloadService {
         // 将这些规则添加到guava缓存中
 
     }
+
+
+    /**
+     * 临时添加规则
+     *
+     * @param rules
+     * @return
+     */
+    public synchronized KieContainer addRules(JSONArray rules) {
+        if(rules ==  null || rules.isEmpty()){
+            throw new ServiceException("规则不能为空");
+        }
+
+        KieServices kieServices = KieServices.Factory.get();
+        // 2. 构建新的规则容器
+        KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
+
+        rules.forEach(rule -> {
+            JSONObject jsonObject = new JSONObject(rule);
+            String nodeId = jsonObject.get("nodeId").toString();
+            String drlContent = jsonObject.get("drools").toString();
+            kieFileSystem.write("src/main/resources/" + nodeId + ".drl",
+                    kieServices.getResources()
+                            .newReaderResource(new StringReader(drlContent)));
+        });
+
+        // 3. 构建容器
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
+        kieBuilder.buildAll();
+
+        if (kieBuilder.getResults().hasMessages(Message.Level.ERROR)) {
+            StringBuilder errorMsg = new StringBuilder("规则编译错误:\n");
+            kieBuilder.getResults().getMessages().forEach(msg -> {
+                errorMsg.append(" - ").append(msg.getText()).append("\n");
+                errorMsg.append("   [规则: ").append(msg.getPath()).append(" 行: ")
+                        .append(msg.getLine()).append("]\n");
+            });
+            throw new ServiceException(errorMsg.toString());
+        }
+
+        // 4. 获取内部 ReleaseId 并创建 KieContainer
+        ReleaseId releaseId = kieBuilder.getKieModule().getReleaseId();
+        return(kieServices.newKieContainer(releaseId));
+    }
+
 
     private Map<String, byte[]> writeDynamicClassesToKie(KieServices kieServices, KieFileSystem kieFileSystem)
             throws Exception {

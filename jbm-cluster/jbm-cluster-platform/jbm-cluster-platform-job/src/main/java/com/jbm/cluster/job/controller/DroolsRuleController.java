@@ -3,8 +3,10 @@ package com.jbm.cluster.job.controller;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.json.JSONObject;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
 import com.jbm.cluster.api.entitys.message.drools.DroolsFeignTemplate;
+import com.jbm.cluster.api.form.job.DroolsParseAndExecuteForm;
 import com.jbm.cluster.api.service.feign.drools.DroolsRuleServiceClient;
 import com.jbm.cluster.job.business.impl.LoadDynamicClassService;
 import com.jbm.cluster.job.business.impl.RuleEngineService;
@@ -17,6 +19,7 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -184,5 +187,16 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
         }
     }
 
+    @PostMapping({"/test4"})
+    public ResultBody<JSONObject> test4(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
+        System.out.println("测试开始-》》》》》》》》》》》》》》》》");
+        try {
+            JSONObject jsonObject = droolsRuleService.parseAndExecuteRule(droolsParseAndExecuteForm);
+            return ResultBody.success(jsonObject,"成功");
+        } catch (Exception e) {
+            //log.error("test1 error", e);
+            throw new RuntimeException(e);
+        }
+    }
 
 }

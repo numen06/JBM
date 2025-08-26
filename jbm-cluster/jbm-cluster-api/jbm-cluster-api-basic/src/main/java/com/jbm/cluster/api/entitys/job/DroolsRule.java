@@ -33,8 +33,11 @@ public class DroolsRule extends MasterDataIdEntity implements Cloneable{
     @ApiModelProperty("规则状态 为0未启用")
     private Boolean ruleStatus;
     @Lob
-    @ApiModelProperty("规则内容")
+    @ApiModelProperty("原始json内容")
     private String ruleContent;
+    @Lob
+    @ApiModelProperty("规则内容")
+    private String droolsContent;
     @ApiModelProperty("版本号")
     private String version;
 
