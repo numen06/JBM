@@ -3,9 +3,10 @@ package com.jbm.cluster.common.basic.module;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
 import com.jbm.cluster.common.basic.module.request.ICustomizeRequest;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
+import org.bouncycastle.cert.ocsp.Req;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -18,14 +19,15 @@ public class JbmRequestTemplate {
     @Autowired
     private ApplicationContext applicationContext;
 
-    public HttpResponse request(String url, String methodType, String jsonBody) throws UnknownHostException {
+    public okhttp3.Response request(String url, String methodType, String jsonBody) throws UnknownHostException {
         ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(url);
         return iCustomizeRequest.request(url, methodType, jsonBody);
     }
 
 
-    public HttpResponse request(HttpRequest httpRequest) {
-        ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(httpRequest.getUrl());
+    public okhttp3.Response request(Request.Builder requestBuilder) {
+        Request httpRequest = requestBuilder.build();
+        ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(httpRequest.url().toString());
         return iCustomizeRequest.request(httpRequest);
     }
 
