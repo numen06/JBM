@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
@@ -84,20 +83,6 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
      */
     public Request.Builder buildRequest(Request.Builder requestBuilder) {
         return requestBuilder;
-    }
-
-    // ---------------- 工具方法 ----------------
-
-    /**
-     * 判断是否为 IP 地址
-     */
-    private boolean isIpAddress(String host) {
-        try {
-            InetAddress.getByName(host);
-            return true;
-        } catch (UnknownHostException e) {
-            return false;
-        }
     }
 
     /**
