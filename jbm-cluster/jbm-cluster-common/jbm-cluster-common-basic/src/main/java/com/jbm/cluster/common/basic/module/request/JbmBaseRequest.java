@@ -2,10 +2,7 @@ package com.jbm.cluster.common.basic.module.request;
 
 import cn.hutool.core.net.url.UrlBuilder;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
@@ -25,16 +22,17 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     private LoadBalancerClient loadBalancerClient;
 
     private final OkHttpClient httpClient = new OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)  // 任务提交和查询都是轻量操作
+            .callTimeout(30, TimeUnit.SECONDS)
+            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
             .build();
 
     /**
      * 动态请求入口
      */
     @Override
-    public okhttp3.Response request(String url, String methodType, String jsonBody)  {
+    public okhttp3.Response request(String url, String methodType, String jsonBody) {
         // 1. 使用 buildUrl 解析并可能替换为真实地址
         UrlBuilder urlBuilder = null;
         try {
@@ -66,6 +64,7 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
         return UrlBuilder.of(sourceUrl);
     }
+
     /**
      * 执行 OkHttp 请求
      */
