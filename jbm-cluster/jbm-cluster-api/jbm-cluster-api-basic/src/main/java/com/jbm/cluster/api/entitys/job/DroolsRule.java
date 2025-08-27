@@ -18,9 +18,8 @@ import javax.persistence.Table;
 @Table
 @Entity
 @ApiModel("drools规则")
-public class DroolsRule extends MasterDataIdEntity implements Cloneable{
+public class DroolsRule extends MasterDataIdEntity {
     private static final long serialVersionUID = 1L;
-    private static DroolsRule droolsRule = new DroolsRule();
 
     @ApiModelProperty("规则编号")
     private String ruleCode;
@@ -41,13 +40,6 @@ public class DroolsRule extends MasterDataIdEntity implements Cloneable{
     @ApiModelProperty("版本号")
     private String version;
 
-    public static DroolsRule getInstance() {
-        try {
-            return (DroolsRule)droolsRule.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return new DroolsRule();
-    }
+
 
 }

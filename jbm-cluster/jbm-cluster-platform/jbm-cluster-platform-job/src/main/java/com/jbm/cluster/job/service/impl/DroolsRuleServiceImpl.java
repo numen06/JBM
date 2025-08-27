@@ -56,16 +56,22 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
             if (StringUtil.isBlank(droolsRule.getVersion())) {
                 droolsRule.setVersion("1.0.0");
             }
+        }else {
+            //根据id查询是否存在
+            DroolsRule droolsRuleOld = super.getById(droolsRule.getId());
+            Assert.notNull(droolsRuleOld, () -> new ServiceException("该id查询不到规则"));
         }
         //通过原始json内容解析出drools内容
         if (StringUtil.isNotBlank(droolsRule.getRuleContent())) {
             JSONArray jsonArray = compileRule(droolsRule.getRuleContent(),null);
-            droolsRule.setDroolsContent(jsonArray.toString());
+            if(!jsonArray.isEmpty()){
+                droolsRule.setDroolsContent(jsonArray.toString());
+            }
         }
 
         super.saveEntity(droolsRule);
         //重新加载规则
-        if (StringUtil.isNotEmpty(droolsRule.getRuleContent())) {
+        if (StringUtil.isNotEmpty(droolsRule.getDroolsContent())) {
             // DroolsUtil.checkRule(droolsRule.getRuleContent());
             ruleReloadService.reloadRules();
         }
