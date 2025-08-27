@@ -14,12 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 /**
  * MQ消息接收者 - 响应式安全版本
@@ -41,17 +38,16 @@ public class JbmClusterScheduledHandler {
      * 接收 RabbitMQ 消息并异步处理，支持重试和 DLQ
      */
     @Bean
-    public Function<Flux<Message<JbmClusterJobResource>>, Mono<Void>> scheduledJob() {
-        return flux -> flux.flatMap(message -> {
+    public Consumer<Message<JbmClusterJobResource>> scheduledJob() {
+        return message -> {
             JbmClusterJobResource payload = message.getPayload();
-            // 使用 flatMap 返回 Mono，确保处理完成才继续
-            return Mono.fromRunnable(() -> scheduledJobQueue(payload))
-                    .then(Mono.just(message)) // 成功后返回原消息（用于 ACK）
-                    .onErrorMap(ex -> {
-                        log.error("处理消息失败，payload: {}", payload, ex);
-                        return ex; // 异常向上传播，触发 NACK 和重试
-                    });
-        }).then();
+            try {
+                scheduledJobQueue(payload);
+            } catch (Exception e) {
+                log.error("【定时任务消费失败】消息ID: {}, 错误: {}", message.getHeaders().getId(), e.getMessage(), e);
+                throw e;
+            }
+        };
     }
 
     /**
@@ -63,7 +59,6 @@ public class JbmClusterScheduledHandler {
             log.info("接收到空的定时任务列表，serviceId: {}", jbmClusterJobResource.getServiceId());
             return;
         }
-
         List<SysJob> serviceJobs = sysJobService.selectJobsByGroup(jbmClusterJobResource.getServiceId());
         log.info("接收到集群推送的定时任务，数量为: {}", jbmClusterJobs.size());
 

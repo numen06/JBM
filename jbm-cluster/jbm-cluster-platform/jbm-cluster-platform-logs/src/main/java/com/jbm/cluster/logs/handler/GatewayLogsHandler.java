@@ -17,11 +17,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
+
 
 /**
  * mq消息接收者
@@ -38,7 +38,7 @@ public class GatewayLogsHandler {
     @Autowired
     private GatewayLogsService gatewayLogsService;
 
-    private final RollingTask<Long> countWithTime = RollingTask.createRollingTask( 1L,TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
+    private final RollingTask<Long> countWithTime = RollingTask.createRollingTask(1L, TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
 
         @Override
         public Long apply(ActionBean<Long> actionBean) {
@@ -55,15 +55,15 @@ public class GatewayLogsHandler {
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Bean
-    public Function<Flux<Message<GatewayLogs>>, Mono<Void>> accessLogs() {
-        return flux -> flux.map(message -> {
+    public Consumer<Message<GatewayLogs>> accessLogs() {
+        return message -> {
             try {
                 GatewayLogs logs = message.getPayload();
                 //如果日志等级不够1,则不记录
                 if (ObjectUtil.isNotEmpty(logs)) {
                     logs.setLoglevel(ObjectUtil.defaultIfNull(logs.getLoglevel(), 0));
                     if (logs.getLoglevel() <= 0) {
-                        return message;
+                        return;
                     }
                     int nowMillis = DateTime.now().getField(DateField.MILLISECOND);
                     DateTime time = DateTime.of(logs.getRequestTime()).setField(DateField.MILLISECOND, nowMillis);
@@ -84,12 +84,48 @@ public class GatewayLogsHandler {
                     //统计
                     countWithTime.offer();
                 }
-                return message;
             } catch (Exception e) {
                 log.error("格式化错误", e);
-                return Mono.empty();
             }
-        }).then();
+        };
     }
+
+//    @Bean
+//    public Function<Flux<Message<GatewayLogs>>, Mono<Void>> accessLogs() {
+//        return flux -> flux.map(message -> {
+//            try {
+//                GatewayLogs logs = message.getPayload();
+//                //如果日志等级不够1,则不记录
+//                if (ObjectUtil.isNotEmpty(logs)) {
+//                    logs.setLoglevel(ObjectUtil.defaultIfNull(logs.getLoglevel(), 0));
+//                    if (logs.getLoglevel() <= 0) {
+//                        return message;
+//                    }
+//                    int nowMillis = DateTime.now().getField(DateField.MILLISECOND);
+//                    DateTime time = DateTime.of(logs.getRequestTime()).setField(DateField.MILLISECOND, nowMillis);
+//                    logs.setRequestTime(time);
+//
+//
+//                    if (StrUtil.isNotBlank(logs.getIp())) {
+//                        //设置IP属地
+//                        logs.setRegion(ipRegionTemplate.getRegion(logs.getIp()));
+//                    }
+//                    if (StrUtil.isEmpty(logs.getAccessId())) {
+//                        //设置IP属地
+//                        logs.setAccessId(IdUtil.fastSimpleUUID());
+//                    }
+//                    applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
+////                    gatewayLogsService.save(logs);
+//                    gatewayLogsService.saveGatewayLogs(logs);
+//                    //统计
+//                    countWithTime.offer();
+//                }
+//                return message;
+//            } catch (Exception e) {
+//                log.error("格式化错误", e);
+//                return Mono.empty();
+//            }
+//        }).then();
+//    }
 
 }
