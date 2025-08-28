@@ -192,8 +192,9 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
                 super.afterMatchFired(event);
                 System.out.println("规则触发: " + event.getMatch().getRule().getName());
                 System.out.println("触发事实: " + event.getMatch().getFactHandles());
-                JSONObject nextNode = getNextNode(droolsParseAndExecuteForm,event.getMatch().getRule().getName());
-                jsonResult.set("nextNode", nextNode);
+                JSONObject  res = getNextNode(droolsParseAndExecuteForm,event.getMatch().getRule().getName());
+                //将res赋值给jsonResult
+                jsonResult.putAll(res);
             }
         });
 
@@ -220,7 +221,7 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
     public JSONObject getNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm,String ruleName){
         Assert.notNull(droolsParseAndExecuteForm.getOriginalJson(), "原始json内容不能为空");
         Assert.notNull(ruleName, "规则名称不能为空");
-        AtomicReference<JSONObject> jsonResult = new AtomicReference<>(new JSONObject());
+        JSONObject jsonResult = new JSONObject();
         //截取规则名称的最后一段，代表当前ifElse节点的id
         //比如 ruleName = "Rule_21368_elseif_31014" 要取 31014
         String ruleNodeId = ruleName.substring(ruleName.lastIndexOf("_") + 1);
@@ -240,7 +241,9 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
             //比如 sourceHandle = "conditions-31014-elseIf-source-handle" 要取 31014
             String sourceHandleId = sourceHandle.toString().split("-")[1];
             if(sourceHandleId.equals(ruleNodeId)){
+                //对应的连线信息
                 targetId = edgeObj.get("target").toString();
+                jsonResult.set("edgeObj",edgeObj);
                 break;
             }
         }
@@ -252,10 +255,10 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
             return nodeObj.get("id").toString().equals(finalTargetId);
         }).findFirst().ifPresent(node -> {
             JSONObject nodeObj = JSONUtil.parseObj(node);
-            jsonResult.set(nodeObj);
+            jsonResult.set("nextNode",nodeObj);
         });
 
-        return jsonResult.get();
+        return jsonResult;
     }
 
 }
