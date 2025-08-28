@@ -2,7 +2,7 @@ package com.jbm.cluster.job;
 
 import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
-import com.jbm.cluster.api.entitys.job.SysJob;
+import com.jbm.cluster.api.entitys.job.*;
 import com.jbm.cluster.job.mapper.SysJobMapper;
 import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
 import org.mybatis.spring.annotation.MapperScan;
@@ -25,7 +25,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EntityScan(basePackageClasses = {SysJob.class})
 @MapperScan(basePackageClasses = SysJobMapper.class)
 @EnableJbmDictionary(basePackageClasses = MisfirePolicy.class)
-@EnableCodeAutoGeneate(entityPackageClasses = {SysJob.class}, targetPackage = "com.jbm.cluster.job")
+@EnableCodeAutoGeneate(entityPackageClasses = {SysJob.class, DroolsRule.class, DynamicClass.class, DynamicField.class, RuleOperationLog.class}, targetPackage = "com.jbm.cluster.job")
 public class JbmJobApplication {
     public static void main(String[] args) {
         SpringApplication.run(JbmJobApplication.class, args);
