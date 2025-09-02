@@ -17,6 +17,7 @@ import com.jbm.cluster.job.util.DroolsUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import jodd.util.StringUtil;
+import lombok.val;
 import org.drools.core.event.DefaultAgendaEventListener;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.runtime.KieContainer;
@@ -174,6 +175,41 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
     }
 
     @Override
+    public JSONObject parseNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm) {
+        Assert.notNull(droolsParseAndExecuteForm.getOriginalJson(), "原始json内容不能为空");
+        Assert.notNull(droolsParseAndExecuteForm.getNodeId(), "节点ID不能为空");
+        //获取当前节点的信息
+        JSONObject jsonObj = JSONUtil.parseObj(droolsParseAndExecuteForm.getOriginalJson());
+        JSONArray nodesArr = JSONUtil.parseArray(jsonObj.get("nodes"));
+        JSONObject currNode = nodesArr.stream()
+                .map(JSONUtil::parseObj)
+                .filter(node -> node.getStr("id").equals(droolsParseAndExecuteForm.getNodeId()))
+                .findFirst()
+                .orElse(null);
+        Assert.notNull(currNode, "当前节点不存在");
+        JSONObject nextObj = getNextNode(droolsParseAndExecuteForm);
+        Assert.notNull(currNode, "查询下一个节点失败");
+        JSONObject jsonResult = new JSONObject();
+        JSONObject nextNode = JSONUtil.parseObj(nextObj.get("nextNode"));
+        if("conditions".equals(nextNode.get("type"))){
+            //下个节点是规则节点
+            jsonResult.set("nextRuleNode", nextNode);
+            //规则节点解析出下下个节点 todo 当前只考虑一次规则节点，如果下下个节点还是规则节点怎么处理？
+            droolsParseAndExecuteForm.setNodeId((String) nextNode.get("id"));
+            JSONObject ruleResult = parseAndExecuteRule(droolsParseAndExecuteForm);
+            JSONObject nextNextNode = JSONUtil.parseObj(ruleResult.get("nextNode"));
+            jsonResult.set("nextNotRuleNode",nextNextNode);
+            return jsonResult;
+        }else {
+            jsonResult.set("nextNotRuleNode", nextNode);
+        }
+
+        return jsonResult;
+
+    }
+
+
+    @Override
     public JSONObject parseAndExecuteRule(DroolsParseAndExecuteForm droolsParseAndExecuteForm) {
         Assert.notNull(droolsParseAndExecuteForm.getOriginalJson(), "原始json内容不能为空");
         Assert.notNull(droolsParseAndExecuteForm.getNodeId(), "节点ID不能为空");
@@ -192,7 +228,7 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
                 super.afterMatchFired(event);
                 System.out.println("规则触发: " + event.getMatch().getRule().getName());
                 System.out.println("触发事实: " + event.getMatch().getFactHandles());
-                JSONObject  res = getNextNode(droolsParseAndExecuteForm,event.getMatch().getRule().getName());
+                JSONObject  res = getRuleNextNode(droolsParseAndExecuteForm,event.getMatch().getRule().getName());
                 //将res赋值给jsonResult
                 jsonResult.putAll(res);
             }
@@ -212,13 +248,13 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
     }
 
     /**
-     * 解析下个节点
+     * 解析下个节点(当前节点是rule节点)
      *
      * @param droolsParseAndExecuteForm
      * @param ruleName
      * @return
      */
-    public JSONObject getNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm,String ruleName){
+    public JSONObject getRuleNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm,String ruleName){
         Assert.notNull(droolsParseAndExecuteForm.getOriginalJson(), "原始json内容不能为空");
         Assert.notNull(ruleName, "规则名称不能为空");
         JSONObject jsonResult = new JSONObject();
@@ -241,6 +277,47 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
             //比如 sourceHandle = "conditions-31014-elseIf-source-handle" 要取 31014
             String sourceHandleId = sourceHandle.toString().split("-")[1];
             if(sourceHandleId.equals(ruleNodeId)){
+                //对应的连线信息
+                targetId = edgeObj.get("target").toString();
+                jsonResult.set("edgeObj",edgeObj);
+                break;
+            }
+        }
+        Object nodesObj = jsonObj.get("nodes");
+        JSONArray nodes = JSONUtil.parseArray(nodesObj);
+        String finalTargetId = targetId;
+        nodes.stream().filter(node -> {
+            JSONObject nodeObj = JSONUtil.parseObj(node);
+            return nodeObj.get("id").toString().equals(finalTargetId);
+        }).findFirst().ifPresent(node -> {
+            JSONObject nodeObj = JSONUtil.parseObj(node);
+            jsonResult.set("nextNode",nodeObj);
+        });
+
+        return jsonResult;
+    }
+
+    /**
+     * 解析下个节点
+     *
+     * @param droolsParseAndExecuteForm
+     * @return
+     */
+    public JSONObject getNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm){
+        Assert.notNull(droolsParseAndExecuteForm.getOriginalJson(), "原始json内容不能为空");
+        JSONObject jsonResult = new JSONObject();
+
+        JSONObject jsonObj = JSONUtil.parseObj(droolsParseAndExecuteForm.getOriginalJson());
+        Object edgesObj = jsonObj.get("edges");
+        JSONArray edges = JSONUtil.parseArray(edgesObj);
+        //下一节点id
+        String targetId = "";
+        for (Object edge : edges) {
+            JSONObject edgeObj = JSONUtil.parseObj(edge);
+            Object source = edgeObj.get("source");
+
+            String sourceId = source.toString();
+            if(sourceId.equals(droolsParseAndExecuteForm.getNodeId())){
                 //对应的连线信息
                 targetId = edgeObj.get("target").toString();
                 jsonResult.set("edgeObj",edgeObj);
