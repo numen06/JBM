@@ -17,6 +17,16 @@ public class JbmRequestTemplate {
     @Autowired
     private ApplicationContext applicationContext;
 
+    /**
+     * 请求服务
+     * @param url 示例：支持http和feign
+     *            地址1：<a href="http://127.0.0.1:8080/api/test">...</a>
+     *            地址2：feign://jbm-cluster-platform-center/api/test
+     * @param methodType 请求方式
+     * @param jsonBody 请求体
+     * @return 请求结果
+     * @throws UnknownHostException 找不到服务
+     */
     public okhttp3.Response request(String url, String methodType, String jsonBody) throws UnknownHostException {
         ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(url);
         if (iCustomizeRequest != null) {
@@ -27,6 +37,11 @@ public class JbmRequestTemplate {
     }
 
 
+    /**
+     * 请求服务
+     * @param requestBuilder 请求构造器
+     * @return 请求结果
+     */
     public okhttp3.Response request(Request.Builder requestBuilder) {
         Request httpRequest = requestBuilder.build();
         ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(httpRequest.url().toString());

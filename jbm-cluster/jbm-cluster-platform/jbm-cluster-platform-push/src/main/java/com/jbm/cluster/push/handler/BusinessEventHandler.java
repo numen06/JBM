@@ -15,10 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Slf4j
@@ -34,20 +36,21 @@ public class BusinessEventHandler {
     private WebhookTaskService webhookTaskService;
 
     @Bean
-    public Function<Flux<Message<JbmClusterBusinessEventResource>>, Mono<Void>> businessEventResource() {
-        return flux -> flux.map(message -> {
-            this.receive(message.getPayload());
-            return message;
-        }).then();
+    public Consumer<Message<JbmClusterBusinessEventResource>> businessEventResourceConsumer() {
+        return message -> {
+            // 调用你的业务逻辑
+            receive(message.getPayload());
+        };
     }
 
     @Bean
-    public Function<Flux<Message<JbmClusterBusinessEventBean>>, Mono<Void>> businessEvent() {
-        return flux -> flux.map(message -> {
-            this.sendEvent(message.getPayload());
-            return message;
-        }).then();
+    public Consumer<Message<JbmClusterBusinessEventBean>> businessEventConsumer() {
+        return message -> {
+            // 调用你的业务逻辑
+            sendEvent(message.getPayload());
+        };
     }
+
 
     /**
      * 接受集群事件推送
