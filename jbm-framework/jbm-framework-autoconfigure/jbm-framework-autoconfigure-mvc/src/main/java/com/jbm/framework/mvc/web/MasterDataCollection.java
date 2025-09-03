@@ -217,7 +217,7 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
     public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
         try {
             // 获取前端信息List<BusCompanyInfo>
-            List<Long> ids = idsForm.getIds();
+            List<String> ids = idsForm.getIds();
             if (CollectionUtil.isEmpty(ids)) {
                 return ResultBody.error(true, "ID为空");
             }

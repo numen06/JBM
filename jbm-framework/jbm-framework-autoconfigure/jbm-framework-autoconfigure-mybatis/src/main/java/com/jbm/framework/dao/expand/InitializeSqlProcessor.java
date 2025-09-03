@@ -40,7 +40,7 @@ public class InitializeSqlProcessor implements BeanPostProcessor {
                 log.info("数据源未配置，不执行初始化数据库文件扫描");
                 return bean;
             }
-            log.info("测试数据源配置:{}", dataSource);
+//            log.info("测试数据源配置:{}", dataSource);
             this.ds = new SimpleDataSource(dataSource.getUrl(), dataSource.getUsername(), dataSource.getPassword());
             this.initialize();
         }
