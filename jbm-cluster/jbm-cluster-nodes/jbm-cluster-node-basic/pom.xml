@@ -70,6 +70,10 @@
         <!--            <groupId>com.taobao.arthas</groupId>-->
         <!--            <artifactId>arthas-spring-boot-starter</artifactId>-->
         <!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-timelimiter</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

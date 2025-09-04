@@ -11,6 +11,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.batch.BatchTask;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
+import jodd.util.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
