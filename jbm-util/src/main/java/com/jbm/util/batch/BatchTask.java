@@ -68,14 +68,13 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
             T item = blockingQueue.poll();
             if (item != null) list.add(item);
         }
-
         try {
             action.accept(list);
             log.debug("批量任务执行成功，数量：{}，触发方式：{}，耗时：{}ms",
                     list.size(), actionBean.getActionType(),
                     DateUtil.between(actionBean.getSubmitTime(), DateTime.now(), DateUnit.MS));
         } catch (Exception e) {
-            log.error("批量任务执行失败，数量：" + list.size(), e);
+            log.error("批量任务执行失败，数量：{}", list.size(), e);
         }
     }
 }

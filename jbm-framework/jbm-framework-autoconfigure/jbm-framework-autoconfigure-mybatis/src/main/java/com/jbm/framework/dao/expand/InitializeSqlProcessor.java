@@ -22,13 +22,13 @@ public class InitializeSqlProcessor implements BeanPostProcessor {
     }
 
     public void initialize() {
-        try {
-            SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(ds);
-            sqlPrepareRunner.scanSqlFiles();
-        } catch (Exception e) {
-            log.error("初始化数据库文件扫描失败");
-//            throw new RuntimeException(e);
-        }
+//        try {
+//            SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(ds);
+//            sqlPrepareRunner.scanSqlFiles();
+//        } catch (Exception e) {
+//            log.error("初始化数据库文件扫描失败");
+////            throw new RuntimeException(e);
+//        }
     }
 
 
@@ -37,9 +37,10 @@ public class InitializeSqlProcessor implements BeanPostProcessor {
         if (ds == null) {
             JdbcDataSourceProperties dataSource = SpringUtil.getBean(JdbcDataSourceProperties.class);
             if (dataSource.getUrl() == null) {
-//                log.warn("数据源未配置，不执行初始化数据库文件扫描");
+                log.info("数据源未配置，不执行初始化数据库文件扫描");
                 return bean;
             }
+//            log.info("测试数据源配置:{}", dataSource);
             this.ds = new SimpleDataSource(dataSource.getUrl(), dataSource.getUsername(), dataSource.getPassword());
             this.initialize();
         }

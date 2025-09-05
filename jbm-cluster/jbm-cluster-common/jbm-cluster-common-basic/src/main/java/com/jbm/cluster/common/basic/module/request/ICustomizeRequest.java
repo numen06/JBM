@@ -6,9 +6,9 @@ import cn.hutool.http.HttpResponse;
 import java.net.UnknownHostException;
 
 public interface ICustomizeRequest {
-    HttpResponse request(String url, String methodType, String jsonBody) throws UnknownHostException;
+    okhttp3.Response request(String url, String methodType, String jsonBody) ;
 
-    HttpResponse request(HttpRequest httpRequest);
+    okhttp3.Response request(okhttp3.Request httpRequest);
 
     String prefix();
 

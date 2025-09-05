@@ -1,2 +1,4 @@
 namespace,name,type
 4,Demo.Dynamic.Scalar.Int32,int
+3,WCS_HeartBeat,short,WCS_HeartBeat
+3,PLC_HeartBeat,short,PLC_HeartBeat
