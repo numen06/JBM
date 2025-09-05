@@ -2,12 +2,15 @@ package test.util;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.IoUtil;
 import com.github.pfmiles.minvelocity.TemplateUtil;
 import com.github.pfmiles.org.apache.velocity.Template;
 import com.jbm.util.MapUtils;
 import com.jbm.util.SimpleTemplateUtils;
 import junit.framework.TestCase;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
@@ -20,8 +23,8 @@ public class SimpleTemplateUtilsTest extends TestCase {
         System.out.println(SimpleTemplateUtils.render("temps/text.tmp", MapUtils.newParamMap("name", "wesley")));
     }
 
-    public void testFileTest2() {
-        String template = "temps/text-date.tmp";
+    public void testFileTest2() throws IOException {
+//        String template = "temps/text-date.tmp";
         // 将格式化后的字符串放入上下文
         Map<String, Object> context = new HashMap<>();
         // 注入工具类实例
@@ -32,7 +35,9 @@ public class SimpleTemplateUtilsTest extends TestCase {
         });
         // 注入到上下文
         context.put("currentDate", DateTime.now());
-        System.out.println(SimpleTemplateUtils.render(template, context));
+//        System.out.println(SimpleTemplateUtils.render(template, context));
+        String templateString = "$currentDate.toString('yyyy-MM-dd HH:mm:ss')";
+        System.out.println(SimpleTemplateUtils.renderStringTemplate(templateString, context));
     }
 
     public void testRenderStringTemp() {
