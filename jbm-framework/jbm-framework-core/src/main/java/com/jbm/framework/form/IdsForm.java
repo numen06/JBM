@@ -13,8 +13,8 @@ import java.util.List;
  **/
 @Data
 @ApiModel("传递Ids")
-public class IdsForm  {
+public class IdsForm {
 
     @ApiModelProperty("ID数组")
-    private List<String> ids;
+    private List<Long> ids;
 }
