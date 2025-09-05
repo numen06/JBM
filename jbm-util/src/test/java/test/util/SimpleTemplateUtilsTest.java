@@ -38,6 +38,8 @@ public class SimpleTemplateUtilsTest extends TestCase {
 //        System.out.println(SimpleTemplateUtils.render(template, context));
         String templateString = "$currentDate.toString('yyyy-MM-dd HH:mm:ss')";
         System.out.println(SimpleTemplateUtils.renderStringTemplate(templateString, context));
+          templateString = "$date.format('yyyy-MM-dd HH:mm:ss', $currentDate)";
+        System.out.println(SimpleTemplateUtils.renderStringTemplate(templateString, context));
     }
 
     public void testRenderStringTemp() {
