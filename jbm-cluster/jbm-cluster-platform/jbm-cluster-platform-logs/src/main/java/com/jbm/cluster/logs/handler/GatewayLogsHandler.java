@@ -10,7 +10,6 @@ import com.jbm.cluster.logs.event.AccessEvent;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.util.batch.ActionBean;
 import com.jbm.util.batch.RollingTask;
-import io.github.resilience4j.timelimiter.TimeLimiter;
 import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,8 +54,6 @@ public class GatewayLogsHandler {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private final TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(30));
-
     @Bean
     public Consumer<Message<GatewayLogs>> accessLogs() {
         return message -> {
@@ -83,23 +78,16 @@ public class GatewayLogsHandler {
                         //设置IP属地
                         logs.setAccessId(IdUtil.fastSimpleUUID());
                     }
-                    // 限制处理时间不超过 30s
-                    timeLimiter.executeFutureSupplier(() ->
-                            CompletableFuture.runAsync(() -> {
-                                applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
-                                gatewayLogsService.saveGatewayLogs(logs);
-                            })
-                    );
+                    applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
+//                    gatewayLogsService.save(logs);
+                    gatewayLogsService.saveGatewayLogs(logs);
                     //统计
                     countWithTime.offer();
                 }
             } catch (Exception e) {
-                log.error("接受日志错误", e);
-                throw new RuntimeException(e);
+                log.error("格式化错误", e);
             }
         };
-
-
     }
 
 //    @Bean

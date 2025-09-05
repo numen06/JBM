@@ -1,95 +1,65 @@
 package com.jbm.cluster.common.basic.module.request;
 
 import cn.hutool.core.net.url.UrlBuilder;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.http.ContentType;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.Method;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpClientErrorException;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
-
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpMethod.PUT;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public abstract class JbmBaseRequest implements ICustomizeRequest {
 
-    @Autowired
-    private LoadBalancerClient loadBalancerClient;
-
-    private final OkHttpClient httpClient = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)  // 任务提交和查询都是轻量操作
-            .callTimeout(30, TimeUnit.SECONDS)
-            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
-            .build();
-
-    /**
-     * 动态请求入口
-     */
     @Override
-    public okhttp3.Response request(String url, String methodType, String jsonBody) {
-        // 1. 使用 buildUrl 解析并可能替换为真实地址
-        UrlBuilder urlBuilder = null;
-        try {
-            urlBuilder = buildUrl(url);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
+    public HttpResponse request( String url, String methodType, String jsonBody) throws UnknownHostException {
+        HttpRequest httpRequest = new HttpRequest(this.buildUrl(url));
+        httpRequest.body(jsonBody);
+        httpRequest.setMethod(Method.GET);
+        if (HttpMethod.POST.matches(methodType)) {
+            httpRequest.setMethod(Method.POST);
         }
-        String finalUrl = urlBuilder.toString();
-
-        // 2. 构建 OkHttp Request
-        RequestBody body = null;
-        if (POST.matches(methodType) || PUT.matches(methodType) || "PATCH".equalsIgnoreCase(methodType)) {
-            MediaType mediaType = MediaType.get("application/json; charset=utf-8");
-            body = RequestBody.create(jsonBody != null ? jsonBody : "{}", mediaType);
-        }
-        Request.Builder requestBuilder = new Request.Builder().url(finalUrl);
-        requestBuilder.method(methodType, body);
-
-        // 允许子类扩展
-        requestBuilder = buildRequest(requestBuilder);
-
-        Request request = requestBuilder.build();
-        return executeRequest(request);
+        return request(httpRequest);
     }
 
-    /**
-     * 构建 URL
+    /***
+     * 异步执行线程池
      */
+//    private ExecutorService executorService = ThreadUtil.newExecutor(100);
+
+    @Override
+    public HttpResponse request(HttpRequest httpRequest) {
+        httpRequest.contentType(ContentType.JSON.getValue());
+        httpRequest = this.buildRequest(httpRequest);
+        HttpResponse httpResponse = httpRequest.execute(true);
+        log.info("执行URL状态为[{}],结果[{}]", httpResponse.getStatus(), httpResponse.body());
+        return httpResponse;
+    }
+
+//    @Override
+//    public void requestAsync(HttpRequest httpRequest) {
+//        executorService.submit(new Callable<HttpResponse>() {
+//            @Override
+//            public HttpResponse call() throws Exception {
+//                return request(httpRequest);
+//            }
+//        });
+//    }
+
+    public HttpRequest buildRequest(HttpRequest httpRequest) {
+        return httpRequest;
+    }
+
     public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
         return UrlBuilder.of(sourceUrl);
     }
 
-    /**
-     * 执行 OkHttp 请求
-     */
-    private okhttp3.Response executeRequest(Request request) {
-        try {
-            okhttp3.Response response = httpClient.newCall(request).execute();
-            String bodyString = response.body() != null ? response.body().string() : "";
-            log.info("执行URL[{}]状态为[{}], 结果[{}]", request.url(), response.code(), bodyString);
-            return response;
-        } catch (IOException e) {
-            throw new RuntimeException("HTTP request failed: " + e.getMessage(), e);
-        }
-    }
 
-    /**
-     * 允许子类扩展 Request（如添加 header）
-     */
-    public Request.Builder buildRequest(Request.Builder requestBuilder) {
-        return requestBuilder;
-    }
-
-    /**
-     * 兼容旧接口（可选）
-     */
-    @Override
-    public okhttp3.Response request(okhttp3.Request request) {
-        return executeRequest(request);
-    }
 }

@@ -2,6 +2,7 @@ package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.url.UrlBuilder;
@@ -9,10 +10,10 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import cn.hutool.http.HttpRequest;
 import com.jbm.cluster.common.basic.module.request.JbmBaseRequest;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Request;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
@@ -22,6 +23,22 @@ import java.util.List;
 
 @Slf4j
 public class JbmFeignRequest extends JbmBaseRequest {
+
+//    private SaOAuth2Template saOAuth2Template = new SaOAuth2Template() {
+//        @Override
+//        public SaClientModel getClientModel(String clientToken) {
+//            if (SpringUtil.getApplicationName().equals(clientToken)) {
+//                return new SaClientModel()
+//                        .setClientId(SpringUtil.getApplicationName())
+//                        .setClientSecret(SaIdUtil.getToken())
+//                        .setAllowUrl("*")
+//                        .setContractScope("*")
+//                        .setIsAutoMode(true);
+//            }
+//            return null;
+//        }
+//    };
+
 
     @Override
     public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
@@ -33,7 +50,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
     }
 
     @Override
-    public Request.Builder buildRequest(Request.Builder httpRequest) {
+    public HttpRequest buildRequest(HttpRequest httpRequest) {
         SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
 //        try {

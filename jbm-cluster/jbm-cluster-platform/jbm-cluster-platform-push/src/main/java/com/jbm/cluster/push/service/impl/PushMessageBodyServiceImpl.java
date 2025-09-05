@@ -18,7 +18,6 @@ import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -41,12 +40,12 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
 
     @Override
     public DataPaging<PushMessageResult> selectPushMessagePageList(PushMessageForm pushMessageform) {
-        DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.selectEntitys(pushMessageform, pushMessageform.getPageForm());
+        DataPaging<PushMessageItem> pushMessageItemDataPaging = pushMessageItemService.selectEntitys(pushMessageform,pushMessageform.getPageForm());
         List<PushMessageResult> pushMessageBodyList = buildPushMessage(pushMessageItemDataPaging.getContents());
         return new DataPaging<>(pushMessageBodyList, pushMessageItemDataPaging);
     }
 
-    public List<PushMessageResult> buildPushMessage(List<PushMessageItem> pushMessageItems) {
+    public List<PushMessageResult> buildPushMessage(List<PushMessageItem> pushMessageItems){
         List<PushMessageResult> pushMessageBodyList = Lists.newArrayList();
         pushMessageItems.forEach(new Consumer<PushMessageItem>() {
             @Override
@@ -93,8 +92,6 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         return super.save(pushMessageBody);
     }
 
-    @Resource
-    private PushMessageBodyService self;
 
     @Override
     public void sendPushMsg(PushMsg pushMsg) {
@@ -106,7 +103,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageBody.setExtend(pushMsg.getExtend());
         pushMessageBody.setTemplateCode(pushMsg.getTemplateCode());
         pushMessageBody.setUrl(pushMsg.getUrl());
-        self.saveEntity(pushMessageBody);
+        this.saveEntity(pushMessageBody);
         pushMsg.getRecUserIds().forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
     }
 
@@ -120,7 +117,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         }
         pushMessageBody.setSendUserId(null);
 //        pushMessageBody.setReadFlag(false);
-        self.save(pushMessageBody);
+        this.save(pushMessageBody);
 //        dispatcher.dispatch( pushMessage);
     }
 
@@ -130,7 +127,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageBody.setType(PushMsgType.notification);
         pushMessageBody.setLevel(1);
 //        pushMessageBody.setReadFlag(0);
-        self.save(pushMessageBody);
+        this.save(pushMessageBody);
 //        dispatcher.dispatch( pushMessage);
 
     }

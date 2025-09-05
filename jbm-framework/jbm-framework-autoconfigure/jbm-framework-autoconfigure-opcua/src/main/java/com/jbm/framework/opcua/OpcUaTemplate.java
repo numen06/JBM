@@ -9,7 +9,6 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.opcua.attribute.OpcBean;
 import com.jbm.framework.opcua.attribute.OpcPoint;
 import com.jbm.framework.opcua.attribute.OpcPointsRead;
@@ -21,22 +20,18 @@ import com.jbm.framework.opcua.listener.GuardSubscriptionListener;
 import com.jbm.framework.opcua.util.DriverUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
-import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
 import org.eclipse.milo.opcua.sdk.client.api.identity.AnonymousProvider;
-import org.eclipse.milo.opcua.sdk.client.api.identity.UsernameProvider;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
 import org.eclipse.milo.opcua.stack.client.DiscoveryClient;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.UaException;
-import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 import org.eclipse.milo.opcua.stack.core.types.builtin.Variant;
 import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UByte;
 import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UShort;
-import org.eclipse.milo.opcua.stack.core.types.enumerated.MessageSecurityMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.MonitoringMode;
 import org.eclipse.milo.opcua.stack.core.types.enumerated.TimestampsToReturn;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
@@ -51,7 +46,6 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -77,9 +71,11 @@ public class OpcUaTemplate {
      * @param opcUaClientBean
      */
     public synchronized void addClient(OpcUaClientBean opcUaClientBean) {
-        this.clientMap.put(opcUaClientBean.getDeviceId(), opcUaClientBean);
         OpcUaClient opcUaClient = this.getOpcUaClient(opcUaClientBean.getDeviceId(), opcUaClientBean.getOpcUaSource());
         opcUaClientBean.setOpcUaClient(opcUaClient);
+        this.clientMap.put(opcUaClientBean.getDeviceId(), opcUaClientBean);
+        opcUaClient.getSubscriptionManager().addSubscriptionListener(new GuardSubscriptionListener(this, opcUaClientBean));
+//        this.loadPoints(opcUaClientBean.getOpcUaSource());
     }
 
     public <T extends OpcBean> T getOpcBean(String deviceId) {
@@ -102,6 +98,7 @@ public class OpcUaTemplate {
         } finally {
             this.clientMap.remove(deviceId);
         }
+//        this.loadPoints(opcUaClientBean.getOpcUaSource());
     }
 
 
@@ -175,39 +172,43 @@ public class OpcUaTemplate {
      * @throws UaException UaException
      */
     public OpcUaClient getOpcUaClient(String deviceId, OpcUaSource driverInfo) {
+        OpcUaClient opcUaClient = null;
         if (clientMap.containsKey(deviceId) && clientMap.get(deviceId).getOpcUaClient() != null) {
             return clientMap.get(deviceId).getOpcUaClient();
         }
         try {
-            OpcUaSource.OpcUaSecurityPolicy securityPolicy = driverInfo.getSecurityPolicy();
-
-            MessageSecurityMode mode = securityPolicy != null ? ObjectUtil.defaultIfNull(securityPolicy.getMode(), MessageSecurityMode.None) : MessageSecurityMode.None;
-            SecurityPolicy policy = securityPolicy != null ? ObjectUtil.defaultIfNull(securityPolicy.getPolicy(), SecurityPolicy.None) : SecurityPolicy.None;
-
-            List<EndpointDescription> remoteEndpoints = DiscoveryClient.getEndpoints(driverInfo.getUrl()).get();
-            Optional<EndpointDescription> optional = remoteEndpoints.stream().filter(item -> StrUtil.equals(item.getSecurityPolicyUri(), policy.getUri())).findFirst();
-            EndpointDescription configPoint = EndpointUtil.updateUrl(optional.orElseThrow(() -> new ServiceException("not matching endpoint")), driverInfo.getHost(), driverInfo.getPort());
-
-            OpcUaClientConfigBuilder clientConfigBuilder = new OpcUaClientConfigBuilder().setEndpoint(configPoint)
-                    .setKeepAliveInterval(uint(3000)).setRequestTimeout(uint(5000));
-
-            if (ObjectUtil.equals(mode, MessageSecurityMode.Sign) && securityPolicy != null) {
-                KeyLoader loader = new KeyLoader().load(Paths.get(FileUtil.getTmpDirPath()));
-                clientConfigBuilder.setIdentityProvider(new UsernameProvider(securityPolicy.getUsername(), securityPolicy.getPassword()))
-                        .setKeyPair(loader.getClientKeyPair())
-                        .setCertificate(loader.getClientCertificate())
-                        .setApplicationUri(KeyLoader.getApplicationUri());
-            } else {
-                clientConfigBuilder.setIdentityProvider(new AnonymousProvider());
+            KeyLoader loader = new KeyLoader().load(Paths.get(FileUtil.getTmpDirPath()));
+            if (null == opcUaClient) {
+                try {
+                    List<EndpointDescription> remoteEndpoints = DiscoveryClient.getEndpoints(driverInfo.getUrl()).get();
+                    EndpointDescription configPoint = EndpointUtil.updateUrl(remoteEndpoints.get(0), driverInfo.getHost(), driverInfo.getPort());
+                    opcUaClient = OpcUaClient.create(
+                            driverInfo.getUrl(),
+                            endpoints -> remoteEndpoints.stream().findFirst(),
+                            configBuilder -> configBuilder
+                                    .setIdentityProvider(new AnonymousProvider())
+                                    .setCertificate(loader.getClientCertificate())
+//                                    .setKeepAliveFailuresAllowed(uint(0))
+                                    .setKeepAliveInterval(uint(3000))
+                                    .setRequestTimeout(uint(5000))
+                                    .setEndpoint(configPoint)
+                                    .build()
+                    );
+//                    clientMap.put(deviceId, new OpcUaClientBean(deviceId, opcUaClient));
+                } catch (UaException e) {
+                    log.error("get opc ua client error: {}", e.getMessage());
+//                    clientMap.entrySet().removeIf(next -> next.getKey().equals(deviceId));
+                }
             }
-
-            OpcUaClient opcUaClient = OpcUaClient.create(driverInfo.getUrl(), endpoints -> optional, configBuilder -> clientConfigBuilder.build());
-            opcUaClient.getSubscriptionManager().addSubscriptionListener(new GuardSubscriptionListener(this, clientMap.get(deviceId)));
-            return opcUaClient;
         } catch (Exception e) {
-            log.error("{} get opc ua client error", deviceId, e);
+            log.error("get opc ua client error: {}", e.getMessage());
         }
-        return null;
+//        if (!clientMap.containsKey(deviceId)) {
+//            log.error("not found opcua client in cache");
+//            return null;
+//        }
+//        return clientMap.get(deviceId).getOpcUaClient();
+        return opcUaClient;
     }
 
     public String readItem(String deviceId, String pointName, long timeout) throws Exception {
