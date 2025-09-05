@@ -36,6 +36,8 @@ public class KeyLoader {
     private static final char[] PASSWORD = "password".toCharArray();
     private static final String CLIENT_ALIAS = "client-ai";
     @Getter
+    private static final String applicationUri = "urn:dc3:opc:ua:client";
+    @Getter
     private X509Certificate clientCertificate;
     @Getter
     private KeyPair clientKeyPair;
@@ -54,7 +56,7 @@ public class KeyLoader {
                     .setLocalityName("Shanghai")
                     .setStateName("BJ")
                     .setCountryCode("ZN")
-                    .setApplicationUri("urn:dc3:opc:ua:client")
+                    .setApplicationUri(getApplicationUri())
                     .addDnsName("localhost")
                     .addIpAddress("127.0.0.1");
             // Get as many hostnames and IP addresses as we can listed in the certificate.
