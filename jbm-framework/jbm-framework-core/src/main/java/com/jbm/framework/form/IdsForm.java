@@ -16,5 +16,5 @@ import java.util.List;
 public class IdsForm  {
 
     @ApiModelProperty("ID数组")
-    private List<String> ids;
+    private List<Long> ids;
 }

@@ -1,14 +1,6 @@
 opcua:
   enabled: true
   clients:
-    s1:
-      url: opc.tcp://172.31.11.54:4840
-      point-file: test.csv
-    s2:
-      security-policy:
-        mode: sign
-        policy: none
-        username: admin
-        password: 123456
-      url: opc.tcp://172.31.12.60:4840
+    test:
+      url: opc.tcp://10.100.10.89:48020
       point-file: test.csv

@@ -86,7 +86,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         int newTotal = currQuantity.addAndGet(addedCount);
 
         // 3. 检查是否达到数量阈值
-        if (maxSubmitQuantity > 0 & newTotal >= maxSubmitQuantity) {
+        if (maxSubmitQuantity >0 & newTotal >= maxSubmitQuantity) {
             submitIfNotEmpty(ActionType.QUANTITY);
         }
 
@@ -110,7 +110,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
             int newTotal = currQuantity.incrementAndGet();
             addedCount++;
 
-            if (maxSubmitQuantity > 0 & newTotal >= maxSubmitQuantity) {
+            if (maxSubmitQuantity >0 & newTotal >= maxSubmitQuantity) {
                 submitIfNotEmpty(ActionType.QUANTITY);
             }
         }
@@ -125,6 +125,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         if (count <= 0) {
             return;
         }
+
         // CAS 尝试获取提交权，防止并发提交
         if (!submitting.compareAndSet(false, true)) {
             return; // 已有线程在提交
@@ -132,10 +133,10 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         try {
             ActionBean<T> actionBean = new ActionBean<>(triggerType, count, DateTime.now());
             asyncAction(actionBean);
+            currQuantity.set(0); // 成功后清零
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
-            currQuantity.set(0); // 成功后清零
             submitting.set(false); // 释放提交锁
         }
     }
