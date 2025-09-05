@@ -1,5 +1,7 @@
 package test.util;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.github.pfmiles.minvelocity.TemplateUtil;
 import com.github.pfmiles.org.apache.velocity.Template;
 import com.jbm.util.MapUtils;
@@ -8,20 +10,29 @@ import junit.framework.TestCase;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SimpleTemplateUtilsTest extends TestCase {
+
+
 
     public void testFileTest() {
         System.out.println(SimpleTemplateUtils.render("temps/text.tmp", MapUtils.newParamMap("name", "wesley")));
     }
 
     public void testFileTest2() {
-        Template template = SimpleTemplateUtils.getTemplate("temps/text.tmp");
-        System.out.println(TemplateUtil.renderTemplate(template, MapUtils.newParamMap("name", "wesley2")));
+        String template = "temps/text-date.tmp";
+        // 将格式化后的字符串放入上下文
+        Map<String, Object> context = new HashMap<>();
+        // 注入工具类实例
+        context.put("date", new Object(){
+            public String format(String format, Date date) {
+                return DateUtil.format(date, format);
+            }
+        });
+        // 注入到上下文
+        context.put("currentDate", DateTime.now());
+        System.out.println(SimpleTemplateUtils.render(template, context));
     }
 
     public void testRenderStringTemp() {
