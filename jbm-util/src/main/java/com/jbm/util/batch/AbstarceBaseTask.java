@@ -4,9 +4,12 @@ import cn.hutool.core.date.DateTime;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.sql.Time;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 批量定时加数量触发任务
@@ -25,6 +28,9 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
 
     // 当前累积数量，volatile + 原子操作保证可见性和原子性
     private final AtomicInteger currQuantity = new AtomicInteger(0);
+
+    // 最后一次触发时间
+    private final AtomicLong lastActionTime = new AtomicLong(System.currentTimeMillis());
 
     // 防止重复提交的标志（CAS 控制）
     private final AtomicBoolean submitting = new AtomicBoolean(false);
@@ -126,24 +132,27 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
      * 尝试提交，如果当前有数据且未在提交中
      */
     protected final void submitIfNotEmpty(ActionType triggerType) {
-        int count = currQuantity.get();
+        final int count = currQuantity.get();
         if (count <= 0) {
             return;
         }
-        // CAS 尝试获取提交权，防止并发提交
-        if (!submitting.compareAndSet(false, true)) {
-            return; // 已有线程在提交
+        //如果两次触发时间低于最小时间则不触发
+        if(ActionType.TIME.equals(triggerType)) {
+            long tc = System.currentTimeMillis() - lastActionTime.get();
+            if (tc < timeUnit.toMicros(maxSubmitTime)) {
+                return;
+            }
         }
         try {
-            ActionBean<T> actionBean = new ActionBean<>(triggerType, count, DateTime.now());
+            lastActionTime.set(System.currentTimeMillis());
+            DateTime actionTime = DateTime.of(lastActionTime.get());
+            ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime);
             asyncAction(actionBean);
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
             // 成功后清零
-            currQuantity.set(0);
-            // 释放提交锁
-            submitting.set(false);
+            currQuantity.getAndAdd(count*-1);
         }
     }
 

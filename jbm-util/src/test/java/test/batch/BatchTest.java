@@ -152,4 +152,19 @@ public class BatchTest {
         batchTask.awaitTerminated();
 
     }
+
+
+    @Test
+    public void testLogs() {
+        BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 200, new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> logs) {
+                log.info("处理了{}条日志", logs.size());
+            }
+        });
+            while (true) {
+                batchTask.offer(DateUtil.now());
+                ThreadUtil.safeSleep(10);
+            }
+    }
 }
