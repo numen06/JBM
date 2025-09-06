@@ -127,6 +127,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     }
 
     private final ReentrantLock lock = new ReentrantLock();
+
     /**
      * 尝试提交，如果当前有数据且未在提交中
      */
@@ -151,10 +152,10 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
-            lock.unlock();
             if (currQuantity.getAndAdd(-count) < 0) {
                 log.info("批量任务异常，现有执行数量：{}，回复基准值", currQuantity.getAndSet(0));
             }
+            lock.unlock();
         }
     }
 
