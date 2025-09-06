@@ -6,7 +6,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.logs.entity.GatewayLogs;
-import com.jbm.cluster.logs.event.AccessEvent;
+import com.jbm.cluster.logs.service.ClusterAccessService;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import com.jbm.util.batch.ActionBean;
 import com.jbm.util.batch.RollingTask;
@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -38,14 +39,18 @@ public class GatewayLogsHandler {
     /**
      * 临时存放减少io
      */
-    @Autowired
+    @Resource
     private GatewayLogsService gatewayLogsService;
+
+    @Resource
+    private ClusterAccessService clusterAccessService;
 
     private final RollingTask<Long> countWithTime = RollingTask.createRollingTask(1L, TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {
 
         @Override
         public Long apply(ActionBean<Long> actionBean) {
             log.info("最近1分钟处理日志:{}", actionBean.getCurrQuantity());
+            log.info("今日处理日志:{}条", clusterAccessService.getClusterAccessInfo().getToday());
             return actionBean.getObj();
         }
     });
@@ -86,11 +91,11 @@ public class GatewayLogsHandler {
                     // 限制处理时间不超过 30s
                     timeLimiter.executeFutureSupplier(() ->
                             CompletableFuture.runAsync(() -> {
-                                applicationEventPublisher.publishEvent(new AccessEvent(this, logs));
                                 gatewayLogsService.saveGatewayLogs(logs);
                             })
                     );
                     //统计
+                    clusterAccessService.accumulate(1);
                     countWithTime.offer();
                 }
             } catch (Exception e) {

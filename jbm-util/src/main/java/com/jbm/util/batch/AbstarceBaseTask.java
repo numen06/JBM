@@ -16,9 +16,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
 
-    protected final Long maxSubmitTime;     // 最大提交时间（毫秒）
-    protected final TimeUnit timeUnit;      // 时间单位
-    protected final Integer maxSubmitQuantity;  // 最大提交数量
+    // 最大提交时间（毫秒）
+    protected final Long maxSubmitTime;
+    // 时间单位
+    protected final TimeUnit timeUnit;
+    // 最大提交数量
+    protected final Integer maxSubmitQuantity;
 
     // 当前累积数量，volatile + 原子操作保证可见性和原子性
     private final AtomicInteger currQuantity = new AtomicInteger(0);
@@ -44,7 +47,8 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         }
         this.maxSubmitTime = maxSubmitTime;
         this.timeUnit = timeUnit;
-        this.maxSubmitQuantity = Math.max(maxSubmitQuantity, 0); // 至少为1
+        // 至少为1
+        this.maxSubmitQuantity = Math.max(maxSubmitQuantity, 0);
 
         if (this.maxSubmitTime <= 0 && this.maxSubmitQuantity <= 0) {
             throw new IllegalArgumentException("批处理时间和数量不能同时为0或负数");
@@ -103,7 +107,8 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         int addedCount = 0;
         for (T obj : objs) {
             try {
-                doOfferBlocking(obj); // 子类实现阻塞入队
+                // 子类实现阻塞入队
+                doOfferBlocking(obj);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -135,8 +140,10 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
-            currQuantity.set(0); // 成功后清零
-            submitting.set(false); // 释放提交锁
+            // 成功后清零
+            currQuantity.set(0);
+            // 释放提交锁
+            submitting.set(false);
         }
     }
 
