@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 批量定时加数量触发任务
@@ -125,10 +126,12 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         return addedCount;
     }
 
+    private final ReentrantLock lock = new ReentrantLock();
     /**
      * 尝试提交，如果当前有数据且未在提交中
      */
     protected final void submitIfNotEmpty(ActionType triggerType) {
+        lock.lock();
         final int count = currQuantity.get();
         if (count <= 0) {
             return;
@@ -147,8 +150,9 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
             asyncAction(actionBean);
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
-        }finally {
-            if(currQuantity.getAndAdd(-count) < 0) {
+        } finally {
+            lock.unlock();
+            if (currQuantity.getAndAdd(-count) < 0) {
                 log.info("批量任务异常，现有执行数量：{}，回复基准值", currQuantity.getAndSet(0));
             }
         }
