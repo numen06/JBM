@@ -139,7 +139,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         //如果两次触发时间低于最小时间则不触发
         if(ActionType.TIME.equals(triggerType)) {
             long tc = System.currentTimeMillis() - lastActionTime.get();
-            if (tc < timeUnit.toMicros(maxSubmitTime)) {
+            if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
                 return;
             }
         }
