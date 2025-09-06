@@ -59,9 +59,6 @@ public class GatewayLogsHandler {
     @Autowired
     private IpRegionTemplate ipRegionTemplate;
 
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-
     private final TimeLimiter timeLimiter = TimeLimiter.of(Duration.ofSeconds(30));
 
     @Bean
@@ -103,8 +100,6 @@ public class GatewayLogsHandler {
                 throw new RuntimeException(e);
             }
         };
-
-
     }
 
 //    @Bean

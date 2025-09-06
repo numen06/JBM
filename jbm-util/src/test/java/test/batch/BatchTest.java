@@ -156,6 +156,13 @@ public class BatchTest {
 
     @Test
     public void testLogs() {
+        RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
+            @Override
+            public Long apply(ActionBean<Long> rollingBean) {
+                log.info("5秒内处理{}条数据", rollingBean.getCurrQuantity());
+                return rollingBean.getObj();
+            }
+        });
         BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 200, new Consumer<List<String>>() {
             @Override
             public void accept(List<String> logs) {
@@ -164,6 +171,7 @@ public class BatchTest {
         });
             while (true) {
                 batchTask.offer(DateUtil.now());
+                rollingTask.offer();
                 ThreadUtil.safeSleep(10);
             }
     }

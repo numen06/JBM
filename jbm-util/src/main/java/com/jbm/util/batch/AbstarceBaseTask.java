@@ -32,9 +32,6 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     // 最后一次触发时间
     private final AtomicLong lastActionTime = new AtomicLong(System.currentTimeMillis());
 
-    // 防止重复提交的标志（CAS 控制）
-    private final AtomicBoolean submitting = new AtomicBoolean(false);
-
     public AbstarceBaseTask() {
         this(5L, TimeUnit.SECONDS, 200);
     }
@@ -137,7 +134,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
             return;
         }
         //如果两次触发时间低于最小时间则不触发
-        if(ActionType.TIME.equals(triggerType)) {
+        if (ActionType.TIME.equals(triggerType)) {
             long tc = System.currentTimeMillis() - lastActionTime.get();
             if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
                 return;
@@ -150,9 +147,10 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
             asyncAction(actionBean);
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
-        } finally {
-            // 成功后清零
-            currQuantity.getAndAdd(count*-1);
+        }finally {
+            if(currQuantity.getAndAdd(-count) < 0) {
+                log.info("批量任务异常，现有执行数量：{}，回复基准值", currQuantity.getAndSet(0));
+            }
         }
     }
 
