@@ -133,17 +133,17 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     protected final void submitIfNotEmpty(ActionType triggerType) {
         lock.lock();
         final int count = currQuantity.get();
-        if (count <= 0) {
-            return;
-        }
-        //如果两次触发时间低于最小时间则不触发
-        if (ActionType.TIME.equals(triggerType)) {
-            long tc = System.currentTimeMillis() - lastActionTime.get();
-            if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
+        try {
+            if (count <= 0) {
                 return;
             }
-        }
-        try {
+            //如果两次触发时间低于最小时间则不触发
+            if (ActionType.TIME.equals(triggerType)) {
+                long tc = System.currentTimeMillis() - lastActionTime.get();
+                if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
+                    return;
+                }
+            }
             lastActionTime.set(System.currentTimeMillis());
             DateTime actionTime = DateTime.of(lastActionTime.get());
             ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime);
