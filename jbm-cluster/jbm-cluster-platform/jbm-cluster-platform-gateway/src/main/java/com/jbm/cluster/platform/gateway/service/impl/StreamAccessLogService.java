@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import cn.hutool.http.Method;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -105,6 +106,10 @@ public class StreamAccessLogService implements AccessLogService {
             int httpStatus = response.getStatusCode().value();
             //获取访问方法
             String method = request.getMethodValue();
+            //忽略OPTIONS请求
+//            if(Method.OPTIONS.name().equalsIgnoreCase(method)) {
+//                return;
+//            }
             Map<String, String> headers = request.getHeaders().toSingleValueMap();
             Map data = Maps.newHashMap();
             GatewayContext gatewayContext = exchange.getAttribute(GatewayContext.CACHE_GATEWAY_CONTEXT);
@@ -115,6 +120,8 @@ public class StreamAccessLogService implements AccessLogService {
             String serviceId = null;
             if (route != null) {
                 serviceId = route.getUri().getAuthority();
+            }else{
+                return;
             }
             //获取IP地址
             String ip = ReactiveWebUtils.getRemoteAddress(exchange);

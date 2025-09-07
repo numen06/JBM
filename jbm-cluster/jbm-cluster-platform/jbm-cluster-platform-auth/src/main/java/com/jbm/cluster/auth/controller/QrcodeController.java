@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * @author wesley
+ */
 @Api(tags = "二维码中心")
 @RestController
 @RequestMapping("/qrcode")
