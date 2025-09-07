@@ -3,6 +3,7 @@ package com.jbm.cluster.center.listener;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
@@ -71,6 +72,9 @@ public class ApiResourceScanHandler {
                         BaseApi api = new BaseApi();
                         //复制Bean
                         BeanUtil.copyProperties(jbmApi, api);
+                        if(BooleanUtil.isFalse(jbmApi.getAccessLog())){
+                            log.info("{}接口不记录访问日志",jbmApi.getApiName());
+                        }
                         api.setAccessLog(jbmApi.getAccessLog());
                         api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
                         api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
