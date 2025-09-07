@@ -45,10 +45,10 @@
             AND app_name = '%${appKey}%'
         </if>
         <if test="beginTime != null">
-            AND request_time &gt;= #{beginTime}
+            AND request_time &gt;= '%${beginTime}%'
         </if>
         <if test="endTime != null">
-            AND request_time &lt;= #{endTime}
+            AND request_time &lt;= '${endTime}%'
         </if>
     </sql>
     <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
