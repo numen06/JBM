@@ -69,9 +69,9 @@ public class ApiResourceScanHandler {
                 public void accept(JbmApi jbmApi) {
                     try {
                         BaseApi api = new BaseApi();
-                        api.setAccessLog(jbmApi.getAccessLog());
                         //复制Bean
                         BeanUtil.copyProperties(jbmApi, api);
+                        api.setAccessLog(jbmApi.getAccessLog());
                         api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
                         api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
                         codes.add(api.getApiCode());
@@ -85,8 +85,7 @@ public class ApiResourceScanHandler {
                             baseApiService.updateApi(api);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        log.error("添加资源error:", e.getMessage());
+                        log.error("添加资源error", e);
                     }
                 }
             });
