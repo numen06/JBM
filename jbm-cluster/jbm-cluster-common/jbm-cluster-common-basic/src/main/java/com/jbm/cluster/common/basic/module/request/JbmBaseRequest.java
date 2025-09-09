@@ -3,11 +3,14 @@ package com.jbm.cluster.common.basic.module.request;
 import cn.hutool.core.net.url.UrlBuilder;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okio.Buffer;
+import okio.BufferedSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpMethod.POST;
@@ -70,13 +73,22 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     private okhttp3.Response executeRequest(Request request) {
         try {
             okhttp3.Response response = httpClient.newCall(request).execute();
-            String bodyString = response.body() != null ? response.body().string() : "";
+            String bodyString = readResponseBody(response);
             log.info("执行URL[{}]状态为[{}], 结果[{}]", request.url(), response.code(), bodyString);
             return response;
         } catch (IOException e) {
             throw new RuntimeException("HTTP request failed: " + e.getMessage(), e);
         }
     }
+
+    public static String readResponseBody(Response response) throws IOException {
+        if (!response.isSuccessful()) return null;
+        ResponseBody responseBody = response.body();
+        if (responseBody == null) return null;
+        // 可以多次读取 buffer 的克隆
+        return response.peekBody(Integer.MAX_VALUE).string();
+    }
+
 
     /**
      * 允许子类扩展 Request（如添加 header）

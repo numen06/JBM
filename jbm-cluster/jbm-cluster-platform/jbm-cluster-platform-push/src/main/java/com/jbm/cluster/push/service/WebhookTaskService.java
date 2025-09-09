@@ -15,13 +15,13 @@ public interface WebhookTaskService extends IMultiPlatformService<WebhookTask> {
 
     boolean clearTasks();
 
-    void sendEvent(WebhookTaskForm webhookTaskForm);
+    void sendBusinessEvent(WebhookTaskForm webhookTaskForm);
 
     WebhookTask selectByTaskId(String taskId);
 
-    void sendEvent(String eventId);
+    void sendBusinessEvent(String eventId);
 
-    void sendEvent(WebhookTask webhookTask);
+    void sendBusinessEvent(WebhookTask webhookTask);
 
     void retryEventTask(String taskId);
 

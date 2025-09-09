@@ -40,13 +40,13 @@ public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, 
     @ApiOperation("触发")
     @GetMapping("/run")
     public ResultBody run(String eventId) {
-        return ResultBody.call("触发成功", () -> this.service.sendEvent(eventId));
+        return ResultBody.call("触发成功", () -> this.service.sendBusinessEvent(eventId));
     }
 
     @ApiOperation("请求")
     @PostMapping("/req")
     public ResultBody<Void> run(@RequestBody WebhookTask webhookTask) {
-        return ResultBody.call("请求成功", () -> service.sendEvent(webhookTask));
+        return ResultBody.call("请求成功", () -> service.sendBusinessEvent(webhookTask));
     }
 
     @ApiOperation("重试")

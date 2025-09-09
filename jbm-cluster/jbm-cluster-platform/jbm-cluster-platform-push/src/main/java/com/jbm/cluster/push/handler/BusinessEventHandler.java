@@ -11,33 +11,28 @@ import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
-import org.springframework.util.MimeTypeUtils;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Slf4j
 @Configuration
 public class BusinessEventHandler {
 
 
-    @Autowired
+    @Resource
     private WebhookEventConfigService webhookEventConfigService;
 
 
-    @Autowired
+    @Resource
     private WebhookTaskService webhookTaskService;
 
     /**
      * 接受注册集群事件
-     * @return
      */
     @Bean
     public Consumer<Message<JbmClusterBusinessEventResource>> businessEventResource() {
@@ -51,7 +46,7 @@ public class BusinessEventHandler {
     public Consumer<Message<JbmClusterBusinessEventBean>> businessEvent() {
         return message -> {
             // 调用你的业务逻辑
-            sendEvent(message.getPayload());
+            sendBusinessEvent(message.getPayload());
         };
     }
 
@@ -59,21 +54,19 @@ public class BusinessEventHandler {
     /**
      * 接受集群事件推送
      *
-     * @param jbmClusterBusinessEventBean
      */
-    public void sendEvent(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
+    public void sendBusinessEvent(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
         try {
             WebhookTaskForm webhookTaskForm = beanToWebHook(jbmClusterBusinessEventBean);
-            webhookTaskService.sendEvent(webhookTaskForm);
+            webhookTaskService.sendBusinessEvent(webhookTaskForm);
         } catch (Exception e) {
             log.error("接受集群事件推送失败", e);
         }
     }
 
     /**
-     * 接受应用程序推过来的事件
+     * 接受应用程序推过来的事件,进行注册
      *
-     * @param jbmClusterBusinessEventResource
      */
     public void receive(JbmClusterBusinessEventResource jbmClusterBusinessEventResource) {
         List<JbmClusterBusinessEventBean> jbmClusterBusinessEventBeans = jbmClusterBusinessEventResource.getJbmClusterBusinessEventBeans();
@@ -92,8 +85,6 @@ public class BusinessEventHandler {
 
     /***
      * 将扫描数据转为成传输数据
-     * @param jbmClusterBusinessEventBean
-     * @return
      */
     public WebhookTaskForm beanToWebHook(JbmClusterBusinessEventBean jbmClusterBusinessEventBean) {
         WebhookTaskForm webhookTaskForm = new WebhookTaskForm();
