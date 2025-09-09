@@ -91,6 +91,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
     @Override
     protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
         this.blockingQueue.put((T) obj);
+        currQuantity.incrementAndGet();
     }
 
     /**
@@ -100,15 +101,20 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
     protected int asyncAction(ActionBean<T> actionBean) {
         Date startTime = DateTime.now();
         Map<Integer, T> list = new ConcurrentHashMap<>();
-        if (actionBean.getCurrQuantity() <= 0) {
-            return 0;
+        int size = actionBean.getCurrQuantity();
+        if (size <= 0) {
+            // 如果为0 则从队列中获取数据
+            size = blockingQueue.size();
         }
-        for (int i = 0; i < actionBean.getCurrQuantity(); i++) {
+        while (list.size() < size) {
             T obj = blockingQueue.poll();
             if (obj == null) {
-                break;
+                continue;
             }
             list.put(obj.hashCode(), obj);
+        }
+        if (list.isEmpty()) {
+            return 0;
         }
         Date endTime;
         try {

@@ -69,6 +69,9 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
             T obj = blockingQueue.poll();
             list.add(obj);
         }
+        if (list.isEmpty()) {
+            return 0;
+        }
 //        log .info("从队列中取出{}个，目前队列中有{}个", list.size(), blockingQueue.size() );
         try {
             action.accept(list);
