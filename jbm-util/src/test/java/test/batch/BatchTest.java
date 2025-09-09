@@ -17,6 +17,7 @@ import test.entity.Student;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -156,23 +157,43 @@ public class BatchTest {
 
     @Test
     public void testLogs() {
-        RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
-            @Override
-            public Long apply(ActionBean<Long> rollingBean) {
-                log.info("5秒内处理{}条数据", rollingBean.getCurrQuantity());
-                return rollingBean.getObj();
-            }
-        });
+//        RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
+//            @Override
+//            public Long apply(ActionBean<Long> rollingBean) {
+//                log.info("5秒内处理{}条数据", rollingBean.getCurrQuantity());
+//                return rollingBean.getObj();
+//            }
+//        });
         BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 200, new Consumer<List<String>>() {
             @Override
             public void accept(List<String> logs) {
                 log.info("处理了{}条日志", logs.size());
             }
         });
-            while (true) {
-                batchTask.offer(DateUtil.now());
-                rollingTask.offer();
-                ThreadUtil.safeSleep(10);
+        while (true) {
+            batchTask.offer(DateUtil.now());
+//            rollingTask.offer();
+            ThreadUtil.safeSleep(10);
+        }
+    }
+
+    @Test
+    public void testLogs2() {
+        AtomicInteger offerCount = new AtomicInteger(0);
+        BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100, new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> logs) {
+                log.info("处理了{}条日志", logs.size());
             }
+        });
+
+        while (true) {
+            batchTask.offerBlocking(DateUtil.now());
+            int cnt = offerCount.incrementAndGet();
+            if (cnt % 100 == 0) {
+                log.info("已放入 {} 条数据", cnt);
+            }
+            ThreadUtil.safeSleep(10);
+        }
     }
 }

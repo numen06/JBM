@@ -3,6 +3,7 @@ package com.jbm.util.batch;
 import cn.hutool.core.collection.CollUtil;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -81,9 +82,10 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @param actionBean 任务
      */
     @Override
-    protected void asyncAction(ActionBean actionBean) {
+    protected int asyncAction(ActionBean actionBean) {
         actionBean.setObj(atomicReference.get());
         this.atomicReference.set((T) action.apply(actionBean));
+        return 1;
     }
 
     /**
@@ -93,7 +95,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 提交结果
      */
     @Override
-    protected int doOffer(T... objs) {
+    protected int doOffer(AtomicInteger currQuantity, T... objs) {
         CollUtil.newArrayList(objs).forEach(obj -> {
             atomicReference.set((T) obj);
         });

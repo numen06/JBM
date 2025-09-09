@@ -4,13 +4,9 @@ import cn.hutool.core.date.DateTime;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.Time;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 批量定时加数量触发任务
@@ -85,10 +81,10 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
 //        }
 
         // 1. 先尝试入队（由子类实现，如 BlockingQueue.put 或 offer）
-        int addedCount = doOffer(objs);
-        if (addedCount <= 0) {
-            return 0;
-        }
+        int addedCount = doOffer(this.currQuantity, objs);
+//        if (addedCount <= 0) {
+//            return 0;
+//        }
 
         // 2. 原子增加计数
         int newTotal = currQuantity.addAndGet(addedCount);
@@ -104,11 +100,11 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 阻塞提交：等待直到成功入队
      */
-    public int offerBlocking(T... objs) {
-        if (objs == null || objs.length == 0) {
-            return 0;
+    @SafeVarargs
+    public final void offerBlocking(T... objs) {
+        if (objs == null) {
+            return;
         }
-        int addedCount = 0;
         for (T obj : objs) {
             try {
                 // 子类实现阻塞入队
@@ -117,23 +113,19 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
                 throw new RuntimeException(e);
             }
             int newTotal = currQuantity.incrementAndGet();
-            addedCount++;
-
             if (maxSubmitQuantity > 0 & newTotal >= maxSubmitQuantity) {
                 submitIfNotEmpty(ActionType.QUANTITY);
             }
         }
-        return addedCount;
     }
 
-    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * 尝试提交，如果当前有数据且未在提交中
      */
-    protected final void submitIfNotEmpty(ActionType triggerType) {
-        lock.lock();
+    protected synchronized final void submitIfNotEmpty(ActionType triggerType) {
         final int count = currQuantity.get();
+        int doCount = 0;
         try {
             if (count <= 0) {
                 return;
@@ -148,14 +140,11 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
             lastActionTime.set(System.currentTimeMillis());
             DateTime actionTime = DateTime.of(lastActionTime.get());
             ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime);
-            asyncAction(actionBean);
+            doCount = asyncAction(actionBean);
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
-            if (currQuantity.getAndAdd(-count) < 0) {
-                log.info("批量任务异常，现有执行数量：{}，回复基准值", currQuantity.getAndSet(0));
-            }
-            lock.unlock();
+            currQuantity.addAndGet(-doCount);
         }
     }
 
@@ -169,7 +158,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 子类实现：非阻塞添加数据
      */
-    protected abstract int doOffer(T... obj);
+    protected abstract int doOffer(AtomicInteger currQuantity, T... obj);
 
     /**
      * 子类实现：阻塞添加单个元素（用于 offerBlocking）
@@ -179,7 +168,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 子类实现：异步处理逻辑
      */
-    protected abstract void asyncAction(ActionBean<T> actionBean);
+    protected abstract int asyncAction(ActionBean<T> actionBean);
 
 
 }

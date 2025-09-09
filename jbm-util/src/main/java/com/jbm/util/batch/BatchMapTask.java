@@ -12,6 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -96,11 +97,11 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * 执行批量操作
      */
     @Override
-    protected void asyncAction(ActionBean<T> actionBean) {
+    protected int asyncAction(ActionBean<T> actionBean) {
         Date startTime = DateTime.now();
         Map<Integer, T> list = new ConcurrentHashMap<>();
         if (actionBean.getCurrQuantity() <= 0) {
-            return;
+            return 0;
         }
         for (int i = 0; i < actionBean.getCurrQuantity(); i++) {
             T obj = blockingQueue.poll();
@@ -118,6 +119,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
             endTime = DateTime.now();
             log.error("批量任务执行失败，执行时间:{}毫秒", e, DateUtil.between(startTime, endTime, DateUnit.MS));
         }
+        return list.size();
     }
 
     /**
@@ -127,7 +129,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @return 追加成功的元素个数
      */
     @Override
-    protected int doOffer(Object... objs) {
+    protected int doOffer(AtomicInteger currQuantity, Object... objs) {
         for (int i = 0; i < objs.length; i++) {
             Object obj = objs[i];
             boolean a = this.blockingQueue.offer((T) obj);

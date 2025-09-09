@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -33,22 +34,21 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
     public BatchTask(Long maxSubmitTime, TimeUnit timeUnit, Integer maxSubmitQuantity, Consumer<List<T>> action) {
         super(maxSubmitTime, timeUnit, maxSubmitQuantity);
         this.action = action;
-        this.blockingQueue = new ArrayBlockingQueue<>(Math.max(maxSubmitQuantity, 200));
+        this.blockingQueue = new ArrayBlockingQueue<>(Math.max(maxSubmitQuantity, 10));
     }
 
 
     @SafeVarargs
     @Override
-    protected final int doOffer(T... objs) {
-        int count = 0;
+    protected final int doOffer(AtomicInteger currQuantity,T... objs) {
         for (T obj : objs) {
             if (blockingQueue.offer(obj)) {
-                count++;
+                currQuantity.incrementAndGet();
             } else {
-                break; // 队列满，停止
+                break;
             }
         }
-        return count;
+        return 0;
     }
 
     @Override
@@ -58,10 +58,10 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
     }
 
     @Override
-    protected void asyncAction(ActionBean<T> actionBean) {
+    protected int asyncAction(ActionBean<T> actionBean) {
         int size = actionBean.getCurrQuantity();
         if (size <= 0) {
-            return;
+            return 0;
         }
         List<T> list = new ArrayList<>();
         // 安全取出最多 size 个
@@ -77,5 +77,6 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
         } catch (Exception e) {
             log.error("批量任务执行失败，数量：{}", list.size(), e);
         }
+        return list.size();
     }
 }
