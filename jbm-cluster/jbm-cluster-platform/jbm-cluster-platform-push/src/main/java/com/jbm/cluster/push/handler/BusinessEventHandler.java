@@ -35,8 +35,12 @@ public class BusinessEventHandler {
     @Autowired
     private WebhookTaskService webhookTaskService;
 
+    /**
+     * 接受注册集群事件
+     * @return
+     */
     @Bean
-    public Consumer<Message<JbmClusterBusinessEventResource>> businessEventResourceConsumer() {
+    public Consumer<Message<JbmClusterBusinessEventResource>> businessEventResource() {
         return message -> {
             // 调用你的业务逻辑
             receive(message.getPayload());
@@ -44,7 +48,7 @@ public class BusinessEventHandler {
     }
 
     @Bean
-    public Consumer<Message<JbmClusterBusinessEventBean>> businessEventConsumer() {
+    public Consumer<Message<JbmClusterBusinessEventBean>> businessEvent() {
         return message -> {
             // 调用你的业务逻辑
             sendEvent(message.getPayload());
