@@ -95,11 +95,12 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 提交结果
      */
     @Override
-    protected int doOffer(AtomicInteger currQuantity, T... objs) {
+    protected void doOffer(AtomicInteger currQuantity, T... objs) {
         CollUtil.newArrayList(objs).forEach(obj -> {
             atomicReference.set((T) obj);
         });
-        return objs.length == 0 ? 1 : objs.length;
+        int count = objs.length == 0 ? 1 : objs.length;
+        currQuantity.addAndGet(count);
     }
 
     /**
@@ -107,7 +108,8 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @throws InterruptedException
      */
     @Override
-    protected void doOfferBlocking(T obj) throws InterruptedException {
+    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
         atomicReference.getAndSet((T) obj);
+        currQuantity.incrementAndGet();
     }
 }

@@ -89,7 +89,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @throws InterruptedException
      */
     @Override
-    protected void doOfferBlocking(T obj) throws InterruptedException {
+    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
         this.blockingQueue.put((T) obj);
     }
 
@@ -129,15 +129,14 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @return 追加成功的元素个数
      */
     @Override
-    protected int doOffer(AtomicInteger currQuantity, Object... objs) {
-        for (int i = 0; i < objs.length; i++) {
-            Object obj = objs[i];
+    protected void doOffer(AtomicInteger currQuantity, Object... objs) {
+        for (Object obj : objs) {
             boolean a = this.blockingQueue.offer((T) obj);
+            currQuantity.incrementAndGet();
             if (BooleanUtil.isFalse(a)) {
-                return i;
+                return;
             }
         }
-        return objs.length;
     }
 
 }

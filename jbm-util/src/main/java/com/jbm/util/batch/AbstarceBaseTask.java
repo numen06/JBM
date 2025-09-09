@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 批量定时加数量触发任务
@@ -81,20 +82,18 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
 //        }
 
         // 1. 先尝试入队（由子类实现，如 BlockingQueue.put 或 offer）
-        int addedCount = doOffer(this.currQuantity, objs);
+        doOffer(this.currQuantity, objs);
 //        if (addedCount <= 0) {
-//            return 0;
+//            return 0 ;
 //        }
 
         // 2. 原子增加计数
-        int newTotal = currQuantity.addAndGet(addedCount);
-
+        int newTotal = currQuantity.get();
         // 3. 检查是否达到数量阈值
         if (maxSubmitQuantity > 0 & newTotal >= maxSubmitQuantity) {
             submitIfNotEmpty(ActionType.QUANTITY);
         }
-
-        return addedCount;
+        return objs.length;
     }
 
     /**
@@ -108,43 +107,61 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         for (T obj : objs) {
             try {
                 // 子类实现阻塞入队
-                doOfferBlocking(obj);
+                doOfferBlocking(this.currQuantity,obj);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            int newTotal = currQuantity.incrementAndGet();
+            int newTotal = currQuantity.get();
             if (maxSubmitQuantity > 0 & newTotal >= maxSubmitQuantity) {
                 submitIfNotEmpty(ActionType.QUANTITY);
             }
         }
     }
 
+    public int getCurrQuantity() {
+        return currQuantity.get();
+    }
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * 尝试提交，如果当前有数据且未在提交中
      */
-    protected synchronized final void submitIfNotEmpty(ActionType triggerType) {
-        final int count = currQuantity.get();
-        int doCount = 0;
+    protected final void submitIfNotEmpty(ActionType triggerType) {
+        lock.lock();
+        int count = this.maxSubmitQuantity;
         try {
-            if (count <= 0) {
-                return;
-            }
-            //如果两次触发时间低于最小时间则不触发
-            if (ActionType.TIME.equals(triggerType)) {
-                long tc = System.currentTimeMillis() - lastActionTime.get();
-                if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
-                    return;
-                }
+            switch (triggerType){
+                case TIME:
+                    count = 0;
+                    //如果两次触发时间低于最小时间则不触发
+                    long tc = System.currentTimeMillis() - lastActionTime.get();
+                    if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
+                        return;
+                    }
+                    break;
+                case QUANTITY:
+                    if (count <= 0) {
+                        return;
+                    }
+                    break;
+                case FLUSH:
+                    count = 0;
+                    break;
             }
             lastActionTime.set(System.currentTimeMillis());
             DateTime actionTime = DateTime.of(lastActionTime.get());
             ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime);
-            doCount = asyncAction(actionBean);
+            int doCount = asyncAction(actionBean);
+            currQuantity.addAndGet(-doCount);
+//            if (doCount != count) {
+//                log.warn("批量任务执行数量超出限制，数量：{}，实际数量：{}", count, doCount);
+//            }
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
-            currQuantity.addAndGet(-doCount);
+//            currQuantity.addAndGet(-count);
+            lock.unlock();
         }
     }
 
@@ -158,12 +175,12 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 子类实现：非阻塞添加数据
      */
-    protected abstract int doOffer(AtomicInteger currQuantity, T... obj);
+    protected abstract void doOffer(AtomicInteger currQuantity, T... obj);
 
     /**
      * 子类实现：阻塞添加单个元素（用于 offerBlocking）
      */
-    protected abstract void doOfferBlocking(T obj) throws InterruptedException;
+    protected abstract void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException;
 
     /**
      * 子类实现：异步处理逻辑
