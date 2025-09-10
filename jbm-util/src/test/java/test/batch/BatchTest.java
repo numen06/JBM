@@ -160,7 +160,7 @@ public class BatchTest {
         RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
             @Override
             public Long apply(ActionBean<Long> rollingBean) {
-                log.info("5秒内处理{}条数据", rollingBean.getCurrQuantity());
+                log.info("从{}到{}：5秒内处理{}条数据",rollingBean.getLastActionTime(),rollingBean.getSubmitTime(), rollingBean.getCurrQuantity());
                 return rollingBean.getObj();
             }
         });

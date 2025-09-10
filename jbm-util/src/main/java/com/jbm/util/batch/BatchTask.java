@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -49,7 +51,7 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
     }
 
     @Override
-    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
+    protected void doOfferBlocking(AtomicInteger currQuantity, T obj) throws InterruptedException {
         // 阻塞直到成功
         blockingQueue.put(obj);
         currQuantity.incrementAndGet();
@@ -61,6 +63,9 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
         final List<T> list = new ArrayList<>();
         if (size <= 0) {
             // 如果为0 则从队列中获取数据
+            size = blockingQueue.size();
+        } else if (size > blockingQueue.size()) {
+            // 如果大于队列中的数量，则从队列中获取数据
             size = blockingQueue.size();
         }
 //        log.info("需要从队列中取出{}个，目前队列中有{}个", size, blockingQueue.size() );

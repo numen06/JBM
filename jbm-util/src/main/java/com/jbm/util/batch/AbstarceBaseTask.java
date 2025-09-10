@@ -107,7 +107,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
         for (T obj : objs) {
             try {
                 // 子类实现阻塞入队
-                doOfferBlocking(this.currQuantity,obj);
+                doOfferBlocking(this.currQuantity, obj);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -130,13 +130,15 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     protected final void submitIfNotEmpty(ActionType triggerType) {
         lock.lock();
         int count = this.maxSubmitQuantity;
+        final long now = System.currentTimeMillis();
         try {
-            switch (triggerType){
+            switch (triggerType) {
                 case TIME:
-                    count = 0;
+                    count = this.getCurrQuantity();
                     //如果两次触发时间低于最小时间则不触发
-                    long tc = System.currentTimeMillis() - lastActionTime.get();
+                    long tc =now - lastActionTime.get();
                     if (TimeUnit.MILLISECONDS.toMicros(tc) < timeUnit.toMicros(maxSubmitTime)) {
+//                        log.info("批量任务触发时间间隔低于最{}秒，忽略本次触发",TimeUnit.MILLISECONDS.toSeconds(tc));
                         return;
                     }
                     break;
@@ -149,17 +151,18 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
                     count = 0;
                     break;
             }
-            lastActionTime.set(System.currentTimeMillis());
-            DateTime actionTime = DateTime.of(lastActionTime.get());
-            ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime);
-            int doCount = asyncAction(actionBean);
+            final DateTime actionTime = DateTime.of(now);
+            ActionBean<T> actionBean = new ActionBean<>(triggerType, count, actionTime, DateTime.of(lastActionTime.get()));
+            final int doCount = asyncAction(actionBean);
             currQuantity.addAndGet(-doCount);
+
 //            if (doCount != count) {
 //                log.warn("批量任务执行数量超出限制，数量：{}，实际数量：{}", count, doCount);
 //            }
         } catch (Exception e) {
             log.error("批量执行器执行失败", e);
         } finally {
+            lastActionTime.set(now);
 //            currQuantity.addAndGet(-count);
             lock.unlock();
         }
@@ -180,7 +183,7 @@ public abstract class AbstarceBaseTask<T> extends AbstractScheduledService {
     /**
      * 子类实现：阻塞添加单个元素（用于 offerBlocking）
      */
-    protected abstract void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException;
+    protected abstract void doOfferBlocking(AtomicInteger currQuantity, T obj) throws InterruptedException;
 
     /**
      * 子类实现：异步处理逻辑

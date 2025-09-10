@@ -105,6 +105,9 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
         if (size <= 0) {
             // 如果为0 则从队列中获取数据
             size = blockingQueue.size();
+        } else if (size > blockingQueue.size()) {
+            // 如果大于队列中的数量，则从队列中获取数据
+            size = blockingQueue.size();
         }
         while (list.size() < size) {
             T obj = blockingQueue.poll();

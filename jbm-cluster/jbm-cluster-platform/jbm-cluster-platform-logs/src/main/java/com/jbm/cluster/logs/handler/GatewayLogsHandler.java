@@ -14,7 +14,6 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import jbm.framework.boot.autoconfigure.ip2region.IpRegionTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -49,6 +48,9 @@ public class GatewayLogsHandler {
 
         @Override
         public Long apply(ActionBean<Long> actionBean) {
+            if (actionBean.getCurrQuantity() <= 0) {
+                return actionBean.getObj();
+            }
             log.info("最近1分钟处理日志:{}", actionBean.getCurrQuantity());
             log.info("今日处理日志:{}条", clusterAccessService.getClusterAccessInfo().getToday());
             return actionBean.getObj();
