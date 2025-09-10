@@ -49,6 +49,7 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
     //    @Override
     public boolean exchange(PushMessageBody pushMessageBody, PushMessageItem pushMessageItem) {
         switch (pushMessageItem.getPushWay()) {
+            case internal:
             case mqtt:
                 MqttNotification mqttNotification = mqttNotificationExchanger.build(pushMessageBody, pushMessageItem);
                 jbmClusterNotification.sendMqttNotification(mqttNotification);

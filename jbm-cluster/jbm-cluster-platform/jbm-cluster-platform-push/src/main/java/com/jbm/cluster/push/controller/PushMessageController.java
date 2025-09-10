@@ -92,7 +92,7 @@ public class PushMessageController {
 
     @ApiOperation("删除站内信")
     @PostMapping("/deleteByIds")
-    public ResultBody<String> deleteByIds(@RequestBody IdsForm idsForm) {
+    public ResultBody<String> deleteByIds(@RequestBody ObjectIdsForm idsForm) {
         this.pushMessageItemService.removeByIds(idsForm.getIds());
         return ResultBody.ok();
     }
