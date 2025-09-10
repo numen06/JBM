@@ -1,8 +1,11 @@
 package com.jbm.util.batch;
 
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 操作对象
@@ -51,5 +54,12 @@ public class ActionBean<T> {
         this.submitTime = submitTime;
         this.lastActionTime = lastActionTime;
         this.obj = obj;
+    }
+
+    /**
+     * 获取时间差
+     */
+    public long getTimeDiff(DateUnit dateUnit) {
+        return DateUtil.between(lastActionTime, submitTime, dateUnit);
     }
 }

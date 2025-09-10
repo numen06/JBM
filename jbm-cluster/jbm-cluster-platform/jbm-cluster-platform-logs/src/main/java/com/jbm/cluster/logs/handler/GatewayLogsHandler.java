@@ -2,6 +2,7 @@ package com.jbm.cluster.logs.handler;
 
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -51,7 +52,7 @@ public class GatewayLogsHandler {
             if (actionBean.getCurrQuantity() <= 0) {
                 return actionBean.getObj();
             }
-            log.info("最近1分钟处理日志:{}", actionBean.getCurrQuantity());
+            log.info("最近{}秒处理日志:{}", actionBean.getTimeDiff(DateUnit.SECOND), actionBean.getCurrQuantity());
             log.info("今日处理日志:{}条", clusterAccessService.getClusterAccessInfo().getToday());
             return actionBean.getObj();
         }

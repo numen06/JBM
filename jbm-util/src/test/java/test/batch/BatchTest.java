@@ -1,6 +1,7 @@
 package test.batch;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
@@ -160,7 +161,7 @@ public class BatchTest {
         RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
             @Override
             public Long apply(ActionBean<Long> rollingBean) {
-                log.info("从{}到{}：5秒内处理{}条数据",rollingBean.getLastActionTime(),rollingBean.getSubmitTime(), rollingBean.getCurrQuantity());
+                log.info("从{}到{}：{}秒内处理{}条数据",rollingBean.getLastActionTime(),rollingBean.getSubmitTime(), rollingBean.getTimeDiff(DateUnit.SECOND),rollingBean.getCurrQuantity());
                 return rollingBean.getObj();
             }
         });
