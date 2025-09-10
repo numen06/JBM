@@ -26,7 +26,7 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param submitTime         日期
+     * @param submitTime   日期
      */
     public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime) {
         this.actionType = actionType;
@@ -39,7 +39,7 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param submitTime         日期
+     * @param submitTime   日期
      * @param obj          对象
      */
     public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime, T obj) {

@@ -83,9 +83,12 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      */
     @Override
     protected int asyncAction(ActionBean actionBean) {
+        if(ActionType.TIME == actionBean.getActionType()){
+            actionBean = new ActionBean(ActionType.TIME, this.getCurrQuantity(), actionBean.getSubmitTime());
+        }
         actionBean.setObj(atomicReference.get());
         this.atomicReference.set((T) action.apply(actionBean));
-        return 1;
+        return actionBean.getCurrQuantity();
     }
 
     /**
