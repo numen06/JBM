@@ -41,6 +41,12 @@ public class EmqxApiService {
 
     public EmqxApiService(EmqxProperties emqxProperties) {
         this.emqxProperties = emqxProperties;
+        if (StrUtil.isEmpty(emqxProperties.getUrl())) {
+            throw new RuntimeException("请配置 EMQX 的 管理URL");
+        }
+        if (StrUtil.isEmpty(emqxProperties.getUsername()) || StrUtil.isEmpty(emqxProperties.getPassword())) {
+            throw new RuntimeException("请配置 EMQX 的用户名和密码");
+        }
     }
 
     private Request.Builder builder() {

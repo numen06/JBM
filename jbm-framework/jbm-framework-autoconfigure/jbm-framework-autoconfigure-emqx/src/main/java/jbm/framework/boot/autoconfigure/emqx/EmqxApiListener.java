@@ -31,6 +31,13 @@ public class EmqxApiListener implements InitializingBean {
     }
 
     private void initMqttClient() {
+        //校验传入的信息
+        if (StrUtil.isBlank(emqxMqttProperties.getUrl()) ){
+            throw new RuntimeException("请配置EMQX MQTT Broker地址");
+        }
+        if (StrUtil.isBlank(emqxMqttProperties.getUsername()) || StrUtil.isBlank(emqxMqttProperties.getPassword())) {
+            throw new RuntimeException("请配置EMQX MQTT Broker用户名密码");
+        }
         //url是tcp://192.168.1.1:1883这种格式
         String host = StrUtil.subBetween(emqxMqttProperties.getUrl(), "//", ":");
         int port = NumberUtil.parseInt(StrUtil.subAfter(emqxMqttProperties.getUrl(), ":", true));

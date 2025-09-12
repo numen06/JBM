@@ -25,15 +25,6 @@ public class EmqxApiListenerTest {
     @Resource
     private EmqxApiListener emqxApiListener;
 
-//    @BeforeEach
-//    public void before() throws Exception {
-//        EmqxMqttProperties emqxMqttProperties = new EmqxMqttProperties();
-//        emqxMqttProperties.setUrl("tcp://10.100.10.121:1883");
-//        emqxMqttProperties.setUsername("admin");
-//        emqxMqttProperties.setPassword("Admin@123456");
-//        emqxMqttProperties.setClientId("emqx-api-client");
-//
-//    }
     @Autowired
     private TestEventListener testEventListener;
 

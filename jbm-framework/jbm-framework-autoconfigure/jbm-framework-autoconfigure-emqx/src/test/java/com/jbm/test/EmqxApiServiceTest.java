@@ -4,29 +4,29 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.db.Page;
 import cn.hutool.db.PageResult;
 import jbm.framework.boot.autoconfigure.emqx.EmqxApiService;
+import jbm.framework.boot.autoconfigure.emqx.configuration.EmqxConfiguration;
 import jbm.framework.boot.autoconfigure.emqx.configuration.EmqxProperties;
 import jbm.framework.boot.autoconfigure.emqx.model.EmqxClient;
 import jbm.framework.boot.autoconfigure.emqx.model.EmqxSubscription;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
 @Slf4j
+@ExtendWith(SpringExtension.class)
+@SpringBootConfiguration
+@SpringBootTest(classes = {EmqxConfiguration.class})
 public class EmqxApiServiceTest {
 
-
+    @Autowired
     private EmqxApiService emqxApiService;
-
-    @BeforeEach
-    public void before() {
-        EmqxProperties emqxProperties = new EmqxProperties();
-        emqxProperties.setUrl("http://10.100.10.121:18083");
-        emqxProperties.setUsername("ee26b0dd4af7e749");
-        emqxProperties.setPassword("jikw9C0MaA25NhbXFGvslDcyzwU0uZYeY9AnJlhY9Be8oE");
-        emqxApiService = new EmqxApiService(emqxProperties);
-    }
 
     @Test
     public void testGetOnlineAllClients() {
