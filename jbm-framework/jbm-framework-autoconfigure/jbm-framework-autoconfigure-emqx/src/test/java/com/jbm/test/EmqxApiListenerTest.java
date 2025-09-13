@@ -30,7 +30,7 @@ public class EmqxApiListenerTest {
 
     @Test
     public void test() throws Exception {
-        Thread.sleep(1000000);
+        Thread.sleep(30*1000L);
     }
 
     @TestConfiguration

@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.emqx;
 
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -32,7 +33,7 @@ public class EmqxApiListener implements InitializingBean {
 
     private void initMqttClient() {
         //校验传入的信息
-        if (StrUtil.isBlank(emqxMqttProperties.getUrl()) ){
+        if (StrUtil.isBlank(emqxMqttProperties.getUrl())) {
             throw new RuntimeException("请配置EMQX MQTT Broker地址");
         }
         if (StrUtil.isBlank(emqxMqttProperties.getUsername()) || StrUtil.isBlank(emqxMqttProperties.getPassword())) {
@@ -41,8 +42,9 @@ public class EmqxApiListener implements InitializingBean {
         //url是tcp://192.168.1.1:1883这种格式
         String host = StrUtil.subBetween(emqxMqttProperties.getUrl(), "//", ":");
         int port = NumberUtil.parseInt(StrUtil.subAfter(emqxMqttProperties.getUrl(), ":", true));
+        String clientId = StrUtil.isEmpty(emqxMqttProperties.getClientId()) ? "emqx-api-listener:" + IdUtil.fastSimpleUUID() : emqxMqttProperties.getClientId();
         this.client = Mqtt5Client.builder()
-                .identifier("emqx-api-listener")
+                .identifier(clientId)
                 .serverHost(host)
                 .serverPort(port)
                 .simpleAuth(Mqtt5SimpleAuth.builder().username(emqxMqttProperties.getUsername()).password(emqxMqttProperties.getPassword().getBytes()).build())
