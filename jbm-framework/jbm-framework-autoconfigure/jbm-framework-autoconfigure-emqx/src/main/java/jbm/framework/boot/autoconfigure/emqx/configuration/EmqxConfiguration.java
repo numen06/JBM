@@ -16,7 +16,6 @@ import javax.annotation.Resource;
  */
 @Slf4j
 @EnableConfigurationProperties({EmqxProperties.class, EmqxMqttProperties.class})
-@ConditionalOnProperty(prefix = "emqx.api", name = "url")
 public class EmqxConfiguration {
 
     @Resource
@@ -29,11 +28,13 @@ public class EmqxConfiguration {
     private ApplicationEventPublisher eventPublisher;
 
     @Bean
+    @ConditionalOnProperty(prefix = "emqx.api", name = "url")
     public EmqxApiService getEmqxApiService() {
         return new EmqxApiService(emqxProperties);
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "emqx.mqtt", name = "url")
     public EmqxApiListener getEmqxApiClientService() {
         return new EmqxApiListener(emqxMqttProperties, eventPublisher);
     }
