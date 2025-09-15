@@ -7,3 +7,4 @@ management:
     export:
       prometheus:
         enabled: true
+#        rate: 5

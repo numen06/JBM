@@ -4,10 +4,12 @@ import cn.hutool.core.lang.Console;
 import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsPrinter;
 import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsParser;
 import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsTamplete;
+import jbm.framework.boot.autoconfigure.base.prometheus.event.MetricsEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -36,6 +38,12 @@ public class SpringBootTest {
             List<Map<String, Object>> json = PrometheusMetricsParser.parseToMap(txt);
             PrometheusMetricsPrinter.printKeyMetrics(json);
 
+        }
+
+        @EventListener
+        public void print(MetricsEvent metricsEvent){
+            Console.log("监听到数据");
+            PrometheusMetricsPrinter.printKeyMetrics(metricsEvent.getMetrics());
         }
     }
 

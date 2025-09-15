@@ -42,4 +42,8 @@ public class PrometheusMetricsTamplete {
         List<Map<String, Object>> metrics = getMetrics();
         PrometheusMetricsPrinter.printKeyMetrics(metrics);
     }
+
+    public void printKeyMetrics(List<Map<String, Object>> metrics){
+        PrometheusMetricsPrinter.printKeyMetrics(metrics);
+    }
 }
