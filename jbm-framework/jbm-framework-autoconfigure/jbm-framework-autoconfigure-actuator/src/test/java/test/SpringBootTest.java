@@ -1,8 +1,10 @@
 package test;
 
+import cn.hutool.core.lang.Console;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
+import jbm.framework.boot.autoconfigure.base.listener.PrometheusMetricsPrinter;
 import jbm.framework.boot.autoconfigure.base.listener.PrometheusTextToMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,21 +35,20 @@ public class SpringBootTest {
             log.info("初始化完成");
 
             String txt = scrape();
+            Console.log(txt);
             List<Map<String, Object>> json = PrometheusTextToMap.parseToMap(txt);
-            for (Map<String, Object> metric : json){
-                log.info("获取应用状态：{}", metric);
-            }
+//            for (Map<String, Object> metric : json){
+//                log.info("获取应用状态：{}", metric);
+//            }
+
+            PrometheusMetricsPrinter.printKeyMetrics(json);
+
         }
     }
 
 
     @Autowired
     private PrometheusMeterRegistry prometheusRegistry;
-
-//    @Bean
-//    public PrometheusMeterRegistry prometheusMeterRegistry() {
-//        return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-//    }
 
     /**
      * 模拟 Prometheus 的 scrape 行为
