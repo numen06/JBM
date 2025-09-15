@@ -49,20 +49,25 @@ public class ClusterEventBusAutoConfigure {
     public ApplicationEventMulticaster applicationEventMulticaster() {
         SimpleApplicationEventMulticaster eventMulticaster =
                 new SimpleApplicationEventMulticaster();
-        eventMulticaster.setTaskExecutor(taskExecutor()); // 使用自定义线程池
+        // 使用自定义线程池
+        eventMulticaster.setTaskExecutor(taskExecutor());
         return eventMulticaster;
     }
 
     @Bean("taskExecutor")
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(100);
+        // 核心线程数
+        executor.setCorePoolSize(20);
+        // 最大线程数
+        executor.setMaxPoolSize(50);
+        // 队列容量（避免太小）
+        executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("spring-event-");
         executor.initialize();
         return executor;
     }
+
     /**
      * 替换原有的接收器
      *

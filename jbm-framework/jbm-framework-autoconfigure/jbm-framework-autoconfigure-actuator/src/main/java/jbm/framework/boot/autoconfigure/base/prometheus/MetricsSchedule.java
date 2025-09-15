@@ -18,9 +18,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MetricsSchedule extends AbstractScheduledService implements InitializingBean {
 
-    private final Executor executor = Executors.newScheduledThreadPool(2);
-
-
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PrometheusMetricsTamplete prometheusMetricsTamplete;
     private final MetricsProperties metricsProperties;
