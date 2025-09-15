@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.auth.Mqtt5SimpleAuth;
+import com.jbm.util.thread.InMemoryBlacklistRateLimiter;
 import jbm.framework.boot.autoconfigure.emqx.configuration.EmqxMqttProperties;
 import jbm.framework.boot.autoconfigure.emqx.event.EmqxClientEvent;
 import jbm.framework.boot.autoconfigure.emqx.model.EmqxClient;
@@ -55,6 +56,8 @@ public class EmqxApiListener implements InitializingBean {
                 .build();
     }
 
+    private final InMemoryBlacklistRateLimiter blacklistRateLimiter = new InMemoryBlacklistRateLimiter(30, TimeUnit.MINUTES,30);
+
     private void connectAndSubscribe() {
         client.toAsync().connect()
                 .thenAccept(connAck ->
@@ -67,6 +70,9 @@ public class EmqxApiListener implements InitializingBean {
                             //$SYS/brokers/emqx@172.17.0.4/clients/hivemq_IPrintService_078d5b3d9ed24e0ebfbe26715ff0f537/connected
                             String topic = publish.getTopic().toString();
                             String clientid = extractClientid(topic);
+                            if(blacklistRateLimiter.isBlacklisted(clientid)){
+                                return;
+                            }
                             String payload = new String(publish.getPayloadAsBytes());
                             log.info(" 🔌 Client Online: " + clientid);
                             EmqxClient emqxClient = JSONObject.parseObject(payload, EmqxClient.class);
@@ -81,6 +87,9 @@ public class EmqxApiListener implements InitializingBean {
                         .callback(publish -> {
                             String topic = publish.getTopic().toString();
                             String clientid = extractClientid(topic);
+                            if(blacklistRateLimiter.isBlacklisted(clientid)){
+                                return;
+                            }
                             String payload = new String(publish.getPayloadAsBytes());
                             log.info(" 📴 Client Offline: " + clientid);
                             EmqxClient emqxClient = JSONObject.parseObject(payload, EmqxClient.class);
