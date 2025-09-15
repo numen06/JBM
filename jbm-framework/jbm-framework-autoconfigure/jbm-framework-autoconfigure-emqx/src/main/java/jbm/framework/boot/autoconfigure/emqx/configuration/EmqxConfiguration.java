@@ -24,9 +24,6 @@ public class EmqxConfiguration {
     @Resource
     private EmqxMqttProperties emqxMqttProperties;
 
-    @Resource
-    private ApplicationEventPublisher eventPublisher;
-
     @Bean
     @ConditionalOnProperty(prefix = "emqx.api", name = "url")
     public EmqxApiService getEmqxApiService() {
@@ -35,8 +32,8 @@ public class EmqxConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "emqx.mqtt", name = "url")
-    public EmqxApiListener getEmqxApiClientService() {
-        return new EmqxApiListener(emqxMqttProperties, eventPublisher);
+    public EmqxApiListener getEmqxApiClientService(ApplicationEventPublisher applicationEventPublisher) {
+        return new EmqxApiListener(emqxMqttProperties, applicationEventPublisher);
     }
 
 
