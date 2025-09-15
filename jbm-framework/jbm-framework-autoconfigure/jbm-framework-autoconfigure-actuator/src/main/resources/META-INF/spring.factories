@@ -1,2 +1,3 @@
-#org.springframework.context.ApplicationListener=\
+org.springframework.context.ApplicationListener=\
+jbm.framework.boot.autoconfigure.base.listener.ApplicationEnvironmentDefaultEvent
 #jbm.framework.boot.autoconfigure.base.listener.ApplicationPidListener

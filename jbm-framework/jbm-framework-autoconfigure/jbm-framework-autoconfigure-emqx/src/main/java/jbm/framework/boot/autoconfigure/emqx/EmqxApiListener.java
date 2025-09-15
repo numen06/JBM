@@ -1,6 +1,7 @@
 package jbm.framework.boot.autoconfigure.emqx;
 
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
@@ -14,7 +15,10 @@ import jbm.framework.boot.autoconfigure.emqx.model.EmqxClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,7 +60,7 @@ public class EmqxApiListener implements InitializingBean {
                 .build();
     }
 
-    private final InMemoryBlacklistRateLimiter blacklistRateLimiter = new InMemoryBlacklistRateLimiter(30, TimeUnit.MINUTES,30);
+    private final InMemoryBlacklistRateLimiter blacklistRateLimiter = new InMemoryBlacklistRateLimiter(30, TimeUnit.MINUTES, 30);
 
     private void connectAndSubscribe() {
         client.toAsync().connect()
@@ -70,7 +74,7 @@ public class EmqxApiListener implements InitializingBean {
                             //$SYS/brokers/emqx@172.17.0.4/clients/hivemq_IPrintService_078d5b3d9ed24e0ebfbe26715ff0f537/connected
                             String topic = publish.getTopic().toString();
                             String clientid = extractClientid(topic);
-                            if(blacklistRateLimiter.isBlacklisted(clientid)){
+                            if (blacklistRateLimiter.isBlacklisted(clientid)) {
                                 return;
                             }
                             String payload = new String(publish.getPayloadAsBytes());
@@ -87,7 +91,7 @@ public class EmqxApiListener implements InitializingBean {
                         .callback(publish -> {
                             String topic = publish.getTopic().toString();
                             String clientid = extractClientid(topic);
-                            if(blacklistRateLimiter.isBlacklisted(clientid)){
+                            if (blacklistRateLimiter.isBlacklisted(clientid)) {
                                 return;
                             }
                             String payload = new String(publish.getPayloadAsBytes());
@@ -109,10 +113,18 @@ public class EmqxApiListener implements InitializingBean {
         return StrUtil.subBetween(topic, "clients/", "/");
     }
 
+    private final Executor threadPoolTaskExecutor = Executors.newFixedThreadPool(10);
+
     public void publishDeviceEvent(EmqxClient emqxClient, EmqxClientStatus status) {
         EmqxClientEvent event = new EmqxClientEvent(emqxClient, status);
-        log.info(" EVENT: {}", event);
-        eventPublisher.publishEvent(event);
+        threadPoolTaskExecutor.execute(() -> {
+            try {
+                log.info(" EVENT: {}", event);
+                eventPublisher.publishEvent(event);
+            } catch (Exception e) {
+                log.error(" EVENT: {}", event);
+            }
+        });
     }
 
     @Override

@@ -10,6 +10,11 @@ import org.springframework.cloud.bus.*;
 import org.springframework.cloud.bus.event.Destination;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ApplicationEventMulticaster;
+import org.springframework.context.event.SimpleApplicationEventMulticaster;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
 
 import static org.springframework.cloud.bus.BusConstants.BUS_CONSUMER;
 
@@ -36,6 +41,28 @@ public class ClusterEventBusAutoConfigure {
         return new ClusterEventPublisher(applicationEventPublisher, busProperties);
     }
 
+    /**
+     * 全局事件异步操作
+     * @return
+     */
+    @Bean
+    public ApplicationEventMulticaster applicationEventMulticaster() {
+        SimpleApplicationEventMulticaster eventMulticaster =
+                new SimpleApplicationEventMulticaster();
+        eventMulticaster.setTaskExecutor(taskExecutor()); // 使用自定义线程池
+        return eventMulticaster;
+    }
+
+    @Bean("taskExecutor")
+    public Executor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("spring-event-");
+        executor.initialize();
+        return executor;
+    }
     /**
      * 替换原有的接收器
      *
