@@ -21,7 +21,6 @@
         <module>jbm-util</module>
         <module>jbm-cluster</module>
         <module>jbm-algorithm</module>
-        <module>jbm-framework/jbm-framework-autoconfigure/jbm-framework-autoconfigure-emqx</module>
     </modules>
     <scm>
         <developerConnection>scm:git:https://github.com/numen06/JBM.git</developerConnection>
