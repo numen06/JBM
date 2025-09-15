@@ -1,8 +1,10 @@
-package jbm.framework.boot.autoconfigure.base.listener;
+package jbm.framework.boot.autoconfigure.base.prometheus;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+/**
+ * @author wesley
+ */
 public class PrometheusMetricsPrinter {
 
     public static void printKeyMetrics(List<Map<String, Object>> metrics) {

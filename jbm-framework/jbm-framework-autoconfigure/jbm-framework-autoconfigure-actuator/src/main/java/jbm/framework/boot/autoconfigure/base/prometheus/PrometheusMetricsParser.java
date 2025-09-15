@@ -1,10 +1,13 @@
-package jbm.framework.boot.autoconfigure.base.listener;
+package jbm.framework.boot.autoconfigure.base.prometheus;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PrometheusTextToMap {
+/**
+ * @author wesley
+ */
+public class PrometheusMetricsParser {
 
     // 匹配 HELP 和 TYPE 注释
     private static final Pattern HELP_PATTERN = Pattern.compile("^# HELP (\\S+) (.+)$");

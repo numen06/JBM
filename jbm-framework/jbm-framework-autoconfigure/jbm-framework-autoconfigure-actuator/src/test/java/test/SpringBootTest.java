@@ -1,19 +1,16 @@
 package test;
 
 import cn.hutool.core.lang.Console;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.exporter.common.TextFormat;
-import jbm.framework.boot.autoconfigure.base.listener.PrometheusMetricsPrinter;
-import jbm.framework.boot.autoconfigure.base.listener.PrometheusTextToMap;
+import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsPrinter;
+import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsParser;
+import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsTamplete;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Service;
 
-import java.io.StringWriter;
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -26,43 +23,23 @@ public class SpringBootTest {
     }
 
     @Service
-    public class TestEventListener implements InitializingBean {
-
+    public static class TestEventListener implements InitializingBean {
+        @Resource
+        private PrometheusMetricsTamplete prometheusMetricsTamplete;
         /**
          */
         @Override
         public void afterPropertiesSet() {
             log.info("初始化完成");
-
-            String txt = scrape();
+            String txt = prometheusMetricsTamplete.getMetricsAsText();
             Console.log(txt);
-            List<Map<String, Object>> json = PrometheusTextToMap.parseToMap(txt);
-//            for (Map<String, Object> metric : json){
-//                log.info("获取应用状态：{}", metric);
-//            }
-
+            List<Map<String, Object>> json = PrometheusMetricsParser.parseToMap(txt);
             PrometheusMetricsPrinter.printKeyMetrics(json);
 
         }
     }
 
 
-    @Autowired
-    private PrometheusMeterRegistry prometheusRegistry;
-
-    /**
-     * 模拟 Prometheus 的 scrape 行为
-     */
-    private String scrape() {
-        CollectorRegistry registry = prometheusRegistry.getPrometheusRegistry();
-        StringWriter writer = new StringWriter();
-        try {
-            TextFormat.write004(writer, registry.metricFamilySamples());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to write metrics", e);
-        }
-        return writer.toString();
-    }
 
 
 }

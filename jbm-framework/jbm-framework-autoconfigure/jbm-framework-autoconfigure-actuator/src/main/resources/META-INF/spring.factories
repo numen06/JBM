@@ -1,3 +1,4 @@
 org.springframework.context.ApplicationListener=\
-jbm.framework.boot.autoconfigure.base.listener.ApplicationEnvironmentDefaultEvent
-#jbm.framework.boot.autoconfigure.base.listener.ApplicationPidListener
+jbm.framework.boot.autoconfigure.base.ApplicationEnvironmentDefaultEvent
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+jbm.framework.boot.autoconfigure.base.prometheus.MetricsConfiguration

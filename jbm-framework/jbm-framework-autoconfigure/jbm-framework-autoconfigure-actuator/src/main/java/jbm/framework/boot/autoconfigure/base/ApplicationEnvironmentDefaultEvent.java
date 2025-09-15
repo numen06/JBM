@@ -1,4 +1,4 @@
-package jbm.framework.boot.autoconfigure.base.listener;
+package jbm.framework.boot.autoconfigure.base;
 
 import com.google.common.collect.Lists;
 import jbm.framework.spring.config.ApplicationEnvironmentDefaultListener;
