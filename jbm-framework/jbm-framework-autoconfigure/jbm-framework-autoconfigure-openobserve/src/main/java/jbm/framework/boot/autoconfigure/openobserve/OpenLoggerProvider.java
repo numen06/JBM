@@ -1,19 +1,11 @@
 package jbm.framework.boot.autoconfigure.openobserve;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
-import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
-import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.PostConstruct;
-import java.time.Duration;
+import java.time.Instant;
 
 public class OpenLoggerProvider implements InitializingBean {
 
@@ -21,11 +13,37 @@ public class OpenLoggerProvider implements InitializingBean {
 
     private final OpenTelemetry openTelemetry;
 
+    private final Logger logger;
+
     public OpenLoggerProvider(OpenObserveProperties openObserveProperties, OpenTelemetry openTelemetry) {
         this.openObserveProperties = openObserveProperties;
         this.openTelemetry = openTelemetry;
+        this.logger = this.openTelemetry.getLogsBridge().get("test");
     }
 
+    public void info(String message) {
+        logger.logRecordBuilder()
+                .setBody(message)
+                .setSeverity(Severity.INFO)
+                .setTimestamp(Instant.now())
+                .emit();
+    }
+
+    public void error(String message) {
+        logger.logRecordBuilder()
+                .setBody(message)
+                .setSeverity(Severity.ERROR)
+                .setTimestamp(Instant.now())
+                .emit();
+    }
+
+    public void warn(String message) {
+        logger.logRecordBuilder()
+                .setBody(message)
+                .setSeverity(Severity.WARN)
+                .setTimestamp(Instant.now())
+                .emit();
+    }
 
     /**
      * @throws Exception

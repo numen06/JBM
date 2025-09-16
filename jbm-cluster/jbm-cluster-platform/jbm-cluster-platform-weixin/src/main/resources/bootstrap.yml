@@ -12,10 +12,11 @@ spring:
         refreshable-dataids: common.properties
         shared-dataids: ${jbm.cluster.nacos-confs}
         file-extension: yml
-  resources:
-    add-mappings: false
   profiles:
     active: ${profile.name}
+  web:
+    resources:
+      add-mappings: false
 management:
   endpoints:
     web:
