@@ -35,7 +35,7 @@ public class JbmClusterScheduledHandler {
     }
 
     /**
-     * 接收 RabbitMQ 消息并异步处理，支持重试和 DLQ
+     * 接收注册定时任务
      */
     @Bean
     public Consumer<Message<JbmClusterJobResource>> scheduledJob() {

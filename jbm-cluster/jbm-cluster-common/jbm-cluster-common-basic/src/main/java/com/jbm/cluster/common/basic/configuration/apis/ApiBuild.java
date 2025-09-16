@@ -1,5 +1,6 @@
 package com.jbm.cluster.common.basic.configuration.apis;
 
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -22,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * @author wesley
  * @Created wesley.zhang
  * @Date 2022/4/30 19:24
  * @Description TODO
@@ -91,7 +93,7 @@ public class ApiBuild {
         for (MediaType mediaType : mediaTypes) {
             sbf.append(mediaType.toString()).append(StrUtil.COMMA);
         }
-        if (mediaTypes.size() > 0) {
+        if (!mediaTypes.isEmpty()) {
             sbf.deleteCharAt(sbf.length() - 1);
         }
         return sbf.toString();
@@ -102,7 +104,7 @@ public class ApiBuild {
         for (RequestMethod requestMethod : requestMethods) {
             sbf.append(requestMethod.toString()).append(StrUtil.COMMA);
         }
-        if (requestMethods.size() > 0) {
+        if (!requestMethods.isEmpty()) {
             sbf.deleteCharAt(sbf.length() - 1);
         }
         return sbf.toString();

@@ -3,6 +3,7 @@ package com.jbm.util.batch;
 import cn.hutool.core.collection.CollUtil;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -81,9 +82,10 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @param actionBean 任务
      */
     @Override
-    protected void asyncAction(ActionBean actionBean) {
+    protected int asyncAction(ActionBean actionBean) {
         actionBean.setObj(atomicReference.get());
         this.atomicReference.set((T) action.apply(actionBean));
+        return actionBean.getCurrQuantity();
     }
 
     /**
@@ -93,11 +95,12 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 提交结果
      */
     @Override
-    protected int doOffer(T... objs) {
+    protected void doOffer(AtomicInteger currQuantity, T... objs) {
         CollUtil.newArrayList(objs).forEach(obj -> {
             atomicReference.set((T) obj);
         });
-        return objs.length == 0 ? 1 : objs.length;
+        int count = objs.length == 0 ? 1 : objs.length;
+        currQuantity.addAndGet(count);
     }
 
     /**
@@ -105,7 +108,8 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @throws InterruptedException
      */
     @Override
-    protected void doOfferBlocking(T obj) throws InterruptedException {
+    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
         atomicReference.getAndSet((T) obj);
+        currQuantity.incrementAndGet();
     }
 }

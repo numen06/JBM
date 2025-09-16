@@ -1,6 +1,7 @@
 package test.batch;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
@@ -17,6 +18,7 @@ import test.entity.Student;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -55,7 +57,7 @@ public class BatchTest {
      */
     @Test
     public void test2() {
-        RollingTask<Student> batchTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Student>, Student>() {
+        RollingTask<Student> batchTask = RollingTask.createRollingTask(2L, TimeUnit.SECONDS, new Function<ActionBean<Student>, Student>() {
             @Override
             public Student apply(ActionBean<Student> rollingBean) {
                 Student student = rollingBean.getObj();
@@ -150,6 +152,49 @@ public class BatchTest {
             }
         });
         batchTask.awaitTerminated();
+
+    }
+
+
+    @Test
+    public void testLogs() {
+        RollingTask<Long> rollingTask = RollingTask.createRollingTask(5L, TimeUnit.SECONDS, new Function<ActionBean<Long>, Long>() {
+            @Override
+            public Long apply(ActionBean<Long> rollingBean) {
+                log.info("从{}到{}：{}秒内处理{}条数据",rollingBean.getLastActionTime(),rollingBean.getSubmitTime(), rollingBean.getTimeDiff(DateUnit.SECOND),rollingBean.getCurrQuantity());
+                return rollingBean.getObj();
+            }
+        });
+        BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100, new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> logs) {
+                log.info("处理了{}条日志", logs.size());
+            }
+        });
+        while (true) {
+            batchTask.offer(DateUtil.now());
+            rollingTask.offer();
+            ThreadUtil.safeSleep(10);
+        }
+    }
+
+    @Test
+    public void testLogs2() {
+        final AtomicInteger offerCount = new AtomicInteger(0);
+        BatchTask<String> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100, new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> logs) {
+                log.info("处理了{}条日志", logs.size());
+            }
+        });
+        while (true) {
+            batchTask.offerBlocking(DateUtil.now());
+            int cnt = offerCount.incrementAndGet();
+            if (cnt % 100 == 0) {
+                log.info("已放入 {} 条数据,批处理当前数量:{}", cnt, batchTask.getCurrQuantity());
+            }
+            ThreadUtil.safeSleep(10);
+        }
 
     }
 }

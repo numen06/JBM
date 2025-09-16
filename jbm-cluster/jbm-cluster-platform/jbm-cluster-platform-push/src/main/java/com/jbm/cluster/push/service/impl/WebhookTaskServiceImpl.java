@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
@@ -70,12 +71,13 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
 
     @Override
-    public void sendEvent(WebhookTaskForm webhookTaskForm) {
+    public void sendBusinessEvent(WebhookTaskForm webhookTaskForm) {
         List<WebhookEventConfig> webhookEventConfigList = CollUtil.newArrayList();
         //如果传输过来的数据中已经有配置则不再搜索
         if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig())) {
             //根据事件ID查询
             if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig().getEventId())) {
+                webhookTaskForm.getWebhookEventConfig().setEnable(true);
                 webhookEventConfigList = CollUtil.newArrayList(webhookTaskForm.getWebhookEventConfig());
             } else {
                 webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
@@ -102,9 +104,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         if (CollUtil.isEmpty(webhookEventConfigList)) {
             throw new ServiceException("不存在可用的发送配置");
         }
-        Map<String, List<WebhookEventConfig>> groupEvnetGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
+        Map<String, List<WebhookEventConfig>> groupEventGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
         //遍历整个分组
-        groupEvnetGroup.forEach(new BiConsumer<String, List<WebhookEventConfig>>() {
+        groupEventGroup.forEach(new BiConsumer<String, List<WebhookEventConfig>>() {
             @Override
             public void accept(String group, List<WebhookEventConfig> webhookEventConfigs) {
 
@@ -113,7 +115,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                     public void run() {
                         //分拨推送
                         for (WebhookEventConfig webhookEventConfig : webhookEventConfigs) {
-                            WebhookTask webhookTask = sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+                            WebhookTask webhookTask = sendBusinessEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
                             //如果状态为200则为成功,跳出循环
                             if (webhookTask.getHttpStatus() == HttpStatus.HTTP_OK) {
                                 log.info("分组名称:{},执行地址:{}", group, webhookTask.getEventId());
@@ -138,22 +140,22 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     }
 
     @Override
-    public void sendEvent(String eventId) {
+    public void sendBusinessEvent(String eventId) {
         WebhookEventConfig webhookEventConfig = webhookEventConfigService.selectByEventId(eventId);
         if (ObjectUtil.isEmpty(webhookEventConfig)) {
             throw new ServiceException("事件为空");
         }
         WebhookTask webhookTask = new WebhookTask();
-        this.sendEvent(webhookEventConfig, webhookTask);
+        this.sendBusinessEvent(webhookEventConfig, webhookTask);
     }
 
     @Override
-    public void sendEvent(WebhookTask webhookTask) {
+    public void sendBusinessEvent(WebhookTask webhookTask) {
         WebhookEventConfig webhookEventConfig = webhookEventConfigService.selectByEventId(webhookTask.getEventId());
         WebhookTaskForm webhookTaskForm = new WebhookTaskForm();
         webhookTaskForm.setWebhookTask(webhookTask);
         webhookTaskForm.setWebhookEventConfig(webhookEventConfig);
-        this.sendEvent(webhookTaskForm);
+        this.sendBusinessEvent(webhookTaskForm);
 //        this.sendEventAsync(webhookEventConfig, webhookTask);
     }
 
@@ -163,7 +165,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         if (ObjectUtil.isEmpty(webhookTask)) {
             throw new ServiceException("任务不存在");
         }
-        this.sendEvent(webhookTask);
+        this.sendBusinessEvent(webhookTask);
     }
 
     @Override
@@ -188,7 +190,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             public void run() {
                 try {
                     log.info("推送任务开始:{}", webhookEventConfig.getEventName());
-                    sendEvent(webhookEventConfig, sourceWebhookTask);
+                    sendBusinessEvent(webhookEventConfig, sourceWebhookTask);
                 } catch (Exception e) {
                     log.error("推送Webhook事件错误", e);
                 } finally {
@@ -200,7 +202,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     private void buildErrorMsg(WebhookTask webhookTask, String... errorMsg) {
         String format = "{} : {}";
-        StringBuilder sb = new StringBuilder("");
+        StringBuilder sb = new StringBuilder();
         sb.append(StrUtil.emptyIfNull(webhookTask.getErrorMsg()));
         for (String s : errorMsg) {
             String msg = StrUtil.format(format, DateUtil.now(), StrUtil.emptyToDefault(s, "无"));
@@ -209,7 +211,10 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         webhookTask.setErrorMsg(StrUtil.trimToEmpty(sb.toString()));
     }
 
-    private WebhookTask sendEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
+    @Resource
+    private WebhookTaskService webhookTaskService;
+
+    private WebhookTask sendBusinessEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
         AtomicBoolean ok = new AtomicBoolean(true);
         WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
@@ -223,7 +228,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
             //如果不启用则跳出
             this.buildErrorMsg(webhookTask, "事件未启用");
         }
-        this.saveEntity(webhookTask);
+        webhookTaskService.saveEntity(webhookTask);
         //如果事件未启用则跳出
         if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
             return webhookTask;
@@ -238,6 +243,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 if (response.getStatus() != HttpStatus.HTTP_OK) {
                     throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
                 }
+                this.buildErrorMsg(webhookTask, "事件发送成功");
 //                this.saveEntity(webhookTask);
                 ok.set(false);
             } catch (UnknownHostException e) {
@@ -260,7 +266,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                     webhookEventConfigService.disableEvents(webhookEventConfig.getServiceName());
                 }
                 //保存信息
-                this.saveEntity(webhookTask);
+                webhookTaskService.saveEntity(webhookTask);
                 webhookTaskCache.remove(webhookTask.getTaskId());
 //                BeanUtil.copyProperties(webhookEventConfig,sourceWebhookTask);
             }

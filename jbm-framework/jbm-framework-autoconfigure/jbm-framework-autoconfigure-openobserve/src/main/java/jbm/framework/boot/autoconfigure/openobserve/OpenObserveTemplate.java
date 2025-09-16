@@ -46,6 +46,7 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,7 +112,13 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
     }
 
     // 共享的 OkHttpClient 实例（推荐单例）
-    private final OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)  // 任务提交和查询都是轻量操作
+            .callTimeout(30, TimeUnit.SECONDS)
+            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
+            .build();
+
 
     public void postLogStr(String json, String stream) {
         String firstChar = StrUtil.sub(json, 0, 1);
@@ -152,7 +159,7 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
                 .post(requestBody)
                 .build();
 
-        // 异步发送
+        // 同步发送
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {

@@ -25,7 +25,7 @@ import java.util.Map;
 
 public abstract class ApplicationEnvironmentDefaultListener implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
-    private static HashSet<String> configsMap = new HashSet<>();
+    private static final HashSet<String> configsMap = new HashSet<>();
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected ResourceLoader resourceLoader = null;
     protected ApplicationEnvironmentPreparedEvent event;
@@ -50,7 +50,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
             this.importProperties(event, resourceLoader);
             this.importProperties(event);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("配置预注入失败", e);
         }
     }
 
@@ -68,7 +68,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 //            Resource resource = resourceLoader.getResource(path);
 //            defaultProperties.load(resource.getInputStream());
 //            PropertiesPropertySource propertySource = new PropertiesPropertySource(resource.getFilename(), defaultProperties);
-            if ("yml".equalsIgnoreCase(FileNameUtil.extName(path))) {
+            if ("yml".equalsIgnoreCase(FileNameUtil.extName(path)) || "yaml".equalsIgnoreCase(FileNameUtil.extName(path))) {
                 this.loadYaml(path);
             } else {
                 ResourcePropertySource resourcePropertySource = new ResourcePropertySource(path);
@@ -80,9 +80,11 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
 
     private void loadYaml(String path) throws IOException {
         Resource resource = resourceLoader.getResource(path);
-        YamlPropertySourceLoader yamlloader = new YamlPropertySourceLoader();
-        List<PropertySource<?>> pss = yamlloader.load(getNameForResource(resource), resource);
-        for (PropertySource propertySource : pss) {
+        if (!resource.exists())
+            return;
+        YamlPropertySourceLoader autoloader = new YamlPropertySourceLoader();
+        List<PropertySource<?>> pss = autoloader.load(getNameForResource(resource), resource);
+        for (PropertySource<?> propertySource : pss) {
             this.addLast(propertySource);
         }
     }
@@ -96,7 +98,7 @@ public abstract class ApplicationEnvironmentDefaultListener implements Applicati
     }
 
 
-    private synchronized void addLast(PropertySource propertySource) {
+    private synchronized void addLast(PropertySource<?> propertySource) {
         if (configsMap.contains(propertySource.getName()))
             return;
         event.getEnvironment().getPropertySources().addLast(propertySource);

@@ -1,0 +1,10 @@
+emqx:
+  api:
+    url: http://10.100.10.121:18083/api/v5/
+    username: ee26b0dd4af7e749
+    password: jikw9C0MaA25NhbXFGvslDcyzwU0uZYeY9AnJlhY9Be8oE
+  mqtt:
+    url: tpc://10.100.10.121:1883
+    username: admin
+    password: Admin@123456
+    clientId: emqx-client-api

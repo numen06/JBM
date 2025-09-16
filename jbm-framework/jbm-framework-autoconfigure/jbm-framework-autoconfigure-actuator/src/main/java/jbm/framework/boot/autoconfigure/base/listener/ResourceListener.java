@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ResourceListener {
-    private static ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+    private static final ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
     private final FileWatchCallback callback;
     private final File listenerFile;
     private WatchService ws;

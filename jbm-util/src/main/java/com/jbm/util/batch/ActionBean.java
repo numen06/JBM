@@ -1,8 +1,11 @@
 package com.jbm.util.batch;
 
+import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 操作对象
@@ -18,6 +21,8 @@ public class ActionBean<T> {
     private final Integer currQuantity;
     // 日期
     private final Date submitTime;
+
+    private final Date lastActionTime;
     // 对象
     private T obj;
 
@@ -26,12 +31,13 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param submitTime         日期
+     * @param submitTime   日期
      */
-    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime) {
+    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime, Date lastActionTime) {
         this.actionType = actionType;
         this.currQuantity = currQuantity;
         this.submitTime = submitTime;
+        this.lastActionTime = lastActionTime;
     }
 
     /**
@@ -39,13 +45,21 @@ public class ActionBean<T> {
      *
      * @param actionType   操作类型
      * @param currQuantity 当前数量
-     * @param submitTime         日期
+     * @param submitTime   日期
      * @param obj          对象
      */
-    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime, T obj) {
+    public ActionBean(ActionType actionType, Integer currQuantity, Date submitTime, Date lastActionTime, T obj) {
         this.actionType = actionType;
         this.currQuantity = currQuantity;
         this.submitTime = submitTime;
+        this.lastActionTime = lastActionTime;
         this.obj = obj;
+    }
+
+    /**
+     * 获取时间差
+     */
+    public long getTimeDiff(DateUnit dateUnit) {
+        return DateUtil.between(lastActionTime, submitTime, dateUnit);
     }
 }

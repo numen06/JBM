@@ -24,7 +24,7 @@
             AND http_status = ${httpStatus}
         </if>
         <if test="apiName != null">
-            AND apiName like '%${apiName}%'
+            AND api_name like '%${apiName}%'
         </if>
         <if test="appName != null">
             AND app_name like '%${appName}%'
@@ -43,6 +43,12 @@
         </if>
         <if test="appKey != null">
             AND app_name = '%${appKey}%'
+        </if>
+        <if test="beginTime != null">
+            AND request_time &gt;= '%${beginTime}%'
+        </if>
+        <if test="endTime != null">
+            AND request_time &lt;= '${endTime}%'
         </if>
     </sql>
     <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.GatewayLogs">
