@@ -38,11 +38,19 @@ public interface DroolsRuleService extends IMasterDataService<DroolsRule> {
     JSONArray compileRule(String originalJson, String nodeId);
 
     /**
-     * 执行规则
+     * 执行规则并获取下一个节点的信息
      *
      * @param droolsParseAndExecuteForm
-     * @return
+     * @return 根据rule执行结果返回下一个节点的信息
      */
     JSONObject parseAndExecuteRule(DroolsParseAndExecuteForm droolsParseAndExecuteForm);
+
+    /**
+     * 解析下一个节点的信息（下一个节点如果是rule就再执行规则获取下下个节点）
+     *
+     * @param droolsParseAndExecuteForm
+     * @return 根据执行结果返回下一个节点的信息
+     */
+    JSONObject parseNextNode(DroolsParseAndExecuteForm droolsParseAndExecuteForm);
 
 }
