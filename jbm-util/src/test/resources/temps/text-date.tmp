@@ -1,5 +1,0 @@
-我是一个天才就是那么简单。
-你叫什么名字？
-<!-- 使用 $date 工具 -->
-当前时间: $date.format('yyyy-MM-dd HH:mm:ss', $currentDate)
- $currentDate.toString('yyyy-MM-dd HH:mm:ss')
