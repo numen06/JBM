@@ -7,7 +7,6 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpStatus;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
@@ -22,6 +21,7 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MultiPlatformServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -236,12 +236,16 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
             try {
                 webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
-                HttpResponse response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
-                webhookTask.setResponse(response.body());
-                webhookTask.setHttpStatus(response.getStatus());
-                this.buildErrorMsg(webhookTask);
-                if (response.getStatus() != HttpStatus.HTTP_OK) {
-                    throw new RuntimeException("推送HTTP状态码错误:" + response.getStatus());
+                //返回okhttp的结果
+                Response response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
+                //响应体
+                if (response.body() != null) {
+                    webhookTask.setResponse(response.body().string());
+                    webhookTask.setHttpStatus(response.code());
+                    this.buildErrorMsg(webhookTask);
+                    if (response.code() != HttpStatus.HTTP_OK) {
+                        throw new RuntimeException("推送HTTP状态码错误:" + response.code());
+                    }
                 }
                 this.buildErrorMsg(webhookTask, "事件发送成功");
 //                this.saveEntity(webhookTask);

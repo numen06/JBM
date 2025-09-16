@@ -2,10 +2,9 @@ package com.jbm.cluster.common.basic.module;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
 import com.jbm.cluster.common.basic.module.request.ICustomizeRequest;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -18,15 +17,39 @@ public class JbmRequestTemplate {
     @Autowired
     private ApplicationContext applicationContext;
 
-    public HttpResponse request(String url, String methodType, String jsonBody) throws UnknownHostException {
+    /**
+     * 请求服务
+     * @param url 示例：支持http和feign
+     *            地址1：<a href="http://127.0.0.1:8080/api/test">...</a>
+     *            地址2：feign://jbm-cluster-platform-center/api/test
+     * @param methodType 请求方式
+     * @param jsonBody 请求体
+     * @return 请求结果
+     * @throws UnknownHostException 找不到服务
+     */
+    public okhttp3.Response request(String url, String methodType, String jsonBody) throws UnknownHostException {
         ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(url);
-        return iCustomizeRequest.request(url, methodType, jsonBody);
+        if (iCustomizeRequest != null) {
+            return iCustomizeRequest.request(url, methodType, jsonBody);
+        } else {
+            throw new RuntimeException("未找到对应的请求方式");
+        }
     }
 
 
-    public HttpResponse request(HttpRequest httpRequest) {
-        ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(httpRequest.getUrl());
-        return iCustomizeRequest.request(httpRequest);
+    /**
+     * 请求服务
+     * @param requestBuilder 请求构造器
+     * @return 请求结果
+     */
+    public okhttp3.Response request(Request.Builder requestBuilder) {
+        Request httpRequest = requestBuilder.build();
+        ICustomizeRequest iCustomizeRequest = this.findCustomizeRequest(httpRequest.url().toString());
+        if (iCustomizeRequest != null) {
+            return iCustomizeRequest.request(httpRequest);
+        }else {
+            throw new RuntimeException("未找到对应的请求方式");
+        }
     }
 
 
