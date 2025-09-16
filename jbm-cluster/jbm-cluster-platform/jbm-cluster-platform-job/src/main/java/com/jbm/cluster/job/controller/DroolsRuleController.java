@@ -188,6 +188,7 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     }
 
     @PostMapping({"/parseAndExecuteRule"})
+    @Override
     public ResultBody<JSONObject> parseAndExecuteRule(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
         System.out.println("测试开始-》》》》》》》》》》》》》》》》");
         try {
