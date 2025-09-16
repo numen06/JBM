@@ -14,9 +14,10 @@ spring:
         file-extension: yml
   profiles:
     active: ${profile.name}
-  web:
-    resources:
-      add-mappings: false
+  mvc:
+    throw-exception-if-no-handler-found: true
+  resources:
+    add-mappings: false
 management:
   endpoints:
     web:
