@@ -4,6 +4,7 @@ package com.jbm.cluster.job.business.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.job.DroolsRule;
@@ -74,14 +75,28 @@ public class RuleReloadService {
         QueryWrapper<DroolsRule> wrapper = new QueryWrapper<>();
         wrapper.eq("rule_status", true);
         wrapper.isNotNull("drools_content");
+        //排除空字符串
+        wrapper.notInSql("drools_content", "''");
 
-        List<DroolsRule> rules = droolsRuleService.selectEntitys(wrapper);
-        rules.forEach(rule -> {
-            String drlContent = processDynamicClassImports(rule.getDroolsContent());
-            kieFileSystem.write("src/main/resources/" + rule.getRuleCode() + rule.getVersion() + ".drl",
+        List<DroolsRule> droolsRules = droolsRuleService.selectEntitys(wrapper);
+        for (DroolsRule droolsRule : droolsRules) {
+            JSONArray droolsContent = JSONUtil.parseArray(droolsRule.getDroolsContent());
+            for (int i = 0; i < droolsContent.size(); i++) {
+                Object o = droolsContent.get(i);
+                JSONObject jsonObject = new JSONObject(o);
+                String drools = jsonObject.get("drools").toString();
+                kieFileSystem.write("src/main/resources/" + droolsRule.getRuleCode() + droolsRule.getVersion() + "number" + i + ".drl",
                     kieServices.getResources()
-                            .newReaderResource(new StringReader(drlContent)));
-        });
+                            .newReaderResource(new StringReader(drools)));
+            }
+        }
+//        rules.forEach(rule -> {
+//            String drlContent = processDynamicClassImports(rule.getDroolsContent());
+//            kieFileSystem.write("src/main/resources/" + rule.getRuleCode() + rule.getVersion() + ".drl",
+//                    kieServices.getResources()
+//                            .newReaderResource(new StringReader(drlContent)));
+//        });
+
 
         // 3. 构建容器
         KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);

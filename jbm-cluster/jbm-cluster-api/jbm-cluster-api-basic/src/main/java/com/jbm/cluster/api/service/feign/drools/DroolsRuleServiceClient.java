@@ -23,4 +23,6 @@ public interface DroolsRuleServiceClient {
     ResultBody<DroolsFeignTemplate> executeRule(@RequestBody DroolsFeignTemplate droolsFeignTemplate);
     @PostMapping("/parseAndExecuteRule")
     ResultBody<JSONObject> parseAndExecuteRule(@RequestBody DroolsParseAndExecuteForm droolsParseAndExecuteForm);
+    @PostMapping("/parseNextNode")
+    ResultBody<JSONObject> parseNextNode(@RequestBody DroolsParseAndExecuteForm droolsParseAndExecuteForm);
 }

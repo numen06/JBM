@@ -188,8 +188,8 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     }
 
     @PostMapping({"/parseAndExecuteRule"})
+    @Override
     public ResultBody<JSONObject> parseAndExecuteRule(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
-        System.out.println("测试开始-》》》》》》》》》》》》》》》》");
         try {
             JSONObject jsonObject = droolsRuleService.parseAndExecuteRule(droolsParseAndExecuteForm);
             return ResultBody.success(jsonObject,"成功");
@@ -197,5 +197,18 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
             throw new ServiceException(e);
         }
     }
+
+
+    @PostMapping({"/parseNextNode"})
+    @Override
+    public ResultBody<JSONObject> parseNextNode(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
+        try {
+            JSONObject jsonObject = droolsRuleService.parseNextNode(droolsParseAndExecuteForm);
+            return ResultBody.success(jsonObject,"成功");
+        } catch (Exception e) {
+            throw new ServiceException(e);
+        }
+    }
+
 
 }
