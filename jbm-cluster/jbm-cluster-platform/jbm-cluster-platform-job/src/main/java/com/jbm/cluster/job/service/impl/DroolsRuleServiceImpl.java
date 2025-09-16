@@ -66,6 +66,12 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
         if (StringUtil.isNotBlank(droolsRule.getRuleContent())) {
             JSONArray jsonArray = compileRule(droolsRule.getRuleContent(),null);
             if(!jsonArray.isEmpty()){
+//                StringBuilder droolsContent = new StringBuilder();
+//                for (Object object : jsonArray) {
+//                    JSONObject jsonObject = (JSONObject) object;
+//                    droolsContent.append(jsonObject.get("drools").toString());
+//                    droolsContent.append("\n");
+//                }
                 droolsRule.setDroolsContent(jsonArray.toString());
             }
         }
