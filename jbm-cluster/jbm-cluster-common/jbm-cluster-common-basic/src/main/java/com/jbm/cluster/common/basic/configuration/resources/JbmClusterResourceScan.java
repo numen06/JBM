@@ -19,7 +19,6 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
     @Autowired
-    @Qualifier("taskExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public JbmClusterResourceScan() {
