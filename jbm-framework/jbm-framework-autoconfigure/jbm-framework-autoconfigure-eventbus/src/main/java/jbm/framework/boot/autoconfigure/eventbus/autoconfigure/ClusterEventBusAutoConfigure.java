@@ -62,7 +62,7 @@ public class ClusterEventBusAutoConfigure {
         // 最大线程数
         executor.setMaxPoolSize(50);
         // 队列容量（避免太小）
-        executor.setQueueCapacity(500);
+        executor.setQueueCapacity(1000);
         executor.setThreadNamePrefix("spring-event-");
         executor.initialize();
         return executor;
