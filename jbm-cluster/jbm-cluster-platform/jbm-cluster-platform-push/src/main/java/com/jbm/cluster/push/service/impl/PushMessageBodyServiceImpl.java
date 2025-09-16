@@ -21,6 +21,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -95,6 +96,8 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         return super.save(pushMessageBody);
     }
 
+    @Resource
+    private PushMessageBodyService self;
 
     @Override
     public void sendPushMsg(PushMsg pushMsg) {
@@ -123,7 +126,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageBody.setExtend(pushMsg.getExtend());
         pushMessageBody.setTemplateCode(pushMsg.getTemplateCode());
         pushMessageBody.setUrl(pushMsg.getUrl());
-        this.saveEntity(pushMessageBody);
+        self.saveEntity(pushMessageBody);
         pushMsg.getRecUserIds().forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
     }
 
@@ -137,7 +140,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         }
         pushMessageBody.setSendUserId(null);
 //        pushMessageBody.setReadFlag(false);
-        this.save(pushMessageBody);
+        self.save(pushMessageBody);
 //        dispatcher.dispatch( pushMessage);
     }
 
