@@ -6,7 +6,9 @@ import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -17,13 +19,14 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
     @Autowired
+    @Qualifier("taskExecutor")
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public JbmClusterResourceScan() {
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
         if (!this.enable(jbmClusterProperties)) {
             return;
         }
