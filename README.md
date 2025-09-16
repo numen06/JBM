@@ -28,9 +28,11 @@
 - JBM7随着使用越来越庞大和复杂正在不断完善文档
 - [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)，详细说明特性功能
   - JBM7在Docker中部署
-  - JBM入门代码生成
+  - JBM入门-代码生成
   - JBM7新特性-集群定时任务
   - JBM7新特性-集群事件
+  - JBM记录操作日志
+  - JVM监控和Prometheus支持
   - 持续更新中
 
 
@@ -49,7 +51,7 @@
 
 ### 技术路线
 
-- JDK:JDK1.8+
+- JDK:JDK1.8+(JBM7以下)
 - 核心框架：Spring Boot
 - 安全框架：Spring Security
 - 注册中心：Nacos
@@ -104,6 +106,9 @@
 ### Docker集群快速部署
 
 集群部署之前需要中间件:Nacos,Redis等
+
+#参考部署文件
+https://www.yuque.com/numen06/ksfcpy/zur3q71heb6g15hi?singleDoc# 《JBM7-Docker中部署》
 
 1.部署平台中心服务
 
