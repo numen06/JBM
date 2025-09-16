@@ -40,7 +40,9 @@
 
 ### 故事
 
-- 由于框架诞生之初是初期期spring boot 1.0时代，所以有很多兼容性问题，在spring boot 2.0走红之后，JBM5.0全面升级融合个大主流中间件的starter
+- JBM6之前框架基于诞生之初是初期期spring boot 1.0时代,所以有很多兼容性问题
+- JBM7全面升级在spring boot 2.0走红之后
+- JBM8正在升级JDK和对应spring boot版本,后续兼容AI
 - 4.x以前版本主要基于dubbo分布式体系，5.0将重心转移到spring cloud
 - 基于java spring boot 模块化企业级框架
 - 主要由util;autoconfig;webjars等模块组成
@@ -51,10 +53,10 @@
 
 ### 技术路线
 
-- JDK:JDK1.8+(JBM7以下)
+- JDK:JDK1.8+(JBM7及其以下)
 - 核心框架：Spring Boot
 - 安全框架：Spring Security
-- 注册中心：Nacos
+- 注册中心：Nacos2(JBM7)
 - 任务调度：Spring + Quartz + Zookeeper
 - 持久层框架：MyBatis + MyBatis-Plus + JPA + Spring Data
 - 文档性架构：MongoDB + minio
