@@ -55,12 +55,13 @@ public class LogPolling extends AbstractScheduledService {
         if (queryBean.getQuery() == null) {
             throw new NullPointerException();
         }
-        if (queryBean.getQuery().getStartTime() == null) {
-            queryBean.getQuery().setStartTime(lastTime.addAndGet(1000 * 60));
-        }
         if (queryBean.getQuery().getEndTime() == null) {
             queryBean.getQuery().setEndTime(lastTime.get());
         }
+        if (queryBean.getQuery().getStartTime() == null) {
+            queryBean.getQuery().setStartTime(lastTime.getAndAdd(-1000 * 60));
+        }
+
     }
 
     private void nextQueryBean() {
