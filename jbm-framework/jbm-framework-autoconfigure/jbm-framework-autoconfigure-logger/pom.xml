@@ -7,6 +7,9 @@
         <version>7.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>jbm-framework-autoconfigure-logger</artifactId>
+    <properties>
+        <opentelemetry.version>1.38.0</opentelemetry.version>
+    </properties>
     <dependencies>
         <!-- <dependency> -->
         <!-- <groupId>com.github.danielwegener</groupId> -->
@@ -32,9 +35,10 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.opentelemetry.instrumentation</groupId>
-            <artifactId>opentelemetry-logback-appender-1.0</artifactId>
-            <version>2.20.0-alpha</version>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.9</version>
         </dependency>
+
     </dependencies>
 </project>

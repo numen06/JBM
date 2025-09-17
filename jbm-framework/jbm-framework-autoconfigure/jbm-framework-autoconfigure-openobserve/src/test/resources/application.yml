@@ -1,6 +1,6 @@
 open-observe:
   url: http://10.100.10.65:5080
-  otlp:  http://10.100.10.65:5080
+  grpc:  http://10.100.10.65:5081
   organization: default
   stream: test
   username: admin@example.com
