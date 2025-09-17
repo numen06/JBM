@@ -72,21 +72,27 @@ public class PushMessageController {
 
     @ApiOperation("发送用户站内信")
     @PostMapping("/sendUserMessage")
-    public ResultBody<String> sendUserMessage(@RequestBody PushMessageBody pushMessageBody) {
-        this.pushMessageBodyService.sendUserMessage(pushMessageBody);
-        return ResultBody.ok();
+    public ResultBody<String> sendUserMessage(@RequestBody PushMsg pushMsg) {
+        return ResultBody.callback(() -> {
+                    this.pushMessageBodyService.sendPushMsg(pushMsg);
+                    return "发送用户站内信成功";
+                }
+        );
     }
 
     @ApiOperation("发送系统站内信")
     @PostMapping("/sendSysMessage")
-    public ResultBody<String> sendSysMessage(@RequestBody PushMessageBody pushMessageBody) {
-        this.pushMessageBodyService.sendSysMessage(pushMessageBody);
-        return ResultBody.ok();
+    public ResultBody<String> sendSysMessage(@RequestBody PushMsg pushMsg) {
+        return ResultBody.callback(() -> {
+                    this.pushMessageBodyService.sendPushMsg(pushMsg);
+                    return "发送系统站内信成功";
+                }
+        );
     }
 
     @ApiOperation("删除站内信")
     @PostMapping("/deleteByIds")
-    public ResultBody<String> deleteByIds(@RequestBody IdsForm idsForm) {
+    public ResultBody<String> deleteByIds(@RequestBody ObjectIdsForm idsForm) {
         this.pushMessageItemService.removeByIds(idsForm.getIds());
         return ResultBody.ok();
     }

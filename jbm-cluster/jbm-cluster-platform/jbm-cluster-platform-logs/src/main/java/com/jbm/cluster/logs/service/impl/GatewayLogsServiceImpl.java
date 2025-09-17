@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,8 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
 //        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
         String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectOperationLogs";
         Map<String, Object> params = BeanUtil.beanToMap(gatewayLogsForm.getGatewayLogs());
+        params.put("beginTime", gatewayLogsForm.getBeginTime());
+        params.put("endTime", gatewayLogsForm.getEndTime());
         QueryResult queryResult = openObserveTemplate.selectLogs(statement, params, gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime(), gatewayLogsForm.getPageForm());
         List<Map<String, Object>> hits = queryResult.getHits();
         List<GatewayLogs> list = hits.stream().map(map -> {
@@ -56,6 +59,8 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
 //        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
         String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs";
         Map<String, Object> params = BeanUtil.beanToMap(gatewayLogsForm.getGatewayLogs());
+        params.put("beginTime", gatewayLogsForm.getBeginTime());
+        params.put("endTime", gatewayLogsForm.getEndTime());
         QueryResult queryResult = openObserveTemplate.selectLogs(statement, params, gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime(), gatewayLogsForm.getPageForm());
         List<Map<String, Object>> hits = queryResult.getHits();
         List<GatewayLogs> list = hits.stream().map(map -> {
@@ -83,7 +88,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
     }
 
 
-    private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(new Consumer<List<GatewayLogs>>() {
+    private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100,new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
             openObserveTemplate.postLogs(gatewayLogs, GatewayLogs.class.getSimpleName());

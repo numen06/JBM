@@ -12,6 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -88,26 +89,35 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @throws InterruptedException
      */
     @Override
-    protected void doOfferBlocking(T obj) throws InterruptedException {
+    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
         this.blockingQueue.put((T) obj);
+        currQuantity.incrementAndGet();
     }
 
     /**
      * 执行批量操作
      */
     @Override
-    protected void asyncAction(ActionBean<T> actionBean) {
+    protected int asyncAction(ActionBean<T> actionBean) {
         Date startTime = DateTime.now();
         Map<Integer, T> list = new ConcurrentHashMap<>();
-        if (actionBean.getCurrQuantity() <= 0) {
-            return;
+        int size = actionBean.getCurrQuantity();
+        if (size <= 0) {
+            // 如果为0 则从队列中获取数据
+            size = blockingQueue.size();
+        } else if (size > blockingQueue.size()) {
+            // 如果大于队列中的数量，则从队列中获取数据
+            size = blockingQueue.size();
         }
-        for (int i = 0; i < actionBean.getCurrQuantity(); i++) {
+        while (list.size() < size) {
             T obj = blockingQueue.poll();
             if (obj == null) {
-                break;
+                continue;
             }
             list.put(obj.hashCode(), obj);
+        }
+        if (list.isEmpty()) {
+            return 0;
         }
         Date endTime;
         try {
@@ -118,6 +128,7 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
             endTime = DateTime.now();
             log.error("批量任务执行失败，执行时间:{}毫秒", e, DateUtil.between(startTime, endTime, DateUnit.MS));
         }
+        return list.size();
     }
 
     /**
@@ -127,15 +138,14 @@ public class BatchMapTask<T> extends AbstarceBaseTask<T> {
      * @return 追加成功的元素个数
      */
     @Override
-    protected int doOffer(Object... objs) {
-        for (int i = 0; i < objs.length; i++) {
-            Object obj = objs[i];
+    protected void doOffer(AtomicInteger currQuantity, Object... objs) {
+        for (Object obj : objs) {
             boolean a = this.blockingQueue.offer((T) obj);
+            currQuantity.incrementAndGet();
             if (BooleanUtil.isFalse(a)) {
-                return i;
+                return;
             }
         }
-        return objs.length;
     }
 
 }

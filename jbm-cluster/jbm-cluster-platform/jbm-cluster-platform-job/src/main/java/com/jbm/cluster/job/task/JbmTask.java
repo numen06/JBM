@@ -18,7 +18,7 @@ public class JbmTask {
     }
 
     public void params(String params) {
-        log.info("执行有参方法：" + params);
+        log.info("执行有参方法：{}", params);
     }
 
     public void noParams() {

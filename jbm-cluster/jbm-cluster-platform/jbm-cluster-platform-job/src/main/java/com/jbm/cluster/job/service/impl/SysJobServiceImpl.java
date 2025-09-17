@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -33,7 +34,8 @@ import java.util.List;
 @Slf4j
 @Service
 public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements SysJobService {
-    @Autowired
+
+    @Resource
     private Scheduler scheduler;
 
     /**
@@ -114,8 +116,7 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         }
         QueryWrapper<SysJob> sysJobQueryWrapper = this.currentQueryWrapper();
         sysJobQueryWrapper.lambda().eq(SysJob::getJobGroup, group);
-        List<SysJob> sysJobs = this.selectEntitysByWapper(sysJobQueryWrapper);
-        return sysJobs;
+        return this.selectEntitysByWapper(sysJobQueryWrapper);
     }
 
     /**
@@ -126,11 +127,13 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
      */
     @Override
     public List<SysJob> pauseGroup(String group) {
-        List<SysJob> sysJobs = this.selectJobsByGroup(group);
+        List<SysJob> sysJobs = self.selectJobsByGroup(group);
         this.pauseJobs(sysJobs);
         return sysJobs;
     }
 
+    @Resource
+    private SysJobService self;
     /**
      * 暂定多个任务
      * @param sysJobs
@@ -139,7 +142,7 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
     public void pauseJobs(List<SysJob> sysJobs) {
         sysJobs.forEach(sysJob -> {
             try {
-                this.pauseJob(sysJob);
+                self.pauseJob(sysJob);
             } catch (SchedulerException e) {
                 throw new RuntimeException(e);
             }

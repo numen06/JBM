@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
  **/
 @RestController
 @RequestMapping("/notification")
-@Api(value = "notification", tags = "通知中心")
+@Api(value = "notification", tags = "直达通知中心")
 public class NotificationController {
 
     @Autowired
     private NotificationDispatcher dispatcher;
 
 
-    @ApiOperation("短信通知")
+    @ApiOperation("发送短信通知")
     @PostMapping("/send/sms")
     public ResultBody<String> sendSms(SmsNotification smsNotification) {
 //        this.dispatcher.dispatch(smsNotification);
@@ -34,7 +34,7 @@ public class NotificationController {
         return ResultBody.ok();
     }
 
-    @ApiOperation("邮件通知")
+    @ApiOperation("发送邮件通知")
     @PostMapping("/send/email")
     public ResultBody<String> sendEmail(EmailNotification emailNotification) {
 //        this.dispatcher.dispatch(emailNotification);
@@ -43,7 +43,7 @@ public class NotificationController {
     }
 
 
-    @ApiOperation("发送站内信")
+    @ApiOperation("发送MQTT通知")
     @PostMapping("/send/mqtt")
     public ResultBody<String> sendmqtt(@RequestBody MqttNotification mqttNotification) {
 //        this.dispatcher.dispatch(mqttNotification);

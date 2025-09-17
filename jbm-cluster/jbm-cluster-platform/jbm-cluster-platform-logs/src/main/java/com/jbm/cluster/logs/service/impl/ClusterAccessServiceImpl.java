@@ -3,19 +3,20 @@ package com.jbm.cluster.logs.service.impl;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.jbm.cluster.logs.event.AccessEvent;
 import com.jbm.cluster.logs.form.ClusterAccessInfo;
 import com.jbm.cluster.logs.service.ClusterAccessService;
 import com.jbm.cluster.logs.service.GatewayLogsService;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * @author wesley
+ */
 @Service
 public class ClusterAccessServiceImpl implements ClusterAccessService {
 
@@ -37,11 +38,12 @@ public class ClusterAccessServiceImpl implements ClusterAccessService {
         this.load();
     }
 
+
     /**
      * 累加
      */
-    @EventListener
-    public void accumulate(AccessEvent accessEvent) {
+    @Override
+    public void accumulate(int count) {
         redisService.syncExecute("test", 3, TimeUnit.SECONDS, (key) -> {
             AtomicLong atomicTotal = new AtomicLong(clusterAccessInfo.getTotal());
             clusterAccessInfo.setTotal(atomicTotal.addAndGet(1));
@@ -53,7 +55,7 @@ public class ClusterAccessServiceImpl implements ClusterAccessService {
                 clusterAccessInfo.setTime(DateTime.now());
             }
             AtomicLong atomicToday = new AtomicLong(clusterAccessInfo.getToday());
-            clusterAccessInfo.setToday(atomicToday.addAndGet(1));
+            clusterAccessInfo.setToday(atomicToday.addAndGet(count));
             redisService.setCacheObject(ACCESS_CACHE_KEY, clusterAccessInfo);
         });
     }

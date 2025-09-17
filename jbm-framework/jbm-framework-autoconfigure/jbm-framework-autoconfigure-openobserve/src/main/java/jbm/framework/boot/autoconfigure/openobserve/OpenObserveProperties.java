@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class OpenObserveProperties {
 
     private String url;
+    private String otlp;
     private String organization;
     private String stream;
     private String username;

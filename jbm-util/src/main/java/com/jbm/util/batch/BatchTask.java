@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -33,49 +34,58 @@ public class BatchTask<T> extends AbstarceBaseTask<T> {
     public BatchTask(Long maxSubmitTime, TimeUnit timeUnit, Integer maxSubmitQuantity, Consumer<List<T>> action) {
         super(maxSubmitTime, timeUnit, maxSubmitQuantity);
         this.action = action;
-        this.blockingQueue = new ArrayBlockingQueue<>(Math.max(maxSubmitQuantity, 200));
+        this.blockingQueue = new ArrayBlockingQueue<>(Math.max(maxSubmitQuantity, 10));
     }
 
 
+    @SafeVarargs
     @Override
-    protected int doOffer(T... objs) {
-        int count = 0;
+    protected final void doOffer(AtomicInteger currQuantity, T... objs) {
         for (T obj : objs) {
             if (blockingQueue.offer(obj)) {
-                count++;
+                currQuantity.incrementAndGet();
             } else {
-                break; // 队列满，停止
+                break;
             }
         }
-        return count;
     }
 
     @Override
-    protected void doOfferBlocking(T obj) throws InterruptedException {
-        blockingQueue.put(obj); // 阻塞直到成功
+    protected void doOfferBlocking(AtomicInteger currQuantity, T obj) throws InterruptedException {
+        // 阻塞直到成功
+        blockingQueue.put(obj);
+        currQuantity.incrementAndGet();
     }
 
     @Override
-    protected void asyncAction(ActionBean<T> actionBean) {
+    protected int asyncAction(ActionBean<T> actionBean) {
         int size = actionBean.getCurrQuantity();
-        if (size <= 0) return;
-
-        List<T> list = new ArrayList<>(size);
-        blockingQueue.drainTo(list, size); // 安全取出最多 size 个
-
-        // 补齐：如果 drainTo 没取够（并发消费），再 poll 一下
-        while (list.size() < size && !blockingQueue.isEmpty()) {
-            T item = blockingQueue.poll();
-            if (item != null) list.add(item);
+        final List<T> list = new ArrayList<>();
+        if (size <= 0) {
+            // 如果为0 则从队列中获取数据
+            size = blockingQueue.size();
+        } else if (size > blockingQueue.size()) {
+            // 如果大于队列中的数量，则从队列中获取数据
+            size = blockingQueue.size();
         }
-
+//        log.info("需要从队列中取出{}个，目前队列中有{}个", size, blockingQueue.size() );
+        // 从队列中获取数据
+        while (list.size() < size) {
+            T obj = blockingQueue.poll();
+            list.add(obj);
+        }
+        if (list.isEmpty()) {
+            return 0;
+        }
+//        log .info("从队列中取出{}个，目前队列中有{}个", list.size(), blockingQueue.size() );
         try {
             action.accept(list);
             log.debug("批量任务执行成功，数量：{}，触发方式：{}，耗时：{}ms",
                     list.size(), actionBean.getActionType(),
                     DateUtil.between(actionBean.getSubmitTime(), DateTime.now(), DateUnit.MS));
         } catch (Exception e) {
-            log.error("批量任务执行失败，数量：" + list.size(), e);
+            log.error("批量任务执行失败，数量：{}", list.size(), e);
         }
+        return list.size();
     }
 }

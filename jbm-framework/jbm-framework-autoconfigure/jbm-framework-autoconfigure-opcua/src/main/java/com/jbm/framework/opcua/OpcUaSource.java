@@ -3,6 +3,8 @@ package com.jbm.framework.opcua;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
+import org.eclipse.milo.opcua.stack.core.types.enumerated.MessageSecurityMode;
 
 @Data
 public class OpcUaSource {
@@ -25,5 +27,15 @@ public class OpcUaSource {
                 this.getPort(),
                 StrUtil.blankToDefault(this.getPath(), "")
         );
+    }
+
+    private OpcUaSecurityPolicy securityPolicy;
+
+    @Data
+    public static class OpcUaSecurityPolicy {
+        private MessageSecurityMode mode;
+        private SecurityPolicy policy;
+        private String username;
+        private String password;
     }
 }
