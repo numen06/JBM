@@ -1,14 +1,14 @@
 package com.jbm.test;
 
+import cn.hutool.core.lang.Console;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.IdUtil;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
+import jbm.framework.boot.autoconfigure.openobserve.LogPolling;
 import jbm.framework.boot.autoconfigure.openobserve.OpenLoggerProvider;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
+import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringApplication;
@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 @Slf4j
 @SpringBootApplication
@@ -29,6 +30,8 @@ public class OpenObserveBootTest {
     public static class TestEventListener implements InitializingBean {
         @Resource
         private OpenTelemetry openTelemetry;
+        @Resource
+        private OpenObserveTemplate openObserveTemplate;
 
         /**
          *
@@ -38,44 +41,23 @@ public class OpenObserveBootTest {
             log.info("初始化完成");
 
             log.info("开始测试");
-            OpenLoggerProvider openLoggerProvider = new OpenLoggerProvider(null,openTelemetry);
-            openLoggerProvider.info("测试");
-            Tracer tracer =  openTelemetry.getTracer("test-tracer");
-            while ( true){
-
-                // 创建并开始一个 Span
-                Span span = tracer.spanBuilder("test-operation")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan();
-
-                try (Scope scope = span.makeCurrent()) {
-                    System.out.println("开始执行业务逻辑...");
-
-                    // 模拟业务处理
-                    Thread.sleep(100);
-
-                    // 添加事件
-                    span.addEvent("user.login");
-                    span.setAttribute("user.id", "12345");
-                    span.setAttribute("http.method", "GET");
-                    span.setAttribute("http.url", "/api/login");
-
-                    System.out.println("业务逻辑执行完成");
-                } catch (Exception e) {
-                    span.recordException(e);
-                } finally {
-                    span.end(); // ✅ 必须调用 end()
+            OpenLoggerProvider openLoggerProvider = new OpenLoggerProvider(null, openTelemetry);
+            LogPolling logPolling = new LogPolling(openObserveTemplate);
+            QueryBean queryBean = QueryBean.defaultQuery( "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs");
+            queryBean.getQuery().setSize(-1);
+            logPolling.look(queryBean, (result)->{
+                for (Map<String, Object> row : result.getHits()) {
+                    Console.log(row);
                 }
-                ThreadUtil.sleep(500);
+            });
+            while (true) {
+                openLoggerProvider.info("测试" + IdUtil.fastUUID());
+                ThreadUtil.sleep(1000);
             }
         }
 
 
-
-
     }
-
-
 
 
 }

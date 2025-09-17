@@ -30,17 +30,17 @@
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
-            <version>1.38.0</version>
+            <version>1.54.0</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-sdk</artifactId>
-            <version>1.38.0</version>
+            <version>1.54.0</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
-            <version>1.38.0</version>
+            <version>1.54.0</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
