@@ -18,11 +18,12 @@ public class LogPolling extends AbstractScheduledService {
 
     private final OpenObserveTemplate openObserveTemplate;
 
-    private LinkedBlockingQueue<QueryResult> queryBeanQueue = new LinkedBlockingQueue<>(10);
+    private final LinkedBlockingQueue<QueryResult> queryBeanQueue = new LinkedBlockingQueue<>(10);
 
     public LogPolling(OpenObserveTemplate openObserveTemplate) {
         this.openObserveTemplate = openObserveTemplate;
         this.startAsync();
+
     }
 
     private final AtomicLong lastTime = new AtomicLong(System.currentTimeMillis());
@@ -34,9 +35,11 @@ public class LogPolling extends AbstractScheduledService {
     public void look(QueryBean queryBean, Consumer<QueryResult> queryResultConsumer) {
         this.queryBean = queryBean;
         initQueryBean();
+        //等待服务启动
+        this.awaitRunning();
         //异步回调
         executor.execute(() -> {
-            while (true) {
+            while (this.isRunning()) {
                 QueryResult queryResult = null;
                 try {
                     queryResult = queryBeanQueue.take();
@@ -107,6 +110,6 @@ public class LogPolling extends AbstractScheduledService {
      */
     @Override
     protected Scheduler scheduler() {
-        return Scheduler.newFixedRateSchedule(1, 1, TimeUnit.SECONDS);
+        return Scheduler.newFixedRateSchedule(0, 1, TimeUnit.SECONDS);
     }
 }
