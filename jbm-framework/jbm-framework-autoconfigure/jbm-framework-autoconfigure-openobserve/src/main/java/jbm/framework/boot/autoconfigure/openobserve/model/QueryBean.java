@@ -9,8 +9,8 @@ import java.util.Map;
 public class QueryBean {
 
 
-    @JSONField(name = "search_type")
-    private String searchType = "ui";
+//    @JSONField(name = "search_type")
+//    private String searchType = "ui";
     private Integer timeout = 0;
     @JSONField(name = "query")
     private Query query = new Query();
