@@ -123,7 +123,6 @@ public class OpenObserveTemplate implements InitializingBean {
                 .addPathSegment(StrUtil.toUnderlineCase(s))
                 .addPathSegment("_json");
         final String url = urlBuilder.build();
-        final String credential = HttpUtil.buildBasicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword(), Charsets.UTF_8);
         // 构建 Request Body
         RequestBody requestBody = RequestBody.create(
                 sb.toString(),
