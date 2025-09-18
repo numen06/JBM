@@ -5,7 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.*;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.PropertyNamingStrategy;
@@ -70,6 +70,7 @@ public class OpenObserveTemplate implements InitializingBean {
 
     /**
      * 发送日志
+     *
      * @param log
      * @param stream
      */
@@ -83,6 +84,7 @@ public class OpenObserveTemplate implements InitializingBean {
 
     /**
      * 发送日志
+     *
      * @param logs
      * @param stream
      */
@@ -105,6 +107,7 @@ public class OpenObserveTemplate implements InitializingBean {
 
     /**
      * 发送日志
+     *
      * @param json
      * @param stream
      */
@@ -265,32 +268,29 @@ public class OpenObserveTemplate implements InitializingBean {
                 requestBodyStr,
                 MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
         );
-
         // 构建请求
         Request request = getBaseRequest(urlBuilder.build()).post(requestBody).build();
+        QueryResult queryResult = call(request, QueryResult.class);
+        // 设置扫描记录数
+        Long total = selectCount(queryBean);
+        queryResult.setScanRecords(total);
+        return queryResult;
+    }
+
+    private <T> T call(Request request, Class<T> clazz) {
         try (Response response = okHttpClient.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                String responseBody = response.body().string();
-
-                // 解析结果
-                QueryResult queryResult = JSON.parseObject(responseBody, QueryResult.class);
-
-                // 设置扫描记录数
-                Long total = selectCount(queryBean);
-                queryResult.setScanRecords(total);
-
-                return queryResult;
-            } else {
-                // ❌ 请求失败
-                String errorBody = response.body() != null ? response.body().string() : "未知错误";
-                log.error("请求信息: {}", requestBodyStr);
-                log.error("错误信息: HTTP {} - {}", response.code(), errorBody);
-
-                throw ServiceException.of("OpenObserve 请求失败: " + response.code() + ", " + errorBody);
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw ServiceException.of("响应体为空");
             }
-
+            String responseBody = body.string();
+            if (response.isSuccessful()) {
+                return JSON.parseObject(responseBody, clazz);
+            } else {
+                throw ServiceException.of("请求失败: " + response.code() + ", 响应: " + responseBody);
+            }
         } catch (IOException e) {
-            log.error("请求异常: {}", requestBodyStr, e);
+            log.error("网络请求异常: {}", request.url(), e);
             throw ServiceException.of("网络请求异常: " + e.getMessage());
         }
     }
@@ -317,6 +317,8 @@ public class OpenObserveTemplate implements InitializingBean {
                 .addPathSegment("_search");
         QueryBean countQueryBean = new QueryBean();
         countQueryBean.setQuery(query);
+        countQueryBean.getQuery().setFrom(0);
+        countQueryBean.getQuery().setSize(-1);
         String requestBodyStr = JSON.toJSONString(countQueryBean);
 
         RequestBody requestBody = RequestBody.create(
