@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.satoken.core.dao;
 
 import cn.dev33.satoken.dao.SaTokenDao;
+import cn.dev33.satoken.dao.SaTokenDaoDefaultImpl;
 import cn.dev33.satoken.util.SaFoxUtil;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @author Lion Li
  */
 //@Component
-public class RedisSaTokenDao implements SaTokenDao {
+public class RedisSaTokenDao extends SaTokenDaoDefaultImpl {
 
     @Autowired
     private RedisService redisService;
@@ -170,11 +171,10 @@ public class RedisSaTokenDao implements SaTokenDao {
     /**
      * 搜索数据
      */
-    @Override
-    public List<String> searchData(String prefix, String keyword, int start, int size) {
+    public List<String> searchData(String prefix, String keyword, int start, int size, boolean sortType) {
         Collection<String> keys = redisService.keys(prefix + "*" + keyword + "*");
         List<String> list = new ArrayList<>(keys);
-        return SaFoxUtil.searchList(list, start, size);
+        return SaFoxUtil.searchList(list, prefix, keyword, start, size, sortType);
     }
 
 }

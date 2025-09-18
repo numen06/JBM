@@ -15,7 +15,7 @@ import lombok.Data;
  */
 @Data
 @ApiModel(value = "分页查询")
-public class EntityPageSearchForm<Entity> extends EntityRequsetForm<Entity> {
+public class EntityPageSearchForm<Entity> extends EntityRequestForm<Entity> {
 
     @ApiModelProperty(value = "分页对象")
     private PageForm pageForm;

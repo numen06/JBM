@@ -452,7 +452,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<UserInfoStatistics> getUserInfoStatistics() {
         return ResultBody.callback(() -> {
             UserInfoStatistics userInfoStatistics = new UserInfoStatistics();
-            List<String> list = StpUtil.searchTokenValue("", -1, 0);
+            List<String> list = StpUtil.searchTokenValue("", -1, 0, true);
             userInfoStatistics.setOnlineUser(new Long(list.size()));
             userInfoStatistics.setUsersTotal(baseUserService.count(new BaseUser()));
             return userInfoStatistics;

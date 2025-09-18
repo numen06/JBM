@@ -11,7 +11,7 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.EntityPageSearchForm;
-import com.jbm.framework.usage.form.EntityRequsetForm;
+import com.jbm.framework.usage.form.EntityRequestForm;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.ApiOperation;
@@ -36,15 +36,15 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     }
 
 
-    protected void validator(EntityRequsetForm<Entity> entityRequsetForm) throws Exception {
-        if (ObjectUtil.isNull(entityRequsetForm)) {
+    protected void validator(EntityRequestForm<Entity> entityRequestForm) throws Exception {
+        if (ObjectUtil.isNull(entityRequestForm)) {
             throw new ServiceException("参数错误");
         }
 
     }
 
-    protected Entity validatorMasterData(EntityRequsetForm<Entity> entityRequsetForm, Boolean valNull) throws Exception {
-        Entity entity = entityRequsetForm.tryGet(service.currentEntityClass());
+    protected Entity validatorMasterData(EntityRequestForm<Entity> entityRequestForm, Boolean valNull) throws Exception {
+        Entity entity = entityRequestForm.tryGet(service.currentEntityClass());
         if (valNull) {
             if (ObjectUtil.isNull(entity)) {
                 throw new ServiceException("参数错误");
@@ -53,8 +53,8 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
         return entity;
     }
 
-    protected List<Entity> validatorMasterDataList(EntityRequsetForm<Entity> entityRequsetForm, Boolean valNull) throws Exception {
-        List<Entity> entitys = entityRequsetForm.tryGetList(service.currentEntityClass());
+    protected List<Entity> validatorMasterDataList(EntityRequestForm<Entity> entityRequestForm, Boolean valNull) throws Exception {
+        List<Entity> entitys = entityRequestForm.tryGetList(service.currentEntityClass());
         if (valNull) {
             if (CollectionUtil.isEmpty(entitys)) {
                 throw new ServiceException("列表参数为空");
@@ -91,16 +91,16 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     /**
      * 列表查询
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
     @ApiOperation(value = "获取列表", notes = "获取列表")
     @PostMapping("/list")
     @Override
-    public ResultBody<List<Entity>> list(@RequestBody(required = false) EntityRequsetForm<Entity> entityRequsetForm) {
+    public ResultBody<List<Entity>> list(@RequestBody(required = false) EntityRequestForm<Entity> entityRequestForm) {
         try {
-            validator(entityRequsetForm);
-            Entity entity = validatorMasterData(entityRequsetForm, false);
+            validator(entityRequestForm);
+            Entity entity = validatorMasterData(entityRequestForm, false);
             List<Entity> list = service.selectEntitys(entity);
             return ResultBody.success(list, "查询列表成功");
         } catch (Exception e) {
@@ -111,16 +111,16 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     /**
      * 查询实体
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
     @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
     @PostMapping("/model")
     @Override
-    public ResultBody<Entity> model(@RequestBody(required = false) EntityRequsetForm<Entity> entityRequsetForm) {
+    public ResultBody<Entity> model(@RequestBody(required = false) EntityRequestForm<Entity> entityRequestForm) {
         try {
-            validator(entityRequsetForm);
-            Entity entity = validatorMasterData(entityRequsetForm, true);
+            validator(entityRequestForm);
+            Entity entity = validatorMasterData(entityRequestForm, true);
             entity = service.selectEntity(entity);
             return ResultBody.success(entity, "查询对象成功");
         } catch (Exception e) {
@@ -133,16 +133,16 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     /**
      * 保存
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
     @ApiOperation(value = "保存单个实体", notes = "保存单个实体")
     @PostMapping("/save")
     @Override
-    public ResultBody<Entity> save(@RequestBody(required = false) EntityRequsetForm<Entity> entityRequsetForm) {
+    public ResultBody<Entity> save(@RequestBody(required = false) EntityRequestForm<Entity> entityRequestForm) {
         try {
-            validator(entityRequsetForm);
-            Entity entity = validatorMasterData(entityRequsetForm, true);
+            validator(entityRequestForm);
+            Entity entity = validatorMasterData(entityRequestForm, true);
             entity = service.saveEntity(entity);
             return ResultBody.success(entity, "保存对象成功");
         } catch (Exception e) {
@@ -153,16 +153,16 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     /**
      * 保存多个对象
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
     @ApiOperation(value = "批量保存", notes = "批量保存")
     @PostMapping("/saveBatch")
     @Override
-    public ResultBody<List<Entity>> saveBatch(@RequestBody(required = false) EntityRequsetForm<Entity> entityRequsetForm) {
+    public ResultBody<List<Entity>> saveBatch(@RequestBody(required = false) EntityRequestForm<Entity> entityRequestForm) {
         try {
-            validator(entityRequsetForm);
-            List<Entity> entitys = validatorMasterDataList(entityRequsetForm, true);
+            validator(entityRequestForm);
+            List<Entity> entitys = validatorMasterDataList(entityRequestForm, true);
             service.saveBatch(entitys);
             return ResultBody.success(entitys, "保存对象成功");
         } catch (Exception e) {
@@ -193,16 +193,16 @@ public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity
     /**
      * 删除
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
     @ApiOperation(value = "删除实体", notes = "删除实体")
     @PostMapping("/delete")
     @Override
-    public ResultBody<Boolean> remove(@RequestBody(required = false) EntityRequsetForm<Entity> entityRequsetForm) {
+    public ResultBody<Boolean> remove(@RequestBody(required = false) EntityRequestForm<Entity> entityRequestForm) {
         try {
-            validator(entityRequsetForm);
-            Entity entity = validatorMasterData(entityRequsetForm, true);
+            validator(entityRequestForm);
+            Entity entity = validatorMasterData(entityRequestForm, true);
             if (service.deleteEntity(entity)) {
                 return ResultBody.success(true, "删除对象成功");
             } else {

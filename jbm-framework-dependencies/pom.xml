@@ -66,6 +66,7 @@
         <hivemq.version>1.3.9</hivemq.version>
         <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
+        <mybatis.version>3.5.6</mybatis.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
         <hutool.version>5.8.34</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
@@ -88,7 +89,7 @@
         <swagger.version>3.0.0</swagger.version>
         <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
-        <satoken.version>1.30.0.RC</satoken.version>
+        <satoken.version>1.32.0</satoken.version>
         <mapstruct.version>1.5.0.RC1</mapstruct.version>
         <bascomtask.version>2.1.0</bascomtask.version>
         <oshi-core.version>6.4.2</oshi-core.version>
