@@ -34,10 +34,10 @@
         <spring.boot.version>2.6.4</spring.boot.version>
         <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
         <!--加入alibaba cloud-->
-        <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
+        <spring.cloud.alibaba.version>2023.0.3.3</spring.cloud.alibaba.version>
         <alibaba.nacos.version>2.3.0</alibaba.nacos.version>
         <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
-        <!-- 7.0add-->
+        <!-- 8.0-->
         <arthas.version>3.6.2</arthas.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -58,7 +58,6 @@
         <jdk.version>17</jdk.version>
         <jbm.framework.version>8.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
-        <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
         <fastjson2.version>2.0.15</fastjson2.version>
         <minio.version>8.3.0</minio.version>
@@ -322,11 +321,6 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-camel</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-autoconfigure-dubbo</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
             <dependency>
@@ -862,58 +856,6 @@
                 <groupId>com.caucho</groupId>
                 <artifactId>hessian</artifactId>
                 <version>${hessian.version}</version>
-            </dependency>
-            <!-- dubbo -->
-            <dependency>
-                <groupId>org.apache.dubbo</groupId>
-                <artifactId>dubbo</artifactId>
-                <version>${dubbo.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-beans</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-web</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>mina-core</artifactId>
-                        <groupId>org.apache.mina</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>jedis</artifactId>
-                        <groupId>redis.clients</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-expression</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>spring-core</artifactId>
-                        <groupId>org.springframework</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>spring-context</artifactId>
-                        <groupId>org.springframework</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>spring-aop</artifactId>
-                        <groupId>org.springframework</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>netty</artifactId>
-                        <groupId>io.netty</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>guava</artifactId>
-                        <groupId>com.google.guava</groupId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <!-- <dependency> -->
             <!-- <groupId>io.netty</groupId> -->

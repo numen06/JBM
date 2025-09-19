@@ -10,7 +10,6 @@
     <artifactId>jbm-framework-autoconfigure</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>jbm-framework-autoconfigure-dubbo</module>
         <module>jbm-framework-autoconfigure-redis</module>
         <module>jbm-framework-autoconfigure-mongo</module>
         <module>jbm-framework-autoconfigure-mybatis</module>
