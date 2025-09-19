@@ -1,7 +1,6 @@
 package jbm.framework.boot.autoconfigure.openobserve;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
@@ -10,11 +9,9 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
@@ -32,13 +29,7 @@ public class OpenObserveConfiguration {
     @ConditionalOnProperty(prefix = "open-observe", name = "grpc")
     public OpenTelemetry openTelemetry(OpenObserveProperties openObserveProperties) {
         // 获取OpenTelemetry Tracer
-        Resource resource = Resource.getDefault()
-                .merge(Resource.create(Attributes.of(
-                        ResourceAttributes.SERVICE_NAME, "test",  // 应用名。
-                        ResourceAttributes.SERVICE_VERSION, "1.0",  // 版本号。
-                        ResourceAttributes.DEPLOYMENT_ENVIRONMENT, "dev", // 部署环境。
-                        ResourceAttributes.HOST_NAME, "wesley" // 请将 ${host-name} 替换为您的主机名。
-                )));
+        Resource resource = Resource.getDefault();
 
 //        OtlpGrpcSpanExporter logSpan = OtlpGrpcSpanExporter.builder()
 //                .setEndpoint(openObserveProperties.getOtlp())
