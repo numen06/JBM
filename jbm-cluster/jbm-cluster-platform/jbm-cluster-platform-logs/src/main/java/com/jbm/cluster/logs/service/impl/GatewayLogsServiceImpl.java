@@ -40,7 +40,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         IPage<GatewayLogs> page = ServiceUtils.buildPage(gatewayLogsForm.getPageForm());
 //        List<GatewayLogs> list = gatewayLogsMapper.selectList(page, queryWrapper);
         String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectOperationLogs";
-        Map<String, Object> params = BeanUtil.beanToMap(gatewayLogsForm.getGatewayLogs());
+        Map<String, Object> params = BeanUtil.beanToMap(gatewayLogsForm.getGatewayLogs(), false, true);
         params.put("beginTime", gatewayLogsForm.getBeginTime());
         params.put("endTime", gatewayLogsForm.getEndTime());
         QueryResult queryResult = openObserveTemplate.selectLogs(statement, params, gatewayLogsForm.getBeginTime(), gatewayLogsForm.getEndTime(), gatewayLogsForm.getPageForm());
@@ -88,7 +88,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
     }
 
 
-    private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100,new Consumer<List<GatewayLogs>>() {
+    private final BatchTask<GatewayLogs> batchTask = new BatchTask<>(5L, TimeUnit.SECONDS, 100, new Consumer<List<GatewayLogs>>() {
         @Override
         public void accept(List<GatewayLogs> gatewayLogs) {
             openObserveTemplate.postLogs(gatewayLogs, GatewayLogs.class.getSimpleName());

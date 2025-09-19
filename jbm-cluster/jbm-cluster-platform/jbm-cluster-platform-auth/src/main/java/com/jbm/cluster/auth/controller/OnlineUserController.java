@@ -44,7 +44,7 @@ public class OnlineUserController {
     @PostMapping("/pageList")
     public ResultBody<DataPaging<SysUserOnline>> pageList(@RequestBody OnlineUserSearchForm onlineUserSearchForm) {
         // 获取所有未过期的 token
-        List<String> keys = StpUtil.searchTokenValue("", -1, 0);
+        List<String> keys = StpUtil.searchTokenValue("", -1, 0, true);
         List<SysUserOnline> userOnlineList = new ArrayList<SysUserOnline>();
         for (String key : keys) {
             String token = key.replace(JbmCacheConstants.LOGIN_TOKEN_KEY, "");

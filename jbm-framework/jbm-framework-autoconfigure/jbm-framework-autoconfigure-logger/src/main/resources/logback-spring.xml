@@ -7,7 +7,6 @@
     <property name="log.pattern"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{50}) - %highlight(%msg) %n"/>
 
-
     <!-- 控制台输出 -->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -104,6 +103,7 @@
     <logger name="com.jbm" level="info"/>
     <!-- Spring日志级别控制  -->
     <logger name="org.springframework" level="warn"/>
+
 
     <root level="info">
         <appender-ref ref="console"/>

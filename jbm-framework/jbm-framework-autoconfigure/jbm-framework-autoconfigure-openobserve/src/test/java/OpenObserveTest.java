@@ -1,6 +1,7 @@
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import com.jbm.framework.usage.paging.PageForm;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveProperties;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
@@ -33,6 +34,7 @@ public class OpenObserveTest {
         String log = ResourceUtil.readUtf8Str("gateway_logs.json");
 //        String log = ResourceUtil.readUtf8Str("test.json");
         openObserveTemplate.postLog(log,"test");
+        ThreadUtil.safeSleep(2000);
     }
 
     @Test
@@ -54,7 +56,6 @@ public class OpenObserveTest {
 //        System.out.println(JSON.toJSONString(queryResult.getHits()));
 
     }
-
     @Test
     public void selectByMapper() {
         String statement = "com.jbm.cluster.logs.mapper.GatewayLogsMapper.selectLogs";

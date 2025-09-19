@@ -4,7 +4,7 @@ import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.EntityPageSearchForm;
-import com.jbm.framework.usage.form.EntityRequsetForm;
+import com.jbm.framework.usage.form.EntityRequestForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -20,37 +20,37 @@ public interface IMultiPlatformController<Entity extends MultiPlatformEntity> {
      */
     ResultBody<DataPaging<Entity>> pageList(EntityPageSearchForm<Entity> entityPageSearchForm);
 
-    ResultBody<List<Entity>> list(EntityRequsetForm<Entity> entityRequsetForm);
+    ResultBody<List<Entity>> list(EntityRequestForm<Entity> entityRequestForm);
 
     /**
      * 获取单一对对象
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
-    ResultBody<Entity> model(EntityRequsetForm<Entity> entityRequsetForm);
+    ResultBody<Entity> model(EntityRequestForm<Entity> entityRequestForm);
 
     /**
      * 保存单一对象
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
-    ResultBody<Entity> save(EntityRequsetForm<Entity> entityRequsetForm);
+    ResultBody<Entity> save(EntityRequestForm<Entity> entityRequestForm);
 
     /**
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
-    ResultBody<Boolean> remove(EntityRequsetForm<Entity> entityRequsetForm);
+    ResultBody<Boolean> remove(EntityRequestForm<Entity> entityRequestForm);
 
     /**
      * 保存多个对象
      *
-     * @param entityRequsetForm
+     * @param entityRequestForm
      * @return
      */
-    ResultBody<List<Entity>> saveBatch(EntityRequsetForm<Entity> entityRequsetForm);
+    ResultBody<List<Entity>> saveBatch(EntityRequestForm<Entity> entityRequestForm);
 
     /**
      * 生产假数据

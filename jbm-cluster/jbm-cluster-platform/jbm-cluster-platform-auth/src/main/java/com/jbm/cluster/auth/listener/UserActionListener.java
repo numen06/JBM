@@ -2,6 +2,7 @@ package com.jbm.cluster.auth.listener;
 
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.listener.SaTokenListener;
+import cn.dev33.satoken.listener.SaTokenListenerForSimple;
 import cn.dev33.satoken.stp.SaLoginModel;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class UserActionListener implements SaTokenListener {
+public class UserActionListener extends SaTokenListenerForSimple {
 
     private final SaTokenConfig tokenConfig;
 
@@ -90,33 +91,33 @@ public class UserActionListener implements SaTokenListener {
         log.info("user doReplaced, useId:{}, token:{}", loginId, tokenValue);
     }
 
-    /**
-     * 每次被封禁时触发
-     */
-    @Override
-    public void doDisable(String loginType, Object loginId, long disableTime) {
-    }
+//    /**
+//     * 每次被封禁时触发
+//     */
+//    @Override
+//    public void doDisable(String loginType, Object loginId, long disableTime) {
+//    }
+//
+//    /**
+//     * 每次被解封时触发
+//     */
+//    @Override
+//    public void doUntieDisable(String loginType, Object loginId) {
+//    }
 
-    /**
-     * 每次被解封时触发
-     */
-    @Override
-    public void doUntieDisable(String loginType, Object loginId) {
-    }
-
-    /**
-     * 每次创建Session时触发
-     */
-    @Override
-    public void doCreateSession(String id) {
-    }
-
-    /**
-     * 每次注销Session时触发
-     */
-    @Override
-    public void doLogoutSession(String id) {
-    }
+//    /**
+//     * 每次创建Session时触发
+//     */
+//    @Override
+//    public void doCreateSession(String id) {
+//    }
+//
+//    /**
+//     * 每次注销Session时触发
+//     */
+//    @Override
+//    public void doLogoutSession(String id) {
+//    }
 
 
 }

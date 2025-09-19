@@ -1,24 +1,21 @@
 package jbm.framework.boot.autoconfigure.openobserve;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.*;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.PropertyNamingStrategy;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.usage.paging.PageForm;
-import com.jbm.util.token.TokenException;
-import com.jbm.util.token.TokenInfo;
-import com.jbm.util.token.TokenManager;
-import com.jbm.util.token.TokenProvider;
 import jbm.framework.boot.autoconfigure.openobserve.model.PostLogResult;
 import jbm.framework.boot.autoconfigure.openobserve.model.Query;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
-import jdk.nashorn.internal.parser.Token;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.io.Charsets;
@@ -36,13 +33,10 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.net.HttpCookie;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -50,17 +44,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @author wesley
+ */
 @Slf4j
-public class OpenObserveTemplate implements InitializingBean, TokenProvider {
+public class OpenObserveTemplate implements InitializingBean {
 
-    private final TokenManager opobserveTokenManager;
+    // 共享的 OkHttpClient 实例（推荐单例）
+    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            // 任务提交和查询都是轻量操作
+            .readTimeout(15, TimeUnit.SECONDS)
+            .callTimeout(30, TimeUnit.SECONDS)
+            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
+            .build();
+
     private final OpenObserveProperties openObserveProperties;
+
+    final String credential;
 
     public OpenObserveTemplate(OpenObserveProperties openObserveProperties) {
         this.openObserveProperties = openObserveProperties;
-        this.opobserveTokenManager = new TokenManager(this);
+        credential = HttpUtil.buildBasicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword(), Charsets.UTF_8);
     }
 
+    /**
+     * 发送日志
+     *
+     * @param log
+     * @param stream
+     */
     public void postLog(Object log, String stream) {
         if (log instanceof String) {
             this.postLogStr((String) log, stream);
@@ -69,6 +82,12 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         postLogs(CollUtil.newArrayList(log), stream);
     }
 
+    /**
+     * 发送日志
+     *
+     * @param logs
+     * @param stream
+     */
     public void postLogs(List<?> logs, String stream) {
 //        if (logs.size() == 1) {
 //            Object log = logs.get(0);
@@ -85,41 +104,13 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         this.postLogStr(json, stream);
     }
 
-//    private String auth_tokens = null;
 
-    public String login() {
-        String url = StrUtil.format("{}/auth/login", openObserveProperties.getUrl());
-        HttpRequest request = HttpUtil.createPost(url);
-        request.contentType("application/json");
-        JSONObject loginInfo = new JSONObject();
-        loginInfo.put("name", openObserveProperties.getUsername());
-        loginInfo.put("password", openObserveProperties.getPassword());
-        request.body(JSON.toJSONString(loginInfo));
-        try (HttpResponse response = request.execute()) {
-            if (response.getStatus() != HttpStatus.HTTP_OK) {
-                throw ServiceException.of("登录错误");
-            } else {
-                String body = response.body();
-                JSONObject jsonObject = JSON.parseObject(body);
-                boolean status = jsonObject.getBoolean("status");
-                if (!status) {
-                    throw ServiceException.of("认证失败");
-                }
-            }
-
-            return response.getCookieValue("auth_tokens");
-        }
-    }
-
-    // 共享的 OkHttpClient 实例（推荐单例）
-    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)  // 任务提交和查询都是轻量操作
-            .callTimeout(30, TimeUnit.SECONDS)
-            .connectionPool(new ConnectionPool(50, 5, TimeUnit.MINUTES))
-            .build();
-
-
+    /**
+     * 发送日志
+     *
+     * @param json
+     * @param stream
+     */
     public void postLogStr(String json, String stream) {
         String firstChar = StrUtil.sub(json, 0, 1);
         StringBuilder sb = new StringBuilder(json);
@@ -129,36 +120,21 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
             sb.append("]");
         }
         final String s = StrUtil.isNotEmpty(stream) ? stream : openObserveProperties.getStream();
-        final String url = StrUtil.format("{}/api/{}/{}/_json", openObserveProperties.getUrl(), openObserveProperties.getOrganization(), StrUtil.toUnderlineCase(s));
-//            HttpRequest request = HttpUtil.createPost(url).basicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword());
-//            request.contentType(ContentType.JSON.getValue());
-//            request.body(sb.toString());
-//            try (HttpResponse response = request.execute()) {
-//                if (response.getStatus() != HttpStatus.HTTP_OK) {
-//                    log.error("发送日志错误信息:{}", response.body());
-//                    throw ServiceException.of(response.body());
-//                }else{
-//                    PostLogResult postLogResult = JSON.parseObject(response.body(), PostLogResult.class);
-//                    log.info("发送日志成功:{}条,失败:{}条。", postLogResult.getAllSuccessful(), postLogResult.getAllFailed());
-//                }
-//            }
-
-
-        final String credential = HttpUtil.buildBasicAuth(openObserveProperties.getUsername(), openObserveProperties.getPassword(), Charsets.UTF_8);
+        UrlBuilder urlBuilder = UrlBuilder.of(openObserveProperties.getUrl())
+                .addPath("api/")
+                .addPathSegment(openObserveProperties.getOrganization())
+                .addPathSegment(StrUtil.toUnderlineCase(s))
+                .addPathSegment("_json");
+        final String url = urlBuilder.build();
         // 构建 Request Body
         RequestBody requestBody = RequestBody.create(
                 sb.toString(),
                 MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
         );
-
-
         // 构建请求
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", credential)
+        Request request = this.getBaseRequest(url)
                 .post(requestBody)
                 .build();
-
         // 同步发送
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -187,29 +163,36 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         });
     }
 
-    public HttpRequest getRequest(String url) {
-        return getRequest(url, Method.POST, ContentType.JSON);
+
+    private Request.Builder getBaseRequest(String url) {
+        // 构建请求
+        return new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", credential);
     }
 
-    public HttpRequest getRequest(String url, Method method, ContentType contentType) {
-        HttpRequest request = HttpUtil.createRequest(method, url);
-        request.contentType(contentType.getValue());
-        try {
-            request.cookie(new HttpCookie("auth_tokens", opobserveTokenManager.getTokenValue()));
-        } catch (Exception e) {
-            log.error("获取token失败", e);
-        }
-        return request;
-    }
+
+//    public HttpRequest getRequest(String url) {
+//        return getRequest(url, Method.POST, ContentType.JSON);
+//    }
+//
+//    public HttpRequest getRequest(String url, Method method, ContentType contentType) {
+//        HttpRequest request = HttpUtil.createRequest(method, url);
+//        request.contentType(contentType.getValue());
+//        try {
+//            request.cookie(new HttpCookie("auth_tokens", opobserveTokenManager.getTokenValue()));
+//        } catch (Exception e) {
+//            log.error("获取token失败", e);
+//        }
+//        return request;
+//    }
 
     public QueryResult selectLogs(String statement, Map<String, Object> params, PageForm pageForm) {
         return selectLogs(statement, params, null, null, pageForm);
     }
 
     public QueryResult selectLogs(String statement, Map<String, Object> params, Date beginTime, Date endTime, PageForm pageForm) {
-        QueryBean queryBean = new QueryBean();
-        String sql = getGeneratedSql(statement, params);
-        queryBean.getQuery().setSql(sql);
+        QueryBean queryBean = QueryBean.defaultQuery(statement, params);
         int from = (pageForm.getCurrPage() - 1) * pageForm.getPageSize();
         queryBean.getQuery().setFrom(Math.max(from, 0));
         queryBean.getQuery().setSize(pageForm.getPageSize());
@@ -225,34 +208,95 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         return selectLogs(queryBean);
     }
 
-    public QueryResult selectLogs(QueryBean queryBean) {
-        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getUrl(), openObserveProperties.getOrganization());
-        HttpRequest request = getRequest(url);
-//        JSONObject queryBeanJson = new JSONObject();
-//        queryBeanJson.put("query", queryBean);
-        String requestBody = JSON.toJSONString(queryBean);
-        request.body(requestBody);
-        String body;
-        try (HttpResponse response = request.execute()) {
-            if (response.getStatus() != HttpStatus.HTTP_OK) {
-                log.error("请求信息:{}", requestBody);
-                log.error("错误信息:{}", response.body());
-                throw ServiceException.of(response.body());
-            }
-            body = response.body();
+    private void initSql(QueryBean queryBean) {
+        if (StrUtil.isNotEmpty(queryBean.getQuery().getSql())) {
+            return;
         }
-        QueryResult queryResult = JSON.parseObject(body, QueryResult.class);
-        Long total = this.selectCount(queryBean);
+        String sql = this.getGeneratedSql(queryBean.getStatement(), queryBean.getParams());
+        queryBean.getQuery().setSql(sql);
+        queryBean.setStatement(null);
+        queryBean.setParams(null);
+        if (queryBean.getQuery().getStartTime() != null) {
+            queryBean.getQuery().setStartTime(ensureMicrosTimestamp(queryBean.getQuery().getStartTime()));
+        }
+        if (queryBean.getQuery().getEndTime() != null) {
+            queryBean.getQuery().setEndTime(ensureMicrosTimestamp(queryBean.getQuery().getEndTime()));
+        }
+
+    }
+
+    private static long ensureMicrosTimestamp(long timestamp) {
+        // 获取数字的位数
+        int digits = (int) (Math.log10(timestamp) + 1);
+
+        if (timestamp < 0) {
+            throw new IllegalArgumentException("Invalid timestamp: " + timestamp);
+        }
+
+        if (digits == 16) {
+            // 已经是微秒级（如：1758091852985000）
+            return timestamp;
+        } else if (digits == 13) {
+            // 是毫秒级（如：1758091852985），转为微秒
+            return timestamp * 1000L;
+        } else if (digits == 10) {
+            // 是秒级（如：1758091852），转为微秒
+            return timestamp * 1_000_000L;
+        } else if (digits == 19) {
+            // 是纳秒级（如：1758091852985000000），可选择截断或保留
+            // 根据需求决定是否转为微秒（除以 1000）
+            return timestamp / 1000;
+        } else {
+            throw new IllegalArgumentException(
+                    "Unsupported timestamp format (digits: " + digits + "). Expected 10, 13, 16, or 19 digits.");
+        }
+    }
+
+    public QueryResult selectLogs(QueryBean queryBean) {
+        // 构建 URL
+        UrlBuilder urlBuilder = UrlBuilder.of(openObserveProperties.getUrl())
+                .addPath("/api/")
+                .addPathSegment(openObserveProperties.getOrganization())
+                .addPath("/_search");
+
+        initSql(queryBean);
+        // 构建请求体
+        String requestBodyStr = JSON.toJSONString(queryBean);
+
+//        log.info("请求信息: {}", requestBodyStr);
+        RequestBody requestBody = RequestBody.create(
+                requestBodyStr,
+                MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
+        );
+        // 构建请求
+        Request request = getBaseRequest(urlBuilder.build()).post(requestBody).build();
+        QueryResult queryResult = call(request, QueryResult.class);
+        // 设置扫描记录数
+        Long total = selectCount(queryBean);
         queryResult.setScanRecords(total);
-//        queryBean.getQuery().setSqlMode("full");
-//        queryBean.getQuery().setStreamingOutput( true);
-//        PartitionResult partitionResult = this.selectCount(queryBean.getQuery());
-//        queryResult.setTotal(partitionResult.getRecords());
         return queryResult;
     }
 
+    private <T> T call(Request request, Class<T> clazz) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw ServiceException.of("响应体为空");
+            }
+            String responseBody = body.string();
+            if (response.isSuccessful()) {
+                return JSON.parseObject(responseBody, clazz);
+            } else {
+                throw ServiceException.of("请求失败: " + response.code() + ", 响应: " + responseBody);
+            }
+        } catch (IOException e) {
+            log.error("网络请求异常: {}", request.url(), e);
+            throw ServiceException.of("网络请求异常: " + e.getMessage());
+        }
+    }
+
     public Long selectCount(QueryBean queryBean) {
-        Query query = queryBean.getQuery();
+        Query query = BeanUtil.copyProperties(queryBean.getQuery(), Query.class);
         // 正则说明：
         // - (?i) 忽略大小写
         // - SELECT\s+ 匹配 SELECT 和后面的一个或多个空格
@@ -264,34 +308,53 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
 
         // 替换 SELECT 后的字段为 COUNT(*)
         String newSql = matcher.replaceFirst("$1COUNT(*) AS zo_sql_num $3");
-
 //        log.info("原始SQL:{}", queryBean.getQuery().getSql());
 //        log.info("替换后SQL:{}", newSql);
         query.setSql(newSql);
-        String url = StrUtil.format("{}/api/{}/_search", openObserveProperties.getUrl(), openObserveProperties.getOrganization());
-        HttpRequest request = getRequest(url);
-        queryBean.getQuery().setFrom(0);
-        queryBean.getQuery().setSize(-1);
-        String requestBody = JSON.toJSONString(queryBean);
-        request.body(requestBody);
-        String body;
-        try (HttpResponse response = request.execute()) {
-            if (response.getStatus() != HttpStatus.HTTP_OK) {
-//                log.error("请求信息:{}", requestBody);
-//                log.error("错误信息:{}", response.body());
-                throw ServiceException.of(response.body());
+        UrlBuilder urlBuilder = UrlBuilder.ofHttp(openObserveProperties.getUrl())
+                .addPath("/api")
+                .addPathSegment(openObserveProperties.getOrganization())
+                .addPathSegment("_search");
+        QueryBean countQueryBean = new QueryBean();
+        countQueryBean.setQuery(query);
+        countQueryBean.getQuery().setFrom(0);
+        countQueryBean.getQuery().setSize(-1);
+        String requestBodyStr = JSON.toJSONString(countQueryBean);
+
+        RequestBody requestBody = RequestBody.create(
+                requestBodyStr,
+                MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
+        );
+
+        // 构建请求
+        Request request = getBaseRequest(urlBuilder.build()).post(requestBody).build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String responseBody = response.body().string();
+
+                QueryResult queryResult = JSON.parseObject(responseBody, QueryResult.class);
+                List<Map<String, Object>> hits = queryResult.getHits();
+                Long total = 0L;
+                if (CollUtil.isNotEmpty(hits)) {
+                    Map<String, Object> map = CollUtil.getFirst(hits);
+                    JSONObject jsonObject = new JSONObject(map);
+                    total = jsonObject.getLong("zo_sql_num");
+                }
+                return total == null ? 0L : total;
+            } else {
+                // ❌ 请求失败
+                String errorBody = response.body() != null ? response.body().string() : "未知错误";
+                log.error("请求信息: {}", requestBodyStr);
+                log.error("错误信息: HTTP {} - {}", response.code(), errorBody);
+
+                return 0L;
             }
-            body = response.body();
+
+        } catch (IOException e) {
+            log.error("请求异常: {}", requestBodyStr, e);
+            throw ServiceException.of("网络请求异常: " + e.getMessage());
         }
-        QueryResult queryResult = JSON.parseObject(body, QueryResult.class);
-        List<Map<String, Object>> hits = queryResult.getHits();
-        Long total = 0L;
-        if (CollUtil.isNotEmpty(hits)) {
-            Map<String, Object> map = CollUtil.getFirst(hits);
-            JSONObject jsonObject = new JSONObject(map);
-            total = jsonObject.getLong("zo_sql_num");
-        }
-        return total;
     }
 
 
@@ -300,7 +363,7 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
     public void initMapper() {
         try {
             // 1. 初始化 H2 内存数据库
-            String jdbcUrl = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1";
+            String jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
             DataSource dataSource = new UnpooledDataSource("org.h2.Driver", jdbcUrl, null, null);
             // 2. 创建事务工厂
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
@@ -341,22 +404,4 @@ public class OpenObserveTemplate implements InitializingBean, TokenProvider {
         initMapper();
     }
 
-    /**
-     * @return
-     * @throws TokenException
-     */
-    @Override
-    public TokenInfo getToken() throws TokenException {
-        String token = login();
-        return new TokenInfo(token);
-    }
-
-    /**
-     * @return
-     * @throws TokenException
-     */
-    @Override
-    public TokenInfo refreshToken() throws TokenException {
-        return getToken();
-    }
 }
