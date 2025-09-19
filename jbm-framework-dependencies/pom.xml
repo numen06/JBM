@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>8.0-SNAPSHOT</version>
+    <version>8.0.0-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -487,7 +487,7 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
-                <version>8.0-SNAPSHOT</version>
+                <version>8.0.0-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>

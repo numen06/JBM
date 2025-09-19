@@ -1,1 +1,1 @@
-mvn versions:set -DnewVersion=8.0-SNAPSHOT -DgenerateBackupPoms=false -f jbm-framework-dependencies/pom.xml
+mvn versions:set -DnewVersion=8.0.0-SNAPSHOT -DgenerateBackupPoms=false -f jbm-framework-dependencies/pom.xml
