@@ -5,6 +5,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +18,6 @@ import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 import org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
-import javax.annotation.Resource;
-
 @Aspect
 @Configuration
 @Slf4j
@@ -26,7 +25,7 @@ public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
 
     private String targetPackages;
 
-    @Resource
+    @Autowired
     private PlatformTransactionManager transactionManager;
 
     @Bean

@@ -1,13 +1,13 @@
 package jbm.framework.spring;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
-import javax.annotation.Resource;
 import java.util.Locale;
 
 public class MessageSourceTamplate {
-    @Resource
+    @Autowired
     private final MessageSource messageSource;
 
     public MessageSourceTamplate(MessageSource messageSource) {

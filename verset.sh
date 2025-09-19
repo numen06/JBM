@@ -1,0 +1,1 @@
+mvn versions:set -DnewVersion=7.2.17-SNAPSHOT -DgenerateBackupPoms=false -f jbm-framework-dependencies/pom.xml

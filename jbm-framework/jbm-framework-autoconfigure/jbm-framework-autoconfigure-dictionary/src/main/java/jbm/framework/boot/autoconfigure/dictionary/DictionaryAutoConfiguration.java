@@ -3,12 +3,11 @@ package jbm.framework.boot.autoconfigure.dictionary;
 import com.jbm.autoconfig.dic.DictionaryScanner;
 import com.jbm.autoconfig.dic.DictionaryTemplate;
 import com.jbm.autoconfig.dic.EnumScanPackages;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-
-import javax.annotation.Resource;
 
 @Configuration
 @Order(-1)
@@ -16,7 +15,7 @@ import javax.annotation.Resource;
 public class DictionaryAutoConfiguration {
 
 
-    @Resource
+    @Autowired
     private EnumScanPackages enumScanPackages;
 
     /**

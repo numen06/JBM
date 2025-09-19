@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>7.2.0-SNAPSHOT</version>
+    <version>7.2.17-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -39,18 +39,24 @@
         <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
         <!-- 7.0add-->
         <arthas.version>3.6.2</arthas.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
-        <maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version>
-        <maven-surefire-plugin-version>2.22.2</maven-surefire-plugin-version>
-        <maven-source-plugin-version>3.2.1</maven-source-plugin-version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.compilerVersion>17</maven.compiler.compilerVersion>
+        <!-- 插件版本管理 -->
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+        <maven-deploy-plugin.version>3.1.3</maven-deploy-plugin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
-        <jdk.version>1.8</jdk.version>
-        <jbm.framework.version>7.2.0-SNAPSHOT</jbm.framework.version>
+        <java.version>17</java.version>
+        <jdk.version>17</jdk.version>
+        <jbm.framework.version>7.2.17-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
@@ -94,15 +100,9 @@
         <bascomtask.version>2.1.0</bascomtask.version>
         <oshi-core.version>6.4.2</oshi-core.version>
         <ognl.version>3.1.2</ognl.version>
-        <!--plugin-->
-        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
-        <maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
-        <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
-        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-        <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
-        <maven-assembly-plugin.version>3.1.0</maven-assembly-plugin.version>
-        <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
-        <maven-dockerfile-plugin.version>1.4.10</maven-dockerfile-plugin.version>
+
+        <drools.version>7.74.1.Final</drools.version>
+
 
     </properties>
 
@@ -487,7 +487,7 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
-                <version>7.2.0-SNAPSHOT</version>
+                <version>7.2.17-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>
