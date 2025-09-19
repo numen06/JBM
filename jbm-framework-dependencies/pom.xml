@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>7.2.17-SNAPSHOT</version>
+    <version>8.0-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -56,7 +56,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <jdk.version>17</jdk.version>
-        <jbm.framework.version>7.2.17-SNAPSHOT</jbm.framework.version>
+        <jbm.framework.version>8.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
@@ -487,7 +487,7 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
-                <version>7.2.17-SNAPSHOT</version>
+                <version>8.0-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>
