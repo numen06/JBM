@@ -25,7 +25,7 @@ import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
@@ -211,7 +211,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         webhookTask.setErrorMsg(StrUtil.trimToEmpty(sb.toString()));
     }
 
-    @Resource
+    @Autowired
     private WebhookTaskService webhookTaskService;
 
     private WebhookTask sendBusinessEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {

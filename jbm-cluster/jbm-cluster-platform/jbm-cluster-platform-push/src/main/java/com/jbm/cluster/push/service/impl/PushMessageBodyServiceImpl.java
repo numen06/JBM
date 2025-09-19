@@ -21,7 +21,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -96,7 +96,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         return super.save(pushMessageBody);
     }
 
-    @Resource
+    @Autowired
     private PushMessageBodyService self;
 
     @Override

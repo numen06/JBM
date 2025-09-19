@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.annotation.Resource;
+
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 @SpringBootTest(classes = {EmqxConfiguration.class, EmqxApiListenerTest.TestEventListenerConfig.class})
 public class EmqxApiListenerTest {
 
-    @Resource
+    @Autowired
     private EmqxApiListener emqxApiListener;
 
     @Autowired

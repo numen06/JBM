@@ -6,9 +6,9 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SerialNumberTamplete {
 
-    @Resource
+    @Autowired
     private RedisTemplate redisTemplate;
 
 

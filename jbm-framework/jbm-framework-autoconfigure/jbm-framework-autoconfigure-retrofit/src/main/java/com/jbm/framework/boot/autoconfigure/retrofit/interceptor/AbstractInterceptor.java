@@ -13,8 +13,9 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Resource;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -22,11 +23,11 @@ import java.util.*;
  * @author wesley
  */
 public abstract class AbstractInterceptor extends BasePathMatchInterceptor implements InitializingBean {
-    @Resource
+    @Autowired
     protected StrategyFactory strategyFactory;
-    @Resource
+    @Autowired
     protected PlatformsProperties platformsProperties;
-    @Resource
+    @Autowired
     protected RetrofitProperties retrofitProperties;
 
     private final List<Class<? extends BaseStrategy>> strategys = new ArrayList<>();

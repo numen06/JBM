@@ -11,11 +11,11 @@ import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,11 +24,11 @@ import java.util.function.Consumer;
 public class BusinessEventHandler {
 
 
-    @Resource
+    @Autowired
     private WebhookEventConfigService webhookEventConfigService;
 
 
-    @Resource
+    @Autowired
     private WebhookTaskService webhookTaskService;
 
     /**

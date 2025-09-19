@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -39,10 +38,10 @@ public class GatewayLogsHandler {
     /**
      * 临时存放减少io
      */
-    @Resource
+    @Autowired
     private GatewayLogsService gatewayLogsService;
 
-    @Resource
+    @Autowired
     private ClusterAccessService clusterAccessService;
 
     private final RollingTask<Long> countWithTime = RollingTask.createRollingTask(1L, TimeUnit.MINUTES, new Function<ActionBean<Long>, Long>() {

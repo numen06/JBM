@@ -15,12 +15,13 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.mqtt.core.ConsumerStopAction;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 
-import javax.annotation.Resource;
+
 
 @Slf4j
 public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
@@ -41,7 +42,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
 //                    return messageHandler;
 //                }
 //            });
-    @Resource
+    @Autowired
     private ApplicationContext applicationContext;
     private Cache<String, AutoCloseable> CLIENT_CACHE = CacheUtil.newLFUCache(100);
 

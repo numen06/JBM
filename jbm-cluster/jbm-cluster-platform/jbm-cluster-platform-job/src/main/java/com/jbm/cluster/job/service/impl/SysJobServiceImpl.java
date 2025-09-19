@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+
 import java.util.List;
 
 /**
@@ -35,7 +35,7 @@ import java.util.List;
 @Service
 public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements SysJobService {
 
-    @Resource
+    @Autowired
     private Scheduler scheduler;
 
     /**
@@ -132,7 +132,7 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         return sysJobs;
     }
 
-    @Resource
+    @Autowired
     private SysJobService self;
     /**
      * 暂定多个任务

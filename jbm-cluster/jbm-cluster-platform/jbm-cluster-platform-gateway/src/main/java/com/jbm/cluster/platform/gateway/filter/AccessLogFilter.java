@@ -3,6 +3,8 @@ package com.jbm.cluster.platform.gateway.filter;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.service.AccessLogService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
@@ -11,24 +13,15 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import org.apache.commons.io.Charsets;
 import org.reactivestreams.Publisher;
-import org.springframework.context.NoSuchMessageException;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import javax.annotation.Resource;
+
 
 /**
  * 日志过滤器
@@ -41,7 +34,8 @@ public class AccessLogFilter implements WebFilter {
 
     private final AccessLogService accessLogService;
 
-    @Resource(name = "databaseMessageSource")
+    @Qualifier("databaseMessageSource")
+    @Autowired
     private DatabaseMessageSource messageSource;
 
     public AccessLogFilter(AccessLogService accessLogService) {

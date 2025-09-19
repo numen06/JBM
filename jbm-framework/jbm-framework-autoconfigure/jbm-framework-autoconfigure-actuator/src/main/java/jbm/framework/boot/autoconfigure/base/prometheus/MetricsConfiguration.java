@@ -3,12 +3,13 @@ package jbm.framework.boot.autoconfigure.base.prometheus;
 
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
-import javax.annotation.Resource;
+
 
 /**
  * @author wesley
@@ -17,10 +18,10 @@ import javax.annotation.Resource;
 @EnableConfigurationProperties(MetricsProperties.class)
 public class MetricsConfiguration {
 
-    @Resource
+    @Autowired
     private PrometheusMeterRegistry prometheusRegistry;
 
-    @Resource
+    @Autowired
     private MetricsProperties metricsProperties;
 
     @Bean

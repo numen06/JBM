@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.Resource;
+
 
 /**
  * 默认的缓存注入
@@ -24,10 +24,10 @@ import javax.annotation.Resource;
 public class RetrofitAutoConfiguration {
 
 
-    @Resource
+    @Autowired
     private RetrofitProperties retrofitProperties;
 
-    @Resource
+    @Autowired
     private PlatformsProperties platformsProperties;
 
     @Bean

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import retrofit2.Retrofit;
 
-import javax.annotation.Resource;
+
 import java.util.concurrent.TimeUnit;
 
 /**

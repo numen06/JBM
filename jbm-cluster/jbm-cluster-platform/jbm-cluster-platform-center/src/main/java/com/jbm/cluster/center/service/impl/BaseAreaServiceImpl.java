@@ -13,6 +13,7 @@ import com.jbm.cluster.center.mapper.BaseAreaMapper;
 import com.jbm.cluster.center.service.BaseAreaService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,7 +21,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
-import javax.annotation.Resource;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> impleme
 
     private final static String CACHE_KEY = "chinaAreaList";
 
-    @Resource
+    @Autowired
     private BaseAreaMapper baseAreaMapper;
 
     @Override

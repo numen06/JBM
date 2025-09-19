@@ -11,11 +11,12 @@ import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.util.Map;
 
 @Slf4j
@@ -28,9 +29,9 @@ public class OpenObserveBootTest {
 
     @Service
     public static class TestEventListener implements InitializingBean {
-        @Resource
+        @Autowired
         private OpenTelemetry openTelemetry;
-        @Resource
+        @Autowired
         private OpenObserveTemplate openObserveTemplate;
 
         /**

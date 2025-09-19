@@ -8,14 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.Proxy;
 import org.springframework.context.ApplicationContext;
 
-import javax.annotation.Resource;
+
 
 public class MqttMapperBeanFactory<T> implements FactoryBean<T> {
 
 
     private Class<T> mqttMapper;
 
-    @Resource
+    @Autowired
 
     private RealMqttPahoClientFactory mqttPahoClientFactory;
 

@@ -7,12 +7,13 @@ import jbm.framework.boot.autoconfigure.base.prometheus.PrometheusMetricsTamplet
 import jbm.framework.boot.autoconfigure.base.prometheus.event.MetricsEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class SpringBootTest {
 
     @Service
     public static class TestEventListener implements InitializingBean {
-        @Resource
+        @Autowired
         private PrometheusMetricsTamplete prometheusMetricsTamplete;
         /**
          */

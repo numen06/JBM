@@ -11,10 +11,10 @@ import jbm.framework.boot.autoconfigure.canal.event.UpdateCanalEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +22,7 @@ public class CanalEventCenter extends AbstractScheduledService implements Applic
 
     private static final Logger logger = LoggerFactory.getLogger(CanalEventCenter.class);
     private ApplicationContext applicationContext;
-    @Resource
+    @Autowired
     private CanalTemplate canalTemplate;
 
     public CanalEventCenter(CanalTemplate canalTemplate) {

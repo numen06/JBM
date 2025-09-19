@@ -24,7 +24,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @RemoteApplicationEventScan(basePackageClasses = {BusConfiguration.class})
 public class EventbusAppA {
 
-//    @Resource
+//    @Autowired
 //    public EventPublisher eventPublisher;
 
     public static void main(String[] args) {

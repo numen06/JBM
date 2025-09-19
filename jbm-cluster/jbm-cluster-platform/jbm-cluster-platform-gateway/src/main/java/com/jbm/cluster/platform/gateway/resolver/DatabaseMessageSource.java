@@ -8,13 +8,14 @@ import cn.hutool.db.ds.simple.SimpleDataSource;
 import com.jbm.cluster.platform.gateway.config.JdbcDataSourceProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.AbstractMessageSource;
 import org.springframework.lang.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.i18n.LocaleContextResolver;
 
-import javax.annotation.Resource;
+
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.Locale;
 @Slf4j
 public class DatabaseMessageSource extends AbstractMessageSource implements InitializingBean {
 
-    @Resource
+    @Autowired
     private LocaleContextResolver localeContextResolver;
 
     private final SimpleDataSource dataSource;

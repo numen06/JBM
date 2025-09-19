@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ public abstract class BaseServiceImpl<M extends SuperMapper<T>, T> extends Servi
 
     @Autowired
     public ApplicationContext applicationContext;
-    @Resource
+    @Autowired
     public SqlSessionTemplate sqlSession;
 
 

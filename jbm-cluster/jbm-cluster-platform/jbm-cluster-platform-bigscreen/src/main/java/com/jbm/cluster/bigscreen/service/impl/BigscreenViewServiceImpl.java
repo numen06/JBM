@@ -16,13 +16,14 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
@@ -35,7 +36,7 @@ import java.util.List;
 @Slf4j
 public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService, ApplicationListener<ApplicationReadyEvent> {
 
-    @Resource
+    @Autowired
     private DiscoveryClient discoveryClient;
 
     /**

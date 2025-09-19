@@ -12,9 +12,10 @@ import com.jbm.util.batch.BatchTask;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class GatewayLogsServiceImpl implements GatewayLogsService {
 
 
-    @Resource
+    @Autowired
     private OpenObserveTemplate openObserveTemplate;
 
 
