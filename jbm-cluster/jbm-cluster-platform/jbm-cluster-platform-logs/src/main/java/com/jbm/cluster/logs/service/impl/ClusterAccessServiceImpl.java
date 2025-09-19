@@ -6,11 +6,11 @@ import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.logs.form.ClusterAccessInfo;
 import com.jbm.cluster.logs.service.ClusterAccessService;
 import com.jbm.cluster.logs.service.GatewayLogsService;
+import jakarta.annotation.PostConstruct;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 

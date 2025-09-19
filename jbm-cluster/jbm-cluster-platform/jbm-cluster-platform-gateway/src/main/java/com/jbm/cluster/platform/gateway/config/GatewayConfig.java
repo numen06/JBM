@@ -10,6 +10,7 @@ import com.jbm.cluster.platform.gateway.locator.DynamicRouteDefinitionLocator;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.service.RouteDataSource;
 import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,7 +30,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 

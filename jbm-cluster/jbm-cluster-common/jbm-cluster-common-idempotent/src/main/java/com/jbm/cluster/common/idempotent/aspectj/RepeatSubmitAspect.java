@@ -9,6 +9,7 @@ import com.jbm.cluster.common.idempotent.annotation.RepeatSubmit;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import jakarta.servlet.http.HttpServletResponse;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import jbm.framework.spring.MessageUtils;
 import jbm.framework.web.ServletUtils;
@@ -20,8 +21,7 @@ import org.aspectj.lang.annotation.Before;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

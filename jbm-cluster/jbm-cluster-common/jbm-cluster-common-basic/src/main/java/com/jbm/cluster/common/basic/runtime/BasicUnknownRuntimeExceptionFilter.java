@@ -5,7 +5,7 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.base.BaseException;
 import jbm.framework.web.exception.filter.SimpleUnknownRuntimeExceptionFilter;
 
-import javax.validation.ValidationException;
+//import javax.validation.ValidationException;
 import java.util.Set;
 
 /**
@@ -20,7 +20,7 @@ public class BasicUnknownRuntimeExceptionFilter extends SimpleUnknownRuntimeExce
     @Override
     public void filterRuntimeExceptions(Set<Class<? extends RuntimeException>> runtimeExceptions) {
         runtimeExceptions.add(ValidateException.class);
-        runtimeExceptions.add(ValidationException.class);
+//        runtimeExceptions.add(ValidationException.class);
         runtimeExceptions.add(ServiceException.class);
         runtimeExceptions.add(BaseException.class);
     }

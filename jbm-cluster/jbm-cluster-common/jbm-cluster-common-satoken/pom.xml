@@ -53,6 +53,10 @@
             <artifactId>sa-token-oauth2</artifactId>
             <version>${satoken.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
 
     </dependencies>
 

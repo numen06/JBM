@@ -6,6 +6,7 @@ import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import jakarta.servlet.http.HttpServletRequest;
 import jbm.framework.web.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.function.BiConsumer;
 

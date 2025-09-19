@@ -1,10 +1,10 @@
 package com.jbm.cluster.common.basic.interceptor;
 
 import com.jbm.cluster.common.basic.service.TenantService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -19,6 +19,7 @@ public class TenantInterceptor implements HandlerInterceptor {
     public TenantInterceptor(Collection<TenantService> services) {
         this.services = services;
     }
+
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

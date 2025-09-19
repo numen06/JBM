@@ -11,9 +11,8 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,11 +40,11 @@ public class WxMaMediaController   {
     public List<String> uploadMedia(@PathVariable String appid, HttpServletRequest request) throws WxErrorException {
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
 
-        CommonsMultipartResolver resolver = new CommonsMultipartResolver(request.getSession().getServletContext());
-
-        if (!resolver.isMultipart(request)) {
-            return Lists.newArrayList();
-        }
+//        CommonsMultipartResolver resolver = new CommonsMultipartResolver(request.getSession().getServletContext());
+//
+//        if (!resolver.isMultipart(request)) {
+//            return Lists.newArrayList();
+//        }
 
         MultipartHttpServletRequest multiRequest = (MultipartHttpServletRequest) request;
         Iterator<String> it = multiRequest.getFileNames();

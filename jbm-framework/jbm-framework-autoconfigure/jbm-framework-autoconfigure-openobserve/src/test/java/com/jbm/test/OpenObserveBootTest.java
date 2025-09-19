@@ -8,7 +8,6 @@ import jbm.framework.boot.autoconfigure.openobserve.LogPolling;
 import jbm.framework.boot.autoconfigure.openobserve.OpenLoggerProvider;
 import jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate;
 import jbm.framework.boot.autoconfigure.openobserve.model.QueryBean;
-import jbm.framework.boot.autoconfigure.openobserve.model.QueryResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;

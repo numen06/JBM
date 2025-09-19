@@ -21,8 +21,13 @@ import java.util.function.Consumer;
 @SuppressWarnings(value = {"unchecked", "rawtypes"})
 @Slf4j
 public class RedisService {
-    @Autowired
-    public RedisTemplate redisTemplate;
+
+    public final RedisTemplate redisTemplate;
+
+    public RedisService(RedisTemplate redisTemplate, LockTemplate lockTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.lockTemplate = lockTemplate;
+    }
 
     /**
      * 缓存基本的对象，Integer、String、实体类等
@@ -243,8 +248,7 @@ public class RedisService {
         return redisTemplate.keys(pattern);
     }
 
-    @Autowired
-    private LockTemplate lockTemplate;
+    private final LockTemplate lockTemplate;
 
     public void syncExecute(String key, long time, TimeUnit unit, Consumer<String> callback) {
         final LockInfo redisLock = lockTemplate.lock(key, unit.toMillis(time) + 1000, unit.toMillis(time));

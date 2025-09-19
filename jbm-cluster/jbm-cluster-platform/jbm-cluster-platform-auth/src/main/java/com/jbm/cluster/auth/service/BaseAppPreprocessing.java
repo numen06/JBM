@@ -5,13 +5,13 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Objects;
 
 /**

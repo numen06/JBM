@@ -85,8 +85,6 @@ public class KeyspaceConfiguration {
      * @param keyspaceSettings must not be {@literal null}.
      */
     public void addKeyspaceSettings(KeyspaceSettings keyspaceSettings) {
-
-        Assert.notNull(keyspaceSettings);
         this.settingsMap.put(keyspaceSettings.getType(), keyspaceSettings);
     }
 

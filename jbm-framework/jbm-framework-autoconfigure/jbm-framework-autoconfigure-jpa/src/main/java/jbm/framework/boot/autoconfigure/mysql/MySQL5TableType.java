@@ -5,7 +5,7 @@ package jbm.framework.boot.autoconfigure.mysql;
  *
  * @author wesley
  */
-public class MySQL5TableType extends org.hibernate.dialect.MySQL5Dialect {
+public class MySQL5TableType extends org.hibernate.dialect.MySQLDialect {
 
     @Override
     public String getTableTypeString() {

@@ -1,8 +1,8 @@
 package jbm.framework.web.exception;
 
 import com.jbm.framework.metadata.bean.ResultBody;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @Created wesley.zhang

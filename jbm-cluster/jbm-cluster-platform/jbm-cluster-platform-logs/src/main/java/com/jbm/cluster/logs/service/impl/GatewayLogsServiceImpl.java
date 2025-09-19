@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class GatewayLogsServiceImpl implements GatewayLogsService {
 
 
-    @Autowired
+    @Autowired(required = false)
     private OpenObserveTemplate openObserveTemplate;
 
 

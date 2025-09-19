@@ -2,6 +2,7 @@ package com.jbm.test;
 
 import io.minio.messages.Item;
 import io.minio.messages.NotificationRecords;
+import jakarta.servlet.http.HttpServletResponse;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
 import jbm.framework.boot.autoconfigure.minio.MinioService;
 import jbm.framework.boot.autoconfigure.minio.notification.MinioNotification;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;

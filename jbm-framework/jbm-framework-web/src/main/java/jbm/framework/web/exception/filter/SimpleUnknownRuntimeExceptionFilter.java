@@ -5,12 +5,12 @@ import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.base.BaseException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import jakarta.servlet.http.HttpServletRequest;
 import jbm.framework.spring.MessageUtils;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

@@ -1,10 +1,10 @@
 package jbm.framework.boot.autoconfigure.mail.test;
 
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
-import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 
 /**
@@ -16,7 +16,7 @@ public class MailTest {
 
 
     @Test
-    public void testSend(String[] args) {
+    public void testSend() {
         JavaMailSenderImpl js = new JavaMailSenderImpl();
         js.setHost("smtp.qq.com");
         js.setUsername("350006811@qq.com");

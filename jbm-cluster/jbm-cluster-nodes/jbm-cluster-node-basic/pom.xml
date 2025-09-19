@@ -27,6 +27,10 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-satoken</artifactId>
         </dependency>
         <dependency>

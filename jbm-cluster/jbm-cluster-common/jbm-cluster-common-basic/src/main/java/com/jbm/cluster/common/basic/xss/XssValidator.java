@@ -1,9 +1,9 @@
 package com.jbm.cluster.common.basic.xss;
 
 import cn.hutool.core.util.StrUtil;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

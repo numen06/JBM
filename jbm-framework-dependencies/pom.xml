@@ -30,9 +30,11 @@
     </developers>
     <properties>
         <log4j.version>2.17.1</log4j.version>
-        <spring.cloud.version>2021.0.1</spring.cloud.version>
-        <spring.boot.version>2.6.4</spring.boot.version>
-        <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
+        <!-- Spring Cloud -->
+        <spring.cloud.version>2023.0.3</spring.cloud.version>
+        <!-- Spring Boot -->
+        <spring.boot.version>3.2.9</spring.boot.version>
+<!--        <spring.boot-admin.version>2.1.6</spring.boot-admin.version>-->
         <!--加入alibaba cloud-->
         <spring.cloud.alibaba.version>2023.0.3.3</spring.cloud.alibaba.version>
         <alibaba.nacos.version>2.3.0</alibaba.nacos.version>
@@ -56,7 +58,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <jdk.version>17</jdk.version>
-        <jbm.framework.version>8.0-SNAPSHOT</jbm.framework.version>
+<!--        <jbm.framework.version>8.0.0-SNAPSHOT</jbm.framework.version>-->
         <druid.version>1.2.9</druid.version>
         <fastjson.version>1.2.83</fastjson.version>
         <fastjson2.version>2.0.15</fastjson2.version>
@@ -99,7 +101,7 @@
         <bascomtask.version>2.1.0</bascomtask.version>
         <oshi-core.version>6.4.2</oshi-core.version>
         <ognl.version>3.1.2</ognl.version>
-
+        <mysql.version>8.0.33</mysql.version>
         <drools.version>7.74.1.Final</drools.version>
 
 
@@ -220,14 +222,6 @@
                 <artifactId>transmittable-thread-local</artifactId>
                 <version>${transmittable-thread-local.version}</version>
             </dependency>
-            <!-- spring admin -->
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-dependencies</artifactId>
-                <version>${spring-boot-admin.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-parent</artifactId>
@@ -239,244 +233,239 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-util</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-core</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-web</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-spring</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-data-masterdata</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <!-- micro -->
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-micro-core</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-micro-server</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-micro-mysql</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <!-- autoconfigure -->
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-actuator</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mail</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-nacos</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-modbus</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-opcua</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-baidu-ocr</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-ftp</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-druid</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-camel</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-freemark</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-jpa</artifactId>
-                <version>${jbm.framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jbm</groupId>
-                <artifactId>jbm-framework-autoconfigure-mongo</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-redis</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-amqp</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-ip2region</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-emqx</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-minio</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-git</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-logger</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-jpa-h2</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-fastdfs</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-ssl</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-beetl</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-schedule</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-canal</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-rest</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-excel</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-leveldb</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-taskflow</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-fegin</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-dictionary</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mqtt</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-hivemq</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-influxdb</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-tdengine</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-retrofit</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
@@ -487,18 +476,18 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-webjars</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-webjars-manager</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <!--aliyun-->
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-aliyun-oss</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <!--okhttp-->
             <dependency>
@@ -526,47 +515,47 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-platform-auth</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-platform-gateway</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-platform-doc</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-platform-center</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-api</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-api-basic</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-core</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-node-basic</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-cluster-node-mysql</artifactId>
-                <version>${jbm.framework.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <!-- mqtt -->
             <dependency>
@@ -776,11 +765,11 @@
             <!--                <artifactId>c3p0</artifactId>-->
             <!--                <version>${c3p0.version}</version>-->
             <!--            </dependency>-->
-            <!--<dependency>
+            <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
-            </dependency>-->
+            </dependency>
             <!--拼音-->
             <dependency>
                 <groupId>io.github.tokenjan</groupId>
@@ -1086,32 +1075,6 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-core</artifactId>
                 <version>${hutool.version}</version>
-            </dependency>
-            <!--spring cloud admin-->
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-server</artifactId>
-                <version>${spring-boot-admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-server-ui</artifactId>
-                <version>${spring-boot-admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-server-ui-hystrix</artifactId>
-                <version>${spring-boot-admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-server-ui-turbine</artifactId>
-                <version>${spring-boot-admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-server-ui-login</artifactId>
-                <version>${spring-boot-admin.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

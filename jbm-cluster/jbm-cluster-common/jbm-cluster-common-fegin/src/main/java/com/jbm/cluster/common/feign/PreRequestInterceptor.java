@@ -2,7 +2,7 @@ package com.jbm.cluster.common.feign;
 
 import feign.RequestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @Created wesley.zhang

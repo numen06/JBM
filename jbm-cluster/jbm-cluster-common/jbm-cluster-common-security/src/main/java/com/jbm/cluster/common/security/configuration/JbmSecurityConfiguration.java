@@ -13,6 +13,8 @@ import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.common.security.annotation.PermitAll;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,8 +28,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

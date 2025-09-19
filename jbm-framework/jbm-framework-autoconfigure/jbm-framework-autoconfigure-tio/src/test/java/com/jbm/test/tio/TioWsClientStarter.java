@@ -1,10 +1,10 @@
 package com.jbm.test.tio;
 
 import com.alibaba.fastjson.JSON;
+import jakarta.websocket.*;
 import jbm.framework.boot.autoconfigure.tio.packet.JsonForcer;
 import jodd.io.FileUtil;
 
-import javax.websocket.*;
 import java.net.URI;
 import java.nio.ByteBuffer;
 

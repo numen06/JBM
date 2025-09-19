@@ -6,6 +6,7 @@ import com.jbm.framework.exceptions.DemoModeException;
 import com.jbm.framework.exceptions.InnerAuthException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import jakarta.servlet.http.HttpServletResponse;
 import jbm.framework.web.WebExceptionResolve;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.function.BiConsumer;
 

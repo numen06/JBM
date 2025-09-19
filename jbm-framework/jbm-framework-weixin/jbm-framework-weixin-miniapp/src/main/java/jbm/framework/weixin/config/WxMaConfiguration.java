@@ -9,6 +9,7 @@ import cn.binarywang.wx.miniapp.message.WxMaMessageHandler;
 import cn.binarywang.wx.miniapp.message.WxMaMessageRouter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -16,7 +17,6 @@ import me.chanjar.weixin.common.error.WxRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.List;
 import java.util.Map;

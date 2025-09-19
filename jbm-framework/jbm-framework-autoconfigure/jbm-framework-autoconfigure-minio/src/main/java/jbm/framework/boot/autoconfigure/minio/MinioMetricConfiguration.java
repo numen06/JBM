@@ -20,6 +20,7 @@ package jbm.framework.boot.autoconfigure.minio;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.minio.MinioClient;
+import jakarta.annotation.PostConstruct;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -32,8 +33,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
 @Aspect

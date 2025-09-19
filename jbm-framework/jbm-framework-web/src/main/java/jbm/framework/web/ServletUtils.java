@@ -3,14 +3,15 @@ package jbm.framework.web;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.JakartaServletUtil;
 import cn.hutool.extra.servlet.ServletUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -197,7 +198,7 @@ public class ServletUtils {
     }
 
     public static String getClientIP() {
-        return ServletUtil.getClientIP(getRequest());
+        return JakartaServletUtil.getClientIP(getRequest());
     }
 
 //    /**

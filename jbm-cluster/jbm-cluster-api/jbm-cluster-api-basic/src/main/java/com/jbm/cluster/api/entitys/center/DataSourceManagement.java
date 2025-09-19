@@ -5,12 +5,12 @@ import com.jbm.cluster.api.constants.center.DataSourceType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * @author scolin

@@ -22,7 +22,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.HandlerMapping;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;

@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Primary;
  * @author wesley.zhang
  */
 @Slf4j
-@ConditionalOnClass(name = {"feign.codec.Encoder", "javax.servlet.http.HttpServletRequest"})
+@ConditionalOnClass(name = {"feign.codec.Encoder", "jakarta.servlet.http.HttpServletRequest"})
 public class FeignAutoConfiguration {
     public static int connectTimeOutMillis = 12000;
     public static int readTimeOutMillis = 12000;

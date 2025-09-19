@@ -7,9 +7,9 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.model.BucketInfo;
 import com.jbm.util.FileNameUtils;
 import com.jbm.util.PathUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.InputStream;
 import java.text.MessageFormat;

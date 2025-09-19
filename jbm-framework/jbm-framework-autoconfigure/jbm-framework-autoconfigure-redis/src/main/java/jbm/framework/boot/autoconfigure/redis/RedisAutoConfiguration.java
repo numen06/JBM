@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.redis;
 
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
+import com.baomidou.lock.LockTemplate;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -10,11 +11,14 @@ import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import jbm.framework.boot.autoconfigure.redis.cache.CustomizedRedisCacheManager;
 import jbm.framework.boot.autoconfigure.redis.cache.JbmKeyGenerator;
 import jbm.framework.boot.autoconfigure.redis.distributed.SerialNumberTamplete;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.KeyGenerator;
@@ -25,6 +29,8 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -40,16 +46,17 @@ import java.time.Duration;
  */
 @Configuration
 @EnableCaching
-@AutoConfigureAfter(RedisConfiguration.class)
+@AutoConfigureAfter(RedisAutoConfiguration.class)
 @ConditionalOnClass(RedisOperations.class)
 @EnableConfigurationProperties(RedisProperties.class)
 public class RedisAutoConfiguration extends CachingConfigurerSupport {
 
+
     @Bean
     @Primary
-    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory connectionFactory) throws UnknownHostException {
+    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
+        template.setConnectionFactory(redisConnectionFactory);
 
         FastJson2JsonRedisSerializer serializer = new FastJson2JsonRedisSerializer(Object.class);
 
@@ -71,8 +78,8 @@ public class RedisAutoConfiguration extends CachingConfigurerSupport {
     }
 
     @Bean
-    public RedisService redisService() {
-        return new RedisService();
+    public RedisService redisService(RedisTemplate redisTemplate,@Autowired(required = false) LockTemplate lockTemplate) {
+        return new RedisService(redisTemplate, lockTemplate);
     }
 
     @Bean

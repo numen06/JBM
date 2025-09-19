@@ -11,7 +11,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>jbm-framework-autoconfigure-redis</module>
-        <module>jbm-framework-autoconfigure-mongo</module>
         <module>jbm-framework-autoconfigure-mybatis</module>
         <module>jbm-framework-autoconfigure-camel</module>
         <module>jbm-framework-autoconfigure-jpa</module>
@@ -39,7 +38,6 @@
         <module>jbm-framework-autoconfigure-fastdfs</module>
         <module>jbm-framework-autoconfigure-canal</module>
         <module>jbm-framework-autoconfigure-amqp</module>
-        <module>jbm-framework-autoconfigure-taskflow</module>
         <module>jbm-framework-autoconfigure-modbus</module>
         <module>jbm-framework-autoconfigure-fegin</module>
         <module>jbm-framework-autoconfigure-ip2region</module>

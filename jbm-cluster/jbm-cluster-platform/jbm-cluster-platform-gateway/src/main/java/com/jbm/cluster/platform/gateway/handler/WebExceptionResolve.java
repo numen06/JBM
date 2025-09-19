@@ -41,7 +41,7 @@ public class WebExceptionResolve {
         String superClassName = ex.getClass().getSuperclass().getName();
         String className = ex.getClass().getName();
         if (className.contains("ResponseStatusException")) {
-            httpStatus = ((ResponseStatusException) ex).getStatus().value();
+            httpStatus = ((ResponseStatusException) ex).getStatusCode().value();
         }
         if (className.contains("UsernameNotFoundException")) {
             httpStatus = HttpStatus.UNAUTHORIZED.value();

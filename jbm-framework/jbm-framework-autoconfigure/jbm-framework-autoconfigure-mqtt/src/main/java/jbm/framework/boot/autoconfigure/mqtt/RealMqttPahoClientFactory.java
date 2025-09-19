@@ -17,7 +17,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.integration.mqtt.core.ConsumerStopAction;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 
@@ -51,7 +50,7 @@ public class RealMqttPahoClientFactory extends DefaultMqttPahoClientFactory {
         super();
         this.mqttConnectProperties = mqttConnectProperties;
         this.setConnectionOptions(mqttConnectProperties.toMqttConnectOptions());
-        this.setConsumerStopAction(ConsumerStopAction.UNSUBSCRIBE_NEVER);
+//        this.setConsumerStopAction(ConsumerStopAction.UNSUBSCRIBE_NEVER);
         this.setPersistence(new MemoryPersistence());
         //设置为文件缓存
         //this.setPersistence(new MqttDefaultFilePersistence("mqtt_paho/"));

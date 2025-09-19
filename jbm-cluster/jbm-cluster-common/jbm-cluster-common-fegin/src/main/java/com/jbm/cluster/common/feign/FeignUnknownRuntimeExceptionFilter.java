@@ -7,7 +7,7 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import feign.FeignException;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class FeignUnknownRuntimeExceptionFilter implements UnknownRuntimeExceptionFilter {
     @Override

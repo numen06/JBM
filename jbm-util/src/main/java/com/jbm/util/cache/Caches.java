@@ -48,11 +48,11 @@ public class Caches {
      * @param <T>
      * @return
      */
-    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, String key) {
+    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, K key) {
         return getIfNotExpired(cache, key, null);
     }
 
-    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, String key, T defaultValue) {
+    public static <K, T> T getIfNotExpired(Cache<K, ExpiringValue<T>> cache, K key, T defaultValue) {
         ExpiringValue<T> expiringValue = cache.getIfPresent(key);
         if (expiringValue != null && !expiringValue.isExpired()) {
             return expiringValue.get();

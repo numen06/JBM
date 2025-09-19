@@ -5,7 +5,6 @@ import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import cn.hutool.http.Method;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -105,7 +104,7 @@ public class StreamAccessLogService implements AccessLogService {
             //获取HTTP状态
             int httpStatus = response.getStatusCode().value();
             //获取访问方法
-            String method = request.getMethodValue();
+            String method = request.getMethod().name();
             //忽略OPTIONS请求
 //            if(Method.OPTIONS.name().equalsIgnoreCase(method)) {
 //                return;

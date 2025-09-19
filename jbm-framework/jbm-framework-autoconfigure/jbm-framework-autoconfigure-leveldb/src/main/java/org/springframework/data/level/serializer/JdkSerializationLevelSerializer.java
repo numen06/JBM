@@ -42,8 +42,8 @@ public class JdkSerializationLevelSerializer implements LevelSerializer<Object> 
      */
     public JdkSerializationLevelSerializer(Converter<Object, byte[]> serializer, Converter<byte[], Object> deserializer) {
 
-        Assert.notNull("Serializer must not be null!");
-        Assert.notNull("Deserializer must not be null!");
+        Assert.notNull(serializer,"Serializer must not be null!");
+        Assert.notNull(deserializer,"Deserializer must not be null!");
 
         this.serializer = serializer;
         this.deserializer = deserializer;

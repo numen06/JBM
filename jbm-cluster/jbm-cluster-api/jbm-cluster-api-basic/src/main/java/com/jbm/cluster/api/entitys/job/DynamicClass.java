@@ -3,11 +3,11 @@ package com.jbm.cluster.api.entitys.job;
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 
 /**
  * @author scolin

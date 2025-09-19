@@ -7,6 +7,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
+import jakarta.annotation.PostConstruct;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

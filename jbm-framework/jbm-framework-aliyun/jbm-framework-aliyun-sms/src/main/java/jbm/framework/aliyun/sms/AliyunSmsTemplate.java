@@ -13,11 +13,11 @@ import com.aliyuncs.profile.DefaultProfile;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.jbm.util.StringUtils;
+import jakarta.annotation.PostConstruct;
 import jbm.framework.aliyun.sms.autoconfigure.AliyunSmsProperties;
 import jbm.framework.aliyun.sms.model.AliyunSms;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.PostConstruct;
 
 /**
  * @program: JBM7

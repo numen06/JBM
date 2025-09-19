@@ -37,6 +37,10 @@
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-httpclient</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-web</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
