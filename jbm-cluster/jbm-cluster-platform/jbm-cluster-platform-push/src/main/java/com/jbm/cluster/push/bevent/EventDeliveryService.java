@@ -37,6 +37,13 @@ public class EventDeliveryService {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    public void enqueueAndTrigger(WebhookTask task) {
+        final String url = task.getTaskUrl();
+        final String targetKey = ServiceNameExtractor.getEnqueueName(url);
+        eventStorageService.enqueueTask(targetKey, task);
+        this.deliverPendingTasks(targetKey);
+    }
+
     // ========== 核心投递逻辑 ==========
     @Async
     public void deliverPendingTasks(String url) {
@@ -51,18 +58,12 @@ public class EventDeliveryService {
             if (tasks.isEmpty()) {
                 return;
             }
-
             for (WebhookTask task : tasks) {
                 try {
                     // 🚀 发送任务并获取实际尝试次数
                     int attemptCount = sendTaskWithRetry(task);
 
-                    // 🆕 判断是否最终成功
                     boolean success = TaskStatus.SUCCESS.toString().equals(task.getStatus());
-
-                    // 🎉 无论成功失败，发布任务结束事件
-                    eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
-
                     // ✅ 如果成功，ACK 单个任务（从队列中移除）
                     if (success) {
                         // ⬅️ 假设你有这个方法
@@ -72,6 +73,8 @@ public class EventDeliveryService {
                         log.warn("❌ 任务 {} 投递失败，尝试 {} 次，等待下次重试或进入死信", task.getTaskId(), attemptCount);
                         // ❗ 失败不ACK，下次还会被取出重试（直到超过 MAX_RETRY，在 sendTaskWithRetry 中已标记 FAILED）
                     }
+                    // 🎉 无论成功失败，发布任务结束事件
+                    eventPublisher.publishEvent(new WebhookTaskEndEvent(this, task));
 
                 } catch (Exception e) {
                     log.error("🔥 处理任务 {} 时发生未预期异常", task.getTaskId(), e);

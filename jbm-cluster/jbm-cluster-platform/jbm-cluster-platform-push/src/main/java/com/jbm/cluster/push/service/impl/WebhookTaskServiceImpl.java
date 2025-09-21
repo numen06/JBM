@@ -210,7 +210,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         webhookTask.setRequest(sourceWebhookTask.getRequest());
         webhookTask.setTaskUrl(webhookEventConfig.getUrl());
         webhookTask.setTaskMethod(webhookEventConfig.getMethodType());
-        webhookTask.setRequest(webhookEventConfig.getEventBody());
+        if (ObjectUtil.isEmpty(webhookTask.getRequest())) {
+            webhookTask.setRequest(webhookEventConfig.getEventBody());
+        }
         //初始化一个方法
         webhookTask.setEventId(webhookEventConfig.getEventId());
         if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {

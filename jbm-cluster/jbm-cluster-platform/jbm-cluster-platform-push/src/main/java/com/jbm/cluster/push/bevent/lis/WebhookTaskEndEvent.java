@@ -15,6 +15,12 @@ public class WebhookTaskEndEvent extends ApplicationEvent {
 
     private final TaskStatus taskStatus;
 
+    public WebhookTaskEndEvent(Object source, WebhookTask webhookTask) {
+        super(source);
+        this.webhookTask = webhookTask;
+        this.taskStatus = TaskStatus.valueOf(webhookTask.getStatus());
+    }
+
     public WebhookTaskEndEvent(Object source, WebhookTask webhookTask, TaskStatus taskStatus) {
         super(source);
         this.webhookTask = webhookTask;

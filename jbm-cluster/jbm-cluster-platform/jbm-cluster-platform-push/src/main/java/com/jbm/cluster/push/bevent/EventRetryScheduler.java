@@ -1,18 +1,24 @@
 package com.jbm.cluster.push.bevent;
 
+import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.push.bevent.lis.ServiceOfflineEvent;
 import com.jbm.cluster.push.bevent.lis.ServiceOnlineEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
 
 /**
  * @author wesley
@@ -25,6 +31,8 @@ public class EventRetryScheduler {
 
     @Autowired
     private EventDeliveryService eventDeliveryService;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     // 监控的服务列表（可配置化）
     private static final List<String> MONITORED_SERVICES = new ArrayList<>();
@@ -56,4 +64,22 @@ public class EventRetryScheduler {
     }
 
 
+
+    @PostConstruct
+    public void recoverOrphanTasksOnStartup() {
+        log.info("🔍 启动时扫描所有 processing 队列，恢复孤儿任务...");
+
+        String urlQueuePrefix = EventStorageService.EVENT_QUEUE_KEY_PREFIX+"*";
+        // 获取所有 processing keys（按 URL 分片）
+        Set<String> processingKeys = redisTemplate.keys(urlQueuePrefix);
+        if (processingKeys.isEmpty()) {
+            return;
+        }
+        for (String processingKey : processingKeys) {
+            String taskUrl = StrUtil.removePrefixIgnoreCase(processingKey, EventStorageService.EVENT_QUEUE_KEY_PREFIX);
+            eventDeliveryService.deliverPendingTasks(taskUrl);
+        }
+
+        log.info("✅ 孤儿任务恢复完成");
+    }
 }

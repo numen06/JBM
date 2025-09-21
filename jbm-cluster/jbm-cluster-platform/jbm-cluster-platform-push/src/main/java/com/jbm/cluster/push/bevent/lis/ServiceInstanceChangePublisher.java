@@ -3,6 +3,7 @@ package com.jbm.cluster.push.bevent.lis;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ import org.springframework.context.ApplicationEventPublisher;
 public class ServiceInstanceChangePublisher {
 
     @Autowired
-    private org.springframework.cloud.client.discovery.DiscoveryClient discoveryClient;
+    private DiscoveryClient discoveryClient;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;

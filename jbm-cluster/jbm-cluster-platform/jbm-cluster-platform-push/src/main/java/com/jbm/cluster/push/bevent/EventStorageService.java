@@ -25,17 +25,23 @@ public class EventStorageService {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
-    private static final String EVENT_QUEUE_KEY = "jbm:bevent:%s";
+    public static final String EVENT_QUEUE_KEY_PREFIX = "jbm:bevent:";
+
+
+    private String getEventQueueKey(String url) {
+        // 防止中文乱码
+        return EVENT_QUEUE_KEY_PREFIX + URLUtil.decode(url);
+    }
 
     /**
      * @param url 可能是按照service分组也是可能指定的url
-     * 存储待发送的 Webhook 任务（序列化为 JSON）
+     *            存储待发送的 Webhook 任务（序列化为 JSON）
      */
     public void enqueueTask(String url, WebhookTask task) {
         try {
             String taskJson = JSON.toJSONString(task);
-            // 防止中文乱码
-            final String queueKey = String.format(EVENT_QUEUE_KEY, URLUtil.decode(url));
+
+            final String queueKey = getEventQueueKey(url);
 
             redisTemplate.opsForList().rightPush(queueKey, taskJson);
             // 3天过期
@@ -52,7 +58,7 @@ public class EventStorageService {
      * 获取待处理任务（反序列化）
      */
     public List<WebhookTask> getPendingTasks(String url, int count) {
-        String queueKey = String.format(EVENT_QUEUE_KEY, url);
+        final String queueKey = getEventQueueKey(url);
         List<String> taskJsons = redisTemplate.opsForList().range(queueKey, 0, count - 1);
         if (taskJsons == null || taskJsons.isEmpty()) {
             return Collections.emptyList();
@@ -66,6 +72,7 @@ public class EventStorageService {
     public void ackTask(String url) {
         ackTasks(url, 1);
     }
+
     /**
      * 确认发送成功，从队列移除
      */
@@ -73,7 +80,7 @@ public class EventStorageService {
         if (count <= 0) {
             return;
         }
-        String queueKey = String.format(EVENT_QUEUE_KEY, url);
+        final String queueKey = getEventQueueKey(url);
         redisTemplate.execute((RedisCallback<Void>) conn -> {
             byte[] key = queueKey.getBytes(StandardCharsets.UTF_8);
             conn.lTrim(key, count, -1);

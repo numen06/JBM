@@ -19,13 +19,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class WebhookEventService {
 
-    @Autowired
-    private EventStorageService eventStorageService;
 
     @Autowired
     private EventDeliveryService eventDeliveryService;
 
-    @Autowired
     private JbmRequestTemplate jbmRequestTemplate;
 
     @Autowired
@@ -45,33 +42,28 @@ public class WebhookEventService {
             task.setCreateTime(DateTime.now());
         }
 
-        String url = task.getTaskUrl();
-
-        final String targetKey = ServiceNameExtractor.getEnqueueName(url);
         // 🚀 首次尝试直发
         try {
-            Response response = jbmRequestTemplate.request(url, task.getTaskMethod(), task.getRequest());
-            if (response.isSuccessful()) {
-                // ✅ 成功 → 且不在 sticky 模式 → 直接返回
-                task.setStatus(TaskStatus.SUCCESS.toString());
-                task.setHttpStatus(response.code());
-                log.debug("✅ 直发成功: {}", url);
-                eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
-            } else {
-                throw new RuntimeException("HTTP " + response.code());
-            }
+//            Response response = jbmRequestTemplate.request(url, task.getTaskMethod(), task.getRequest());
+//            if (response.isSuccessful()) {
+//                // ✅ 成功 → 直接返回
+//                task.setStatus(TaskStatus.SUCCESS.toString());
+//                task.setHttpStatus(response.code());
+//                log.debug("✅ 直发成功: {}", url);
+//                eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
+//            } else {
+//                throw new RuntimeException("HTTP " + response.code());
+//            }
             //模拟发送失败
+            throw new RuntimeException("模拟发送失败");
         } catch (Exception e) {
-            log.warn("⚠️ 直发失败，标记为异步发送并入队: {}", url, e);
-            enqueueAndTrigger(task, targetKey);
+//            log.warn("⚠️ 直发失败，标记为异步发送并入队: {}", url, e);
+            eventDeliveryService.enqueueAndTrigger(task);
         }
     }
 
     /**
      * 🆕 封装：入队列 + 触发投递
      */
-    private void enqueueAndTrigger(WebhookTask task,String targetKey) {
-        eventStorageService.enqueueTask(targetKey, task);
-        eventDeliveryService.deliverPendingTasks(targetKey);
-    }
+
 }
