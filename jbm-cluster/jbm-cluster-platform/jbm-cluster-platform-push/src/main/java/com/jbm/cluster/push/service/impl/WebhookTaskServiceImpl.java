@@ -12,6 +12,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
+import com.jbm.cluster.push.bevent.TaskStatus;
+import com.jbm.cluster.push.bevent.WebhookEventService;
+import com.jbm.cluster.push.bevent.lis.WebhookTaskEndEvent;
 import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.mapper.WebhookTaskMapper;
 import com.jbm.cluster.push.result.WebhookTaskReslut;
@@ -20,9 +23,12 @@ import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MultiPlatformServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -46,17 +51,20 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
 
     @Autowired
-    private JbmRequestTemplate jbmRequestTemplate;
-    @Autowired
     private WebhookEventConfigService webhookEventConfigService;
     @Autowired
     private WebhookTaskMapper webhookTaskMapper;
 
+    @Autowired
+    private WebhookEventService webhookEventService;
+
+//    @Autowired
+//    private WebhookTaskService webhookTaskService;
 
     /***
      * 异步执行线程池
      */
-    private ExecutorService executorService = ThreadUtil.newExecutor(100);
+    private final ExecutorService executorService = ThreadUtil.newExecutor(100);
 
 
     /**
@@ -69,9 +77,13 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         return this.deleteByWapper(queryWrapper);
     }
 
-
+    /**
+     * 获取可用事件配置
+     * @param webhookTaskForm
+     * @return  List
+     */
     @Override
-    public void sendBusinessEvent(WebhookTaskForm webhookTaskForm) {
+    public List<WebhookEventConfig> getEnableEventConfigs(WebhookTaskForm webhookTaskForm) {
         List<WebhookEventConfig> webhookEventConfigList = CollUtil.newArrayList();
         //如果传输过来的数据中已经有配置则不再搜索
         if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig())) {
@@ -83,52 +95,25 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
                 webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
             }
         }
-        //系统分组默认发送全部
-//        List<WebhookEventConfig> defGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isEmpty(item.getEventGroup()) || BusinessEventConstant.SYSTEM.equals(item.getEventGroup())).collect(Collectors.toList());
-//        defGroup.forEach(new Consumer<WebhookEventConfig>() {
-//            @Override
-//            public void accept(WebhookEventConfig webhookEventConfig) {
-//                if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
-//                    return;
-//                }
-//                //如果是全局事件采用唯一性推送
-//                if (BooleanUtil.isTrue(webhookEventConfig.getGlobal())) {
-//                    sendEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
-//                } else {
-//                    sendEventAsync(webhookEventConfig, webhookTaskForm.getWebhookTask());
-//                }
-//            }
-//        });
         //过滤掉不启用的配置
         webhookEventConfigList = webhookEventConfigList.stream().filter(item -> BooleanUtil.isTrue(item.getEnable())).collect(Collectors.toList());
         if (CollUtil.isEmpty(webhookEventConfigList)) {
             throw new ServiceException("不存在可用的发送配置");
         }
+        return webhookEventConfigList;
+    }
+
+
+
+    @Override
+    public void sendBusinessEvent(WebhookTaskForm webhookTaskForm) {
+        List<WebhookEventConfig> webhookEventConfigList = getEnableEventConfigs(webhookTaskForm);
         Map<String, List<WebhookEventConfig>> groupEventGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
-        //遍历整个分组
-        groupEventGroup.forEach(new BiConsumer<String, List<WebhookEventConfig>>() {
-            @Override
-            public void accept(String group, List<WebhookEventConfig> webhookEventConfigs) {
-
-                executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        //分拨推送
-                        for (WebhookEventConfig webhookEventConfig : webhookEventConfigs) {
-                            WebhookTask webhookTask = sendBusinessEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
-                            //如果状态为200则为成功,跳出循环
-                            if (webhookTask.getHttpStatus() == HttpStatus.HTTP_OK) {
-                                log.info("分组名称:{},执行地址:{}", group, webhookTask.getEventId());
-                                return;
-                            }
-//                            if (webhookTask.getRetryNumber() >= 3) {
-//                                return;
-//                            }
-                        }
-                    }
-                });
-
-            }
+        groupEventGroup.forEach((group, webhookEventConfigs)->{
+            webhookEventConfigs.parallelStream().forEach( webhookEventConfig -> {
+                //创建任务
+                this.sendBusinessEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
+            });
         });
     }
 
@@ -181,24 +166,24 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         });
     }
 
-    private Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
+//    private final Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
 
 
-    private void sendEventAsync(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
-        Future<?> future = executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    log.info("推送任务开始:{}", webhookEventConfig.getEventName());
-                    sendBusinessEvent(webhookEventConfig, sourceWebhookTask);
-                } catch (Exception e) {
-                    log.error("推送Webhook事件错误", e);
-                } finally {
-                    log.info("推送任务完成:{}", webhookEventConfig.getEventName());
-                }
-            }
-        });
-    }
+//    private void sendEventAsync(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
+//        Future<?> future = executorService.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    log.info("推送任务开始:{}", webhookEventConfig.getEventName());
+//                    sendBusinessEvent(webhookEventConfig, sourceWebhookTask);
+//                } catch (Exception e) {
+//                    log.error("推送Webhook事件错误", e);
+//                } finally {
+//                    log.info("推送任务完成:{}", webhookEventConfig.getEventName());
+//                }
+//            }
+//        });
+//    }
 
     private void buildErrorMsg(WebhookTask webhookTask, String... errorMsg) {
         String format = "{} : {}";
@@ -211,71 +196,60 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         webhookTask.setErrorMsg(StrUtil.trimToEmpty(sb.toString()));
     }
 
-    @Resource
-    private WebhookTaskService webhookTaskService;
 
+
+    /**
+     * 组装任务或者中数据中找到这个任务
+     * @param webhookEventConfig
+     * @param sourceWebhookTask
+     * @return
+     */
     private WebhookTask sendBusinessEvent(WebhookEventConfig webhookEventConfig, WebhookTask sourceWebhookTask) {
-        AtomicBoolean ok = new AtomicBoolean(true);
+        // 生成唯一事件ID
         WebhookTask webhookTask = ObjectUtil.isEmpty(sourceWebhookTask) || !StrUtil.equalsIgnoreCase(webhookEventConfig.getEventId(), sourceWebhookTask.getEventId()) ? new WebhookTask() : sourceWebhookTask;
         webhookTask.setRequest(sourceWebhookTask.getRequest());
+        webhookTask.setTaskUrl(webhookEventConfig.getUrl());
+        webhookTask.setTaskMethod(webhookEventConfig.getMethodType());
+        webhookTask.setRequest(webhookEventConfig.getEventBody());
         //初始化一个方法
         webhookTask.setEventId(webhookEventConfig.getEventId());
         if (ObjectUtil.isEmpty(webhookTask.getRetryNumber())) {
             webhookTask.setRetryNumber(0);
         }
+        WebhookTaskService webhookTaskService = SpringContextHolder.getBean(WebhookTaskService.class);
         //如果事件则标注错误
         if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
             //如果不启用则跳出
             this.buildErrorMsg(webhookTask, "事件未启用");
-        }
-        webhookTaskService.saveEntity(webhookTask);
-        //如果事件未启用则跳出
-        if (BooleanUtil.isFalse(webhookEventConfig.getEnable())) {
+            webhookTaskService.saveEntity(webhookTask);
             return webhookTask;
         }
-        while (ok.get() && !webhookTaskCache.containsKey(webhookTask.getTaskId())) {
-            try {
-                webhookTaskCache.put(webhookTask.getTaskId(), webhookTask);
-                //返回okhttp的结果
-                Response response = jbmRequestTemplate.request(webhookEventConfig.getUrl(), webhookEventConfig.getMethodType(), webhookTask.getRequest());
-                //响应体
-                if (response.body() != null) {
-                    webhookTask.setResponse(response.body().string());
-                    webhookTask.setHttpStatus(response.code());
-                    this.buildErrorMsg(webhookTask);
-                    if (response.code() != HttpStatus.HTTP_OK) {
-                        throw new RuntimeException("推送HTTP状态码错误:" + response.code());
-                    }
-                }
-                this.buildErrorMsg(webhookTask, "事件发送成功");
-//                this.saveEntity(webhookTask);
-                ok.set(false);
-            } catch (UnknownHostException e) {
-                webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
-                //如果超出重试次数跳出
-                if (eventException(webhookTask, e)) {
-                    break;
-                }
-            } catch (Exception e) {
-                //如果超出重试次数跳出
-                if (eventException(webhookTask, e)) {
-                    break;
-                }
-            } finally {
-                if (ObjectUtil.isEmpty(webhookTask.getHttpStatus())) {
-                    webhookTask.setHttpStatus(HttpStatus.HTTP_NOT_FOUND);
-                }
-                //如果访问是404取消自动发送
-                if (webhookTask.getHttpStatus().equals(HttpStatus.HTTP_NOT_FOUND)) {
-                    webhookEventConfigService.disableEvents(webhookEventConfig.getServiceName());
-                }
-                //保存信息
-                webhookTaskService.saveEntity(webhookTask);
-                webhookTaskCache.remove(webhookTask.getTaskId());
-//                BeanUtil.copyProperties(webhookEventConfig,sourceWebhookTask);
-            }
-        }
+        //创建任务
+        webhookTaskService.saveEntity(webhookTask);
+        //投递事件
+        webhookEventService.processEvent(webhookTask);
         return webhookTask;
+    }
+
+    /**
+     *
+     * 事件结束
+     * @param webhookTaskEndEvent
+     */
+    @Async
+    @EventListener
+    public void webhookEventEnd(WebhookTaskEndEvent webhookTaskEndEvent) {
+        WebhookTaskService webhookTaskService = SpringContextHolder.getBean(WebhookTaskService.class);
+        try {
+            if (webhookTaskEndEvent.getTaskStatus() == TaskStatus.SUCCESS) {
+                webhookTaskEndEvent.getWebhookTask().setStatus(TaskStatus.SUCCESS.toString());
+            } else {
+                webhookTaskEndEvent.getWebhookTask().setStatus(TaskStatus.FAILED.toString());
+            }
+            webhookTaskService.updateEntity(webhookTaskEndEvent.getWebhookTask());
+        }catch (Exception e){
+            log.error("更新任务错误", e);
+        }
     }
 
     private boolean eventException(WebhookTask webhookTask, Exception e) {
