@@ -62,7 +62,10 @@ public class PushMessageTest {
     }
     @Scheduled(cron = "0/5 * *  * * ? ")
     public void testSendEvent() {
-        jbmClusterBusinessEventTemplate.sendBusinessEvent(new TestBusinessEvent("我是测试事件:" + DateUtil.now()));
+        //判断当前profile是jaja则发送测试
+        if (StrUtil.equals("jaja", System.getProperty("spring.profiles.active"))) {
+            jbmClusterBusinessEventTemplate.sendBusinessEvent(new TestBusinessEvent("我是测试事件:" + DateUtil.now()));
+        }
     }
 
 
