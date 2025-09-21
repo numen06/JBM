@@ -125,6 +125,9 @@ public class EventDeliveryService {
                 if (response.isSuccessful()) {
                     task.setStatus(TaskStatus.SUCCESS.toString());
                     task.setHttpStatus(response.code());
+                    if (response.body() != null) {
+                        task.setResponse(response.body().string());
+                    }
                     // 记录最终使用的重试编号
                     task.setRetryNumber(currentRetry);
                     // ✅ 成功，返回当前尝试次数
