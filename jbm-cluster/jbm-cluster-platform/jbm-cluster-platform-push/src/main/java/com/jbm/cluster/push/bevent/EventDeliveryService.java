@@ -1,5 +1,8 @@
 package com.jbm.cluster.push.bevent;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
 import com.jbm.cluster.push.bevent.lis.WebhookTaskEndEvent;
@@ -10,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,15 +32,16 @@ public class EventDeliveryService {
     @Autowired
     private JbmRequestTemplate jbmRequestTemplate;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     private static final int MAX_RETRY = 3;
 
     // 防止并发重复处理
     private final Set<String> deliveringServices = ConcurrentHashMap.newKeySet();
 
 
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
+    @Async
     public void enqueueAndTrigger(WebhookTask task) {
         final String url = task.getTaskUrl();
         final String targetKey = ServiceNameExtractor.getEnqueueName(url);
@@ -51,7 +56,6 @@ public class EventDeliveryService {
             log.debug("🚫 服务 {} 正在处理中，跳过本次触发", url);
             return;
         }
-
         try {
             // 1. 获取待发送任务（最多10个）
             List<WebhookTask> tasks = eventStorageService.getPendingTasks(url, 10);
@@ -64,18 +68,15 @@ public class EventDeliveryService {
                     int attemptCount = sendTaskWithRetry(task);
 
                     boolean success = TaskStatus.SUCCESS.toString().equals(task.getStatus());
+
+                    // 🎉 无论成功失败，发布任务结束事件
+                    eventPublisher.publishEvent(new WebhookTaskEndEvent(this, task));
                     // ✅ 如果成功，ACK 单个任务（从队列中移除）
                     if (success) {
                         // ⬅️ 假设你有这个方法
                         eventStorageService.ackTask(url);
                         log.debug("✅ 任务 {} 投递成功，尝试 {} 次，已ACK", task.getTaskId(), attemptCount);
-                    } else {
-                        log.warn("❌ 任务 {} 投递失败，尝试 {} 次，等待下次重试或进入死信", task.getTaskId(), attemptCount);
-                        // ❗ 失败不ACK，下次还会被取出重试（直到超过 MAX_RETRY，在 sendTaskWithRetry 中已标记 FAILED）
                     }
-                    // 🎉 无论成功失败，发布任务结束事件
-                    eventPublisher.publishEvent(new WebhookTaskEndEvent(this, task));
-
                 } catch (Exception e) {
                     log.error("🔥 处理任务 {} 时发生未预期异常", task.getTaskId(), e);
                     // 可选：发布失败事件 or 记录死信
@@ -94,27 +95,18 @@ public class EventDeliveryService {
     }
 
     // ========== 带重试的发送逻辑 ==========
+
     /**
      * 发送任务并重试，返回实际尝试次数（从1开始计数）
+     *
      * @param task 任务对象
      * @return 实际尝试次数（最小为1，最大为 MAX_RETRY + 1）
      */
     private int sendTaskWithRetry(WebhookTask task) {
         int currentRetry = task.getRetryNumber() != null ? task.getRetryNumber() : 0;
-        // 🆕 记录实际尝试次数
         int attemptCount = 0;
-
-        while (currentRetry <= MAX_RETRY) {
-            attemptCount++; // 🎯 每次进入循环，尝试次数+1
-
-            if (currentRetry == MAX_RETRY) {
-                // 💀 已达最大重试次数，本次不尝试，直接标记失败
-                task.setStatus(TaskStatus.FAILED.toString());
-                task.setErrorMsg("超过最大重试次数 " + MAX_RETRY);
-                // 返回尝试次数（如 MAX_RETRY + 1）
-                return attemptCount;
-            }
-
+        while (true) {
+            attemptCount++;
             try {
                 Response response = jbmRequestTemplate.request(
                         task.getTaskUrl(),
@@ -128,38 +120,46 @@ public class EventDeliveryService {
                     if (response.body() != null) {
                         task.setResponse(response.body().string());
                     }
-                    // 记录最终使用的重试编号
                     task.setRetryNumber(currentRetry);
-                    // ✅ 成功，返回当前尝试次数
+                    log.info("✅ 任务 {} 第 {} 次尝试成功", task.getTaskId(), attemptCount);
                     return attemptCount;
                 } else {
                     throw new RuntimeException("HTTP " + response.code() + " " + response.message());
                 }
-
-            } catch (Exception e) {
-                currentRetry++;
+            }catch (Exception e) {
                 task.setRetryNumber(currentRetry);
-                task.setErrorMsg("第 " + currentRetry + " 次失败: " + e.getMessage());
+                String msg = StrUtil.format("第{}次失败: ", currentRetry + 1, e.getMessage());
+                this.buildErrorMsg(task, msg);
 
-                if (currentRetry < MAX_RETRY) {
-                    long backoffMillis = (long) Math.pow(2, currentRetry - 1) * 1000;
-                    try {
-                        log.warn("⏳ 第 {} 次重试前等待 {}ms: {}", currentRetry, backoffMillis, task.getTaskId());
-                        Thread.sleep(backoffMillis);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                        log.warn("⚠️ 重试等待被中断: {}", task.getTaskId());
-                    }
-                    // ➿ 继续下一次尝试
-                } else {
-                    // 💀 最后一次尝试也失败
+                // 💀 最后一次尝试（第 MAX_RETRY + 1 次）失败 → 标记失败
+                if (attemptCount > MAX_RETRY) {
+                    // 🎯 关键：用 attemptCount 判断是否超限
                     task.setStatus(TaskStatus.FAILED.toString());
-                    // 返回总尝试次数
+                    task.setErrorMsg("已达最大尝试次数 " + (MAX_RETRY + 1) + "，最终错误: " + e.getMessage());
+                    log.error("💀 任务 {} 经过 {} 次尝试后最终失败", task.getTaskId(), attemptCount);
                     return attemptCount;
                 }
+
+                // 🔄 否则，准备重试
+                currentRetry++;
+                task.setRetryNumber(currentRetry);
+
+                long backoffMillis = (long) Math.pow(2, attemptCount - 1) * 1000;
+                log.warn("⏳ 第 {} 次重试前等待 {}ms: {}", attemptCount, backoffMillis, task.getTaskId());
+                ThreadUtil.safeSleep(backoffMillis);
+                // ➿ 继续下一次尝试
             }
         }
-        // 理论上不会走到这里
-        return attemptCount;
+    }
+
+    private void buildErrorMsg(WebhookTask webhookTask, String... errorMsg) {
+        String format = "{} : {}";
+        StringBuilder sb = new StringBuilder();
+        sb.append(StrUtil.emptyIfNull(webhookTask.getErrorMsg()));
+        for (String s : errorMsg) {
+            String msg = StrUtil.format(format, DateUtil.now(), StrUtil.emptyToDefault(s, "无"));
+            sb.append("\r\n").append(msg);
+        }
+        webhookTask.setErrorMsg(StrUtil.trimToEmpty(sb.toString()));
     }
 }
