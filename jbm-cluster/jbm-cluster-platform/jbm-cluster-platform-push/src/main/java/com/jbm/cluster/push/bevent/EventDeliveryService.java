@@ -73,10 +73,10 @@ public class EventDeliveryService {
                     eventPublisher.publishEvent(new WebhookTaskEndEvent(this, task));
                     // ✅ 如果成功，ACK 单个任务（从队列中移除）
                     if (success) {
-                        // ⬅️ 假设你有这个方法
-                        eventStorageService.ackTask(url);
+
                         log.debug("✅ 任务 {} 投递成功，尝试 {} 次，已ACK", task.getTaskId(), attemptCount);
                     }
+                    eventStorageService.ackTask(url);
                 } catch (Exception e) {
                     log.error("🔥 处理任务 {} 时发生未预期异常", task.getTaskId(), e);
                     // 可选：发布失败事件 or 记录死信
@@ -113,8 +113,8 @@ public class EventDeliveryService {
                         task.getTaskMethod(),
                         task.getRequest()
                 );
-
-                if (response.isSuccessful()) {
+                //只要不是404都是成功
+                if (response.code() != 404) {
                     task.setStatus(TaskStatus.SUCCESS.toString());
                     task.setHttpStatus(response.code());
                     if (response.body() != null) {
@@ -126,7 +126,7 @@ public class EventDeliveryService {
                 } else {
                     throw new RuntimeException("HTTP " + response.code() + " " + response.message());
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 task.setRetryNumber(currentRetry);
                 String msg = StrUtil.format("第{}次失败: ", currentRetry + 1, e.getMessage());
                 this.buildErrorMsg(task, msg);
