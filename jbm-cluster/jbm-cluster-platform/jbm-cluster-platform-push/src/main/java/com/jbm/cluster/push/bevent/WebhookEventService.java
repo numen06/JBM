@@ -42,22 +42,24 @@ public class WebhookEventService {
             task.setCreateTime(DateTime.now());
         }
 
+        final String url = task.getTaskUrl();
+
         // 🚀 首次尝试直发
         try {
-//            Response response = jbmRequestTemplate.request(url, task.getTaskMethod(), task.getRequest());
-//            if (response.isSuccessful()) {
-//                // ✅ 成功 → 直接返回
-//                task.setStatus(TaskStatus.SUCCESS.toString());
-//                task.setHttpStatus(response.code());
-//                log.debug("✅ 直发成功: {}", url);
-//                eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
-//            } else {
-//                throw new RuntimeException("HTTP " + response.code());
-//            }
+            Response response = jbmRequestTemplate.request(url, task.getTaskMethod(), task.getRequest());
+            if (response.isSuccessful()) {
+                // ✅ 成功 → 直接返回
+                task.setStatus(TaskStatus.SUCCESS.toString());
+                task.setHttpStatus(response.code());
+                log.debug("✅ 直发成功: {}", url);
+                eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
+            } else {
+                throw new RuntimeException("HTTP " + response.code());
+            }
             //模拟发送失败
-            throw new RuntimeException("模拟发送失败");
+//            throw new RuntimeException("模拟发送失败");
         } catch (Exception e) {
-//            log.warn("⚠️ 直发失败，标记为异步发送并入队: {}", url, e);
+            log.warn("⚠️ 直发失败，标记为异步发送并入队: {}", url, e);
             eventDeliveryService.enqueueAndTrigger(task);
         }
     }
