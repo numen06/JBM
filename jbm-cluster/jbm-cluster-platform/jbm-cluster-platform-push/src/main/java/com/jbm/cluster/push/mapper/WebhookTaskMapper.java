@@ -3,7 +3,7 @@ package com.jbm.cluster.push.mapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.push.form.WebhookTaskForm;
-import com.jbm.cluster.push.result.WebhookTaskReslut;
+import com.jbm.cluster.push.result.WebhookTaskResult;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Param;
@@ -15,5 +15,5 @@ import org.apache.ibatis.annotations.Param;
 @MapperRepository
 public interface WebhookTaskMapper extends SuperMapper<WebhookTask> {
 
-    Page<WebhookTaskReslut> selectWebhookTasks(Page page, @Param("form") WebhookTaskForm webhookTaskForm);
+    Page<WebhookTaskResult> selectWebhookTasks(Page page, @Param("form") WebhookTaskForm webhookTaskForm);
 }

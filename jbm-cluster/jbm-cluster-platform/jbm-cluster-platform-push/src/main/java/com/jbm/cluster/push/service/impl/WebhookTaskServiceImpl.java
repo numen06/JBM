@@ -7,17 +7,16 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpStatus;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
-import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
 import com.jbm.cluster.push.bevent.TaskStatus;
 import com.jbm.cluster.push.bevent.WebhookEventService;
 import com.jbm.cluster.push.bevent.lis.WebhookTaskEndEvent;
 import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.mapper.WebhookTaskMapper;
-import com.jbm.cluster.push.result.WebhookTaskReslut;
+import com.jbm.cluster.push.result.WebhookTaskResult;
+import com.jbm.cluster.push.service.WebhookConfigSelectionStrategy;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -25,20 +24,14 @@ import com.jbm.framework.service.mybatis.MultiPlatformServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +42,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask> implements WebhookTaskService {
 
-
     @Autowired
     private WebhookEventConfigService webhookEventConfigService;
     @Autowired
@@ -57,6 +49,9 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     @Autowired
     private WebhookEventService webhookEventService;
+    
+    @Autowired
+    private WebhookConfigSelectionStrategy configSelectionStrategy;
 
 //    @Autowired
 //    private WebhookTaskService webhookTaskService;
@@ -110,10 +105,41 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         List<WebhookEventConfig> webhookEventConfigList = getEnableEventConfigs(webhookTaskForm);
         Map<String, List<WebhookEventConfig>> groupEventGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
         groupEventGroup.forEach((group, webhookEventConfigs)->{
-            webhookEventConfigs.parallelStream().forEach( webhookEventConfig -> {
-                //创建任务
-                this.sendBusinessEvent(webhookEventConfig, webhookTaskForm.getWebhookTask());
-            });
+            // 使用策略类选择最优配置
+            WebhookEventConfig selectedConfig = configSelectionStrategy.selectConfig(group, webhookEventConfigs);
+            if (selectedConfig == null) {
+                log.warn("分组 {} 中没有可用的配置", group);
+                return;
+            }
+            
+            // 尝试发送事件
+            try {
+                this.sendBusinessEvent(selectedConfig, webhookTaskForm.getWebhookTask());
+                // 发送成功，更新策略
+                configSelectionStrategy.handleSuccess(group, selectedConfig);
+            } catch (Exception e) {
+                log.error("使用配置 {} 发送事件失败", selectedConfig.getEventId(), e);
+                // 发送失败，更新策略
+                configSelectionStrategy.handleFailure(group, selectedConfig);
+                
+                // 遍历分组中的其他配置尝试发送
+                for (WebhookEventConfig config : webhookEventConfigs) {
+                    // 跳过已尝试过的配置
+                    if (StrUtil.equals(config.getEventId(), selectedConfig.getEventId())) {
+                        continue;
+                    }
+                    
+                    try {
+                        this.sendBusinessEvent(config, webhookTaskForm.getWebhookTask());
+                        // 发送成功，更新策略并退出循环
+                        configSelectionStrategy.handleSuccess(group, config);
+                        break;
+                    } catch (Exception ex) {
+                        log.error("使用配置 {} 发送事件失败", config.getEventId(), ex);
+                        configSelectionStrategy.handleFailure(group, config);
+                    }
+                }
+            }
         });
     }
 
@@ -154,7 +180,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     }
 
     @Override
-    public DataPaging<WebhookTaskReslut> selectWebhookTasks(WebhookTaskForm webhookTaskForm) {
+    public DataPaging<WebhookTaskResult> selectWebhookTasks(WebhookTaskForm webhookTaskForm) {
         return this.selectPageList(webhookTaskForm.getPageForm(), (page) -> {
             if (ObjectUtil.isEmpty(webhookTaskForm.getWebhookTask())) {
                 webhookTaskForm.setWebhookTask(new WebhookTask());

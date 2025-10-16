@@ -3,7 +3,7 @@ package com.jbm.cluster.push.service;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.api.entitys.message.WebhookTask;
 import com.jbm.cluster.push.form.WebhookTaskForm;
-import com.jbm.cluster.push.result.WebhookTaskReslut;
+import com.jbm.cluster.push.result.WebhookTaskResult;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
 import com.jbm.framework.usage.paging.DataPaging;
 
@@ -30,5 +30,5 @@ public interface WebhookTaskService extends IMultiPlatformService<WebhookTask> {
 
     void retryEventTask(String taskId);
 
-    DataPaging<WebhookTaskReslut> selectWebhookTasks(WebhookTaskForm webhookTaskForm);
+    DataPaging<WebhookTaskResult> selectWebhookTasks(WebhookTaskForm webhookTaskForm);
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @ApiModel("Web反向推送返回")
-public class WebhookTaskReslut extends WebhookEventConfig {
+public class WebhookTaskResult extends WebhookEventConfig {
 
     @ApiModelProperty(value = "任务ID")
     private String taskId;
