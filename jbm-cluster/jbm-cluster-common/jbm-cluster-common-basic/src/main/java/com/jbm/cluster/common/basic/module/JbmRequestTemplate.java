@@ -11,6 +11,9 @@ import org.springframework.context.ApplicationContext;
 import java.net.UnknownHostException;
 import java.util.Map;
 
+/**
+ * @author wesley
+ */
 @Slf4j
 public class JbmRequestTemplate {
 

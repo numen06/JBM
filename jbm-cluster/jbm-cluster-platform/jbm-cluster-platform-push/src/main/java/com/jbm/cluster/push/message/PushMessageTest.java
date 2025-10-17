@@ -12,6 +12,7 @@ import com.jbm.cluster.common.basic.module.JbmClusterBusinessEventTemplate;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -34,8 +35,8 @@ public class PushMessageTest {
      *
      * 发送测试事件
      */
-    //    @Scheduled(cron = "0/5 * *  * * ? ")
-    public void testSend() {
+//        @Scheduled(cron = "0/5 * *  * * ? ")
+    public void testSendPush() {
         PushMsg pushMsg = new PushMsg();
 //        pushMsg.setPushWays(Lists.newArrayList(PushWay.wechat));
         pushMsg.setPushWays(Lists.newArrayList(PushWay.mqtt));
@@ -57,7 +58,14 @@ public class PushMessageTest {
         pushMsg.setContent(StrUtil.format("{}发的:{}", DateTime.now(), pushMsg.getTitle()));
 //        pushMessageBodyService.sendPushMsg(pushMsg);
         jbmClusterNotification.pushMsg(pushMsg);
-        jbmClusterBusinessEventTemplate.sendBusinessEvent(new TestBusinessEvent("我是测试事件:" + DateUtil.now()));
+
+    }
+    @Scheduled(cron = "0/5 * *  * * ? ")
+    public void testSendEvent() {
+        //判断当前profile是jaja则发送测试
+        if (StrUtil.equals("jaja", System.getProperty("spring.profiles.active"))) {
+            jbmClusterBusinessEventTemplate.sendBusinessEvent(new TestBusinessEvent("我是测试事件:" + DateUtil.now()));
+        }
     }
 
 

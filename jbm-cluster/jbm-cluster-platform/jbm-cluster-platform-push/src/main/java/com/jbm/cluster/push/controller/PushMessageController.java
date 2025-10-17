@@ -116,7 +116,7 @@ public class PushMessageController {
     @ApiOperation("发送管理员测试信息")
     @PostMapping("/testSend")
     public ResultBody<String> testSend() {
-        pushMessageTest.testSend();
+        pushMessageTest.testSendPush();
         return ResultBody.ok();
     }
 

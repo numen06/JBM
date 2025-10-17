@@ -14,6 +14,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+/**
+ * @author wesley
+ */
 @Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
@@ -27,6 +30,10 @@ public class WebhookTask extends MultiPlatformEntity {
     private String taskId;
     @ApiModelProperty(value = "事件ID")
     private String eventId;
+    @ApiModelProperty(value = "执行URL")
+    private String taskUrl;
+    @ApiModelProperty(value = "请求方法")
+    private String taskMethod;
     @ApiModelProperty("请求体")
     @Column(columnDefinition = "TEXT")
     private String request;
@@ -39,5 +46,8 @@ public class WebhookTask extends MultiPlatformEntity {
     private Integer retryNumber;
     @ApiModelProperty("错误信息")
     private String errorMsg;
+    @ApiModelProperty("任务状态")
+    private String status;
+
 
 }
