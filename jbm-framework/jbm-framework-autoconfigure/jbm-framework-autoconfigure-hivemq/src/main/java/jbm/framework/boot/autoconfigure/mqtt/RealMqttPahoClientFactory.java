@@ -15,6 +15,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author wesley
@@ -25,7 +27,9 @@ public class RealMqttPahoClientFactory {
     private final Mqtt5ClientFactory mqtt5ClientFactory;
 
     private final MqttProperties mqttConnectProperties;
-
+    
+    // 客户端缓存，避免重复创建相同 Client ID 的客户端
+    private final Map<String, SimpleMqttClient> clientCache = new ConcurrentHashMap<>();
 
     public RealMqttPahoClientFactory(Mqtt5ClientFactory mqtt5ClientFactory, MqttProperties mqttConnectProperties) {
         super();
@@ -43,29 +47,41 @@ public class RealMqttPahoClientFactory {
     private final String mqttTag = IdUtil.simpleUUID();
 
     /**
-     * 分布式程序的客户端创建，避免冲突
+     * 分布式程序的客户端创建，避免冲突（带缓存）
      *
-     * @param clientId
-     * @return
+     * @param clientId 客户端ID
+     * @param tags 额外标签
+     * @return MQTT客户端（如果已存在则返回缓存的实例）
      */
     public SimpleMqttClient getAppClientInstance(String clientId, Object... tags) {
-        MqttProperties properties = new MqttProperties();
-        BeanUtil.copyProperties(mqttConnectProperties, properties);
+        // 生成完整的 Client ID
         tags = ArrayUtil.insert(tags, 0, clientId);
         tags = ArrayUtil.append(tags, mqttTag);
-        properties.setClientId(StrUtil.join(StrUtil.UNDERLINE, tags));
-        Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
-        return new SimpleMqttClient(mqtt5AsyncClient, properties);
+        String fullClientId = StrUtil.join(StrUtil.UNDERLINE, tags);
+        
+        // 使用缓存，避免重复创建相同 Client ID 的客户端
+        return clientCache.computeIfAbsent(fullClientId, id -> {
+            log.info("🔌 Creating new MQTT client: ClientId={}", id);
+            MqttProperties properties = new MqttProperties();
+            BeanUtil.copyProperties(mqttConnectProperties, properties);
+            properties.setClientId(id);
+            Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
+            return new SimpleMqttClient(mqtt5AsyncClient, properties);
+        });
     }
 
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance(String clientId) {
-        MqttProperties properties = new MqttProperties();
-        BeanUtil.copyProperties(mqttConnectProperties, properties);
-        properties.setClientId(clientId);
-        Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
-        return new SimpleMqttClient(mqtt5AsyncClient, properties);
+        // 使用缓存，避免重复创建
+        return clientCache.computeIfAbsent(clientId, id -> {
+            log.info("🔌 Creating new MQTT client: ClientId={}", id);
+            MqttProperties properties = new MqttProperties();
+            BeanUtil.copyProperties(mqttConnectProperties, properties);
+            properties.setClientId(id);
+            Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
+            return new SimpleMqttClient(mqtt5AsyncClient, properties);
+        });
     }
 
     @SneakyThrows
@@ -91,6 +107,47 @@ public class RealMqttPahoClientFactory {
     public synchronized Mqtt5Client getClientInstance(MqttProperties properties) {
         // 创建客户端
         return mqtt5ClientFactory.mqttClient(properties, null);
+    }
+    
+    /**
+     * 获取缓存的客户端数量
+     * 
+     * @return 当前缓存的客户端数量
+     */
+    public int getCachedClientCount() {
+        return clientCache.size();
+    }
+    
+    /**
+     * 清理指定的客户端缓存
+     * 
+     * @param clientId 客户端ID
+     */
+    public void removeClient(String clientId) {
+        SimpleMqttClient client = clientCache.remove(clientId);
+        if (client != null) {
+            log.info("🗑️ Removed MQTT client from cache: ClientId={}", clientId);
+            try {
+                client.shutdown();
+            } catch (Exception e) {
+                log.warn("Failed to shutdown client: {}", clientId, e);
+            }
+        }
+    }
+    
+    /**
+     * 清理所有客户端缓存
+     */
+    public void clearAllClients() {
+        log.info("🗑️ Clearing all {} cached MQTT clients", clientCache.size());
+        clientCache.values().forEach(client -> {
+            try {
+                client.shutdown();
+            } catch (Exception e) {
+                log.warn("Failed to shutdown client", e);
+            }
+        });
+        clientCache.clear();
     }
 
 }

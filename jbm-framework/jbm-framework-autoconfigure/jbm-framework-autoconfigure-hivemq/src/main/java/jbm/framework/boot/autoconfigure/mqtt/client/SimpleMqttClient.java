@@ -66,29 +66,34 @@ public class SimpleMqttClient {
                 
                 // 检测到从断连到连接的状态变化，触发订阅恢复
                 if (currentlyConnected && !wasConnected) {
-                    log.info("🔄 Connection restored after disconnect, triggering subscription recovery");
-                    // 延迟2秒后恢复订阅，确保连接稳定（弱网环境需要更长时间）
-                    healthCheckScheduler.schedule(() -> {
-                        try {
-                            restoreSubscriptions();
-                            log.info("✅ Subscription recovery completed after network restore");
-                        } catch (Exception e) {
-                            log.error("❌ Error restoring subscriptions", e);
-                            // 失败后再次尝试
-                            healthCheckScheduler.schedule(() -> {
-                                try {
-                                    restoreSubscriptions();
-                                } catch (Exception ex) {
-                                    log.error("❌ Second attempt to restore subscriptions failed", ex);
-                                }
-                            }, 5, TimeUnit.SECONDS);
-                        }
-                    }, 2000, TimeUnit.MILLISECONDS);
+                    if (!subscriptions.isEmpty()) {
+                        log.info("🔄 Connection restored, recovering {} subscriptions", subscriptions.size());
+                        // 延迟2秒后恢复订阅，确保连接稳定（弱网环境需要更长时间）
+                        healthCheckScheduler.schedule(() -> {
+                            try {
+                                restoreSubscriptions();
+                                log.info("✅ {} subscriptions recovered successfully", subscriptions.size());
+                            } catch (Exception e) {
+                                log.error("❌ Error restoring subscriptions", e);
+                                // 失败后再次尝试
+                                healthCheckScheduler.schedule(() -> {
+                                    try {
+                                        restoreSubscriptions();
+                                        log.info("✅ Subscriptions recovered on retry");
+                                    } catch (Exception ex) {
+                                        log.error("❌ Failed to restore subscriptions after retry", ex);
+                                    }
+                                }, 5, TimeUnit.SECONDS);
+                            }
+                        }, 2000, TimeUnit.MILLISECONDS);
+                    }
                 }
                 
-                // 如果断连，记录日志但依赖自动重连机制
+                // 如果断连，只在 DEBUG 级别记录
                 if (!currentlyConnected && wasConnected) {
-                    log.warn("⚠️ MQTT Client health check detected disconnect - automatic reconnection in progress");
+                    if (log.isDebugEnabled()) {
+                        log.debug("⚠️ MQTT Client disconnected - automatic reconnection in progress");
+                    }
                 }
                 
                 // 更新连接状态
@@ -145,9 +150,11 @@ public class SimpleMqttClient {
             return;
         }
         
-        log.info("🔄 Restoring {} subscriptions after reconnection", subscriptions.size());
+        if (log.isDebugEnabled()) {
+            log.debug("🔄 Restoring {} subscriptions", subscriptions.size());
+        }
+        
         subscriptions.forEach((topicFilter, messageListener) -> {
-            log.info("🔄 Restoring subscription for topic: {}", topicFilter);
             mqttClient.subscribeWith()
                     .topicFilter(topicFilter)
                     .qos(MqttQos.AT_LEAST_ONCE)
@@ -155,12 +162,11 @@ public class SimpleMqttClient {
                     .send()
                     .whenComplete((subAck, throwable) -> {
                         if (throwable != null) {
-                            log.error("❌ Failed to restore subscription for topic {}: {}", 
-                                    topicFilter, throwable.getMessage());
+                            log.warn("⚠️ Failed to restore subscription for topic {}, will retry", topicFilter);
                             // 订阅失败后重试
                             scheduleRetrySubscription(topicFilter, messageListener, 1);
-                        } else {
-                            log.info("✅ Successfully restored subscription for topic: {}", topicFilter);
+                        } else if (log.isDebugEnabled()) {
+                            log.debug("✅ Restored subscription: {}", topicFilter);
                         }
                     });
         });
@@ -179,8 +185,10 @@ public class SimpleMqttClient {
         
         // 指数退避，最多2分钟（弱网环境需要更长的间隔）
         long delay = Math.min(1000L * (1L << (attempt - 1)), 120000L);
-        log.info("⏳ Scheduling retry {} for topic {} in {}ms ({}s)", 
-                attempt, topicFilter, delay, delay/1000);
+        if (log.isDebugEnabled()) {
+            log.debug("⏳ Scheduling retry {} for topic {} in {}s", 
+                    attempt, topicFilter, delay/1000);
+        }
         
         healthCheckScheduler.schedule(() -> {
             if (!isConnected()) {
@@ -218,13 +226,12 @@ public class SimpleMqttClient {
                 .send()
                 .whenComplete((subAck, throwable) -> {
                     if (throwable != null) {
-                        log.error("❌ Failed to subscribe to topic {}: {}", topicFilter, throwable.getMessage());
+                        log.warn("⚠️ Failed to subscribe to topic {}, will retry", topicFilter);
                         // 订阅失败时启动重试机制
                         scheduleRetrySubscription(topicFilter, messageListener, 1);
                         return;
                     }
-                    log.info("✅ {} Successfully subscribed to topic: {}", 
-                            mqttClient.getConfig().getClientIdentifier(), topicFilter);
+                    log.info("✅ Subscribed to topic: {}", topicFilter);
                 });
     }
 
