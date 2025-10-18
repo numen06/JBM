@@ -2,7 +2,6 @@ package com.jbm.test.mqtt;
 
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.thread.ThreadUtil;
-import com.alibaba.fastjson.JSON;
 import com.jbm.test.mqtt.proxy.MqttSender;
 import com.jbm.test.mqtt.proxy.MqttSender2;
 import com.jbm.test.mqtt.proxy.impl.MqttExecuteImpl;
@@ -24,7 +23,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(
         classes = {MqttAutoConfiguration.class, MqttExecuteImpl.class})
 @Slf4j
-public class MqttProxy {
+public class MqttProxyTest {
     @Autowired
     private MqttProxyFactory mqttProxyFactory;
 

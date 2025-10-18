@@ -25,7 +25,7 @@ public class MqttCallClientTest {
     @BeforeAll
     public static void testClient() throws Exception {
         Mqtt5ClientFactory mqtt5ClientFactory = new Mqtt5ClientFactory();
-        mqttProperties.setUrl(URI.create("tcp://www.51jbm.cn:1883"));
+        mqttProperties.setUrl(URI.create("tcp://10.100.10.121:1883"));
         realMqttPahoClientFactory = new RealMqttPahoClientFactory(mqtt5ClientFactory, mqttProperties);
         mqttCallProxyFactory = new MqttCallProxyFactory(realMqttPahoClientFactory);
     }

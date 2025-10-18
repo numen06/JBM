@@ -3,7 +3,6 @@ package jbm.framework.boot.autoconfigure.mqtt.proxy;
 import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.expression.engine.spel.SpELEngine;
@@ -22,10 +21,8 @@ import org.springframework.context.ApplicationListener;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author wesley
@@ -39,6 +36,9 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
 
 
     private final List<RequiredBean> requiredBeans = new ArrayList<>();
+    
+    // 客户端缓存，避免重复创建相同 Client ID 的客户端
+    private final Map<String, SimpleMqttClient> clientCache = new ConcurrentHashMap<>();
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
@@ -50,8 +50,9 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         try {
             subscribe();
             applicationContext.publishEvent(new MqttMapperSubscribeEvent(mqttPahoClientFactory));
+            log.info("✅ MQTT Mapper subscriptions initialized successfully, {} subscriptions registered", requiredBeans.size());
         } catch (Exception e) {
-            log.error("subscribe error", e);
+            log.error("❌ Failed to initialize MQTT subscriptions", e);
         }
     }
 
@@ -59,13 +60,50 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
      * 订阅方法
      */
     public void subscribe() {
+        log.info("📡 Subscribing to {} MQTT topics", requiredBeans.size());
         requiredBeans.forEach(requiredBean -> {
             try {
                 subscribeMethod(requiredBean.mqttRequsetBean, requiredBean.simpleMqttClient);
             } catch (Exception e) {
-                log.error("subscribe error", e);
+                log.error("❌ Failed to subscribe to topic: {}", 
+                        requiredBean.mqttRequsetBean.getRequestTopic(), e);
             }
         });
+    }
+    
+    /**
+     * 恢复所有客户端的订阅（在重连后调用）
+     */
+    public void restoreAllSubscriptions() {
+        log.info("🔄 Restoring subscriptions for {} MQTT clients", clientCache.size());
+        // 直接使用缓存的客户端，避免遍历 requiredBeans
+        clientCache.values().forEach(client -> {
+            try {
+                client.restoreSubscriptions();
+            } catch (Exception e) {
+                log.error("❌ Failed to restore subscriptions for client", e);
+            }
+        });
+    }
+    
+    /**
+     * 获取所有缓存的客户端
+     */
+    public Collection<SimpleMqttClient> getAllClients() {
+        return clientCache.values();
+    }
+    
+    /**
+     * 获取客户端统计信息
+     */
+    public Map<String, Object> getStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalClients", clientCache.size());
+        stats.put("totalSubscriptions", requiredBeans.size());
+        stats.put("connectedClients", clientCache.values().stream()
+                .filter(SimpleMqttClient::isConnected)
+                .count());
+        return stats;
     }
 
     //    public void proxySend() throws MqttException {
@@ -107,8 +145,20 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         return bean.getSimpleName();
     }
 
+    /**
+     * 获取或创建 MQTT 客户端（带缓存）
+     */
+    private SimpleMqttClient getOrCreateClient(String clientId) {
+        return clientCache.computeIfAbsent(clientId, id -> {
+            log.info("🔌 Creating new MQTT client with ID: {}", id);
+            return mqttPahoClientFactory.getAppClientInstance(id);
+        });
+    }
+
     public void find() {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
+        log.info("🔍 Found {} beans with @MqttMapper annotation", mqttProxys.size());
+        
         for (String name : mqttProxys.keySet()) {
             log.debug("class {} find mqtt proxy", name);
             Object bean = mqttProxys.get(name);
@@ -116,8 +166,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 continue;
             }
             MqttMapper mqttMapper = AnnotationUtil.getAnnotation(bean.getClass(), MqttMapper.class);
-            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getAppClientInstance(getMqttClientId(mqttMapper, bean.getClass()));
+            String clientId = getMqttClientId(mqttMapper, bean.getClass());
+            
+            // 使用缓存获取客户端，避免重复创建
+            SimpleMqttClient simpleMqttClient = getOrCreateClient(clientId);
+            log.debug("📱 Using MQTT client [{}] for mapper [{}]", clientId, bean.getClass().getSimpleName());
 
+            // 注入客户端到 Bean 的字段中
             Field[] fields = ClassUtil.getDeclaredFields(bean.getClass());
             for (Field field : fields) {
                 if (field.getType().equals(SimpleMqttClient.class)) {
@@ -125,7 +180,10 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 }
             }
 
+            // 处理所有带 @MqttRequest 注解的方法
             List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
+            log.debug("📋 Found {} methods with @MqttRequest in {}", methods.size(), bean.getClass().getSimpleName());
+            
             for (Method method : methods) {
                 MqttRequsetBean mqttRequsetBean = new MqttRequsetBean();
                 mqttRequsetBean.setMethod(method);
@@ -143,6 +201,9 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
 //                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
             }
         }
+        
+        log.info("✅ MQTT Proxy initialization completed: {} clients created, {} subscriptions registered", 
+                clientCache.size(), requiredBeans.size());
     }
 
     public String buildTopic(Object bean, String... url) {
@@ -157,7 +218,9 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     public void subscribeMethod(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
-        log.info("start subscribe mqtt topic to method:{}", mqttRequsetBean.getRequestTopic());
+        log.info("📬 Subscribing MQTT topic [{}] to method [{}]", 
+                mqttRequsetBean.getRequestTopic(), 
+                mqttRequsetBean.getMethod().getName());
         MqttRequestListener mqttRequestListener = new MqttRequestListener(mqttRequsetBean, simpleMqttClient);
         simpleMqttClient.subscribeWithResponse(mqttRequsetBean.getRequestTopic(), mqttRequestListener);
     }

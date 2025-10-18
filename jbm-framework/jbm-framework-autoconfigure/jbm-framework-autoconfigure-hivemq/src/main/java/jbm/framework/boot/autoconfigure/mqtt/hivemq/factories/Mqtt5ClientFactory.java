@@ -19,7 +19,6 @@ package jbm.framework.boot.autoconfigure.mqtt.hivemq.factories;
 import cn.hutool.core.util.StrUtil;
 import com.hivemq.client.mqtt.*;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
-import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5ClientBuilder;
 import com.hivemq.client.mqtt.mqtt5.auth.Mqtt5EnhancedAuthMechanism;
@@ -28,7 +27,6 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
-import jbm.framework.boot.autoconfigure.mqtt.exception.MqttClientException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.KeyManagerFactoryCreationException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.TrustManagerFactoryCreationException;
@@ -66,8 +64,8 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
         }
         if (configuration.isAutomaticReconnect()) {
             clientBuilder.automaticReconnect()
-                    .initialDelay(MqttClientAutoReconnect.DEFAULT_START_DELAY_S, TimeUnit.SECONDS)
-                    .maxDelay(configuration.getMaxReconnectDelay(), TimeUnit.SECONDS)
+                    .initialDelay(1, TimeUnit.SECONDS) // 初始延迟1秒
+                    .maxDelay(configuration.getMaxReconnectDelay(), TimeUnit.SECONDS) // 最大延迟
                     .applyAutomaticReconnect();
         }
 
@@ -112,21 +110,38 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                 .addConnectedListener(connectedEvent -> {
                     log.info("✅ Connected or Reconnected to MQTT5 Client:{}", connectedEvent.getClientConfig().getClientIdentifier());
                 }).addDisconnectedListener(disconnectedEvent -> {
-                    log.warn("❌ Disconnected from MQTT5 Client:{},Reconnect attempts:{}",
-                            disconnectedEvent.getClientConfig().getClientIdentifier(),
-                            disconnectedEvent.getReconnector().getAttempts()
-                    );
+                    Throwable cause = disconnectedEvent.getCause();
+                    if (cause != null) {
+                        log.warn("❌ Disconnected from MQTT5 Client:{}, Reconnect attempts:{}, Reason:{}",
+                                disconnectedEvent.getClientConfig().getClientIdentifier(),
+                                disconnectedEvent.getReconnector().getAttempts(),
+                                cause.getMessage()
+                        );
+                    } else {
+                        log.warn("❌ Disconnected from MQTT5 Client:{}, Reconnect attempts:{}",
+                                disconnectedEvent.getClientConfig().getClientIdentifier(),
+                                disconnectedEvent.getReconnector().getAttempts()
+                        );
+                    }
+                    // 不手动触发重连，让自动重连机制处理
+                    // 手动触发会干扰自动重连机制，导致 attempts 始终为 0
                 }).buildAsync();
 
         if (log.isTraceEnabled()) {
             log.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
         }
+        
+        // 异步连接，避免阻塞启动流程
         client.connect(connectBuilder.build())
-                .whenComplete((mqtt3ConnAck, throwable) -> {
+                .whenComplete((mqtt5ConnAck, throwable) -> {
                     if (throwable != null) {
-                        throw new MqttClientException("Error connecting mqtt client");
+                        log.error("❌ Initial connection failed for MQTT client, will retry automatically: {}", 
+                                throwable.getMessage());
+                        // 不抛出异常，让自动重连机制处理
+                    } else {
+                        log.info("✅ Initial connection successful for MQTT client");
                     }
-                }).join();
+                });
 
         return client;
     }
