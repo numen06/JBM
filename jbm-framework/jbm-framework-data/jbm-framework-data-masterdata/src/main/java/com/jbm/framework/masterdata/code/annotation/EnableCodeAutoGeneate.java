@@ -55,5 +55,6 @@ public @interface EnableCodeAutoGeneate {
      * @return
      */
     String daoModule() default "";
-
+    // 排除包目录
+    String[] excludePackages() default {};
 }
