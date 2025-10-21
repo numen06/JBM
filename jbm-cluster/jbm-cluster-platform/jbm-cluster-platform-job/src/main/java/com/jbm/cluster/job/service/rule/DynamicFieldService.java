@@ -1,6 +1,6 @@
-package com.jbm.cluster.job.service;
+package com.jbm.cluster.job.service.rule;
 
-import com.jbm.cluster.api.entitys.job.DynamicField;
+import com.jbm.cluster.api.entitys.job.rule.DynamicField;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

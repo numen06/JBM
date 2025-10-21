@@ -1,4 +1,4 @@
-package com.jbm.cluster.api.entitys.job;
+package com.jbm.cluster.api.entitys.job.rule;
 
 import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
 import io.swagger.annotations.ApiModel;

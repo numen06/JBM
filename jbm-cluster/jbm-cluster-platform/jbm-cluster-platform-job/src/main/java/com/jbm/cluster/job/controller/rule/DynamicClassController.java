@@ -1,7 +1,7 @@
-package com.jbm.cluster.job.controller;
+package com.jbm.cluster.job.controller.rule;
 
-import com.jbm.cluster.api.entitys.job.DynamicClass;
-import com.jbm.cluster.job.service.DynamicClassService;
+import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
+import com.jbm.cluster.job.service.rule.DynamicClassService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;

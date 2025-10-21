@@ -1,8 +1,8 @@
-package com.jbm.cluster.job.service;
+package com.jbm.cluster.job.service.rule;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
-import com.jbm.cluster.api.entitys.job.DroolsRule;
+import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
 import com.jbm.cluster.api.form.job.DroolsParseAndExecuteForm;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
@@ -10,14 +10,14 @@ import com.jbm.framework.masterdata.service.IMasterDataService;
  * @Author: auto generate by jbm
  * @Create: 2025-08-12 14:03:24
  */
-public interface DroolsRuleService extends IMasterDataService<DroolsRule> {
+public interface RuleDefinitionService extends IMasterDataService<RuleDefinition> {
     /**
      * 保存规则
      *
-     * @param droolsRule
+     * @param ruleDefinition
      * @return
      */
-    DroolsRule saveData(DroolsRule droolsRule);
+    RuleDefinition saveData(RuleDefinition ruleDefinition);
 
     /**
      * 升版
@@ -26,7 +26,7 @@ public interface DroolsRuleService extends IMasterDataService<DroolsRule> {
      * @return
      */
 
-    DroolsRule updateVersion(DroolsRule droolsRule);
+    RuleDefinition updateVersion(RuleDefinition droolsRule);
 
     /**
      * 前端传入的原始json解析drool内容

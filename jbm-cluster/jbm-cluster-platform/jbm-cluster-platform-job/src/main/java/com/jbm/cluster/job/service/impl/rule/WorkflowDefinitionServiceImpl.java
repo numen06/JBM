@@ -1,7 +1,7 @@
-package com.jbm.cluster.job.service.impl;
+package com.jbm.cluster.job.service.impl.rule;
 
-import com.jbm.cluster.api.entitys.job.WorkflowDefinition;
-import com.jbm.cluster.job.service.WorkflowDefinitionService;
+import com.jbm.cluster.api.entitys.job.rule.WorkflowDefinition;
+import com.jbm.cluster.job.service.rule.WorkflowDefinitionService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;
 

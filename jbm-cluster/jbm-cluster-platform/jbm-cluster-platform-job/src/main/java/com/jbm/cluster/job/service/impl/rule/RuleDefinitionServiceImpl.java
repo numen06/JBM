@@ -1,4 +1,4 @@
-package com.jbm.cluster.job.service.impl;
+package com.jbm.cluster.job.service.impl.rule;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
@@ -6,18 +6,17 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.jbm.cluster.api.entitys.job.DroolsRule;
-import com.jbm.cluster.api.entitys.job.RuleOperationLog;
+import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
+import com.jbm.cluster.api.entitys.job.rule.RuleOperationLog;
 import com.jbm.cluster.api.form.job.DroolsParseAndExecuteForm;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.job.business.impl.RuleReloadService;
-import com.jbm.cluster.job.service.DroolsRuleService;
-import com.jbm.cluster.job.service.RuleOperationLogService;
+import com.jbm.cluster.job.service.rule.RuleDefinitionService;
+import com.jbm.cluster.job.service.rule.RuleOperationLogService;
 import com.jbm.cluster.job.util.DroolsUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import jodd.util.StringUtil;
-import lombok.val;
 import org.drools.core.event.DefaultAgendaEventListener;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.runtime.KieContainer;
@@ -29,14 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @Author: auto generate by jbm
  * @Create: 2025-08-12 14:03:24
  */
 @Service
-public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> implements DroolsRuleService {
+public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinition> implements RuleDefinitionService {
     @Autowired
     RuleReloadService ruleReloadService;
     @Autowired
@@ -44,27 +42,27 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public DroolsRule saveData(DroolsRule droolsRule) {
+    public RuleDefinition saveData(RuleDefinition ruleDefinition) {
 
-        if (droolsRule.getId() == null) {
+        if (ruleDefinition.getId() == null) {
             //新增时校验
-            Assert.notNull(droolsRule.getRuleName(), () -> new ServiceException("规则名称不能为空"));
+            Assert.notNull(ruleDefinition.getRuleName(), () -> new ServiceException("规则名称不能为空"));
             //如果前端未传规则code，则自动生成
-            if (StringUtil.isBlank(droolsRule.getRuleCode())) {
-                droolsRule.setRuleCode("RULE_" + System.currentTimeMillis());
+            if (StringUtil.isBlank(ruleDefinition.getRuleCode())) {
+                ruleDefinition.setRuleCode("RULE_" + System.currentTimeMillis());
             }
             //初始化版本号
-            if (StringUtil.isBlank(droolsRule.getVersion())) {
-                droolsRule.setVersion("1.0.0");
+            if (StringUtil.isBlank(ruleDefinition.getVersion())) {
+                ruleDefinition.setVersion("1.0.0");
             }
         }else {
             //根据id查询是否存在
-            DroolsRule droolsRuleOld = super.getById(droolsRule.getId());
-            Assert.notNull(droolsRuleOld, () -> new ServiceException("该id查询不到规则"));
+            RuleDefinition ruleDefinitionOld = super.getById(ruleDefinition.getId());
+            Assert.notNull(ruleDefinitionOld, () -> new ServiceException("该id查询不到规则"));
         }
         //通过原始json内容解析出drools内容
-        if (StringUtil.isNotBlank(droolsRule.getRuleContent())) {
-            JSONArray jsonArray = compileRule(droolsRule.getRuleContent(),null);
+        if (StringUtil.isNotBlank(ruleDefinition.getRuleContent())) {
+            JSONArray jsonArray = compileRule(ruleDefinition.getRuleContent(),null);
             if(!jsonArray.isEmpty()){
 //                StringBuilder droolsContent = new StringBuilder();
 //                for (Object object : jsonArray) {
@@ -72,64 +70,64 @@ public class DroolsRuleServiceImpl extends MasterDataServiceImpl<DroolsRule> imp
 //                    droolsContent.append(jsonObject.get("drools").toString());
 //                    droolsContent.append("\n");
 //                }
-                droolsRule.setDroolsContent(jsonArray.toString());
+                ruleDefinition.setDroolsContent(jsonArray.toString());
             }
         }
 
-        super.saveEntity(droolsRule);
+        super.saveEntity(ruleDefinition);
         //重新加载规则
-        if (StringUtil.isNotEmpty(droolsRule.getDroolsContent())) {
+        if (StringUtil.isNotEmpty(ruleDefinition.getDroolsContent())) {
             // DroolsUtil.checkRule(droolsRule.getRuleContent());
             ruleReloadService.reloadRules();
         }
 
         //增加操作日志
-        DroolsRule copyRule = super.getById(droolsRule.getId());
+        RuleDefinition copyRule = super.getById(ruleDefinition.getId());
         String username = LoginHelper.getLoginUser().getUsername();
         String realName = LoginHelper.getLoginUser().getRealName();
         RuleOperationLog log = new RuleOperationLog();
         BeanUtil.copyProperties(copyRule, log);
         log.setId(null);
-        log.setRuleId(droolsRule.getId());
+        log.setRuleId(ruleDefinition.getId());
         log.setOperationTime(DateTime.now());
         log.setOperationUser(username);
         log.setOperationUserName(realName);
         ruleOperationLogService.save(log);
-        return droolsRule;
+        return ruleDefinition;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public DroolsRule updateVersion(DroolsRule droolsRule) {
-        Assert.notNull(droolsRule.getId(), "规则id不能为空");
-        Assert.notNull(droolsRule.getRuleCode(), "规则code不能为空");
+    public RuleDefinition updateVersion(RuleDefinition ruleDefinition) {
+        Assert.notNull(ruleDefinition.getId(), "规则id不能为空");
+        Assert.notNull(ruleDefinition.getRuleCode(), "规则code不能为空");
 
-        droolsRule = super.getById(droolsRule.getId());
-        if (droolsRule == null) {
+        ruleDefinition = super.getById(ruleDefinition.getId());
+        if (ruleDefinition == null) {
             throw new ServiceException("该id查询不到规则");
         }
 
 
-        DroolsRule param = new DroolsRule();
-        param.setRuleCode(droolsRule.getRuleCode());
-        List<DroolsRule> droolsRules = super.selectEntitys(param);
+        RuleDefinition param = new RuleDefinition();
+        param.setRuleCode(ruleDefinition.getRuleCode());
+        List<RuleDefinition> ruleDefinitions = super.selectEntitys(param);
         //取 droolsRules 版本号最大的一条数据
-        DroolsRule droolsRuleMax = droolsRules.stream().max(Comparator.comparing(DroolsRule::getVersion)).isPresent() ? droolsRules.stream().max(Comparator.comparing(DroolsRule::getVersion)).get() : null;
-        if (droolsRuleMax == null) {
+        RuleDefinition ruleDefinitionMax = ruleDefinitions.stream().max(Comparator.comparing(RuleDefinition::getVersion)).isPresent() ? ruleDefinitions.stream().max(Comparator.comparing(RuleDefinition::getVersion)).get() : null;
+        if (ruleDefinitionMax == null) {
             throw new ServiceException("查询规则版本失败");
         }
 
         // 升版
-        String currentVersion = droolsRuleMax.getVersion();
+        String currentVersion = ruleDefinitionMax.getVersion();
         String[] parts = currentVersion.split("\\.");
         int patch = Integer.parseInt(parts[2]) + 1;
         String newVersion = parts[0] + "." + parts[1] + "." + patch;
-        droolsRule.setVersion(newVersion);
-        droolsRule.setId(null);
-        droolsRule.setCreateTime(null);
-        droolsRule.setUpdateTime(null);
-        this.saveData(droolsRule);
-        return droolsRule;
+        ruleDefinition.setVersion(newVersion);
+        ruleDefinition.setId(null);
+        ruleDefinition.setCreateTime(null);
+        ruleDefinition.setUpdateTime(null);
+        this.saveData(ruleDefinition);
+        return ruleDefinition;
     }
 
 

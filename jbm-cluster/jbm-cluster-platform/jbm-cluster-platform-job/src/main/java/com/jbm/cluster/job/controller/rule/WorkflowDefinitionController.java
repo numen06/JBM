@@ -1,7 +1,7 @@
-package com.jbm.cluster.job.controller;
+package com.jbm.cluster.job.controller.rule;
 
-import com.jbm.cluster.api.entitys.job.WorkflowDefinition;
-import com.jbm.cluster.job.service.WorkflowDefinitionService;
+import com.jbm.cluster.api.entitys.job.rule.WorkflowDefinition;
+import com.jbm.cluster.job.service.rule.WorkflowDefinitionService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;

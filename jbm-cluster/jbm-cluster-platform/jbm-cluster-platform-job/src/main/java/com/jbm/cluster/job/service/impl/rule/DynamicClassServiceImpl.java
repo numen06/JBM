@@ -1,7 +1,7 @@
-package com.jbm.cluster.job.service.impl;
+package com.jbm.cluster.job.service.impl.rule;
 
-import com.jbm.cluster.api.entitys.job.DynamicClass;
-import com.jbm.cluster.job.service.DynamicClassService;
+import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
+import com.jbm.cluster.job.service.rule.DynamicClassService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;
 

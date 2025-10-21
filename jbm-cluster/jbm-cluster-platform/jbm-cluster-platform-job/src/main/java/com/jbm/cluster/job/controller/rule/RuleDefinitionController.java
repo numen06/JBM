@@ -1,17 +1,17 @@
-package com.jbm.cluster.job.controller;
+package com.jbm.cluster.job.controller.rule;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.json.JSONObject;
-import com.jbm.cluster.api.entitys.job.DroolsRule;
+import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
 import com.jbm.cluster.api.entitys.message.drools.DroolsFeignTemplate;
 import com.jbm.cluster.api.form.job.DroolsParseAndExecuteForm;
 import com.jbm.cluster.api.service.feign.drools.DroolsRuleServiceClient;
 import com.jbm.cluster.job.business.impl.LoadDynamicClassService;
 import com.jbm.cluster.job.business.impl.RuleEngineService;
 import com.jbm.cluster.job.business.impl.RuleReloadService;
-import com.jbm.cluster.job.service.DroolsRuleService;
+import com.jbm.cluster.job.service.rule.RuleDefinitionService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
@@ -19,7 +19,6 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,9 +37,9 @@ import java.util.Map;
 @Api(tags = "drools规则开放接口")
 @RestController
 @RequestMapping("/droolsRule")
-public class DroolsRuleController extends MasterDataCollection<DroolsRule, DroolsRuleService> implements DroolsRuleServiceClient {
+public class RuleDefinitionController extends MasterDataCollection<RuleDefinition, RuleDefinitionService> implements DroolsRuleServiceClient {
     @Autowired
-    private DroolsRuleService droolsRuleService;
+    private RuleDefinitionService ruleDefinitionService;
     @Autowired
     private RuleEngineService ruleEngineService;
     @Autowired
@@ -51,14 +50,14 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
 
     @ApiOperation("保存规则")
     @PostMapping("/saveData")
-    public ResultBody<DroolsRule> saveData(@RequestBody(required = false) DroolsRule droolsRule) {
-        return ResultBody.callback(() -> droolsRuleService.saveData(droolsRule));
+    public ResultBody<RuleDefinition> saveData(@RequestBody(required = false) RuleDefinition ruleDefinition) {
+        return ResultBody.callback(() -> ruleDefinitionService.saveData(ruleDefinition));
     }
 
     @ApiOperation("升版")
     @PostMapping("/updateVersion")
-    public ResultBody<DroolsRule> updateVersion(@RequestBody(required = false) DroolsRule droolsRule) {
-        return ResultBody.callback(() -> droolsRuleService.updateVersion(droolsRule));
+    public ResultBody<RuleDefinition> updateVersion(@RequestBody(required = false) RuleDefinition ruleDefinition) {
+        return ResultBody.callback(() -> ruleDefinitionService.updateVersion(ruleDefinition));
     }
 
     /**
@@ -73,8 +72,8 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     public ResultBody<Boolean> remove(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
             validator(masterDataRequsetBody);
-            DroolsRule entity = validatorMasterData(masterDataRequsetBody, true);
-            droolsRuleService.deleteEntity(entity);
+            RuleDefinition entity = validatorMasterData(masterDataRequsetBody, true);
+            ruleDefinitionService.deleteEntity(entity);
             //ruleReloadService.reloadRules();
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -97,7 +96,7 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
             if (CollectionUtil.isEmpty(ids)) {
                 return ResultBody.error(true, "ids为空");
             }
-            if (droolsRuleService.removeByIds(ids)) {
+            if (ruleDefinitionService.removeByIds(ids)) {
                 //ruleReloadService.reloadRules();
                 return ResultBody.success(false, "批量成功刪除");
             }
@@ -191,7 +190,7 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     @Override
     public ResultBody<JSONObject> parseAndExecuteRule(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
         try {
-            JSONObject jsonObject = droolsRuleService.parseAndExecuteRule(droolsParseAndExecuteForm);
+            JSONObject jsonObject = ruleDefinitionService.parseAndExecuteRule(droolsParseAndExecuteForm);
             return ResultBody.success(jsonObject,"成功");
         } catch (Exception e) {
             throw new ServiceException(e);
@@ -203,7 +202,7 @@ public class DroolsRuleController extends MasterDataCollection<DroolsRule, Drool
     @Override
     public ResultBody<JSONObject> parseNextNode(@RequestBody(required = false) DroolsParseAndExecuteForm droolsParseAndExecuteForm)  {
         try {
-            JSONObject jsonObject = droolsRuleService.parseNextNode(droolsParseAndExecuteForm);
+            JSONObject jsonObject = ruleDefinitionService.parseNextNode(droolsParseAndExecuteForm);
             return ResultBody.success(jsonObject,"成功");
         } catch (Exception e) {
             throw new ServiceException(e);

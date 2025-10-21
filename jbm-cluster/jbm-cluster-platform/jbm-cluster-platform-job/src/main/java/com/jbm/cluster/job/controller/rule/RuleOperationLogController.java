@@ -1,7 +1,7 @@
-package com.jbm.cluster.job.controller;
+package com.jbm.cluster.job.controller.rule;
 
-import com.jbm.cluster.api.entitys.job.RuleOperationLog;
-import com.jbm.cluster.job.service.RuleOperationLogService;
+import com.jbm.cluster.api.entitys.job.rule.RuleOperationLog;
+import com.jbm.cluster.job.service.rule.RuleOperationLogService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;

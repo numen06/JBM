@@ -1,6 +1,6 @@
-package com.jbm.cluster.job.service;
+package com.jbm.cluster.job.service.rule;
 
-import com.jbm.cluster.api.entitys.job.WorkflowDefinition;
+import com.jbm.cluster.api.entitys.job.rule.WorkflowDefinition;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 
 /**

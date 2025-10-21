@@ -5,14 +5,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jbm.cluster.api.entitys.job.DroolsRule;
-import com.jbm.cluster.api.entitys.job.DynamicClass;
-import com.jbm.cluster.job.service.DroolsRuleService;
-import com.jbm.cluster.job.service.DynamicClassService;
+import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
+import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
+import com.jbm.cluster.job.service.rule.RuleDefinitionService;
+import com.jbm.cluster.job.service.rule.DynamicClassService;
 import com.jbm.framework.exceptions.ServiceException;
-import lombok.val;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
 import org.kie.api.runtime.KieContainer;
@@ -42,7 +40,7 @@ public class RuleReloadService {
     private KieContainer kieContainer;
 
     @Autowired
-    private DroolsRuleService droolsRuleService;
+    private RuleDefinitionService ruleDefinitionService;
     @Autowired
     private LoadDynamicClassService loadDynamicClassService;
 
@@ -72,20 +70,20 @@ public class RuleReloadService {
 //        DroolsRule ruleParam = new DroolsRule();
 //        ruleParam.setRuleStatus(true);
 
-        QueryWrapper<DroolsRule> wrapper = new QueryWrapper<>();
+        QueryWrapper<RuleDefinition> wrapper = new QueryWrapper<>();
         wrapper.eq("rule_status", true);
         wrapper.isNotNull("drools_content");
         //排除空字符串
         wrapper.notInSql("drools_content", "''");
 
-        List<DroolsRule> droolsRules = droolsRuleService.selectEntitys(wrapper);
-        for (DroolsRule droolsRule : droolsRules) {
-            JSONArray droolsContent = JSONUtil.parseArray(droolsRule.getDroolsContent());
+        List<RuleDefinition> ruleDefinitions = ruleDefinitionService.selectEntitys(wrapper);
+        for (RuleDefinition ruleDefinition : ruleDefinitions) {
+            JSONArray droolsContent = JSONUtil.parseArray(ruleDefinition.getDroolsContent());
             for (int i = 0; i < droolsContent.size(); i++) {
                 Object o = droolsContent.get(i);
                 JSONObject jsonObject = new JSONObject(o);
                 String drools = jsonObject.get("drools").toString();
-                kieFileSystem.write("src/main/resources/" + droolsRule.getRuleCode() + droolsRule.getVersion() + "number" + i + ".drl",
+                kieFileSystem.write("src/main/resources/" + ruleDefinition.getRuleCode() + ruleDefinition.getVersion() + "number" + i + ".drl",
                     kieServices.getResources()
                             .newReaderResource(new StringReader(drools)));
             }
@@ -223,7 +221,7 @@ public class RuleReloadService {
 
 
     private boolean checkRuleChanges() {
-        List<DroolsRule> rules = droolsRuleService.list();
+        List<RuleDefinition> rules = ruleDefinitionService.list();
 
         // 规则数量变化
         if (rules.size() != ruleChecksums.size()) {
