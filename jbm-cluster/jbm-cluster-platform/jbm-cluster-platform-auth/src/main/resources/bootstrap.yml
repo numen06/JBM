@@ -43,3 +43,13 @@ jbm:
       - /captcha/**
       - /qrcode/**
 
+third-party:
+  auth:
+    platforms:
+      jaja:
+        client-id: 2zZw3p6YYtTLcOqRMpZbYrhX
+        client-secret: LAv2A6ZDRzldmMDibyNCNvCNViNzMixG
+        redirect-uri: https://platform.jajachina.com/api/auth/oauth2/thirdparty/github/callback
+        token-url: https://platform.jajachina.com/api/auth/oauth2/access_token
+        user-info-url: https://platform.jajachina.com/api/auth/oauth2/userinfo
+

@@ -16,6 +16,10 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-node-basic</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
         <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
 <!--        <dependency>-->
 <!--            <groupId>cn.dev33</groupId>-->

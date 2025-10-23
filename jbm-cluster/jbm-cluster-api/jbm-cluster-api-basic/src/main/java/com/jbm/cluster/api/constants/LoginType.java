@@ -31,6 +31,8 @@ public enum LoginType {
      */
     FACE("", ""),
 
+    THIRD_PARTY("", ""),
+
 
     /**
      * 微信登录
