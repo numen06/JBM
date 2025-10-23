@@ -64,21 +64,19 @@ public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinit
         if (StringUtil.isNotBlank(ruleDefinition.getRuleContent())) {
             JSONArray jsonArray = compileRule(ruleDefinition.getRuleContent(),null);
             if(!jsonArray.isEmpty()){
-//                StringBuilder droolsContent = new StringBuilder();
-//                for (Object object : jsonArray) {
-//                    JSONObject jsonObject = (JSONObject) object;
-//                    droolsContent.append(jsonObject.get("drools").toString());
-//                    droolsContent.append("\n");
-//                }
                 ruleDefinition.setDroolsContent(jsonArray.toString());
             }
         }
 
         super.saveEntity(ruleDefinition);
-        //重新加载规则
+        //校验规则
         if (StringUtil.isNotEmpty(ruleDefinition.getDroolsContent())) {
-            // DroolsUtil.checkRule(droolsRule.getRuleContent());
-            ruleReloadService.reloadRules();
+            JSONArray jsonArray = JSONUtil.parseArray(ruleDefinition.getDroolsContent());
+            for (Object o : jsonArray) {
+                JSONObject jsonObject = new JSONObject(o);
+                String drools = jsonObject.get("drools").toString();
+                DroolsUtil.checkRule(drools);
+            }
         }
 
         //增加操作日志
