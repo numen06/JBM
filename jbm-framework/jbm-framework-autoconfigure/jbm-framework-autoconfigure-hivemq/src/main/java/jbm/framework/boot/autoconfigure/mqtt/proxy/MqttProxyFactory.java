@@ -35,7 +35,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
 
 
-    private final List<RequiredBean> requiredBeans = new ArrayList<>();
+    // 使用 Map 存储订阅，key 为 "clientId:topic"，避免重复订阅
+    private final Map<String, RequiredBean> subscriptionMap = new ConcurrentHashMap<>();
     
     // 客户端缓存，避免重复创建相同 Client ID 的客户端
     private final Map<String, SimpleMqttClient> clientCache = new ConcurrentHashMap<>();
@@ -50,7 +51,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         try {
             subscribe();
             applicationContext.publishEvent(new MqttMapperSubscribeEvent(mqttPahoClientFactory));
-            log.info("✅ MQTT Mapper subscriptions initialized successfully, {} subscriptions registered", requiredBeans.size());
+            log.info("✅ MQTT Mapper subscriptions initialized successfully, {} subscriptions registered", subscriptionMap.size());
         } catch (Exception e) {
             log.error("❌ Failed to initialize MQTT subscriptions", e);
         }
@@ -60,8 +61,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
      * 订阅方法
      */
     public void subscribe() {
-        log.info("📡 Subscribing to {} MQTT topics", requiredBeans.size());
-        requiredBeans.forEach(requiredBean -> {
+        log.info("📡 Subscribing to {} MQTT topics", subscriptionMap.size());
+        subscriptionMap.values().forEach(requiredBean -> {
             try {
                 subscribeMethod(requiredBean.mqttRequsetBean, requiredBean.simpleMqttClient);
             } catch (Exception e) {
@@ -99,7 +100,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     public Map<String, Object> getStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalClients", clientCache.size());
-        stats.put("totalSubscriptions", requiredBeans.size());
+        stats.put("totalSubscriptions", subscriptionMap.size());
         stats.put("connectedClients", clientCache.values().stream()
                 .filter(SimpleMqttClient::isConnected)
                 .count());
@@ -192,18 +193,31 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 MqttRequest mqttRequest = AnnotationUtil.getAnnotation(method, MqttRequest.class);
                 mqttRequsetBean.setRequestTopic(this.buildTopic(bean, mqttMapper.value(), mqttRequest.fromTopic()));
                 mqttRequsetBean.setResponseTopic(this.buildTopic(bean, mqttMapper.value(), mqttRequest.toTopic()));
-                log.debug("mqtt request [{}]", mqttRequsetBean);
+                
+                // 使用 clientId + topic 作为唯一标识，避免重复订阅
+                String subscriptionKey = clientId + ":" + mqttRequsetBean.getRequestTopic();
+                
+                // 使用 putIfAbsent 确保同一主题只订阅一次
+                RequiredBean existingBean = subscriptionMap.putIfAbsent(subscriptionKey, 
+                        new RequiredBean(simpleMqttClient, mqttRequsetBean));
+                
+                if (existingBean != null) {
+                    log.warn("⚠️ Duplicate subscription detected for topic [{}] on client [{}], skipping duplicate",
+                            mqttRequsetBean.getRequestTopic(), clientId);
+                } else {
+                    log.debug("✅ Registered subscription: {}", subscriptionKey);
+                }
+                
 //                MqttResponse mqttResponse = AnnotationUtil.getAnnotation(method, MqttResponse.class);
 //                if (mqttResponse != null)
 //                    mqttRequsetBean.setResponseTopic(mqttResponse.topic());
-                this.requiredBeans.add(new RequiredBean(simpleMqttClient, mqttRequsetBean));
                 //到系统准备好了之后再监听
 //                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
             }
         }
         
         log.info("✅ MQTT Proxy initialization completed: {} clients created, {} subscriptions registered", 
-                clientCache.size(), requiredBeans.size());
+                clientCache.size(), subscriptionMap.size());
     }
 
     public String buildTopic(Object bean, String... url) {

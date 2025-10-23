@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
@@ -35,7 +36,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     private final RealMqttPahoClientFactory mqttPahoClientFactory;
 
 
-    private List<RequiredBean> requiredBeans = new ArrayList<>();
+    // 使用 Map 存储订阅，key 为 "clientId:topic"，避免重复订阅
+    private final Map<String, RequiredBean> subscriptionMap = new ConcurrentHashMap<>();
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
@@ -56,11 +58,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
      * 订阅方法
      */
     public void subscribe() {
-        requiredBeans.forEach(requiredBean -> {
+        log.info("📡 Subscribing to {} MQTT topics", subscriptionMap.size());
+        subscriptionMap.values().forEach(requiredBean -> {
             try {
                 subscribeMethod(requiredBean.mqttRequsetBean, requiredBean.simpleMqttClient);
             } catch (Exception e) {
-                log.error("subscribe error", e);
+                log.error("❌ Failed to subscribe to topic: {}", 
+                        requiredBean.mqttRequsetBean.getRequestTopic(), e);
             }
         });
     }
@@ -93,6 +97,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
 
     public void find() throws MqttException {
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
+        log.info("🔍 Found {} beans with @MqttMapper annotation", mqttProxys.size());
+        
         for (String name : mqttProxys.keySet()) {
             log.debug("class {} find mqtt proxy", name);
             Object bean = mqttProxys.get(name);
@@ -103,6 +109,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
             String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? "MqttMapper_" + bean.getClass().getSimpleName() : mqttMapper.clientId();
 //            String clientId = StrUtil.isBlank(mqttMapper.clientId()) ? MqttProxyFactory.class.getSimpleName() + IdUtil.fastSimpleUUID() : mqttMapper.clientId();
             SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getClientInstance(clientId);
+            log.debug("📱 Using MQTT client [{}] for mapper [{}]", clientId, bean.getClass().getSimpleName());
 
             Field[] fields = ClassUtil.getDeclaredFields(bean.getClass());
             for (Field field : fields) {
@@ -112,6 +119,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
             }
 
             List<Method> methods = ReflectUtils.findAnnotationMethods(bean.getClass(), MqttRequest.class);
+            log.debug("📋 Found {} methods with @MqttRequest in {}", methods.size(), bean.getClass().getSimpleName());
+            
             for (Method method : methods) {
                 MqttRequsetBean mqttRequsetBean = new MqttRequsetBean();
                 mqttRequsetBean.setMethod(method);
@@ -120,15 +129,30 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 MqttRequest mqttRequest = AnnotationUtil.getAnnotation(method, MqttRequest.class);
                 mqttRequsetBean.setRequestTopic(this.buildTopic(bean, mqttMapper.value(), mqttRequest.fromTopic()));
                 mqttRequsetBean.setResponseTopic(this.buildTopic(bean, mqttMapper.value(), mqttRequest.toTopic()));
-                log.debug("mqtt request [{}]", mqttRequsetBean);
+                
+                // 使用 clientId + topic 作为唯一标识，避免重复订阅
+                String subscriptionKey = clientId + ":" + mqttRequsetBean.getRequestTopic();
+                
+                // 使用 putIfAbsent 确保同一主题只订阅一次
+                RequiredBean existingBean = subscriptionMap.putIfAbsent(subscriptionKey, 
+                        new RequiredBean(simpleMqttClient, mqttRequsetBean));
+                
+                if (existingBean != null) {
+                    log.warn("⚠️ Duplicate subscription detected for topic [{}] on client [{}], skipping duplicate",
+                            mqttRequsetBean.getRequestTopic(), clientId);
+                } else {
+                    log.debug("✅ Registered subscription: {}", subscriptionKey);
+                }
+                
 //                MqttResponse mqttResponse = AnnotationUtil.getAnnotation(method, MqttResponse.class);
 //                if (mqttResponse != null)
 //                    mqttRequsetBean.setResponseTopic(mqttResponse.topic());
-                this.requiredBeans.add(new RequiredBean(simpleMqttClient, mqttRequsetBean));
                 //到系统准备好了之后再监听
 //                this.subscribeMethod(mqttRequsetBean, simpleMqttClient);
             }
         }
+        
+        log.info("✅ MQTT Proxy initialization completed: {} subscriptions registered", subscriptionMap.size());
     }
 
     public String buildTopic(Object bean, String... url) {
