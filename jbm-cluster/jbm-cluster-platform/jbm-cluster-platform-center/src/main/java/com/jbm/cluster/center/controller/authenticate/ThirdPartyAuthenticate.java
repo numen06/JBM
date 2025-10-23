@@ -1,0 +1,88 @@
+package com.jbm.cluster.center.controller.authenticate;
+
+import cn.hutool.core.util.IdUtil;
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
+import com.jbm.cluster.api.constants.LoginType;
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.user.ThirdPartyUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
+import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.center.service.BaseAccountService;
+import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
+import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.metadata.bean.ResultBody;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * @Created wesley.zhang
+ * @Date 2022/5/19 16:36
+ * @Description TODO
+ */
+@Service
+public class ThirdPartyAuthenticate implements ILoginAuthenticate {
+
+    @Autowired
+    private BaseUserService baseUserService;
+
+    @Autowired
+    private BaseAccountService baseAccountService;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
+        return ResultBody.callback(() -> {
+            ThirdPartyUser thirdPartyUser = JSONObject.parseObject(username, ThirdPartyUser.class);
+            if (thirdPartyUser == null) {
+                throw ServiceException.of("三方授权信息错误");
+            }
+            BaseAccount baseAccount = baseAccountService.getAccount(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider(), null);
+            if (baseAccount == null) {
+                throw ServiceException.of("没有找到授权");
+            }
+            UserAccount account = baseUserService.getUserAccount(baseAccount.getUserId());
+            if (account == null) {
+                throw ServiceException.of("没有找到授权用户");
+            }
+            return findUserByAccount(account);
+        });
+    }
+
+    public JbmLoginUser findUserByAccount(UserAccount account) {
+        JbmLoginUser jbmLoginUser = new JbmLoginUser();
+        jbmLoginUser.setUserId(account.getUserId());
+        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+        jbmLoginUser.setUsername(baseUser.getUserName());
+        jbmLoginUser.setRealName(baseUser.getRealName());
+        jbmLoginUser.setMobile(baseUser.getMobile());
+        jbmLoginUser.setAccount(account.getAccount());
+        jbmLoginUser.setAccountType(account.getAccountType());
+        jbmLoginUser.setDeptId(account.getDepartmentId());
+        jbmLoginUser.setCompanyId(account.getCompanyId());
+        Set<String> roles = account.getRoles().stream().map(BaseRole::getRoleCode).collect(Collectors.toSet());
+        jbmLoginUser.setRoles(roles);
+        Set<Long> roleIds = account.getRoles().stream().map(BaseRole::getRoleId).collect(Collectors.toSet());
+        jbmLoginUser.setRoleIds(roleIds);
+        Set<String> menuPermission = account.getAuthorities().stream().map(OpenAuthority::getAuthority).collect(Collectors.toSet());
+        jbmLoginUser.setMenuPermission(menuPermission);
+        return jbmLoginUser;
+    }
+
+    @Override
+    public List<LoginType> getLoginType() {
+        return Lists.newArrayList(LoginType.THIRD_PARTY);
+    }
+}

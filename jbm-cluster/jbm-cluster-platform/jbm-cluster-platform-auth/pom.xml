@@ -20,6 +20,11 @@
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
         </dependency>
+        <!-- Thymeleaf 模板引擎，用于渲染 OAuth2 登录页面 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
         <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
 <!--        <dependency>-->
 <!--            <groupId>cn.dev33</groupId>-->

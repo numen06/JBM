@@ -1,4 +1,4 @@
-package com.jbm.cluster.auth.model;
+package com.jbm.cluster.api.form.user;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +11,7 @@ import lombok.Data;
  *                 .email((String) userResp.get("email"))
  *                 .nickname((String) userResp.get("login"))
  *                 .build();
+ * @author wesley
  */
 @Data
 @Builder

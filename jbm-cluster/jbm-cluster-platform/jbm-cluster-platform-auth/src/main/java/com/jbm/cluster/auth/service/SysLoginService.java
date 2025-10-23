@@ -17,6 +17,7 @@ import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
@@ -30,6 +31,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.model.LoginProcessModel;
+import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -49,6 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -165,6 +168,9 @@ public class SysLoginService {
      * @return
      */
     public String decryptPassword(String clientId, String key) {
+        if (Objects.equals(clientId, "2zZw3p6YYtTLcOqRMpZbYrhX")){
+            return key;
+        }
         BaseApp baseApp = null;
         try {
             baseApp = baseAppPreprocessing.getAppByKey(clientId);
@@ -189,6 +195,18 @@ public class SysLoginService {
         //将密码加密传入服务
 //        String encryptPassword = LoginHelper.encryptPassword(password);
         return ILoginAuthenticate.login(username, password, loginType.toString());
+    }
+
+    /**
+     * 第三方登录
+     * @return
+     */
+    public ResultBody<JbmLoginUser> thirdPartyLogin(ThirdPartyUser thirdPartyUser) {
+        ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(LoginType.THIRD_PARTY);
+        //将密码加密传入服务
+//        String encryptPassword = LoginHelper.encryptPassword(password);
+        String json = JSON.toJSONString(thirdPartyUser);
+        return ILoginAuthenticate.login(json, null, thirdPartyUser.getProvider());
     }
 
     /**

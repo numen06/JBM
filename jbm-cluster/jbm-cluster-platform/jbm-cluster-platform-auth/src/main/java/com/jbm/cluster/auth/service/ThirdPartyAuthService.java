@@ -1,9 +1,10 @@
 package com.jbm.cluster.auth.service;
 
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.auth.config.ThirdPartyAuthProperties;
-import com.jbm.cluster.auth.model.ThirdPartyUser;
+import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,15 +33,15 @@ public class ThirdPartyAuthService {
         
         // Step 1: 换 access_token
         String tokenUrl = platformConfig.getTokenUrl();
-        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
-        FormBody.Builder formBodyBuilder = new FormBody.Builder()
+        RequestBody body = new FormBody.Builder()
                 .add("client_id", platformConfig.getClientId())
                 .add("client_secret", platformConfig.getClientSecret())
+                .add(SaOAuth2Consts.Param.grant_type, SaOAuth2Consts.GrantType.authorization_code)
                 .add("code", code)
-                .add("redirect_uri", platformConfig.getRedirectUri());
+//                .add("redirect_uri", platformConfig.getRedirectUri())
+                .build();
 
-        RequestBody body = RequestBody.create(formBodyBuilder.toString(), mediaType);
-        
+        //form方式请求
         Request tokenRequest = new Request.Builder()
                 .url(tokenUrl)
                 .post(body)
@@ -53,8 +54,14 @@ public class ThirdPartyAuthService {
             
             String responseBody = Objects.requireNonNull(tokenResponse.body()).string();
             JSONObject tokenJson = JSON.parseObject(responseBody);
-            accessToken = tokenJson.getString("access_token");
-            if (accessToken == null) throw new RuntimeException("No access token");
+            if (tokenJson.get("result")!=null){
+                accessToken =  tokenJson.getJSONObject("result").getString("access_token");
+            }else {
+                accessToken = tokenJson.getString("access_token");
+            }
+            if (accessToken == null) {
+                throw new RuntimeException("No access token");
+            }
         } catch (IOException e) {
             throw new RuntimeException("Error getting access token", e);
         }
@@ -70,10 +77,13 @@ public class ThirdPartyAuthService {
             
             String responseBody = Objects.requireNonNull(userResponse.body()).string();
             JSONObject userJson = JSON.parseObject(responseBody);
+            if (userJson.get("result")!=null){
+                userJson = userJson.getJSONObject("result");
+            }
             
             return ThirdPartyUser.builder()
                     .provider(provider)
-                    .subjectId(getStringValue(userJson, "id", "openid", "userid", "sub"))
+                    .subjectId(getStringValue(userJson, "id", "openid", "userId","userid", "sub"))
                     .email(userJson.getString("email"))
                     .nickname(getStringValue(userJson, "login", "name", "username", "nick"))
                     .avatar(userJson.getString("avatar_url"))
