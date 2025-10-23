@@ -66,16 +66,16 @@ public class DroolsRuleEngine {
             kieSession.fireAllRules();
             kieSession.dispose();
 
-
-
             // 根据触发的规则决定分支
             if (!firedRules.isEmpty()) {
-                String firedRule = firedRules.get(0);
-                return extractBranchIdFromRuleName(firedRule);
+                //"Rule_60285_elseIf_39639" 这种类型字符串截取 最后一段 39639
+                return firedRules.get(0).substring(firedRules.get(0).lastIndexOf("_") + 1);
+            }else {
+                throw new ServiceException("当前实例匹配不到规则！{"+ inputData +"}");
             }
 
             // 默认返回else分支
-            return findElseBranchId(conditionNode);
+            //return findElseBranchId(conditionNode);
 
         } catch (Exception e) {
             throw new ServiceException("规则执行失败: " + e.getMessage(), e);

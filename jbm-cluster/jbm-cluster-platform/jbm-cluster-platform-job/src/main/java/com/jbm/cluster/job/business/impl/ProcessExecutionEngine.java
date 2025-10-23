@@ -233,13 +233,13 @@ public class ProcessExecutionEngine {
                                                         Map<String, Object> inputData,
                                                         List<EdgeData> outgoingEdges) {
         // 使用Drools规则引擎判断分支
-        String branchId = droolsRuleEngine.evaluateCondition(conditionNode, inputData);
+        String ruleName = droolsRuleEngine.evaluateCondition(conditionNode, inputData);
 
         // 找到对应的边
         EdgeData selectedEdge = outgoingEdges.stream()
                 .filter(edge -> {
                     String sourceHandle = edge.getSourceHandle();
-                    return sourceHandle != null && sourceHandle.contains(branchId);
+                    return sourceHandle != null && sourceHandle.contains(ruleName);
                 })
                 .findFirst()
                 .orElseThrow(() -> new ServiceException("未找到匹配的分支"));

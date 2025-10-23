@@ -51,7 +51,7 @@ public class RuleReloadService {
     @PostConstruct
     public void init() throws Exception {
         //loadDynamicClassService.generateClass();
-        reloadRules();
+        //reloadRules();
     }
 
     public synchronized void reloadRules() {
