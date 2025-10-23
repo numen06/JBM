@@ -22,7 +22,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EntityScan(basePackages = {"com.jbm.cluster.api.entitys.job","com.jbm.cluster.job.model.rule"})
-@MapperScan(basePackageClasses = SysJobMapper.class)
+@MapperScan(basePackages = {"com.jbm.cluster.job.mapper"})
 @EnableJbmDictionary(basePackageClasses = MisfirePolicy.class)
 @EnableCodeAutoGeneate(entityPackages = "com.jbm.cluster.api.entitys.job", targetPackage = "com.jbm.cluster.job", excludePackages = {"com.jbm.cluster.api.entitys.job.rule"})
 public class JbmJobApplication {

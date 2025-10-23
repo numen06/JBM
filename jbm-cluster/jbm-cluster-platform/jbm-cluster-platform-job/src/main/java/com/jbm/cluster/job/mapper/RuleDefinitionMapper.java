@@ -9,5 +9,5 @@ import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
  * @Create: 2025-08-12 14:03:24
  */
 @MapperRepository
-public interface DroolsRuleMapper extends SuperMapper<RuleDefinition> {
+public interface RuleDefinitionMapper extends SuperMapper<RuleDefinition> {
 }

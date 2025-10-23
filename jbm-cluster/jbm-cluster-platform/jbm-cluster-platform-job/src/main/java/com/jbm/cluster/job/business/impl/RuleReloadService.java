@@ -11,6 +11,7 @@ import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
 import com.jbm.cluster.job.service.rule.RuleDefinitionService;
 import com.jbm.cluster.job.service.rule.DynamicClassService;
 import com.jbm.framework.exceptions.ServiceException;
+import jodd.util.StringUtil;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
 import org.kie.api.runtime.KieContainer;
@@ -145,6 +146,46 @@ public class RuleReloadService {
                     kieServices.getResources()
                             .newReaderResource(new StringReader(drlContent)));
         });
+
+        // 3. 构建容器
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
+        kieBuilder.buildAll();
+
+        if (kieBuilder.getResults().hasMessages(Message.Level.ERROR)) {
+            StringBuilder errorMsg = new StringBuilder("规则编译错误:\n");
+            kieBuilder.getResults().getMessages().forEach(msg -> {
+                errorMsg.append(" - ").append(msg.getText()).append("\n");
+                errorMsg.append("   [规则: ").append(msg.getPath()).append(" 行: ")
+                        .append(msg.getLine()).append("]\n");
+            });
+            throw new ServiceException(errorMsg.toString());
+        }
+
+        // 4. 获取内部 ReleaseId 并创建 KieContainer
+        ReleaseId releaseId = kieBuilder.getKieModule().getReleaseId();
+        return(kieServices.newKieContainer(releaseId));
+    }
+
+    /**
+     * 临时添加规则2
+     *
+     * @param
+     * @return
+     */
+    public synchronized KieContainer addRulesForFlow(String rule,String nodeId) {
+        if(StringUtil.isBlank(rule)){
+            throw new ServiceException("规则不能为空");
+        }
+
+        KieServices kieServices = KieServices.Factory.get();
+        // 2. 构建新的规则容器
+        KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
+
+
+            kieFileSystem.write("src/main/resources/" + nodeId + ".drl",
+                    kieServices.getResources()
+                            .newReaderResource(new StringReader(rule)));
+
 
         // 3. 构建容器
         KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
