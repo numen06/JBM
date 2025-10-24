@@ -281,18 +281,13 @@ public class OAuth2ServerController {
             ResultBody<JbmLoginUser> jbmLoginUserResultBody = sysLoginService.thirdPartyLogin(thirdUser);
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
             LoginHelper.login(myUser);
-            AccessTokenResult accessTokenResult = new AccessTokenResult();
-            accessTokenResult.setAccessToken(myUser.getToken());
-            if (myUser.getExpireTime() != null) {
-                accessTokenResult.setExpiresIn(myUser.getExpireTime() - System.currentTimeMillis());
-            }
-            accessTokenResult.setScope("*");
+            AccessTokenModel accessTokenResult = SaOAuth2Util.getAccessToken(myUser.getToken());
             //如果设置了跳转则跳转
             if (StrUtil.isNotEmpty(redirectUri)) {
                 response.sendRedirect(redirectUri);
                 return ResultBody.ok();
             }
-            return ResultBody.ok().data(accessTokenResult);
+            return ResultBody.ok().data(accessTokenResult.toLineMap());
         } catch (Exception e) {
 //            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login failed");
             return ResultBody.failed().msg("第三方登录失败Third-party OAuth2 login failed");
