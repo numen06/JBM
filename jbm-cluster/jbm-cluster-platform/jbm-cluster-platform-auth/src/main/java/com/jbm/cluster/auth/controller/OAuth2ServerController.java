@@ -18,10 +18,10 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.form.auth.RegisterForm;
+import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
-import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.ThirdPartyAuthService;
@@ -79,10 +79,11 @@ public class OAuth2ServerController {
         }
         return result;
     }
+
     @ApiOperation(value = "获取认证token", notes = "")
     @PostMapping("/access_token")
     public Object access_token(HttpSession session, HttpServletResponse response) {
-        return ((ResultBody<?>)this.oauth2()).getResult();
+        return ((ResultBody<?>) this.oauth2()).getResult();
     }
 
     /**
@@ -123,11 +124,11 @@ public class OAuth2ServerController {
         try {
             // 先进行用户登录
             ResultBody<JbmLoginUser> loginResult = sysLoginService.login(
-                authorizeForm.getUsername(), 
-                authorizeForm.getPassword(), 
-                LoginType.PASSWORD
+                    authorizeForm.getUsername(),
+                    authorizeForm.getPassword(),
+                    LoginType.PASSWORD
             );
-            
+
             if (!loginResult.getSuccess()) {
                 return ResultBody.<String>failed().msg(loginResult.getMessage());
             }
@@ -144,12 +145,10 @@ public class OAuth2ServerController {
             ra.loginId = loginResult.getResult().getLoginId();
 
 
-
-            
             // 生成授权码
             Object codeModel = SaOAuth2Util.generateCode(ra);
             String code = String.valueOf(codeModel);
-            
+
             // 如果 codeModel 有 code 属性，尝试获取
             if (codeModel != null && codeModel.getClass().getName().contains("CodeModel")) {
                 try {
@@ -159,14 +158,14 @@ public class OAuth2ServerController {
                     code = codeModel.toString();
                 }
             }
-            
+
             // 构建回调 URL
             String callbackUrl = SaOAuth2Util.buildRedirectUri(
-                authorizeForm.getRedirect_uri(), 
-                code, 
-                authorizeForm.getState()
+                    authorizeForm.getRedirect_uri(),
+                    code,
+                    authorizeForm.getState()
             );
-            
+
             log.info("OAuth2 登录成功，用户: {}, 授权码已生成，回调地址: {}", authorizeForm.getUsername(), callbackUrl);
             return ResultBody.<String>ok(callbackUrl).msg("登录成功");
         } catch (Exception e) {
@@ -174,8 +173,6 @@ public class OAuth2ServerController {
             return ResultBody.<String>failed().msg("登录失败：" + e.getMessage());
         }
     }
-
-
 
 
     @ApiOperation("用户注册")
@@ -243,7 +240,7 @@ public class OAuth2ServerController {
         SaRequest req = SaHolder.getRequest();
         SaResponse res = SaHolder.getResponse();
         // 获取参数
-        CodeModel codeModel =  SaOAuth2Util.getCode( code);
+        CodeModel codeModel = SaOAuth2Util.getCode(code);
         if (codeModel == null) {
             res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             ResultBody.failed().msg("code参数错误");
@@ -251,7 +248,7 @@ public class OAuth2ServerController {
         // 构建 Access-Token
         AccessTokenModel token = SaOAuth2Util.generateAccessToken(code);
         // 返回
-        return ResultBody.ok( token);
+        return ResultBody.ok(token);
     }
 
 
@@ -264,7 +261,7 @@ public class OAuth2ServerController {
             @PathVariable String provider,
             @RequestParam String code,
             @RequestParam(required = false) String state,
-            HttpSession session,
+            @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             HttpServletResponse response) throws IOException {
 
         // 1. 验证 state（防 CSRF）
@@ -276,19 +273,28 @@ public class OAuth2ServerController {
 
         try {
             // 2. 用 code 换取第三方用户信息
-            ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code,provider);
+            ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code, provider);
+            if (thirdUser == null) {
+                return ResultBody.failed().msg("获取第三方用户信息失败");
+            }
             // 3. 将第三方用户映射为你系统内的用户（自动注册或关联）
             ResultBody<JbmLoginUser> jbmLoginUserResultBody = sysLoginService.thirdPartyLogin(thirdUser);
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
-
+            LoginHelper.login(myUser);
             AccessTokenResult accessTokenResult = new AccessTokenResult();
             accessTokenResult.setAccessToken(myUser.getToken());
-            accessTokenResult.setExpiresIn(myUser.getExpireTime() - System.currentTimeMillis());
+            if (myUser.getExpireTime() != null) {
+                accessTokenResult.setExpiresIn(myUser.getExpireTime() - System.currentTimeMillis());
+            }
             accessTokenResult.setScope("*");
+            //如果设置了跳转则跳转
+            if (StrUtil.isNotEmpty(redirectUri)) {
+                response.sendRedirect(redirectUri);
+                return ResultBody.ok();
+            }
             return ResultBody.ok().data(accessTokenResult);
-
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login failed");
+//            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login failed");
             return ResultBody.failed().msg("第三方登录失败Third-party OAuth2 login failed");
 
         }

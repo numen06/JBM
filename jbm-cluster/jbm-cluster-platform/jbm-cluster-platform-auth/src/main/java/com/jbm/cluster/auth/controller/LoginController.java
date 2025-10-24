@@ -5,13 +5,11 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 @Controller
@@ -37,24 +35,12 @@ public class LoginController {
         }
         //获取当前请求的URL拼接前缀
         if (StrUtil.isEmpty(redirectUri)) {
-            //获取原始访问链接，拼接前缀，链接可能通过了几次转发
-            String referer = request.getHeader("referer");
-            if (StrUtil.isNotEmpty(referer)) {
-                String url = referer;
-                int index = url.indexOf("oauth2/authorize");
-                if (index > 0) {
-                    url = url.substring(0, index);
-                }
-                redirectUri = url + "/oauth2/thirdparty/local/callback";
-            }else{
-                String url = request.getRequestURL().toString();
-                String pixel = url.substring(0, url.indexOf("oauth2/authorize"));
-                redirectUri = pixel + "/oauth2/thirdparty/local/callback";
-            }
-
+            String url = request.getRequestURL().toString();
+            String pixel = url.substring(0, url.indexOf("oauth2/authorize"));
+            redirectUri = pixel + "/oauth2/thirdparty/local/callback";
         }
         if (StrUtil.isEmpty(clientId)) {
-            clientId = "2zZw3p6YYtTLcOqRMpZbYrhX";
+            clientId = "demo";
         }
         // 将参数传递给模板
         model.put("response_type", responseType);

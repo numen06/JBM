@@ -3,8 +3,8 @@ package com.jbm.cluster.auth.service;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.auth.config.ThirdPartyAuthProperties;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
+import com.jbm.cluster.auth.config.ThirdPartyAuthProperties;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class ThirdPartyAuthService {
             .writeTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build();
-    
+
     @Autowired
     private ThirdPartyAuthProperties thirdPartyAuthProperties;
 
@@ -30,7 +30,7 @@ public class ThirdPartyAuthService {
         if (platformConfig == null) {
             throw new RuntimeException("Unsupported provider: " + provider);
         }
-        
+
         // Step 1: 换 access_token
         String tokenUrl = platformConfig.getTokenUrl();
         RequestBody body = new FormBody.Builder()
@@ -51,12 +51,12 @@ public class ThirdPartyAuthService {
         String accessToken;
         try (Response tokenResponse = client.newCall(tokenRequest).execute()) {
             if (!tokenResponse.isSuccessful()) throw new IOException("Unexpected code " + tokenResponse);
-            
+
             String responseBody = Objects.requireNonNull(tokenResponse.body()).string();
             JSONObject tokenJson = JSON.parseObject(responseBody);
-            if (tokenJson.get("result")!=null){
-                accessToken =  tokenJson.getJSONObject("result").getString("access_token");
-            }else {
+            if (tokenJson.get("result") != null) {
+                accessToken = tokenJson.getJSONObject("result").getString("access_token");
+            } else {
                 accessToken = tokenJson.getString("access_token");
             }
             if (accessToken == null) {
@@ -74,25 +74,27 @@ public class ThirdPartyAuthService {
 
         try (Response userResponse = client.newCall(userRequest).execute()) {
             if (!userResponse.isSuccessful()) throw new IOException("Unexpected code " + userResponse);
-            
+
             String responseBody = Objects.requireNonNull(userResponse.body()).string();
             JSONObject userJson = JSON.parseObject(responseBody);
-            if (userJson.get("result")!=null){
+            if (userJson.get("result") != null) {
                 userJson = userJson.getJSONObject("result");
             }
-            
+
             return ThirdPartyUser.builder()
                     .provider(provider)
-                    .subjectId(getStringValue(userJson, "id", "openid", "userId","userid", "sub"))
+                    .subjectId(getStringValue(userJson, "id", "openid", "userId", "userid", "sub"))
                     .email(userJson.getString("email"))
-                    .nickname(getStringValue(userJson, "login", "name", "username", "nick"))
+                    .username(userJson.getString("username"))
+                    .mobile(userJson.getString("mobile"))
+                    .nickname(getStringValue(userJson, "login", "name", "nick"))
                     .avatar(userJson.getString("avatar_url"))
                     .build();
         } catch (IOException e) {
             throw new RuntimeException("Error getting user info", e);
         }
     }
-    
+
     /**
      * 从JSON对象中获取第一个非空字段值
      */

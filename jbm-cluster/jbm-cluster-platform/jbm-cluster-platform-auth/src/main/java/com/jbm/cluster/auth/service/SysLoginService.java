@@ -168,7 +168,7 @@ public class SysLoginService {
      * @return
      */
     public String decryptPassword(String clientId, String key) {
-        if (Objects.equals(clientId, "2zZw3p6YYtTLcOqRMpZbYrhX")){
+        if (Objects.equals(clientId, "demo")){
             return key;
         }
         BaseApp baseApp = null;
@@ -191,10 +191,10 @@ public class SysLoginService {
     }
 
     public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
-        ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
+        ILoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
         //将密码加密传入服务
 //        String encryptPassword = LoginHelper.encryptPassword(password);
-        return ILoginAuthenticate.login(username, password, loginType.toString());
+        return loginAuthenticate.login(username, password, loginType.toString());
     }
 
     /**
@@ -202,11 +202,11 @@ public class SysLoginService {
      * @return
      */
     public ResultBody<JbmLoginUser> thirdPartyLogin(ThirdPartyUser thirdPartyUser) {
-        ILoginAuthenticate ILoginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(LoginType.THIRD_PARTY);
+        ILoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(LoginType.THIRD_PARTY);
         //将密码加密传入服务
 //        String encryptPassword = LoginHelper.encryptPassword(password);
         String json = JSON.toJSONString(thirdPartyUser);
-        return ILoginAuthenticate.login(json, null, thirdPartyUser.getProvider());
+        return loginAuthenticate.login(json, null, LoginType.THIRD_PARTY.toString());
     }
 
     /**

@@ -1,8 +1,9 @@
 package com.jbm.cluster.center.controller.authenticate;
 
-import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.jbm.cluster.api.constants.AccountType;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
@@ -14,7 +15,6 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseUserService;
-import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,16 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             if (thirdPartyUser == null) {
                 throw ServiceException.of("三方授权信息错误");
             }
-            BaseAccount baseAccount = baseAccountService.getAccount(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider(), null);
+            BaseAccount baseAccount = null;
+            if (StrUtil.isNotEmpty(thirdPartyUser.getUsername())) {
+                baseAccount = baseAccountService.getAccount(thirdPartyUser.getUsername(), AccountType.username.toString(), null);
+            } else if (StrUtil.isNotEmpty(thirdPartyUser.getMobile())) {
+                baseAccount = baseAccountService.getAccount(thirdPartyUser.getMobile(), AccountType.mobile.toString(), null);
+            } else if (StrUtil.isNotEmpty(thirdPartyUser.getEmail())) {
+                baseAccount = baseAccountService.getAccount(thirdPartyUser.getEmail(), AccountType.email.toString(), null);
+            } else {
+                baseAccount = baseAccountService.getAccount(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider(), null);
+            }
             if (baseAccount == null) {
                 throw ServiceException.of("没有找到授权");
             }
