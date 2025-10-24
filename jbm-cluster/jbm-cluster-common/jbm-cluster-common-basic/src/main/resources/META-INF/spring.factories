@@ -2,6 +2,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.jbm.cluster.common.basic.module.JbmClusterNotification,\
 com.jbm.cluster.common.basic.configuration.TenantConfiguration,\
 com.jbm.cluster.common.basic.configuration.JbmBasicConfiguration,\
-com.jbm.cluster.common.basic.configuration.LoginAssemblyConfiguration
+com.jbm.cluster.common.basic.configuration.LoginAssemblyConfiguration,\
+com.jbm.cluster.common.basic.configuration.ForwardedHeaderConfig
 org.springframework.boot.env.EnvironmentPostProcessor=\
 com.jbm.cluster.common.basic.env.JbmBasicEnvProcessor

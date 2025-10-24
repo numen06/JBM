@@ -19,6 +19,15 @@ spring:
   web:
     resources:
       add-mappings: false
+  thymeleaf:
+    enabled: true
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    check-template: true
+    check-template-location: true
 management:
   endpoints:
     web:
@@ -42,4 +51,20 @@ jbm:
       - /oauth2/**
       - /captcha/**
       - /qrcode/**
+      - /login
 
+third-party:
+  auth:
+    platforms:
+      jaja:
+        client-id: 2zZw3p6YYtTLcOqRMpZbYrhX
+        client-secret: LAv2A6ZDRzldmMDibyNCNvCNViNzMixG
+        redirect-uri: https://platform.jajachina.com/api/auth/oauth2/thirdparty/github/callback
+        token-url: https://platform.jajachina.com/api/auth/oauth2/access_token
+        user-info-url: https://platform.jajachina.com/api/auth/oauth2/userinfo
+      local:
+        client-id: 2zZw3p6YYtTLcOqRMpZbYrhX
+        client-secret: LAv2A6ZDRzldmMDibyNCNvCNViNzMixG
+        redirect-uri: http://127.0.0.1:5555/oauth2/callback
+        token-url: http://127.0.0.1:5555/oauth2/token
+        user-info-url: http://127.0.0.1:5555/oauth2/userinfo
