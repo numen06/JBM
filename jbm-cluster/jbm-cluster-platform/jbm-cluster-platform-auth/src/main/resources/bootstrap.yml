@@ -60,5 +60,5 @@ third-party:
         client-id: demo
         client-secret: demo
         redirect-uri: http://127.0.0.1:5555/oauth2/callback
-        token-url: http://127.0.0.1:5555/oauth2/token
+        token-url: http://127.0.0.1:5555/oauth2/callback
         user-info-url: http://127.0.0.1:5555/oauth2/userinfo
