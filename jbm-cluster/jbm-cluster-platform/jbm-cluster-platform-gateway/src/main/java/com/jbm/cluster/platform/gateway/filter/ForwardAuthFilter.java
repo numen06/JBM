@@ -19,11 +19,14 @@ import reactor.core.publisher.Mono;
 public class ForwardAuthFilter implements GlobalFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        final String originalPath = exchange.getRequest().getURI().getPath();
         ServerHttpRequest newRequest = exchange
                 .getRequest()
                 .mutate()
                 // 为请求追加 Id-Token 参数
                 .header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken())
+                // 为请求追加 Original-Path 参数
+                .header("X-Original-Path", originalPath)
                 .build();
         ServerWebExchange newExchange = exchange.mutate().request(newRequest).build();
         // 添加请求时间
