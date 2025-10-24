@@ -257,7 +257,7 @@
 
         <div class="error-message" id="errorMessage"></div>
 
-        <form class="login-form" id="loginForm" method="POST" action="/oauth2/doLogin">
+        <form class="login-form" id="loginForm" method="POST" action="">
             <input type="hidden" name="response_type" th:value="${response_type}">
             <input type="hidden" name="client_id" th:value="${client_id}">
             <input type="hidden" name="redirect_uri" th:value="${redirect_uri}">
@@ -308,15 +308,33 @@
 
     <!-- Footer -->
     <div class="footer-box">
-        还没有账户？ <a href="/oauth2/register">创建账户</a>
+        还没有账户？ <a href="" id="registerLink">创建账户</a>
     </div>
 </div>
 
 <script>
+    // 动态获取基础路径
+    function getBasePath() {
+        const currentPath = window.location.pathname;
+        // 从当前路径中提取基础路径，例如：/api/auth/oauth2/authorize -> /api/auth
+        const pathParts = currentPath.split('/');
+        const oauthIndex = pathParts.indexOf('oauth2');
+        if (oauthIndex > 0) {
+            return pathParts.slice(0, oauthIndex).join('/');
+        }
+        return '';
+    }
+
+    const basePath = getBasePath();
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     const submitBtn = document.getElementById('submitBtn');
     const loading = document.getElementById('loading');
+    const registerLink = document.getElementById('registerLink');
+
+    // 设置表单action和注册链接
+    loginForm.action = basePath + '/oauth2/doLogin';
+    registerLink.href = basePath + '/oauth2/register';
 
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -333,7 +351,7 @@
         const formData = new FormData(loginForm);
 
         try {
-            const response = await fetch('/oauth2/doLogin', {
+            const response = await fetch(basePath + '/oauth2/doLogin', {
                 method: 'POST',
                 body: formData
             });
@@ -359,7 +377,7 @@
                     const scope = document.querySelector('input[name="scope"]').value;
                     const state = document.querySelector('input[name="state"]').value;
 
-                    let url = '/oauth2/authorize?response_type=' + responseType
+                    let url = basePath + '/oauth2/authorize?response_type=' + responseType
                         + '&client_id=' + clientId
                         + '&redirect_uri=' + encodeURIComponent(redirectUri)
                         + '&scope=' + (scope || '');
