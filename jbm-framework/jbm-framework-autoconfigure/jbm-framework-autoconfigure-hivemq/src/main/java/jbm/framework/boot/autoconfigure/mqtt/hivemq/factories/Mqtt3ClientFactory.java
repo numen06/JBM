@@ -103,11 +103,21 @@ public final class Mqtt3ClientFactory implements IMqttClientFactory {
         client.connect(connectBuilder.build())
                 .whenComplete((mqtt3ConnAck, throwable) -> {
                     if (throwable != null) {
-                        log.error("❌ Initial connection failed for MQTT3 client, will retry automatically: {}", 
+                        log.error("❌ Initial connection failed for MQTT3 client, Server: {}:{}, ClientId: {}, Reason: {}", 
+                                configuration.getServerHost(),
+                                configuration.getServerPort(),
+                                configuration.getClientId(),
                                 throwable.getMessage());
+                        log.error("💡 Please check: 1) Network connectivity 2) Server address 3) Authentication 4) Firewall rules");
+                        if (log.isDebugEnabled()) {
+                            log.debug("🔍 Connection failure detail:", throwable);
+                        }
                         // 不抛出异常，让自动重连机制处理
                     } else {
-                        log.info("✅ Initial connection successful for MQTT3 client");
+                        log.info("✅ Initial connection successful for MQTT3 client, Server={}:{}, ClientId={}", 
+                                configuration.getServerHost(),
+                                configuration.getServerPort(),
+                                configuration.getClientId());
                     }
                 });
 

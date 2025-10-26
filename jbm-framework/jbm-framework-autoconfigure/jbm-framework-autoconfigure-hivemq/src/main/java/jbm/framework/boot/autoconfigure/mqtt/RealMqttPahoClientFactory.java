@@ -7,14 +7,11 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
-import com.jbm.util.BeanUtils;
-import com.jbm.util.StringUtils;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.factories.Mqtt5ClientFactory;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Array;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,7 +41,8 @@ public class RealMqttPahoClientFactory {
         return this.getClientInstance(clientId);
     }
 
-    private final String mqttTag = IdUtil.simpleUUID();
+    // 使用短UUID作为标签（去除连字符，只有8位）
+    private final String mqttTag = IdUtil.simpleUUID().substring(0, 8);
 
     /**
      * 分布式程序的客户端创建，避免冲突（带缓存）
@@ -73,12 +71,15 @@ public class RealMqttPahoClientFactory {
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance(String clientId) {
+        log.warn("🔍 getClientInstance called with clientId: {}", clientId);
         // 使用缓存，避免重复创建
         return clientCache.computeIfAbsent(clientId, id -> {
             log.info("🔌 Creating new MQTT client: ClientId={}", id);
             MqttProperties properties = new MqttProperties();
             BeanUtil.copyProperties(mqttConnectProperties, properties);
+            log.warn("🔍 After copyProperties, clientId in properties: {}", properties.getClientId());
             properties.setClientId(id);
+            log.warn("🔍 After setClientId, clientId in properties: {}", properties.getClientId());
             Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
             return new SimpleMqttClient(mqtt5AsyncClient, properties);
         });
