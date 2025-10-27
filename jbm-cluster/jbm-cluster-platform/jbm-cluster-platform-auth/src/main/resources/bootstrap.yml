@@ -53,12 +53,12 @@ jbm:
       - /qrcode/**
       - /login
 
-third-party:
-  auth:
-    platforms:
-      local:
-        client-id: 7gBZcbsC7kLIWCdELIl8nxcs
-        client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
-        redirect-uri: http://127.0.0.1:5555/oauth2/callback
-        token-url: http://127.0.0.1:5555/oauth2/token
-        user-info-url: http://127.0.0.1:5555/oauth2/userinfo
+#third-party:
+#  auth:
+#    platforms:
+#      local:
+#        client-id: 7gBZcbsC7kLIWCdELIl8nxcs
+#        client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
+#        redirect-uri: http://127.0.0.1:5555/oauth2/callback
+#        token-url: http://127.0.0.1:5555/oauth2/token
+#        user-info-url: http://127.0.0.1:5555/oauth2/userinfo
