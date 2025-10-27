@@ -10,7 +10,10 @@ import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.net.ssl.*;
 import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -18,11 +21,55 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ThirdPartyAuthService {
 
-    private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .build();
+    private final OkHttpClient client = createOkHttpClient();
+
+    private OkHttpClient createOkHttpClient() {
+        try {
+            // Create a trust manager that trusts all certificates (USE WITH CAUTION)
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            // Trust all client certificates
+                        }
+
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                            // Trust all server certificates
+                            // WARNING: This is insecure for production use
+                            log.warn("[第三方认证] 使用自定义SSL信任管理器 - 仅用于开发/测试环境");
+                        }
+
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            return new OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier((hostname, session) -> {
+                        // Trust all hostnames (USE WITH CAUTION)
+                        log.debug("[第三方认证] 跳过主机名验证: {}", hostname);
+                        return true;
+                    })
+                    .build();
+        } catch (Exception e) {
+            log.error("[第三方认证] 创建OkHttpClient失败", e);
+            throw new RuntimeException("Failed to create OkHttpClient", e);
+        }
+    }
 
     @Autowired
     private ThirdPartyAuthProperties thirdPartyAuthProperties;
