@@ -12,6 +12,7 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.CodeModel;
 import cn.dev33.satoken.oauth2.model.RequestAuthModel;
+import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.util.ObjectUtil;
@@ -311,15 +312,19 @@ public class OAuth2ServerController {
             // 4. 执行登录
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
             LoginHelper.login(myUser);
+            log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
-            
             // 5. 获取AccessToken
             log.info("[第三方回调] Step 4: 获取AccessToken...");
+            //获取token对象
             AccessTokenModel accessTokenResult = SaOAuth2Util.getAccessToken(myUser.getToken());
+            if (accessTokenResult == null) {
+                 log.error("[第三方回调] 通过token获取实体失败");
+                 //瓶装一个AccessTokenModel返回
+                 accessTokenResult = new AccessTokenModel(myUser.getToken(), myUser.getClientId(), myUser.getLoginId(), "all");
+            }
             log.info("[第三方回调] Step 4: AccessToken获取成功");
-            log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] AccessToken详情: {}", accessTokenResult);
-            
             //如果设置了跳转则跳转
             if (StrUtil.isNotEmpty(redirectUri)) {
                 log.info("[第三方回调] Step 5: 执行重定向到: {}", redirectUri);
