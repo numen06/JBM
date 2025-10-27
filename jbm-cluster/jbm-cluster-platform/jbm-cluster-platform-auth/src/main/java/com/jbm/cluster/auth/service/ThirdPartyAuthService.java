@@ -85,9 +85,9 @@ public class ThirdPartyAuthService {
                     .provider(provider)
                     .subjectId(getStringValue(userJson, "id", "openid", "userId", "userid", "sub"))
                     .email(userJson.getString("email"))
-                    .username(userJson.getString("username"))
+                    .username(getStringValue(userJson,"username","name"))
                     .mobile(userJson.getString("mobile"))
-                    .nickname(getStringValue(userJson, "login", "name", "nick"))
+                    .nickname(getStringValue(userJson, "login", "nick","desc"))
                     .avatar(userJson.getString("avatar_url"))
                     .build();
         } catch (IOException e) {
