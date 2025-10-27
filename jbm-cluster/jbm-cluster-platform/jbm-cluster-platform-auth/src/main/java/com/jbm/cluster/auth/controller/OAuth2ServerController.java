@@ -264,6 +264,12 @@ public class OAuth2ServerController {
             @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             HttpServletResponse response) throws IOException {
 
+        log.info("========== 第三方登录回调开始 ==========");
+        log.info("[第三方回调] 提供商: {}", provider);
+        log.info("[第三方回调] 授权码: {}", code);
+        log.info("[第三方回调] 状态码: {}", state);
+        log.info("[第三方回调] 回调地址: {}", redirectUri);
+
         // 1. 验证 state（防 CSRF）
 //        String expectedState = (String) session.getAttribute("oauth2_thirdparty_state");
 //        if (expectedState == null || !expectedState.equals(state)) {
@@ -273,24 +279,65 @@ public class OAuth2ServerController {
 
         try {
             // 2. 用 code 换取第三方用户信息
+            log.info("[第三方回调] Step 1: 开始获取第三方用户信息...");
             ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code, provider);
+            
             if (thirdUser == null) {
+                log.error("[第三方回调] Step 1: 获取第三方用户信息失败，返回null");
                 return ResultBody.failed().msg("获取第三方用户信息失败");
             }
+            
+            log.info("[第三方回调] Step 1: 获取第三方用户信息成功");
+            log.info("[第三方回调] 第三方用户ID: {}", thirdUser.getSubjectId());
+            log.info("[第三方回调] 用户名: {}", thirdUser.getUsername());
+            log.info("[第三方回调] 昵称: {}", thirdUser.getNickname());
+            log.info("[第三方回调] 邮箱: {}", thirdUser.getEmail());
+            log.info("[第三方回调] 手机: {}", thirdUser.getMobile());
+            
             // 3. 将第三方用户映射为你系统内的用户（自动注册或关联）
+            log.info("[第三方回调] Step 2: 开始映射/注册系统用户...");
             ResultBody<JbmLoginUser> jbmLoginUserResultBody = sysLoginService.thirdPartyLogin(thirdUser);
+            
+            if (!jbmLoginUserResultBody.getSuccess()) {
+                log.error("[第三方回调] Step 2: 系统用户映射失败: {}", jbmLoginUserResultBody.getMessage());
+                return ResultBody.failed().msg("用户映射失败: " + jbmLoginUserResultBody.getMessage());
+            }
+            
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
+            log.info("[第三方回调] Step 2: 系统用户映射成功");
+            log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
+            log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
+            
+            // 4. 执行登录
+            log.info("[第三方回调] Step 3: 开始执行用户登录...");
             LoginHelper.login(myUser);
+            log.info("[第三方回调] Step 3: 用户登录成功");
+            
+            // 5. 获取AccessToken
+            log.info("[第三方回调] Step 4: 获取AccessToken...");
             AccessTokenModel accessTokenResult = SaOAuth2Util.getAccessToken(myUser.getToken());
+            log.info("[第三方回调] Step 4: AccessToken获取成功");
+            log.info("[第三方回调] Token: {}", myUser.getToken());
+            log.info("[第三方回调] AccessToken详情: {}", accessTokenResult);
+            
             //如果设置了跳转则跳转
             if (StrUtil.isNotEmpty(redirectUri)) {
+                log.info("[第三方回调] Step 5: 执行重定向到: {}", redirectUri);
                 response.sendRedirect(redirectUri);
+                log.info("========== 第三方登录回调成功（重定向模式） ==========");
                 return ResultBody.ok();
             }
+            
+            log.info("[第三方回调] Step 5: 返回Token信息（JSON模式）");
+            log.info("========== 第三方登录回调成功 ==========");
             return ResultBody.ok().data(accessTokenResult.toLineMap());
         } catch (Exception e) {
+            log.error("========== 第三方登录回调失败 ==========");
+            log.error("[第三方回调] 异常类型: {}", e.getClass().getName());
+            log.error("[第三方回调] 异常信息: {}", e.getMessage());
+            log.error("[第三方回调] 详细堆栈信息:", e);
 //            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login failed");
-            return ResultBody.failed().msg("第三方登录失败Third-party OAuth2 login failed");
+            return ResultBody.failed().msg("第三方登录失败: " + e.getMessage()).exception(e);
 
         }
     }
