@@ -274,6 +274,7 @@ public class OAuth2ServerController {
     public ResultBody<Object> thirdPartyCallback(
             @PathVariable String provider,
             @RequestParam String code,
+            @RequestParam(value = "client_id", required = false) String targetClientId,
             @RequestParam(required = false) String state,
             @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             HttpServletResponse response) throws IOException {
@@ -319,9 +320,13 @@ public class OAuth2ServerController {
 
             //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
-            if (myUser.getClientId()==null) {
+            if (StrUtil.isEmpty(myUser.getClientId())) {
                 log.info("[第三方回调] 映射用户没有clientId,设置clientId");
-                myUser.setClientId("g6LLZlu9nv0bRz73eHaxrMJQ");
+                if(StrUtil.isEmpty(targetClientId)) {
+                    myUser.setClientId("g6LLZlu9nv0bRz73eHaxrMJQ");
+                }else {
+                    myUser.setClientId(targetClientId);
+                }
             }
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
