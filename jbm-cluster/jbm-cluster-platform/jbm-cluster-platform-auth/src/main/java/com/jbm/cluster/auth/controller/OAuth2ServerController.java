@@ -217,7 +217,6 @@ public class OAuth2ServerController {
     }
 
     @ApiOperation("登出方法")
-    @GetMapping("logout")
     @DeleteMapping("logout")
     public ResultBody<String> logout(HttpServletResponse response) {
         return ResultBody.callback(() -> {
