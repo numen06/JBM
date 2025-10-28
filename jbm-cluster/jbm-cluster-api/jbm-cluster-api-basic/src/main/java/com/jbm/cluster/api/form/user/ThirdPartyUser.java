@@ -29,4 +29,5 @@ public class ThirdPartyUser {
     private String nickname;
     private String avatar;
     private String gender;
+    private String token;
 }

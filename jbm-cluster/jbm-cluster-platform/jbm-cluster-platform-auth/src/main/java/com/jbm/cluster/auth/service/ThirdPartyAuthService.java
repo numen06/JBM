@@ -90,9 +90,13 @@ public class ThirdPartyAuthService {
         if (StrUtil.isEmpty(logoutUrl)) {
             return platformConfig.getLoginUrl();
         }
+        if (StrUtil.isEmpty(loginUser.getThirdToken())){
+            log.info("[第三方认证] 登出失败, 未获取到第三方token");
+            return platformConfig.getLoginUrl();
+        }
         Request request = new Request.Builder().get()
                 .url(logoutUrl)
-                .addHeader("Authorization", "Bearer " + loginUser.getToken())
+                .addHeader("Authorization", "Bearer " + loginUser.getThirdToken())
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
@@ -181,6 +185,7 @@ public class ThirdPartyAuthService {
             }
 
             ThirdPartyUser thirdPartyUser = ThirdPartyUser.builder()
+                    .token(accessToken)
                     .provider(provider)
                     .subjectId(getStringValue(userJson, "id", "openid", "userId", "userid", "sub"))
                     .email(userJson.getString("email"))

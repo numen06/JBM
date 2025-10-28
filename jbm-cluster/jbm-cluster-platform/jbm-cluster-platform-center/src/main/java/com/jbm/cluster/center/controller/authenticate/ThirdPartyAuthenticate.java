@@ -70,7 +70,10 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
                 log.info("[第三方认证]: 没有用户信息:{}", thirdPartyUser.getSubjectId());
                 throw ServiceException.of("没有找到授权");
             }
-            return findUserByAccount(userAccount);
+            JbmLoginUser jbmLoginUser = findUserByAccount(userAccount);
+            jbmLoginUser.setThirdToken(thirdPartyUser.getToken());
+            log.info("[第三方认证]: 获取用户信息成功:{}", jbmLoginUser);
+            return jbmLoginUser;
         });
     }
 
