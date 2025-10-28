@@ -219,7 +219,7 @@ public class OAuth2ServerController {
     @ApiOperation("登出方法")
     @GetMapping("logout")
     @DeleteMapping("logout")
-    public ResultBody<Void> logout(HttpServletResponse response) {
+    public ResultBody<String> logout(HttpServletResponse response) {
         return ResultBody.callback(() -> {
             try {
                 JbmLoginUser loginUser = LoginHelper.getLoginUser();
@@ -231,10 +231,10 @@ public class OAuth2ServerController {
                     response.setStatus(302);
                     response.setHeader("Location", loginUrl);
                 }
+                return loginUrl;
             } catch (NotLoginException e) {
                 throw new ServiceException("还没有登录");
             }
-            return null;
         });
     }
 
