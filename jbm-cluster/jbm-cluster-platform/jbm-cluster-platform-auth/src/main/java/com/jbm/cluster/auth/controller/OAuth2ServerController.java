@@ -316,8 +316,16 @@ public class OAuth2ServerController {
                 log.error("[第三方回调] Step 2: 系统用户映射失败: {}", jbmLoginUserResultBody.getMessage());
                 return ResultBody.failed().msg("用户映射失败: " + jbmLoginUserResultBody.getMessage());
             }
-            
+
+            //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
+            RequestAuthModel requestAuthModel = new RequestAuthModel();
+            requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
+            requestAuthModel.setClientId(myUser.getClientId());
+            requestAuthModel.setScope("all");
+
+            AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
+
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
@@ -331,7 +339,6 @@ public class OAuth2ServerController {
             // 5. 获取AccessToken
             log.info("[第三方回调] Step 4: 获取AccessToken...");
             //获取token对象
-            AccessTokenModel accessTokenResult = SaOAuth2Util.getAccessToken(myUser.getToken());
             if (accessTokenResult == null) {
                  log.error("[第三方回调] 通过token获取实体失败");
                  //瓶装一个AccessTokenModel返回
