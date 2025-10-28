@@ -258,7 +258,11 @@ public class SysLoginService {
 //    }
 
     public void logout(Object loginId) {
-        LoginHelper.loginout();
+        if (loginId != null) {
+            LoginHelper.loginout(loginId);
+        }else {
+            LoginHelper.loginout();
+        }
 //        recordLogininfor(loginName, JbmConstants.LOGOUT, MessageUtils.message("user.logout.success"));
     }
 

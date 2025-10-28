@@ -217,12 +217,20 @@ public class OAuth2ServerController {
     }
 
     @ApiOperation("登出方法")
+    @GetMapping("logout")
     @DeleteMapping("logout")
-    public ResultBody<Void> logout() {
-
+    public ResultBody<Void> logout(HttpServletResponse response) {
         return ResultBody.callback(() -> {
             try {
+                JbmLoginUser loginUser = LoginHelper.getLoginUser();
+                //如果登录类型是第三方登录则调用第三方登录的退出
                 sysLoginService.logout(null);
+                String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
+                //浏览器重定向
+                if (loginUrl != null) {
+                    response.setStatus(302);
+                    response.setHeader("Location", loginUrl);
+                }
             } catch (NotLoginException e) {
                 throw new ServiceException("还没有登录");
             }

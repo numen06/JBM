@@ -1,9 +1,12 @@
 package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.config.ThirdPartyAuthProperties;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -73,6 +76,34 @@ public class ThirdPartyAuthService {
 
     @Autowired
     private ThirdPartyAuthProperties thirdPartyAuthProperties;
+
+    public String logout(String provider, JbmLoginUser loginUser) {
+        if (provider == null) {
+            return null;
+        }
+        ThirdPartyAuthProperties.PlatformConfig platformConfig = thirdPartyAuthProperties.getPlatforms().get(provider);
+        if (platformConfig == null) {
+            return null;
+        }
+        String logoutUrl = platformConfig.getLogoutUrl();
+        //调用第三方的登出接口get请求带token
+        if (StrUtil.isEmpty(logoutUrl)) {
+            return platformConfig.getLoginUrl();
+        }
+        Request request = new Request.Builder().get()
+                .url(logoutUrl)
+                .addHeader("Authorization", "Bearer " + loginUser.getToken())
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                log.error("[第三方认证] 登出失败, 响应码: {}", response.code());
+                throw new IOException("Unexpected code " + response);
+            }
+        } catch (IOException e) {
+            log.error("[第三方认证] 登出失败", e);
+        }
+        return platformConfig.getLoginUrl();
+    }
 
     public ThirdPartyUser getUserInfoByCode(String code, String provider) {
         log.info("[第三方认证] 开始获取用户信息, provider: {}, code: {}", provider, code);

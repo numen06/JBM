@@ -24,6 +24,8 @@ public class ThirdPartyAuthProperties {
         private String redirectUri;
         private String tokenUrl;
         private String userInfoUrl;
+        private String logoutUrl;
+        private String loginUrl;
         private String scope;
     }
 }
