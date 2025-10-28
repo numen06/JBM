@@ -329,7 +329,7 @@ public class OAuth2ServerController {
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
             RequestAuthModel requestAuthModel = new RequestAuthModel();
             requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
-            requestAuthModel.setClientId(myUser.getClientId());
+            requestAuthModel.setClientId(thirdUser.getClientId());
             requestAuthModel.setScope("all");
 
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);

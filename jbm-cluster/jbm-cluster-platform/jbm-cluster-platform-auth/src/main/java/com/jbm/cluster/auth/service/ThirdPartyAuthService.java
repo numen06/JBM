@@ -187,6 +187,7 @@ public class ThirdPartyAuthService {
 
             ThirdPartyUser thirdPartyUser = ThirdPartyUser.builder()
                     .token(accessToken)
+                    .clientId(platformConfig.getClientId())
                     .provider(provider)
                     .subjectId(getStringValue(userJson, "id", "openid", "userId", "userid", "sub"))
                     .email(userJson.getString("email"))

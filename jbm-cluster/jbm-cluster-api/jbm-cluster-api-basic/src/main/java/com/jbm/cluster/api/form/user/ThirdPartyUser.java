@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ThirdPartyUser {
     private String provider;
+    private String clientId;
     private String subjectId;
     private String openId;
     private String username;
