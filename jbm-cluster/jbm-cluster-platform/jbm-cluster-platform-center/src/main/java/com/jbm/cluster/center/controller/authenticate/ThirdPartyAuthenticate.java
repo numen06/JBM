@@ -17,6 +17,7 @@ import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  * @Date 2022/5/19 16:36
  * @Description TODO
  */
+@Slf4j
 @Service
 public class ThirdPartyAuthenticate implements ILoginAuthenticate {
 
@@ -49,6 +51,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             if (thirdPartyUser == null) {
                 throw ServiceException.of("三方授权信息错误");
             }
+            log.info("[第三方认证]: 获取用户信息:{}", username);
             UserAccount userAccount = null;
             if (StrUtil.isEmpty(thirdPartyUser.getSubjectId())) {
                 if (StrUtil.isNotEmpty(thirdPartyUser.getUsername())) {
@@ -63,8 +66,8 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
                 }
             }
             userAccount = baseUserService.login(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider());
-
             if (userAccount == null) {
+                log.info("[第三方认证]: 没有用户信息:{}", thirdPartyUser.getSubjectId());
                 throw ServiceException.of("没有找到授权");
             }
             return findUserByAccount(userAccount);
@@ -75,6 +78,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
         BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+        log.info("[第三方认证]: 获取用户信息:{}", baseUser);
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());
         jbmLoginUser.setMobile(baseUser.getMobile());
