@@ -340,21 +340,21 @@ public class OAuth2ServerController {
             requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
             LoginHelper.login(myUser);
+            log.info("[第三方回调] 登录状态:{}", StpUtil.isLogin());
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken
             log.info("[第三方回调] Step 4: 获取AccessToken...");
             //获取token对象
-            if (accessTokenResult == null) {
-                 log.error("[第三方回调] 通过token获取实体失败");
-                 //瓶装一个AccessTokenModel返回
-                 accessTokenResult = new AccessTokenModel(myUser.getToken(), myUser.getClientId(), myUser.getLoginId(), "all");
-            }
-            myUser.setToken(accessTokenResult.accessToken);
-
+//            if (accessTokenResult == null) {
+//                 log.error("[第三方回调] 通过token获取实体失败");
+//                 //瓶装一个AccessTokenModel返回
+//                 accessTokenResult = new AccessTokenModel(myUser.getToken(), myUser.getClientId(), myUser.getLoginId(), "all");
+//            }
             log.info("[第三方回调] Step 4: AccessToken获取成功");
             log.info("[第三方回调] AccessToken详情: {}", accessTokenResult);
+            myUser.setToken(accessTokenResult.accessToken);
             //如果设置了跳转则跳转
             if (StrUtil.isNotEmpty(redirectUri)) {
                 log.info("[第三方回调] Step 5: 执行重定向到: {}", redirectUri);
