@@ -319,12 +319,6 @@ public class OAuth2ServerController {
 
             //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
-            RequestAuthModel requestAuthModel = new RequestAuthModel();
-            requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
-            requestAuthModel.setClientId(myUser.getClientId());
-            requestAuthModel.setScope("all");
-
-            AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
 
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
@@ -333,7 +327,13 @@ public class OAuth2ServerController {
             
             // 4. 执行登录
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
-            LoginHelper.login(myUser);
+            RequestAuthModel requestAuthModel = new RequestAuthModel();
+            requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
+            requestAuthModel.setClientId(myUser.getClientId());
+            requestAuthModel.setScope("all");
+
+            AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
+
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken
