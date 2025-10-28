@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller.authenticate;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
@@ -72,7 +73,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             }
             JbmLoginUser jbmLoginUser = findUserByAccount(userAccount);
             jbmLoginUser.setThirdToken(thirdPartyUser.getToken());
-            log.info("[第三方认证]: 获取用户信息成功: 用户名:{},权限数量:{}", jbmLoginUser.getUsername(), jbmLoginUser.getPermissions().size());
+            log.info("[第三方认证]: 获取用户信息成功: 用户名:{},菜单权限数量:{}", jbmLoginUser.getUsername(), CollUtil.size(jbmLoginUser.getMenuPermission()));
             return jbmLoginUser;
         });
     }
