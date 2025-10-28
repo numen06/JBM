@@ -319,7 +319,10 @@ public class OAuth2ServerController {
 
             //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
-
+            if (myUser.getClientId()==null) {
+                log.info("[第三方回调] 映射用户没有clientId,设置clientId");
+                myUser.setClientId(thirdUser.getClientId());
+            }
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
@@ -329,7 +332,7 @@ public class OAuth2ServerController {
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
             RequestAuthModel requestAuthModel = new RequestAuthModel();
             requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
-            requestAuthModel.setClientId(thirdUser.getClientId());
+            requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
 
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
