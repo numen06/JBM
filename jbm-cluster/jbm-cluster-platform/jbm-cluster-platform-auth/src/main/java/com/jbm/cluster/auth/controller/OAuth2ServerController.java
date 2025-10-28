@@ -341,7 +341,6 @@ public class OAuth2ServerController {
             requestAuthModel.setScope("all");
 
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
-
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken
@@ -352,6 +351,8 @@ public class OAuth2ServerController {
                  //瓶装一个AccessTokenModel返回
                  accessTokenResult = new AccessTokenModel(myUser.getToken(), myUser.getClientId(), myUser.getLoginId(), "all");
             }
+            myUser.setToken(accessTokenResult.accessToken);
+            LoginHelper.login(myUser);
             log.info("[第三方回调] Step 4: AccessToken获取成功");
             log.info("[第三方回调] AccessToken详情: {}", accessTokenResult);
             //如果设置了跳转则跳转
