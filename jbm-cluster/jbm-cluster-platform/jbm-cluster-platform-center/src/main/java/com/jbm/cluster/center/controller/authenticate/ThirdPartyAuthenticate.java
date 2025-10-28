@@ -49,24 +49,20 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             if (thirdPartyUser == null) {
                 throw ServiceException.of("三方授权信息错误");
             }
-            BaseAccount baseAccount = null;
+            UserAccount userAccount = null;
             if (StrUtil.isNotEmpty(thirdPartyUser.getUsername())) {
-                baseAccount = baseAccountService.getAccount(thirdPartyUser.getUsername(), AccountType.username.toString(), null);
+                userAccount =  baseUserService.login(thirdPartyUser.getUsername(), AccountType.username.toString());
             } else if (StrUtil.isNotEmpty(thirdPartyUser.getMobile())) {
-                baseAccount = baseAccountService.getAccount(thirdPartyUser.getMobile(), AccountType.mobile.toString(), null);
+                userAccount = baseUserService.login(thirdPartyUser.getMobile(), AccountType.mobile.toString());
             } else if (StrUtil.isNotEmpty(thirdPartyUser.getEmail())) {
-                baseAccount = baseAccountService.getAccount(thirdPartyUser.getEmail(), AccountType.email.toString(), null);
+                userAccount = baseUserService.login(thirdPartyUser.getEmail(), AccountType.email.toString());
             } else {
-                baseAccount = baseAccountService.getAccount(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider(), null);
+                userAccount = baseUserService.login(thirdPartyUser.getEmail(), thirdPartyUser.getProvider());
             }
-            if (baseAccount == null) {
+            if (userAccount == null) {
                 throw ServiceException.of("没有找到授权");
             }
-            UserAccount account = baseUserService.getUserAccount(baseAccount.getUserId());
-            if (account == null) {
-                throw ServiceException.of("没有找到授权用户");
-            }
-            return findUserByAccount(account);
+            return findUserByAccount(userAccount);
         });
     }
 
