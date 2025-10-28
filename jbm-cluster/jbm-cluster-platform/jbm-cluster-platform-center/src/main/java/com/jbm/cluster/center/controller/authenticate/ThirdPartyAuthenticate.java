@@ -51,14 +51,17 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             }
             UserAccount userAccount = null;
             if (StrUtil.isNotEmpty(thirdPartyUser.getUsername())) {
-                userAccount =  baseUserService.login(thirdPartyUser.getUsername(), AccountType.username.toString());
+                thirdPartyUser.setSubjectId(thirdPartyUser.getUsername());
             } else if (StrUtil.isNotEmpty(thirdPartyUser.getMobile())) {
-                userAccount = baseUserService.login(thirdPartyUser.getMobile(), AccountType.mobile.toString());
+                thirdPartyUser.setSubjectId(thirdPartyUser.getMobile());
             } else if (StrUtil.isNotEmpty(thirdPartyUser.getEmail())) {
-                userAccount = baseUserService.login(thirdPartyUser.getEmail(), AccountType.email.toString());
-            } else {
-                userAccount = baseUserService.login(thirdPartyUser.getEmail(), thirdPartyUser.getProvider());
+                thirdPartyUser.setSubjectId(thirdPartyUser.getEmail());
             }
+            if (StrUtil.isEmpty(thirdPartyUser.getSubjectId())) {
+                throw ServiceException.of("没有找到第三方登录授权信息");
+            }
+            userAccount = baseUserService.login(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider());
+
             if (userAccount == null) {
                 throw ServiceException.of("没有找到授权");
             }
