@@ -321,7 +321,7 @@ public class OAuth2ServerController {
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
             if (myUser.getClientId()==null) {
                 log.info("[第三方回调] 映射用户没有clientId,设置clientId");
-                myUser.setClientId(thirdUser.getClientId());
+                myUser.setClientId("g6LLZlu9nv0bRz73eHaxrMJQ");
             }
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
