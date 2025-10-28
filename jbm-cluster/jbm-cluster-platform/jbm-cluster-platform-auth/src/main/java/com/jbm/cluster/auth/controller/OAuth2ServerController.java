@@ -229,7 +229,7 @@ public class OAuth2ServerController {
                     String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
                     //浏览器重定向
                     if (loginUrl != null) {
-                        response.setStatus(302);
+//                        response.setStatus(302);
                         response.setHeader("Location", loginUrl);
                     }
                     return loginUrl;
