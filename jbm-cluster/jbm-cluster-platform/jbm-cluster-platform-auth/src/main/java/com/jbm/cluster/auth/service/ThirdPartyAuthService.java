@@ -94,6 +94,7 @@ public class ThirdPartyAuthService {
             log.info("[第三方认证] 登出失败, 未获取到第三方token");
             return platformConfig.getLoginUrl();
         }
+        log.info("[第三方认证] 登出, logoutUrl: {}, token :{}", logoutUrl , loginUser.getThirdToken());
         Request request = new Request.Builder().get()
                 .url(logoutUrl)
                 .addHeader("Authorization", "Bearer " + loginUser.getThirdToken())

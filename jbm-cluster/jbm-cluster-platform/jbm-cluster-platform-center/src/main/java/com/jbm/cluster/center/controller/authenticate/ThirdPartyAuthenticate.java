@@ -72,7 +72,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
             }
             JbmLoginUser jbmLoginUser = findUserByAccount(userAccount);
             jbmLoginUser.setThirdToken(thirdPartyUser.getToken());
-            log.info("[第三方认证]: 获取用户信息成功:{}", jbmLoginUser);
+            log.info("[第三方认证]: 获取用户信息成功: 用户名:{},权限数量:{}", jbmLoginUser.getUsername(), jbmLoginUser.getPermissions().size());
             return jbmLoginUser;
         });
     }
