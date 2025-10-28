@@ -340,7 +340,7 @@ public class OAuth2ServerController {
             requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
             LoginHelper.login(myUser);
-            log.info("[第三方回调] 登录状态:{}", StpUtil.isLogin());
+            log.info("[第三方回调] 登录状态:{}，当前用户token:{}", StpUtil.isLogin(), StpUtil.getTokenValue());
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
