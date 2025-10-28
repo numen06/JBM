@@ -15,6 +15,7 @@ import cn.dev33.satoken.oauth2.model.RequestAuthModel;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
@@ -221,16 +222,21 @@ public class OAuth2ServerController {
     public ResultBody<String> logout(HttpServletResponse response) {
         return ResultBody.callback(() -> {
             try {
-                JbmLoginUser loginUser = LoginHelper.getLoginUser();
                 //如果登录类型是第三方登录则调用第三方登录的退出
                 sysLoginService.logout(null);
-                String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
-                //浏览器重定向
-                if (loginUrl != null) {
-                    response.setStatus(302);
-                    response.setHeader("Location", loginUrl);
+                try {
+                    JbmLoginUser loginUser = LoginHelper.getLoginUser();
+                    String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
+                    //浏览器重定向
+                    if (loginUrl != null) {
+                        response.setStatus(302);
+                        response.setHeader("Location", loginUrl);
+                    }
+                    return loginUrl;
+                } catch (Exception e) {
+                    log.error("第三方登录退出失败", e);
                 }
-                return loginUrl;
+                return "";
             } catch (NotLoginException e) {
                 throw new ServiceException("还没有登录");
             }
@@ -315,6 +321,7 @@ public class OAuth2ServerController {
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
+            log.info("[第三方回调] 系统菜单权限数量: {}", CollUtil.size(myUser.getMenuPermission()));
             
             // 4. 执行登录
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
