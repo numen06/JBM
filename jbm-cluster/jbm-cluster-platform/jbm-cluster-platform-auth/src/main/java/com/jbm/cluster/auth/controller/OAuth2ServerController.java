@@ -223,9 +223,10 @@ public class OAuth2ServerController {
         return ResultBody.callback(() -> {
             try {
                 //如果登录类型是第三方登录则调用第三方登录的退出
+                JbmLoginUser loginUser = LoginHelper.getLoginUser();
+                log.info("获取到用户信息:{}", loginUser);
                 sysLoginService.logout(null);
                 try {
-                    JbmLoginUser loginUser = LoginHelper.getLoginUser();
                     String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
                     //浏览器重定向
                     if (loginUrl != null) {
