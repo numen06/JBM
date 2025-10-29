@@ -224,18 +224,18 @@ public class OAuth2ServerController {
             try {
                 //如果登录类型是第三方登录则调用第三方登录的退出
                 sysLoginService.logout(null);
-//                try {
-//                    JbmLoginUser loginUser = LoginHelper.getLoginUser();
-//                    String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
-//                    //浏览器重定向
-//                    if (loginUrl != null) {
-////                        response.setStatus(302);
+                try {
+                    JbmLoginUser loginUser = LoginHelper.getLoginUser();
+                    String loginUrl = thirdPartyAuthService.logout(loginUser.getAccountType(), loginUser);
+                    //浏览器重定向
+                    if (loginUrl != null) {
+//                        response.setStatus(302);
 //                        response.setHeader("Location", loginUrl);
-//                    }
+                    }
 //                    return loginUrl;
-//                } catch (Exception e) {
-//                    log.error("第三方登录退出失败", e);
-//                }
+                } catch (Exception e) {
+                    log.error("第三方登录退出失败", e);
+                }
                 return null;
             } catch (NotLoginException e) {
                 throw new ServiceException("还没有登录");

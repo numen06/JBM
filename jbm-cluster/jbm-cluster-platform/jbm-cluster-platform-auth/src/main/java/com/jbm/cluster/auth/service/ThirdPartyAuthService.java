@@ -95,9 +95,13 @@ public class ThirdPartyAuthService {
             return platformConfig.getLoginUrl();
         }
         log.info("[第三方认证] 登出, logoutUrl: {}, token :{}", logoutUrl , loginUser.getThirdToken());
-        Request request = new Request.Builder().get()
-                .url(logoutUrl)
-                .addHeader("Authorization", "Bearer " + loginUser.getThirdToken())
+        //设置url参数access_token
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(logoutUrl).newBuilder();
+        urlBuilder.addQueryParameter("access_token", loginUser.getThirdToken());
+        // 2. 创建 Request
+        Request request = new Request.Builder()
+                .url(urlBuilder.build())
+                .get() // GET 请求
                 .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
