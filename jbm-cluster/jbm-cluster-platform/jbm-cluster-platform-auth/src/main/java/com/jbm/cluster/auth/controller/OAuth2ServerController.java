@@ -61,11 +61,12 @@ public class OAuth2ServerController {
         if (SaOAuth2Consts.NOT_HANDLE.equals(result)) {
             return ResultBody.failed().httpStatus(400).code(400).msg("输入参数错误,没有找到匹配的授权模式");
         }
-        SaRequest req = SaHolder.getRequest();
-        if (req.isParam(SaOAuth2Consts.Param.response_type, SaOAuth2Consts.ResponseType.token)) {
-            return result;
-        }
+
         if (result instanceof SaResult) {
+            SaRequest req = SaHolder.getRequest();
+            if (req.isParam(SaOAuth2Consts.Param.response_type, SaOAuth2Consts.ResponseType.token)) {
+                return ((SaResult) result).getData();
+            }
             SaResult saResult = (SaResult) result;
             if (SaResult.CODE_SUCCESS == saResult.getCode()) {
                   req = SaHolder.getRequest();
