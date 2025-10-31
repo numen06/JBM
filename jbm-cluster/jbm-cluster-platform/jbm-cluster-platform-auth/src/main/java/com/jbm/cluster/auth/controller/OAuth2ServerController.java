@@ -12,7 +12,6 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.CodeModel;
 import cn.dev33.satoken.oauth2.model.RequestAuthModel;
-import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.collection.CollUtil;
@@ -21,7 +20,6 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
-import com.jbm.cluster.api.model.auth.AccessTokenResult;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
 import com.jbm.cluster.auth.service.ConfirmService;
@@ -37,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
 
@@ -64,10 +61,14 @@ public class OAuth2ServerController {
         if (SaOAuth2Consts.NOT_HANDLE.equals(result)) {
             return ResultBody.failed().httpStatus(400).code(400).msg("输入参数错误,没有找到匹配的授权模式");
         }
+        SaRequest req = SaHolder.getRequest();
+        if (req.isParam(SaOAuth2Consts.Param.response_type, SaOAuth2Consts.ResponseType.token)) {
+            return result;
+        }
         if (result instanceof SaResult) {
             SaResult saResult = (SaResult) result;
             if (SaResult.CODE_SUCCESS == saResult.getCode()) {
-                SaRequest req = SaHolder.getRequest();
+                  req = SaHolder.getRequest();
                 if (req.isPath(SaOAuth2Consts.Api.token)) {
                     if (saResult.getData() instanceof Map) {
                         Map<String, Object> data = (Map<String, Object>) saResult.getData();
@@ -82,11 +83,6 @@ public class OAuth2ServerController {
         return result;
     }
 
-    @ApiOperation(value = "获取认证token", notes = "")
-    @PostMapping("/access_token")
-    public Object access_token(HttpSession session, HttpServletResponse response) {
-        return ((ResultBody<?>) this.oauth2()).getResult();
-    }
 
     /**
      * 处理所有OAuth相关请求
@@ -297,23 +293,23 @@ public class OAuth2ServerController {
             // 2. 用 code 换取第三方用户信息
             log.info("[第三方回调] Step 1: 开始获取第三方用户信息...");
             ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code, provider);
-            
+
             if (thirdUser == null) {
                 log.error("[第三方回调] Step 1: 获取第三方用户信息失败，返回null");
                 return ResultBody.failed().msg("获取第三方用户信息失败");
             }
-            
+
             log.info("[第三方回调] Step 1: 获取第三方用户信息成功");
             log.info("[第三方回调] 第三方用户ID: {}", thirdUser.getSubjectId());
             log.info("[第三方回调] 用户名: {}", thirdUser.getUsername());
             log.info("[第三方回调] 昵称: {}", thirdUser.getNickname());
             log.info("[第三方回调] 邮箱: {}", thirdUser.getEmail());
             log.info("[第三方回调] 手机: {}", thirdUser.getMobile());
-            
+
             // 3. 将第三方用户映射为你系统内的用户（自动注册或关联）
             log.info("[第三方回调] Step 2: 开始映射/注册系统用户...");
             ResultBody<JbmLoginUser> jbmLoginUserResultBody = sysLoginService.thirdPartyLogin(thirdUser);
-            
+
             if (!jbmLoginUserResultBody.getSuccess()) {
                 log.error("[第三方回调] Step 2: 系统用户映射失败: {}", jbmLoginUserResultBody.getMessage());
                 return ResultBody.failed().msg("用户映射失败: " + jbmLoginUserResultBody.getMessage());
@@ -323,9 +319,9 @@ public class OAuth2ServerController {
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
             if (StrUtil.isEmpty(myUser.getClientId())) {
                 log.info("[第三方回调] 映射用户没有clientId,设置clientId");
-                if(StrUtil.isEmpty(targetClientId)) {
+                if (StrUtil.isEmpty(targetClientId)) {
                     myUser.setClientId("g6LLZlu9nv0bRz73eHaxrMJQ");
-                }else {
+                } else {
                     myUser.setClientId(targetClientId);
                 }
             }
@@ -333,7 +329,7 @@ public class OAuth2ServerController {
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
             log.info("[第三方回调] 系统菜单权限数量: {}", CollUtil.size(myUser.getMenuPermission()));
-            
+
             // 4. 执行登录
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
             RequestAuthModel requestAuthModel = new RequestAuthModel();
@@ -342,7 +338,7 @@ public class OAuth2ServerController {
             requestAuthModel.setScope("all");
             LoginHelper.login(myUser);
             log.info("[第三方回调] 登录状态:{}，当前用户token:{}", StpUtil.isLogin(), StpUtil.getTokenValue());
-            AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel,true);
+            AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel, true);
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken
@@ -363,7 +359,7 @@ public class OAuth2ServerController {
                 log.info("========== 第三方登录回调成功（重定向模式） ==========");
                 return ResultBody.ok();
             }
-            
+
             log.info("[第三方回调] Step 5: 返回Token信息（JSON模式）");
             log.info("========== 第三方登录回调成功 ==========");
             return ResultBody.ok().data(accessTokenResult.toLineMap());
