@@ -10,6 +10,7 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -104,7 +105,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
 
     @ApiOperation(value = "导入菜单JSON文件")
     @PostMapping("/importMenu")
-    public ResultBody<String> importMenu(@RequestParam("file") MultipartFile file) {
+    public ResultBody<String> importMenu(@RequestParam(value = "file", required = false) MultipartFile file) {
         return ResultBody.callback(() -> {
             try {
                 // 读取文件内容
@@ -125,7 +126,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
                 
                 return String.format("成功导入 %d 个菜单", successCount);
             } catch (Exception e) {
-                throw new com.jbm.framework.exceptions.ServiceException("导入菜单失败: " + e.getMessage());
+                throw ServiceException.of(e, "导入菜单失败");
             }
         });
     }
