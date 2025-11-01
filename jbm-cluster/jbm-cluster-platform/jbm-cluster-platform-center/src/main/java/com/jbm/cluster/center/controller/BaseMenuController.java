@@ -24,9 +24,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -102,11 +104,11 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
 
     @ApiOperation(value = "导入菜单JSON文件")
     @PostMapping("/importMenu")
-    public ResultBody<String> importMenu(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+    public ResultBody<String> importMenu(@RequestParam("file") MultipartFile file) {
         return ResultBody.callback(() -> {
             try {
                 // 读取文件内容
-                String jsonContent = new String(file.getBytes(), "UTF-8");
+                String jsonContent = new String(file.getBytes(), StandardCharsets.UTF_8);
                 
                 // 解析JSON为菜单列表
                 List<BaseMenu> menus = JSON.parseArray(jsonContent, BaseMenu.class);
