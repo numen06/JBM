@@ -286,7 +286,6 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 } else {
                     // 不存在，清空menuId进行新增
                     importMenu.setMenuId(null);
-                    menuMapper.insert(importMenu);
                     saveEntity(importMenu);
                     insertCount++;
                     log.info("新增菜单: {} - {}", importMenu.getMenuName(), importMenu.getPath());
