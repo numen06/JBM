@@ -101,10 +101,31 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     }
 
     @ApiOperation(value = "导入菜单JSON文件")
-    @GetMapping("/importMenu")
-    public  void  importMenu(@RequestParam(required = false) Long appId) {
-
-
+    @PostMapping("/importMenu")
+    public ResultBody<String> importMenu(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        return ResultBody.callback(() -> {
+            try {
+                // 读取文件内容
+                String jsonContent = new String(file.getBytes(), "UTF-8");
+                
+                // 解析JSON为菜单列表
+                List<BaseMenu> menus = JSON.parseArray(jsonContent, BaseMenu.class);
+                
+                if (menus == null || menus.isEmpty()) {
+                    throw new com.jbm.framework.exceptions.ServiceException("导入文件内容为空或格式错误");
+                }
+                
+                // 批量导入菜单
+                int successCount = baseResourceMenuService.importMenus(menus);
+                
+                // 刷新网关
+                jbmClusterTemplate.refreshGateway();
+                
+                return String.format("成功导入 %d 个菜单", successCount);
+            } catch (Exception e) {
+                throw new com.jbm.framework.exceptions.ServiceException("导入菜单失败: " + e.getMessage());
+            }
+        });
     }
 
 
