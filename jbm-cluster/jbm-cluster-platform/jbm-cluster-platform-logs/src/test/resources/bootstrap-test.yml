@@ -1,0 +1,68 @@
+server:
+  port: 0  # 随机端口，避免端口冲突
+
+spring:
+  application:
+    name: jbm-cluster-platform-logs-test
+  cloud:
+    nacos:
+      config:
+        namespace: jbm
+        server-addr: 10.100.10.62:8848
+        # 测试环境禁用Nacos配置，使用本地配置
+        enabled: false
+      discovery:
+        # 测试环境禁用服务发现
+        enabled: false
+    bus:
+      enabled: false
+    stream:
+      # 测试环境禁用Stream
+      default-binder: rabbit
+      bindings:
+        accessLogs-in-0:
+          group: ${spring.application.name}
+      rabbit:
+        bindings:
+          accessLogs-in-0:
+            consumer:
+              # 测试环境不自动启动消费者
+              auto-startup: false
+  rabbitmq:
+    # 测试环境RabbitMQ配置（如果需要）
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  resources:
+    add-mappings: false
+
+# OpenObserve配置
+open-observe:
+  url: http://10.100.10.65:5080
+  organization: default
+  stream: business_log_test
+  username: admin
+  password: admin123
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.jbm: DEBUG
+    org.springframework: WARN
+
+# 禁用部分自动配置（测试环境不需要）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+jbm:
+  cluster:
+    token-type: memory  # 测试环境使用内存token
+
+swagger2:
+  enabled: false  # 测试环境禁用Swagger
+
