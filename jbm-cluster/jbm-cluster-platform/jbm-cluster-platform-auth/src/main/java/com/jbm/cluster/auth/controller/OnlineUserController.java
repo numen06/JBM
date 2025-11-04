@@ -13,6 +13,7 @@ import com.jbm.cluster.auth.form.OnlineUserSearchForm;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
@@ -93,7 +94,34 @@ public class OnlineUserController {
         
         Collections.reverse(userOnlineList);
         userOnlineList.removeAll(Collections.singleton(null));
-        return ResultBody.ok(new DataPaging<SysUserOnline>(userOnlineList, userOnlineList.size()));
+        
+        // 获取分页参数
+        PageForm pageForm = onlineUserSearchForm.getPageForm();
+        if (pageForm == null) {
+            pageForm = new PageForm();
+        }
+        
+        // 计算总记录数
+        int total = userOnlineList.size();
+        
+        // 计算总页数
+        int pageSize = pageForm.getPageSize() != null ? pageForm.getPageSize() : Integer.MAX_VALUE;
+        int currPage = pageForm.getCurrPage() != null ? pageForm.getCurrPage() : 1;
+        long totalPage = (total + pageSize - 1) / pageSize;
+        
+        // 进行内存分页
+        int fromIndex = (currPage - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        
+        List<SysUserOnline> pagedList;
+        if (fromIndex >= total) {
+            // 当前页超出范围，返回空列表
+            pagedList = new ArrayList<>();
+        } else {
+            pagedList = userOnlineList.subList(fromIndex, toIndex);
+        }
+        
+        return ResultBody.ok(new DataPaging<SysUserOnline>(pagedList, (long) total, totalPage, pageForm));
     }
 
     @ApiOperation("踢出用户")
