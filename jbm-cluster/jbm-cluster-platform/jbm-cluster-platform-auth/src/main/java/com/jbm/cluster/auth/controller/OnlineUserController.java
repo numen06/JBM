@@ -56,17 +56,24 @@ public class OnlineUserController {
                     continue;
                 }
                 
-                // 获取token值用于检查活动超时时间
+                // 获取token值用于检查活动超时时间和过期时间
                 String token = onlineKey.replace(JbmCacheConstants.ONLINE_TOKEN_KEY, "");
                 
-                // 检查token是否还有效
+                // 检查token是否还有效并设置相关时间
                 try {
-                    Long activityTime = StpUtil.stpLogic.getTokenActivityTimeoutByToken(token);
-                    if (activityTime != null && activityTime > 0) {
-                        sysUserOnline.setActivityTime(DateUtil.offset(DateTime.now(), DateField.SECOND, activityTime.intValue()));
+                    // 设置临时有效期（活动超时时间）
+                    Long activityTimeout = StpUtil.stpLogic.getTokenActivityTimeoutByToken(token);
+                    if (activityTimeout != null && activityTimeout > 0) {
+                        sysUserOnline.setActivityTime(DateUtil.offset(DateTime.now(), DateField.SECOND, activityTimeout.intValue()));
+                    }
+                    
+                    // 设置过期时间（从Redis获取在线用户key的过期时间）
+                    Long expireTime = redisService.getExpire(onlineKey);
+                    if (expireTime != null && expireTime > 0) {
+                        sysUserOnline.setExpiredTime(DateUtil.offset(DateTime.now(), DateField.SECOND, expireTime.intValue()));
                     }
                 } catch (Exception e) {
-                    // token可能已失效，继续处理但不设置活动时间
+                    // token可能已失效，继续处理但不设置相关时间
                 }
                 
                 userOnlineList.add(sysUserOnline);
