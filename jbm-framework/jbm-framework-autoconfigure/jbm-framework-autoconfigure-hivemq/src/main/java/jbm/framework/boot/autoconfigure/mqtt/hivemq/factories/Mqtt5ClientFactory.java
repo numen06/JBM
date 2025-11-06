@@ -19,7 +19,6 @@ package jbm.framework.boot.autoconfigure.mqtt.hivemq.factories;
 import cn.hutool.core.util.StrUtil;
 import com.hivemq.client.mqtt.*;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
-import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5ClientBuilder;
 import com.hivemq.client.mqtt.mqtt5.auth.Mqtt5EnhancedAuthMechanism;
@@ -28,7 +27,6 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
-import jbm.framework.boot.autoconfigure.mqtt.exception.MqttClientException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.KeyManagerFactoryCreationException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.TrustManagerFactoryCreationException;
@@ -57,17 +55,25 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
      */
 
     public Mqtt5AsyncClient mqttClient(final HiveMqttProperties configuration, @Nullable final Mqtt5EnhancedAuthMechanism enhancedAuthMechanism) {
+        // ⚠️ 诊断日志：无论如何都输出，确认代码是否重新编译
+        log.warn("🔧🔧🔧 MQTT5ClientFactory.mqttClient() called - CODE VERSION: 2025-10-27-v2");
+        
         final Mqtt5ClientBuilder clientBuilder = MqttClient.builder()
                 .useMqttVersion5()
                 .transportConfig(buildTransportConfig(configuration));
 
         if (StrUtil.isNotBlank(configuration.getClientId())) {
-            clientBuilder.identifier("hivemq:" + configuration.getClientId());
+            // 直接使用配置的Client ID，不添加前缀（避免超长导致某些MQTT服务器拒绝）
+            String clientId = configuration.getClientId();
+            clientBuilder.identifier(clientId);
+            log.info("🔧 Creating MQTT5 client with ClientId: {} (length: {})", clientId, clientId.length());
+        } else {
+            log.warn("⚠️ ClientId is empty, MQTT client will use auto-generated ID");
         }
         if (configuration.isAutomaticReconnect()) {
             clientBuilder.automaticReconnect()
-                    .initialDelay(MqttClientAutoReconnect.DEFAULT_START_DELAY_S, TimeUnit.SECONDS)
-                    .maxDelay(configuration.getMaxReconnectDelay(), TimeUnit.SECONDS)
+                    .initialDelay(1, TimeUnit.SECONDS) // 初始延迟1秒
+                    .maxDelay(configuration.getMaxReconnectDelay(), TimeUnit.SECONDS) // 最大延迟
                     .applyAutomaticReconnect();
         }
 
@@ -110,23 +116,70 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
 
         final Mqtt5AsyncClient client = clientBuilder
                 .addConnectedListener(connectedEvent -> {
-                    log.info("✅ Connected or Reconnected to MQTT5 Client:{}", connectedEvent.getClientConfig().getClientIdentifier());
+                    // 只在 DEBUG 级别记录连接成功，减少日志量
+                    if (log.isDebugEnabled()) {
+                        log.debug("✅ Connected to MQTT5 Client:{}", 
+                                connectedEvent.getClientConfig().getClientIdentifier());
+                    }
                 }).addDisconnectedListener(disconnectedEvent -> {
-                    log.warn("❌ Disconnected from MQTT5 Client:{},Reconnect attempts:{}",
-                            disconnectedEvent.getClientConfig().getClientIdentifier(),
-                            disconnectedEvent.getReconnector().getAttempts()
-                    );
+                    Throwable cause = disconnectedEvent.getCause();
+                    String clientId = disconnectedEvent.getClientConfig().getClientIdentifier().toString();
+                    int attempts = disconnectedEvent.getReconnector().getAttempts();
+                    
+                    // 检测 Client ID 冲突
+                    boolean isClientIdConflict = (attempts == 0 && cause != null && 
+                            (cause.getMessage().contains("DISCONNECT") || 
+                             cause.getMessage().contains("Session taken over")));
+                    
+                    if (isClientIdConflict) {
+                        log.error("🚨 CRITICAL: Client ID conflict detected! ClientId:{}, Reason:{}", 
+                                clientId, cause != null ? cause.getMessage() : "Unknown");
+                        log.error("🚨 Another system is using the same Client ID. Please ensure Client ID is unique!");
+                        log.error("🚨 Suggestion: Use spring.mqtt.client-id=${{spring.application.name}}-${{random.uuid}}");
+                    } else if (attempts > 0) {
+                        // 正常重连，输出详细原因便于排查
+                        if (cause != null) {
+                            log.warn("🔄 Disconnected (Reconnect attempts:{}), Reason: {}, will auto reconnect", 
+                                    attempts, cause.getMessage());
+                            // 如果有具体的异常堆栈，在DEBUG级别输出
+                            if (log.isDebugEnabled()) {
+                                log.debug("🔍 Disconnect detail:", cause);
+                            }
+                        } else {
+                            log.info("🔄 Disconnected (Reconnect attempts:{}), will auto reconnect", attempts);
+                        }
+                    } else if (log.isDebugEnabled()) {
+                        // 其他情况只在 DEBUG 级别记录
+                        log.debug("❌ Disconnected: ClientId:{}, Attempts:{}, Reason:{}", 
+                                clientId, attempts, cause != null ? cause.getMessage() : "Unknown");
+                    }
                 }).buildAsync();
 
         if (log.isTraceEnabled()) {
             log.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
         }
+        
+        // 异步连接，避免阻塞启动流程
         client.connect(connectBuilder.build())
-                .whenComplete((mqtt3ConnAck, throwable) -> {
+                .whenComplete((mqtt5ConnAck, throwable) -> {
                     if (throwable != null) {
-                        throw new MqttClientException("Error connecting mqtt client");
+                        log.error("❌ Initial connection failed for MQTT client, Server: {}:{}, ClientId: {}, Reason: {}", 
+                                configuration.getServerHost(), 
+                                configuration.getServerPort(),
+                                configuration.getClientId(),
+                                throwable.getMessage());
+                        log.error("💡 Please check: 1) Network connectivity 2) Server address 3) Authentication 4) Firewall rules");
+                        // DEBUG级别输出完整堆栈
+                        if (log.isDebugEnabled()) {
+                            log.debug("🔍 Connection failure detail:", throwable);
+                        }
+                    } else {
+                        log.info("✅ MQTT client connected successfully: Server={}:{}, ClientId={}", 
+                                configuration.getServerHost(),
+                                configuration.getServerPort(),
+                                configuration.getClientId());
                     }
-                }).join();
+                });
 
         return client;
     }

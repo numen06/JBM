@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 客户端演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .demo-section h2 {
+            color: #495057;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .demo-section h2::before {
+            content: "→";
+            margin-right: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: #1976d2;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #495057;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+
+        .code-box {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .code-box code {
+            color: #68d391;
+        }
+
+        .result-section {
+            display: none;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-title {
+            color: #155724;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: -1;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>OAuth2 授权演示</h1>
+    <p class="subtitle">模拟客户端发起 OAuth2 授权请求</p>
+
+    <!-- 步骤指示器 -->
+    <div class="step-indicator">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <div class="step-label">配置参数</div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-label">发起授权</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-label">用户登录</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-label">获取令牌</div>
+        </div>
+    </div>
+
+    <!-- 信息说明 -->
+    <div class="info-box">
+        <strong>💡 OAuth2 授权码模式流程</strong>
+        <p>1. 客户端将用户重定向到授权服务器的登录页面</p>
+        <p>2. 用户在授权服务器上进行身份验证</p>
+        <p>3. 用户授权后，授权服务器返回授权码</p>
+        <p>4. 客户端使用授权码换取访问令牌</p>
+    </div>
+
+    <!-- 配置表单 -->
+    <div class="demo-section">
+        <h2>配置 OAuth2 参数</h2>
+        
+        <div class="form-group">
+            <label class="form-label" for="authServerUrl">授权服务器地址</label>
+            <input type="text" class="form-control" id="authServerUrl" 
+                   value="http://localhost:8080/oauth2/authorize" 
+                   placeholder="http://localhost:8080/oauth2/authorize">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="clientId">客户端 ID (Client ID)</label>
+            <input type="text" class="form-control" id="clientId" 
+                   value="test_client" 
+                   placeholder="输入您的客户端ID">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="redirectUri">回调地址 (Redirect URI)</label>
+            <input type="text" class="form-control" id="redirectUri" 
+                   value="http://localhost:3000/callback" 
+                   placeholder="http://localhost:3000/callback">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="scope">权限范围 (Scope)</label>
+            <input type="text" class="form-control" id="scope" 
+                   value="user profile" 
+                   placeholder="user profile email">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="state">状态参数 (State) - 防 CSRF</label>
+            <input type="text" class="form-control" id="state" 
+                   value="" 
+                   placeholder="自动生成随机值">
+        </div>
+    </div>
+
+    <!-- 生成的授权URL -->
+    <div class="demo-section">
+        <h2>生成的授权 URL</h2>
+        <div class="code-box" id="generatedUrl">
+            点击下方按钮生成授权链接
+        </div>
+    </div>
+
+    <!-- 发起授权按钮 -->
+    <button class="btn" onclick="startOAuth2Flow()">
+        🚀 发起 OAuth2 授权请求
+    </button>
+
+    <!-- 结果显示 -->
+    <div class="result-section" id="resultSection">
+        <div class="result-title">✅ 授权回调结果</div>
+        <div class="result-content" id="resultContent"></div>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-box" style="margin-top: 20px; background: #fff3cd; border-left-color: #ffc107;">
+        <strong>📖 使用说明</strong>
+        <p><strong>步骤 1:</strong> 配置好上方的 OAuth2 参数（默认值可直接使用）</p>
+        <p><strong>步骤 2:</strong> 点击"发起 OAuth2 授权请求"按钮</p>
+        <p><strong>步骤 3:</strong> 在弹出的页面中输入用户名和密码登录</p>
+        <p><strong>步骤 4:</strong> 授权后会返回授权码，可用于换取访问令牌</p>
+    </div>
+</div>
+
+<script>
+    // 页面加载时生成随机 state
+    window.onload = function() {
+        if (!document.getElementById('state').value) {
+            document.getElementById('state').value = generateRandomState();
+        }
+        updateGeneratedUrl();
+
+        // 监听输入变化
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('input', updateGeneratedUrl);
+        });
+
+        // 检查 URL 中是否有授权码返回
+        checkCallbackParams();
+    };
+
+    // 生成随机 state
+    function generateRandomState() {
+        return 'state_' + Math.random().toString(36).substring(2, 15);
+    }
+
+    // 更新生成的 URL 显示
+    function updateGeneratedUrl() {
+        const authServerUrl = document.getElementById('authServerUrl').value;
+        const clientId = document.getElementById('clientId').value;
+        const redirectUri = document.getElementById('redirectUri').value;
+        const scope = document.getElementById('scope').value;
+        const state = document.getElementById('state').value;
+
+        const url = `${authServerUrl}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(state)}`;
+
+        document.getElementById('generatedUrl').textContent = url;
+    }
+
+    // 发起 OAuth2 授权流程
+    function startOAuth2Flow() {
+        updateGeneratedUrl();
+        const url = document.getElementById('generatedUrl').textContent;
+
+        // 保存 state 到 sessionStorage，用于验证回调
+        const state = document.getElementById('state').value;
+        sessionStorage.setItem('oauth2_state', state);
+
+        // 跳转到授权页面
+        window.location.href = url;
+    }
+
+    // 检查回调参数
+    function checkCallbackParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+
+        if (code || error) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            resultSection.classList.add('show');
+
+            if (error) {
+                resultSection.style.background = '#f8d7da';
+                resultSection.style.borderColor = '#f5c6cb';
+                resultContent.innerHTML = `
+                    <strong style="color: #721c24;">❌ 授权失败</strong><br>
+                    错误类型: ${error}<br>
+                    错误描述: ${urlParams.get('error_description') || '未知错误'}
+                `;
+            } else {
+                // 验证 state
+                const savedState = sessionStorage.getItem('oauth2_state');
+                if (state !== savedState) {
+                    resultContent.innerHTML = `
+                        <strong style="color: #856404;">⚠️ State 验证失败</strong><br>
+                        可能存在 CSRF 攻击风险！
+                    `;
+                } else {
+                    resultContent.innerHTML = `
+                        <strong style="color: #155724;">✅ 授权成功</strong><br>
+                        <strong>授权码 (Code):</strong><br>
+                        <code style="background: #e2e8f0; padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">${code}</code><br>
+                        <strong>State:</strong> ${state}<br><br>
+                        <strong>下一步:</strong> 使用此授权码向 <code>/oauth2/token</code> 端点换取访问令牌<br><br>
+                        <strong>请求示例:</strong>
+                        <pre style="background: #2d3748; color: #68d391; padding: 10px; border-radius: 4px; font-size: 11px; overflow-x: auto;">POST /oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=${code}
+&client_id=${document.getElementById('clientId').value}
+&redirect_uri=${encodeURIComponent(document.getElementById('redirectUri').value)}</pre>
+                    `;
+                }
+            }
+
+            // 清除 URL 参数（可选）
+            // window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+</script>
+</body>
+</html>
+

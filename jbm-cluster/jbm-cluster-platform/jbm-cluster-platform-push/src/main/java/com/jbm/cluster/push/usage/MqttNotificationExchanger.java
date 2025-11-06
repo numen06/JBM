@@ -41,10 +41,12 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         }
         this.realMqttPahoClientFactory = realMqttPahoClientFactory;
         try {
-            mqttClient = realMqttPahoClientFactory.getClientInstance(this.getClass().getSimpleName() + "_" + IdUtil.fastUUID());
-            log.info("mqtt连接成功");
+            // 使用极短Client ID：PUSH + 6位UUID（总长度11字符，符合最严格的MQTT限制）
+            String shortClientId = "PUSH" + IdUtil.simpleUUID().substring(0, 6);
+            mqttClient = realMqttPahoClientFactory.getClientInstance(shortClientId);
+            log.info("MQTT通知客户端初始化成功, ClientId={}", shortClientId);
         } catch (Exception e) {
-            log.error("mqtt连接失败", e);
+            log.error("MQTT通知客户端初始化失败", e);
         }
     }
 

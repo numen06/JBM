@@ -78,7 +78,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         queryWrapper.lambda()
                 .eq(BaseAccount::getAccount, account)
                 .eq(BaseAccount::getAccountType, accountType)
-                .eq(BaseAccount::getDomain, domain);
+                .eq(StrUtil.isNotBlank(domain), BaseAccount::getDomain, domain);
         return baseAccountMapper.selectOne(queryWrapper);
 
     }
@@ -303,7 +303,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
             password = IdUtil.fastSimpleUUID();
         }
         BaseAccount baseAccount = this.lambdaQuery().eq(BaseAccount::getUserId, baseUser.getUserId()).eq(BaseAccount::getAccount, accountType).one();
-        if (baseAccount == null){
+        if (baseAccount == null) {
             this.register(baseUser.getUserId(), openId, password, accountType, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
             baseUser.setUserName(openId);
             baseUserService.updateById(baseUser);

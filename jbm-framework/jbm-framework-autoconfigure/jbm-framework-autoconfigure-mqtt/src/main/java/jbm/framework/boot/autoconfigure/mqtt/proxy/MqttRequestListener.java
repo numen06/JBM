@@ -1,7 +1,5 @@
 package jbm.framework.boot.autoconfigure.mqtt.proxy;
 
-import cn.hutool.core.thread.AsyncUtil;
-import cn.hutool.core.thread.ExecutorBuilder;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -30,6 +28,10 @@ public class MqttRequestListener implements IMqttMessageListener {
     public MqttRequestListener(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
         this.mqttRequsetBean = mqttRequsetBean;
         this.simpleMqttClient = simpleMqttClient;
+    }
+    
+    public MqttRequsetBean getMqttRequsetBean() {
+        return mqttRequsetBean;
     }
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -64,19 +66,29 @@ public class MqttRequestListener implements IMqttMessageListener {
     }
 
     /**
+     * 消息到达处理
+     * 注意：由于已经通过多播监听器机制处理了单个类方法只执行一次的问题，这里不再需要消息级别的去重
+     * 
      * @param topic
      * @param message
      * @throws Exception
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        executor.submit(new Runnable() {
-            @Override
-            public void run() {
+        log.debug("📨 收到消息 Topic: {}, Method: {}", 
+                topic, 
+                mqttRequsetBean.getMethod().getName());
+        
+        // 提交到线程池异步处理
+        executor.submit(() -> {
+            try {
                 executeMqttRequest(topic, message);
+                log.debug("✅ 消息处理完成 Topic: {}, Method: {}", 
+                        topic, mqttRequsetBean.getMethod().getName());
+            } catch (Exception e) {
+                log.error("❌ 消息处理失败 Topic: {}, Method: {}", 
+                        topic, mqttRequsetBean.getMethod().getName(), e);
             }
         });
-
-
     }
 }

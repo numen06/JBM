@@ -40,22 +40,24 @@ public class OpenObserveConfiguration {
                         ResourceAttributes.HOST_NAME, "wesley" // 请将 ${host-name} 替换为您的主机名。
                 )));
 
-//        OtlpGrpcSpanExporter logSpan = OtlpGrpcSpanExporter.builder()
-//                .setEndpoint(openObserveProperties.getOtlp())
-//                .addHeader("Authorization", "Basic YWRtaW5AZXhhbXBsZS5jb206MURmMUI4QWU2M0JvU0Q1WA==")
-//                .addHeader("organization", "default")
-//                .addHeader("X-OBSERVE-DATASET", "my-stream")
-////                .addHeader("stream", "test")
-//                .build();
-//
-//        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
-//                .setResource(resource)
-//                .addSpanProcessor(
-//                        BatchSpanProcessor.builder(logSpan)
-//                                .setScheduleDelay(Duration.ofSeconds(1))
-//                                .build()
-//                )
-//                .build();
+        // 启用追踪功能：配置Span导出器
+        io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter spanExporter = 
+                io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter.builder()
+                .setEndpoint(openObserveProperties.getGrpc())
+                .addHeader("Authorization", "Basic YWRtaW5AZXhhbXBsZS5jb206MURmMUI4QWU2M0JvU0Q1WA==")
+                .addHeader("organization", "default")
+                .addHeader("X-OBSERVE-DATASET", "traces")
+                .build();
+
+        io.opentelemetry.sdk.trace.SdkTracerProvider sdkTracerProvider = 
+                io.opentelemetry.sdk.trace.SdkTracerProvider.builder()
+                .setResource(resource)
+                .addSpanProcessor(
+                        io.opentelemetry.sdk.trace.export.BatchSpanProcessor.builder(spanExporter)
+                                .setScheduleDelay(Duration.ofSeconds(1))
+                                .build()
+                )
+                .build();
 
         LogRecordExporter logExporter = OtlpGrpcLogRecordExporter.builder()
                 .setEndpoint(openObserveProperties.getGrpc())
@@ -76,7 +78,7 @@ public class OpenObserveConfiguration {
                 .build();
 
         OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
-//                .setTracerProvider(sdkTracerProvider)
+                .setTracerProvider(sdkTracerProvider) // 启用追踪功能
                 .setLoggerProvider(sdkLoggerProvider)
                 .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
                 .buildAndRegisterGlobal();

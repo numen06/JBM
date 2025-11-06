@@ -523,6 +523,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             UserAccount userAccount = getUserAccount(baseAccount.getUserId());
             // 复制账号信息
             BeanUtils.copyProperties(baseAccount, userAccount);
+            userAccount.setAccountType(baseAccount.getAccountType());
             return userAccount;
         }
         return null;
