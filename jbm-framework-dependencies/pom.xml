@@ -102,7 +102,7 @@
         <oshi-core.version>6.4.2</oshi-core.version>
         <ognl.version>3.1.2</ognl.version>
 
-        <drools.version>7.74.1.Final</drools.version>
+        <drools.version>8.44.0.Final</drools.version>
 
 
     </properties>
@@ -965,6 +965,8 @@
                 <version>${drools.version}</version>
                 <optional>true</optional>
             </dependency>
+            <!-- drools-spring 在 Drools 8.x 中已被移除 -->
+            <!--
             <dependency>
                 <groupId>org.drools</groupId>
                 <artifactId>drools-spring</artifactId>
@@ -988,6 +990,7 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            -->
             <!-- push -->
             <dependency>
                 <groupId>cn.jpush.api</groupId>

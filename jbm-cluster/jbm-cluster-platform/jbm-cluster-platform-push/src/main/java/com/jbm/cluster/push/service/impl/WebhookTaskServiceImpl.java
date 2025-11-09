@@ -80,20 +80,36 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     @Override
     public List<WebhookEventConfig> getEnableEventConfigs(WebhookTaskForm webhookTaskForm) {
         List<WebhookEventConfig> webhookEventConfigList = CollUtil.newArrayList();
+        String businessEventCode = null;
         //如果传输过来的数据中已经有配置则不再搜索
         if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig())) {
+            businessEventCode = webhookTaskForm.getWebhookEventConfig().getBusinessEventCode();
             //根据事件ID查询
             if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig().getEventId())) {
                 webhookTaskForm.getWebhookEventConfig().setEnable(true);
                 webhookEventConfigList = CollUtil.newArrayList(webhookTaskForm.getWebhookEventConfig());
             } else {
-                webhookEventConfigList = webhookEventConfigService.selectByEventCode(webhookTaskForm.getWebhookEventConfig().getBusinessEventCode());
+                List<WebhookEventConfig> allConfigs = webhookEventConfigService.selectByEventCode(businessEventCode);
+                webhookEventConfigList = allConfigs;
+                
+                // 记录查询到的配置信息，方便排查
+                if (CollUtil.isNotEmpty(allConfigs)) {
+                    long disabledCount = allConfigs.stream().filter(item -> BooleanUtil.isFalse(item.getEnable())).count();
+                    if (disabledCount > 0) {
+                        log.warn("业务事件 [{}] 查询到 {} 个配置，其中 {} 个未启用", 
+                                businessEventCode, allConfigs.size(), disabledCount);
+                    }
+                }
             }
         }
         //过滤掉不启用的配置
         webhookEventConfigList = webhookEventConfigList.stream().filter(item -> BooleanUtil.isTrue(item.getEnable())).collect(Collectors.toList());
         if (CollUtil.isEmpty(webhookEventConfigList)) {
-            throw new ServiceException("不存在可用的发送配置");
+            String errorMsg = StrUtil.isNotBlank(businessEventCode) 
+                    ? String.format("不存在可用的发送配置，业务事件代码: %s", businessEventCode)
+                    : "不存在可用的发送配置，请检查 WebhookEventConfig 配置表";
+            log.error(errorMsg);
+            throw new ServiceException(errorMsg);
         }
         return webhookEventConfigList;
     }
