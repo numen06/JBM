@@ -99,12 +99,12 @@ public class ApiFunctionRegistry {
             }
             
             // 统计函数名长度
-            long maxLength = functionDefinitions.values().stream()
+            int maxLength = functionDefinitions.values().stream()
                     .mapToInt(f -> f.getName().length())
                     .max()
                     .orElse(0);
             
-            long avgLength = functionDefinitions.values().stream()
+            double avgLength = functionDefinitions.values().stream()
                     .mapToInt(f -> f.getName().length())
                     .average()
                     .orElse(0);
