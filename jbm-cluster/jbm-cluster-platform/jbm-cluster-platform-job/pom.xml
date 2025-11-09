@@ -50,32 +50,12 @@
             <artifactId>kie-api</artifactId>
             <version>${drools.version}</version>
         </dependency>
-        <!-- Drools 8.x 中 kie-spring 模块仍然存在 -->
+        <!-- Drools 8.x 中 kie-spring 模块已被移除，不再需要 -->
+        <!-- 更新 ECJ 编译器版本以支持 JDK 21 -->
         <dependency>
-            <groupId>org.kie</groupId>
-            <artifactId>kie-spring</artifactId>
-            <version>${drools.version}</version>
-            <exclusions>
-                <!-- 排除过时的 spring 依赖 -->
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-beans</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- 更新 ECJ 编译器版本以支持更高版本的 Java -->
-        <dependency>
-            <groupId>org.eclipse.jdt.core.compiler</groupId>
+            <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
-            <version>4.6.1</version>
+            <version>3.35.0</version>
         </dependency>
 
     </dependencies>
