@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.jbm</groupId>
         <artifactId>jbm-framework-data</artifactId>
-        <version>7.2.17-SNAPSHOT</version>
+        <version>7.2.21-SNAPSHOT</version>
     </parent>
     <artifactId>jbm-framework-data-masterdata</artifactId>
     <dependencies>

@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>jbm</artifactId>
-    <version>7.2.17-SNAPSHOT</version>
+    <version>7.2.21-SNAPSHOT</version>
     <groupId>com.jbm</groupId>
     <packaging>pom</packaging>
     <developers>
@@ -58,7 +58,11 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
                 <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
                     <showWarnings>true</showWarnings>
                     <encoding>UTF-8</encoding>
                 </configuration>

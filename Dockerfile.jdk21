@@ -1,0 +1,75 @@
+# JDK 21 多阶段构建 Dockerfile
+# 用于在Docker容器中运行升级到JDK 21的应用
+
+# 构建阶段 - 使用JDK 21
+FROM eclipse-temurin:21-jdk-alpine as builder
+ARG JAR_FILE=*.jar
+WORKDIR /root/app
+
+# 复制jar文件
+COPY ${JAR_FILE} application.jar
+
+# 提取分层jar（如果使用Spring Boot 2.3+的分层功能）
+RUN java -Djarmode=layertools -jar application.jar extract
+
+# 运行阶段 - 使用JRE 21（更小的镜像）
+FROM eclipse-temurin:21-jre-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 设置时区为中国标准时间
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    apk del tzdata
+
+# 复制分层内容
+COPY --from=builder /root/app/dependencies/ ./
+COPY --from=builder /root/app/spring-boot-loader/ ./
+COPY --from=builder /root/app/snapshot-dependencies/ ./
+COPY --from=builder /root/app/application/ ./
+
+# 创建非root用户运行应用（安全最佳实践）
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# JVM参数配置（如果需要反射访问）
+ENV JAVA_OPTS="\
+    -Xms512m \
+    -Xmx2048m \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+HeapDumpOnOutOfMemoryError \
+    -XX:HeapDumpPath=/app/logs \
+    -Dfile.encoding=UTF-8 \
+    -Duser.timezone=Asia/Shanghai"
+
+# 如果遇到反射访问问题，取消下面的注释
+# ENV JAVA_OPTS="${JAVA_OPTS} \
+#     --add-opens java.base/java.lang=ALL-UNNAMED \
+#     --add-opens java.base/java.util=ALL-UNNAMED \
+#     --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
+
+# 暴露端口（根据实际应用调整）
+EXPOSE 8080
+
+# 健康检查（根据实际应用调整）
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# 启动应用
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.JarLauncher"]
+
+# 构建命令示例：
+# docker build -f Dockerfile.jdk21 -t your-app:jdk21 --build-arg JAR_FILE=your-app.jar .
+#
+# 运行命令示例：
+# docker run -d -p 8080:8080 --name your-app your-app:jdk21
+#
+# 使用阿里云镜像（国内用户）：
+# 替换第一行为：FROM registry.cn-hangzhou.aliyuncs.com/dragonwell/dragonwell:21-anolis
+

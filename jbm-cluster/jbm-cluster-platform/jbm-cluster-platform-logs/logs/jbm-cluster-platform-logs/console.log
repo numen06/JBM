@@ -8886,3 +8886,87 @@ Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No q
 2025-11-04 23:42:13.451 [Thread-8] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Start destroying common HttpClient[0;39m 
 2025-11-04 23:42:13.451 [Thread-16] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Destruction of the end[0;39m 
 2025-11-04 23:42:13.452 [Thread-8] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Destruction of the end[0;39m 
+2025-11-09 22:22:38.391 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-09 22:22:38.418 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-09 22:22:38.429 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-09 22:22:38.656 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-09 22:22:38.656 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-09 22:22:38.705 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-09 22:22:39.505 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[common.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:39.915 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[redis.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:40.337 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[rabbitmq.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:40.748 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[openobserve.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:41.167 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-logs] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:41.585 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-logs.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:22:41.598 [main] [34mINFO [0;39m [36mcom.jbm.cluster.logs.JbmLogsApplication[0;39m - [34mNo active profile set, falling back to 1 default profile: "default"[0;39m 
+2025-11-09 22:22:42.727 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-3312"][0;39m 
+2025-11-09 22:22:42.728 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-09 22:22:42.728 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-09 22:22:42.804 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-09 22:22:42.925 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-09 22:22:42.986 [main] [31mWARN [0;39m [36mo.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext[0;39m - [31mException encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'businessLogController': Unsatisfied dependency expressed through field 'businessLogService'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'businessLogServiceImpl': Injection of resource dependencies failed; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@javax.annotation.Resource(shareable=true, lookup="", name="", description="", authenticationType=CONTAINER, type=java.lang.Object.class, mappedName="")}[0;39m 
+2025-11-09 22:22:42.988 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStopping service [Tomcat][0;39m 
+2025-11-09 22:22:43.011 [main] [1;31mERROR[0;39m [36mo.s.b.diagnostics.LoggingFailureAnalysisReporter[0;39m - [1;31m
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field businessLogService in com.jbm.cluster.logs.controllers.BusinessLogController required a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' in your configuration.
+[0;39m 
+2025-11-09 22:22:43.012 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Start destroying common HttpClient[0;39m 
+2025-11-09 22:22:43.012 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Start destroying Publisher[0;39m 
+2025-11-09 22:22:43.012 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Destruction of the end[0;39m 
+2025-11-09 22:22:43.012 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Destruction of the end[0;39m 
+2025-11-09 22:24:18.981 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-09 22:24:19.007 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-09 22:24:19.019 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-09 22:24:19.238 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-09 22:24:19.239 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-09 22:24:19.291 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-09 22:24:20.063 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[common.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:20.479 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[redis.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:20.898 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[rabbitmq.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:21.314 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[openobserve.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:21.731 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-logs] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:22.152 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-logs.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-09 22:24:22.160 [main] [34mINFO [0;39m [36mcom.jbm.cluster.logs.JbmLogsApplication[0;39m - [34mNo active profile set, falling back to 1 default profile: "default"[0;39m 
+2025-11-09 22:24:23.305 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-3312"][0;39m 
+2025-11-09 22:24:23.306 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-09 22:24:23.306 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-09 22:24:23.388 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-09 22:24:23.523 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-09 22:24:23.590 [main] [31mWARN [0;39m [36mo.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext[0;39m - [31mException encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'businessLogController': Unsatisfied dependency expressed through field 'businessLogService'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'businessLogServiceImpl': Injection of resource dependencies failed; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@javax.annotation.Resource(shareable=true, lookup="", name="", description="", authenticationType=CONTAINER, type=java.lang.Object.class, mappedName="")}[0;39m 
+2025-11-09 22:24:23.592 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStopping service [Tomcat][0;39m 
+2025-11-09 22:24:23.617 [main] [1;31mERROR[0;39m [36mo.s.b.diagnostics.LoggingFailureAnalysisReporter[0;39m - [1;31m
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field businessLogService in com.jbm.cluster.logs.controllers.BusinessLogController required a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' in your configuration.
+[0;39m 
+2025-11-09 22:24:23.618 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Start destroying common HttpClient[0;39m 
+2025-11-09 22:24:23.618 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Start destroying Publisher[0;39m 
+2025-11-09 22:24:23.618 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Destruction of the end[0;39m 
+2025-11-09 22:24:23.618 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Destruction of the end[0;39m 

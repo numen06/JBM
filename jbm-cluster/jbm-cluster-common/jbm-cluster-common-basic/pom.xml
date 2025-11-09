@@ -5,13 +5,18 @@
     <parent>
         <artifactId>jbm-cluster-common</artifactId>
         <groupId>com.jbm</groupId>
-        <version>7.2.17-SNAPSHOT</version>
+        <version>7.2.21-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbm-cluster-common-basic</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-api-basic</artifactId>

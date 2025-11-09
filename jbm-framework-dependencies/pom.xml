@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>7.2.17-SNAPSHOT</version>
+    <version>7.2.21-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -30,18 +30,18 @@
     </developers>
     <properties>
         <log4j.version>2.17.1</log4j.version>
-        <spring.cloud.version>2021.0.1</spring.cloud.version>
-        <spring.boot.version>2.6.4</spring.boot.version>
-        <spring-boot-admin.version>2.1.6</spring-boot-admin.version>
+        <spring.cloud.version>2021.0.8</spring.cloud.version>
+        <spring.boot.version>2.7.18</spring.boot.version>
+        <spring-boot-admin.version>2.7.10</spring-boot-admin.version>
         <!--加入alibaba cloud-->
-        <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
+        <spring.cloud.alibaba.version>2021.0.5.0</spring.cloud.alibaba.version>
         <alibaba.nacos.version>2.3.0</alibaba.nacos.version>
         <transmittable-thread-local.version>2.12.2</transmittable-thread-local.version>
         <!-- 7.0add-->
         <arthas.version>3.6.2</arthas.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.compilerVersion>17</maven.compiler.compilerVersion>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.compilerVersion>21</maven.compiler.compilerVersion>
         <!-- 插件版本管理 -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
@@ -54,9 +54,9 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
-        <jdk.version>17</jdk.version>
-        <jbm.framework.version>7.2.17-SNAPSHOT</jbm.framework.version>
+        <java.version>21</java.version>
+        <jdk.version>21</jdk.version>
+        <jbm.framework.version>7.2.21-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.9</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
@@ -74,9 +74,10 @@
         <mqtt.client.version>1.2.1</mqtt.client.version>
         <mybatis.version>3.5.6</mybatis.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
+        <mysql.version>8.0.33</mysql.version>
         <hutool.version>5.8.34</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.32</lombok.version>
         <okhttp.version>4.9.1</okhttp.version>
         <jjwt.version>0.9.1</jjwt.version>
         <redisson.version>3.17.0</redisson.version>
@@ -487,7 +488,7 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
-                <version>7.2.17-SNAPSHOT</version>
+                <version>7.2.21-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>
@@ -782,11 +783,11 @@
             <!--                <artifactId>c3p0</artifactId>-->
             <!--                <version>${c3p0.version}</version>-->
             <!--            </dependency>-->
-            <!--<dependency>
+            <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
-            </dependency>-->
+            </dependency>
             <!--拼音-->
             <dependency>
                 <groupId>io.github.tokenjan</groupId>

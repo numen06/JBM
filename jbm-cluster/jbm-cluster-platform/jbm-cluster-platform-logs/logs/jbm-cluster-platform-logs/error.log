@@ -8158,3 +8158,39 @@ Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No q
 	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:119)
 	at org.springframework.context.annotation.CommonAnnotationBeanPostProcessor.postProcessProperties(CommonAnnotationBeanPostProcessor.java:329)
 	... 103 common frames omitted
+2025-11-09 22:22:43.011 [main] [1;31mERROR[0;39m [36mo.s.b.diagnostics.LoggingFailureAnalysisReporter[0;39m - [1;31m
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field businessLogService in com.jbm.cluster.logs.controllers.BusinessLogController required a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' in your configuration.
+[0;39m 
+2025-11-09 22:24:23.617 [main] [1;31mERROR[0;39m [36mo.s.b.diagnostics.LoggingFailureAnalysisReporter[0;39m - [1;31m
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field businessLogService in com.jbm.cluster.logs.controllers.BusinessLogController required a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'jbm.framework.boot.autoconfigure.openobserve.OpenObserveTemplate' in your configuration.
+[0;39m 

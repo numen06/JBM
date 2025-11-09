@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-JbmLogsApplication<jbm-cluster-platform-logs>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.jbm.cluster.logs.JbmLogsApplication",
+            "projectName": "jbm-cluster-platform-logs",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=50874 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=jbm-cluster-platform-logs"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-JbmJobApplication<jbm-cluster-platform-job>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.jbm.cluster.job.JbmJobApplication",
+            "projectName": "jbm-cluster-platform-job",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
