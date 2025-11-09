@@ -1,0 +1,320 @@
+2025-11-10 00:24:47.443 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:24:47.467 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:24:47.472 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:24:47.474 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:24:47.476 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:24:47.935 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:24:47.935 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:24:47.984 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:24:48.339 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:24:48.340 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:24:48.341 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:24:48.341 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:24:48.538 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.JbmPushApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:24:50.644 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-3313"][0;39m 
+2025-11-10 00:24:50.645 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-10 00:24:50.645 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-10 00:24:50.718 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-10 00:24:50.770 [main] [34mINFO [0;39m [36mc.a.d.s.b.a.DruidDataSourceAutoConfigure[0;39m - [34mInit DruidDataSource[0;39m 
+2025-11-10 00:24:51.451 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} inited[0;39m 
+2025-11-10 00:24:51.591 [main] [34mINFO [0;39m [36morg.hibernate.jpa.internal.util.LogHelper[0;39m - [34mHHH000204: Processing PersistenceUnitInfo [name: default][0;39m 
+2025-11-10 00:24:51.620 [main] [34mINFO [0;39m [36morg.hibernate.Version[0;39m - [34mHHH000412: Hibernate ORM core version 5.6.15.Final[0;39m 
+2025-11-10 00:24:51.713 [main] [34mINFO [0;39m [36morg.hibernate.annotations.common.Version[0;39m - [34mHCANN000001: Hibernate Commons Annotations {5.1.2.Final}[0;39m 
+2025-11-10 00:24:51.788 [main] [34mINFO [0;39m [36morg.hibernate.dialect.Dialect[0;39m - [34mHHH000400: Using dialect: jbm.framework.boot.autoconfigure.mysql.MySQL5TableType[0;39m 
+2025-11-10 00:24:52.370 [main] [34mINFO [0;39m [36mo.h.e.t.jta.platform.internal.JtaPlatformInitiator[0;39m - [34mHHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform][0;39m 
+2025-11-10 00:24:52.465 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-10 00:24:52.682 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔍 启动时扫描所有 processing 队列，恢复孤儿任务...[0;39m 
+2025-11-10 00:24:53.151 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34m初始化站内消息通知[0;39m 
+2025-11-10 00:24:53.500 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34mMQTT通知客户端初始化成功, ClientId=PUSH2a6c54[0;39m 
+2025-11-10 00:24:53.500 [MQTT Call: PUSH2a6c54] [34mINFO [0;39m [36mj.f.b.a.mqtt.callback.SimpleMqttCallback[0;39m - [34mMQTT Client:[PUSH2a6c54]连接[tcp://10.100.10.62:1883]成功[0;39m 
+2025-11-10 00:24:53.809 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.SmsNotificationExchanger[0;39m - [34m初始化短信通知组件[0;39m 
+2025-11-10 00:24:54.064 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} closing ...[0;39m 
+2025-11-10 00:24:54.067 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} closed[0;39m 
+2025-11-10 00:24:54.068 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStopping service [Tomcat][0;39m 
+2025-11-10 00:29:19.438 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:29:19.464 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:29:19.467 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:29:19.470 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:29:19.471 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:29:19.714 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:29:19.714 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:29:19.765 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:29:20.148 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:29:20.149 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:29:20.150 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:29:20.150 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:29:20.383 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.JbmPushApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:29:22.509 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-3313"][0;39m 
+2025-11-10 00:29:22.510 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-10 00:29:22.510 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-10 00:29:22.583 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-10 00:29:22.634 [main] [34mINFO [0;39m [36mc.a.d.s.b.a.DruidDataSourceAutoConfigure[0;39m - [34mInit DruidDataSource[0;39m 
+2025-11-10 00:29:23.218 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} inited[0;39m 
+2025-11-10 00:29:23.351 [main] [34mINFO [0;39m [36morg.hibernate.jpa.internal.util.LogHelper[0;39m - [34mHHH000204: Processing PersistenceUnitInfo [name: default][0;39m 
+2025-11-10 00:29:23.380 [main] [34mINFO [0;39m [36morg.hibernate.Version[0;39m - [34mHHH000412: Hibernate ORM core version 5.6.15.Final[0;39m 
+2025-11-10 00:29:23.478 [main] [34mINFO [0;39m [36morg.hibernate.annotations.common.Version[0;39m - [34mHCANN000001: Hibernate Commons Annotations {5.1.2.Final}[0;39m 
+2025-11-10 00:29:23.555 [main] [34mINFO [0;39m [36morg.hibernate.dialect.Dialect[0;39m - [34mHHH000400: Using dialect: jbm.framework.boot.autoconfigure.mysql.MySQL5TableType[0;39m 
+2025-11-10 00:29:24.160 [main] [34mINFO [0;39m [36mo.h.e.t.jta.platform.internal.JtaPlatformInitiator[0;39m - [34mHHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform][0;39m 
+2025-11-10 00:29:24.206 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-10 00:29:24.434 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔍 启动时扫描所有 processing 队列，恢复孤儿任务...[0;39m 
+2025-11-10 00:29:24.647 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m✅ 孤儿任务恢复完成[0;39m 
+2025-11-10 00:29:24.976 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34m初始化站内消息通知[0;39m 
+2025-11-10 00:29:25.326 [MQTT Call: PUSHe966ab] [34mINFO [0;39m [36mj.f.b.a.mqtt.callback.SimpleMqttCallback[0;39m - [34mMQTT Client:[PUSHe966ab]连接[tcp://10.100.10.62:1883]成功[0;39m 
+2025-11-10 00:29:25.326 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34mMQTT通知客户端初始化成功, ClientId=PUSHe966ab[0;39m 
+2025-11-10 00:29:25.662 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.SmsNotificationExchanger[0;39m - [34m初始化短信通知组件[0;39m 
+2025-11-10 00:29:26.024 [task-1] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:29:26.024 [task-1] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:29:26.315 [task-1] [34mINFO [0;39m [36mc.j.c.c.satoken.oauth.JbmNodeOAuth2TemplateImpl[0;39m - [34m初始化当前应用的默认的ClientToken[0;39m 
+2025-11-10 00:29:26.431 [task-1] [34mINFO [0;39m [36mc.j.c.common.basic.module.request.JbmBaseRequest[0;39m - [34m执行URL[http://10.100.10.61:3313/webhookTask/businessEventListener]状态为[200], 结果[{"code":200,"message":"监听测试-1成功","success":true,"timestamp":1762705766463}][0;39m 
+2025-11-10 00:29:26.432 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventDeliveryService[0;39m - [34m✅ 任务 8f54d381fe5d4f3770c32f1544e1fe60 第 1 次尝试成功[0;39m 
+2025-11-10 00:29:26.593 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m🔍 Found 0 beans with @MqttMapper annotation[0;39m 
+2025-11-10 00:29:26.593 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m✅ MQTT Proxy initialization completed: 0 subscriptions registered[0;39m 
+2025-11-10 00:29:27.697 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mStarting ProtocolHandler ["http-nio-3313"][0;39m 
+2025-11-10 00:29:27.718 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mnacos registry, DEFAULT_GROUP jbm-cluster-platform-push 192.168.9.111:3313 register finished[0;39m 
+2025-11-10 00:29:28.056 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.JbmPushApplication[0;39m - [34mStarted JbmPushApplication in 8.866 seconds (JVM running for 9.286)[0;39m 
+2025-11-10 00:29:28.059 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:29:28.502 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.442432708秒[0;39m 
+2025-11-10 00:29:28.504 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push.yml, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:29:28.505 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:29:28.505 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=common.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:29:28.505 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push-jaja.yml, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:29:28.505 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:29:28.562 [RMI TCP Connection(2)-127.0.0.1] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring DispatcherServlet 'dispatcherServlet'[0;39m 
+2025-11-10 00:29:28.802 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.296345542秒[0;39m 
+2025-11-10 00:29:28.802 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:29:28.830 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.027869791秒[0;39m 
+2025-11-10 00:29:28.830 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m📡 Subscribing to 0 MQTT topics[0;39m 
+2025-11-10 00:29:28.830 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m🚀 初始化服务实例状态... (第 1 次尝试)[0;39m 
+2025-11-10 00:29:28.883 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-vehicle-dev 已上线，当前在线服务数: 1[0;39m 
+2025-11-10 00:29:28.883 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-vehicle-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.884 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-vehicle-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.896 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-project-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.896 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-project-platform 已上线，当前在线服务数: 2[0;39m 
+2025-11-10 00:29:28.897 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-project-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.910 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-auth 已上线，当前在线服务数: 3[0;39m 
+2025-11-10 00:29:28.910 [task-6] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-auth, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.910 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-auth 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.958 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wms-platform 已上线，当前在线服务数: 4[0;39m 
+2025-11-10 00:29:28.958 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wms-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.958 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wms-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.971 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-platform-dev 已上线，当前在线服务数: 5[0;39m 
+2025-11-10 00:29:28.971 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.972 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.984 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-logs 已上线，当前在线服务数: 6[0;39m 
+2025-11-10 00:29:28.984 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-logs, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.984 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-logs 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:28.997 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 smart-building-data-batch-dev 已上线，当前在线服务数: 7[0;39m 
+2025-11-10 00:29:28.997 [task-6] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: smart-building-data-batch-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:28.997 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 smart-building-data-batch-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.007 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-agv-dev 已上线，当前在线服务数: 8[0;39m 
+2025-11-10 00:29:29.007 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-agv-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.007 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-agv-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.021 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-led-dev 已上线，当前在线服务数: 9[0;39m 
+2025-11-10 00:29:29.021 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-led-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.021 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-led-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.034 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-feige-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.034 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-feige-dev 已上线，当前在线服务数: 10[0;39m 
+2025-11-10 00:29:29.034 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-feige-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.043 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-vehicle, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.043 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-vehicle 已上线，当前在线服务数: 11[0;39m 
+2025-11-10 00:29:29.043 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-vehicle 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.057 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-platform 已上线，当前在线服务数: 12[0;39m 
+2025-11-10 00:29:29.057 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.057 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.057 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-push 已上线，当前在线服务数: 13[0;39m 
+2025-11-10 00:29:29.057 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-push, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.057 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-push 状态: 2 个实例在线[0;39m 
+2025-11-10 00:29:29.070 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wcs-app-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.070 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wcs-app-dev 已上线，当前在线服务数: 14[0;39m 
+2025-11-10 00:29:29.070 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wcs-app-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.085 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-elevator-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.085 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-elevator-dev 已上线，当前在线服务数: 15[0;39m 
+2025-11-10 00:29:29.085 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-elevator-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.095 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-gateway 已上线，当前在线服务数: 16[0;39m 
+2025-11-10 00:29:29.095 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-gateway, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.095 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-gateway 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.109 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-mqtt-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.109 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-mqtt-dev 已上线，当前在线服务数: 17[0;39m 
+2025-11-10 00:29:29.110 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-mqtt-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.123 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-tms-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.123 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-tms-platform-dev 已上线，当前在线服务数: 18[0;39m 
+2025-11-10 00:29:29.123 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-tms-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.136 [task-6] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-bigscreen, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.136 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-bigscreen 已上线，当前在线服务数: 19[0;39m 
+2025-11-10 00:29:29.136 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-bigscreen 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.149 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-center, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.149 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-center 已上线，当前在线服务数: 20[0;39m 
+2025-11-10 00:29:29.150 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-center 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.199 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-doc, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.199 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-doc 已上线，当前在线服务数: 21[0;39m 
+2025-11-10 00:29:29.199 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-doc 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.239 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wcs-app 已上线，当前在线服务数: 22[0;39m 
+2025-11-10 00:29:29.239 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wcs-app, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.239 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wcs-app 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.269 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-job, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.269 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-job 已上线，当前在线服务数: 23[0;39m 
+2025-11-10 00:29:29.269 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-job 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.288 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-weixin, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.288 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-weixin 已上线，当前在线服务数: 24[0;39m 
+2025-11-10 00:29:29.288 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-weixin 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.301 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-stacker-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.301 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-stacker-dev 已上线，当前在线服务数: 25[0;39m 
+2025-11-10 00:29:29.301 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-stacker-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.312 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: smart-building-app-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.312 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 smart-building-app-dev 已上线，当前在线服务数: 26[0;39m 
+2025-11-10 00:29:29.312 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 smart-building-app-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.329 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wms-platform-dev 已上线，当前在线服务数: 27[0;39m 
+2025-11-10 00:29:29.329 [task-6] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wms-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.329 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wms-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.343 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-opcua, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.343 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-opcua 已上线，当前在线服务数: 28[0;39m 
+2025-11-10 00:29:29.343 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-opcua 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.371 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-mes-app 已上线，当前在线服务数: 29[0;39m 
+2025-11-10 00:29:29.371 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-mes-app, 触发积压任务投递[0;39m 
+2025-11-10 00:29:29.371 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-mes-app 状态: 1 个实例在线[0;39m 
+2025-11-10 00:29:29.371 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 服务实例状态初始化完成，共 29 个服务，29 个在线[0;39m 
+2025-11-10 00:31:51.658 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:31:51.681 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:31:51.687 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:31:51.689 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:31:51.690 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:31:51.906 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:31:51.907 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:31:51.967 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:31:52.366 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:31:52.367 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:31:52.367 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:31:52.368 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:31:52.581 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.JbmPushApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:31:54.839 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-3313"][0;39m 
+2025-11-10 00:31:54.840 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-10 00:31:54.840 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-10 00:31:54.912 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-10 00:31:54.967 [main] [34mINFO [0;39m [36mc.a.d.s.b.a.DruidDataSourceAutoConfigure[0;39m - [34mInit DruidDataSource[0;39m 
+2025-11-10 00:31:55.530 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} inited[0;39m 
+2025-11-10 00:31:55.681 [main] [34mINFO [0;39m [36morg.hibernate.jpa.internal.util.LogHelper[0;39m - [34mHHH000204: Processing PersistenceUnitInfo [name: default][0;39m 
+2025-11-10 00:31:55.713 [main] [34mINFO [0;39m [36morg.hibernate.Version[0;39m - [34mHHH000412: Hibernate ORM core version 5.6.15.Final[0;39m 
+2025-11-10 00:31:55.819 [main] [34mINFO [0;39m [36morg.hibernate.annotations.common.Version[0;39m - [34mHCANN000001: Hibernate Commons Annotations {5.1.2.Final}[0;39m 
+2025-11-10 00:31:55.899 [main] [34mINFO [0;39m [36morg.hibernate.dialect.Dialect[0;39m - [34mHHH000400: Using dialect: jbm.framework.boot.autoconfigure.mysql.MySQL5TableType[0;39m 
+2025-11-10 00:31:56.511 [main] [34mINFO [0;39m [36mo.h.e.t.jta.platform.internal.JtaPlatformInitiator[0;39m - [34mHHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform][0;39m 
+2025-11-10 00:31:56.557 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-10 00:31:56.790 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔍 启动时扫描所有 processing 队列，恢复孤儿任务...[0;39m 
+2025-11-10 00:31:57.272 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34m初始化站内消息通知[0;39m 
+2025-11-10 00:31:57.619 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.MqttNotificationExchanger[0;39m - [34mMQTT通知客户端初始化成功, ClientId=PUSHdf6859[0;39m 
+2025-11-10 00:31:57.619 [MQTT Call: PUSHdf6859] [34mINFO [0;39m [36mj.f.b.a.mqtt.callback.SimpleMqttCallback[0;39m - [34mMQTT Client:[PUSHdf6859]连接[tcp://10.100.10.62:1883]成功[0;39m 
+2025-11-10 00:31:57.955 [main] [34mINFO [0;39m [36mc.jbm.cluster.push.usage.SmsNotificationExchanger[0;39m - [34m初始化短信通知组件[0;39m 
+2025-11-10 00:31:58.650 [main] [34mINFO [0;39m [36mc.j.c.c.satoken.oauth.JbmNodeOAuth2TemplateImpl[0;39m - [34m初始化当前应用的默认的ClientToken[0;39m 
+2025-11-10 00:31:59.027 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m🔍 Found 0 beans with @MqttMapper annotation[0;39m 
+2025-11-10 00:31:59.027 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m✅ MQTT Proxy initialization completed: 0 subscriptions registered[0;39m 
+2025-11-10 00:32:00.289 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mStarting ProtocolHandler ["http-nio-3313"][0;39m 
+2025-11-10 00:32:00.306 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:32:00.306 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:32:00.368 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mnacos registry, DEFAULT_GROUP jbm-cluster-platform-push 192.168.9.111:3313 register finished[0;39m 
+2025-11-10 00:32:00.707 [RMI TCP Connection(2)-127.0.0.1] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring DispatcherServlet 'dispatcherServlet'[0;39m 
+2025-11-10 00:32:00.747 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.JbmPushApplication[0;39m - [34mStarted JbmPushApplication in 9.35 seconds (JVM running for 9.854)[0;39m 
+2025-11-10 00:32:00.750 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:32:00.811 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [34m📝 接收到事件注册请求，服务ID: jbm-cluster-platform-push, 事件数量: 2, 批次时间: 2025-11-10 00:32:00[0;39m 
+2025-11-10 00:32:01.231 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [34m🧹 清理旧批次配置，服务ID: jbm-cluster-platform-push, 保留批次: 2025-11-10 00:32:00[0;39m 
+2025-11-10 00:32:01.304 [main] [34mINFO [0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [34m✅ 事件注册完成，服务ID: jbm-cluster-platform-push[0;39m 
+2025-11-10 00:32:01.305 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.553805958秒[0;39m 
+2025-11-10 00:32:01.310 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push.yml, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:32:01.311 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:32:01.311 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=common.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:32:01.311 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-push-jaja.yml, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:32:01.311 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:32:01.654 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.342382秒[0;39m 
+2025-11-10 00:32:01.654 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:32:01.680 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.025852292秒[0;39m 
+2025-11-10 00:32:01.680 [main] [34mINFO [0;39m [36mj.f.boot.autoconfigure.mqtt.proxy.MqttProxyFactory[0;39m - [34m📡 Subscribing to 0 MQTT topics[0;39m 
+2025-11-10 00:32:01.680 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m🚀 初始化服务实例状态... (第 1 次尝试)[0;39m 
+2025-11-10 00:32:01.717 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-vehicle-dev 已上线，当前在线服务数: 1[0;39m 
+2025-11-10 00:32:01.717 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-vehicle-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.717 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-vehicle-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.731 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-project-platform 已上线，当前在线服务数: 2[0;39m 
+2025-11-10 00:32:01.731 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-project-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.731 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-project-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.745 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-auth 已上线，当前在线服务数: 3[0;39m 
+2025-11-10 00:32:01.745 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-auth, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.746 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-auth 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.762 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wms-platform 已上线，当前在线服务数: 4[0;39m 
+2025-11-10 00:32:01.762 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wms-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.762 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wms-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.778 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-platform-dev 已上线，当前在线服务数: 5[0;39m 
+2025-11-10 00:32:01.778 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.778 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.790 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-logs, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.790 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-logs 已上线，当前在线服务数: 6[0;39m 
+2025-11-10 00:32:01.790 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-logs 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.804 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 smart-building-data-batch-dev 已上线，当前在线服务数: 7[0;39m 
+2025-11-10 00:32:01.804 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: smart-building-data-batch-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.804 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 smart-building-data-batch-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.812 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-agv-dev 已上线，当前在线服务数: 8[0;39m 
+2025-11-10 00:32:01.812 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-agv-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.812 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-agv-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.825 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-led-dev 已上线，当前在线服务数: 9[0;39m 
+2025-11-10 00:32:01.825 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-led-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.825 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-led-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.839 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-feige-dev 已上线，当前在线服务数: 10[0;39m 
+2025-11-10 00:32:01.839 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-feige-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.839 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-feige-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.852 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-vehicle 已上线，当前在线服务数: 11[0;39m 
+2025-11-10 00:32:01.852 [task-5] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-vehicle, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.852 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-vehicle 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.866 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-platform 已上线，当前在线服务数: 12[0;39m 
+2025-11-10 00:32:01.866 [task-6] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-platform, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.866 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-platform 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.880 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-push, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.880 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-push 已上线，当前在线服务数: 13[0;39m 
+2025-11-10 00:32:01.880 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-push 状态: 2 个实例在线[0;39m 
+2025-11-10 00:32:01.893 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wcs-app-dev 已上线，当前在线服务数: 14[0;39m 
+2025-11-10 00:32:01.893 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wcs-app-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.893 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wcs-app-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.906 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-elevator-dev 已上线，当前在线服务数: 15[0;39m 
+2025-11-10 00:32:01.906 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-elevator-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.906 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-elevator-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.920 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-gateway, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.920 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-gateway 已上线，当前在线服务数: 16[0;39m 
+2025-11-10 00:32:01.920 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-gateway 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.931 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-mqtt-dev 已上线，当前在线服务数: 17[0;39m 
+2025-11-10 00:32:01.931 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-mqtt-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.931 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-mqtt-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.945 [task-4] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-tms-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.945 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-tms-platform-dev 已上线，当前在线服务数: 18[0;39m 
+2025-11-10 00:32:01.945 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-tms-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.956 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-bigscreen 已上线，当前在线服务数: 19[0;39m 
+2025-11-10 00:32:01.956 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-bigscreen, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.956 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-bigscreen 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.966 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-center 已上线，当前在线服务数: 20[0;39m 
+2025-11-10 00:32:01.966 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-center, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.966 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-center 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.979 [task-3] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-doc, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.979 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-doc 已上线，当前在线服务数: 21[0;39m 
+2025-11-10 00:32:01.979 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-doc 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:01.996 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wcs-app 已上线，当前在线服务数: 22[0;39m 
+2025-11-10 00:32:01.996 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wcs-app, 触发积压任务投递[0;39m 
+2025-11-10 00:32:01.996 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wcs-app 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.009 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-job 已上线，当前在线服务数: 23[0;39m 
+2025-11-10 00:32:02.009 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-job, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.009 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-job 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.022 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jbm-cluster-platform-weixin, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.022 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jbm-cluster-platform-weixin 已上线，当前在线服务数: 24[0;39m 
+2025-11-10 00:32:02.022 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jbm-cluster-platform-weixin 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.036 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-stacker-dev 已上线，当前在线服务数: 25[0;39m 
+2025-11-10 00:32:02.036 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-stacker-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.036 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-stacker-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.048 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 smart-building-app-dev 已上线，当前在线服务数: 26[0;39m 
+2025-11-10 00:32:02.048 [task-2] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: smart-building-app-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.048 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 smart-building-app-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.069 [task-7] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-wms-platform-dev, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.069 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-wms-platform-dev 已上线，当前在线服务数: 27[0;39m 
+2025-11-10 00:32:02.069 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-wms-platform-dev 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.083 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 tpm-iot-protocol-opcua 已上线，当前在线服务数: 28[0;39m 
+2025-11-10 00:32:02.083 [task-8] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: tpm-iot-protocol-opcua, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.083 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 tpm-iot-protocol-opcua 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.105 [main] [34mINFO [0;39m [36mc.j.c.push.service.WebhookConfigSelectionStrategy[0;39m - [34m🟢 服务 jaja-mes-app 已上线，当前在线服务数: 29[0;39m 
+2025-11-10 00:32:02.105 [task-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.bevent.EventRetryScheduler[0;39m - [34m🔔 服务上线: jaja-mes-app, 触发积压任务投递[0;39m 
+2025-11-10 00:32:02.105 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 初始化服务 jaja-mes-app 状态: 1 个实例在线[0;39m 
+2025-11-10 00:32:02.105 [main] [34mINFO [0;39m [36mc.j.c.p.bevent.lis.ServiceInstanceChangePublisher[0;39m - [34m✅ 服务实例状态初始化完成，共 29 个服务，29 个在线[0;39m 
+2025-11-10 00:32:11.599 [businessEvent-in-0.jbm-cluster-platform-push-1] [34mINFO [0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [34m📥 接收到业务事件推送，事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent, 服务名: null[0;39m 
+2025-11-10 00:32:11.624 [businessEvent-in-0.jbm-cluster-platform-push-1] [34mINFO [0;39m [36mc.j.c.push.service.impl.WebhookTaskServiceImpl[0;39m - [34m📋 业务事件 [com.jajachina.wcs.event.business.TaskSendExceptionEvent] 查询到 2 个配置[0;39m 
+2025-11-10 00:32:11.625 [businessEvent-in-0.jbm-cluster-platform-push-1] [34mINFO [0;39m [36mc.j.c.push.service.impl.WebhookTaskServiceImpl[0;39m - [34m   └─ 启用: 0 个, 禁用: 2 个[0;39m 

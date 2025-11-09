@@ -2,8 +2,8 @@ package com.jbm.cluster.api.model;
 
 //import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
-import com.jbm.util.StringUtils;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -29,7 +29,7 @@ public class IpLimitApi extends BaseApi implements Serializable {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
-        if (StringUtils.isNotBlank(ipAddress)) {
+        if (StrUtil.isNotBlank(ipAddress)) {
             ipAddressSet = new HashSet(Arrays.asList(ipAddress.split(";")));
         }
     }

@@ -138,6 +138,8 @@ sa-token:
   jwt-secret-key: abcdefghijklmnopqrstuvwxyz
   # 是否输出操作日志
   is-log: true
+  # 是否打印Banner横幅
+  isPrint: false
 
 # 安全配置
 security:

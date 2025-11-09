@@ -1,0 +1,263 @@
+2025-11-10 00:12:19.258 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:12:19.289 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:12:19.295 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:12:19.298 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:12:19.300 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:12:19.601 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:19.601 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:19.657 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:12:20.015 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:12:20.016 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:12:20.017 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:12:20.017 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:12:20.152 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:20.172 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:20.182 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job-jaja.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:20.206 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.JbmJobApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:12:40.539 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:12:40.569 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:12:40.572 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:12:40.575 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:12:40.576 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:12:40.803 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:40.803 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:40.856 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:12:41.204 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:12:41.205 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:12:41.205 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:12:41.206 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:12:41.322 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:41.331 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:41.343 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job-jaja.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:12:41.363 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.JbmJobApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:12:42.727 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:12:42.729 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-10 00:12:42.729 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-10 00:12:42.809 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-10 00:12:42.861 [main] [34mINFO [0;39m [36mc.a.d.s.b.a.DruidDataSourceAutoConfigure[0;39m - [34mInit DruidDataSource[0;39m 
+2025-11-10 00:12:43.418 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} inited[0;39m 
+2025-11-10 00:12:43.549 [main] [34mINFO [0;39m [36morg.hibernate.jpa.internal.util.LogHelper[0;39m - [34mHHH000204: Processing PersistenceUnitInfo [name: default][0;39m 
+2025-11-10 00:12:43.579 [main] [34mINFO [0;39m [36morg.hibernate.Version[0;39m - [34mHHH000412: Hibernate ORM core version 5.6.15.Final[0;39m 
+2025-11-10 00:12:43.672 [main] [34mINFO [0;39m [36morg.hibernate.annotations.common.Version[0;39m - [34mHCANN000001: Hibernate Commons Annotations {5.1.2.Final}[0;39m 
+2025-11-10 00:12:43.756 [main] [34mINFO [0;39m [36morg.hibernate.dialect.Dialect[0;39m - [34mHHH000400: Using dialect: jbm.framework.boot.autoconfigure.mysql.MySQL5TableType[0;39m 
+2025-11-10 00:12:44.277 [main] [34mINFO [0;39m [36mo.h.e.t.jta.platform.internal.JtaPlatformInitiator[0;39m - [34mHHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform][0;39m 
+2025-11-10 00:12:44.325 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-10 00:12:44.438 [main] [31mWARN [0;39m [36mj.f.boot.autoconfigure.mybatis.MybatisPlusConfig[0;39m - [31m没有找到租户拦截器[0;39m 
+2025-11-10 00:12:44.902 [main] [31mWARN [0;39m [36mo.drools.compiler.kie.builder.impl.KieBuilderImpl[0;39m - [31mFile 'scolintest1.0.0number0.drl' is in folder '' but declares package 'com.jajachina.rules'. It is advised to have a correspondance between package and folder names.[0;39m 
+2025-11-10 00:12:44.902 [main] [31mWARN [0;39m [36mo.drools.compiler.kie.builder.impl.KieBuilderImpl[0;39m - [31mFile 'calzgj1.0.0number0.drl' is in folder '' but declares package 'com.jajachina.rules'. It is advised to have a correspondance between package and folder names.[0;39m 
+2025-11-10 00:12:45.563 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.config.ScheduleConfig[0;39m - [34m初始化JbmScheduler[0;39m 
+2025-11-10 00:12:45.581 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mUsing default implementation for ThreadExecutor[0;39m 
+2025-11-10 00:12:45.590 [main] [34mINFO [0;39m [36morg.quartz.core.SchedulerSignalerImpl[0;39m - [34mInitialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl[0;39m 
+2025-11-10 00:12:45.590 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mQuartz Scheduler v.2.3.2 created.[0;39m 
+2025-11-10 00:12:45.607 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler meta-data: Quartz Scheduler (v2.3.2) 'JbmScheduler' with instanceId 'zhuifengzhuyuezhudeMacBook-Pro.local1762704765583'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+[0;39m 
+2025-11-10 00:12:45.607 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mQuartz scheduler 'JbmScheduler' initialized from an externally provided properties instance.[0;39m 
+2025-11-10 00:12:45.607 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mQuartz scheduler version: 2.3.2[0;39m 
+2025-11-10 00:12:45.608 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mJobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@57b9ce87[0;39m 
+2025-11-10 00:12:49.922 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mJBM开始扫描字典[0;39m 
+2025-11-10 00:12:49.937 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[0],value[默认][0;39m 
+2025-11-10 00:12:49.937 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[1],value[立即触发执行][0;39m 
+2025-11-10 00:12:49.937 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[2],value[触发一次执行][0;39m 
+2025-11-10 00:12:49.937 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[3],value[不触发立即执行][0;39m 
+2025-11-10 00:12:49.937 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[ScheduleStauts] typeName:[任务执行状态] code:[0],value[正常][0;39m 
+2025-11-10 00:12:49.938 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[ScheduleStauts] typeName:[任务执行状态] code:[1],value[暂停][0;39m 
+2025-11-10 00:12:49.938 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mJBM结束扫描字典[0;39m 
+2025-11-10 00:12:50.162 [main] [34mINFO [0;39m [36mc.j.c.c.satoken.oauth.JbmNodeOAuth2TemplateImpl[0;39m - [34m初始化当前应用的默认的ClientToken[0;39m 
+2025-11-10 00:12:50.592 [main] [31mWARN [0;39m [36mo.s.c.s.f.FunctionConfiguration$FunctionBindingRegistrar[0;39m - [31mThe function definition 'scheduledJob;;busConsumer' is not valid. The referenced function bean or one of its components does not exist[0;39m 
+2025-11-10 00:12:51.316 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mStarting ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:12:51.331 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:51.331 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:12:51.400 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mnacos registry, DEFAULT_GROUP jbm-cluster-platform-job 192.168.9.111:4444 register finished[0;39m 
+2025-11-10 00:12:51.729 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.JbmJobApplication[0;39m - [34mStarted JbmJobApplication in 11.491 seconds (JVM running for 11.836)[0;39m 
+2025-11-10 00:12:51.736 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:12:51.736 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:12:51.737 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=common.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:12:51.737 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job-jaja.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:12:51.737 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:12:51.738 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:1.2833E-5秒[0;39m 
+2025-11-10 00:12:51.753 [main] [1;31mERROR[0;39m [36morg.springframework.boot.SpringApplication[0;39m - [1;31mApplication run failed[0;39m 
+java.lang.Error: Unresolved compilation problem: 
+	The method getBean(String) in the type SpringContextHolder is not applicable for the arguments (String, Class<RequestMappingHandlerMapping>)
+
+	at com.jbm.cluster.common.basic.configuration.resources.JbmApiResourceScan.scan(JbmApiResourceScan.java:43)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmApiResourceScan.scan(JbmApiResourceScan.java:1)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:36)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:1)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:178)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:171)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:429)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:386)
+	at org.springframework.boot.context.event.EventPublishingRunListener.ready(EventPublishingRunListener.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$ready$6(SpringApplicationRunListeners.java:82)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.ready(SpringApplicationRunListeners.java:82)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:323)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at com.jbm.cluster.job.JbmJobApplication.main(JbmJobApplication.java:31)
+2025-11-10 00:12:51.757 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mPausing ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:12:51.757 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStopping service [Tomcat][0;39m 
+2025-11-10 00:12:51.760 [main] [31mWARN [0;39m [36morg.apache.catalina.loader.WebappClassLoaderBase[0;39m - [31mThe web application [ROOT] appears to have started a thread named [Druid-ConnectionPool-Create-2049308910] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base/java.util.concurrent.locks.LockSupport.park(LockSupport.java:371)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(AbstractQueuedSynchronizer.java:519)
+ java.base/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3780)
+ java.base/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3725)
+ java.base/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1746)
+ com.alibaba.druid.pool.DruidDataSource$CreateConnectionThread.run(DruidDataSource.java:2815)[0;39m 
+2025-11-10 00:12:51.760 [main] [31mWARN [0;39m [36morg.apache.catalina.loader.WebappClassLoaderBase[0;39m - [31mThe web application [ROOT] appears to have started a thread named [Druid-ConnectionPool-Destroy-2049308910] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base/java.lang.Thread.sleep0(Native Method)
+ java.base/java.lang.Thread.sleep(Thread.java:509)
+ com.alibaba.druid.pool.DruidDataSource$DestroyConnectionThread.run(DruidDataSource.java:2915)[0;39m 
+2025-11-10 00:12:51.760 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mStopping ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:12:51.761 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mDestroying ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:12:51.823 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Start destroying common HttpClient[0;39m 
+2025-11-10 00:12:51.823 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Start destroying Publisher[0;39m 
+2025-11-10 00:12:51.823 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Destruction of the end[0;39m 
+2025-11-10 00:12:51.824 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Destruction of the end[0;39m 
+2025-11-10 00:12:52.327 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mDe-registering from Nacos Server now...[0;39m 
+2025-11-10 00:12:52.345 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mDe-registration finished.[0;39m 
+2025-11-10 00:12:52.745 [Quartz Scheduler [JbmScheduler]] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler JbmScheduler_$_zhuifengzhuyuezhudeMacBook-Pro.local1762704765583 started.[0;39m 
+2025-11-10 00:12:57.327 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler JbmScheduler_$_zhuifengzhuyuezhudeMacBook-Pro.local1762704765583 shutting down.[0;39m 
+2025-11-10 00:12:57.328 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler JbmScheduler_$_zhuifengzhuyuezhudeMacBook-Pro.local1762704765583 paused.[0;39m 
+2025-11-10 00:12:57.328 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler JbmScheduler_$_zhuifengzhuyuezhudeMacBook-Pro.local1762704765583 shutdown complete.[0;39m 
+2025-11-10 00:12:57.331 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} closing ...[0;39m 
+2025-11-10 00:12:57.334 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} closed[0;39m 
+2025-11-10 00:14:00.001 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:14:00.033 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 00:14:00.040 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/jpa.properties][0;39m 
+2025-11-10 00:14:00.045 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/mybatis-plus.properties][0;39m 
+2025-11-10 00:14:00.046 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 00:14:00.265 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:14:00.266 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:14:00.314 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 00:14:00.660 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 00:14:00.660 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 00:14:00.661 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 00:14:00.661 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 00:14:00.775 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:14:00.784 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:14:00.797 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-job-jaja.properties] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 00:14:00.820 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.JbmJobApplication[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 00:14:02.165 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mInitializing ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:14:02.166 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardService[0;39m - [34mStarting service [Tomcat][0;39m 
+2025-11-10 00:14:02.166 [main] [34mINFO [0;39m [36morg.apache.catalina.core.StandardEngine[0;39m - [34mStarting Servlet engine: [Apache Tomcat/9.0.83][0;39m 
+2025-11-10 00:14:02.245 [main] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring embedded WebApplicationContext[0;39m 
+2025-11-10 00:14:02.296 [main] [34mINFO [0;39m [36mc.a.d.s.b.a.DruidDataSourceAutoConfigure[0;39m - [34mInit DruidDataSource[0;39m 
+2025-11-10 00:14:02.867 [main] [34mINFO [0;39m [36mcom.alibaba.druid.pool.DruidDataSource[0;39m - [34m{dataSource-1} inited[0;39m 
+2025-11-10 00:14:03.004 [main] [34mINFO [0;39m [36morg.hibernate.jpa.internal.util.LogHelper[0;39m - [34mHHH000204: Processing PersistenceUnitInfo [name: default][0;39m 
+2025-11-10 00:14:03.034 [main] [34mINFO [0;39m [36morg.hibernate.Version[0;39m - [34mHHH000412: Hibernate ORM core version 5.6.15.Final[0;39m 
+2025-11-10 00:14:03.127 [main] [34mINFO [0;39m [36morg.hibernate.annotations.common.Version[0;39m - [34mHCANN000001: Hibernate Commons Annotations {5.1.2.Final}[0;39m 
+2025-11-10 00:14:03.211 [main] [34mINFO [0;39m [36morg.hibernate.dialect.Dialect[0;39m - [34mHHH000400: Using dialect: jbm.framework.boot.autoconfigure.mysql.MySQL5TableType[0;39m 
+2025-11-10 00:14:03.736 [main] [34mINFO [0;39m [36mo.h.e.t.jta.platform.internal.JtaPlatformInitiator[0;39m - [34mHHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform][0;39m 
+2025-11-10 00:14:03.779 [main] [34mINFO [0;39m [36mc.alibaba.cloud.sentinel.SentinelWebMvcConfigurer[0;39m - [34m[Sentinel Starter] register SentinelWebInterceptor with urlPatterns: [/**].[0;39m 
+2025-11-10 00:14:03.887 [main] [31mWARN [0;39m [36mj.f.boot.autoconfigure.mybatis.MybatisPlusConfig[0;39m - [31m没有找到租户拦截器[0;39m 
+2025-11-10 00:14:04.348 [main] [31mWARN [0;39m [36mo.drools.compiler.kie.builder.impl.KieBuilderImpl[0;39m - [31mFile 'scolintest1.0.0number0.drl' is in folder '' but declares package 'com.jajachina.rules'. It is advised to have a correspondance between package and folder names.[0;39m 
+2025-11-10 00:14:04.349 [main] [31mWARN [0;39m [36mo.drools.compiler.kie.builder.impl.KieBuilderImpl[0;39m - [31mFile 'calzgj1.0.0number0.drl' is in folder '' but declares package 'com.jajachina.rules'. It is advised to have a correspondance between package and folder names.[0;39m 
+2025-11-10 00:14:04.970 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.config.ScheduleConfig[0;39m - [34m初始化JbmScheduler[0;39m 
+2025-11-10 00:14:04.987 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mUsing default implementation for ThreadExecutor[0;39m 
+2025-11-10 00:14:04.997 [main] [34mINFO [0;39m [36morg.quartz.core.SchedulerSignalerImpl[0;39m - [34mInitialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl[0;39m 
+2025-11-10 00:14:04.997 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mQuartz Scheduler v.2.3.2 created.[0;39m 
+2025-11-10 00:14:05.012 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler meta-data: Quartz Scheduler (v2.3.2) 'JbmScheduler' with instanceId 'zhuifengzhuyuezhudeMacBook-Pro.local1762704844990'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+[0;39m 
+2025-11-10 00:14:05.013 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mQuartz scheduler 'JbmScheduler' initialized from an externally provided properties instance.[0;39m 
+2025-11-10 00:14:05.013 [main] [34mINFO [0;39m [36morg.quartz.impl.StdSchedulerFactory[0;39m - [34mQuartz scheduler version: 2.3.2[0;39m 
+2025-11-10 00:14:05.013 [main] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mJobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@13df2f89[0;39m 
+2025-11-10 00:14:09.084 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mJBM开始扫描字典[0;39m 
+2025-11-10 00:14:09.099 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[ScheduleStauts] typeName:[任务执行状态] code:[0],value[正常][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[ScheduleStauts] typeName:[任务执行状态] code:[1],value[暂停][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[0],value[默认][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[1],value[立即触发执行][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[2],value[触发一次执行][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mput application:[jbm-cluster-platform-job] cache type:[MisfirePolicy] typeName:[任务执行类型] code:[3],value[不触发立即执行][0;39m 
+2025-11-10 00:14:09.100 [main] [34mINFO [0;39m [36mcom.jbm.autoconfig.dic.DictionaryScanner[0;39m - [34mJBM结束扫描字典[0;39m 
+2025-11-10 00:14:09.271 [main] [34mINFO [0;39m [36mc.j.c.c.satoken.oauth.JbmNodeOAuth2TemplateImpl[0;39m - [34m初始化当前应用的默认的ClientToken[0;39m 
+2025-11-10 00:14:09.629 [main] [31mWARN [0;39m [36mo.s.c.s.f.FunctionConfiguration$FunctionBindingRegistrar[0;39m - [31mThe function definition 'scheduledJob;;busConsumer' is not valid. The referenced function bean or one of its components does not exist[0;39m 
+2025-11-10 00:14:10.296 [main] [34mINFO [0;39m [36morg.apache.coyote.http11.Http11NioProtocol[0;39m - [34mStarting ProtocolHandler ["http-nio-4444"][0;39m 
+2025-11-10 00:14:10.310 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:14:10.310 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 00:14:10.366 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.registry.NacosServiceRegistry[0;39m - [34mnacos registry, DEFAULT_GROUP jbm-cluster-platform-job 192.168.9.111:4444 register finished[0;39m 
+2025-11-10 00:14:10.691 [main] [34mINFO [0;39m [36mcom.jbm.cluster.job.JbmJobApplication[0;39m - [34mStarted JbmJobApplication in 10.986 seconds (JVM running for 11.443)[0;39m 
+2025-11-10 00:14:10.700 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:14:10.700 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:14:10.700 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=common.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:14:10.700 [main] [34mINFO [0;39m [36mc.a.cloud.nacos.refresh.NacosContextRefresher[0;39m - [34m[Nacos Config] Listening config: dataId=jbm-cluster-platform-job-jaja.properties, group=DEFAULT_GROUP[0;39m 
+2025-11-10 00:14:10.700 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:14:10.879 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.177849792秒[0;39m 
+2025-11-10 00:14:10.879 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:14:10.882 [main] [1;31mERROR[0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [1;31m资源采集失败[0;39m 
+org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping' available: expected single matching bean but found 2: requestMappingHandlerMapping,controllerEndpointHandlerMapping
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveNamedBean(DefaultListableBeanFactory.java:1273)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveBean(DefaultListableBeanFactory.java:494)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:349)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:342)
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1186)
+	at jbm.framework.spring.config.SpringContextHolder.getBean(SpringContextHolder.java:77)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterJobScan.scan(JbmClusterJobScan.java:51)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterJobScan.scan(JbmClusterJobScan.java:1)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:36)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:1)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:178)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:171)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:429)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:386)
+	at org.springframework.boot.context.event.EventPublishingRunListener.ready(EventPublishingRunListener.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$ready$6(SpringApplicationRunListeners.java:82)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.ready(SpringApplicationRunListeners.java:82)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:323)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at com.jbm.cluster.job.JbmJobApplication.main(JbmJobApplication.java:31)
+2025-11-10 00:14:10.882 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.002930958秒[0;39m 
+2025-11-10 00:14:10.882 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:14:10.882 [main] [1;31mERROR[0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [1;31m资源采集失败[0;39m 
+org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping' available: expected single matching bean but found 2: requestMappingHandlerMapping,controllerEndpointHandlerMapping
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveNamedBean(DefaultListableBeanFactory.java:1273)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveBean(DefaultListableBeanFactory.java:494)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:349)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:342)
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1186)
+	at jbm.framework.spring.config.SpringContextHolder.getBean(SpringContextHolder.java:77)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan.scan(JbmClusterBusinessEventScan.java:64)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan.scan(JbmClusterBusinessEventScan.java:1)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:36)
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan.onApplicationEvent(JbmClusterResourceScan.java:1)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:178)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:171)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:429)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:386)
+	at org.springframework.boot.context.event.EventPublishingRunListener.ready(EventPublishingRunListener.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$ready$6(SpringApplicationRunListeners.java:82)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.ready(SpringApplicationRunListeners.java:82)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:323)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at com.jbm.cluster.job.JbmJobApplication.main(JbmJobApplication.java:31)
+2025-11-10 00:14:10.883 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:5.90083E-4秒[0;39m 
+2025-11-10 00:14:10.883 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集开始，线程数量:8[0;39m 
+2025-11-10 00:14:10.908 [main] [34mINFO [0;39m [36mc.j.c.c.b.c.resources.JbmClusterResourceScan[0;39m - [34m资源采集结束,用时:0.025023625秒[0;39m 
+2025-11-10 00:14:11.740 [Quartz Scheduler [JbmScheduler]] [34mINFO [0;39m [36morg.quartz.core.QuartzScheduler[0;39m - [34mScheduler JbmScheduler_$_zhuifengzhuyuezhudeMacBook-Pro.local1762704844990 started.[0;39m 
+2025-11-10 00:14:12.016 [RMI TCP Connection(2)-127.0.0.1] [34mINFO [0;39m [36mo.a.c.core.ContainerBase.[Tomcat].[localhost].[/][0;39m - [34mInitializing Spring DispatcherServlet 'dispatcherServlet'[0;39m 

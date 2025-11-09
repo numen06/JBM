@@ -1,0 +1,293 @@
+2025-11-10 00:24:54.089 [main] [1;31mERROR[0;39m [36morg.springframework.boot.SpringApplication[0;39m - [1;31mApplication run failed[0;39m 
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'pushMessageController': Unsatisfied dependency expressed through field 'pushMessageTest'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'pushMessageTest': Unsatisfied dependency expressed through field 'jbmClusterBusinessEventTemplate'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jbmClusterBusinessEventTemplate': Unsatisfied dependency expressed through field 'jbmClusterBusinessEventScan'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jbmClusterBusinessEventScan' defined in class path resource [com/jbm/cluster/common/basic/configuration/JbmBasicConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan]: Factory method 'jbmClusterBusinessEventScan' threw exception; nested exception is java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:713)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:693)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:119)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:408)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1431)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:619)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:929)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:591)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:732)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:409)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:308)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1300)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1289)
+	at com.jbm.cluster.push.JbmPushApplication.main(JbmPushApplication.java:41)
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'pushMessageTest': Unsatisfied dependency expressed through field 'jbmClusterBusinessEventTemplate'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jbmClusterBusinessEventTemplate': Unsatisfied dependency expressed through field 'jbmClusterBusinessEventScan'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jbmClusterBusinessEventScan' defined in class path resource [com/jbm/cluster/common/basic/configuration/JbmBasicConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan]: Factory method 'jbmClusterBusinessEventScan' threw exception; nested exception is java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:713)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:693)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:119)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:408)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1431)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:619)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1391)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1311)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:710)
+	... 20 common frames omitted
+Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'jbmClusterBusinessEventTemplate': Unsatisfied dependency expressed through field 'jbmClusterBusinessEventScan'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jbmClusterBusinessEventScan' defined in class path resource [com/jbm/cluster/common/basic/configuration/JbmBasicConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan]: Factory method 'jbmClusterBusinessEventScan' threw exception; nested exception is java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:713)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:693)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:119)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:408)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1431)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:619)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1391)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1311)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:710)
+	... 34 common frames omitted
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jbmClusterBusinessEventScan' defined in class path resource [com/jbm/cluster/common/basic/configuration/JbmBasicConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan]: Factory method 'jbmClusterBusinessEventScan' threw exception; nested exception is java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:481)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1391)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1311)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:710)
+	... 48 common frames omitted
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan]: Factory method 'jbmClusterBusinessEventScan' threw exception; nested exception is java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:185)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:648)
+	... 61 common frames omitted
+Caused by: java.lang.Error: Unresolved compilation problems: 
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	The import com.jbm.cluster.api.model.event cannot be resolved
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	The method hasMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEventListener cannot be resolved to a type
+	The method getMethodAnnotation(Class<A>) in the type HandlerMethod is not applicable for the arguments (Class<BusinessEventListener>)
+	BusinessEventListener cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	BusinessEvent cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventBean cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+	JbmClusterBusinessEventResource cannot be resolved to a type
+
+	at com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan.<init>(JbmClusterBusinessEventScan.java:11)
+	at com.jbm.cluster.common.basic.configuration.JbmBasicConfiguration.jbmClusterBusinessEventScan(JbmBasicConfiguration.java:57)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154)
+	... 62 common frames omitted
+2025-11-10 00:29:45.421 [businessEvent-in-0.jbm-cluster-platform-push-1] [1;31mERROR[0;39m [36mc.j.c.push.service.impl.WebhookTaskServiceImpl[0;39m - [1;31m不存在可用的发送配置，业务事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent[0;39m 
+2025-11-10 00:29:45.423 [businessEvent-in-0.jbm-cluster-platform-push-1] [1;31mERROR[0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [1;31m接受集群事件推送失败[0;39m 
+com.jbm.framework.exceptions.ServiceException: 不存在可用的发送配置，业务事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl.getEnableEventConfigs(WebhookTaskServiceImpl.java:112)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl.sendBusinessEvent(WebhookTaskServiceImpl.java:121)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl$$FastClassBySpringCGLIB$$a6eab1b4.invoke(<generated>)
+	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:218)
+	at org.springframework.aop.framework.CglibAopProxy.invokeMethod(CglibAopProxy.java:386)
+	at org.springframework.aop.framework.CglibAopProxy.access$000(CglibAopProxy.java:85)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:703)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl$$EnhancerBySpringCGLIB$$99458f8d.sendBusinessEvent(<generated>)
+	at com.jbm.cluster.push.handler.BusinessEventHandler.sendBusinessEvent(BusinessEventHandler.java:61)
+	at com.jbm.cluster.push.handler.BusinessEventHandler.lambda$businessEvent$1(BusinessEventHandler.java:49)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.invokeConsumer(SimpleFunctionRegistry.java:1017)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.doApply(SimpleFunctionRegistry.java:744)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.apply(SimpleFunctionRegistry.java:590)
+	at org.springframework.cloud.stream.function.PartitionAwareFunctionWrapper.apply(PartitionAwareFunctionWrapper.java:84)
+	at org.springframework.cloud.stream.function.FunctionConfiguration$FunctionWrapper.apply(FunctionConfiguration.java:791)
+	at org.springframework.cloud.stream.function.FunctionConfiguration$FunctionToDestinationBinder$1.handleMessageInternal(FunctionConfiguration.java:623)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:55)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:115)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:133)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:106)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:72)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:317)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:272)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:187)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:166)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:47)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:109)
+	at org.springframework.integration.endpoint.MessageProducerSupport.sendMessage(MessageProducerSupport.java:215)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter.access$1300(AmqpInboundChannelAdapter.java:69)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter$Listener.lambda$onMessage$0(AmqpInboundChannelAdapter.java:374)
+	at org.springframework.retry.support.RetryTemplate.doExecute(RetryTemplate.java:329)
+	at org.springframework.retry.support.RetryTemplate.execute(RetryTemplate.java:225)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter$Listener.onMessage(AmqpInboundChannelAdapter.java:370)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.doInvokeListener(AbstractMessageListenerContainer.java:1722)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.actualInvokeListener(AbstractMessageListenerContainer.java:1641)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.invokeListener(AbstractMessageListenerContainer.java:1629)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.doExecuteListener(AbstractMessageListenerContainer.java:1620)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.executeListener(AbstractMessageListenerContainer.java:1564)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.doReceiveAndExecute(SimpleMessageListenerContainer.java:994)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.receiveAndExecute(SimpleMessageListenerContainer.java:941)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.access$1600(SimpleMessageListenerContainer.java:86)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.mainLoop(SimpleMessageListenerContainer.java:1323)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.run(SimpleMessageListenerContainer.java:1225)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2025-11-10 00:32:11.625 [businessEvent-in-0.jbm-cluster-platform-push-1] [1;31mERROR[0;39m [36mc.j.c.push.service.impl.WebhookTaskServiceImpl[0;39m - [1;31m❌ 不存在可用的发送配置，业务事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent[0;39m 
+2025-11-10 00:32:11.625 [businessEvent-in-0.jbm-cluster-platform-push-1] [1;31mERROR[0;39m [36mc.j.c.push.service.impl.WebhookTaskServiceImpl[0;39m - [1;31m💡 请检查: 1) 配置是否存在 2) enable字段是否为true 3) 事件是否已注册[0;39m 
+2025-11-10 00:32:11.627 [businessEvent-in-0.jbm-cluster-platform-push-1] [1;31mERROR[0;39m [36mcom.jbm.cluster.push.handler.BusinessEventHandler[0;39m - [1;31m❌ 接受集群事件推送失败，事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent, 服务名: null[0;39m 
+com.jbm.framework.exceptions.ServiceException: 不存在可用的发送配置，业务事件代码: com.jajachina.wcs.event.business.TaskSendExceptionEvent
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl.getEnableEventConfigs(WebhookTaskServiceImpl.java:137)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl.sendBusinessEvent(WebhookTaskServiceImpl.java:148)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl$$FastClassBySpringCGLIB$$a6eab1b4.invoke(<generated>)
+	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:218)
+	at org.springframework.aop.framework.CglibAopProxy.invokeMethod(CglibAopProxy.java:386)
+	at org.springframework.aop.framework.CglibAopProxy.access$000(CglibAopProxy.java:85)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:703)
+	at com.jbm.cluster.push.service.impl.WebhookTaskServiceImpl$$EnhancerBySpringCGLIB$$54efbf88.sendBusinessEvent(<generated>)
+	at com.jbm.cluster.push.handler.BusinessEventHandler.sendBusinessEvent(BusinessEventHandler.java:71)
+	at com.jbm.cluster.push.handler.BusinessEventHandler.lambda$1(BusinessEventHandler.java:49)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.invokeConsumer(SimpleFunctionRegistry.java:1017)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.doApply(SimpleFunctionRegistry.java:744)
+	at org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry$FunctionInvocationWrapper.apply(SimpleFunctionRegistry.java:590)
+	at org.springframework.cloud.stream.function.PartitionAwareFunctionWrapper.apply(PartitionAwareFunctionWrapper.java:84)
+	at org.springframework.cloud.stream.function.FunctionConfiguration$FunctionWrapper.apply(FunctionConfiguration.java:791)
+	at org.springframework.cloud.stream.function.FunctionConfiguration$FunctionToDestinationBinder$1.handleMessageInternal(FunctionConfiguration.java:623)
+	at org.springframework.integration.handler.AbstractMessageHandler.handleMessage(AbstractMessageHandler.java:55)
+	at org.springframework.integration.dispatcher.AbstractDispatcher.tryOptimizedDispatch(AbstractDispatcher.java:115)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.doDispatch(UnicastingDispatcher.java:133)
+	at org.springframework.integration.dispatcher.UnicastingDispatcher.dispatch(UnicastingDispatcher.java:106)
+	at org.springframework.integration.channel.AbstractSubscribableChannel.doSend(AbstractSubscribableChannel.java:72)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:317)
+	at org.springframework.integration.channel.AbstractMessageChannel.send(AbstractMessageChannel.java:272)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:187)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:166)
+	at org.springframework.messaging.core.GenericMessagingTemplate.doSend(GenericMessagingTemplate.java:47)
+	at org.springframework.messaging.core.AbstractMessageSendingTemplate.send(AbstractMessageSendingTemplate.java:109)
+	at org.springframework.integration.endpoint.MessageProducerSupport.sendMessage(MessageProducerSupport.java:215)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter.access$1300(AmqpInboundChannelAdapter.java:69)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter$Listener.lambda$onMessage$0(AmqpInboundChannelAdapter.java:374)
+	at org.springframework.retry.support.RetryTemplate.doExecute(RetryTemplate.java:329)
+	at org.springframework.retry.support.RetryTemplate.execute(RetryTemplate.java:225)
+	at org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter$Listener.onMessage(AmqpInboundChannelAdapter.java:370)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.doInvokeListener(AbstractMessageListenerContainer.java:1722)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.actualInvokeListener(AbstractMessageListenerContainer.java:1641)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.invokeListener(AbstractMessageListenerContainer.java:1629)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.doExecuteListener(AbstractMessageListenerContainer.java:1620)
+	at org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer.executeListener(AbstractMessageListenerContainer.java:1564)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.doReceiveAndExecute(SimpleMessageListenerContainer.java:994)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.receiveAndExecute(SimpleMessageListenerContainer.java:941)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer.access$1600(SimpleMessageListenerContainer.java:86)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.mainLoop(SimpleMessageListenerContainer.java:1323)
+	at org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$AsyncMessageProcessingConsumer.run(SimpleMessageListenerContainer.java:1225)
+	at java.base/java.lang.Thread.run(Thread.java:1583)

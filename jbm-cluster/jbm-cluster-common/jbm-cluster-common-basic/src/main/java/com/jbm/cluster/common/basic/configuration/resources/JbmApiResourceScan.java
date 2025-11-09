@@ -39,8 +39,8 @@ public class JbmApiResourceScan extends JbmClusterResourceScan<JbmApiResource> {
     public JbmApiResource scan() {
         // 服务名称
         String serviceId = SpringContextHolder.geteApplicationName();
-        // 所有接口映射
-        final RequestMappingHandlerMapping mapping = SpringContextHolder.getBean(RequestMappingHandlerMapping.class);
+        // 所有接口映射，指定 bean 名称避免多个候选 bean 时的冲突
+        final RequestMappingHandlerMapping mapping = SpringContextHolder.getBean("requestMappingHandlerMapping");
         // 获取url与类和方法的对应信息
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
         List<JbmApi> jbmApis = Lists.newArrayList();

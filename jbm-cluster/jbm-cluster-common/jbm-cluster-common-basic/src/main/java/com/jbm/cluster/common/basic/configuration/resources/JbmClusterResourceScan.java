@@ -13,6 +13,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+/**
+ * @author wesley
+ */
 @Slf4j
 public abstract class JbmClusterResourceScan<T extends JbmClusterResource> implements ApplicationListener<ApplicationReadyEvent> {
 
@@ -39,7 +42,7 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
             final JbmClusterStreamTemplate streamTemplate = SpringContextHolder.getBean(JbmClusterStreamTemplate.class);
             streamTemplate.sendResource(this.queue(), resource);
         } catch (Exception e) {
-            log.error("资源采集失败");
+            log.error("资源采集失败", e);
         } finally {
             stopWatch.stop();
             // 打印出耗时

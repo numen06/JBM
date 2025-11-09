@@ -19,6 +19,17 @@
             "mainClass": "com.jbm.cluster.job.JbmJobApplication",
             "projectName": "jbm-cluster-platform-job",
             "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=59819 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=jbm-cluster-platform-job"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-JbmPushApplication<jbm-cluster-platform-push>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.jbm.cluster.push.JbmPushApplication",
+            "projectName": "jbm-cluster-platform-push",
+            "args": "",
             "envFile": "${workspaceFolder}/.env"
         }
     ]

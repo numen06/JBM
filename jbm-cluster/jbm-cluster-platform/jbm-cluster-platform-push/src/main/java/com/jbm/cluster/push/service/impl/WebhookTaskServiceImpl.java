@@ -84,33 +84,62 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
         //如果传输过来的数据中已经有配置则不再搜索
         if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig())) {
             businessEventCode = webhookTaskForm.getWebhookEventConfig().getBusinessEventCode();
+            log.debug("🔍 开始查询业务事件配置，事件代码: {}", businessEventCode);
+            
             //根据事件ID查询
             if (ObjectUtil.isNotEmpty(webhookTaskForm.getWebhookEventConfig().getEventId())) {
+                log.debug("✅ 使用传入的事件ID: {}", webhookTaskForm.getWebhookEventConfig().getEventId());
                 webhookTaskForm.getWebhookEventConfig().setEnable(true);
                 webhookEventConfigList = CollUtil.newArrayList(webhookTaskForm.getWebhookEventConfig());
             } else {
+                log.debug("📡 从数据库查询事件配置，事件代码: {}", businessEventCode);
                 List<WebhookEventConfig> allConfigs = webhookEventConfigService.selectByEventCode(businessEventCode);
                 webhookEventConfigList = allConfigs;
                 
                 // 记录查询到的配置信息，方便排查
                 if (CollUtil.isNotEmpty(allConfigs)) {
+                    log.info("📋 业务事件 [{}] 查询到 {} 个配置", businessEventCode, allConfigs.size());
+                    long enabledCount = allConfigs.stream().filter(item -> BooleanUtil.isTrue(item.getEnable())).count();
                     long disabledCount = allConfigs.stream().filter(item -> BooleanUtil.isFalse(item.getEnable())).count();
-                    if (disabledCount > 0) {
-                        log.warn("业务事件 [{}] 查询到 {} 个配置，其中 {} 个未启用", 
-                                businessEventCode, allConfigs.size(), disabledCount);
-                    }
+                    log.info("   └─ 启用: {} 个, 禁用: {} 个", enabledCount, disabledCount);
+                    
+                    // 详细输出每个配置的状态
+                    allConfigs.forEach(config -> {
+                        log.debug("   ├─ EventId: {}, Enable: {}, URL: {}, ServiceName: {}", 
+                                config.getEventId(), 
+                                config.getEnable(), 
+                                config.getUrl(),
+                                config.getServiceName());
+                    });
+                } else {
+                    log.warn("⚠️  业务事件 [{}] 在数据库中未找到任何配置记录", businessEventCode);
                 }
             }
+        } else {
+            log.warn("⚠️  WebhookTaskForm 中的 WebhookEventConfig 为空");
         }
+        
         //过滤掉不启用的配置
+        int beforeFilterCount = webhookEventConfigList.size();
         webhookEventConfigList = webhookEventConfigList.stream().filter(item -> BooleanUtil.isTrue(item.getEnable())).collect(Collectors.toList());
+        int afterFilterCount = webhookEventConfigList.size();
+        
+        if (beforeFilterCount != afterFilterCount) {
+            log.debug("🔧 过滤后: {} 个配置 → {} 个启用的配置", beforeFilterCount, afterFilterCount);
+        }
+        
         if (CollUtil.isEmpty(webhookEventConfigList)) {
-            String errorMsg = StrUtil.isNotBlank(businessEventCode) 
+            String warnMsg = StrUtil.isNotBlank(businessEventCode) 
                     ? String.format("不存在可用的发送配置，业务事件代码: %s", businessEventCode)
                     : "不存在可用的发送配置，请检查 WebhookEventConfig 配置表";
-            log.error(errorMsg);
-            throw new ServiceException(errorMsg);
+            log.warn("⚠️  {}", warnMsg);
+            log.warn("💡 可能原因: 1) 配置尚未注册 2) 配置已禁用(enable=false) 3) 目标服务未上线");
+            log.warn("📝 建议: 如需推送该事件，请在目标服务中添加 @BusinessEvent 注解并重启服务");
+            // 返回空列表，不抛出异常，避免中断整个流程
+            return CollUtil.newArrayList();
         }
+        
+        log.info("✅ 找到 {} 个可用的发送配置", webhookEventConfigList.size());
         return webhookEventConfigList;
     }
 
@@ -119,7 +148,20 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     @Override
     public void sendBusinessEvent(WebhookTaskForm webhookTaskForm) {
         List<WebhookEventConfig> webhookEventConfigList = getEnableEventConfigs(webhookTaskForm);
+        
+        // 如果没有可用的配置，记录日志后直接返回，不进行推送
+        if (CollUtil.isEmpty(webhookEventConfigList)) {
+            log.info("⏭️  跳过事件推送，因为没有可用的配置");
+            return;
+        }
+        
         Map<String, List<WebhookEventConfig>> groupEventGroup = webhookEventConfigList.stream().filter(item -> StrUtil.isNotBlank(item.getEventGroup())).collect(Collectors.groupingBy(WebhookEventConfig::getEventGroup));
+        
+        if (groupEventGroup.isEmpty()) {
+            log.warn("⚠️  所有配置都没有设置事件分组(eventGroup)，无法进行推送");
+            return;
+        }
+        
         groupEventGroup.forEach((group, webhookEventConfigs)->{
             // 使用策略类选择最优配置
             WebhookEventConfig selectedConfig = configSelectionStrategy.selectConfig(group, webhookEventConfigs);
