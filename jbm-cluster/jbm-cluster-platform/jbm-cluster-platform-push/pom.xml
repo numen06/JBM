@@ -44,6 +44,12 @@
             <artifactId>jbm-framework-autoconfigure-mail</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <!-- OkHttp for HTTP testing -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <!-- 打包名称 -->

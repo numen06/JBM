@@ -13,36 +13,44 @@
         wec.url
         FROM
         webhook_task wt
-        JOIN webhook_event_config wec ON wt.event_id = wec.event_id
+        LEFT JOIN webhook_event_config wec ON wt.event_id = wec.event_id
         <where>
+            <if test="form.webhookTask != null">
             <if test="form.webhookTask.taskId != null and form.webhookTask.taskId != ''">
                 AND wt.task_id = #{form.webhookTask.taskId}
             </if>
             <if test="form.webhookTask.httpStatus != null">
                 AND wt.http_status = #{form.webhookTask.httpStatus}
             </if>
+                <if test="form.webhookTask.status != null and form.webhookTask.status != ''">
+                    AND wt.status = #{form.webhookTask.status}
+                </if>
+            </if>
+            <if test="form.webhookEventConfig != null">
             <if test="form.webhookEventConfig.eventId != null and form.webhookEventConfig.eventId != ''">
                 AND wec.event_id = #{form.webhookEventConfig.eventId}
             </if>
             <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
-                AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
-            </if>
-            <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
-                AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
+                    AND wec.business_event_code LIKE CONCAT('%', #{form.webhookEventConfig.businessEventCode}, '%')
             </if>
             <if test="form.webhookEventConfig.eventName != null and form.webhookEventConfig.eventName != ''">
-                AND wec.event_name like concat('%', #{form.webhookEventConfig.eventName}, '%')
+                    AND wec.event_name LIKE CONCAT('%', #{form.webhookEventConfig.eventName}, '%')
             </if>
             <if test="form.webhookEventConfig.eventGroup != null and form.webhookEventConfig.eventGroup != ''">
-                AND wec.event_group like concat('%', #{form.webhookEventConfig.eventGroup}, '%')
+                    AND wec.event_group LIKE CONCAT('%', #{form.webhookEventConfig.eventGroup}, '%')
+                </if>
             </if>
-            <if test="form.beginTime != null"><!-- 开始时间检索 -->
-                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.beginTime},'%Y-%m-%d %H:%i:%s')
+            <if test="form.beginTime != null">
+                <!-- 开始时间检索 - 优化：直接比较时间戳，避免使用date_format -->
+                AND wt.create_time &gt;= #{form.beginTime}
             </if>
-            <if test="form.endTime != null"><!-- 结束时间检索 -->
-                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &lt;= date_format(#{form.endTime},'%Y-%m-%d %H:%i:%s')
+            <if test="form.endTime != null">
+                <!-- 结束时间检索 - 优化：直接比较时间戳，避免使用date_format -->
+                AND wt.create_time &lt;= #{form.endTime}
             </if>
         </where>
+        <!-- 添加排序，按创建时间倒序，确保结果稳定且最新的在前面 -->
+        ORDER BY wt.create_time DESC
     </select>
 
 </mapper>

@@ -239,15 +239,52 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
     @Override
     public DataPaging<WebhookTaskResult> selectWebhookTasks(WebhookTaskForm webhookTaskForm) {
-        return this.selectPageList(webhookTaskForm.getPageForm(), (page) -> {
-            if (ObjectUtil.isEmpty(webhookTaskForm.getWebhookTask())) {
-                webhookTaskForm.setWebhookTask(new WebhookTask());
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            log.debug("🔍 开始查询 Webhook 任务列表");
+            
+            if (log.isDebugEnabled()) {
+                log.debug("   ├─ 查询条件: taskId={}, httpStatus={}, status={}, eventId={}, businessEventCode={}", 
+                        webhookTaskForm.getWebhookTask() != null ? webhookTaskForm.getWebhookTask().getTaskId() : null,
+                        webhookTaskForm.getWebhookTask() != null ? webhookTaskForm.getWebhookTask().getHttpStatus() : null,
+                        webhookTaskForm.getWebhookTask() != null ? webhookTaskForm.getWebhookTask().getStatus() : null,
+                        webhookTaskForm.getWebhookEventConfig() != null ? webhookTaskForm.getWebhookEventConfig().getEventId() : null,
+                        webhookTaskForm.getWebhookEventConfig() != null ? webhookTaskForm.getWebhookEventConfig().getBusinessEventCode() : null);
+                log.debug("   ├─ 时间范围: {} ~ {}", webhookTaskForm.getBeginTime(), webhookTaskForm.getEndTime());
+                log.debug("   └─ 分页参数: page={}, size={}", 
+                        webhookTaskForm.getPageForm() != null ? webhookTaskForm.getPageForm().getCurrPage() : 1,
+                        webhookTaskForm.getPageForm() != null ? webhookTaskForm.getPageForm().getPageSize() : 10);
             }
-            if (ObjectUtil.isEmpty(webhookTaskForm.getWebhookEventConfig())) {
-                webhookTaskForm.setWebhookEventConfig(new WebhookEventConfig());
-            }
-            webhookTaskMapper.selectWebhookTasks(page, webhookTaskForm);
-        });
+            
+            DataPaging<WebhookTaskResult> result = this.selectPageList(webhookTaskForm.getPageForm(), (page) -> {
+                if (ObjectUtil.isEmpty(webhookTaskForm.getWebhookTask())) {
+                    webhookTaskForm.setWebhookTask(new WebhookTask());
+                }
+                if (ObjectUtil.isEmpty(webhookTaskForm.getWebhookEventConfig())) {
+                    webhookTaskForm.setWebhookEventConfig(new WebhookEventConfig());
+                }
+                
+                long queryStartTime = System.currentTimeMillis();
+                webhookTaskMapper.selectWebhookTasks(page, webhookTaskForm);
+                long queryTime = System.currentTimeMillis() - queryStartTime;
+                
+                if (queryTime > 1000) {
+                    log.warn("⚠️  查询耗时较长: {} ms", queryTime);
+                } else if (queryTime > 3000) {
+                    log.error("❌ 查询超时: {} ms，请检查数据库索引和查询条件", queryTime);
+                }
+            });
+            
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.debug("✅ 查询完成，耗时: {} ms, 结果数: {}", totalTime, result != null ? result.getTotal() : 0);
+            
+            return result;
+        } catch (Exception e) {
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.error("❌ 查询 Webhook 任务列表失败，耗时: {} ms", totalTime, e);
+            throw e;
+        }
     }
 
 //    private final Map<String, WebhookTask> webhookTaskCache = new ConcurrentHashMap<>();
