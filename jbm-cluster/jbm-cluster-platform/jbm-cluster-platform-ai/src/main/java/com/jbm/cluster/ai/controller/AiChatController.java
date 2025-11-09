@@ -9,10 +9,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -74,6 +77,16 @@ public class AiChatController {
     @GetMapping("/functions")
     public List<Map<String, Object>> listFunctions() {
         return aiChatService.listAvailableFunctions();
+    }
+    
+    /**
+     * 聊天页面
+     */
+    @ApiOperation("访问 AI 聊天界面")
+    @GetMapping(value = "/chat-ui", produces = MediaType.TEXT_HTML_VALUE)
+    public String chatUI() throws IOException {
+        ClassPathResource resource = new ClassPathResource("static/chat.html");
+        return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     }
     
     /**

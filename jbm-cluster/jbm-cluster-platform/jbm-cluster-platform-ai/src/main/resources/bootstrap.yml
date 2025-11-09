@@ -35,10 +35,14 @@ swagger2:
 # 阿里云 DashScope (通义千问) 配置
 dashscope:
   api-key: ${DASHSCOPE_API_KEY:sk-test}
-  model: qwen-plus
-  temperature: 0.7
+  model: qwen-max  # 使用 qwen-max 提高 Function Calling 准确性（qwen-plus/qwen-turbo 也可用）
+  temperature: 0.1  # 极低温度，强制 AI 使用 Function Calling
   max-tokens: 2000
   enable-search: false
+  # Agent 模式（推荐开启）
+  # true: 使用 4 个元函数，AI 自己搜索和执行 API（Token 消耗少，速度快）
+  # false: 将所有 API 注册为函数（Token 消耗大，可能超限）
+  agent-mode: true
   # API 元数据缓存配置
   api-cache-enabled: true
   api-cache-file: data/api-metadata-cache.json

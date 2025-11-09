@@ -37,5 +37,12 @@ public class DashScopeConfig {
      * 是否启用搜索
      */
     private Boolean enableSearch = false;
+    
+    /**
+     * 是否启用 Agent 模式
+     * true: 使用 4 个元函数（推荐，Token 消耗少）
+     * false: 注册所有 API 为函数（Token 消耗大）
+     */
+    private Boolean agentMode = true;
 }
 
