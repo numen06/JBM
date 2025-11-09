@@ -36,7 +36,7 @@ swagger2:
 dashscope:
   api-key: ${DASHSCOPE_API_KEY:sk-test}
   model: qwen-max  # 使用 qwen-max 提高 Function Calling 准确性（qwen-plus/qwen-turbo 也可用）
-  temperature: 0.1  # 极低温度，强制 AI 使用 Function Calling
+  temperature: 1  # 接近0的温度，强制 AI 使用 Function Calling
   max-tokens: 2000
   enable-search: false
   # Agent 模式（推荐开启）

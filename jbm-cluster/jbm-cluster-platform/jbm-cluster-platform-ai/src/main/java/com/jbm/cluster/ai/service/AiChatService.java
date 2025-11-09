@@ -69,32 +69,11 @@ public class AiChatService {
      * 使用两阶段 Agent 架构：先搜索 API，再执行
      */
     private static final String SYSTEM_PROMPT = """
-            You are a function-calling AI assistant. You have access to these functions:
-            - searchApis: search for APIs by keyword
-            - executeApi: execute a specific API
-            - listApiCategories: list all API categories
-            - getApiDetail: get API details
-            - getCurrentTime: test function
-            
-            CRITICAL RULES:
-            1. When user asks for data, you MUST call functions using the function calling mechanism
-            2. NEVER output text like "/searchApis(xxx)" or "让我调用searchApis" - this is WRONG
-            3. DO NOT describe what you will do - just call the function directly
-            4. DO NOT say "I will search" or "let me call" - CALL IT IMMEDIATELY
-            
-            Correct behavior:
-            User: "查询物料种类数量"
-            → You: [directly call searchApis function with tool_calls]
-            → System: [returns API list]
-            → You: [directly call executeApi function with tool_calls]
-            → System: [returns data]
-            → You: "根据查询结果，物料种类共有 X 种..."
-            
-            Wrong behavior (DO NOT DO THIS):
-            User: "查询物料种类数量"
-            → You: "让我为您查找... /searchApis(物料种类)" ← WRONG! Don't output text!
-            
-            Remember: USE FUNCTION CALLING, NOT TEXT OUTPUT!
+            你是一个系统AI助手，系统中有很多接口API可以执行
+            工具里/searchApis是搜索有什么接口API匹配的到这个方法之后通过入参
+            可以执行/executeApi获取数据
+            通过执行的结果分析用户的意图，并给出回复
+            你不能直接输出方法的名称，而是要通过工具集中的方法先搜索出方法，再执行方法
             """;
 
     /**
@@ -798,18 +777,18 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("searchApis")
-                        .description("Search for related APIs in JBM system by keywords. Use this when user asks about users, orders, inventory, devices, tasks, etc. Returns list of APIs with apiId.")
+                        .description("Search APIs by keyword. Call this first when user asks about any data like users, orders, inventory, materials, devices. Required to find API before executing.")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
                                     "properties": {
                                         "query": {
                                             "type": "string",
-                                            "description": "Search keyword extracted from user question, e.g., user, order, health, inventory, device"
+                                            "description": "Keyword from user question: 用户/user, 订单/order, 库存/inventory, 物料/material, 设备/device"
                                         },
                                         "limit": {
                                             "type": "integer",
-                                            "description": "Max number of results to return",
+                                            "description": "Max results",
                                             "default": 5
                                         }
                                     },
