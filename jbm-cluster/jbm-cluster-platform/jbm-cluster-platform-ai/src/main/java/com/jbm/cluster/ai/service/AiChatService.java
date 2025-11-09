@@ -69,11 +69,11 @@ public class AiChatService {
      * 使用两阶段 Agent 架构：先搜索 API，再执行
      */
     private static final String SYSTEM_PROMPT = """
-            你是一个系统AI助手，系统中有很多接口API可以执行
-            工具里/searchApis是搜索有什么接口API匹配的到这个方法之后通过入参
-            可以执行/executeApi获取数据
-            通过执行的结果分析用户的意图，并给出回复
-            你不能直接输出方法的名称，而是要通过工具集中的方法先搜索出方法，再执行方法
+            你是JBM系统AI助手。当用户询问数据时：
+            1. 先调用searchApis搜索相关API
+            2. 再调用executeApi执行获取数据
+            3. 分析数据后用自然语言回复用户
+            注意：使用函数调用机制，不要输出函数名称文本。
             """;
 
     /**
@@ -278,6 +278,9 @@ public class AiChatService {
                 
                 // 验证消息历史的完整性，防止未完成的函数调用
                 validateAndCleanMessageHistory(messages, sessionId);
+                
+                // 限制消息历史长度，防止超过 API 限制
+                limitMessageHistory(messages, sessionId);
                 
                 // 添加系统消息（仅第一次）
                 if (messages.isEmpty()) {
@@ -777,7 +780,7 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("searchApis")
-                        .description("Search APIs by keyword. Call this first when user asks about any data like users, orders, inventory, materials, devices. Required to find API before executing.")
+                        .description("这是查询接口API的方法，告诉你有什么样的API匹配，你可以用做执行方法")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
@@ -803,7 +806,7 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("executeApi")
-                        .description("Execute a specific API to get actual data. Use apiId from searchApis result. Returns query results.")
+                        .description("执行一个API，查看数据分析之后返回给用户")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
@@ -897,6 +900,58 @@ public class AiChatService {
                 .type("function")
                 .function(funcDef)
                 .build();
+    }
+    
+    /**
+     * 限制消息历史长度
+     * 
+     * 防止消息总长度超过 API 限制 (30720 字符)
+     * 保留最近的对话，删除最旧的（但保留系统消息）
+     */
+    private void limitMessageHistory(List<Message> messages, String sessionId) {
+        if (messages.size() <= 1) {
+            return; // 只有系统消息或空，不需要限制
+        }
+        
+        // 计算总长度
+        int totalLength = messages.stream()
+                .mapToInt(msg -> msg.getContent() != null ? msg.getContent().length() : 0)
+                .sum();
+        
+        // 限制：保留最近 20 条消息，或总长度不超过 20000 字符
+        final int MAX_MESSAGES = 20;
+        final int MAX_LENGTH = 20000;
+        
+        boolean needClean = messages.size() > MAX_MESSAGES || totalLength > MAX_LENGTH;
+        
+        if (needClean) {
+            log.warn("⚠️  [会话限制] 消息历史过长，进行清理");
+            log.warn("   会话ID: {}", sessionId);
+            log.warn("   当前消息数: {}, 总长度: {}", messages.size(), totalLength);
+            
+            // 保留系统消息（第一条）
+            Message systemMsg = messages.get(0);
+            List<Message> recentMessages = new ArrayList<>();
+            recentMessages.add(systemMsg);
+            
+            // 保留最近的消息
+            int startIndex = Math.max(1, messages.size() - MAX_MESSAGES + 1);
+            for (int i = startIndex; i < messages.size(); i++) {
+                recentMessages.add(messages.get(i));
+            }
+            
+            // 替换消息列表
+            messages.clear();
+            messages.addAll(recentMessages);
+            
+            // 重新计算长度
+            int newLength = messages.stream()
+                    .mapToInt(msg -> msg.getContent() != null ? msg.getContent().length() : 0)
+                    .sum();
+            
+            log.info("✅ [会话限制] 清理完成");
+            log.info("   清理后消息数: {}, 总长度: {}", messages.size(), newLength);
+        }
     }
     
     /**
