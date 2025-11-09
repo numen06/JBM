@@ -1,40 +1,19 @@
 server:
-  port: 3313
+  port: 3315
 spring:
   application:
     name: ${artifactId}
   cloud:
-    #手动配置Bus id,
-    bus:
-      refresh:
-        enabled: true
-      id: ${spring.application.name}:${server.port}
-    function:
-      definition: notification;mqtt;pushCallBack;pushMsg;businessEvent;businessEventResource;
-    stream:
-      #      default-binder: kafka
-      bindings:
-        notification-in-0:
-          group: ${spring.application.name}
-        mqtt-in-0:
-          group: ${spring.application.name}
-        pushCallBack-in-0:
-          group: ${spring.application.name}
-        pushMsg-in-0:
-          group: ${spring.application.name}
-        businessEvent-in-0:
-          group: ${spring.application.name}
-        businessEventResource-in-0:
-          group: ${spring.application.name}
     nacos:
       config:
         refreshable-dataids: common.properties
         shared-dataids: ${jbm.cluster.nacos-confs}
         file-extension: yml
-  resources:
-    add-mappings: false
   profiles:
     active: ${profile.name}
+  web:
+    resources:
+      add-mappings: false
 management:
   endpoints:
     web:
@@ -42,7 +21,7 @@ management:
         include: '*'
 jbm:
   cluster:
-    nacos-confs: common.properties,rabbitmq.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
+    nacos-confs: common.properties,rabbitmq.properties,redis.properties
     #    nacos-confs: common.properties,rabbitmq.properties,kafka.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     #    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties
     token-type: redis
@@ -50,11 +29,17 @@ jbm:
       - /get/**
 swagger2:
   enabled: true
-  description: 平台文档服务器
-  title: 平台文档服务器
+  description: 平台AI服务器
+  title: 平台AI服务器
 
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
-
+# 阿里云 DashScope (通义千问) 配置
+dashscope:
+  api-key: ${DASHSCOPE_API_KEY:sk-test}
+  model: qwen-plus
+  temperature: 0.7
+  max-tokens: 2000
+  enable-search: false
+  # API 元数据缓存配置
+  api-cache-enabled: true
+  api-cache-file: data/api-metadata-cache.json
 

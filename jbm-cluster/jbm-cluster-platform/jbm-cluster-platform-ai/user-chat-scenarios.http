@@ -1,0 +1,395 @@
+### JBM AI 用户对话场景测试
+### 模拟真实用户与系统的对话流程
+
+@baseUrl = http://localhost:3315
+@sessionId = 
+
+### ═══════════════════════════════════════════════════════
+### 场景 1: 初次见面 - 简单问候
+### ═══════════════════════════════════════════════════════
+
+### 1.1 用户首次问候
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "你好，我是新用户，你能做什么？",
+  "enableFunctions": false
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 2: 了解系统能力
+### ═══════════════════════════════════════════════════════
+
+### 2.1 询问系统功能
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "你可以帮我查询哪些信息？请列举一下",
+  "enableFunctions": false
+}
+
+### 2.2 询问可用接口
+GET {{baseUrl}}/ai/functions
+
+### ═══════════════════════════════════════════════════════
+### 场景 3: 系统状态查询（Function Calling）
+### ═══════════════════════════════════════════════════════
+
+### 3.1 查询系统健康状态
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我看一下系统现在的健康状态",
+  "enableFunctions": true
+}
+
+### 3.2 查询系统运行信息
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "系统运行正常吗？",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 4: 用户信息查询
+### ═══════════════════════════════════════════════════════
+
+### 4.1 查询所有用户
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "我想看一下系统中的用户列表",
+  "enableFunctions": true
+}
+
+### 4.2 查询在线用户
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "现在有多少用户在线？",
+  "enableFunctions": true
+}
+
+### 4.3 查询特定用户
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我查询用户ID为1001的详细信息",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 5: 多轮对话 - 上下文理解
+### ═══════════════════════════════════════════════════════
+
+### 5.1 第一轮：查询订单
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询最近的订单",
+  "enableFunctions": true
+}
+
+> {%
+    // 保存 sessionId 用于后续对话
+    client.global.set("sessionId", response.body.sessionId);
+    client.log("Session ID: " + response.body.sessionId);
+%}
+
+### 5.2 第二轮：追加条件（测试上下文）
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "只要今天的",
+  "sessionId": "{{sessionId}}",
+  "enableFunctions": true
+}
+
+### 5.3 第三轮：继续追问
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "其中有多少是已完成的？",
+  "sessionId": "{{sessionId}}",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 6: 数据统计与分析
+### ═══════════════════════════════════════════════════════
+
+### 6.1 查询订单统计
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询最近一周的订单统计",
+  "enableFunctions": true
+}
+
+### 6.2 用户增长趋势
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "最近一个月用户增长情况如何？",
+  "enableFunctions": true
+}
+
+### 6.3 系统访问量
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "今天的系统访问量是多少？",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 7: 复杂查询 - 多条件
+### ═══════════════════════════════════════════════════════
+
+### 7.1 带时间范围的查询
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询2024年11月的所有订单，按金额倒序排列",
+  "enableFunctions": true
+}
+
+### 7.2 带多个条件的查询
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询最近7天，状态为已完成的订单，金额大于1000元的",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 8: 日志和错误查询
+### ═══════════════════════════════════════════════════════
+
+### 8.1 查询错误日志
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我查看一下最近的错误日志",
+  "enableFunctions": true
+}
+
+### 8.2 查询系统日志
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询今天的系统日志",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 9: 配置查询
+### ═══════════════════════════════════════════════════════
+
+### 9.1 查询系统配置
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查看系统的配置信息",
+  "enableFunctions": true
+}
+
+### 9.2 查询环境变量
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "当前运行环境是什么？",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 10: 错误处理测试
+### ═══════════════════════════════════════════════════════
+
+### 10.1 不存在的功能
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我订一张明天去北京的机票",
+  "enableFunctions": true
+}
+
+### 10.2 无效的查询
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "asdfjkl;qwer",
+  "enableFunctions": true
+}
+
+### 10.3 超长文本
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "请帮我查询用户信息，我想知道这个用户的所有详细信息，包括但不限于姓名、年龄、性别、地址、电话、邮箱、注册时间、最后登录时间、订单历史、购买记录、浏览记录、收藏夹、购物车、评价记录等等所有的信息，越详细越好",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 11: 清除会话
+### ═══════════════════════════════════════════════════════
+
+### 11.1 清除指定会话
+DELETE {{baseUrl}}/ai/session/{{sessionId}}
+
+### ═══════════════════════════════════════════════════════
+### 场景 12: 完整业务流程模拟
+### ═══════════════════════════════════════════════════════
+
+### 12.1 步骤1 - 查询订单
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "查询最近一周的订单统计",
+  "enableFunctions": true
+}
+
+> {%
+    client.global.set("flowSessionId", response.body.sessionId);
+%}
+
+### 12.2 步骤2 - 追加条件
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "其中有多少是已完成的？",
+  "sessionId": "{{flowSessionId}}",
+  "enableFunctions": true
+}
+
+### 12.3 步骤3 - 分析数据
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "和上周相比增长了多少？",
+  "sessionId": "{{flowSessionId}}",
+  "enableFunctions": true
+}
+
+### 12.4 步骤4 - 总结
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我总结一下整体情况",
+  "sessionId": "{{flowSessionId}}",
+  "enableFunctions": false
+}
+
+### ═══════════════════════════════════════════════════════
+### 场景 13: 自然语言理解测试
+### ═══════════════════════════════════════════════════════
+
+### 13.1 口语化表达
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "看看现在有啥人在线呗",
+  "enableFunctions": true
+}
+
+### 13.2 方言式表达
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮俺瞅瞅系统咋样了",
+  "enableFunctions": true
+}
+
+### 13.3 简洁表达
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "用户",
+  "enableFunctions": true
+}
+
+### 13.4 详细表达
+POST {{baseUrl}}/ai/chat
+Content-Type: application/json
+
+{
+  "message": "请您帮助我查询一下当前系统中注册的所有用户的完整列表信息，谢谢",
+  "enableFunctions": true
+}
+
+### ═══════════════════════════════════════════════════════
+### ═══════════════════════════════════════════════════════
+### 系统管理和监控
+### ═══════════════════════════════════════════════════════
+
+### 健康检查（包含 API 数量）
+GET {{baseUrl}}/ai/health
+
+### 查看统计信息
+GET {{baseUrl}}/ai/stats
+
+### 查看所有可用函数
+GET {{baseUrl}}/ai/functions
+
+### 强制刷新 API 元数据缓存
+POST {{baseUrl}}/ai/refresh
+
+### 清除缓存文件
+DELETE {{baseUrl}}/ai/cache
+
+### ═══════════════════════════════════════════════════════
+### 测试说明
+### ═══════════════════════════════════════════════════════
+### 
+### 1. 测试前准备：
+###    - 确保设置了 DASHSCOPE_API_KEY
+###    - 确保服务运行在 3315 端口
+###    - 等待 5-10 秒让 API 元数据收集完成
+###
+### 2. 测试顺序：
+###    - 按场景顺序测试，体验完整对话流程
+###    - 场景 5 和 12 需要保持 sessionId 连续性
+###
+### 3. 验证重点：
+###    - Function Calling 是否正确触发
+###    - 多轮对话上下文是否保持
+###    - 错误情况是否友好处理
+###    - AI 响应是否准确理解意图
+###
+### 4. 注意事项：
+###    - 每次请求间隔 1-2 秒，避免频繁调用
+###    - 观察 functionCalled 字段确认函数调用
+###    - 检查 error 字段了解错误信息
+###
+### ═══════════════════════════════════════════════════════
+

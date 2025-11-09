@@ -1,0 +1,48 @@
+### AI Chat API 测试
+
+### 1. 健康检查
+GET http://localhost:3313/ai/health
+Content-Type: application/json
+
+### 2. 获取可用函数列表
+GET http://localhost:3313/ai/functions
+Content-Type: application/json
+
+### 3. 简单对话（不启用函数调用）
+POST http://localhost:3313/ai/chat
+Content-Type: application/json
+
+{
+  "message": "你好，请介绍一下你自己",
+  "enableFunctions": false
+}
+
+### 4. 启用函数调用的对话
+POST http://localhost:3313/ai/chat
+Content-Type: application/json
+
+{
+  "message": "帮我查询一下当前系统中有哪些在线用户",
+  "enableFunctions": true
+}
+
+### 5. 继续对话（使用 sessionId）
+POST http://localhost:3313/ai/chat
+Content-Type: application/json
+
+{
+  "message": "请告诉我这些用户的详细信息",
+  "sessionId": "替换为上一次返回的sessionId",
+  "enableFunctions": true
+}
+
+### 6. 清除会话
+DELETE http://localhost:3313/ai/session/替换为实际的sessionId
+Content-Type: application/json
+
+### 测试说明：
+# 1. 确保已设置环境变量 DASHSCOPE_API_KEY
+# 2. 确保服务已启动在端口 3313
+# 3. 等待 5-10 秒让 API 元数据收集完成
+# 4. 根据实际的 API 调整测试消息
+

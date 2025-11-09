@@ -1,0 +1,25 @@
+# API 元数据缓存文件
+data/api-metadata-cache.json
+data/api-cache-*.json
+
+# Maven 构建
+target/
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+
+# 日志
+logs/
+*.log
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+

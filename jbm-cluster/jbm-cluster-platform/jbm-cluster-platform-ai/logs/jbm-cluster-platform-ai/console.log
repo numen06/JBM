@@ -1,0 +1,30 @@
+2025-11-10 02:07:54.678 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 02:07:54.706 [background-preinit] [34mINFO [0;39m [36morg.hibernate.validator.internal.util.Version[0;39m - [34mHV000001: Hibernate Validator 6.2.5.Final[0;39m 
+2025-11-10 02:07:54.716 [main] [34mINFO [0;39m [36mj.f.b.a.base.ApplicationEnvironmentDefaultEvent[0;39m - [34mjbm load properties:class path resource [configs/metrics.yml][0;39m 
+2025-11-10 02:07:54.922 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 02:07:54.922 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 02:07:54.965 [main] [34mINFO [0;39m [36mj.f.b.a.m.event.ApplicationEnvironmentDefaultEvent[0;39m - [34mresoures develop path is file:resources/,file:META-INF/resources/,file:static/,file:public/,classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/[0;39m 
+2025-11-10 02:07:55.489 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to get current node abilities...[0;39m 
+2025-11-10 02:07:55.490 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mReady to initialize current node abilities, support modes: [SDK_CLIENT][0;39m 
+2025-11-10 02:07:55.491 [main] [34mINFO [0;39m [36mc.a.n.common.ability.AbstractAbilityControlManager[0;39m - [34mInitialize current abilities finish...[0;39m 
+2025-11-10 02:07:55.491 [main] [34mINFO [0;39m [36mc.a.n.c.ability.discover.NacosAbilityManagerHolder[0;39m - [34m[AbilityControlManager] Successfully initialize AbilityControlManager[0;39m 
+2025-11-10 02:07:55.621 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-ai] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 02:07:55.630 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-ai.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 02:07:55.641 [main] [31mWARN [0;39m [36mc.a.cloud.nacos.client.NacosPropertySourceBuilder[0;39m - [31mIgnore the empty nacos configuration and get it based on dataId[jbm-cluster-platform-ai-jaja.yml] & group[DEFAULT_GROUP][0;39m 
+2025-11-10 02:07:55.655 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.AiChatServiceTest[0;39m - [34mThe following 1 profile is active: "jaja"[0;39m 
+2025-11-10 02:07:56.792 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m🚀 初始化 API 元数据收集器...[0;39m 
+2025-11-10 02:07:56.799 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.impl.NacosClientAuthServiceImpl success.[0;39m 
+2025-11-10 02:07:56.799 [main] [34mINFO [0;39m [36mc.a.n.p.auth.spi.client.ClientAuthPluginManager[0;39m - [34m[ClientAuthPluginManager] Load ClientAuthService com.alibaba.nacos.client.auth.ram.RamClientAuthServiceImpl success.[0;39m 
+2025-11-10 02:07:56.857 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m📋 发现 30 个注册服务[0;39m 
+2025-11-10 02:07:56.977 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 tpm-iot-protocol-vehicle-dev 的 2 个 API[0;39m 
+2025-11-10 02:08:01.995 [main] [31mWARN [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [31m解析 Swagger 2.0 文档失败: SocketTimeoutException: Connect timed out[0;39m 
+2025-11-10 02:08:02.109 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 jbm-cluster-platform-auth 的 49 个 API[0;39m 
+2025-11-10 02:08:03.022 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Start destroying common HttpClient[0;39m 
+2025-11-10 02:08:03.022 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Start destroying Publisher[0;39m 
+2025-11-10 02:08:03.022 [Thread-24] [31mWARN [0;39m [36mcom.alibaba.nacos.common.notify.NotifyCenter[0;39m - [31m[NotifyCenter] Destruction of the end[0;39m 
+2025-11-10 02:08:03.023 [Thread-13] [31mWARN [0;39m [36mcom.alibaba.nacos.common.http.HttpClientBeanHolder[0;39m - [31m[HttpClientBeanHolder] Destruction of the end[0;39m 
+2025-11-10 02:08:07.139 [main] [31mWARN [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [31m解析 Swagger 2.0 文档失败: SocketTimeoutException: Connect timed out[0;39m 
+2025-11-10 02:08:07.620 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 tpm-iot-platform-dev 的 228 个 API[0;39m 
+2025-11-10 02:08:07.692 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 jbm-cluster-platform-logs 的 17 个 API[0;39m 
+2025-11-10 02:08:07.741 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 smart-building-data-batch-dev 的 2 个 API[0;39m 
+2025-11-10 02:08:07.938 [main] [34mINFO [0;39m [36mcom.jbm.cluster.ai.service.ApiMetadataCollector[0;39m - [34m✅ 成功收集服务 tpm-iot-protocol-agv-dev 的 1 个 API[0;39m 
