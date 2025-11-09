@@ -15,11 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
 
+/**
+ * @author wesley
+ */
 @Slf4j
 public class JbmFeignRequest extends JbmBaseRequest {
 
@@ -41,7 +46,8 @@ public class JbmFeignRequest extends JbmBaseRequest {
 //        } catch (Exception e) {
 //            log.warn("客户端Token验证失败", e);
 //        }
-        httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
+        final String authorization = SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken;
+        httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
         return httpRequest;
     }
 
@@ -51,30 +57,30 @@ public class JbmFeignRequest extends JbmBaseRequest {
     }
 
 
-    public static String getServiceIdByUrl(String url) {
+    public String getServiceIdByUrl(String url) {
         String serviceId = ReUtil.get("(?<=://)[^//]*?/", url, 0);
         serviceId = StrUtil.removeSuffix(serviceId, "/");
         return serviceId;
     }
 
-    public static String feignToUrl(String url) {
+    public String feignToUrl(String url) throws UnknownHostException {
         String serviceId = getServiceIdByUrl(url);
+        //得到服务的真实地址127.0.0.1:8080
         URI uri = getServiceUrl(serviceId);
         if (ObjectUtil.isEmpty(uri)) {
-            return null;
+            throw new UnknownHostException(serviceId + "服务没有启动");
         }
+        //将feign://替换成为真实URL
         String realUrl = uri.toString();
         return StrUtil.replace(url, "feign://" + serviceId, realUrl);
     }
 
-    public static URI getServiceUrl(String serviceId) {
-        DiscoveryClient discoveryClient = SpringUtil.getBean(DiscoveryClient.class);
-        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(serviceId);
-        if (CollUtil.isEmpty(serviceInstances)) {
-            return null;
+    public URI getServiceUrl(String serviceId) {
+        LoadBalancerClient loadBalancer = SpringUtil.getBean(LoadBalancerClient.class);
+        if (loadBalancer == null) {
+            throw new RuntimeException("Spring LoadBalancerClient not found");
         }
-        ServiceInstance serviceInstance = CollUtil.getFirst(serviceInstances);
-        return serviceInstance.getUri();
+        return loadBalancer.choose(serviceId).getUri();
     }
 
 }

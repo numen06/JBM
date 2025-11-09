@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -235,6 +237,62 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         baseActionService.removeByMenuId(menuId);
         // 移除菜单信息
         baseMenuMapper.deleteById(menuId);
+    }
+
+    /**
+     * 根据path和appId查询菜单
+     *
+     * @param path
+     * @param appId
+     * @return
+     */
+    @Override
+    public BaseMenu getMenuByPathAndAppId(String path, Long appId) {
+        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseMenu::getPath, path);
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(appId), BaseMenu::getAppId, appId);
+        List<BaseMenu> list = baseMenuMapper.selectList(queryWrapper);
+        return CollUtil.getFirst(list);
+    }
+
+    /**
+     * 批量导入菜单
+     *
+     * @param menus
+     * @return
+     */
+    @Override
+    public int importMenus(List<BaseMenu> menus) {
+        int successCount = 0;
+        int updateCount = 0;
+        int insertCount = 0;
+        
+        for (BaseMenu importMenu : menus) {
+            try {
+                // 根据path和appId查询是否已存在
+                BaseMenu existingMenu = getMenuByPathAndAppId(importMenu.getPath(), importMenu.getAppId());
+                
+                if (existingMenu != null) {
+                    // 已存在，使用现有的menuId进行更新
+                    importMenu.setMenuId(existingMenu.getMenuId());
+                    baseMenuMapper.updateById(importMenu);
+                    updateCount++;
+                    log.info("更新菜单: {} - {}", importMenu.getMenuName(), importMenu.getPath());
+                } else {
+                    // 不存在，清空menuId进行新增
+                    importMenu.setMenuId(null);
+                    baseMenuMapper.insert(importMenu);
+                    insertCount++;
+                    log.info("新增菜单: {} - {}", importMenu.getMenuName(), importMenu.getPath());
+                }
+                successCount++;
+            } catch (Exception e) {
+                log.error("导入菜单失败: {} - {}, 错误: {}", importMenu.getMenuName(), importMenu.getPath(), e.getMessage(), e);
+            }
+        }
+        
+        log.info("菜单导入完成，成功: {}, 新增: {}, 更新: {}", successCount, insertCount, updateCount);
+        return successCount;
     }
 
 

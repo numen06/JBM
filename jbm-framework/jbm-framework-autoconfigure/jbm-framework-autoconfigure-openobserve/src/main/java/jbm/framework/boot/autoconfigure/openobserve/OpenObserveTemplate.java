@@ -38,6 +38,7 @@ import org.springframework.util.MimeTypeUtils;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -397,6 +398,74 @@ public class OpenObserveTemplate implements InitializingBean {
             // 返回生成的 SQL 语句
             return boundSql.getSql();
         }
+    }
+
+    /**
+     * 创建或更新流的保留策略（TTL）
+     * OpenObserve会根据保留策略自动删除过期数据
+     * 
+     * @param streamName 流名称
+     * @param retentionDays 保留天数（TTL），null表示永不过期
+     * @return 是否成功
+     */
+    public boolean createOrUpdateStreamRetention(String streamName, Integer retentionDays) {
+        try {
+            // OpenObserve API: PUT /api/{org}/{stream}
+            // 设置流的保留策略（TTL）
+            UrlBuilder urlBuilder = UrlBuilder.of(openObserveProperties.getUrl())
+                    .addPath("/api/")
+                    .addPathSegment(openObserveProperties.getOrganization())
+                    .addPathSegment(StrUtil.toUnderlineCase(streamName));
+            
+            // 构建请求体：设置保留策略
+            Map<String, Object> streamConfig = new HashMap<>();
+            streamConfig.put("name", StrUtil.toUnderlineCase(streamName));
+            streamConfig.put("type", "logs"); // 日志类型
+            
+            // 如果指定了保留天数，设置TTL（单位：秒）
+            if (retentionDays != null && retentionDays > 0) {
+                long retentionSeconds = retentionDays * 24L * 60L * 60L;
+                streamConfig.put("retention_period", retentionSeconds);
+                log.info("设置流 {} 的保留策略为 {} 天（{}秒）", streamName, retentionDays, retentionSeconds);
+            } else {
+                log.info("设置流 {} 为永不过期", streamName);
+            }
+            
+            String requestBodyStr = JSON.toJSONString(streamConfig);
+            RequestBody requestBody = RequestBody.create(
+                    requestBodyStr,
+                    MediaType.get(MimeTypeUtils.APPLICATION_JSON_VALUE)
+            );
+            
+            Request request = getBaseRequest(urlBuilder.build())
+                    .put(requestBody)
+                    .build();
+            
+            try (Response response = okHttpClient.newCall(request).execute()) {
+                if (response.isSuccessful()) {
+                    log.info("成功创建/更新流 {} 的保留策略", streamName);
+                    return true;
+                } else {
+                    String errorBody = response.body() != null ? response.body().string() : "未知错误";
+                    log.warn("创建/更新流 {} 保留策略失败: HTTP {} - {}", streamName, response.code(), errorBody);
+                    // 流可能已存在，这是正常的，不算错误
+                    return response.code() == 409 || response.code() == 200;
+                }
+            }
+        } catch (Exception e) {
+            log.error("创建/更新流 {} 保留策略异常", streamName, e);
+            return false;
+        }
+    }
+    
+    /**
+     * 确保流存在并配置了正确的保留策略
+     * 
+     * @param streamName 流名称
+     * @param retentionDays 保留天数
+     */
+    public void ensureStreamWithRetention(String streamName, Integer retentionDays) {
+        createOrUpdateStreamRetention(streamName, retentionDays);
     }
 
     @Override

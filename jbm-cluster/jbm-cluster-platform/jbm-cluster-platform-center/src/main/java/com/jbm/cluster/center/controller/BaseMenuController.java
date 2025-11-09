@@ -10,6 +10,7 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -24,9 +25,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -101,10 +104,31 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     }
 
     @ApiOperation(value = "导入菜单JSON文件")
-    @GetMapping("/importMenu")
-    public  void  importMenu(@RequestParam(required = false) Long appId) {
-
-
+    @PostMapping("/importMenu")
+    public ResultBody<String> importMenu(@RequestParam(value = "file", required = false) MultipartFile file) {
+        return ResultBody.callback(() -> {
+            try {
+                // 读取文件内容
+                String jsonContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+                
+                // 解析JSON为菜单列表
+                List<BaseMenu> menus = JSON.parseArray(jsonContent, BaseMenu.class);
+                
+                if (menus == null || menus.isEmpty()) {
+                    throw new com.jbm.framework.exceptions.ServiceException("导入文件内容为空或格式错误");
+                }
+                
+                // 批量导入菜单
+                int successCount = baseResourceMenuService.importMenus(menus);
+                
+                // 刷新网关
+                jbmClusterTemplate.refreshGateway();
+                
+                return String.format("成功导入 %d 个菜单", successCount);
+            } catch (Exception e) {
+                throw ServiceException.of(e, "导入菜单失败");
+            }
+        });
     }
 
 

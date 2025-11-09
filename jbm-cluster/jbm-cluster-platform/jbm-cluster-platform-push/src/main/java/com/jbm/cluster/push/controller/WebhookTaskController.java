@@ -5,7 +5,7 @@ import com.jbm.cluster.api.event.TestBusinessEvent;
 import com.jbm.cluster.api.event.annotation.BusinessEventListener;
 import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.push.form.WebhookTaskForm;
-import com.jbm.cluster.push.result.WebhookTaskReslut;
+import com.jbm.cluster.push.result.WebhookTaskResult;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MultiPlatformCollection;
@@ -74,7 +74,7 @@ public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, 
 
     @ApiOperation(value = "查询任务列表")
     @PostMapping("/selectWebhookTasks")
-    public ResultBody<DataPaging<WebhookTaskReslut>> selectWebhookTasks(@RequestBody(required = false) final WebhookTaskForm webhookTaskForm) {
+    public ResultBody<DataPaging<WebhookTaskResult>> selectWebhookTasks(@RequestBody(required = false) final WebhookTaskForm webhookTaskForm) {
         return ResultBody.callback("查询成功", () -> {
             return service.selectWebhookTasks(webhookTaskForm);
         });
