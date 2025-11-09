@@ -1,4 +1,5 @@
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:21-anolis as builder
+WORKDIR /root/app
 ARG JAR_FILE=*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
