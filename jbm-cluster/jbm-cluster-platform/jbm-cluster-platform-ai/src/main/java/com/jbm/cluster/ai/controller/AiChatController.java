@@ -4,11 +4,14 @@ import com.jbm.cluster.ai.model.ChatRequest;
 import com.jbm.cluster.ai.model.ChatResponse;
 import com.jbm.cluster.ai.service.AiChatService;
 import com.jbm.cluster.ai.service.ApiMetadataCollector;
+import io.reactivex.Flowable;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -30,13 +33,28 @@ public class AiChatController {
     private ApiMetadataCollector apiMetadataCollector;
     
     /**
-     * 聊天接口
+     * 聊天接口（普通模式）
      */
-    @ApiOperation("发送消息并获取 AI 回复")
+    @ApiOperation("发送消息并获取 AI 回复（普通模式，等待完整响应）")
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest request) {
         log.info("📨 收到聊天请求: {}", request.getMessage());
         return aiChatService.chat(request);
+    }
+    
+    /**
+     * 聊天接口（流式模式）
+     * 使用 Server-Sent Events (SSE) 实现流式响应
+     * AI 逐字生成，用户实时看到回复，体验更好
+     */
+    @ApiOperation("发送消息并获取 AI 流式回复（推荐使用，响应更快）")
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> chatStream(@RequestBody ChatRequest request) {
+        log.info("📨 [流式] 收到聊天请求: {}", request.getMessage());
+        
+        // 将 RxJava Flowable 转换为 Reactor Flux
+        Flowable<String> flowable = aiChatService.chatStream(request);
+        return Flux.from(flowable);
     }
     
     /**

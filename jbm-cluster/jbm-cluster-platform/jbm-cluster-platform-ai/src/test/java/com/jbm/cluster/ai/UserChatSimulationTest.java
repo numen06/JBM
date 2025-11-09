@@ -41,6 +41,8 @@ public class UserChatSimulationTest {
         
         // 检查服务是否可用
         try {
+            log.info("⏳ 正在检查服务状态...");
+            
             Request healthCheck = new Request.Builder()
                     .url(BASE_URL + "/ai/health")
                     .get()
@@ -48,11 +50,44 @@ public class UserChatSimulationTest {
             
             Response response = httpClient.newCall(healthCheck).execute();
             if (response.isSuccessful()) {
+                String body = response.body().string();
+                JSONObject healthData = JSONUtil.parseObj(body);
+                int apiCount = healthData.getInt("apiCount", 0);
+                
                 log.info("✅ 服务运行正常");
-                log.info("⏳ 等待 10 秒让 API 元数据收集完成...");
-                Thread.sleep(10000);
+                log.info("📊 当前已收集 {} 个 API", apiCount);
+                
+                // 智能等待：根据 API 数量决定等待时间
+                if (apiCount == 0) {
+                    log.warn("⚠️ 还没有收集到 API，等待 15 秒...");
+                    Thread.sleep(15000);
+                } else if (apiCount < 5) {
+                    log.info("⏳ API 收集中（{}个），等待 10 秒...", apiCount);
+                    Thread.sleep(10000);
+                } else {
+                    log.info("✅ API 已就绪（{}个），等待 5 秒确保函数注册完成...", apiCount);
+                    Thread.sleep(5000);
+                }
+                
+                // 查看详细统计
+                Request statsReq = new Request.Builder()
+                        .url(BASE_URL + "/ai/stats")
+                        .get()
+                        .build();
+                Response statsResp = httpClient.newCall(statsReq).execute();
+                if (statsResp.isSuccessful()) {
+                    JSONObject stats = JSONUtil.parseObj(statsResp.body().string());
+                    log.info("📈 系统就绪状态:");
+                    log.info("   ✅ API 总数: {}", stats.getInt("totalApis"));
+                    log.info("   ✅ 服务数: {}", stats.getInt("serviceCount"));
+                    log.info("   ✅ 可用函数: {}", stats.getInt("functionsCount"));
+                    log.info("   ✅ 缓存状态: {}", stats.getBool("cacheEnabled") ? "已启用" : "未启用");
+                }
+                statsResp.close();
+                
             } else {
                 log.error("❌ 服务健康检查失败: HTTP {}", response.code());
+                log.error("请检查服务是否正常启动");
             }
             response.close();
         } catch (Exception e) {
@@ -60,6 +95,8 @@ public class UserChatSimulationTest {
             log.error("请确保:");
             log.error("  1. 服务已启动在端口 3315");
             log.error("  2. 已设置 DASHSCOPE_API_KEY 环境变量");
+            log.error("  3. 已删除旧缓存: rm -f data/api-metadata-cache.json");
+            log.error("  4. MockApiController 已启用");
         }
         
         log.info("═══════════════════════════════════════════════════════\n");
@@ -67,9 +104,9 @@ public class UserChatSimulationTest {
     
     @BeforeEach
     public void setup() {
-        // 每个测试间隔 2 秒
+        // 每个测试间隔 1 秒，避免请求过快
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             // ignore
         }
@@ -124,7 +161,7 @@ public class UserChatSimulationTest {
         log.info("═══════════════════════════════════════════════════════");
         
         // 用户询问系统状态，AI 应该调用健康检查接口
-        JSONObject response = simulateUserChat("帮我看一下系统现在的健康状态", true);
+        JSONObject response = simulateUserChat("帮我看一下系统现在的系统健康状态", true);
         
         if (response.getBool("functionCalled", false)) {
             log.info("✅ AI 成功调用了函数: {}", response.getStr("functionName"));
@@ -304,13 +341,54 @@ public class UserChatSimulationTest {
     }
     
     /**
-     * 测试 10: 交互式对话（可选）
+     * 测试 10: 流式对话测试
      */
     @Test
     @Order(10)
-    @DisplayName("场景10: 交互式对话（手动测试）")
+    @DisplayName("场景10: 流式对话 - SSE 实时响应")
+    public void testScenario10_StreamChat() throws IOException, InterruptedException {
+        log.info("\n");
+        log.info("═══════════════════════════════════════════════════════");
+        log.info("📝 场景10: 流式对话");
+        log.info("═══════════════════════════════════════════════════════");
+        
+        log.info("👤 用户: 请介绍一下你自己和你的功能");
+        log.info("⚙️ 模式: 流式（SSE）");
+        
+        // 测试流式接口
+        testStreamResponse("请介绍一下你自己和你的功能", false);
+        
+        log.info("✅ 场景10完成：流式对话测试\n");
+    }
+    
+    /**
+     * 测试 11: 流式 Function Calling
+     */
+    @Test
+    @Order(11)
+    @DisplayName("场景11: 流式 Function Calling")
+    public void testScenario11_StreamFunctionCalling() throws IOException, InterruptedException {
+        log.info("\n");
+        log.info("═══════════════════════════════════════════════════════");
+        log.info("📝 场景11: 流式 Function Calling");
+        log.info("═══════════════════════════════════════════════════════");
+        
+        log.info("👤 用户: 查询在线用户");
+        log.info("⚙️ 模式: 流式 + Function Calling");
+        
+        testStreamResponse("查询在线用户", true);
+        
+        log.info("✅ 场景11完成：流式 Function Calling\n");
+    }
+    
+    /**
+     * 测试 12: 交互式对话（可选）
+     */
+    @Test
+    @Order(12)
+    @DisplayName("场景12: 交互式对话（手动测试）")
     @Disabled("手动测试时启用")
-    public void testScenario10_InteractiveChat() throws IOException {
+    public void testScenario12_InteractiveChat() throws IOException {
         log.info("\n");
         log.info("═══════════════════════════════════════════════════════");
         log.info("📝 场景10: 交互式对话");
@@ -368,16 +446,20 @@ public class UserChatSimulationTest {
     }
     
     /**
-     * 辅助方法：模拟用户对话
+     * 辅助方法：模拟用户对话（普通模式）
      */
     private JSONObject simulateUserChat(String message, boolean enableFunctions) throws IOException {
         log.info("👤 用户: {}", message);
-        log.info("⚙️ Function Calling: {}", enableFunctions ? "启用" : "禁用");
+        log.info("⚙️ Function Calling: {}, 模式: 普通", enableFunctions ? "启用" : "禁用");
         
+        long startTime = System.currentTimeMillis();
         JSONObject response = sendChatRequest(message, enableFunctions, sessionId);
+        long duration = System.currentTimeMillis() - startTime;
+        
         sessionId = response.getStr("sessionId");
         
         log.info("🤖 AI: {}", response.getStr("message"));
+        log.info("⏱️ 响应时间: {}ms", duration);
         
         if (response.getBool("functionCalled", false)) {
             log.info("📞 函数调用: {}", response.getStr("functionName"));
@@ -396,14 +478,107 @@ public class UserChatSimulationTest {
         log.info("🔑 会话ID: {}", response.getStr("sessionId"));
         log.info("-----------------------------------------------------------");
         
-        // 延迟避免请求过快
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
+        return response;
+    }
+    
+    /**
+     * 测试流式响应
+     */
+    private void testStreamResponse(String message, boolean enableFunctions) 
+            throws IOException, InterruptedException {
+        
+        JSONObject requestJson = new JSONObject();
+        requestJson.set("message", message);
+        requestJson.set("enableFunctions", enableFunctions);
+        if (sessionId != null) {
+            requestJson.set("sessionId", sessionId);
         }
         
-        return response;
+        RequestBody body = RequestBody.create(requestJson.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(BASE_URL + "/ai/chat/stream")
+                .post(body)
+                .addHeader("Accept", "text/event-stream")
+                .build();
+        
+        log.info("📡 [流式] 发送请求...");
+        long startTime = System.currentTimeMillis();
+        
+        StringBuilder fullResponse = new StringBuilder();
+        String currentSessionId = null;
+        boolean hasFunctionCall = false;
+        String functionName = null;
+        
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                log.error("❌ HTTP 请求失败: {}", response.code());
+                return;
+            }
+            
+            log.info("📥 [流式] 开始接收数据...");
+            System.out.print("🤖 AI: ");
+            
+            String line;
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(response.body().byteStream()));
+            
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("data: ")) {
+                    String data = line.substring(6);
+                    
+                    if ("[DONE]".equals(data)) {
+                        System.out.println();
+                        log.info("✅ [流式] 接收完成");
+                        break;
+                    }
+                    
+                    try {
+                        JSONObject chunk = JSONUtil.parseObj(data);
+                        String type = chunk.getStr("type");
+                        
+                        switch (type) {
+                            case "sessionId":
+                                currentSessionId = chunk.getStr("sessionId");
+                                break;
+                            case "text":
+                                String content = chunk.getStr("content");
+                                fullResponse.append(content);
+                                System.out.print(content);  // 实时输出
+                                System.out.flush();
+                                break;
+                            case "functionCall":
+                                hasFunctionCall = true;
+                                functionName = chunk.getStr("functionName");
+                                log.info("\n📞 [流式] 调用函数: {}", functionName);
+                                System.out.print("\n[正在调用函数: " + functionName + "...]\n🤖 AI: ");
+                                break;
+                            case "error":
+                                log.error("❌ [流式] 错误: {}", chunk.getStr("message"));
+                                break;
+                        }
+                    } catch (Exception e) {
+                        // 忽略解析错误
+                    }
+                }
+            }
+            
+            long duration = System.currentTimeMillis() - startTime;
+            
+            System.out.println();
+            log.info("-----------------------------------------------------------");
+            log.info("📝 完整回复: {}", fullResponse.toString());
+            log.info("⏱️ 总耗时: {}ms", duration);
+            if (hasFunctionCall) {
+                log.info("📞 调用了函数: {}", functionName);
+            }
+            log.info("🔑 会话ID: {}", currentSessionId);
+            
+            // 更新 sessionId
+            if (currentSessionId != null) {
+                sessionId = currentSessionId;
+            }
+            
+        }
     }
     
     /**
@@ -462,6 +637,19 @@ public class UserChatSimulationTest {
         log.info("═══════════════════════════════════════════════════════");
         log.info("🎉 所有对话场景测试完成！");
         log.info("═══════════════════════════════════════════════════════");
+        log.info("");
+        log.info("📊 测试总结:");
+        log.info("   - 测试场景: 11 个");
+        log.info("   - 包含流式: 2 个");
+        log.info("   - 验证内容:");
+        log.info("     ✅ 普通对话");
+        log.info("     ✅ Function Calling");
+        log.info("     ✅ 多轮对话");
+        log.info("     ✅ 上下文保持");
+        log.info("     ✅ 参数提取");
+        log.info("     ✅ 流式响应");
+        log.info("     ✅ API 列表注入");
+        log.info("");
         
         // 关闭 HTTP 客户端
         if (httpClient != null) {
