@@ -18,10 +18,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
+import com.jbm.cluster.api.constants.RequestDeviceType;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
+import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.ThirdPartyAuthService;
@@ -53,6 +56,8 @@ public class OAuth2ServerController {
     private SysLoginService sysLoginService;
     @Autowired
     private ConfirmService confirmService;
+    @Autowired
+    private BaseAppPreprocessing baseAppPreprocessing;
 
     // 处理所有OAuth相关请求
     public Object oauth2() {
@@ -132,7 +137,18 @@ public class OAuth2ServerController {
                 return ResultBody.<String>failed().msg(loginResult.getMessage());
             }
 
-            LoginHelper.login(loginResult.getResult());
+            // 获取登录用户并设置必要信息
+            JbmLoginUser jbmLoginUser = loginResult.getResult();
+            // 设置 AppId (通过 clientId 获取)
+            BaseApp baseApp = baseAppPreprocessing.getAppByKey(authorizeForm.getClient_id());
+            jbmLoginUser.setAppId(baseApp.getAppId());
+            jbmLoginUser.setClientId(authorizeForm.getClient_id());
+            // 设置设备类型
+            if (StrUtil.isBlank(jbmLoginUser.getDevice())) {
+                jbmLoginUser.setDevice(RequestDeviceType.PC.getDevice());
+            }
+            
+            LoginHelper.login(jbmLoginUser);
 
             // 登录成功后，直接生成授权码
             RequestAuthModel ra = new RequestAuthModel();
@@ -141,7 +157,7 @@ public class OAuth2ServerController {
             ra.redirectUri = authorizeForm.getRedirect_uri();
             ra.state = authorizeForm.getState();
             ra.scope = StrUtil.isNotBlank(authorizeForm.getScope()) ? authorizeForm.getScope() : "";
-            ra.loginId = loginResult.getResult().getLoginId();
+            ra.loginId = jbmLoginUser.getLoginId();
 
 
             // 生成授权码
@@ -326,6 +342,15 @@ public class OAuth2ServerController {
                     myUser.setClientId(targetClientId);
                 }
             }
+            
+            // 设置 AppId (通过 clientId 获取)
+            BaseApp baseApp = baseAppPreprocessing.getAppByKey(myUser.getClientId());
+            myUser.setAppId(baseApp.getAppId());
+            // 设置设备类型
+            if (StrUtil.isBlank(myUser.getDevice())) {
+                myUser.setDevice(RequestDeviceType.PC.getDevice());
+            }
+            
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());
@@ -334,7 +359,7 @@ public class OAuth2ServerController {
             // 4. 执行登录
             log.info("[第三方回调] Step 3: 开始执行用户登录...");
             RequestAuthModel requestAuthModel = new RequestAuthModel();
-            requestAuthModel.setLoginId(jbmLoginUserResultBody.getResult().getLoginId());
+            requestAuthModel.setLoginId(myUser.getLoginId());
             requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
             LoginHelper.login(myUser);

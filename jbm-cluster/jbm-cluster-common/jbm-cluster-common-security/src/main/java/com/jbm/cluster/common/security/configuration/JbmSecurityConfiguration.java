@@ -62,7 +62,16 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         }) {
             @SuppressWarnings("all")
             @Override
+            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                // 在请求开始时初始化ThreadLocal缓存，避免租户拦截器等场景获取不到用户信息
+                LoginHelper.initCache();
+                return super.preHandle(request, response, handler);
+            }
+
+            @SuppressWarnings("all")
+            @Override
             public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+                // 请求结束后清除ThreadLocal缓存，防止内存泄漏
                 LoginHelper.clearCache();
             }
         }).addPathPatterns("/**");
