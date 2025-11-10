@@ -69,9 +69,12 @@ public class DialogueIntentHandler implements IntentHandler {
             ApiDefinition selectedApi = selectApi(context);
             
             if (selectedApi == null) {
-                context.setSuccess(false);
-                context.setErrorMessage("未找到匹配的 API");
-                log.warn("❌ [对话处理] 未找到匹配的 API");
+                // 未找到匹配的 API，返回友好提示
+                String friendlyMessage = generateNoApiFoundMessage(context.getIntent(), context.getUserQuery());
+                context.setApiResponse("{\"message\": \"" + escapeJson(friendlyMessage) + "\"}");
+                context.setResponseStatusCode(404);
+                context.setSuccess(true);  // 设置为成功，让系统正常返回消息
+                log.warn("⚠️  [对话处理] 未找到匹配的 API，返回友好提示");
                 return context;
             }
             
@@ -214,6 +217,35 @@ public class DialogueIntentHandler implements IntentHandler {
             dialogueState.setCurrentAskingParameter(nextParam);
             log.info("❓ [对话处理] 准备询问参数: {}", nextParam);
         }
+    }
+    
+    /**
+     * 生成未找到 API 的友好提示
+     */
+    private String generateNoApiFoundMessage(Intent intent, String userQuery) {
+        StringBuilder message = new StringBuilder();
+        message.append("抱歉，我在系统中没有找到与\"").append(userQuery).append("\"相关的功能接口。\n\n");
+        message.append("可能的原因：\n");
+        message.append("1. 该功能暂未在系统中实现\n");
+        message.append("2. 您可以换一种表达方式试试\n");
+        message.append("3. 请联系管理员确认是否有相关API\n\n");
+        message.append("💡 提示：您可以询问\"你可以帮我做什么？\"来了解我的功能。");
+        
+        return message.toString();
+    }
+    
+    /**
+     * 转义 JSON 字符串
+     */
+    private String escapeJson(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
     
     @Override
