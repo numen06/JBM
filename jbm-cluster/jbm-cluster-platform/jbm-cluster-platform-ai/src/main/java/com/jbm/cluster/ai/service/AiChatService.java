@@ -69,11 +69,30 @@ public class AiChatService {
      * 使用两阶段 Agent 架构：先搜索 API，再执行
      */
     private static final String SYSTEM_PROMPT = """
-            你是JBM系统AI助手。当用户询问数据时：
-            1. 先调用searchApis搜索相关API
-            2. 再调用executeApi执行获取数据
-            3. 分析数据后用自然语言回复用户
-            注意：使用函数调用机制，不要输出函数名称文本。
+            你是 JBM 系统的 AI 智能助手，能够查询和操作真实的业务数据。
+            
+            【核心原则】
+            1. 当用户询问数据时，必须使用函数调用（Function Calling）获取真实数据
+            2. 绝对禁止编造、猜测或返回示例数据
+            3. 永远不要在回复中输出 JSON、函数名或参数 - 直接使用工具调用机制
+            
+            【标准流程】
+            第一步：静默调用 searchApis 搜索相关 API（不告诉用户）
+            第二步：静默调用 executeApi 执行并获取数据（不告诉用户）
+            第三步：分析数据后，用自然语言直接回答用户
+            
+            【正确示例】
+            用户："查询用户ID为123的信息"
+            你的操作：[内部调用 searchApis → 内部调用 executeApi → 获取数据]
+            你的回复："用户ID 123 的信息如下：姓名：张三，邮箱：zhangsan@example.com..."
+            
+            【严格禁止的错误做法】
+            ❌ 不要说："我将查询..."、"让我来获取..."
+            ❌ 不要输出：{"function": "searchApis", ...}
+            ❌ 不要输出：```json ...```
+            ❌ 不要编造："用户A、用户B、用户C"这样的示例数据
+            
+            重要：像通义千问一样，静默执行函数调用，只返回最终的自然语言结果给用户。
             """;
 
     /**
@@ -415,6 +434,24 @@ public class AiChatService {
                             // 保存最后一个消息（包含完整的 toolCalls）
                             lastMessage[0] = msg;
                             
+                            // 🔍 调试：打印每个 chunk 的 toolCalls 状态
+                            if (msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
+                                log.debug("🔍 [流式调试] 收到 toolCalls，数量: {}", msg.getToolCalls().size());
+                                for (int i = 0; i < msg.getToolCalls().size(); i++) {
+                                    var tc = msg.getToolCalls().get(i);
+                                    if (tc instanceof ToolCallFunction) {
+                                        ToolCallFunction tcf = (ToolCallFunction) tc;
+                                        log.debug("    [{}] id={}, type={}, function.name={}, function.arguments={}", 
+                                                i,
+                                                tcf.getId(),
+                                                tcf.getType(),
+                                                tcf.getFunction() != null ? tcf.getFunction().getName() : "NULL",
+                                                tcf.getFunction() != null && tcf.getFunction().getArguments() != null ? 
+                                                    tcf.getFunction().getArguments().substring(0, Math.min(50, tcf.getFunction().getArguments().length())) : "NULL");
+                                    }
+                                }
+                            }
+                            
                             // 处理文本内容 - AI 真实的流式输出
                             if (msg.getContent() != null && !msg.getContent().isEmpty()) {
                                 if (firstChunk[0]) {
@@ -470,6 +507,18 @@ public class AiChatService {
                                 }
                             }
                             
+                            // 🔍 调试：打印 lastMessage 的详细信息
+                            if (lastMessage[0] != null) {
+                                log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                                log.info("🔍 [流式调试] 最后一条消息的详细信息:");
+                                log.info("   role: {}", lastMessage[0].getRole());
+                                log.info("   content: {}", lastMessage[0].getContent());
+                                log.info("   toolCalls: {}", lastMessage[0].getToolCalls());
+                                if (lastMessage[0].getToolCalls() != null) {
+                                    log.info("   toolCalls.size(): {}", lastMessage[0].getToolCalls().size());
+                                }
+                            }
+                            
                             // 如果有函数调用
                             if (!toolCalls.isEmpty()) {
                                 log.info("");
@@ -487,6 +536,9 @@ public class AiChatService {
                                     if (tc.getFunction() != null && tc.getFunction().getArguments() != null) {
                                         log.info("      完整参数: {}", tc.getFunction().getArguments());
                                     }
+                                    
+                                    // 🔍 详细调试：打印 tc 对象的字符串表示
+                                    log.info("      完整对象: {}", tc);
                                 }
                                 
                                 // 添加助手消息
@@ -558,12 +610,12 @@ public class AiChatService {
                                         log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                                         
                                         // 通知前端函数执行完成，并传递结果数据
-                                        emitter.onNext(JSONUtil.toJsonStr(Map.of(
-                                                "type", "functionResult",
-                                                "functionName", functionName,
-                                                "success", true,
-                                                "result", funcResult  // 添加执行结果
-                                        )) + "\n");
+                                        Map<String, Object> resultMap = new HashMap<>();
+                                        resultMap.put("type", "functionResult");
+                                        resultMap.put("functionName", functionName);
+                                        resultMap.put("success", true);
+                                        resultMap.put("result", funcResult);
+                                        emitter.onNext(JSONUtil.toJsonStr(resultMap) + "\n");
                                         
                                         // 添加函数结果（必须包含 tool_call_id）
                                         Message toolMessage = Message.builder()
@@ -585,10 +637,10 @@ public class AiChatService {
                                         log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                                         
                                         // 添加错误信息作为函数结果
-                                        String errorResult = JSONUtil.toJsonStr(Map.of(
-                                                "error", true,
-                                                "message", "函数调用失败: " + funcEx.getMessage()
-                                        ));
+                                        Map<String, Object> errorMap = new HashMap<>();
+                                        errorMap.put("error", true);
+                                        errorMap.put("message", "函数调用失败: " + funcEx.getMessage());
+                                        String errorResult = JSONUtil.toJsonStr(errorMap);
                                         
                                         Message errorToolMessage = Message.builder()
                                                 .role(Role.TOOL.getValue())
@@ -770,7 +822,7 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("getCurrentTime")
-                        .description("Get current system time. Call this when user asks about time, such as 'what time is it now', '现在几点', '当前时间'.")
+                        .description("获取当前系统时间。当用户询问'现在几点'、'当前时间'、'what time is it'时调用此函数。")
                         .parameters(gson.fromJson("{\"type\": \"object\", \"properties\": {}, \"required\": []}", JsonObject.class))
                         .build())
                 .build());
@@ -780,18 +832,18 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("searchApis")
-                        .description("这是查询接口API的方法，告诉你有什么样的API匹配，你可以用做执行方法")
+                        .description("搜索系统中可用的API接口。当用户询问任何数据（用户、订单、库存等）时，必须先调用此函数找到相关API。返回匹配的API列表，包含apiId供executeApi使用。")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
                                     "properties": {
                                         "query": {
                                             "type": "string",
-                                            "description": "Keyword from user question: 用户/user, 订单/order, 库存/inventory, 物料/material, 设备/device"
+                                            "description": "搜索关键词，从用户问题中提取，例如：'用户'、'订单'、'库存'、'物料'、'设备'等"
                                         },
                                         "limit": {
                                             "type": "integer",
-                                            "description": "Max results",
+                                            "description": "返回结果数量限制",
                                             "default": 5
                                         }
                                     },
@@ -806,18 +858,18 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("executeApi")
-                        .description("执行一个API，查看数据分析之后返回给用户")
+                        .description("执行指定的API获取真实数据。从searchApis结果中获取apiId后调用此函数。执行后返回真实的业务数据，你需要解析并用自然语言呈现给用户。")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
                                     "properties": {
                                         "apiId": {
                                             "type": "string",
-                                            "description": "The API identifier from searchApis result"
+                                            "description": "从searchApis返回结果中获取的API标识符"
                                         },
                                         "parameters": {
                                             "type": "object",
-                                            "description": "Parameters needed by the API, like userId, pageSize etc. Empty object {} if no parameters needed.",
+                                            "description": "API所需的参数，如userId、pageSize等。如果API不需要参数则传空对象{}",
                                             "default": {}
                                         }
                                     },
@@ -832,7 +884,7 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("listApiCategories")
-                        .description("List all API categories grouped by service. Call this when user asks 'what can you do' or 'show capabilities'.")
+                        .description("列出所有API分类和服务。当用户询问'你能做什么'、'有什么功能'、'系统有哪些接口'时调用此函数。返回按服务分组的API列表。")
                         .parameters(gson.fromJson("{\"type\": \"object\", \"properties\": {}, \"required\": []}", JsonObject.class))
                         .build())
                 .build());
@@ -842,14 +894,14 @@ public class AiChatService {
                 .type("function")
                 .function(FunctionDefinition.builder()
                         .name("getApiDetail")
-                        .description("Get detailed information about a specific API including parameters and usage. Call when need to know API details before executing.")
+                        .description("获取指定API的详细信息，包括参数、用法等。当需要了解API需要什么参数才能执行时调用此函数。")
                         .parameters(gson.fromJson("""
                                 {
                                     "type": "object",
                                     "properties": {
                                         "apiId": {
                                             "type": "string",
-                                            "description": "The API identifier from searchApis or listApiCategories"
+                                            "description": "从searchApis或listApiCategories获取的API标识符"
                                         }
                                     },
                                     "required": ["apiId"]

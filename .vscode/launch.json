@@ -31,6 +31,16 @@
             "projectName": "jbm-cluster-platform-push",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-JbmAIApplication<jbm-cluster-platform-ai>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.jbm.cluster.ai.JbmAIApplication",
+            "projectName": "jbm-cluster-platform-ai",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }

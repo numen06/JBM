@@ -73,11 +73,11 @@ public class AgentFunctionService {
         int limit = params.getInt("limit", 10);
         
         if (query.isEmpty()) {
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "请提供搜索关键词",
-                    "apis", Collections.emptyList()
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "请提供搜索关键词");
+            errorResult.put("apis", Collections.emptyList());
+            return JSONUtil.toJsonStr(errorResult);
         }
         
         // 获取所有 API
@@ -106,11 +106,11 @@ public class AgentFunctionService {
         
         log.info("✅ [Agent] 找到 {} 个匹配的 API", results.size());
         
-        return JSONUtil.toJsonStr(Map.of(
-                "success", true,
-                "count", results.size(),
-                "apis", results
-        ));
+        Map<String, Object> successResult = new HashMap<>();
+        successResult.put("success", true);
+        successResult.put("count", results.size());
+        successResult.put("apis", results);
+        return JSONUtil.toJsonStr(successResult);
     }
     
     /**
@@ -153,10 +153,10 @@ public class AgentFunctionService {
         
         log.info("✅ [Agent] 共 {} 个服务分类", result.size());
         
-        return JSONUtil.toJsonStr(Map.of(
-                "success", true,
-                "categories", result
-        ));
+        Map<String, Object> categoryResult = new HashMap<>();
+        categoryResult.put("success", true);
+        categoryResult.put("categories", result);
+        return JSONUtil.toJsonStr(categoryResult);
     }
     
     /**
@@ -173,10 +173,10 @@ public class AgentFunctionService {
         log.info("📄 [Agent] 获取 API 详情: {}", apiId);
         
         if (apiId == null || apiId.isEmpty()) {
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "请提供 apiId"
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "请提供 apiId");
+            return JSONUtil.toJsonStr(errorResult);
         }
         
         // 查找 API
@@ -189,10 +189,10 @@ public class AgentFunctionService {
                 .findFirst();
         
         if (apiOpt.isEmpty()) {
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "未找到指定的 API"
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "未找到指定的 API");
+            return JSONUtil.toJsonStr(errorResult);
         }
         
         ApiMetadata api = apiOpt.get();
@@ -209,10 +209,10 @@ public class AgentFunctionService {
         
         log.info("✅ [Agent] 返回 API 详情: {}", api.getSummary());
         
-        return JSONUtil.toJsonStr(Map.of(
-                "success", true,
-                "api", detail
-        ));
+        Map<String, Object> detailResult = new HashMap<>();
+        detailResult.put("success", true);
+        detailResult.put("api", detail);
+        return JSONUtil.toJsonStr(detailResult);
     }
     
     /**
@@ -230,10 +230,10 @@ public class AgentFunctionService {
         log.info("🚀 [Agent] 执行 API: {}, 参数: {}", apiId, parameters);
         
         if (apiId == null || apiId.isEmpty()) {
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "请提供 apiId"
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "请提供 apiId");
+            return JSONUtil.toJsonStr(errorResult);
         }
         
         // 查找 API
@@ -246,10 +246,10 @@ public class AgentFunctionService {
                 .findFirst();
         
         if (apiOpt.isEmpty()) {
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "未找到指定的 API"
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "未找到指定的 API");
+            return JSONUtil.toJsonStr(errorResult);
         }
         
         ApiMetadata api = apiOpt.get();
@@ -268,18 +268,18 @@ public class AgentFunctionService {
             
             log.info("✅ [Agent] API 执行成功");
             
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", true,
-                    "result", JSONUtil.parseObj(result)
-            ));
+            Map<String, Object> successResult = new HashMap<>();
+            successResult.put("success", true);
+            successResult.put("result", JSONUtil.parseObj(result));
+            return JSONUtil.toJsonStr(successResult);
             
         } catch (Exception e) {
             log.error("❌ [Agent] API 执行失败: {}", e.getMessage());
             
-            return JSONUtil.toJsonStr(Map.of(
-                    "success", false,
-                    "message", "API 执行失败: " + e.getMessage()
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "API 执行失败: " + e.getMessage());
+            return JSONUtil.toJsonStr(errorResult);
         }
     }
 }

@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +68,10 @@ public class AiChatController {
     @DeleteMapping("/session/{sessionId}")
     public Map<String, Object> clearSession(@PathVariable String sessionId) {
         aiChatService.clearSession(sessionId);
-        return Map.of("success", true, "message", "会话已清除");
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "会话已清除");
+        return result;
     }
     
     /**
@@ -96,12 +100,12 @@ public class AiChatController {
     @GetMapping("/health")
     public Map<String, Object> health() {
         int apiCount = apiMetadataCollector.getAllApis().size();
-        return Map.of(
-                "status", "ok",
-                "service", "jbm-ai",
-                "message", "AI 服务运行正常",
-                "apiCount", apiCount
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "ok");
+        result.put("service", "jbm-ai");
+        result.put("message", "AI 服务运行正常");
+        result.put("apiCount", apiCount);
+        return result;
     }
     
     /**
@@ -112,10 +116,10 @@ public class AiChatController {
     public Map<String, Object> refreshApiMetadata() {
         log.info("📡 收到刷新 API 元数据请求");
         apiMetadataCollector.forceRefresh();
-        return Map.of(
-                "success", true,
-                "message", "API 元数据刷新任务已启动（后台执行）"
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "API 元数据刷新任务已启动（后台执行）");
+        return result;
     }
     
     /**
@@ -126,10 +130,10 @@ public class AiChatController {
     public Map<String, Object> clearCache() {
         log.info("🗑️ 收到清除缓存请求");
         apiMetadataCollector.clearCache();
-        return Map.of(
-                "success", true,
-                "message", "缓存已清除"
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message", "缓存已清除");
+        return result;
     }
     
     /**
@@ -144,12 +148,12 @@ public class AiChatController {
                 .distinct()
                 .count();
         
-        return Map.of(
-                "totalApis", totalApis,
-                "serviceCount", (int) serviceCount,
-                "functionsCount", aiChatService.listAvailableFunctions().size(),
-                "cacheEnabled", true
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalApis", totalApis);
+        result.put("serviceCount", (int) serviceCount);
+        result.put("functionsCount", aiChatService.listAvailableFunctions().size());
+        result.put("cacheEnabled", true);
+        return result;
     }
 }
 
