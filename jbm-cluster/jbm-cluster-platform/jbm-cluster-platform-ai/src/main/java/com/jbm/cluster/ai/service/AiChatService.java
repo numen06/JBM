@@ -28,23 +28,32 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * AI 聊天服务
+ * AI 聊天服务（旧架构 - 已废弃）
  * 
- * 核心架构：
- * 1. AI 负责理解用户意图
- * 2. AI 通过 Function Calling 决定调用哪个接口
- * 3. AI 提供函数参数
- * 4. 系统通过 JbmRequestTemplate 安全地执行内部调用
- * 5. AI 解析返回的 JSON 数据
- * 6. AI 生成用户友好的回复
+ * ⚠️ 已废弃：请使用新的 Agent 模块化架构 (AgentService)
  * 
- * 安全机制：
- * - AI 不直接访问系统，所有调用通过 JbmRequestTemplate
- * - 使用 Feign 内部协议，自动携带认证信息
- * - 符合 JBM 安全体系和权限控制
+ * 旧架构问题：
+ * 1. Function Calling 流式输出时可能出现 toolCalls 数据不完整
+ * 2. 函数名可能为 null，导致调用失败
+ * 3. AI 可能输出函数调用的文本形式而不是真正执行
+ * 4. 单一服务，难以扩展和维护
+ * 
+ * 新架构优势：
+ * 1. 模块化设计，职责单一
+ * 2. 不依赖 Function Calling 的流式问题
+ * 3. 清晰的阶段进度反馈
+ * 4. 更稳定可靠
+ * 5. 易于测试和调试
+ * 
+ * 迁移指南：
+ * - 使用 AgentService.askStream() 替代 chatStream()
+ * - 使用 AgentService.ask() 替代 chat()
+ * - 前端切换到 /ai/agent/stream 端点
  * 
  * @author wesley
+ * @deprecated 使用 {@link com.jbm.cluster.ai.agent.AgentService} 替代
  */
+@Deprecated
 @Service
 @Slf4j
 public class AiChatService {
@@ -77,22 +86,24 @@ public class AiChatService {
             3. 永远不要在回复中输出 JSON、函数名或参数 - 直接使用工具调用机制
             
             【标准流程】
-            第一步：静默调用 searchApis 搜索相关 API（不告诉用户）
-            第二步：静默调用 executeApi 执行并获取数据（不告诉用户）
-            第三步：分析数据后，用自然语言直接回答用户
+            1. 静默调用函数获取真实数据（用户看不到这个过程）
+            2. 分析返回的数据
+            3. 用自然、简洁的中文直接回答
             
             【正确示例】
             用户："查询用户ID为123的信息"
-            你的操作：[内部调用 searchApis → 内部调用 executeApi → 获取数据]
-            你的回复："用户ID 123 的信息如下：姓名：张三，邮箱：zhangsan@example.com..."
+            正确回复："用户ID 123 的信息如下：
+            - 姓名：张三
+            - 邮箱：zhangsan@example.com
+            - 状态：正常"
             
-            【严格禁止的错误做法】
-            ❌ 不要说："我将查询..."、"让我来获取..."
-            ❌ 不要输出：{"function": "searchApis", ...}
-            ❌ 不要输出：```json ...```
-            ❌ 不要编造："用户A、用户B、用户C"这样的示例数据
+            【严格禁止】
+            ❌ 不要说过程："我将查询..."、"让我来..."、"正在调用..."
+            ❌ 不要输出函数调用："searchApis"、"executeApi"、"[内部调用...]"
+            ❌ 不要输出 JSON 格式：{"function": ...} 或 ```json ...```
+            ❌ 不要编造数据："用户A、用户B、用户C"
             
-            重要：像通义千问一样，静默执行函数调用，只返回最终的自然语言结果给用户。
+            关键：静默使用工具，直接给结果。像人类助手一样回答，不要暴露技术细节。
             """;
 
     /**

@@ -47,3 +47,23 @@ dashscope:
   api-cache-enabled: true
   api-cache-file: data/api-metadata-cache.json
 
+# Agent 模块化架构配置
+agent:
+  # NLU（自然语言理解）配置
+  nlu:
+    model: qwen-max  # 使用的 AI 模型
+    temperature: 0.1  # 温度参数，越低越稳定
+    max-tokens: 500  # 意图识别最大 tokens
+    max-services: 10  # API 概述中最多显示的服务数
+    max-apis-per-service: 5  # 每个服务最多显示的 API 数
+  
+  # API Selection（API 选择）配置
+  selection:
+    match-threshold: 0.3  # 匹配分数阈值（0.3 较宽松，0.5 较严格）
+    cache-duration: 60  # API 缓存有效期（秒）
+  
+  # Execution（执行）配置
+  execution:
+    timeout: 30  # API 调用超时时间（秒）
+    retries: 0  # 重试次数
+

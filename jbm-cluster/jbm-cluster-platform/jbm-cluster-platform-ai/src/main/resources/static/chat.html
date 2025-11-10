@@ -463,6 +463,62 @@
             font-size: 13px;
         }
 
+        /* 参数收集样式 */
+        .parameter-needed {
+            margin: 10px 0;
+            padding: 12px;
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .parameter-needed-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .parameter-progress {
+            display: inline-block;
+            background: #fbbf24;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .parameter-collected {
+            margin: 10px 0;
+            padding: 10px 12px;
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #065f46;
+        }
+
+        .api-ready {
+            margin: 10px 0;
+            padding: 10px 12px;
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         /* 滚动条样式 */
         .chat-messages::-webkit-scrollbar {
             width: 8px;
@@ -526,6 +582,9 @@
             <div class="welcome-message">
                 <h2>👋 欢迎使用 JBM AI 智能助手</h2>
                 <p>我可以帮助您查询和操作 JBM 系统中的数据</p>
+                <p style="font-size: 14px; color: #64748b; margin-top: 10px;">
+                    💡 <strong>新功能</strong>：支持对话式参数补全，缺少参数时会主动询问！
+                </p>
                 <div class="quick-actions">
                     <button class="quick-action-btn" onclick="sendQuickMessage('你好，请介绍一下你自己')">
                         👋 介绍自己
@@ -536,8 +595,11 @@
                     <button class="quick-action-btn" onclick="sendQuickMessage('查询系统健康状态')">
                         🏥 系统状态
                     </button>
-                    <button class="quick-action-btn" onclick="sendQuickMessage('查看用户列表')">
-                        👥 用户列表
+                    <button class="quick-action-btn" onclick="sendQuickMessage('查询用户信息')">
+                        👤 查询用户（演示对话）
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('发送邮件')">
+                        📧 发送邮件（演示多参数）
                     </button>
                 </div>
             </div>
@@ -676,9 +738,9 @@
             }
         }
 
-        // 流式聊天
+        // 流式聊天（使用新的 Agent 架构）
         async function streamChat(message, enableFunctions, assistantDiv) {
-            const response = await fetch(`${BASE_URL}/ai/chat/stream`, {
+            const response = await fetch(`${BASE_URL}/ai/agent/stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -686,7 +748,7 @@
                 },
                 body: JSON.stringify({
                     message: message,
-                    enableFunctions: enableFunctions,
+                    enableAgent: enableFunctions,
                     sessionId: currentSessionId
                 })
             });
@@ -765,12 +827,112 @@
                                     currentSessionId = chunk.sessionId;
                                     console.log('🔑 会话ID:', currentSessionId);
                                     break;
+                                
+                                case 'stage':
+                                    // Agent 处理阶段进度
+                                    console.log('📍 阶段:', chunk.stage, chunk.message);
+                                    if (typingIndicator && chunk.message) {
+                                        const dots = typingIndicator.querySelectorAll('.typing-dot');
+                                        if (dots.length > 0) {
+                                            // 更新加载提示文本
+                                            typingIndicator.setAttribute('title', chunk.message);
+                                        }
+                                    }
+                                    break;
+                                
+                                case 'intent':
+                                    // 识别出的意图（调试信息）
+                                    console.log('🎯 意图:', chunk.name, '置信度:', chunk.confidence, '参数:', chunk.params);
+                                    break;
+                                
+                                case 'apiSelected':
+                                    // 选中的 API（调试信息）
+                                    console.log('📋 选中API:', chunk.method, chunk.path, '匹配分数:', chunk.matchScore);
+                                    break;
+                                
+                                case 'apiCalling':
+                                    // API 调用中
+                                    console.log('🚀 调用API:', chunk.url);
+                                    break;
+                                
+                                case 'apiResult':
+                                    // API 返回结果
+                                    console.log('✅ API结果: 状态码', chunk.statusCode, '数据长度', chunk.dataLength);
+                                    break;
+                                
+                                case 'parameterNeeded':
+                                    // 需要参数（对话模式）
+                                    if (typingIndicator) {
+                                        typingIndicator.remove();
+                                    }
+                                    
+                                    console.log('❓ 需要参数:', chunk.parameter, '问题:', chunk.question);
+                                    
+                                    // 显示参数收集提示
+                                    const paramDiv = document.createElement('div');
+                                    paramDiv.className = 'parameter-needed';
+                                    paramDiv.innerHTML = `
+                                        <div class="parameter-needed-title">
+                                            ❓ 需要补充参数 
+                                            <span class="parameter-progress">
+                                                轮次 ${chunk.round || 1} | 剩余 ${chunk.missingCount || 1} 个
+                                            </span>
+                                        </div>
+                                        <div style="color: #78350f; margin-top: 5px;">
+                                            参数：<strong>${chunk.parameter}</strong>
+                                        </div>
+                                    `;
+                                    contentDiv.appendChild(paramDiv);
+                                    scrollToBottom();
+                                    break;
+                                
+                                case 'parameterCollected':
+                                    // 参数收集成功
+                                    console.log('✅ 参数已收集:', chunk.parameter, '=', chunk.value);
+                                    
+                                    const collectedDiv = document.createElement('div');
+                                    collectedDiv.className = 'parameter-collected';
+                                    collectedDiv.innerHTML = `
+                                        <span>✅</span>
+                                        <span>已收集参数：<strong>${chunk.parameter}</strong> = ${chunk.value}</span>
+                                    `;
+                                    contentDiv.appendChild(collectedDiv);
+                                    scrollToBottom();
+                                    break;
+                                
+                                case 'apiReady':
+                                    // 参数齐全，准备执行
+                                    console.log('🚀 参数已齐全，准备执行 API');
+                                    
+                                    const readyDiv = document.createElement('div');
+                                    readyDiv.className = 'api-ready';
+                                    readyDiv.innerHTML = `
+                                        <span>🚀</span>
+                                        <span>${chunk.message || '参数已齐全，开始执行...'}</span>
+                                    `;
+                                    contentDiv.appendChild(readyDiv);
+                                    
+                                    // 添加加载提示
+                                    const execLoading = document.createElement('div');
+                                    execLoading.className = 'typing-indicator active';
+                                    execLoading.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+                                    execLoading.id = 'execution-loading';
+                                    contentDiv.appendChild(execLoading);
+                                    
+                                    scrollToBottom();
+                                    break;
                                     
                                 case 'text':
                                     // AI 真实的流式输出
                                     if (isFirstChunk && typingIndicator) {
                                         typingIndicator.remove();
                                         isFirstChunk = false;
+                                    }
+                                    
+                                    // 移除执行加载提示（如果有）
+                                    const execLoading = contentDiv.querySelector('#execution-loading');
+                                    if (execLoading) {
+                                        execLoading.remove();
                                     }
                                     
                                     // 直接追加 AI 生成的文本
@@ -978,24 +1140,27 @@
             
             const messagesDiv = document.getElementById('chatMessages');
             messagesDiv.innerHTML = `
-                <div class="welcome-message">
-                    <h2>👋 欢迎使用 JBM AI 智能助手</h2>
-                    <p>我可以帮助您查询和操作 JBM 系统中的数据</p>
-                    <div class="quick-actions">
-                        <button class="quick-action-btn" onclick="sendQuickMessage('你好，请介绍一下你自己')">
-                            👋 介绍自己
-                        </button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('你可以帮我做什么？')">
-                            💡 功能介绍
-                        </button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('查询系统健康状态')">
-                            🏥 系统状态
-                        </button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('查看用户列表')">
-                            👥 用户列表
-                        </button>
-                    </div>
+            <div class="welcome-message">
+                <h2>👋 欢迎使用 JBM AI 智能助手</h2>
+                <p>我可以帮助您查询和操作 JBM 系统中的数据</p>
+                <p style="font-size: 14px; color: #64748b; margin-top: 10px;">
+                    💡 <strong>新功能</strong>：支持对话式参数补全，缺少参数时会主动询问！
+                </p>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="sendQuickMessage('你好，请介绍一下你自己')">
+                        👋 介绍自己
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('你可以帮我做什么？')">
+                        💡 功能介绍
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('查询用户信息')">
+                        👤 查询用户（演示对话）
+                    </button>
+                    <button class="quick-action-btn" onclick="sendQuickMessage('发送邮件')">
+                        📧 发送邮件（演示多参数）
+                    </button>
                 </div>
+            </div>
             `;
 
             document.getElementById('statsBar').style.display = 'none';
