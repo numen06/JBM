@@ -930,9 +930,9 @@
                                     }
                                     
                                     // 移除执行加载提示（如果有）
-                                    const execLoading = contentDiv.querySelector('#execution-loading');
-                                    if (execLoading) {
-                                        execLoading.remove();
+                                    const execLoadingEl = contentDiv.querySelector('#execution-loading');
+                                    if (execLoadingEl) {
+                                        execLoadingEl.remove();
                                     }
                                     
                                     // 直接追加 AI 生成的文本
@@ -1031,7 +1031,10 @@
                                     if (typingIndicator) {
                                         typingIndicator.remove();
                                     }
-                                    removeThinkingIndicators(contentDiv);
+                                    
+                                    // 移除所有加载提示
+                                    const allLoadings = contentDiv.querySelectorAll('.typing-indicator, .analyzing-indicator');
+                                    allLoadings.forEach(el => el.remove());
                                     
                                     const errorDiv = document.createElement('div');
                                     errorDiv.className = 'error-message';
