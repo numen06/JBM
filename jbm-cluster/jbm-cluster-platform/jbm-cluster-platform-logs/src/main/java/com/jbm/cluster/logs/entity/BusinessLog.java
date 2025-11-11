@@ -111,5 +111,28 @@ public class BusinessLog {
      */
     @ApiModelProperty(value = "备注")
     private String remark;
+    
+    // ==================== 新增字段（用于集成模块） ====================
+    
+    /**
+     * 业务类型（如：订单、支付、用户等）
+     * 用于消息队列集成
+     */
+    @ApiModelProperty(value = "业务类型")
+    private String businessType;
+    
+    /**
+     * 业务ID（如：订单号、支付流水号等）
+     * 用于消息队列集成
+     */
+    @ApiModelProperty(value = "业务ID")
+    private String businessId;
+    
+    /**
+     * 日志来源（如：订单服务、支付服务等）
+     * 用于消息队列集成
+     */
+    @ApiModelProperty(value = "日志来源")
+    private String source;
 }
 

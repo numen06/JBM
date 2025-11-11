@@ -29,13 +29,13 @@ public class CreateBusinessLogForm {
     @ApiModelProperty(value = "用户名")
     private String username;
     
-    @ApiModelProperty(value = "初始日志内容（支持多行）", required = false, notes = "可以包含初始的日志内容，支持多行")
+    @ApiModelProperty(value = "初始日志内容", required = false, notes = "可以包含初始的日志内容，支持多行")
     private String content;
     
     @ApiModelProperty(value = "是否自动添加时间戳前缀", notes = "true: 每行自动添加 [时间戳] 前缀")
     private Boolean autoTimestamp = false;
     
-    @ApiModelProperty(value = "过期时间（天数），默认30天")
+    @ApiModelProperty(value = "过期时间", notes = "（天数），默认30天")
     private Integer expireDays = 30;
     
     @ApiModelProperty(value = "请求IP")
@@ -46,5 +46,16 @@ public class CreateBusinessLogForm {
     
     @ApiModelProperty(value = "备注")
     private String remark;
+    
+    // ==================== 新增字段（用于集成模块） ====================
+    
+    @ApiModelProperty(value = "业务类型", notes = "（如：订单、支付、用户等）用于消息队列集成")
+    private String businessType;
+    
+    @ApiModelProperty(value = "业务ID", notes = "（如：订单号、支付流水号等）用于消息队列集成")
+    private String businessId;
+    
+    @ApiModelProperty(value = "日志来源", notes = "（如：订单服务、支付服务等）用于消息队列集成")
+    private String source;
 }
 

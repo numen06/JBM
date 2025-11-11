@@ -135,5 +135,15 @@ public interface BusinessLogService {
      * @return 日志内容
      */
     String getLogByToken(String logId, String token);
+    
+    /**
+     * 通过业务类型和业务ID获取日志ID
+     * 用于消息队列场景，当只有业务信息而没有logId时使用
+     * 
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @return 日志ID，如果不存在则返回null
+     */
+    String getLogIdByBusinessId(String businessType, String businessId);
 }
 

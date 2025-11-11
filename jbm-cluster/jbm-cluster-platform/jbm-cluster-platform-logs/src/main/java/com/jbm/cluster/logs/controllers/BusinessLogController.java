@@ -1,5 +1,8 @@
 package com.jbm.cluster.logs.controllers;
 
+import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.model.log.BusinessLogRequest;
+import com.jbm.cluster.api.model.log.BusinessLogResponse;
 import com.jbm.cluster.logs.entity.BusinessLog;
 import com.jbm.cluster.logs.form.AppendBusinessLogForm;
 import com.jbm.cluster.logs.form.BusinessLogForm;
@@ -142,7 +145,7 @@ public class BusinessLogController {
             response.setContentType("text/plain; charset=utf-8");
             response.setCharacterEncoding("UTF-8");
             response.setHeader("Content-Disposition", "inline; filename=\"" + 
-                    java.net.URLEncoder.encode(logId + ".log", "UTF-8") + "\"");
+                    java.net.URLEncoder.encode(logId  + ".log", "UTF-8") + "\"");
             
             // 写入日志内容
             PrintWriter writer = response.getWriter();
@@ -420,6 +423,243 @@ public class BusinessLogController {
             return ResultBody.success(logContent, "获取日志成功");
         } catch (Exception e) {
             return ResultBody.error(null, "获取日志失败: " + e.getMessage(), e);
+        }
+    }
+    
+    // ==================== Feign 客户端接口 ====================
+    
+    /**
+     * Feign客户端接口：创建业务日志
+     * 
+     * @param request 业务日志请求
+     * @return 返回logId
+     */
+    @ApiOperation(value = "创建业务日志（Feign接口）", notes = "供Feign客户端调用")
+    @PostMapping("/api/create")
+    public ResultBody<Map<String, String>> createLogByApi(@RequestBody BusinessLogRequest request) {
+        try {
+            CreateBusinessLogForm form = new CreateBusinessLogForm();
+            form.setBusinessType(request.getBusinessType());
+            form.setBusinessId(request.getBusinessId());
+            form.setContent(request.getContent());
+            form.setExpireDays(request.getExpireDays() != null ? request.getExpireDays() : 30);
+            form.setSource(request.getSource());
+            
+            String logId = businessLogService.createLog(form);
+            Map<String, String> result = new HashMap<>();
+            result.put("logId", logId);
+            result.put("businessType", request.getBusinessType());
+            result.put("businessId", request.getBusinessId());
+            return ResultBody.success(result, "创建业务日志成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "创建业务日志失败", e);
+        }
+    }
+    
+    /**
+     * Feign客户端接口：追加日志内容
+     * 
+     * @param logId 日志ID
+     * @param content 日志内容
+     * @return 是否成功
+     */
+    @ApiOperation(value = "追加日志内容（Feign接口）", notes = "供Feign客户端调用")
+    @PostMapping("/api/append/{logId}")
+    public ResultBody<Boolean> appendLogByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @RequestBody String content) {
+        try {
+            AppendBusinessLogForm form = new AppendBusinessLogForm();
+            form.setLogId(logId);
+            form.setContent(content);
+            
+            boolean success = businessLogService.appendLog(form);
+            return ResultBody.success(success, success ? "追加日志成功" : "追加日志失败");
+        } catch (Exception e) {
+            return ResultBody.error(false, "追加日志失败", e);
+        }
+    }
+    
+    /**
+     * Feign客户端接口：通过业务类型和业务ID追加日志
+     * 
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param content 日志内容
+     * @return 是否成功
+     */
+    @ApiOperation(value = "通过业务ID追加日志（Feign接口）", notes = "供Feign客户端调用")
+    @PostMapping("/api/append/byBusinessId")
+    public ResultBody<Boolean> appendLogByBusinessId(
+            @ApiParam(value = "业务类型", required = true) @RequestParam String businessType,
+            @ApiParam(value = "业务ID", required = true) @RequestParam String businessId,
+            @RequestBody String content) {
+        try {
+            // 通过businessType和businessId查询logId
+            String logId = businessLogService.getLogIdByBusinessId(businessType, businessId);
+            
+            if (StrUtil.isBlank(logId)) {
+                return ResultBody.error(false, "未找到对应的业务日志");
+            }
+            
+            AppendBusinessLogForm form = new AppendBusinessLogForm();
+            form.setLogId(logId);
+            form.setContent(content);
+            
+            boolean success = businessLogService.appendLog(form);
+            return ResultBody.success(success, success ? "追加日志成功" : "追加日志失败");
+        } catch (Exception e) {
+            return ResultBody.error(false, "追加日志失败", e);
+        }
+    }
+    
+    /**
+     * Feign客户端接口：查询业务日志
+     * 
+     * @param logId 日志ID
+     * @return 日志信息
+     */
+    @ApiOperation(value = "查询业务日志（Feign接口）", notes = "供Feign客户端调用")
+    @GetMapping("/api/get/{logId}")
+    public ResultBody<BusinessLogResponse> getLogByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
+        try {
+            List<BusinessLog> logs = businessLogService.getLogByIdMultiLine(logId);
+            
+            if (logs == null || logs.isEmpty()) {
+                return ResultBody.error(null, "日志不存在");
+            }
+            
+            BusinessLog firstLog = logs.get(0);
+            BusinessLogResponse response = BusinessLogResponse.builder()
+                .logId(logId)
+                .businessType(firstLog.getBusinessType())
+                .businessId(firstLog.getBusinessId())
+                .content(businessLogService.getLogByIdFullContent(logId, false))
+                .source(firstLog.getSource())
+                .totalLines(businessLogService.getLogTotalLines(logId))
+                .status("ACTIVE")
+                .build();
+            
+            return ResultBody.success(response, "查询业务日志成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询业务日志失败", e);
+        }
+    }
+    
+    /**
+     * Feign客户端接口：通过业务类型和业务ID查询日志
+     * 
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @return 日志信息
+     */
+    @ApiOperation(value = "通过业务ID查询日志（Feign接口）", notes = "供Feign客户端调用")
+    @GetMapping("/api/getByBusinessId")
+    public ResultBody<BusinessLogResponse> getLogByBusinessIdApi(
+            @ApiParam(value = "业务类型", required = true) @RequestParam String businessType,
+            @ApiParam(value = "业务ID", required = true) @RequestParam String businessId) {
+        try {
+            String logId = businessLogService.getLogIdByBusinessId(businessType, businessId);
+            
+            if (StrUtil.isBlank(logId)) {
+                return ResultBody.error(null, "日志不存在");
+            }
+            
+            return getLogByApi(logId);
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询业务日志失败", e);
+        }
+    }
+    
+    /**
+     * Feign客户端接口：删除业务日志
+     * 
+     * @param logId 日志ID
+     * @return 是否成功
+     */
+    @ApiOperation(value = "删除业务日志（Feign接口）", notes = "供Feign客户端调用")
+    @DeleteMapping("/api/delete/{logId}")
+    public ResultBody<Boolean> deleteLogByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
+        return deleteLog(logId);
+    }
+    
+    /**
+     * Feign客户端接口：更新日志过期时间
+     * 
+     * @param logId 日志ID
+     * @param expireDays 过期天数
+     * @return 是否成功
+     */
+    @ApiOperation(value = "更新日志过期时间（Feign接口）", notes = "供Feign客户端调用")
+    @PutMapping("/api/updateExpireTime/{logId}/{expireDays}")
+    public ResultBody<Boolean> updateExpireTimeByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @ApiParam(value = "过期天数", required = true) @PathVariable Integer expireDays) {
+        return updateExpireTime(logId, expireDays);
+    }
+    
+    /**
+     * Feign客户端接口：生成日志临时访问URL
+     * 
+     * @param logId 日志ID
+     * @param expireMinutes 过期时间（分钟）
+     * @param baseUrl 基础URL（可选）
+     * @return URL信息
+     */
+    @ApiOperation(value = "生成日志临时访问URL（Feign接口）", notes = "供Feign客户端调用")
+    @GetMapping("/api/generateUrl/{logId}")
+    public ResultBody<Map<String, String>> generateTemporaryUrlByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @ApiParam(value = "过期时间（分钟）", required = false) @RequestParam(required = false, defaultValue = "60") Integer expireMinutes,
+            @ApiParam(value = "基础URL", required = false) @RequestParam(required = false) String baseUrl,
+            HttpServletRequest request) {
+        return generateTemporaryUrl(logId, expireMinutes, baseUrl, request);
+    }
+    
+    /**
+     * Feign客户端接口：获取日志总行数
+     * 
+     * @param logId 日志ID
+     * @return 总行数
+     */
+    @ApiOperation(value = "获取日志总行数（Feign接口）", notes = "供Feign客户端调用")
+    @GetMapping("/api/getTotalLines/{logId}")
+    public ResultBody<Integer> getLogTotalLinesByApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
+        return getLogTotalLines(logId);
+    }
+    
+    /**
+     * Feign客户端接口：按行号范围查询日志
+     * 
+     * @param logId 日志ID
+     * @param startLine 起始行号
+     * @param endLine 结束行号
+     * @return 日志内容
+     */
+    @ApiOperation(value = "按行号范围查询日志（Feign接口）", notes = "供Feign客户端调用")
+    @GetMapping("/api/getByLineRange/{logId}")
+    public ResultBody<String> getLogByLineRangeApi(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @ApiParam(value = "起始行号", required = false) @RequestParam(required = false, defaultValue = "1") Integer startLine,
+            @ApiParam(value = "结束行号", required = false) @RequestParam(required = false, defaultValue = "-1") Integer endLine) {
+        try {
+            List<BusinessLog> logs = businessLogService.getLogByLineRange(logId, startLine, endLine);
+            
+            if (logs == null || logs.isEmpty()) {
+                return ResultBody.success("", "日志内容为空");
+            }
+            
+            StringBuilder content = new StringBuilder();
+            for (BusinessLog log : logs) {
+                content.append(log.getContent()).append("\n");
+            }
+            
+            return ResultBody.success(content.toString(), "查询日志成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询日志失败", e);
         }
     }
 }
