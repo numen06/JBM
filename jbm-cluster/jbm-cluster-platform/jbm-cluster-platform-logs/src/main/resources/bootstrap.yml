@@ -8,12 +8,21 @@ spring:
     bus:
       id: ${spring.application.name}:${server.port}
     function:
-      definition: accessLogs
+      definition: accessLogs;businessLog
     stream:
       #      default-binder: kafka
       bindings:
         accessLogs-in-0:
           group: ${spring.application.name}
+        # 业务日志消费者配置
+        businessLog-in-0:
+          destination: cloud.business.log
+          group: business-log-group
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 1000
+            back-off-max-interval: 10000
+            back-off-multiplier: 2.0
     nacos:
       config:
         namespace: jbm

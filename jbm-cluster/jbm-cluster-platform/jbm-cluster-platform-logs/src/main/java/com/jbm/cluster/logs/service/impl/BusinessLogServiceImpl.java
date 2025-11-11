@@ -1310,5 +1310,48 @@ public class BusinessLogServiceImpl implements BusinessLogService {
             return signature;
         }
     }
+    
+    @Override
+    public String getLogIdByBusinessId(String businessType, String businessId) {
+        if (StrUtil.isBlank(businessType) || StrUtil.isBlank(businessId)) {
+            log.error("businessType和businessId不能为空");
+            return null;
+        }
+        
+        try {
+            // 通过 businessType 和 businessId 查询日志
+            // 返回最新的一条记录的 logId
+            BusinessLogForm form = new BusinessLogForm();
+            
+            // 创建 BusinessLog 对象并设置查询条件
+            BusinessLog queryLog = new BusinessLog();
+            queryLog.setBusinessType(businessType);
+            queryLog.setBusinessId(businessId);
+            form.setBusinessLog(queryLog);
+            
+            // 设置分页参数，只查询第一条记录
+            PageForm pageForm = new PageForm();
+            pageForm.setCurrPage(1);
+            pageForm.setPageSize(1);
+            form.setPageForm(pageForm);
+            
+            // 查询日志
+            DataPaging<BusinessLog> dataPaging = queryLogs(form);
+            
+            if (dataPaging != null && dataPaging.getContents() != null && !dataPaging.getContents().isEmpty()) {
+                BusinessLog firstLog = dataPaging.getContents().get(0);
+                String logId = firstLog.getLogId();
+                log.debug("通过businessType={}, businessId={}查询到logId={}", businessType, businessId, logId);
+                return logId;
+            }
+            
+            log.warn("未找到对应的日志: businessType={}, businessId={}", businessType, businessId);
+            return null;
+            
+        } catch (Exception e) {
+            log.error("通过businessType和businessId查询logId失败", e);
+            return null;
+        }
+    }
 }
 

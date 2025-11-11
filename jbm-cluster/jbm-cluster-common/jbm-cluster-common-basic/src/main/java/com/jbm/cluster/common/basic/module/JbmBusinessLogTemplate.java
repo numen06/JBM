@@ -457,6 +457,372 @@ public class JbmBusinessLogTemplate {
         }
     }
 
+    // ==================== 实时追加场景（推荐用于导入、处理任务等）====================
+    
+    /**
+     * 初始化实时日志（用于需要不断追加内容的场景）
+     * 
+     * 典型使用场景：
+     * - 数据导入任务：导入开始创建日志，过程中不断追加进度
+     * - 批处理任务：任务开始创建日志，每处理一批追加一次
+     * - 长流程业务：流程开始创建日志，每个步骤追加记录
+     * 
+     * @param businessType 业务类型（如：DATA_IMPORT、BATCH_TASK）
+     * @param businessId 业务ID（如：任务ID、批次号）
+     * @param title 日志标题（如：导入用户数据、批量更新订单）
+     * @param expireDays 过期天数
+     * @param source 日志来源
+     * @return logId - 用于后续追加内容
+     * 
+     * @example
+     * <pre>
+     * // 1. 初始化日志
+     * String logId = businessLogTemplate.initRealtimeLog(
+     *     "DATA_IMPORT", 
+     *     "TASK-20250111-001", 
+     *     "导入用户数据", 
+     *     30, 
+     *     "import-service"
+     * );
+     * 
+     * // 2. 过程中不断追加
+     * businessLogTemplate.appendContent(logId, "开始读取文件...");
+     * businessLogTemplate.appendContent(logId, "已导入100条记录");
+     * businessLogTemplate.appendContent(logId, "已导入200条记录");
+     * businessLogTemplate.appendContent(logId, "导入完成，共导入500条记录");
+     * </pre>
+     */
+    public String initRealtimeLog(String businessType, String businessId, String title, 
+                                 Integer expireDays, String source) {
+        String initialContent = StrUtil.format("[{}] {} - 任务开始\n" +
+                                               "----------------------------------------\n" +
+                                               "业务类型: {}\n" +
+                                               "业务ID: {}\n" +
+                                               "开始时间: {}\n" +
+                                               "----------------------------------------\n",
+                                               title,
+                                               title,
+                                               businessType,
+                                               businessId,
+                                               cn.hutool.core.date.DateUtil.now());
+        
+        return createLogSync(businessType, businessId, initialContent, expireDays, source);
+    }
+    
+    /**
+     * 初始化实时日志（使用默认过期时间30天）
+     * 
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param title 日志标题
+     * @param source 日志来源
+     * @return logId
+     */
+    public String initRealtimeLog(String businessType, String businessId, String title, String source) {
+        return initRealtimeLog(businessType, businessId, title, 30, source);
+    }
+    
+    /**
+     * 追加内容到实时日志（异步，高性能）
+     * 
+     * ⚠️ 推荐：此方法使用 RabbitMQ 异步追加，不阻塞业务流程，性能更好
+     * 适用于高频追加场景（如导入任务、批处理任务）
+     * 
+     * @param logId 日志ID
+     * @param content 追加的内容
+     */
+    public void appendContent(String logId, String content) {
+        // 添加时间戳
+        String timestampedContent = StrUtil.format("[{}] {}", 
+                                                  cn.hutool.core.date.DateUtil.now(), 
+                                                  content);
+        
+        // 使用异步方式追加（不阻塞）
+        appendLog(logId, timestampedContent);
+    }
+    
+    /**
+     * 追加内容到实时日志（同步，立即写入）
+     * 
+     * ⚠️ 仅在需要立即可见时使用（如关键节点、最终结果）
+     * 大部分场景建议使用 appendContent() 异步方式
+     * 
+     * @param logId 日志ID
+     * @param content 追加的内容
+     * @throws RuntimeException 如果追加失败或 BusinessLogClient 未注入
+     */
+    public void appendContentSync(String logId, String content) {
+        if (businessLogClient == null) {
+            log.warn("BusinessLogClient 未注入，降级使用异步方式追加日志");
+            appendContent(logId, content);
+            return;
+        }
+        
+        try {
+            // 添加时间戳
+            String timestampedContent = StrUtil.format("[{}] {}", 
+                                                      cn.hutool.core.date.DateUtil.now(), 
+                                                      content);
+            
+            ResultBody<Boolean> result = businessLogClient.appendLog(logId, timestampedContent);
+            
+            if (!result.getSuccess()) {
+                throw new RuntimeException("追加日志失败: " + result.getMessage());
+            }
+            
+            log.debug("同步追加日志内容成功: logId={}", logId);
+            
+        } catch (Exception e) {
+            log.error("同步追加日志内容失败: logId={}", logId, e);
+            throw new RuntimeException("同步追加日志内容失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 追加进度信息（异步，格式化输出）
+     * 
+     * 推荐：用于高频进度更新，异步不阻塞业务
+     * 
+     * @param logId 日志ID
+     * @param current 当前进度
+     * @param total 总数
+     * @param message 附加消息
+     */
+    public void appendProgress(String logId, long current, long total, String message) {
+        double percentage = total > 0 ? (current * 100.0 / total) : 0;
+        String content = StrUtil.format("进度: {}/{} ({:.2f}%) - {}", 
+                                       current, total, percentage, message);
+        appendContent(logId, content);  // 使用异步追加
+    }
+    
+    /**
+     * 追加进度信息（同步，立即可见）
+     * 
+     * ⚠️ 仅在需要立即看到进度时使用
+     * 
+     * @param logId 日志ID
+     * @param current 当前进度
+     * @param total 总数
+     * @param message 附加消息
+     */
+    public void appendProgressSync(String logId, long current, long total, String message) {
+        double percentage = total > 0 ? (current * 100.0 / total) : 0;
+        String content = StrUtil.format("进度: {}/{} ({:.2f}%) - {}", 
+                                       current, total, percentage, message);
+        appendContentSync(logId, content);  // 使用同步追加
+    }
+    
+    /**
+     * 标记日志完成（异步）
+     * 
+     * 推荐：用于任务结束时记录最终结果
+     * 
+     * @param logId 日志ID
+     * @param success 是否成功
+     * @param summary 总结信息
+     */
+    public void finishRealtimeLog(String logId, boolean success, String summary) {
+        String content = StrUtil.format("\n----------------------------------------\n" +
+                                       "任务结束\n" +
+                                       "状态: {}\n" +
+                                       "结束时间: {}\n" +
+                                       "总结: {}\n" +
+                                       "----------------------------------------",
+                                       success ? "✓ 成功" : "✗ 失败",
+                                       cn.hutool.core.date.DateUtil.now(),
+                                       summary);
+        appendContent(logId, content);  // 使用异步追加
+    }
+    
+    /**
+     * 标记日志完成（同步，立即写入）
+     * 
+     * ⚠️ 用于需要确保最终结果立即可见的场景
+     * 
+     * @param logId 日志ID
+     * @param success 是否成功
+     * @param summary 总结信息
+     */
+    public void finishRealtimeLogSync(String logId, boolean success, String summary) {
+        String content = StrUtil.format("\n----------------------------------------\n" +
+                                       "任务结束\n" +
+                                       "状态: {}\n" +
+                                       "结束时间: {}\n" +
+                                       "总结: {}\n" +
+                                       "----------------------------------------",
+                                       success ? "✓ 成功" : "✗ 失败",
+                                       cn.hutool.core.date.DateUtil.now(),
+                                       summary);
+        appendContentSync(logId, content);  // 使用同步追加
+    }
+    
+    // ==================== 文件上传功能 ====================
+    
+    /**
+     * 上传本地日志文件（同步）
+     * 读取本地文件内容并创建业务日志
+     * 
+     * ⚠️ 注意：此方法会读取整个文件到内存，不适合超大文件
+     * 
+     * @param filePath 本地文件路径
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param expireDays 过期天数
+     * @param source 日志来源
+     * @return logId - 业务日志ID
+     * @throws RuntimeException 如果文件读取失败或上传失败
+     */
+    public String uploadLogFile(String filePath, String businessType, String businessId, 
+                               Integer expireDays, String source) {
+        try {
+            // 读取文件内容
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                throw new RuntimeException("文件不存在: " + filePath);
+            }
+            
+            if (file.length() > 10 * 1024 * 1024) { // 10MB 限制
+                log.warn("文件过大: {} bytes，建议使用分块上传", file.length());
+            }
+            
+            String content = cn.hutool.core.io.FileUtil.readUtf8String(file);
+            
+            // 创建日志
+            return createLogSync(businessType, businessId, content, expireDays, source);
+            
+        } catch (Exception e) {
+            log.error("上传日志文件失败: filePath={}, businessType={}, businessId={}", 
+                     filePath, businessType, businessId, e);
+            throw new RuntimeException("上传日志文件失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 上传本地日志文件（使用默认过期时间30天）
+     * 
+     * @param filePath 本地文件路径
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param source 日志来源
+     * @return logId - 业务日志ID
+     */
+    public String uploadLogFile(String filePath, String businessType, String businessId, String source) {
+        return uploadLogFile(filePath, businessType, businessId, 30, source);
+    }
+    
+    /**
+     * 上传日志内容（同步）
+     * 直接使用字符串内容创建业务日志
+     * 
+     * @param content 日志内容
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @param expireDays 过期天数
+     * @param source 日志来源
+     * @return logId - 业务日志ID
+     */
+    public String uploadLogContent(String content, String businessType, String businessId, 
+                                  Integer expireDays, String source) {
+        if (StrUtil.isBlank(content)) {
+            throw new RuntimeException("日志内容不能为空");
+        }
+        
+        return createLogSync(businessType, businessId, content, expireDays, source);
+    }
+    
+    /**
+     * 批量上传日志文件
+     * 适用于批量归档历史日志文件
+     * 
+     * @param fileInfos 文件信息列表（文件路径 -> 业务信息映射）
+     * @param source 日志来源
+     * @return 成功上传的文件数量和对应的 logId 列表
+     */
+    public Map<String, String> uploadLogFiles(java.util.List<FileUploadInfo> fileInfos, String source) {
+        if (fileInfos == null || fileInfos.isEmpty()) {
+            return new java.util.HashMap<>();
+        }
+        
+        Map<String, String> results = new java.util.HashMap<>();
+        int successCount = 0;
+        
+        for (FileUploadInfo info : fileInfos) {
+            try {
+                String logId = uploadLogFile(
+                    info.getFilePath(), 
+                    info.getBusinessType(), 
+                    info.getBusinessId(), 
+                    info.getExpireDays() != null ? info.getExpireDays() : 30,
+                    source
+                );
+                results.put(info.getFilePath(), logId);
+                successCount++;
+                log.info("上传日志文件成功: {} -> logId={}", info.getFilePath(), logId);
+            } catch (Exception e) {
+                log.error("上传日志文件失败: {}", info.getFilePath(), e);
+                results.put(info.getFilePath(), "ERROR: " + e.getMessage());
+            }
+        }
+        
+        log.info("批量上传日志文件完成: 总数={}, 成功={}, 失败={}", 
+                fileInfos.size(), successCount, fileInfos.size() - successCount);
+        
+        return results;
+    }
+    
+    /**
+     * 追加本地文件内容到已存在的日志
+     * 
+     * @param logId 日志ID
+     * @param filePath 本地文件路径
+     * @throws RuntimeException 如果文件读取失败或追加失败
+     */
+    public void appendLogFile(String logId, String filePath) {
+        try {
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                throw new RuntimeException("文件不存在: " + filePath);
+            }
+            
+            String content = cn.hutool.core.io.FileUtil.readUtf8String(file);
+            appendLog(logId, content);
+            
+            log.info("追加日志文件成功: logId={}, filePath={}", logId, filePath);
+            
+        } catch (Exception e) {
+            log.error("追加日志文件失败: logId={}, filePath={}", logId, filePath, e);
+            throw new RuntimeException("追加日志文件失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 文件上传信息
+     */
+    public static class FileUploadInfo {
+        private String filePath;
+        private String businessType;
+        private String businessId;
+        private Integer expireDays;
+        
+        public FileUploadInfo(String filePath, String businessType, String businessId) {
+            this.filePath = filePath;
+            this.businessType = businessType;
+            this.businessId = businessId;
+        }
+        
+        public FileUploadInfo(String filePath, String businessType, String businessId, Integer expireDays) {
+            this.filePath = filePath;
+            this.businessType = businessType;
+            this.businessId = businessId;
+            this.expireDays = expireDays;
+        }
+        
+        public String getFilePath() { return filePath; }
+        public String getBusinessType() { return businessType; }
+        public String getBusinessId() { return businessId; }
+        public Integer getExpireDays() { return expireDays; }
+    }
+
     /**
      * 构建日志查询URL
      * 返回可以在浏览器中直接访问的日志查看地址
