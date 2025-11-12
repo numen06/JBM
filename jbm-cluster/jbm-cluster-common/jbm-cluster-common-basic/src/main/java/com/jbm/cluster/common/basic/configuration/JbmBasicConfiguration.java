@@ -11,6 +11,7 @@ import com.jbm.cluster.common.basic.module.*;
 import com.jbm.cluster.common.basic.module.request.JbmHttpRequest;
 import com.jbm.cluster.common.basic.module.request.JbmHttpsRequest;
 import com.jbm.cluster.common.basic.runtime.BasicUnknownRuntimeExceptionFilter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Bean;
  * @Date 2022/4/27 2:46
  * @Description TODO
  */
+@Slf4j
 @EnableConfigurationProperties({JbmClusterProperties.class})
 public class JbmBasicConfiguration {
     @Autowired
@@ -73,6 +75,12 @@ public class JbmBasicConfiguration {
 
     @Bean
     public JbmBusinessLogTemplate jbmBusinessLogTemplate() {
+        log.info("========================================");
+        log.info("注册 JbmBusinessLogTemplate Bean");
+        log.info("依赖检查：");
+        log.info("- BusinessLogClient (Feign): 已在 @EnableFeignClients 中配置");
+        log.info("- StreamBridge (RabbitMQ): 需要 spring-cloud-stream 依赖");
+        log.info("========================================");
         return new JbmBusinessLogTemplate();
     }
 
