@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
@@ -35,7 +36,7 @@ import java.util.function.Consumer;
  * @author wesley
  */
 @Slf4j
-@Configuration
+@Service
 public class BusinessLogEventListener {
 
     @Autowired
@@ -51,7 +52,7 @@ public class BusinessLogEventListener {
         return message -> {
             try {
                 BusinessLogEvent event = message.getPayload();
-                log.debug("接收到业务日志事件: type={}, logId={}, businessType={}, businessId={}", 
+                log.info("接收到业务日志事件: type={}, logId={}, businessType={}, businessId={}",
                          event.getEventType(), event.getLogId(), event.getBusinessType(), event.getBusinessId());
                 
                 // 根据事件类型处理
