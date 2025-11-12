@@ -7,10 +7,7 @@ import com.jbm.cluster.common.basic.configuration.resources.JbmApiResourceScan;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterDicScan;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterJobScan;
-import com.jbm.cluster.common.basic.module.JbmClusterBusinessEventTemplate;
-import com.jbm.cluster.common.basic.module.JbmClusterNotification;
-import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
-import com.jbm.cluster.common.basic.module.JbmRequestTemplate;
+import com.jbm.cluster.common.basic.module.*;
 import com.jbm.cluster.common.basic.module.request.JbmHttpRequest;
 import com.jbm.cluster.common.basic.module.request.JbmHttpsRequest;
 import com.jbm.cluster.common.basic.runtime.BasicUnknownRuntimeExceptionFilter;
@@ -72,6 +69,11 @@ public class JbmBasicConfiguration {
     @Bean
     public BasicUnknownRuntimeExceptionFilter basicUnknownRuntimeExceptionFilter() {
         return new BasicUnknownRuntimeExceptionFilter();
+    }
+
+    @Bean
+    public JbmBusinessLogTemplate jbmBusinessLogTemplate() {
+        return new JbmBusinessLogTemplate();
     }
 
 
