@@ -1,9 +1,9 @@
 package com.jbm.cluster.logs.listener;
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.cluster.api.model.log.BusinessLogEvent;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

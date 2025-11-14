@@ -58,15 +58,16 @@ public class JbmBusinessLogTemplate {
         }
         
         try {
-            BusinessLogRequest request = BusinessLogRequest.builder()
-                .businessType(businessType)
-                .businessId(businessId)
-                .content(content)
-                .expireDays(expireDays != null ? expireDays : 30)
-                .source(source)
-                .build();
+            // 构建 CreateBusinessLogForm（使用集成格式字段）
+            com.jbm.cluster.api.form.log.CreateBusinessLogForm form = new com.jbm.cluster.api.form.log.CreateBusinessLogForm();
+            form.setBusinessType(businessType);
+            form.setBusinessId(businessId);
+            form.setContent(content);
+            form.setExpireDays(expireDays != null ? expireDays : 30);
+            form.setSource(source);
             
-            ResultBody<Map<String, String>> result = businessLogClient.createLog(request);
+            // 调用 Feign 客户端创建日志
+            ResultBody<Map<String, String>> result = businessLogClient.createLog(form);
             
             if (result.getSuccess() && result.getResult() != null) {
                 String logId = result.getResult().get("logId");
@@ -564,7 +565,8 @@ public class JbmBusinessLogTemplate {
                                                       cn.hutool.core.date.DateUtil.now(), 
                                                       content);
             
-            ResultBody<Boolean> result = businessLogClient.appendLog(logId, timestampedContent);
+            // 调用简化接口 /append/{logId}
+            ResultBody<Boolean> result = businessLogClient.appendLogSimple(logId, timestampedContent);
             
             if (!result.getSuccess()) {
                 throw new RuntimeException("追加日志失败: " + result.getMessage());

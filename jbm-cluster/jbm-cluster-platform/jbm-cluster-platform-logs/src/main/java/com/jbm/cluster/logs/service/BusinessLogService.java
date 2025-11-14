@@ -1,9 +1,9 @@
 package com.jbm.cluster.logs.service;
 
-import com.jbm.cluster.logs.entity.BusinessLog;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.BusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -106,17 +106,6 @@ public interface BusinessLogService {
      * @return 是否更新成功
      */
     boolean updateExpireTime(String logId, Integer expireDays);
-    
-    /**
-     * 清理过期的业务日志（已废弃）
-     * 
-     * @deprecated 过期管理已由OpenObserve自动处理（通过流的保留策略TTL），
-     * 此方法仅用于业务层面的状态标记，实际数据删除由OpenObserve自动完成。
-     * 
-     * @return 清理的日志数量（实际为标记数量）
-     */
-    @Deprecated
-    int cleanExpiredLogs();
     
     /**
      * 生成日志的临时访问URL参数（类似OSS签名URL）

@@ -5,10 +5,10 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.logs.entity.BusinessLog;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.BusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -1181,56 +1181,6 @@ public class BusinessLogServiceImpl implements BusinessLogService {
         } catch (Exception e) {
             log.error("更新业务日志过期时间失败，logId: {}", logId, e);
             return false;
-        }
-    }
-    
-    /**
-     * 清理过期的业务日志（已废弃）
-     * 
-     * @deprecated 过期管理已由OpenObserve自动处理（通过流的保留策略TTL），
-     * 此方法仅用于业务层面的状态标记，实际数据删除由OpenObserve自动完成。
-     * 
-     * ⚠️ 注意：由于OpenObserve会根据流的保留策略自动删除过期数据，
-     * 此方法仅用于兼容旧代码，不建议新代码使用。
-     */
-    @Deprecated
-    @Override
-    public int cleanExpiredLogs() {
-        log.warn("⚠️ cleanExpiredLogs() 已废弃：过期管理已由OpenObserve自动处理，无需手动清理");
-        log.info("提示：OpenObserve会根据流的保留策略（TTL）自动删除过期数据");
-        
-        // 仅用于业务层面的状态标记（可选）
-        // 查询所有流中的过期日志
-        try {
-            Date now = new Date();
-            String nowStr = DateUtil.formatDateTime(now);
-            // SQL模板：查询过期日志（expire_date < 当前时间）
-            String sqlTemplate = "SELECT * FROM %s WHERE status = 'ACTIVE' AND expire_date < '" + nowStr + "' ORDER BY expire_date ASC";
-            
-            PageForm pageForm = new PageForm(1, 1000);
-            List<BusinessLog> expiredLogs = queryAllStreams(sqlTemplate, null, null, null, pageForm, null);
-            
-            // 去重（按logId）
-            Set<String> processedLogIds = new HashSet<>();
-            int count = 0;
-            
-            for (BusinessLog log : expiredLogs) {
-                String logId = log.getLogId();
-                // 只处理每个logId一次（避免重复标记）
-                if (!processedLogIds.contains(logId)) {
-                    processedLogIds.add(logId);
-                    // 标记为EXPIRED（仅用于业务状态管理，实际数据删除由OpenObserve自动完成）
-                    if (deleteLog(logId)) {
-                        count++;
-                    }
-                }
-            }
-            
-            log.info("标记过期业务日志完成，标记数量: {}（实际数据删除由OpenObserve自动完成）", count);
-            return count;
-        } catch (Exception e) {
-            log.error("清理过期业务日志失败", e);
-            return 0;
         }
     }
     
