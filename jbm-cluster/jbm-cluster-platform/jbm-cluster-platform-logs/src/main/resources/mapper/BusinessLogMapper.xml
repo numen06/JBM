@@ -43,7 +43,7 @@
     <!-- 查询业务日志列表 -->
     <!-- 注意：由于日志根据过期时间存储在不同的流中，需要查询所有可能的流 -->
     <!-- 在每个UNION部分都应用WHERE条件 -->
-    <select id="selectLogs" resultType="com.jbm.cluster.logs.entity.BusinessLog">
+    <select id="selectLogs" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
         SELECT * FROM business_log_7d
         <where>
             <include refid="WHERE_SQL"/>
@@ -70,7 +70,7 @@
     <!-- 注意：由于日志根据过期时间存储在不同的流中（business_log_7d, business_log_30d等），
          需要查询所有可能的流。OpenObserve可能不支持UNION，所以先尝试查询最常用的流 -->
     <!-- 如果查询不到，程序会尝试查询其他流 -->
-    <select id="selectByLogId" resultType="com.jbm.cluster.logs.entity.BusinessLog">
+    <select id="selectByLogId" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
         SELECT * FROM business_log_30d WHERE log_id = '${logId}'
         UNION ALL
         SELECT * FROM business_log_7d WHERE log_id = '${logId}'
@@ -82,7 +82,7 @@
     </select>
 
     <!-- 查询过期的业务日志 -->
-    <select id="selectExpiredLogs" resultType="com.jbm.cluster.logs.entity.BusinessLog">
+    <select id="selectExpiredLogs" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
         SELECT * FROM business_log
         WHERE status = 'ACTIVE'
         AND expire_date &lt; now()

@@ -83,9 +83,4 @@ public class QueueConstants {
      */
     public static final String BUSINESS_LOG_STREAM = "businessLog-in-0";
 
-    /**
-     * 业务日志队列
-     */
-    public static final String QUEUE_BUSINESS_LOG = "cloud.business.log";
-
 }

@@ -1,4 +1,4 @@
-package com.jbm.cluster.logs.listener;
+package com.jbm.cluster.logs.handler;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
+import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
@@ -34,7 +35,7 @@ import java.util.function.Consumer;
  * @author wesley
  */
 @Slf4j
-@org.springframework.context.annotation.Configuration
+@Service
 public class BusinessLogEventListener {
 
     @Autowired

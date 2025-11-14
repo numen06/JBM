@@ -2,15 +2,18 @@ package com.jbm.cluster.push.message;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.cluster.api.constants.push.PushWay;
 import com.jbm.cluster.api.event.TestBusinessEvent;
 import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.common.basic.module.JbmBusinessLogTemplate;
 import com.jbm.cluster.common.basic.module.JbmClusterBusinessEventTemplate;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
-import com.jbm.cluster.push.service.PushMessageBodyService;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,18 +22,49 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class PushMessageTest {
 
     @Autowired
-    private PushMessageBodyService pushMessageBodyService;
-    @Autowired
     private JbmClusterNotification jbmClusterNotification;
+
     /**
      * 引入时间发送模板类
      */
     @Autowired
     private JbmClusterBusinessEventTemplate jbmClusterBusinessEventTemplate;
+    @Scheduled(cron = "0/5 * * * * ?")
+    public void testLogSend(){
+        testMdcLogging();
+    }
 
+    public void testMdcLogging() {
+        // 1. 构建 MDC：traceId + 业务信息
+        String traceId = IdUtil.fastSimpleUUID();
+        MDC.put("traceId", traceId);
+        JbmBusinessLogTemplate.BusinessLogMdc.bindBusiness("DATA_IMPORT", "TASK-" + traceId.substring(0, 8));
+        JbmBusinessLogTemplate.BusinessLogMdc.bindSource("mdc-logback-demo");
+        JbmBusinessLogTemplate.BusinessLogMdc.overrideExpireDays(7);
+        JbmBusinessLogTemplate.BusinessLogMdc.enableAutoTimestamp();
+
+        // 2. 直接通过常规日志输出，BusinessLogMdcAppender 会自动采集
+        log.info("导入任务启动");
+        log.info("准备导入文件: {}", "customer.xlsx");
+        log.info("读取文件成功，开始解析...");
+        try {
+            log.info("数据解析完成，正在写入数据库...");
+            log.info("导入任务成功，耗时 3.2s");
+        } catch (Exception ex) {
+            log.error("导入任务失败", ex);
+        } finally {
+            // 通知 Appender 结束，可释放上下文
+            JbmBusinessLogTemplate.BusinessLogMdc.markFinished();
+            // 3. 清理 MDC，避免污染线程
+            JbmBusinessLogTemplate.BusinessLogMdc.clearBusinessKeys();
+            MDC.remove("traceId");
+            log.info("MDC 日志采集流程结束 traceId={}", traceId);
+        }
+    }
     /**
      *
      * 发送测试事件

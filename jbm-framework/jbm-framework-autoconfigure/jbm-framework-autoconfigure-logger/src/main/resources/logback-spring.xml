@@ -99,6 +99,19 @@
         <appender-ref ref="file_error"/>
     </appender>
 
+    <!-- 业务日志自动采集（MDC） -->
+    <appender name="businessLog" class="com.jbm.cluster.common.basic.module.log.BusinessLogMdcAppender">
+        <idleTimeoutMs>600000</idleTimeoutMs>
+        <includeThrowable>true</includeThrowable>
+    </appender>
+
+    <appender name="async_businessLog" class="ch.qos.logback.classic.AsyncAppender">
+        <neverBlock>true</neverBlock>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="businessLog"/>
+    </appender>
+
     <!-- 系统模块日志级别控制  -->
     <logger name="com.jbm" level="info"/>
     <!-- Spring日志级别控制  -->
@@ -107,12 +120,9 @@
 
     <root level="info">
         <appender-ref ref="console"/>
-    </root>
-
-    <!--系统操作日志-->
-    <root level="info">
         <appender-ref ref="async_info"/>
         <appender-ref ref="async_error"/>
         <appender-ref ref="file_console"/>
+        <appender-ref ref="async_businessLog"/>
     </root>
 </configuration>

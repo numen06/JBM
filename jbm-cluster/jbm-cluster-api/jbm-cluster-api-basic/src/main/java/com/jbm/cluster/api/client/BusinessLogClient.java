@@ -1,7 +1,6 @@
 package com.jbm.cluster.api.client;
 
 import com.jbm.cluster.api.entitys.log.BusinessLog;
-import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -9,22 +8,16 @@ import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 /**
- * 业务日志Feign客户端
- * 提供给其他服务调用的业务日志接口
- * 
- * 使用方式：
- * 1. 在需要调用的服务中引入 jbm-cluster-api-basic 模块
- * 2. 注入此客户端：@Autowired private BusinessLogClient businessLogClient;
- * 3. 调用相应的方法即可
- * 
- * 注意：
- * - 所有接口共用 BusinessLogController 中的原有接口
- * - 使用共享的 Form/Entity（在 jbm-cluster-api-basic 模块中）
- * - CreateBusinessLogForm 支持两种使用方式：原有格式或集成格式
+ * 业务日志 Feign 客户端（MDC 精简版）
+ * 仅保留 MDC 采集 + 查询所需的最小接口集合，方便将业务链路日志写入中央日志平台。
+ *
+ * 推荐搭配 MDC（Mapped Diagnostic Context）使用：
+ * - 创建日志时写入 traceId / businessId 等上下文字段
+ * - 通过 append 接口实时补充业务步骤
+ * - 通过查询接口在排查链路问题时一次性拿到完整日志
  * 
  * @author wesley
  */
@@ -49,15 +42,6 @@ public interface BusinessLogClient {
     ResultBody<Map<String, String>> createLog(@RequestBody CreateBusinessLogForm form);
 
     /**
-     * 追加日志内容（完整表单）
-     * 
-     * @param form 追加日志表单
-     * @return 是否成功
-     */
-    @PostMapping("/append")
-    ResultBody<Boolean> appendLog(@RequestBody AppendBusinessLogForm form);
-    
-    /**
      * 追加日志内容（简化版）
      * 仅传递 logId 和 content
      * 
@@ -70,15 +54,6 @@ public interface BusinessLogClient {
                                        @RequestBody String content);
     
     /**
-     * 查询业务日志（多行格式）
-     * 
-     * @param logId 日志ID
-     * @return 日志记录列表
-     */
-    @GetMapping("/getMultiLine/{logId}")
-    ResultBody<List<BusinessLog>> getLogMultiLine(@PathVariable("logId") String logId);
-
-    /**
      * 查询业务日志（完整内容）
      * 
      * @param logId 日志ID
@@ -89,61 +64,6 @@ public interface BusinessLogClient {
     ResultBody<String> getLogFullContent(@PathVariable("logId") String logId,
                                         @RequestParam(value = "formatted", required = false, defaultValue = "false") Boolean formatted);
 
-    /**
-     * 删除业务日志
-     * 
-     * @param logId 日志ID
-     * @return 是否成功
-     */
-    @DeleteMapping("/delete/{logId}")
-    ResultBody<Boolean> deleteLog(@PathVariable("logId") String logId);
-
-    /**
-     * 更新日志过期时间
-     * 
-     * @param logId 日志ID
-     * @param expireDays 过期天数
-     * @return 是否成功
-     */
-    @PutMapping("/updateExpireTime/{logId}/{expireDays}")
-    ResultBody<Boolean> updateExpireTime(@PathVariable("logId") String logId,
-                                        @PathVariable("expireDays") Integer expireDays);
-
-    /**
-     * 生成日志临时访问URL
-     * 
-     * @param logId 日志ID
-     * @param expireMinutes 过期时间（分钟）
-     * @param baseUrl 基础URL（可选）
-     * @return URL信息（包含 url, expires, signature 等）
-     */
-    @GetMapping("/generateUrl/{logId}")
-    ResultBody<Map<String, String>> generateTemporaryUrl(@PathVariable("logId") String logId,
-                                                         @RequestParam(value = "expireMinutes", required = false, defaultValue = "60") Integer expireMinutes,
-                                                         @RequestParam(value = "baseUrl", required = false) String baseUrl);
-
-    /**
-     * 获取日志总行数
-     * 
-     * @param logId 日志ID
-     * @return 总行数
-     */
-    @GetMapping("/getTotalLines/{logId}")
-    ResultBody<Integer> getLogTotalLines(@PathVariable("logId") String logId);
-    
-    /**
-     * 按行号范围查询日志
-     * 
-     * @param logId 日志ID
-     * @param startLine 起始行号
-     * @param endLine 结束行号
-     * @return 日志记录列表
-     */
-    @GetMapping("/getByLineRange/{logId}")
-    ResultBody<List<BusinessLog>> getLogByLineRange(@PathVariable("logId") String logId,
-                                                    @RequestParam(value = "startLine", required = false, defaultValue = "1") Integer startLine,
-                                                    @RequestParam(value = "endLine", required = false, defaultValue = "-1") Integer endLine);
-    
     /**
      * 分页查询业务日志
      * 

@@ -1,68 +1,65 @@
 server:
-  port: 0  # 随机端口，避免端口冲突
-
+  port: 3315
 spring:
   application:
-    name: jbm-cluster-platform-logs-test
+    name: jbm-cluster-platform-log-test
   cloud:
-    nacos:
-      config:
-        namespace: jbm
-        server-addr: 10.100.10.62:8848
-        # 测试环境禁用Nacos配置，使用本地配置
-        enabled: false
-      discovery:
-        # 测试环境禁用服务发现
-        enabled: false
+    #手动配置Bus id,
     bus:
-      enabled: false
+      id: ${spring.application.name}:${server.port}
+    function:
+      definition: accessLogs;businessLog
     stream:
-      # 测试环境禁用Stream
-      default-binder: rabbit
+      #      default-binder: kafka
       bindings:
         accessLogs-in-0:
           group: ${spring.application.name}
-      rabbit:
-        bindings:
-          accessLogs-in-0:
-            consumer:
-              # 测试环境不自动启动消费者
-              auto-startup: false
-  rabbitmq:
-    # 测试环境RabbitMQ配置（如果需要）
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-  resources:
-    add-mappings: false
-
-# OpenObserve配置
-open-observe:
-  url: http://10.100.10.65:5080
-  organization: default
-  stream: business_log_test
-  username: admin
-  password: admin123
-
-# 日志配置
-logging:
-  level:
-    root: INFO
-    com.jbm: DEBUG
-    org.springframework: WARN
-
-# 禁用部分自动配置（测试环境不需要）
+        # 业务日志消费者配置
+        businessLog-in-0:
+          destination: cloud.business.log
+          group: business-log-group
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 1000
+            back-off-max-interval: 10000
+            back-off-multiplier: 2.0
+    nacos:
+      config:
+        namespace: jbm
+        #        group: ${config.group}
+        server-addr: 10.100.10.62:8848
+        shared-configs:
+          - { data-id: common.properties, refresh: true }
+          - { data-id: redis.properties }
+          - { data-id: rabbitmq.properties }
+          - { data-id: openobserve.yml }
+        file-extension: yml
+      discovery:
+        namespace: jbm
+        #        group: ${config.group}
+        server-addr: 10.100.10.62:8848
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
-
+        include: '*'
 jbm:
   cluster:
-    token-type: memory  # 测试环境使用内存token
-
+    token-type: redis
+#    permit-all:
+#      - /authority/access
+#      - /authority/app
+#      - /app/*/info
+#      - /app/client/*/info
+#      - /gateway/api/**
+#      - /user/add/thirdParty
+#      - /user/info
+#      - /user/login
+#      - /developer/add/thirdParty
+#      - /developer/info
+#      - /developer/login
 swagger2:
-  enabled: false  # 测试环境禁用Swagger
+  enabled: true
+  description: 日志处理基础服务器
+  title: 日志处理基础服务器
 
