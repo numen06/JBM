@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
-import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
@@ -35,7 +34,7 @@ import java.util.function.Consumer;
  * @author wesley
  */
 @Slf4j
-@Service
+@org.springframework.context.annotation.Configuration
 public class BusinessLogEventListener {
 
     @Autowired

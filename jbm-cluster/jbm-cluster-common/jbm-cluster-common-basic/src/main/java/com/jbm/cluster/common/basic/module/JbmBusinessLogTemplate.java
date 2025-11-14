@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.client.BusinessLogClient;
 import com.jbm.cluster.api.model.log.BusinessLogEvent;
 import com.jbm.cluster.api.model.log.BusinessLogEventType;
-import com.jbm.cluster.api.model.log.BusinessLogRequest;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
