@@ -40,6 +40,7 @@ public class BusinessLogRequest implements Serializable {
      * 过期天数（7、30、90、180、365）
      * 默认30天
      */
+    @Builder.Default
     private Integer expireDays = 30;
 
     /**
