@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.client;
 
 import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -42,16 +43,21 @@ public interface BusinessLogClient {
     ResultBody<Map<String, String>> createLog(@RequestBody CreateBusinessLogForm form);
 
     /**
-     * 追加日志内容（简化版）
-     * 仅传递 logId 和 content
-     * 
-     * @param logId 日志ID
-     * @param content 追加的内容
+     * 追加日志内容（表单方式，推荐）
+     *
+     * @param form 追加日志表单
      * @return 是否成功
      */
+    @PostMapping("/append")
+    ResultBody<Boolean> appendLog(@RequestBody AppendBusinessLogForm form);
+
+    /**
+     * 追加日志内容（简化方式）
+     * 仅传递 logId 和 content
+     */
     @PostMapping("/append/{logId}")
-    ResultBody<Boolean> appendLogSimple(@PathVariable("logId") String logId, 
-                                       @RequestBody String content);
+    ResultBody<Boolean> appendLogSimple(@PathVariable("logId") String logId,
+                                        @RequestBody String content);
     
     /**
      * 查询业务日志（完整内容）

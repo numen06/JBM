@@ -10,6 +10,7 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import com.jbm.cluster.common.basic.module.JbmBusinessLogTemplate;
 import jbm.framework.spring.config.SpringContextHolder;
+import org.slf4j.MDC;
 
 import java.util.Date;
 import java.util.Map;
@@ -33,8 +34,6 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
 
-    private static final String MDC_BUSINESS_TYPE = "businessType";
-    private static final String MDC_BUSINESS_ID = "businessId";
     private static final String MDC_LOG_ID = "businessLogId";
     private static final String MDC_FINISHED = "businessLogFinished";
 
@@ -63,36 +62,71 @@ public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
         if (mdc == null || mdc.isEmpty()) {
             return;
         }
-        String businessType = StrUtil.trim(mdc.get(MDC_BUSINESS_TYPE));
-        String businessId = StrUtil.trim(mdc.get(MDC_BUSINESS_ID));
-        if (StrUtil.hasBlank(businessType, businessId)) {
+        String loggerName = event.getLoggerName();
+        if (loggerName != null &&
+                (loggerName.startsWith("com.jbm.cluster.common.basic.module.JbmBusinessLogTemplate")
+                        || loggerName.startsWith("com.jbm.cluster.common.basic.module.log.BusinessLogMdcAppender"))) {
             return;
         }
-
         JbmBusinessLogTemplate template = resolveTemplate();
         if (template == null) {
             return;
         }
 
-        String contextKey = buildContextKey(businessType, businessId, mdc.get(MDC_LOG_ID));
-        boolean finished = Boolean.parseBoolean(mdc.get(MDC_FINISHED));
-        if (finished) {
-            contextTimeline.remove(contextKey);
+        String logId = JbmBusinessLogTemplate.currentLogId();
+        if (StrUtil.isBlank(logId)) {
+            logId = StrUtil.trim(mdc.get(MDC_LOG_ID));
+        }
+        if (StrUtil.isBlank(logId)) {
             return;
         }
 
-        String payload = buildPayload(event);
-        if (StrUtil.isBlank(payload)) {
-            return;
-        }
+        String traceId = StrUtil.trim(mdc.get("traceId"));
 
-        boolean isNew = contextTimeline.put(contextKey, System.currentTimeMillis()) == null;
-        if (isNew) {
-            template.startLog(payload);
+        String previousLogId = MDC.get(MDC_LOG_ID);
+        String previousTraceId = MDC.get("traceId");
+        boolean hadPreviousLogId = previousLogId != null;
+        boolean hadPreviousTraceId = previousTraceId != null;
+
+        MDC.put(MDC_LOG_ID, logId);
+        if (StrUtil.isNotBlank(traceId)) {
+            MDC.put("traceId", traceId);
         } else {
-            template.appendLog(payload);
+            MDC.remove("traceId");
         }
-        cleanupExpiredContexts();
+
+        try {
+            String contextKey = logId;
+            boolean finished = Boolean.parseBoolean(mdc.get(MDC_FINISHED));
+            if (finished) {
+                contextTimeline.remove(contextKey);
+                return;
+            }
+
+            String payload = buildPayload(event);
+            if (StrUtil.isBlank(payload)) {
+                return;
+            }
+
+            boolean isNew = contextTimeline.put(contextKey, System.currentTimeMillis()) == null;
+            if (isNew) {
+                template.startLog(payload);
+            } else {
+                template.appendLog(payload);
+            }
+            cleanupExpiredContexts();
+        } finally {
+            if (hadPreviousLogId) {
+                MDC.put(MDC_LOG_ID, previousLogId);
+            } else {
+                MDC.remove(MDC_LOG_ID);
+            }
+            if (hadPreviousTraceId) {
+                MDC.put("traceId", previousTraceId);
+            } else {
+                MDC.remove("traceId");
+            }
+        }
     }
 
     private JbmBusinessLogTemplate resolveTemplate() {
@@ -107,12 +141,6 @@ public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
         return businessLogTemplate;
     }
 
-    private String buildContextKey(String businessType, String businessId, String logId) {
-        if (StrUtil.isNotBlank(logId)) {
-            return logId;
-        }
-        return businessType + "::" + businessId;
-    }
 
     private String buildPayload(ILoggingEvent event) {
         StringBuilder builder = new StringBuilder();
@@ -165,5 +193,6 @@ public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
         contextTimeline.clear();
         businessLogTemplate = null;
     }
+
 }
 
