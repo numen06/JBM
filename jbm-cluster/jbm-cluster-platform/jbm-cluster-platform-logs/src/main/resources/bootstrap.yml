@@ -40,7 +40,8 @@ management:
 jbm:
   cluster:
     token-type: redis
-#    permit-all:
+    permit-all:
+      - /businessLog/get
 #      - /authority/access
 #      - /authority/app
 #      - /app/*/info
