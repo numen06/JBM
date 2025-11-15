@@ -32,7 +32,7 @@ public class PushMessageTest {
      */
     @Autowired
     private JbmClusterBusinessEventTemplate jbmClusterBusinessEventTemplate;
-    @Scheduled(cron = "0/5 * * * * ?")
+//    @Scheduled(cron = "0/5 * * * * ?")
     public void testLogSend(){
         testMdcLogging();
     }
