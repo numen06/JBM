@@ -20,7 +20,7 @@ public abstract class AbstractMqttMessageListener implements IMqttMessageListene
             MqttMessage message = new MqttMessage(publish.getTopic().toString(), publish.getPayloadAsBytes());
             messageArrived(message.getTopic(), message);
         } catch (Exception e) {
-            log.error("Error processing MQTT message", e);
+            log.error("处理MQTT消息失败", e);
         }
     }
 

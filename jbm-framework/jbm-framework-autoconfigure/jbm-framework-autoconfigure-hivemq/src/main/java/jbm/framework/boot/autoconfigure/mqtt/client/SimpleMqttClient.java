@@ -15,6 +15,7 @@ import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -30,8 +31,14 @@ public class SimpleMqttClient {
 
     private final Mqtt5AsyncClient mqttClient;
     
-    // 存储订阅信息以便重连后恢复
+    // 存储订阅信息以便重连后恢复，key 为 topic，value 为监听器
     private final Map<String, Consumer<Mqtt5Publish>> subscriptions = new ConcurrentHashMap<>();
+    
+    // 追踪已成功订阅的 topic，用于防止重复订阅（即使监听器相同，也避免重复调用底层订阅）
+    private final Set<String> successfullySubscribedTopics = ConcurrentHashMap.newKeySet();
+    
+    // 追踪正在订阅中的 topic，用于防止并发订阅（在异步订阅完成前防止重复订阅）
+    private final Set<String> subscribingTopics = ConcurrentHashMap.newKeySet();
     
     // 用于健康检查的调度器
     private final ScheduledExecutorService healthCheckScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -67,12 +74,28 @@ public class SimpleMqttClient {
                 // 检测到从断连到连接的状态变化，触发订阅恢复
                 if (currentlyConnected && !wasConnected) {
                     if (!subscriptions.isEmpty()) {
-                        log.info("🔄 Connection restored, recovering {} subscriptions", subscriptions.size());
+                        log.info("🔄 Connection restored, checking if subscription recovery is needed ({} subscriptions)", subscriptions.size());
+                        // 检查是否需要恢复订阅（如果所有订阅都已经活跃，就不需要恢复）
+                        boolean needRestore = false;
+                        for (String topic : subscriptions.keySet()) {
+                            if (!successfullySubscribedTopics.contains(topic)) {
+                                needRestore = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!needRestore) {
+                            log.debug("🔄 All subscriptions already active, skipping restore");
+                            wasConnected = currentlyConnected;
+                            return;
+                        }
+                        
+                        log.info("🔄 Some subscriptions need recovery, will restore {} subscriptions after delay", subscriptions.size());
                         // 延迟2秒后恢复订阅，确保连接稳定（弱网环境需要更长时间）
                         healthCheckScheduler.schedule(() -> {
                             try {
                                 restoreSubscriptions();
-                                log.info("✅ {} subscriptions recovered successfully", subscriptions.size());
+                                log.info("✅ Subscriptions recovery completed");
                             } catch (Exception e) {
                                 log.error("❌ Error restoring subscriptions", e);
                                 // 失败后再次尝试
@@ -150,23 +173,53 @@ public class SimpleMqttClient {
             return;
         }
         
-        if (log.isDebugEnabled()) {
-            log.debug("🔄 Restoring {} subscriptions", subscriptions.size());
+        // 检查是否已经成功订阅过（避免重复订阅）
+        // 如果会话没有过期，MQTT 服务器可能已经保存了订阅，不需要重新订阅
+        // 但如果会话过期了，需要重新订阅
+        boolean needRestore = false;
+        for (String topic : subscriptions.keySet()) {
+            if (!successfullySubscribedTopics.contains(topic)) {
+                needRestore = true;
+                break;
+            }
         }
         
+        if (!needRestore) {
+            if (log.isDebugEnabled()) {
+                log.debug("🔄 All subscriptions already active, skipping restore");
+            }
+            return;
+        }
+        
+        // 清空成功订阅标记，因为重连后需要重新订阅
+        successfullySubscribedTopics.clear();
+        
+        log.info("🔄 Restoring {} subscriptions", subscriptions.size());
+        
         subscriptions.forEach((topicFilter, messageListener) -> {
+            // 如果正在订阅中，跳过（防止并发）
+            if (!subscribingTopics.add(topicFilter)) {
+                log.warn("⚠️ Topic: {} 正在订阅中，跳过恢复订阅", topicFilter);
+                return;
+            }
+            
             mqttClient.subscribeWith()
                     .topicFilter(topicFilter)
                     .qos(MqttQos.AT_LEAST_ONCE)
                     .callback(messageListener)
                     .send()
                     .whenComplete((subAck, throwable) -> {
+                        // 无论成功或失败，都从"订阅中"集合中移除
+                        subscribingTopics.remove(topicFilter);
+                        
                         if (throwable != null) {
                             log.warn("⚠️ Failed to restore subscription for topic {}, will retry", topicFilter);
                             // 订阅失败后重试
                             scheduleRetrySubscription(topicFilter, messageListener, 1);
-                        } else if (log.isDebugEnabled()) {
-                            log.debug("✅ Restored subscription: {}", topicFilter);
+                        } else {
+                            // 恢复订阅成功，标记为已成功订阅
+                            successfullySubscribedTopics.add(topicFilter);
+                            log.info("✅ Restored subscription: {}", topicFilter);
                         }
                     });
         });
@@ -206,8 +259,12 @@ public class SimpleMqttClient {
                         if (throwable != null) {
                             log.error("❌ Retry {} failed for topic {}: {}", 
                                     attempt, topicFilter, throwable.getMessage());
+                            // 重试失败，从成功订阅集合中移除（如果存在）
+                            successfullySubscribedTopics.remove(topicFilter);
                             scheduleRetrySubscription(topicFilter, messageListener, attempt + 1);
                         } else {
+                            // 重试成功，标记为已成功订阅
+                            successfullySubscribedTopics.add(topicFilter);
                             log.info("✅ Retry {} succeeded for topic: {}", attempt, topicFilter);
                         }
                     });
@@ -215,6 +272,30 @@ public class SimpleMqttClient {
     }
 
     public void subscribe(String topicFilter, Consumer<Mqtt5Publish> messageListener) {
+        // 检查是否已经成功订阅过该 topic（防止重复订阅，即使监听器相同）
+        if (successfullySubscribedTopics.contains(topicFilter)) {
+            Consumer<Mqtt5Publish> existingListener = subscriptions.get(topicFilter);
+            // 如果监听器不同，更新监听器引用（虽然不会重新订阅，但更新引用以便后续使用）
+            if (existingListener != messageListener) {
+                log.warn("⚠️ Topic: {} 已订阅，但监听器不同，更新监听器引用", topicFilter);
+                subscriptions.put(topicFilter, messageListener);
+            } else {
+                log.debug("Topic: {} 已订阅，跳过重复订阅", topicFilter);
+            }
+            return;
+        }
+        
+        // 检查是否正在订阅中（防止并发订阅）
+        if (!subscribingTopics.add(topicFilter)) {
+            log.warn("⚠️ Topic: {} 正在订阅中，跳过重复订阅（并发订阅防护）", topicFilter);
+            // 如果监听器不同，更新监听器引用（虽然不会重新订阅）
+            Consumer<Mqtt5Publish> existingListener = subscriptions.get(topicFilter);
+            if (existingListener != messageListener) {
+                subscriptions.put(topicFilter, messageListener);
+            }
+            return;
+        }
+        
         // 保存订阅信息用于重连恢复
         subscriptions.put(topicFilter, messageListener);
         
@@ -225,13 +306,20 @@ public class SimpleMqttClient {
                 .callback(messageListener)
                 .send()
                 .whenComplete((subAck, throwable) -> {
+                    // 无论成功或失败，都从"订阅中"集合中移除
+                    subscribingTopics.remove(topicFilter);
+                    
                     if (throwable != null) {
-                        log.warn("⚠️ Failed to subscribe to topic {}, will retry", topicFilter);
+                        log.warn("订阅失败 - Topic: {}, 错误: {}", topicFilter, throwable.getMessage());
+                        // 订阅失败时，从成功订阅集合中移除（如果存在）
+                        successfullySubscribedTopics.remove(topicFilter);
                         // 订阅失败时启动重试机制
                         scheduleRetrySubscription(topicFilter, messageListener, 1);
                         return;
                     }
-                    log.info("✅ Subscribed to topic: {}", topicFilter);
+                    // 订阅成功，标记为已成功订阅
+                    successfullySubscribedTopics.add(topicFilter);
+                    log.info("✅ 订阅成功 - Topic: {}", topicFilter);
                 });
     }
 

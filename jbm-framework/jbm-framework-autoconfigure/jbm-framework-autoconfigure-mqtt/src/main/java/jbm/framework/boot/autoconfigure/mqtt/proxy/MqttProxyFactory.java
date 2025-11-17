@@ -44,6 +44,9 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     
     // 记录已经调用过 subscribeMethod 的 subscriptionKey，防止重复调用
     private final Set<String> subscribedKeys = ConcurrentHashMap.newKeySet();
+    
+    // 标记 find() 是否已经被调用过，防止重复初始化
+    private volatile boolean findCalled = false;
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
@@ -102,6 +105,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     public void find() throws MqttException {
+        // 防止重复调用 find()，避免重复注册订阅
+        if (findCalled) {
+            log.debug("⚠️ find() 已经被调用过，跳过重复初始化");
+            return;
+        }
+        findCalled = true;
+        
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         log.info("🔍 Found {} beans with @MqttMapper annotation", mqttProxys.size());
         
@@ -198,9 +208,11 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 listeners.add(listener);
                 
                 // 创建一个多播监听器，将消息分发给所有监听器
+                // 注意：使用 final 变量捕获 mqttSubscriptionKey，确保在多播监听器中能正确获取监听器列表
+                final String finalMqttSubscriptionKey = mqttSubscriptionKey;
                 org.eclipse.paho.client.mqttv3.IMqttMessageListener multicastListener = (msgTopic, message) -> {
-                    List<MqttRequestListener> currentListeners = mqttSubscriptionCache.get(mqttSubscriptionKey);
-                    if (currentListeners != null) {
+                    List<MqttRequestListener> currentListeners = mqttSubscriptionCache.get(finalMqttSubscriptionKey);
+                    if (currentListeners != null && !currentListeners.isEmpty()) {
                         log.debug("📨 收到消息 Topic: {}, 分发给 {} 个监听器", msgTopic, currentListeners.size());
                         for (MqttRequestListener l : currentListeners) {
                             try {
@@ -211,6 +223,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                                         l.getMqttRequsetBean().getMethod().getName(), e);
                             }
                         }
+                    } else {
+                        log.warn("⚠️ 收到消息 Topic: {}，但监听器列表为空", msgTopic);
                     }
                 };
                 
