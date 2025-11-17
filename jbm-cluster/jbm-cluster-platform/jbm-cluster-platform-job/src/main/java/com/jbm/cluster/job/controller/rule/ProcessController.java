@@ -2,17 +2,20 @@ package com.jbm.cluster.job.controller.rule;
 
 import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
 import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
+import com.jbm.cluster.api.form.job.ProcessInstancePageForm;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessRequest;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessResponse;
+import com.jbm.cluster.api.model.job.rule.RuleInstanceModel;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
+import com.jbm.cluster.job.service.rule.RuleDefinitionService;
+import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.usage.paging.DataPaging;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author scolin
@@ -25,6 +28,34 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     @Autowired
     private ProcessExecutionEngine processExecutionEngine;
 
+    @Autowired
+    private RuleDefinitionService ruleDefinitionService;
+
+    @ApiOperation(value = "分页查询流程实例", notes = "分页查询流程实例，包含关联的规则信息和节点执行信息")
+    @PostMapping("/pageQueryProcessInstances")
+    public ResultBody<DataPaging<RuleInstanceModel>> pageQueryProcessInstances(
+            @RequestBody(required = false) ProcessInstancePageForm pageForm) {
+        try {
+            // 如果pageForm为空，使用默认分页参数
+            if (pageForm == null) {
+                pageForm = new ProcessInstancePageForm();
+                pageForm.setPageForm(new com.jbm.framework.usage.paging.PageForm(1, 10));
+            }
+            // 剆处理pageForm为空的情况
+            if (pageForm.getPageForm() == null) {
+                pageForm.setPageForm(new com.jbm.framework.usage.paging.PageForm(1, 10));
+            }
+            DataPaging<RuleInstanceModel> result = this.service.pageQueryProcessInstances(
+                    pageForm.getRuleDefinitionId(),
+                    pageForm.getStatus(),
+                    pageForm.getPageForm());
+            return ResultBody.success(result, "查询分页列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    @ApiOperation(value = "执行流程")
     @PostMapping("/execute")
     public ResponseEntity<ExecuteProcessResponse> executeProcess(@RequestBody ExecuteProcessRequest request) {
         try {
@@ -32,8 +63,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    createErrorResponse(e.getMessage())
-            );
+                    createErrorResponse(e.getMessage()));
         }
     }
 
@@ -44,8 +74,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    createErrorResponse(e.getMessage())
-            );
+                    createErrorResponse(e.getMessage()));
         }
     }
 
