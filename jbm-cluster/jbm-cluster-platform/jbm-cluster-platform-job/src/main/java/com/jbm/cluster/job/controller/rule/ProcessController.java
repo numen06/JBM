@@ -1,12 +1,11 @@
 package com.jbm.cluster.job.controller.rule;
 
 import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
-import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
+import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessRequest;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessResponse;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
-import com.jbm.cluster.job.service.rule.RuleDefinitionService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +51,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
 
     private ExecuteProcessResponse createErrorResponse(String message) {
         ExecuteProcessResponse response = new ExecuteProcessResponse();
-        response.setStatus("FAILED");
+        response.setStatus(ProcessStatusEnum.FAILED.getValue());
         response.setMessage(message);
         return response;
     }

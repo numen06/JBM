@@ -1,14 +1,7 @@
 package com.jbm.cluster.job.execute;
 
-import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
-import com.jbm.cluster.job.service.rule.ProcessTriggerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 
 /**
  * @author scolin
@@ -56,7 +49,7 @@ public class MQTTService {
 //    }
 //
 //    private void subscribeToWaitingTriggers() {
-//        List<ProcessTrigger> waitingTriggers = processTriggerRepository.findByStatusAndTriggerType("WAITING", "MQTT");
+//        List<ProcessTrigger> waitingTriggers = processTriggerRepository.findByStatusAndTriggerType(ProcessStatusEnum.WAITING.getValue(), "MQTT");
 //
 //        for (ProcessTrigger trigger : waitingTriggers) {
 //            subscribe(trigger.getTriggerKey(), trigger);
