@@ -17,11 +17,11 @@
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-framework-weixin-miniapp</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-weixin-miniapp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-weixin-mp</artifactId>
