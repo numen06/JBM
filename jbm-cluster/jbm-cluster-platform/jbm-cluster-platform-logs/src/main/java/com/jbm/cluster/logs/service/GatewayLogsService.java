@@ -9,16 +9,16 @@ import com.jbm.framework.usage.paging.DataPaging;
  * @author: wesley.zhang
  * @create: 2021-05-06 16:55
  **/
-public interface GatewayLogsService extends BaseDataService<GatewayLogs> {
+public interface GatewayLogsService {
 
 
     DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm);
-
-    DataPaging<GatewayLogs> findLogs(GatewayLogsForm gatewayLogsForm, Boolean isOperation);
 
     Long totalAccess();
 
     Long todayAccess();
 
     void saveGatewayLogs(GatewayLogs gatewayLogs);
+
+    DataPaging<GatewayLogs> findOperationLogs(GatewayLogsForm gatewayLogsForm);
 }

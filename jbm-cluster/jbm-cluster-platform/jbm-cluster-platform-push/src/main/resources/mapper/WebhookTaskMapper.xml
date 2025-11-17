@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jbm.cluster.push.mapper.WebhookTaskMapper">
 
-    <select id="selectWebhookTasks" parameterType="com.jbm.cluster.push.form.WebhookTaskForm" resultType="com.jbm.cluster.push.result.WebhookTaskReslut">
+    <select id="selectWebhookTasks" parameterType="com.jbm.cluster.push.form.WebhookTaskForm" resultType="com.jbm.cluster.push.result.WebhookTaskResult">
         SELECT
         wt.*,
         wec.event_name,

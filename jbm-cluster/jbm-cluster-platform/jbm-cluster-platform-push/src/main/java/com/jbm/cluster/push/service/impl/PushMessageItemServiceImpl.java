@@ -14,11 +14,13 @@ import com.jbm.cluster.push.usage.PushMessageNotificationExchanger;
 import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.util.batch.BatchTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @Author: auto generate by jbm
@@ -83,6 +85,21 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
         return pushMessageItem.getMsgId();
     }
 
+
+    private final BatchTask<PushMessageItem> batchTask = new BatchTask<>(new Consumer<List<PushMessageItem>>() {
+        @Override
+        public void accept(List<PushMessageItem> pushMessageItems) {
+            //批量更新
+            updateBatchById(pushMessageItems);
+//            pushMessageItems.parallelStream().forEach(new Consumer<PushMessageItem>() {
+//                @Override
+//                public void accept(PushMessageItem pushMessageItem) {
+//                    updateById(pushMessageItem);
+//                }
+//            });
+        }
+    });
+
     /**
      * 通过回调方法修改发送状态
      *
@@ -94,7 +111,8 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
         PushMessageItem pushMessageItem = new PushMessageItem();
         pushMessageItem.setMsgId(pushCallback.getMsgId());
         pushMessageItem.setPushStatus(pushCallback.getPushStatus());
-        this.updateById(pushMessageItem);
+        //批量保存
+        batchTask.offer(pushMessageItem);
     }
 
     @Override

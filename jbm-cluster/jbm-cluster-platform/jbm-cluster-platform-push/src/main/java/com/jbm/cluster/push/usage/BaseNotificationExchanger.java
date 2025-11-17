@@ -2,6 +2,7 @@ package com.jbm.cluster.push.usage;
 
 import cn.hutool.core.util.TypeUtil;
 import com.jbm.cluster.api.constants.push.PushStatus;
+import com.jbm.cluster.api.constants.push.PushWay;
 import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
@@ -41,6 +42,9 @@ public abstract class BaseNotificationExchanger<T extends Notification> implemen
     public void send(T notification) {
         try {
             PushCallback pushCallback = this.apply(notification);
+            if (PushWay.mqtt.equals(pushCallback.getPushWay())) {
+                return;
+            }
             this.sendCallBack(pushCallback);
         } catch (Exception e) {
             PushCallback pushCallback = this.error(notification, "", e.getMessage());
@@ -83,6 +87,7 @@ public abstract class BaseNotificationExchanger<T extends Notification> implemen
         pushCallback.setPushStatus(PushStatus.issued);
         return pushCallback;
     }
+
 
     /**
      * 发送失败回调

@@ -54,6 +54,8 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
      */
     void addApi(BaseApi api);
 
+    Integer batchUpdateOpen(List<String>  ids, Boolean open);
+
     /**
      * 修改接口
      *
@@ -88,4 +90,6 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
     Long getCount(QueryWrapper<BaseApi> queryWrapper);
 
     BaseApi findApiByPath(String serviceId, String path);
+
+    Integer batchUpdateAccessLog(List<String> ids, Boolean accessLog);
 }

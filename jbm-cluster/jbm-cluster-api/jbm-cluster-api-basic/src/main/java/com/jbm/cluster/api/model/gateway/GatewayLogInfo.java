@@ -8,6 +8,9 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author wesley
+ */
 @Data
 @NoArgsConstructor
 //@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS)

@@ -7,6 +7,9 @@
         <version>7.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>jbm-framework-autoconfigure-logger</artifactId>
+    <properties>
+        <opentelemetry.version>1.38.0</opentelemetry.version>
+    </properties>
     <dependencies>
         <!-- <dependency> -->
         <!-- <groupId>com.github.danielwegener</groupId> -->
@@ -22,6 +25,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
+        <!-- 在每个需要追踪的 Spring Boot 项目中添加 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
@@ -31,5 +39,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.9</version>
+        </dependency>
+
     </dependencies>
 </project>

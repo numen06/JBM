@@ -105,6 +105,26 @@ public class LoginHelper {
     }
 
     /**
+     * 初始化一级缓存 从Session中加载用户信息到ThreadLocal
+     * 用于在请求开始时预加载用户信息，避免在某些场景下（如租户拦截器）获取不到用户
+     */
+    public static void initCache() {
+        try {
+            // 如果ThreadLocal已有数据，不重复加载
+            if (LOGIN_CACHE.get() != null) {
+                return;
+            }
+            // 从Session中获取用户信息并设置到ThreadLocal
+            JbmLoginUser loginUser = (JbmLoginUser) StpUtil.getTokenSession().get(LOGIN_USER_KEY);
+            if (loginUser != null) {
+                LOGIN_CACHE.set(loginUser);
+            }
+        } catch (Exception e) {
+            // 忽略异常，可能是未登录状态
+        }
+    }
+
+    /**
      * 安全获取用户对象
      *
      * @return
@@ -113,6 +133,8 @@ public class LoginHelper {
         try {
             return getLoginUser();
         } catch (Exception e) {
+            // 增加日志便于排查问题
+            // log.debug("获取登录用户信息失败: {}", e.getMessage());
             return null;
         }
     }

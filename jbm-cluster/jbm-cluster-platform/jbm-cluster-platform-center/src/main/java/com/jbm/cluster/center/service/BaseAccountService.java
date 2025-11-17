@@ -125,4 +125,15 @@ public interface BaseAccountService extends IMasterDataService<BaseAccount> {
     void addLoginLog(BaseAccountLogs log);
 
     boolean isExist(BaseAccount baseAccount);
+
+    /**
+     * 小程序登录-更新用户openId信息
+     *
+     * @param openId
+     * @param sessionKey
+     * @param accountType
+     * @param phone
+     * @return
+     */
+    BaseUser updateOpenIdByPhone(String openId, String sessionKey, String accountType, String phone);
 }

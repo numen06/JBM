@@ -3,6 +3,7 @@ package com.jbm.cluster.center.listener;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
@@ -69,9 +70,12 @@ public class ApiResourceScanHandler {
                 public void accept(JbmApi jbmApi) {
                     try {
                         BaseApi api = new BaseApi();
-                        api.setAccessLog(jbmApi.getAccessLog());
                         //复制Bean
                         BeanUtil.copyProperties(jbmApi, api);
+                        if(BooleanUtil.isFalse(jbmApi.getAccessLog())){
+                            log.info("{}接口不记录访问日志",jbmApi.getApiName());
+                        }
+                        api.setAccessLog(jbmApi.getAccessLog());
                         api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
                         api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
                         codes.add(api.getApiCode());
@@ -85,8 +89,7 @@ public class ApiResourceScanHandler {
                             baseApiService.updateApi(api);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        log.error("添加资源error:", e.getMessage());
+                        log.error("添加资源error", e);
                     }
                 }
             });

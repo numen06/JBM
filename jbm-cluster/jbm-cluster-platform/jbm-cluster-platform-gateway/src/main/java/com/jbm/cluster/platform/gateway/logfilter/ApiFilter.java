@@ -31,7 +31,7 @@ public class ApiFilter implements AccessLogFilter {
     private BaseApiServiceClient baseApiServiceClient;
     LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
             //一小时没有读取释放
-            .expireAfterAccess(1, TimeUnit.HOURS)
+            .expireAfterAccess(15, TimeUnit.MINUTES)
             .build(new CacheLoader<String, BaseApi>() {
                 @Override
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
@@ -70,8 +70,9 @@ public class ApiFilter implements AccessLogFilter {
             gatewayLogInfo.setApiId(baseApi.getApiId());
             gatewayLogInfo.setApiName(baseApi.getApiName());
             gatewayLogInfo.setApiPath(baseApi.getPath());
+            gatewayLogInfo.setPath(realPath);
         } catch (Exception e) {
-
+            log.error("获取API信息异常", e);
         }
     }
 }

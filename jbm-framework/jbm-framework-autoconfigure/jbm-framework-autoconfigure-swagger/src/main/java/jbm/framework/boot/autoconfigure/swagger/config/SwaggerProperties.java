@@ -74,6 +74,11 @@ public class SwaggerProperties {
      **/
     private Authorization authorization = new Authorization();
 
+    /**
+     * 基础认证配置
+     **/
+    private BasicAuth basicAuth = new BasicAuth();
+
     public Boolean getEnabled() {
         return enabled;
     }
@@ -176,6 +181,14 @@ public class SwaggerProperties {
 
     public void setAuthorization(Authorization authorization) {
         this.authorization = authorization;
+    }
+
+    public BasicAuth getBasicAuth() {
+        return basicAuth;
+    }
+
+    public void setBasicAuth(BasicAuth basicAuth) {
+        this.basicAuth = basicAuth;
     }
 
     public static class Contact {
@@ -293,6 +306,47 @@ public class SwaggerProperties {
 
         public void setDescription(String description) {
             this.description = description;
+        }
+    }
+
+    public static class BasicAuth {
+        /**
+         * 是否启用基础认证
+         */
+        private Boolean enabled = false;
+
+        /**
+         * 用户名
+         */
+        private String username = "admin";
+
+        /**
+         * 密码
+         */
+        private String password = "admin";
+
+        public Boolean getEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(Boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
     }
 }

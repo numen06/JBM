@@ -28,9 +28,11 @@
 - JBM7随着使用越来越庞大和复杂正在不断完善文档
 - [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)，详细说明特性功能
   - JBM7在Docker中部署
-  - JBM入门代码生成
+  - JBM入门-代码生成
   - JBM7新特性-集群定时任务
   - JBM7新特性-集群事件
+  - JBM记录操作日志
+  - JVM监控和Prometheus支持
   - 持续更新中
 
 
@@ -38,7 +40,9 @@
 
 ### 故事
 
-- 由于框架诞生之初是初期期spring boot 1.0时代，所以有很多兼容性问题，在spring boot 2.0走红之后，JBM5.0全面升级融合个大主流中间件的starter
+- JBM6之前框架基于诞生之初是初期期spring boot 1.0时代,所以有很多兼容性问题
+- JBM7全面升级在spring boot 2.0走红之后
+- JBM8正在升级JDK和对应spring boot版本,后续兼容AI
 - 4.x以前版本主要基于dubbo分布式体系，5.0将重心转移到spring cloud
 - 基于java spring boot 模块化企业级框架
 - 主要由util;autoconfig;webjars等模块组成
@@ -49,10 +53,10 @@
 
 ### 技术路线
 
-- JDK:JDK1.8+
+- JDK:JDK1.8+(JBM7及其以下)
 - 核心框架：Spring Boot
 - 安全框架：Spring Security
-- 注册中心：Nacos
+- 注册中心：Nacos2(JBM7)
 - 任务调度：Spring + Quartz + Zookeeper
 - 持久层框架：MyBatis + MyBatis-Plus + JPA + Spring Data
 - 文档性架构：MongoDB + minio
@@ -104,6 +108,9 @@
 ### Docker集群快速部署
 
 集群部署之前需要中间件:Nacos,Redis等
+
+#参考部署文件
+https://www.yuque.com/numen06/ksfcpy/zur3q71heb6g15hi?singleDoc# 《JBM7-Docker中部署》
 
 1.部署平台中心服务
 

@@ -1,0 +1,11 @@
+[
+	{
+		"user": "test_user_create",
+		"path": "/test/path",
+		"category": "File Management",
+		"event": "Create Document",
+		"date": "2025-04-28 17:01:00",
+		"comment": "Created a new document",
+		"ip": "192.168.1.1"
+	}
+]

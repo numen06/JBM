@@ -30,4 +30,6 @@ public class AuthorizeForm {
     private String code;
     @ApiModelProperty("登录方式")
     private String loginType;
+    @ApiModelProperty("状态码")
+    private String state;
 }

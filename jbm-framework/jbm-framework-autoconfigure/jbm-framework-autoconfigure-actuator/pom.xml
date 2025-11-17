@@ -17,6 +17,11 @@
             <artifactId>spring-boot-starter-logging</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Micrometer Registry for Prometheus -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
         <!-- <dependency> -->
         <!-- <groupId>com.jbm</groupId> -->
         <!-- <artifactId>jbm-framework-autoconfigure-tio</artifactId> -->

@@ -2,7 +2,6 @@ package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.url.UrlBuilder;
@@ -10,35 +9,24 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import cn.hutool.http.HttpRequest;
 import com.jbm.cluster.common.basic.module.request.JbmBaseRequest;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Request;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
 
+/**
+ * @author wesley
+ */
 @Slf4j
 public class JbmFeignRequest extends JbmBaseRequest {
-
-//    private SaOAuth2Template saOAuth2Template = new SaOAuth2Template() {
-//        @Override
-//        public SaClientModel getClientModel(String clientToken) {
-//            if (SpringUtil.getApplicationName().equals(clientToken)) {
-//                return new SaClientModel()
-//                        .setClientId(SpringUtil.getApplicationName())
-//                        .setClientSecret(SaIdUtil.getToken())
-//                        .setAllowUrl("*")
-//                        .setContractScope("*")
-//                        .setIsAutoMode(true);
-//            }
-//            return null;
-//        }
-//    };
-
 
     @Override
     public UrlBuilder buildUrl(String sourceUrl) throws UnknownHostException {
@@ -50,7 +38,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
     }
 
     @Override
-    public HttpRequest buildRequest(HttpRequest httpRequest) {
+    public Request.Builder buildRequest(Request.Builder httpRequest) {
         SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
 //        try {
@@ -58,7 +46,8 @@ public class JbmFeignRequest extends JbmBaseRequest {
 //        } catch (Exception e) {
 //            log.warn("客户端Token验证失败", e);
 //        }
-        httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken);
+        final String authorization = SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken;
+        httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
         return httpRequest;
     }
 
@@ -68,30 +57,30 @@ public class JbmFeignRequest extends JbmBaseRequest {
     }
 
 
-    public static String getServiceIdByUrl(String url) {
+    public String getServiceIdByUrl(String url) {
         String serviceId = ReUtil.get("(?<=://)[^//]*?/", url, 0);
         serviceId = StrUtil.removeSuffix(serviceId, "/");
         return serviceId;
     }
 
-    public static String feignToUrl(String url) {
+    public String feignToUrl(String url) throws UnknownHostException {
         String serviceId = getServiceIdByUrl(url);
+        //得到服务的真实地址127.0.0.1:8080
         URI uri = getServiceUrl(serviceId);
         if (ObjectUtil.isEmpty(uri)) {
-            return null;
+            throw new UnknownHostException(serviceId + "服务没有启动");
         }
+        //将feign://替换成为真实URL
         String realUrl = uri.toString();
         return StrUtil.replace(url, "feign://" + serviceId, realUrl);
     }
 
-    public static URI getServiceUrl(String serviceId) {
-        DiscoveryClient discoveryClient = SpringUtil.getBean(DiscoveryClient.class);
-        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(serviceId);
-        if (CollUtil.isEmpty(serviceInstances)) {
-            return null;
+    public URI getServiceUrl(String serviceId) {
+        LoadBalancerClient loadBalancer = SpringUtil.getBean(LoadBalancerClient.class);
+        if (loadBalancer == null) {
+            throw new RuntimeException("Spring LoadBalancerClient not found");
         }
-        ServiceInstance serviceInstance = CollUtil.getFirst(serviceInstances);
-        return serviceInstance.getUri();
+        return loadBalancer.choose(serviceId).getUri();
     }
 
 }

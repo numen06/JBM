@@ -75,4 +75,21 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
      * @return
      */
     void removeMenu(Long menuId);
+
+    /**
+     * 根据path和appId查询菜单
+     *
+     * @param path
+     * @param appId
+     * @return
+     */
+    BaseMenu getMenuByPathAndAppId(String path, Long appId);
+
+    /**
+     * 批量导入菜单
+     *
+     * @param menus
+     * @return
+     */
+    int importMenus(List<BaseMenu> menus);
 }

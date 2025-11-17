@@ -1,8 +1,8 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 
@@ -142,6 +143,36 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         baseApiMapper.insert(api);
         // 同步权限表里的信息
         baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
+    }
+
+    /**
+     * 自我注入
+     */
+    @Resource
+    private BaseApiService self;
+
+    @Override
+    public Integer batchUpdateOpen(List<String> ids, Boolean open) {
+        QueryWrapper<BaseApi> wrapper = new QueryWrapper<>();
+        wrapper.lambda().in(BaseApi::getApiId, ids);
+        BaseApi entity = new BaseApi();
+        entity.setIsOpen(BooleanUtil.toInt(open));
+        self.update(entity, wrapper);
+        // 刷新网关
+        jbmClusterTemplate.refreshGateway();
+        return CollUtil.size(ids);
+    }
+
+    @Override
+    public Integer batchUpdateAccessLog(List<String> ids, Boolean accessLog) {
+        QueryWrapper<BaseApi> wrapper = new QueryWrapper<>();
+        wrapper.lambda().in(BaseApi::getApiId, ids);
+        BaseApi entity = new BaseApi();
+        entity.setAccessLog(accessLog);
+        self.update(entity, wrapper);
+        // 刷新网关
+        jbmClusterTemplate.refreshGateway();
+        return CollUtil.size(ids);
     }
 
     /**

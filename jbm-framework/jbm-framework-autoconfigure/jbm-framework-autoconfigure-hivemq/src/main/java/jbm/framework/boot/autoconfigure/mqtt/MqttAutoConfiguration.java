@@ -1,5 +1,7 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3BlockingClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
@@ -10,6 +12,7 @@ import com.hivemq.client.mqtt.mqtt5.auth.Mqtt5EnhancedAuthMechanism;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.factories.Mqtt3ClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.factories.Mqtt5ClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.proxy.MqttProxyFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,6 +29,7 @@ import javax.annotation.Nullable;
  *
  * @author wesley
  */
+@Slf4j
 @Configuration
 @ConditionalOnProperty(prefix = "spring.mqtt", name = "url")
 @EnableConfigurationProperties(MqttProperties.class)
@@ -38,6 +42,7 @@ public class MqttAutoConfiguration {
 
     @Bean
     public RealMqttPahoClientFactory realMqttPahoClientFactory(final Mqtt5ClientFactory clientFactory) {
+        mqttProperties.setAutomaticReconnect(true);
         return new RealMqttPahoClientFactory(clientFactory, mqttProperties);
     }
 
@@ -57,8 +62,17 @@ public class MqttAutoConfiguration {
     @ConditionalOnProperty(name = "spring.mqtt.mqtt-version", havingValue = "5", matchIfMissing = true)
     public Mqtt5AsyncClient mqtt5AsyncClient(final Mqtt5ClientFactory clientFactory, @Nullable Mqtt5EnhancedAuthMechanism enhancedAuthMechanism) {
         if (mqttProperties.getMqttVersion() == 3) {
-            throw new BeanCreationException("Mqtt5AsyncClient is not available for MQTT version 3. Use Mqtt3AsyncClient instead.");
+            throw new BeanCreationException("Mqtt5AsyncClient is not available for MQTT version 5. Use Mqtt3AsyncClient instead.");
         }
+        mqttProperties.setAutomaticReconnect(true);
+        
+        // 🔧 如果ClientId为空，自动生成一个短ClientId（避免MQTT服务器拒绝）
+        if (StrUtil.isBlank(mqttProperties.getClientId())) {
+            String autoClientId = "AUTO" + IdUtil.simpleUUID().substring(0, 6);
+            mqttProperties.setClientId(autoClientId);
+            log.warn("⚠️ MQTT ClientId not configured, auto-generated: {} (Please configure spring.mqtt.client-id in production)", autoClientId);
+        }
+        
         return clientFactory.mqttClient(mqttProperties, enhancedAuthMechanism);
     }
 
@@ -89,7 +103,15 @@ public class MqttAutoConfiguration {
         if (mqttProperties.getMqttVersion() == 5) {
             throw new BeanCreationException("Mqtt3AsyncClient is not available for MQTT version 5. Use Mqtt5AsyncClient instead.");
         }
-
+        mqttProperties.setAutomaticReconnect(true);
+        
+        // 🔧 如果ClientId为空，自动生成一个短ClientId（MQTT 3.1.1限制23字符）
+        if (StrUtil.isBlank(mqttProperties.getClientId())) {
+            String autoClientId = "AUTO" + IdUtil.simpleUUID().substring(0, 6);
+            mqttProperties.setClientId(autoClientId);
+            log.warn("⚠️ MQTT ClientId not configured, auto-generated: {} (Please configure spring.mqtt.client-id in production)", autoClientId);
+        }
+        
         return clientFactory.mqttClient(mqttProperties);
     }
 

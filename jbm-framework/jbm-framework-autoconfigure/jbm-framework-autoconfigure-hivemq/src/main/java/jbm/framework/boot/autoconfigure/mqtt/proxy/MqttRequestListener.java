@@ -13,8 +13,7 @@ import jbm.framework.boot.autoconfigure.mqtt.useage.MqttResponseBean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * @author wesley
@@ -29,6 +28,10 @@ public class MqttRequestListener extends AbstractMqttMessageListener {
     public MqttRequestListener(MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
         this.mqttRequsetBean = mqttRequsetBean;
         this.simpleMqttClient = simpleMqttClient;
+    }
+    
+    public MqttRequsetBean getMqttRequsetBean() {
+        return mqttRequsetBean;
     }
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -63,12 +66,51 @@ public class MqttRequestListener extends AbstractMqttMessageListener {
     }
 
     /**
+     * 消息到达处理
+     * 注意：由于已经通过监听器缓存防止了重复订阅，这里不再需要消息级别的去重
+     * 每条消息都会被处理一次
+     * 
      * @param topic
      * @param message
      * @throws Exception
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        executeMqttRequest(topic, message);
+        log.debug("📨 收到消息 Topic: {}, Method: {}, Payload: {}", 
+                topic, 
+                mqttRequsetBean.getMethod().getName(),
+                new String(message.getPayload(), Charsets.UTF_8));
+        
+        // 提交到线程池异步处理
+        executor.submit(() -> {
+            try {
+                executeMqttRequest(topic, message);
+                log.debug("✅ 消息处理完成 Topic: {}, Method: {}", 
+                        topic, mqttRequsetBean.getMethod().getName());
+            } catch (Exception e) {
+                log.error("❌ 消息处理失败 Topic: {}, Method: {}", 
+                        topic, mqttRequsetBean.getMethod().getName(), e);
+            }
+        });
+    }
+    
+    /**
+     * 关闭监听器，释放资源
+     */
+    public void shutdown() {
+        try {
+            log.info("🔄 正在关闭 MqttRequestListener 资源...");
+            
+            // 关闭执行器
+            executor.shutdown();
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+            
+            log.info("✅ MqttRequestListener 资源已释放");
+        } catch (InterruptedException e) {
+            log.error("❌ 关闭 MqttRequestListener 时被中断", e);
+            Thread.currentThread().interrupt();
+        }
     }
 }

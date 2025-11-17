@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @program: JBM7
@@ -20,4 +21,6 @@ public class Notification implements Serializable {
     private String msgId;
     @ApiModelProperty("发送状态")
     private PushStatus pushStatus;
+    @ApiModelProperty("发送时间")
+    private Date sendTime;
 }

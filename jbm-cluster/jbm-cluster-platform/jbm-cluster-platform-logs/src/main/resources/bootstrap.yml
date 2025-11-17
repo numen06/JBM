@@ -6,21 +6,30 @@ spring:
   cloud:
     #手动配置Bus id,
     bus:
+      refresh:
+        enabled: true
       id: ${spring.application.name}:${server.port}
     function:
-      definition: accessLogs
+      definition: accessLogs;businessLog;
     stream:
       #      default-binder: kafka
       bindings:
         accessLogs-in-0:
           group: ${spring.application.name}
+        # 业务日志消费者配置
+        businessLog-in-0:
+          group: ${spring.application.name}
     nacos:
       config:
         namespace: jbm
         #        group: ${config.group}
-        refreshable-dataids: common.properties
         server-addr: nacos2:8848
-        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,mongodb.properties,influx-log.properties
+        shared-configs:
+          - { data-id: common.properties, refresh: true }
+          - { data-id: redis.properties }
+          - { data-id: rabbitmq.properties }
+          - { data-id: openobserve.yml }
+        file-extension: yml
   resources:
     add-mappings: false
 management:
@@ -31,7 +40,8 @@ management:
 jbm:
   cluster:
     token-type: redis
-#    permit-all:
+    permit-all:
+      - /businessLog/get
 #      - /authority/access
 #      - /authority/app
 #      - /app/*/info

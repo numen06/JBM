@@ -12,10 +12,15 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.common.basic.utils.IpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
+
+import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 
 /**
  * Token过滤
@@ -32,6 +37,15 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     @Override
     public void run(Object r) {
         try {
+            //如果是本机IP不要认证
+            HttpServletRequest httpServletRequest = getCurrentRequest();
+            if (httpServletRequest == null) return;
+
+            String clientIp =IpUtils.getRequestIp(httpServletRequest); // Hutool 一行获取真实IP（自动处理代理）
+            if (isLocalIp(clientIp)) {
+                return; // 是本机请求，跳过认证
+            }
+
             final String tokenValue = StpUtil.getTokenValue();
             if (StrUtil.isBlank(tokenValue)) {
                 throw new SaOAuth2Exception("无效Token");
@@ -78,4 +92,32 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         }
     }
 
+    /**
+     * 获取当前 HttpServletRequest（Spring 环境）
+     */
+    private static HttpServletRequest getCurrentRequest() {
+        try {
+            return (HttpServletRequest)
+                    org.springframework.web.context.request.RequestContextHolder
+                            .currentRequestAttributes()
+                            .resolveReference(org.springframework.web.context.request.RequestAttributes.REFERENCE_REQUEST);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 判断是否为本地回环地址（支持 127.x.x.x 和 ::1）
+     */
+    private static boolean isLocalIp(String ip) {
+        if (ObjectUtil.isEmpty(ip)) {
+            return false;
+        }
+        try {
+            InetAddress address = InetAddress.getByName(ip);
+            return address.isLoopbackAddress();
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

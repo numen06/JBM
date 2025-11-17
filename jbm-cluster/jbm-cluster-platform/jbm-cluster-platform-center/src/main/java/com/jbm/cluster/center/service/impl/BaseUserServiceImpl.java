@@ -69,21 +69,20 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
-        BaseUser user = this.selectById(baseUser.getUserId());
-        if (ObjectUtil.isEmpty(user)) {
-            if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
-                BaseOrg baseOrg = new BaseOrg();
-                baseOrg.setId(baseUser.getDepartmentId());
-                // 获取顶层公司
-                BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
-                // 企业下账户数量
-                Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
-                long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
-                if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
-                    throw new ServiceException("企业下用户数已达上限");
-                }
-                baseUser.setCompanyId(rootOrg.getId());
+        if (ObjectUtil.isNotEmpty(baseUser.getDepartmentId())) {
+            BaseOrg baseOrg = new BaseOrg();
+            baseOrg.setId(baseUser.getDepartmentId());
+            // 获取顶层公司
+            BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
+            // 企业下账户数量
+            Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
+            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
+            if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
+                throw new ServiceException("企业下用户数已达上限");
             }
+            baseUser.setCompanyId(rootOrg.getId());
+        }
+        if (ObjectUtil.isEmpty(baseUser.getUserId())) {
             this.addUser(baseUser);
         } else {
             this.updateUser(baseUser);
@@ -524,6 +523,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             UserAccount userAccount = getUserAccount(baseAccount.getUserId());
             // 复制账号信息
             BeanUtils.copyProperties(baseAccount, userAccount);
+            userAccount.setAccountType(baseAccount.getAccountType());
             return userAccount;
         }
         return null;
@@ -531,7 +531,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
 
     @Override
     public List<BaseUser> retrievalUsers(String keyword) {
-        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper<>();
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             // 用户不存在部门的情况下，仅查询自己的数据

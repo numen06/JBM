@@ -4,6 +4,7 @@ package com.jbm.framework.metadata.bean;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.exceptions.ValidateException;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpStatus;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
@@ -145,7 +146,7 @@ public class ResultBody<T> implements Serializable {
         if (e instanceof ValidateException) {
             return ResultBody.error(e.getMessage());
         }
-        return ResultBody.failed();
+        return (ResultBody<T>) ResultBody.failed().exception(e);
     }
 
     public static <T> ResultBody<T> error(T data, String msg, Exception e) {
@@ -203,7 +204,7 @@ public class ResultBody<T> implements Serializable {
         return this;
     }
 
-    public  ResultBody<T> data(T data) {
+    public ResultBody<T> data(T data) {
         this.result = data;
         return this;
     }
@@ -243,7 +244,7 @@ public class ResultBody<T> implements Serializable {
         if (e == null) {
             exception = null;
         } else {
-            this.exception = e.getMessage();
+            this.exception = StrUtil.isNotEmpty(e.getMessage()) ? e.getMessage() : e.getClass().getName();
         }
         return this;
     }

@@ -63,8 +63,10 @@
         <kryo.version>0.42</kryo.version>
         <hessian.version>4.0.51</hessian.version>
         <curator.version>4.0.1</curator.version>
+        <hivemq.version>1.3.9</hivemq.version>
         <!--        <c3p0.version>0.9.1.2</c3p0.version>-->
         <mqtt.client.version>1.2.1</mqtt.client.version>
+        <mybatis.version>3.5.6</mybatis.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
         <hutool.version>5.8.34</hutool.version>
         <beetl.version>3.0.19.RELEASE</beetl.version>
@@ -87,7 +89,7 @@
         <swagger.version>3.0.0</swagger.version>
         <io.swagger.version>1.6.2</io.swagger.version>
         <oracle.version>10.2.0.4.0</oracle.version>
-        <satoken.version>1.30.0.RC</satoken.version>
+        <satoken.version>1.32.0</satoken.version>
         <mapstruct.version>1.5.0.RC1</mapstruct.version>
         <bascomtask.version>2.1.0</bascomtask.version>
         <oshi-core.version>6.4.2</oshi-core.version>
@@ -157,6 +159,12 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct-processor</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+            <!--hivemq-->
+            <dependency>
+                <groupId>com.hivemq</groupId>
+                <artifactId>hivemq-mqtt-client</artifactId>
+                <version>${hivemq.version}</version>
             </dependency>
             <!--lof4j-->
             <dependency>
@@ -363,6 +371,11 @@
             </dependency>
             <dependency>
                 <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-emqx</artifactId>
+                <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-minio</artifactId>
                 <version>${jbm.framework.version}</version>
             </dependency>
@@ -470,6 +483,11 @@
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
                 <version>${jbm.framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jbm</groupId>
+                <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
+                <version>7.2.0-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>

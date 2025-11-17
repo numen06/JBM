@@ -24,7 +24,7 @@ spring:
       enabled: false
     pathmatch:
       # 适配 boot 2.6 路由与 springfox 兼容
-      matching-strategy: ANT_PATH_MATCHER
+      matching-strategy: ant_path_matcher
   # 资源信息
   messages:
     # 国际化资源文件路径

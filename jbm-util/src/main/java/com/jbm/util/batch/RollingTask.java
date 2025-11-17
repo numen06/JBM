@@ -3,6 +3,7 @@ package com.jbm.util.batch;
 import cn.hutool.core.collection.CollUtil;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -18,7 +19,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
     /**
      * 使用 AtomicReference 类来创建一个私有变量 atomicReference，该变量的初始值为 null
      */
-    private AtomicReference<T> atomicReference = new AtomicReference<>(null);
+    private final AtomicReference<T> atomicReference = new AtomicReference<>(null);
 
     /**
      * 构造一个滚动任务执行器
@@ -49,7 +50,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(final Function<ActionBean<T>, T> action) {
-        return new RollingTask(action);
+        return new RollingTask<T>(action);
     }
 
     /**
@@ -61,7 +62,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(final Long maxSubmitTime, final TimeUnit timeUnit, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(maxSubmitTime, timeUnit, 0, action);
+        return new RollingTask<T>(maxSubmitTime, timeUnit, 0, action);
     }
 
     /**
@@ -72,7 +73,7 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 滚动任务执行器实例
      */
     public static <T> RollingTask<T> createRollingTask(Integer maxSubmitQuantity, final Function<ActionBean<T>, T> action) {
-        return new RollingTask(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
+        return new RollingTask<T>(0L, TimeUnit.SECONDS, maxSubmitQuantity, action);
     }
 
     /**
@@ -81,9 +82,10 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @param actionBean 任务
      */
     @Override
-    protected void asyncAction(ActionBean actionBean) {
+    protected int asyncAction(ActionBean actionBean) {
         actionBean.setObj(atomicReference.get());
         this.atomicReference.set((T) action.apply(actionBean));
+        return actionBean.getCurrQuantity();
     }
 
     /**
@@ -93,10 +95,21 @@ public class RollingTask<T> extends AbstarceBaseTask<T> {
      * @return 提交结果
      */
     @Override
-    protected int doOffer(T... objs) {
+    protected void doOffer(AtomicInteger currQuantity, T... objs) {
         CollUtil.newArrayList(objs).forEach(obj -> {
             atomicReference.set((T) obj);
         });
-        return objs.length == 0 ? 1 : objs.length;
+        int count = objs.length == 0 ? 1 : objs.length;
+        currQuantity.addAndGet(count);
+    }
+
+    /**
+     * @param obj
+     * @throws InterruptedException
+     */
+    @Override
+    protected void doOfferBlocking(AtomicInteger currQuantity,T obj) throws InterruptedException {
+        atomicReference.getAndSet((T) obj);
+        currQuantity.incrementAndGet();
     }
 }

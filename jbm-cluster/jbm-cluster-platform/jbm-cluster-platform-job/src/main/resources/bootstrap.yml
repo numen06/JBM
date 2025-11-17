@@ -14,6 +14,18 @@ spring:
       bindings:
         scheduledJob-in-0:
           group: ${spring.application.name}
+          consumer:
+            max-attempts: 3                # ✅ 重试 3 次（含首次）
+            back-off-initial-interval: 1000 # 初始退避 1 秒
+            back-off-multiplier: 2          # 指数退避：1s, 2s, 4s
+            back-off-max-interval: 10000    # 最大间隔 10
+    rabbit:
+      bindings:
+        scheduledJob-in-0:
+          consumer:
+            acknowledge-mode: auto           # auto 模式由 Spring 控制 ACK/NACK
+            auto-bind-dlq: true              # 自动创建 DLQ
+            republish-to-dlq: true           # 失败后转发到 DLQ
   main:
     allow-bean-definition-overriding: true
     #2.6版本后增加循环引用判断

@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.service.impl;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -13,6 +14,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.center.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.center.mapper.BaseAccountMapper;
 import com.jbm.cluster.center.service.BaseAccountService;
+import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -40,6 +42,8 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     private BaseAccountMapper baseAccountMapper;
     @Autowired
     private BaseAccountLogsMapper baseAccountLogsMapper;
+    @Autowired
+    private BaseUserService baseUserService;
 
     /**
      * 根据主键获取账号信息
@@ -74,7 +78,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         queryWrapper.lambda()
                 .eq(BaseAccount::getAccount, account)
                 .eq(BaseAccount::getAccountType, accountType)
-                .eq(BaseAccount::getDomain, domain);
+                .eq(StrUtil.isNotBlank(domain), BaseAccount::getDomain, domain);
         return baseAccountMapper.selectOne(queryWrapper);
 
     }
@@ -286,5 +290,24 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         baseAccountLogsMapper.insert(log);
     }
 
-
+    @Override
+    public BaseUser updateOpenIdByPhone(String openId, String sessionKey, String accountType, String phone) {
+        Assert.notNull(openId, () -> new ServiceException("openId不能为空"));
+        Assert.notNull(sessionKey, () -> new ServiceException("sessionKey不能为空"));
+        Assert.notNull(accountType, () -> new ServiceException("accountType不能为空"));
+        Assert.notNull(phone, () -> new ServiceException("手机号不能为空"));
+        BaseUser baseUser = baseUserService.lambdaQuery().eq(BaseUser::getMobile, phone).one();
+        Assert.notNull(baseUser, () -> new ServiceException("用户信息不存在"));
+        String password = null;
+        if (StrUtil.isEmpty(baseUser.getPassword())) {
+            password = IdUtil.fastSimpleUUID();
+        }
+        BaseAccount baseAccount = this.lambdaQuery().eq(BaseAccount::getUserId, baseUser.getUserId()).eq(BaseAccount::getAccount, accountType).one();
+        if (baseAccount == null) {
+            this.register(baseUser.getUserId(), openId, password, accountType, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
+            baseUser.setUserName(openId);
+            baseUserService.updateById(baseUser);
+        }
+        return baseUser;
+    }
 }

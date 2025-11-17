@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -30,6 +31,8 @@ public class PushMessageResult implements Serializable {
     private Integer level;
     @ApiModelProperty("消息类型")
     private PushMsgType type;
+    @ApiModelProperty("创建时间")
+    private Date createTime;
 //    @ApiModelProperty("扩展字段")
 //    private Map<String, Object> extend;
 

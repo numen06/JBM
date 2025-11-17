@@ -16,6 +16,7 @@ import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
@@ -106,6 +107,23 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username) {
         UserAccount account = baseUserService.login(username);
         return ResultBody.callback(() -> account);
+    }
+
+    @ApiOperation(value = "保存用户信息")
+    @PostMapping("/save")
+    @OperatorLog
+    @Override
+    public ResultBody<BaseUser> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return ResultBody.callback("保存用户信息成功", () -> {
+            validator(masterDataRequsetBody);
+            BaseUser entity = validatorMasterData(masterDataRequsetBody, true);
+            entity = service.saveEntity(entity);
+            BaseUserForm baseUserForm = masterDataRequsetBody.toJavaObject(BaseUserForm.class);
+            if (ObjectUtil.isNotEmpty(baseUserForm.getRoleIds())) {
+                baseRoleService.saveUserRoles(entity.getUserId(), baseUserForm.getRoleIds());
+            }
+            return entity;
+        });
     }
 
     /**
@@ -207,6 +225,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @return
      */
     @ApiOperation(value = "添加系统用户", notes = "添加系统用户")
+    @OperatorLog
     @PostMapping("/add")
     public ResultBody<Long> addUser(
             @RequestParam(value = "userName") String userName,
@@ -433,7 +452,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<UserInfoStatistics> getUserInfoStatistics() {
         return ResultBody.callback(() -> {
             UserInfoStatistics userInfoStatistics = new UserInfoStatistics();
-            List<String> list = StpUtil.searchTokenValue("", -1, 0);
+            List<String> list = StpUtil.searchTokenValue("", -1, 0, true);
             userInfoStatistics.setOnlineUser(new Long(list.size()));
             userInfoStatistics.setUsersTotal(baseUserService.count(new BaseUser()));
             return userInfoStatistics;
@@ -453,4 +472,12 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+    @ApiOperation(value = "小程序登录-更新用户openId信息")
+    @PostMapping("/updateOpenIdByPhone")
+    public ResultBody<BaseUser> updateOpenIdByPhone(@RequestParam(value = "openId") String openId,
+                                                    @RequestParam(value = "sessionKey") String sessionKey,
+                                                    @RequestParam(value = "accountType") String accountType,
+                                                    @RequestParam(value = "phone") String phone) {
+        return ResultBody.callback(() -> baseAccountService.updateOpenIdByPhone(openId, sessionKey, accountType, phone));
+    }
 }

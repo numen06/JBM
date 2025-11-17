@@ -78,5 +78,9 @@ public class QueueConstants {
      */
     public static final String PUSH_MESSAGE_STREAM = "pushMsg-in-0";
 
+    /**
+     * 业务日志通道
+     */
+    public static final String BUSINESS_LOG_STREAM = "businessLog-in-0";
 
 }
