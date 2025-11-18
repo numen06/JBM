@@ -13,6 +13,9 @@ import lombok.Data;
 @ApiModel("流程实例分页查询表单")
 @Data
 public class ProcessInstancePageForm {
+    @ApiModelProperty("流程实例ID，可为空表示查询所有")
+    private String id;
+
     @ApiModelProperty("规则定义ID，可为空表示查询所有")
     private Long ruleDefinitionId;
 

@@ -25,4 +25,12 @@ public interface ProcessInstanceService extends IMasterDataService<ProcessInstan
      * @return 分页数据
      */
     DataPaging<RuleInstanceModel> pageQueryProcessInstances(Long ruleDefinitionId, String status, PageForm pageForm);
+
+    /**
+     * 根据ID查询流程实例（包含关联的规则定义和节点执行信息）
+     *
+     * @param id 流程实例ID
+     * @return 流程实例详情
+     */
+    RuleInstanceModel getProcessInstanceById(String id);
 }

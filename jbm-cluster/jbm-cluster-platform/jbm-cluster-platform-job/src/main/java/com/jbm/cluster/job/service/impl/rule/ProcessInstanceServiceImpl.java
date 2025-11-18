@@ -70,6 +70,15 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
         return new DataPaging<>(ruleInstanceModels, processInstancePageData);
     }
 
+    @Override
+    public RuleInstanceModel getProcessInstanceById(String id) {
+        ProcessInstance processInstance = super.selectById(id);
+        if (processInstance == null) {
+            return null;
+        }
+        return convertToRuleInstanceModel(processInstance);
+    }
+
     /**
      * 将ProcessInstance转换为RuleInstanceModel
      */

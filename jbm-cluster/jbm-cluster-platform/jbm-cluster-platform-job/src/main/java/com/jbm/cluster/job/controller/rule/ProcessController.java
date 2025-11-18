@@ -1,5 +1,6 @@
 package com.jbm.cluster.job.controller.rule;
 
+import cn.hutool.core.lang.Assert;
 import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
 import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
 import com.jbm.cluster.api.form.job.ProcessInstancePageForm;
@@ -32,7 +33,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     private RuleDefinitionService ruleDefinitionService;
 
     @ApiOperation(value = "分页查询流程实例", notes = "分页查询流程实例，包含关联的规则信息和节点执行信息")
-    @PostMapping("/page")
+    @PostMapping("/selectPageList")
     public ResultBody<DataPaging<RuleInstanceModel>> pageQueryProcessInstances(
             @RequestBody(required = false) ProcessInstancePageForm pageForm) {
         try {
@@ -50,6 +51,21 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
                     pageForm.getStatus(),
                     pageForm.getPageForm());
             return ResultBody.success(result, "查询分页列表成功");
+        } catch (Exception e) {
+            return ResultBody.error(e);
+        }
+    }
+
+    @ApiOperation(value = "根据ID查询流程实例", notes = "根据ID查询流程实例详情，包含关联的规则信息和节点执行信息")
+    @PostMapping("/getDetail")
+    public ResultBody<RuleInstanceModel> getProcessInstanceById(@RequestBody(required = false) ProcessInstancePageForm pageForm) {
+        try {
+            Assert.notNull(pageForm.getId(), "流程实例ID不能为空");
+            RuleInstanceModel result = this.service.getProcessInstanceById(pageForm.getId());
+            if (result == null) {
+                return ResultBody.error("流程实例不存在");
+            }
+            return ResultBody.success(result, "查询成功");
         } catch (Exception e) {
             return ResultBody.error(e);
         }
