@@ -1,6 +1,7 @@
 package com.jbm.cluster.job.execute;
 
 import com.jbm.cluster.api.model.job.rule.NodeData;
+import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +32,15 @@ public class HttpNodeExecutor implements NodeExecutor {
             // 构建请求参数
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+
+            //token认证
+            if(nodeData.get("token") != null){
+                //前端有传入就使用输入的token
+                headers.set("Authorization", nodeData.get("token").toString());
+            }else {
+                //使用系统操作人的token
+                headers.set("Authorization", "Bearer " + SecurityUtils.getToken());
+            }
 
             // 替换模板变量
             String requestBody = buildRequestBody(nodeData, inputData);

@@ -76,7 +76,6 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
     private RuleInstanceModel convertToRuleInstanceModel(ProcessInstance processInstance) {
         RuleInstanceModel model = new RuleInstanceModel();
         model.setId(processInstance.getId());
-        model.setRuleId(processInstance.getRuleDefinitionId().toString());
         model.setStatus(processInstance.getStatus());
         model.setInputParams(processInstance.getInputParams());
         model.setOutputParams(processInstance.getOutputParams());
@@ -86,8 +85,10 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
         // 查询对应的RuleDefinition
         RuleDefinition ruleDefinition = ruleDefinitionService.selectById(processInstance.getRuleDefinitionId());
         if (ruleDefinition != null) {
+            model.setRuleId(ruleDefinition.getId());
             model.setRuleName(ruleDefinition.getRuleName());
             model.setRuleCode(ruleDefinition.getRuleCode());
+            model.setRuleContent(ruleDefinition.getRuleContent());
         }
 
         // 查询对应的NodeExecution列表

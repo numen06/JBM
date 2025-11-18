@@ -86,7 +86,7 @@ public class ProcessExecutionEngine {
         ProcessInstance processInstance = processInstanceService.selectById(request.getProcessInstanceId());
         Assert.notNull(processInstance, () -> new ServiceException("流程实例不存在"));
 
-        if (!ProcessStatusEnum.WAITING.getValue().equals(processInstance.getStatus())) {
+        if (!ProcessStatusEnum.WAITING.getCode().equals(processInstance.getStatus())) {
             throw new ServiceException("流程实例不在等待状态");
         }
 
@@ -98,7 +98,7 @@ public class ProcessExecutionEngine {
             throw new ServiceException("未找到对应的触发器");
         }
 
-        trigger.setStatus(ProcessStatusEnum.TRIGGERED.getValue());
+        trigger.setStatus(ProcessStatusEnum.TRIGGERED.getCode());
         trigger.setTriggerData(request.getTriggerData());
         trigger.setTriggeredAt(LocalDateTime.now());
         processTriggerService.saveEntity(trigger);
@@ -132,7 +132,7 @@ public class ProcessExecutionEngine {
                 processInstance.getId(), currentNodeId);
 
         // 更新节点执行记录
-        currentExecution.setStatus(ProcessStatusEnum.COMPLETED.getValue());
+        currentExecution.setStatus(ProcessStatusEnum.COMPLETED.getCode());
         currentExecution.setOutputData(JsonUtils.toJson(triggerData));
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
@@ -164,7 +164,7 @@ public class ProcessExecutionEngine {
             if (result.isWaitingForTrigger()) {
                 // 节点需要等待触发
                 createProcessTrigger(processInstance, currentNode, result);
-                processInstance.setStatus(ProcessStatusEnum.WAITING.getValue());
+                processInstance.setStatus(ProcessStatusEnum.WAITING.getCode());
                 processInstanceService.save(processInstance);
 
                 return createResponse(processInstance, currentNode, result, true);
@@ -175,7 +175,7 @@ public class ProcessExecutionEngine {
                 return executeNextNodes(processInstance, flowData, currentNode, result.getOutputData());
             } else {
                 // 执行失败
-                processInstance.setStatus(ProcessStatusEnum.FAILED.getValue());
+                processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
                 processInstanceService.saveEntity(processInstance);
                 return createResponse(processInstance, currentNode, result, false);
             }
@@ -183,7 +183,7 @@ public class ProcessExecutionEngine {
         } catch (Exception e) {
             // 处理执行异常
             handleNodeExecutionError(nodeExecution, e);
-            processInstance.setStatus(ProcessStatusEnum.FAILED.getValue());
+            processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
             processInstanceService.saveEntity(processInstance);
             throw new ServiceException("节点执行失败: " + e.getMessage(), e);
         }
@@ -200,7 +200,7 @@ public class ProcessExecutionEngine {
 
         if (outgoingEdges.isEmpty()) {
             // 没有后续节点，流程结束
-            processInstance.setStatus(ProcessStatusEnum.COMPLETED.getValue());
+            processInstance.setStatus(ProcessStatusEnum.COMPLETED.getCode());
             processInstance.setOutputParams(JsonUtils.toJson(outputData));
             processInstanceService.saveEntity(processInstance);
 
@@ -218,7 +218,7 @@ public class ProcessExecutionEngine {
 
             if ("end".equals(nextNode.getType())) {
                 // 到达结束节点
-                processInstance.setStatus(ProcessStatusEnum.COMPLETED.getValue());
+                processInstance.setStatus(ProcessStatusEnum.COMPLETED.getCode());
                 processInstance.setOutputParams(JsonUtils.toJson(outputData));
                 processInstanceService.saveEntity(processInstance);
             }
@@ -254,7 +254,7 @@ public class ProcessExecutionEngine {
         ProcessInstance instance = new ProcessInstance();
         instance.setId(UUID.randomUUID().toString());
         instance.setRuleDefinitionId(ruleDefinition.getId());
-        instance.setStatus(ProcessStatusEnum.RUNNING.getValue());
+        instance.setStatus(ProcessStatusEnum.RUNNING.getCode());
         instance.setInputParams(JsonUtils.toJson(request.getInputParams()));
         instance.setCreatedAt(LocalDateTime.now());
         return processInstanceService.saveEntity(instance);
@@ -268,14 +268,14 @@ public class ProcessExecutionEngine {
         execution.setProcessInstanceId(processInstance.getId());
         execution.setNodeId(node.getId());
         execution.setNodeType(node.getType());
-        execution.setStatus(ProcessStatusEnum.RUNNING.getValue());
+        execution.setStatus(ProcessStatusEnum.RUNNING.getCode());
         execution.setInputData(JsonUtils.toJson(inputData));
         execution.setStartedAt(LocalDateTime.now());
         return nodeExecutionService.saveEntity(execution);
     }
 
     private void updateNodeExecution(NodeExecution execution, NodeExecutionResult result) {
-        execution.setStatus(result.isSuccess() ? ProcessStatusEnum.COMPLETED.getValue() : ProcessStatusEnum.FAILED.getValue());
+        execution.setStatus(result.isSuccess() ? ProcessStatusEnum.COMPLETED.getCode() : ProcessStatusEnum.FAILED.getCode());
         execution.setOutputData(JsonUtils.toJson(result.getOutputData()));
         execution.setErrorMessage(result.getErrorMessage());
         execution.setCompletedAt(LocalDateTime.now());
@@ -291,7 +291,7 @@ public class ProcessExecutionEngine {
         trigger.setNodeId(node.getId());
         trigger.setTriggerType(result.getTriggerType());
         trigger.setTriggerKey(result.getTriggerKey());
-        trigger.setStatus(ProcessStatusEnum.WAITING.getValue());
+        trigger.setStatus(ProcessStatusEnum.WAITING.getCode());
         trigger.setCreatedAt(LocalDateTime.now());
         processTriggerService.saveEntity(trigger);
     }
@@ -328,7 +328,7 @@ public class ProcessExecutionEngine {
     }
 
     private void handleNodeExecutionError(NodeExecution execution, Exception e) {
-        execution.setStatus(ProcessStatusEnum.FAILED.getValue());
+        execution.setStatus(ProcessStatusEnum.FAILED.getCode());
         execution.setErrorMessage(e.getMessage());
         execution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(execution);

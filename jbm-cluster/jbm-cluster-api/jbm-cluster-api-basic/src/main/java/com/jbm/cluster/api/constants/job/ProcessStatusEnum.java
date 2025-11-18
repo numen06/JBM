@@ -1,5 +1,8 @@
 package com.jbm.cluster.api.constants.job;
 
+import com.jbm.framework.dictionary.annotation.JbmDicCode;
+import com.jbm.framework.dictionary.annotation.JbmDicType;
+import com.jbm.framework.dictionary.annotation.JbmDicValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -10,61 +13,51 @@ import lombok.Getter;
  * @date 2025/11/17
  */
 @Getter
-@AllArgsConstructor
+@JbmDicType(typeName = "流程状态", value = "process_status")
 public enum ProcessStatusEnum {
 
     /**
      * 等待中
      */
-    WAITING("WAITING", "等待中"),
+    WAITING("等待中"),
 
     /**
      * 运行中
      */
-    RUNNING("RUNNING", "运行中"),
+    RUNNING("运行中"),
 
     /**
      * 已完成
      */
-    COMPLETED("COMPLETED", "已完成"),
+    COMPLETED("已完成"),
 
     /**
      * 已触发
      */
-    TRIGGERED("TRIGGERED", "已触发"),
+    TRIGGERED("已触发"),
 
     /**
      * 已失败
      */
-    FAILED("FAILED", "已失败");
+    FAILED("已失败");
 
     /**
      * 状态值
      */
-    private final String value;
+    @JbmDicCode
+    private  String code;
 
     /**
      * 状态描述
      */
-    private final String description;
+    @JbmDicValue
+    private String name;
 
-    /**
-     * 根据状态值获取枚举
-     *
-     * @param value 状态值
-     * @return 枚举实例，不存在时返回null
-     */
-    public static ProcessStatusEnum getByValue(String value) {
-        if (value == null) {
-            return null;
-        }
-        for (ProcessStatusEnum status : ProcessStatusEnum.values()) {
-            if (status.value.equals(value)) {
-                return status;
-            }
-        }
-        return null;
+    ProcessStatusEnum(String name) {
+        this.code = this.toString();
+        this.name = name;
     }
+
 
     /**
      * 判断是否为成功状态

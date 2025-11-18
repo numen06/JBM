@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.persistence.Lob;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class RuleInstanceModel {
     @ApiModelProperty("实例id")
     private String id;
     @ApiModelProperty("规则id")
-    private String ruleId;
+    private Long ruleId;
     @ApiModelProperty("规则名称")
     private String ruleName;
     @ApiModelProperty("规则编号")
@@ -30,7 +31,8 @@ public class RuleInstanceModel {
 //    @ApiModelProperty("规则状态")
 //    private String ruleStatus;
     @ApiModelProperty("规则内容")
-    private FlowData ruleContent;
+    @Lob
+    private String ruleContent;
     @ApiModelProperty("实例状态")
     private String status;
     @ApiModelProperty("实例输入参数")

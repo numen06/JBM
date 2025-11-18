@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * @date 2025/10/22 15:42
  */
 @RestController
-@RequestMapping("/api/process")
+@RequestMapping("/process")
 public class ProcessController extends MasterDataCollection<ProcessInstance, ProcessInstanceService> {
     @Autowired
     private ProcessExecutionEngine processExecutionEngine;
@@ -32,7 +32,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     private RuleDefinitionService ruleDefinitionService;
 
     @ApiOperation(value = "分页查询流程实例", notes = "分页查询流程实例，包含关联的规则信息和节点执行信息")
-    @PostMapping("/pageQueryProcessInstances")
+    @PostMapping("/page")
     public ResultBody<DataPaging<RuleInstanceModel>> pageQueryProcessInstances(
             @RequestBody(required = false) ProcessInstancePageForm pageForm) {
         try {
@@ -80,7 +80,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
 
     private ExecuteProcessResponse createErrorResponse(String message) {
         ExecuteProcessResponse response = new ExecuteProcessResponse();
-        response.setStatus(ProcessStatusEnum.FAILED.getValue());
+        response.setStatus(ProcessStatusEnum.FAILED.getCode());
         response.setMessage(message);
         return response;
     }
