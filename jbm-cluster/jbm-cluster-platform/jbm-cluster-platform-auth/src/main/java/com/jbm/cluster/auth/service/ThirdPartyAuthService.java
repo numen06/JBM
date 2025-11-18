@@ -122,7 +122,7 @@ public class ThirdPartyAuthService {
             log.error("[第三方认证] 不支持的认证提供商: {}", provider);
             throw new RuntimeException("Unsupported provider: " + provider);
         }
-        log.debug("[第三方认证] 获取平台配置成功, clientId: {}", platformConfig.getClientId());
+        log.info("[第三方认证] 获取平台配置成功, 配置信息: {}", platformConfig);
 
         // Step 1: 换 access_token
         String tokenUrl = platformConfig.getTokenUrl();
@@ -139,6 +139,7 @@ public class ThirdPartyAuthService {
         Request tokenRequest = new Request.Builder()
                 .url(tokenUrl)
                 .post(body)
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
                 .addHeader("Accept", "application/json")
                 .build();
 
