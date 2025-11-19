@@ -14,6 +14,7 @@ import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -98,9 +99,15 @@ public class SimpleMqttClient {
     private final Map<String, ResponseTopicHandler> responseTopicHandlers = new ConcurrentHashMap<>();
     
     /**
-     * 请求ID生成器
+     * 请求ID生成器（全局唯一，支持高并发）
+     * 使用时间戳 + 序列号确保唯一性
      */
     private final AtomicLong requestIdGenerator = new AtomicLong(0);
+    
+    /**
+     * 上次生成ID时的时间戳（用于检测时间回拨）
+     */
+    private volatile long lastTimestamp = System.currentTimeMillis();
     
     /**
      * 响应 topic 处理器：管理单个响应 topic 的所有请求
@@ -109,6 +116,10 @@ public class SimpleMqttClient {
         private final String responseTopic;
         private final SimpleMqttClient client;
         private final Map<String, PendingRequest> pendingRequests = new ConcurrentHashMap<>();
+        private final Queue<String> pendingOrder = new ConcurrentLinkedQueue<>();
+        private final Set<String> expiredRequestIds = ConcurrentHashMap.newKeySet();
+        private final Queue<String> expiredOrder = new ConcurrentLinkedQueue<>();
+        private static final int MAX_EXPIRED_CACHE = 2048;
         private final ScheduledExecutorService timeoutScheduler;
         private volatile boolean subscribed = false;
         
@@ -148,36 +159,29 @@ public class SimpleMqttClient {
                 // 尝试解析请求ID（如果响应包含请求ID）
                 String requestId = extractRequestId(payload);
                 
-                if (requestId != null && pendingRequests.containsKey(requestId)) {
-                    PendingRequest request = pendingRequests.remove(requestId);
+                if (requestId != null) {
+                    PendingRequest request = removePendingRequest(requestId);
                     if (request != null) {
                         request.complete(payload);
-                        // 取消超时任务
-                        if (request.timeoutFuture != null) {
-                            request.timeoutFuture.cancel(false);
-                        }
+                        cancelTimeout(request);
                         return;
                     }
                 }
                 
-                // 如果没有请求ID或找不到匹配的请求，尝试匹配第一个等待的请求（兼容旧逻辑）
-                if (pendingRequests.isEmpty()) {
-                    log.debug("⚠️ 收到响应但无待处理请求 - Topic: {}", responseTopic);
+                if (requestId != null && isExpired(requestId)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("⚠️ 收到已超时请求的响应，丢弃 - Topic: {}, RequestId: {}", responseTopic, requestId);
+                    }
                     return;
                 }
                 
-                // 如果有多个请求，无法匹配，记录警告
-                if (pendingRequests.size() > 1) {
-                    log.warn("⚠️ 收到响应但无法匹配请求（多个待处理请求且无请求ID）- Topic: {}, 待处理: {}", 
-                            responseTopic, pendingRequests.size());
+                // 如果没有请求ID或找不到匹配的请求，按照队列顺序匹配
+                PendingRequest fallbackRequest = pollNextPendingRequest();
+                if (fallbackRequest != null) {
+                    fallbackRequest.complete(payload);
+                    cancelTimeout(fallbackRequest);
                 } else {
-                    // 只有一个请求，直接匹配
-                    PendingRequest request = pendingRequests.values().iterator().next();
-                    pendingRequests.remove(request.requestId);
-                    request.complete(payload);
-                    if (request.timeoutFuture != null) {
-                        request.timeoutFuture.cancel(false);
-                    }
+                    log.debug("⚠️ 收到响应但无待处理请求 - Topic: {}", responseTopic);
                 }
             } catch (Exception e) {
                 log.error("❌ 处理响应失败 - Topic: {}", responseTopic, e);
@@ -220,13 +224,15 @@ public class SimpleMqttClient {
         public PendingRequest registerRequest(String requestId, long timeoutMs) {
             PendingRequest request = new PendingRequest(requestId, timeoutMs);
             pendingRequests.put(requestId, request);
+            pendingOrder.offer(requestId);
             
             // 设置超时清理
             request.timeoutFuture = timeoutScheduler.schedule(() -> {
-                PendingRequest removed = pendingRequests.remove(requestId);
+                PendingRequest removed = removePendingRequest(requestId);
                 if (removed != null && !removed.isCompleted()) {
                     log.warn("⏰ 请求超时 - RequestId: {}, Topic: {}", requestId, responseTopic);
                     removed.completeExceptionally(new TimeoutException("Request timeout after " + timeoutMs + "ms"));
+                    markRequestExpired(requestId);
                 }
             }, timeoutMs, TimeUnit.MILLISECONDS);
             
@@ -240,6 +246,7 @@ public class SimpleMqttClient {
             timeoutScheduler.shutdown();
             // 取消所有待处理的请求
             for (PendingRequest request : pendingRequests.values()) {
+                pendingOrder.remove(request.getRequestId());
                 if (request.timeoutFuture != null) {
                     request.timeoutFuture.cancel(false);
                 }
@@ -248,6 +255,58 @@ public class SimpleMqttClient {
                 }
             }
             pendingRequests.clear();
+            pendingOrder.clear();
+            expiredRequestIds.clear();
+            expiredOrder.clear();
+        }
+        
+        private PendingRequest removePendingRequest(String requestId) {
+            if (requestId == null) {
+                return null;
+            }
+            PendingRequest request = pendingRequests.remove(requestId);
+            if (request != null) {
+                pendingOrder.remove(requestId);
+            }
+            return request;
+        }
+        
+        private PendingRequest pollNextPendingRequest() {
+            while (true) {
+                String nextId = pendingOrder.poll();
+                if (nextId == null) {
+                    return null;
+                }
+                PendingRequest request = pendingRequests.remove(nextId);
+                if (request != null) {
+                    return request;
+                }
+            }
+        }
+        
+        private void cancelTimeout(PendingRequest request) {
+            if (request.timeoutFuture != null) {
+                request.timeoutFuture.cancel(false);
+            }
+        }
+        
+        private void markRequestExpired(String requestId) {
+            expiredRequestIds.add(requestId);
+            expiredOrder.offer(requestId);
+            trimExpiredCache();
+        }
+        
+        private boolean isExpired(String requestId) {
+            return expiredRequestIds.contains(requestId);
+        }
+        
+        private void trimExpiredCache() {
+            while (expiredOrder.size() > MAX_EXPIRED_CACHE) {
+                String expiredId = expiredOrder.poll();
+                if (expiredId != null) {
+                    expiredRequestIds.remove(expiredId);
+                }
+            }
         }
     }
     
@@ -284,6 +343,10 @@ public class SimpleMqttClient {
         
         public CompletableFuture<String> getFuture() {
             return future;
+        }
+        
+        public String getRequestId() {
+            return requestId;
         }
     }
 
@@ -675,10 +738,27 @@ public class SimpleMqttClient {
     }
     
     /**
-     * 生成请求ID
+     * 生成请求ID（全局唯一，支持高并发和不同地址交叉请求）
+     * 格式：timestamp-sequence，确保在极高并发下也是唯一的
      */
     private String generateRequestId() {
-        return String.valueOf(requestIdGenerator.incrementAndGet());
+        long currentTime = System.currentTimeMillis();
+        long sequence = requestIdGenerator.incrementAndGet();
+        
+        // 如果时间回拨，重置序列号
+        if (currentTime < lastTimestamp) {
+            synchronized (this) {
+                if (currentTime < lastTimestamp) {
+                    requestIdGenerator.set(0);
+                    sequence = requestIdGenerator.incrementAndGet();
+                }
+            }
+        }
+        lastTimestamp = currentTime;
+        
+        // 使用时间戳+序列号确保唯一性，格式：timestamp-sequence
+        // 这样可以支持不同地址的交叉并发请求，每个请求都有全局唯一的ID
+        return currentTime + "-" + sequence;
     }
     
     /**
