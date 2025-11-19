@@ -257,13 +257,13 @@ public class OAuth2ServerController {
         });
     }
 
-    @ApiOperation("第三方登录回调")
+    @ApiOperation("登录回调")
     @GetMapping("/callback")
     public Object callback(
             @RequestParam String code,
             @RequestParam(required = false) String state) throws IOException {
         //在request中默认设置参数设置为code模式
-        log.info("第三方登录回调，code: {}, state: {}", code, state);
+        log.info("登录回调，code: {}, state: {}", code, state);
         // 获取变量
         SaRequest req = SaHolder.getRequest();
         SaResponse res = SaHolder.getResponse();
