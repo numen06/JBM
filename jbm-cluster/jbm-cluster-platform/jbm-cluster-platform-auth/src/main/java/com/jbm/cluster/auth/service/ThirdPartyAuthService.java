@@ -282,9 +282,15 @@ public class ThirdPartyAuthService {
 
         // Step 2: 获取用户信息
         log.info("[第三方认证] Step 2: 开始获取用户信息, userInfoUrl: {}", platformConfig.getUserInfoUrl());
+        //access_token做成参数，通过get请求
+        HttpUrl userInfoUrl = Objects.requireNonNull(HttpUrl.parse(platformConfig.getUserInfoUrl()))
+                .newBuilder()
+                .addQueryParameter("access_token", accessToken)
+                .build();
+
         Request userRequest = new Request.Builder()
-                .url(platformConfig.getUserInfoUrl())
-                .addHeader("Authorization", "Bearer " + accessToken)
+                .url(userInfoUrl)
+                .get()
                 .build();
 
         try (Response userResponse = client.newCall(userRequest).execute()) {
