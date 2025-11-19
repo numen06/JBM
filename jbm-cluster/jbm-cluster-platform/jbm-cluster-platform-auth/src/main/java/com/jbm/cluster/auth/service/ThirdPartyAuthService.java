@@ -110,6 +110,9 @@ public class ThirdPartyAuthService {
                 log.error("[第三方认证] 登出失败, 响应码: {}", response.code());
                 throw new IOException("Unexpected code " + response);
             }
+            if (response.body() != null) {
+                log.info("[第三方认证] 登出成功, 响应: {}", response.body().string());
+            }
         } catch (IOException e) {
             log.error("[第三方认证] 登出失败", e);
         }
