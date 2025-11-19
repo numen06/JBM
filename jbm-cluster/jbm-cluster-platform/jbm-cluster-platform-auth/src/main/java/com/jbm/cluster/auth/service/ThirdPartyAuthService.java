@@ -1,6 +1,7 @@
 package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -12,7 +13,10 @@ import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -52,7 +56,7 @@ public class ThirdPartyAuthService {
             // Install the all-trusting trust manager
             final SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            
+
             // Create an ssl socket factory with our all-trusting manager
             final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
@@ -89,11 +93,11 @@ public class ThirdPartyAuthService {
         if (StrUtil.isEmpty(logoutUrl)) {
             return platformConfig.getLoginUrl();
         }
-        if (StrUtil.isEmpty(loginUser.getThirdToken())){
+        if (StrUtil.isEmpty(loginUser.getThirdToken())) {
             log.info("[第三方认证] 登出失败, 未获取到第三方token");
             return platformConfig.getLoginUrl();
         }
-        log.info("[第三方认证] 登出, logoutUrl: {}, token :{}", logoutUrl , loginUser.getThirdToken());
+        log.info("[第三方认证] 登出, logoutUrl: {}, token :{}", logoutUrl, loginUser.getThirdToken());
         //设置url参数access_token
         HttpUrl.Builder urlBuilder = HttpUrl.parse(logoutUrl).newBuilder();
         urlBuilder.addQueryParameter("access_token", loginUser.getThirdToken());
@@ -113,9 +117,9 @@ public class ThirdPartyAuthService {
         return platformConfig.getLoginUrl();
     }
 
-    public ThirdPartyUser getUserInfoByCode(String code, String provider) {
+    public ThirdPartyUser getUserInfoByCode(String code, String redirectUri, String provider) {
         log.info("[第三方认证] 开始获取用户信息, provider: {}, code: {}", provider, code);
-        
+
         ThirdPartyAuthProperties.PlatformConfig platformConfig = thirdPartyAuthProperties.getPlatforms().get(provider);
         if (platformConfig == null) {
             log.error("[第三方认证] 不支持的认证提供商: {}", provider);
@@ -127,19 +131,19 @@ public class ThirdPartyAuthService {
         String tokenUrl = platformConfig.getTokenUrl();
         log.info("[第三方认证] Step 1: 开始获取access_token, tokenUrl: {}", tokenUrl);
         log.info("[第三方认证] Step 1: 请求参数 - clientId: {}, code: {}", platformConfig.getClientId(), code);
-        
+
         FormBody.Builder bodyBuilder = new FormBody.Builder()
                 .add("client_id", platformConfig.getClientId())
                 .add("client_secret", platformConfig.getClientSecret())
                 .add(SaOAuth2Consts.Param.grant_type, SaOAuth2Consts.GrantType.authorization_code)
                 .add("code", code);
-        
-        // OAuth2规范要求：如果获取授权码时使用了redirect_uri，换取token时也必须提供相同的redirect_uri
-        if (StrUtil.isNotBlank(platformConfig.getRedirectUri())) {
-            bodyBuilder.add("redirect_uri", platformConfig.getRedirectUri());
+
+        //OAuth2规范要求：如果获取授权码时使用了redirect_uri，换取token时也必须提供相同的redirect_uri
+        if (StrUtil.isNotBlank(redirectUri)) {
+            bodyBuilder.add("redirect_uri", redirectUri);
             log.info("[第三方认证] Step 1: 添加redirect_uri参数: {}", platformConfig.getRedirectUri());
         }
-        
+
         RequestBody body = bodyBuilder.build();
 
         //form方式请求
@@ -151,24 +155,24 @@ public class ThirdPartyAuthService {
                 .build();
 
         log.info("[第三方认证] Step 1: 准备发送请求到: {}, 方法: POST", tokenUrl);
-        
+
         String accessToken;
         Response tokenResponse = null;
         try {
             log.info("[第三方认证] Step 1: 开始执行HTTP请求...");
             tokenResponse = client.newCall(tokenRequest).execute();
             log.info("[第三方认证] Step 1: HTTP请求执行完成, 状态码: {}", tokenResponse.code());
-            
+
             String responseBody = Objects.requireNonNull(tokenResponse.body()).string();
             log.info("[第三方认证] Step 1: 响应体长度: {} 字节", responseBody.length());
             log.info("[第三方认证] Step 1: 完整响应体: {}", responseBody);
-            
+
             // 检查响应体是否为空
             if (StrUtil.isBlank(responseBody)) {
                 log.error("[第三方认证] 响应体为空");
                 throw new RuntimeException("Response body is empty");
             }
-            
+
             // 检查响应是否包含错误信息（即使HTTP状态码是200，也可能返回错误JSON）
             JSONObject responseJson;
             try {
@@ -182,15 +186,15 @@ public class ThirdPartyAuthService {
                 String errmsg = responseJson.getString("errmsg");
                 String error = responseJson.getString("error");
                 String errorDescription = responseJson.getString("error_description");
-                log.error("[第三方认证] 获取access_token失败, 错误码: {}, 错误信息: {}, error: {}, error_description: {}", 
+                log.error("[第三方认证] 获取access_token失败, 错误码: {}, 错误信息: {}, error: {}, error_description: {}",
                         errcode, errmsg, error, errorDescription);
                 log.error("[第三方认证] 完整响应体: {}", responseBody);
                 log.error("[第三方认证] 注意: 虽然请求已发送并收到响应, 但code可能未被服务器标记为已使用, 可以重试");
-                throw new RuntimeException(String.format("获取access_token失败: %s - %s", 
-                        errcode != null ? errcode : error, 
+                throw new RuntimeException(String.format("获取access_token失败: %s - %s",
+                        errcode != null ? errcode : error,
                         errmsg != null ? errmsg : errorDescription));
             }
-            
+
             if (!tokenResponse.isSuccessful()) {
                 log.error("[第三方认证] 获取access_token失败, 响应码: {}, 响应体: {}", tokenResponse.code(), responseBody);
                 log.error("[第三方认证] 注意: HTTP状态码异常, code可能未被服务器标记为已使用");
@@ -198,11 +202,11 @@ public class ThirdPartyAuthService {
             }
 
             log.info("[第三方认证] Step 1: access_token响应: {}", responseBody);
-            
+
             // 尝试多种可能的响应格式来获取access_token
             JSONObject tokenJson = responseJson;
             accessToken = null;
-            
+
             // 格式1: {"result": {"access_token": "xxx"}}
             if (tokenJson.get("result") != null) {
                 Object resultObj = tokenJson.get("result");
@@ -211,7 +215,7 @@ public class ThirdPartyAuthService {
                     log.debug("[第三方认证] 从result.access_token获取token");
                 }
             }
-            
+
             // 格式2: {"access_token": "xxx"}
             if (accessToken == null) {
                 accessToken = tokenJson.getString("access_token");
@@ -219,7 +223,7 @@ public class ThirdPartyAuthService {
                     log.debug("[第三方认证] 从access_token获取token");
                 }
             }
-            
+
             // 格式3: {"data": {"access_token": "xxx"}}
             if (accessToken == null && tokenJson.get("data") != null) {
                 Object dataObj = tokenJson.get("data");
@@ -230,7 +234,7 @@ public class ThirdPartyAuthService {
                     }
                 }
             }
-            
+
             // 格式4: {"token": "xxx"} 或 {"token_type": "Bearer", "token": "xxx"}
             if (accessToken == null) {
                 accessToken = tokenJson.getString("token");
@@ -238,12 +242,12 @@ public class ThirdPartyAuthService {
                     log.debug("[第三方认证] 从token获取token");
                 }
             }
-            
+
             if (accessToken == null) {
                 log.error("[第三方认证] 解析access_token失败, 响应体中未找到access_token字段");
                 log.error("[第三方认证] 完整响应体: {}", responseBody);
                 log.error("[第三方认证] 响应体中的所有键: {}", tokenJson.keySet());
-                
+
                 // 尝试输出所有可能包含token的字段值（前100个字符）
                 for (String key : tokenJson.keySet()) {
                     Object value = tokenJson.get(key);
@@ -255,18 +259,18 @@ public class ThirdPartyAuthService {
                         log.error("[第三方认证] 响应字段 - {}: {}", key, valueStr);
                     }
                 }
-                
+
                 throw new RuntimeException("No access token in response. Response body: " + responseBody);
             }
-            log.info("[第三方认证] Step 1: 获取access_token成功, accessToken: {}", 
+            log.info("[第三方认证] Step 1: 获取access_token成功, accessToken: {}",
                     accessToken != null ? accessToken.substring(0, Math.min(20, accessToken.length())) + "..." : "null");
         } catch (IOException e) {
-            log.error("[第三方认证] 获取access_token IO异常, 异常类型: {}, 异常信息: {}", 
+            log.error("[第三方认证] 获取access_token IO异常, 异常类型: {}, 异常信息: {}",
                     e.getClass().getName(), e.getMessage());
             log.error("[第三方认证] 注意: 如果是网络异常导致请求未到达服务器, code可能未被使用, 可以重试", e);
             throw new RuntimeException("Error getting access token: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("[第三方认证] 获取access_token未知异常, 异常类型: {}, 异常信息: {}", 
+            log.error("[第三方认证] 获取access_token未知异常, 异常类型: {}, 异常信息: {}",
                     e.getClass().getName(), e.getMessage(), e);
             throw new RuntimeException("Unexpected error getting access token: " + e.getMessage(), e);
         } finally {
@@ -294,7 +298,7 @@ public class ThirdPartyAuthService {
 
             String responseBody = Objects.requireNonNull(userResponse.body()).string();
             log.debug("[第三方认证] 用户信息响应: {}", responseBody);
-            
+
             JSONObject userJson = JSON.parseObject(responseBody);
             if (userJson.get("result") != null) {
                 userJson = userJson.getJSONObject("result");
@@ -306,16 +310,16 @@ public class ThirdPartyAuthService {
                     .provider(provider)
                     .subjectId(getStringValue(userJson, "id", "openid", "userId", "userid", "sub"))
                     .email(userJson.getString("email"))
-                    .username(getStringValue(userJson,"username","name"))
+                    .username(getStringValue(userJson, "username", "name"))
                     .mobile(userJson.getString("mobile"))
-                    .nickname(getStringValue(userJson, "login", "nick","desc"))
+                    .nickname(getStringValue(userJson, "login", "nick", "desc"))
                     .avatar(userJson.getString("avatar_url"))
                     .build();
-            
-            log.info("[第三方认证] Step 2: 获取用户信息成功, subjectId: {}, username: {}", 
+
+            log.info("[第三方认证] Step 2: 获取用户信息成功, subjectId: {}, username: {}",
                     thirdPartyUser.getSubjectId(), thirdPartyUser.getUsername());
             log.info("[第三方认证] 完成第三方用户信息获取, provider: {}", provider);
-            
+
             return thirdPartyUser;
         } catch (IOException e) {
             log.error("[第三方认证] 获取用户信息异常", e);
