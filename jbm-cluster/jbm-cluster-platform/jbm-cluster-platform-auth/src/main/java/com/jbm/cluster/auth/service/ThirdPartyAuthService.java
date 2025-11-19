@@ -1,7 +1,6 @@
 package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Consts;
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -132,25 +131,23 @@ public class ThirdPartyAuthService {
         log.info("[第三方认证] Step 1: 开始获取access_token, tokenUrl: {}", tokenUrl);
         log.info("[第三方认证] Step 1: 请求参数 - clientId: {}, code: {}", platformConfig.getClientId(), code);
 
-        FormBody.Builder bodyBuilder = new FormBody.Builder()
-                .add("client_id", platformConfig.getClientId())
-                .add("client_secret", platformConfig.getClientSecret())
-                .add(SaOAuth2Consts.Param.grant_type, SaOAuth2Consts.GrantType.authorization_code)
-                .add("code", code);
+        HttpUrl.Builder tokenUrlBuilder = Objects.requireNonNull(HttpUrl.parse(tokenUrl)).newBuilder()
+                .addQueryParameter("client_id", platformConfig.getClientId())
+                .addQueryParameter("client_secret", platformConfig.getClientSecret())
+                .addQueryParameter(SaOAuth2Consts.Param.grant_type, SaOAuth2Consts.GrantType.authorization_code)
+                .addQueryParameter("code", code);
 
         //OAuth2规范要求：如果获取授权码时使用了redirect_uri，换取token时也必须提供相同的redirect_uri
         if (StrUtil.isNotBlank(redirectUri)) {
-            bodyBuilder.add("redirect_uri", redirectUri);
+            tokenUrlBuilder.addQueryParameter("redirect_uri", redirectUri);
             log.info("[第三方认证] Step 1: 添加redirect_uri参数: {}", platformConfig.getRedirectUri());
         }
 
-        RequestBody body = bodyBuilder.build();
+        HttpUrl finalTokenUrl = tokenUrlBuilder.build();
 
-        //form方式请求
         Request tokenRequest = new Request.Builder()
-                .url(tokenUrl)
-                .post(body)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .url(finalTokenUrl)
+                .get()
                 .addHeader("Accept", "application/json")
                 .build();
 
