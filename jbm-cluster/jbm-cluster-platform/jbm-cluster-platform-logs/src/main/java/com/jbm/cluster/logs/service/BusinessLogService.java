@@ -1,9 +1,12 @@
 package com.jbm.cluster.logs.service;
 
 import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageSnapshot;
 import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
+import com.jbm.cluster.api.form.log.InitBusinessLogStageForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -134,5 +137,29 @@ public interface BusinessLogService {
      * @return 日志ID，如果不存在则返回null
      */
     String getLogIdByBusinessId(String businessType, String businessId);
+
+    /**
+     * 初始化业务日志阶段
+     *
+     * @param form 阶段配置
+     * @return 阶段快照
+     */
+    BusinessLogStageSnapshot initStages(InitBusinessLogStageForm form);
+
+    /**
+     * 更新阶段进度
+     *
+     * @param form 更新表单
+     * @return 最新快照
+     */
+    BusinessLogStageSnapshot updateStage(BusinessLogStageUpdateForm form);
+
+    /**
+     * 查询阶段快照
+     *
+     * @param logId 日志ID
+     * @return 阶段快照
+     */
+    BusinessLogStageSnapshot getStageSnapshot(String logId);
 }
 

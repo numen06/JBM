@@ -5,80 +5,76 @@
 
     <!-- 查询条件SQL片段 -->
     <sql id="WHERE_SQL">
-        <if test="logId != null">
-            AND log_id = '${logId}'
+        <if test="logId != null and logId != ''">
+            AND log_id = #{logId}
         </if>
-        <if test="module != null">
-            AND module = '${module}'
+        <if test="module != null and module != ''">
+            AND module = #{module}
         </if>
-        <if test="operation != null">
-            AND operation = '${operation}'
+        <if test="operation != null and operation != ''">
+            AND operation = #{operation}
         </if>
-        <if test="userId != null">
-            AND user_id = '${userId}'
+        <if test="userId != null and userId != ''">
+            AND user_id = #{userId}
         </if>
-        <if test="username != null">
-            AND username like '%${username}%'
+        <if test="username != null and username != ''">
+            AND username like CONCAT('%', #{username}, '%')
         </if>
-        <if test="level != null">
-            AND level = '${level}'
+        <if test="level != null and level != ''">
+            AND level = #{level}
         </if>
-        <if test="traceId != null">
-            AND trace_id = '${traceId}'
+        <if test="traceId != null and traceId != ''">
+            AND trace_id = #{traceId}
         </if>
-        <if test="status != null">
-            AND status = '${status}'
+        <if test="status != null and status != ''">
+            AND status = #{status}
         </if>
-        <if test="keyword != null">
-            AND (content like '%${keyword}%' OR biz_data like '%${keyword}%')
+        <if test="keyword != null and keyword != ''">
+            AND (content like CONCAT('%', #{keyword}, '%') OR biz_data like CONCAT('%', #{keyword}, '%'))
         </if>
-        <if test="beginTime != null">
-            AND create_time &gt;= '${beginTime}'
+        <if test="businessType != null and businessType != ''">
+            AND business_type = #{businessType}
         </if>
-        <if test="endTime != null">
-            AND create_time &lt;= '${endTime}'
+        <if test="businessId != null and businessId != ''">
+            AND business_id = #{businessId}
+        </if>
+        <if test="source != null and source != ''">
+            AND source = #{source}
+        </if>
+        <if test="beginTime != null and beginTime != ''">
+            AND create_time &gt;= #{beginTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND create_time &lt;= #{endTime}
         </if>
     </sql>
 
-    <!-- 查询业务日志列表 -->
-    <!-- 注意：由于日志根据过期时间存储在不同的流中，需要查询所有可能的流 -->
-    <!-- 在每个UNION部分都应用WHERE条件 -->
-    <select id="selectLogs" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
-        SELECT * FROM business_log_7d
-        <where>
-            <include refid="WHERE_SQL"/>
-        </where>
-        UNION ALL
-        SELECT * FROM business_log_30d
-        <where>
-            <include refid="WHERE_SQL"/>
-        </where>
-        UNION ALL
-        SELECT * FROM business_log_90d
-        <where>
-            <include refid="WHERE_SQL"/>
-        </where>
-        UNION ALL
-        SELECT * FROM business_log
+    <select id="queryLogByStream" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
+        SELECT * FROM ${streamName}
+        WHERE log_id = #{logId}
+        ORDER BY update_time ASC
+    </select>
+
+    <select id="queryLogsByStream" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
+        SELECT * FROM ${streamName}
         <where>
             <include refid="WHERE_SQL"/>
         </where>
         ORDER BY update_time DESC
     </select>
 
-    <!-- 根据logId查询业务日志 -->
-    <!-- 注意：由于日志根据过期时间存储在不同的流中（business_log_7d, business_log_30d等），
-         需要查询所有可能的流。OpenObserve可能不支持UNION，所以先尝试查询最常用的流 -->
-    <!-- 如果查询不到，程序会尝试查询其他流 -->
-    <select id="selectByLogId" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
-        SELECT * FROM business_log_30d WHERE log_id = '${logId}'
-        UNION ALL
-        SELECT * FROM business_log_7d WHERE log_id = '${logId}'
-        UNION ALL
-        SELECT * FROM business_log_90d WHERE log_id = '${logId}'
-        UNION ALL
-        SELECT * FROM business_log WHERE log_id = '${logId}'
+    <select id="selectByLogIdFromStream" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
+        SELECT * FROM ${streamName}
+        WHERE log_id = '${logId}'
         ORDER BY update_time ASC
+    </select>
+
+    <select id="selectLogsByStream" resultType="com.jbm.cluster.api.entitys.log.BusinessLog">
+        SELECT * FROM ${streamName}
+        <where>
+            <include refid="WHERE_SQL"/>
+        </where>
+        ORDER BY update_time DESC
     </select>
 
     <!-- 查询过期的业务日志 -->

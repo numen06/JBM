@@ -1,8 +1,11 @@
 package com.jbm.cluster.api.form.log;
 
+import com.jbm.cluster.api.entitys.log.BusinessLogStageItem;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 创建业务日志表单
@@ -59,5 +62,10 @@ public class CreateBusinessLogForm {
     
     @ApiModelProperty(value = "日志来源", notes = "如：order-service、payment-service 等，用于集成模块")
     private String source;
+
+    // ==================== 阶段配置 ====================
+
+    @ApiModelProperty(value = "可选：创建日志时初始化的阶段列表")
+    private List<BusinessLogStageItem> stages;
 }
 

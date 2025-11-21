@@ -1,9 +1,13 @@
 package com.jbm.cluster.logs.controllers;
 
 import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageItem;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageSnapshot;
 import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
+import com.jbm.cluster.api.form.log.InitBusinessLogStageForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -12,16 +16,22 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 业务日志控制器
@@ -404,6 +414,221 @@ public class BusinessLogController {
             return ResultBody.success(logContent, "获取日志成功");
         } catch (Exception e) {
             return ResultBody.error(null, "获取日志失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * SSE实时推送业务日志
+     * 
+     * @param logId 业务日志ID
+     * @param intervalMillis 轮询间隔（毫秒）
+     * @return SseEmitter
+     */
+    @ApiOperation(value = "实时监听业务日志", notes = "使用SSE实时推送指定logId的最新日志行")
+    @GetMapping(value = "/stream/{logId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamBusinessLog(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @ApiParam(value = "轮询间隔（毫秒）", required = false, defaultValue = "2000") @RequestParam(required = false, defaultValue = "2000") Long intervalMillis) {
+
+        long safeInterval = Math.max(500L, Math.min(intervalMillis == null ? 2000L : intervalMillis, 5000L));
+        SseEmitter emitter = new SseEmitter(0L);
+        AtomicBoolean active = new AtomicBoolean(true);
+        long[] stageVersionHolder = new long[]{-1L};
+
+        emitter.onCompletion(() -> active.set(false));
+        emitter.onTimeout(() -> {
+            active.set(false);
+            emitter.complete();
+        });
+        emitter.onError(e -> active.set(false));
+
+        CompletableFuture.runAsync(() -> {
+            int nextLine = 1;
+            boolean logReady = false;
+            try {
+                emitter.send(SseEmitter.event().name("status").data(
+                        buildStatusPayload("CONNECTED", "等待业务日志写入...")));
+                pushStageSnapshot(emitter, logId, stageVersionHolder);
+            } catch (IOException ioException) {
+                emitter.completeWithError(ioException);
+                return;
+            }
+
+            while (active.get()) {
+                try {
+                    Integer totalLines = businessLogService.getLogTotalLines(logId);
+                    if (totalLines == null || totalLines == 0) {
+                        Thread.sleep(safeInterval);
+                        continue;
+                    }
+
+                    if (!logReady) {
+                        logReady = true;
+                        nextLine = Math.max(1, totalLines - 200 + 1);
+                        emitter.send(SseEmitter.event().name("status").data(
+                                buildStatusPayload("READY", "已找到业务日志，开始推送最新内容")));
+                    }
+
+                    List<BusinessLog> newLogs = businessLogService.getLogByLineRange(logId, nextLine, -1);
+                    if (!CollectionUtils.isEmpty(newLogs)) {
+                        emitter.send(SseEmitter.event().name("log").data(newLogs));
+                        BusinessLog last = newLogs.get(newLogs.size() - 1);
+                        Integer lineNumber = last.getLineNumber();
+                        if (lineNumber != null && lineNumber > 0) {
+                            nextLine = lineNumber + 1;
+                        } else {
+                            nextLine += newLogs.size();
+                        }
+                    } else {
+                        Thread.sleep(safeInterval);
+                    }
+                    
+                    pushStageSnapshot(emitter, logId, stageVersionHolder);
+                } catch (Exception e) {
+                    try {
+                        emitter.send(SseEmitter.event().name("error").data(
+                                buildStatusPayload("ERROR", e.getMessage())));
+                    } catch (IOException ignored) {
+                        // ignore
+                    }
+                    emitter.completeWithError(e);
+                    break;
+                }
+            }
+        });
+
+        return emitter;
+    }
+
+    @ApiOperation(value = "初始化业务日志阶段", notes = "配置阶段列表，用于展示阶段进度")
+    @PostMapping("/stage/init")
+    public ResultBody<BusinessLogStageSnapshot> initStages(@Validated @RequestBody InitBusinessLogStageForm form) {
+        try {
+            BusinessLogStageSnapshot snapshot = businessLogService.initStages(form);
+            return ResultBody.success(snapshot, "初始化阶段成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "初始化阶段失败", e);
+        }
+    }
+
+    @ApiOperation(value = "更新业务日志阶段进度", notes = "阶段状态、进度变更时调用")
+    @PostMapping("/stage/update")
+    public ResultBody<BusinessLogStageSnapshot> updateStage(@Validated @RequestBody BusinessLogStageUpdateForm form) {
+        try {
+            BusinessLogStageSnapshot snapshot = businessLogService.updateStage(form);
+            return ResultBody.success(snapshot, "更新阶段成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "更新阶段失败", e);
+        }
+    }
+
+    @ApiOperation(value = "查询业务日志阶段快照", notes = "用于前端初始展示当前阶段状态")
+    @GetMapping("/stage/{logId}")
+    public ResultBody<BusinessLogStageSnapshot> getStageSnapshot(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
+        try {
+            BusinessLogStageSnapshot snapshot = businessLogService.getStageSnapshot(logId);
+            return ResultBody.success(snapshot, "查询阶段快照成功");
+        } catch (Exception e) {
+            return ResultBody.error(null, "查询阶段快照失败", e);
+        }
+    }
+
+    @ApiOperation(value = "创建阶段演示用例", notes = "快速创建一个包含阶段进度的演示日志，便于自测")
+    @PostMapping("/demo/stage")
+    public ResultBody<Map<String, String>> createStageDemo() {
+        try {
+            CreateBusinessLogForm form = new CreateBusinessLogForm();
+            form.setModule("DEMO");
+            form.setOperation("STAGE_DEMO");
+            form.setUsername("demo");
+            form.setUserId("demo");
+            form.setAutoTimestamp(true);
+            form.setContent("演示任务已创建，开始准备阶段...");
+            String logId = businessLogService.createLog(form);
+
+            InitBusinessLogStageForm stageForm = new InitBusinessLogStageForm();
+            stageForm.setLogId(logId);
+            stageForm.setStages(Arrays.asList(
+                    buildStageItem("prepare", "准备资源", 1),
+                    buildStageItem("process", "处理数据", 2),
+                    buildStageItem("archive", "归档输出", 3)
+            ));
+            businessLogService.initStages(stageForm);
+
+            CompletableFuture.runAsync(() -> simulateStageDemo(logId));
+
+            Map<String, String> response = new HashMap<>();
+            response.put("logId", logId);
+            response.put("module", "DEMO");
+            return ResultBody.success(response, "演示任务创建成功，logId已返回");
+        } catch (Exception e) {
+            return ResultBody.error(null, "创建演示任务失败", e);
+        }
+    }
+
+    private Map<String, String> buildStatusPayload(String status, String message) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("status", status);
+        payload.put("message", message);
+        return payload;
+    }
+
+    private BusinessLogStageItem buildStageItem(String code, String name, int order) {
+        BusinessLogStageItem item = new BusinessLogStageItem();
+        item.setStageCode(code);
+        item.setStageName(name);
+        item.setOrderIndex(order);
+        item.setStatus("WAITING");
+        item.setProgress(0);
+        return item;
+    }
+
+    private void simulateStageDemo(String logId) {
+        try {
+            updateDemoStage(logId, "prepare", "RUNNING", 20, "正在准备基础资源", 10);
+            Thread.sleep(1200);
+            updateDemoStage(logId, "prepare", "DONE", 100, "资源已准备完毕", 25);
+
+            updateDemoStage(logId, "process", "RUNNING", 30, "开始批量处理数据", 40);
+            Thread.sleep(1500);
+            updateDemoStage(logId, "process", "RUNNING", 65, "处理中间结果校验完成", 60);
+            Thread.sleep(1500);
+            updateDemoStage(logId, "process", "DONE", 100, "数据处理完成", 75);
+
+            updateDemoStage(logId, "archive", "RUNNING", 30, "开始归档生成报告", 85);
+            Thread.sleep(1200);
+            updateDemoStage(logId, "archive", "DONE", 100, "归档完成，任务结束", 100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void updateDemoStage(String logId, String code, String status, int progress, String message, Integer overall) {
+        BusinessLogStageUpdateForm form = new BusinessLogStageUpdateForm();
+        form.setLogId(logId);
+        form.setStageCode(code);
+        form.setStatus(status);
+        form.setProgress(progress);
+        form.setMessage(message);
+        form.setOverallProgress(overall);
+        businessLogService.updateStage(form);
+    }
+
+    private void pushStageSnapshot(SseEmitter emitter, String logId, long[] versionHolder) {
+        try {
+            BusinessLogStageSnapshot snapshot = businessLogService.getStageSnapshot(logId);
+            if (snapshot == null) {
+                return;
+            }
+            long snapshotVersion = snapshot.getVersion() != null ? snapshot.getVersion() : 0L;
+            if (versionHolder[0] >= snapshotVersion) {
+                return;
+            }
+            emitter.send(SseEmitter.event().name("progress").data(snapshot));
+            versionHolder[0] = snapshotVersion;
+        } catch (IOException ignored) {
+            // ignore push failure
         }
     }
 }

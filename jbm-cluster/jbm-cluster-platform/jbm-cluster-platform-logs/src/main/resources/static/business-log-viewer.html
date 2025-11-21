@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>业务日志实时查看</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color-scheme: light dark;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0d1117;
+            color: #e6edf3;
+        }
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+        .side {
+            width: 320px;
+            background: #161b22;
+            padding: 24px;
+            box-sizing: border-box;
+            border-right: 1px solid #30363d;
+        }
+        .side h1 {
+            font-size: 20px;
+            margin: 0 0 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+        input, textarea, button, select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 8px 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        button {
+            cursor: pointer;
+            background: #238636;
+            border-color: #2ea043;
+            font-weight: 600;
+            transition: background .2s;
+        }
+        button.secondary {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .status-chip.waiting { background: rgba(212,165,5,.15); color: #f2cc60; }
+        .status-chip.ready { background: rgba(46,160,67,.2); color: #56d364; }
+        .status-chip.error { background: rgba(248,81,73,.2); color: #ffa198; }
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .toolbar {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .log-view {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background: #0d1117;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 13px;
+            line-height: 1.5;
+            font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+        }
+        .log-line + .log-line {
+            margin-top: 6px;
+        }
+        .log-line-number {
+            color: #8b949e;
+            margin-right: 8px;
+        }
+        .muted {
+            color: #8b949e;
+            font-size: 13px;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .progress-panel {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
+            background: #0f131a;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .progress-bar {
+            position: relative;
+            height: 8px;
+            border-radius: 999px;
+            background: #21262d;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #2ea043, #3fb950);
+            transition: width .3s ease;
+        }
+        .progress-bar.mini {
+            height: 4px;
+        }
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 6px;
+        }
+        .stage-list {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 220px;
+            overflow: auto;
+        }
+        .stage-card {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            background: #161b22;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stage-card__header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        .stage-card__progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stage-card__progress span {
+            font-size: 12px;
+            color: #c9d1d9;
+        }
+        .stage-card__message {
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .stage-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            text-transform: uppercase;
+        }
+        .stage-status-waiting { color: #f2cc60; border-color: rgba(242,204,96,.4); }
+        .stage-status-running { color: #58a6ff; border-color: rgba(88,166,255,.4); }
+        .stage-status-done { color: #56d364; border-color: rgba(86,211,100,.4); }
+        .stage-status-failed { color: #ffa198; border-color: rgba(255,161,152,.4); }
+        @media (max-width: 900px) {
+            .layout {
+                flex-direction: column;
+            }
+            .side {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #30363d;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="side">
+        <h1>业务日志调试台</h1>
+        <div>
+            <label for="logIdInput">LogId</label>
+            <input id="logIdInput" placeholder="请输入业务日志ID">
+        </div>
+        <div>
+            <label for="intervalInput">刷新间隔 (毫秒)</label>
+            <input id="intervalInput" type="number" min="500" max="5000" value="2000">
+        </div>
+        <button id="connectBtn">开始监听</button>
+        <button id="disconnectBtn" class="secondary" disabled>停止监听</button>
+        <button id="demoBtn" class="secondary">生成阶段演示日志</button>
+
+        <div class="status-chip waiting" id="statusChip">等待连接</div>
+        <p class="muted" id="statusDesc">提交LogId后建立SSE连接，实时获取日志。</p>
+
+        <hr style="border: 1px solid #30363d; margin: 16px 0;">
+        <div class="actions" id="actions" style="display:none">
+            <label for="appendInput">追加日志</label>
+            <textarea id="appendInput" rows="4" placeholder="输入要追加的日志内容"></textarea>
+            <button id="appendBtn">追加到当前日志</button>
+            <button id="downloadRawBtn" class="secondary">下载原始日志</button>
+            <button id="downloadFormattedBtn" class="secondary">下载格式化日志</button>
+        </div>
+    </aside>
+    <section class="content">
+        <div class="toolbar">
+            <div>
+                <strong>实时日志</strong>
+                <span class="muted" id="logSummary">未连接</span>
+            </div>
+            <div class="muted">提示：新日志到达时自动滚动到底部</div>
+        </div>
+        <div class="progress-panel" id="progressPanel">
+            <div class="progress-header">
+                <strong>阶段进度</strong>
+                <span class="muted" id="overallStatusLabel">未初始化</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="overallProgressFill"></div>
+            </div>
+            <div class="progress-meta">
+                <span id="overallProgressText">0%</span>
+                <span id="currentStageText">当前阶段：--</span>
+            </div>
+            <div class="stage-list" id="stageList"></div>
+        </div>
+        <div class="log-view">
+            <pre id="logOutput">尚未开始监听</pre>
+        </div>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const logIdInput = document.getElementById('logIdInput');
+    const intervalInput = document.getElementById('intervalInput');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const demoBtn = document.getElementById('demoBtn');
+    const statusChip = document.getElementById('statusChip');
+    const statusDesc = document.getElementById('statusDesc');
+    const logSummary = document.getElementById('logSummary');
+    const logOutput = document.getElementById('logOutput');
+    const actions = document.getElementById('actions');
+    const appendInput = document.getElementById('appendInput');
+    const appendBtn = document.getElementById('appendBtn');
+    const downloadRawBtn = document.getElementById('downloadRawBtn');
+    const downloadFormattedBtn = document.getElementById('downloadFormattedBtn');
+    const overallProgressFill = document.getElementById('overallProgressFill');
+    const overallProgressText = document.getElementById('overallProgressText');
+    const overallStatusLabel = document.getElementById('overallStatusLabel');
+    const currentStageText = document.getElementById('currentStageText');
+    const stageListEl = document.getElementById('stageList');
+
+    let evtSource = null;
+    let currentLogId = null;
+    let stageSnapshot = null;
+
+    const isSuccess = (json) => json && (json.success === true || json.code === 200);
+
+    const setStatus = (type, message) => {
+        statusChip.className = `status-chip ${type}`;
+        statusChip.textContent = ({
+            waiting: '等待',
+            ready: '就绪',
+            error: '错误'
+        })[type] || '状态';
+        statusDesc.textContent = message;
+    };
+
+    const appendLogLines = (logs) => {
+        const fragment = document.createDocumentFragment();
+        logs.forEach(item => {
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'log-line-number';
+            numberSpan.textContent = `[${item.lineNumber ?? '-'}]`;
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = item.content ?? '';
+            line.appendChild(numberSpan);
+            line.appendChild(contentSpan);
+            fragment.appendChild(line);
+        });
+        if (logOutput.textContent === '尚未开始监听') {
+            logOutput.textContent = '';
+        }
+        logOutput.appendChild(fragment);
+        logOutput.parentElement.scrollTop = logOutput.parentElement.scrollHeight;
+    };
+
+    const buildDownloadUrl = (logId, formatted) => formatted
+        ? `/businessLog/getFullContent/${encodeURIComponent(logId)}?formatted=true`
+        : `/businessLog/get/${encodeURIComponent(logId)}.log?formatted=false`;
+
+    const renderStageSnapshot = (snapshot) => {
+        stageSnapshot = snapshot || null;
+        const progress = snapshot?.overallProgress ?? 0;
+        overallProgressFill.style.width = `${progress}%`;
+        overallProgressText.textContent = `${progress}%`;
+        overallStatusLabel.textContent = snapshot?.overallStatus ?? '未初始化';
+        currentStageText.textContent = snapshot?.activeStageName
+            ? `当前阶段：${snapshot.activeStageName}`
+            : '当前阶段：--';
+
+        stageListEl.innerHTML = '';
+        if (!snapshot || !snapshot.stages || snapshot.stages.length === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'muted';
+            empty.textContent = snapshot ? '阶段已初始化，等待更新' : '尚未初始化阶段';
+            stageListEl.appendChild(empty);
+            return;
+        }
+
+        snapshot.stages.forEach(stage => {
+            const card = document.createElement('div');
+            card.className = 'stage-card';
+
+            const header = document.createElement('div');
+            header.className = 'stage-card__header';
+            const title = document.createElement('strong');
+            title.textContent = `${stage.orderIndex ?? '-'} · ${stage.stageName || stage.stageCode || '阶段'}`;
+            const status = (stage.status || 'WAITING').toUpperCase();
+            const badge = document.createElement('span');
+            badge.className = `stage-status stage-status-${status.toLowerCase()}`;
+            badge.textContent = status;
+            header.appendChild(title);
+            header.appendChild(badge);
+            card.appendChild(header);
+
+            const progressWrap = document.createElement('div');
+            progressWrap.className = 'stage-card__progress';
+            const miniBar = document.createElement('div');
+            miniBar.className = 'progress-bar mini';
+            const miniFill = document.createElement('div');
+            miniFill.className = 'progress-bar-fill';
+            miniFill.style.width = `${stage.progress ?? 0}%`;
+            miniBar.appendChild(miniFill);
+            const progressText = document.createElement('span');
+            progressText.textContent = `${stage.progress ?? 0}%`;
+            progressWrap.appendChild(miniBar);
+            progressWrap.appendChild(progressText);
+            card.appendChild(progressWrap);
+
+            if (stage.message) {
+                const message = document.createElement('div');
+                message.className = 'stage-card__message';
+                message.textContent = stage.message;
+                card.appendChild(message);
+            }
+
+            stageListEl.appendChild(card);
+        });
+    };
+
+    const loadStageSnapshot = async (logId) => {
+        try {
+            const res = await fetch(`/businessLog/stage/${encodeURIComponent(logId)}`);
+            const json = await res.json();
+            if (isSuccess(json)) {
+                renderStageSnapshot(json.data);
+            } else {
+                renderStageSnapshot(null);
+            }
+        } catch (err) {
+            console.warn('加载阶段信息失败', err);
+            renderStageSnapshot(null);
+        }
+    };
+
+    const enableActions = (logId) => {
+        actions.style.display = 'flex';
+        downloadRawBtn.onclick = () => window.open(buildDownloadUrl(logId, false), '_blank');
+        downloadFormattedBtn.onclick = () => window.open(buildDownloadUrl(logId, true), '_blank');
+        appendBtn.onclick = async () => {
+            const content = appendInput.value.trim();
+            if (!content) {
+                setStatus('waiting', '请输入要追加的内容');
+                return;
+            }
+            appendBtn.disabled = true;
+            try {
+                const res = await fetch('/businessLog/append', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ logId, content })
+                });
+                const json = await res.json();
+                if (isSuccess(json)) {
+                    appendInput.value = '';
+                    setStatus('ready', '追加成功，等待刷新...');
+                } else {
+                    throw new Error(json.msg || '追加失败');
+                }
+            } catch (err) {
+                console.error(err);
+                setStatus('error', err.message);
+            } finally {
+                appendBtn.disabled = false;
+            }
+        };
+    };
+
+    const disconnect = () => {
+        if (evtSource) {
+            evtSource.close();
+            evtSource = null;
+        }
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        logSummary.textContent = '已断开';
+    };
+
+    connectBtn.addEventListener('click', () => {
+        const logId = logIdInput.value.trim();
+        if (!logId) {
+            setStatus('waiting', '请输入LogId');
+            return;
+        }
+        const interval = parseInt(intervalInput.value, 10) || 2000;
+        if (evtSource) {
+            evtSource.close();
+        }
+        currentLogId = logId;
+        logOutput.textContent = '';
+        renderStageSnapshot(null);
+        setStatus('waiting', '已连接，等待日志写入...');
+        logSummary.textContent = `监听中：${logId}`;
+        enableActions(logId);
+        loadStageSnapshot(logId);
+
+        const url = `/businessLog/stream/${encodeURIComponent(logId)}?intervalMillis=${interval}`;
+        evtSource = new EventSource(url);
+
+        evtSource.addEventListener('status', (event) => {
+            const data = JSON.parse(event.data);
+            if (data.status === 'READY') {
+                setStatus('ready', data.message);
+            } else {
+                setStatus('waiting', data.message);
+            }
+        });
+
+        evtSource.addEventListener('log', (event) => {
+            const logs = JSON.parse(event.data);
+            appendLogLines(logs);
+        });
+
+        evtSource.addEventListener('progress', (event) => {
+            const snapshot = JSON.parse(event.data);
+            renderStageSnapshot(snapshot);
+        });
+
+        evtSource.onerror = () => {
+            setStatus('error', 'SSE连接异常，尝试重新连接');
+            disconnect();
+        };
+
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+    });
+
+    disconnectBtn.addEventListener('click', () => {
+        disconnect();
+        setStatus('waiting', '已停止监听');
+    });
+
+    demoBtn.addEventListener('click', async () => {
+        demoBtn.disabled = true;
+        setStatus('waiting', '正在创建演示任务...');
+        try {
+            const res = await fetch('/businessLog/demo/stage', { method: 'POST' });
+            const json = await res.json();
+            if (isSuccess(json) && json.data?.logId) {
+                logIdInput.value = json.data.logId;
+                setStatus('ready', '演示任务已创建，正在连接...');
+                connectBtn.click();
+            } else {
+                throw new Error(json.msg || '创建演示任务失败');
+            }
+        } catch (err) {
+            setStatus('error', err.message);
+        } finally {
+            demoBtn.disabled = false;
+        }
+    });
+});
+</script>
+</body>
+</html>
+
