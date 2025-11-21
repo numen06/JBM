@@ -1,7 +1,6 @@
 package com.jbm.cluster.logs.controllers;
 
 import com.jbm.cluster.api.entitys.log.BusinessLog;
-import com.jbm.cluster.api.entitys.log.BusinessLogStageItem;
 import com.jbm.cluster.api.entitys.log.BusinessLogStageSnapshot;
 import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
@@ -9,6 +8,7 @@ import com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.cluster.api.form.log.InitBusinessLogStageForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
+import com.jbm.cluster.logs.service.DemoBusinessLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -534,29 +533,25 @@ public class BusinessLogController {
         }
     }
 
-    @ApiOperation(value = "创建阶段演示用例", notes = "快速创建一个包含阶段进度的演示日志，便于自测")
+    @Autowired
+    private DemoBusinessLogService demoBusinessLogService;
+
+    @ApiOperation(value = "创建阶段演示用例", notes = "快速创建一个演示日志，使用JbmBusinessLogTemplate模拟真实业务场景")
     @PostMapping("/demo/stage")
     public ResultBody<Map<String, String>> createStageDemo() {
         try {
+            // 只创建logId，不进行任何演示逻辑
             CreateBusinessLogForm form = new CreateBusinessLogForm();
             form.setModule("DEMO");
             form.setOperation("STAGE_DEMO");
             form.setUsername("demo");
             form.setUserId("demo");
             form.setAutoTimestamp(true);
-            form.setContent("演示任务已创建，开始准备阶段...");
+            form.setContent("演示任务已创建，开始执行...");
             String logId = businessLogService.createLog(form);
 
-            InitBusinessLogStageForm stageForm = new InitBusinessLogStageForm();
-            stageForm.setLogId(logId);
-            stageForm.setStages(Arrays.asList(
-                    buildStageItem("prepare", "准备资源", 1),
-                    buildStageItem("process", "处理数据", 2),
-                    buildStageItem("archive", "归档输出", 3)
-            ));
-            businessLogService.initStages(stageForm);
-
-            CompletableFuture.runAsync(() -> simulateStageDemo(logId));
+            // 异步执行演示任务，使用JbmBusinessLogTemplate完成整个流程
+            CompletableFuture.runAsync(() -> demoBusinessLogService.executeDemo(logId));
 
             Map<String, String> response = new HashMap<>();
             response.put("logId", logId);
@@ -572,47 +567,6 @@ public class BusinessLogController {
         payload.put("status", status);
         payload.put("message", message);
         return payload;
-    }
-
-    private BusinessLogStageItem buildStageItem(String code, String name, int order) {
-        BusinessLogStageItem item = new BusinessLogStageItem();
-        item.setStageCode(code);
-        item.setStageName(name);
-        item.setOrderIndex(order);
-        item.setStatus("WAITING");
-        item.setProgress(0);
-        return item;
-    }
-
-    private void simulateStageDemo(String logId) {
-        try {
-            updateDemoStage(logId, "prepare", "RUNNING", 20, "正在准备基础资源", 10);
-            Thread.sleep(1200);
-            updateDemoStage(logId, "prepare", "DONE", 100, "资源已准备完毕", 25);
-
-            updateDemoStage(logId, "process", "RUNNING", 30, "开始批量处理数据", 40);
-            Thread.sleep(1500);
-            updateDemoStage(logId, "process", "RUNNING", 65, "处理中间结果校验完成", 60);
-            Thread.sleep(1500);
-            updateDemoStage(logId, "process", "DONE", 100, "数据处理完成", 75);
-
-            updateDemoStage(logId, "archive", "RUNNING", 30, "开始归档生成报告", 85);
-            Thread.sleep(1200);
-            updateDemoStage(logId, "archive", "DONE", 100, "归档完成，任务结束", 100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private void updateDemoStage(String logId, String code, String status, int progress, String message, Integer overall) {
-        BusinessLogStageUpdateForm form = new BusinessLogStageUpdateForm();
-        form.setLogId(logId);
-        form.setStageCode(code);
-        form.setStatus(status);
-        form.setProgress(progress);
-        form.setMessage(message);
-        form.setOverallProgress(overall);
-        businessLogService.updateStage(form);
     }
 
     private void pushStageSnapshot(SseEmitter emitter, String logId, long[] versionHolder) {

@@ -513,12 +513,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/businessLog/demo/stage', { method: 'POST' });
             const json = await res.json();
-            if (isSuccess(json) && json.data?.logId) {
-                logIdInput.value = json.data.logId;
+            if (isSuccess(json) && json.result?.logId) {
+                logIdInput.value = json.result.logId;
                 setStatus('ready', '演示任务已创建，正在连接...');
                 connectBtn.click();
             } else {
-                throw new Error(json.msg || '创建演示任务失败');
+                throw new Error(json.message || '创建演示任务失败');
             }
         } catch (err) {
             setStatus('error', err.message);
