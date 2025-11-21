@@ -107,6 +107,11 @@
         .log-line-number {
             color: #8b949e;
             margin-right: 8px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: default;
         }
         .muted {
             color: #8b949e;
@@ -230,7 +235,16 @@
         </div>
         <button id="connectBtn">开始监听</button>
         <button id="disconnectBtn" class="secondary" disabled>停止监听</button>
-        <button id="demoBtn" class="secondary">生成阶段演示日志</button>
+        <hr style="border: 1px solid #30363d; margin: 16px 0;">
+        <div>
+            <label for="demoModeSelect">演示模式</label>
+            <select id="demoModeSelect">
+                <option value="simple">简单日志收集</option>
+                <option value="single-stage">单阶段进度跟踪</option>
+                <option value="multi-stage" selected>多阶段进度跟踪</option>
+            </select>
+        </div>
+        <button id="demoBtn" class="secondary">生成演示日志</button>
 
         <div class="status-chip waiting" id="statusChip">等待连接</div>
         <p class="muted" id="statusDesc">提交LogId后建立SSE连接，实时获取日志。</p>
@@ -453,6 +467,39 @@ document.addEventListener('DOMContentLoaded', () => {
         logSummary.textContent = '已断开';
     };
 
+    /**
+     * 清理页面状态，准备重新追踪
+     */
+    const clearAndReset = () => {
+        // 断开当前连接
+        if (evtSource) {
+            evtSource.close();
+            evtSource = null;
+        }
+        
+        // 清理日志输出
+        logOutput.textContent = '尚未开始监听';
+        
+        // 重置阶段进度
+        renderStageSnapshot(null);
+        stageSnapshot = null;
+        
+        // 重置状态
+        setStatus('waiting', '等待连接');
+        logSummary.textContent = '未连接';
+        
+        // 重置按钮状态
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        
+        // 清空logId输入框（可选，根据需求决定是否保留）
+        // logIdInput.value = '';
+        
+        // 隐藏操作区域
+        actions.style.display = 'none';
+        currentLogId = null;
+    };
+
     connectBtn.addEventListener('click', () => {
         const logId = logIdInput.value.trim();
         if (!logId) {
@@ -507,16 +554,30 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('waiting', '已停止监听');
     });
 
+    const demoModeSelect = document.getElementById('demoModeSelect');
+    
     demoBtn.addEventListener('click', async () => {
+        // 在生成新演示之前，先清理页面状态
+        clearAndReset();
+        
         demoBtn.disabled = true;
-        setStatus('waiting', '正在创建演示任务...');
+        const mode = demoModeSelect.value;
+        const modeNames = {
+            'simple': '简单日志收集',
+            'single-stage': '单阶段进度跟踪',
+            'multi-stage': '多阶段进度跟踪'
+        };
+        setStatus('waiting', `正在创建${modeNames[mode]}演示任务...`);
         try {
-            const res = await fetch('/businessLog/demo/stage', { method: 'POST' });
+            const res = await fetch(`/businessLog/demo?mode=${encodeURIComponent(mode)}`, { method: 'POST' });
             const json = await res.json();
             if (isSuccess(json) && json.result?.logId) {
                 logIdInput.value = json.result.logId;
                 setStatus('ready', '演示任务已创建，正在连接...');
-                connectBtn.click();
+                // 稍微延迟一下，确保清理完成后再连接
+                setTimeout(() => {
+                    connectBtn.click();
+                }, 100);
             } else {
                 throw new Error(json.message || '创建演示任务失败');
             }

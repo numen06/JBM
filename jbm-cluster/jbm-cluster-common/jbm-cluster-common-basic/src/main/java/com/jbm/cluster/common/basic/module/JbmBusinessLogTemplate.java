@@ -32,8 +32,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -78,7 +79,29 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
     @Value("${business.log.feign.enabled:true}")
     private boolean feignEnabled;
 
+    @Value("${business.log.realtime.enabled:true}")
+    private boolean realtimeEnabled = true;
+
+    @Value("${business.log.realtime.batch.size:10}")
+    private int realtimeBatchSize = 10;
+
+    @Value("${business.log.realtime.batch.interval.ms:500}")
+    private long realtimeBatchIntervalMs = 500;
+
     private final ConcurrentMap<String, Object> traceLocks = new ConcurrentHashMap<>();
+    
+    // 实时推送缓冲：logId -> 事件列表
+    private final ConcurrentMap<String, List<BusinessLogEvent>> realtimeBuffers = new ConcurrentHashMap<>();
+    
+    // 实时推送调度器
+    private final ScheduledExecutorService realtimeScheduler = Executors.newScheduledThreadPool(2, r -> {
+        Thread t = new Thread(r, "business-log-realtime-pusher");
+        t.setDaemon(true);
+        return t;
+    });
+    
+    // 最后推送时间记录
+    private final ConcurrentMap<String, AtomicLong> lastPushTime = new ConcurrentHashMap<>();
 
     public static BusinessLogContext.BusinessLogContextBuilder log() {
         return BusinessLogContext.builder();
@@ -279,6 +302,12 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
                 .build();
 
         persistEvent(event);
+        
+        // 实时推送：写入文件的同时尝试推送
+        if (realtimeEnabled) {
+            tryRealtimePush(event);
+        }
+        
         if (context.isFinished()) {
             flushTraceLog(finalLogId, "mdc-finished");
         }
@@ -316,6 +345,112 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
         }
     }
 
+    /**
+     * 尝试实时推送日志事件
+     * 使用缓冲机制，累积一定数量或时间后批量推送，提高实时性
+     */
+    private void tryRealtimePush(BusinessLogEvent event) {
+        if (event == null || StrUtil.isBlank(event.getLogId())) {
+            return;
+        }
+        
+        String logId = event.getLogId();
+        String lockKey = BusinessLogTraceUtils.traceLockKey(logId);
+        
+        // 添加到缓冲
+        List<BusinessLogEvent> buffer = realtimeBuffers.computeIfAbsent(lockKey, k -> {
+            List<BusinessLogEvent> newBuffer = new CopyOnWriteArrayList<>();
+            // 启动定时推送任务
+            scheduleRealtimePush(lockKey, newBuffer);
+            return newBuffer;
+        });
+        
+        buffer.add(event);
+        lastPushTime.put(lockKey, new AtomicLong(System.currentTimeMillis()));
+        
+        // 如果缓冲达到批量大小，立即推送
+        if (buffer.size() >= realtimeBatchSize) {
+            triggerRealtimePush(lockKey, buffer);
+        }
+    }
+
+    /**
+     * 调度定时推送任务
+     */
+    private void scheduleRealtimePush(String lockKey, List<BusinessLogEvent> buffer) {
+        realtimeScheduler.scheduleWithFixedDelay(() -> {
+            AtomicLong lastTime = lastPushTime.get(lockKey);
+            if (lastTime != null && !buffer.isEmpty()) {
+                long elapsed = System.currentTimeMillis() - lastTime.get();
+                if (elapsed >= realtimeBatchIntervalMs) {
+                    triggerRealtimePush(lockKey, buffer);
+                }
+            }
+        }, realtimeBatchIntervalMs, realtimeBatchIntervalMs, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 触发实时推送
+     */
+    private void triggerRealtimePush(String lockKey, List<BusinessLogEvent> buffer) {
+        if (buffer.isEmpty()) {
+            return;
+        }
+        
+        // 复制缓冲并清空
+        List<BusinessLogEvent> eventsToPush = new ArrayList<>(buffer);
+        buffer.clear();
+        
+        // 异步推送
+        realtimeScheduler.execute(() -> {
+            try {
+                // 解析阶段信息
+                List<BusinessLogEvent> allEvents = new ArrayList<>();
+                for (BusinessLogEvent event : eventsToPush) {
+                    allEvents.add(event);
+                    // 解析阶段信息
+                    if (event.getContent() != null && event.getContent().contains("[STAGE:")) {
+                        List<BusinessLogEvent> stageEvents = parseStageEvents(event);
+                        if (!stageEvents.isEmpty()) {
+                            String trimmedContent = StrUtil.trim(event.getContent());
+                            boolean isOnlyStage = trimmedContent.startsWith("[STAGE:") && trimmedContent.endsWith("]");
+                            if (isOnlyStage) {
+                                // 只包含阶段信息，不添加原始事件
+                                allEvents.remove(event);
+                            }
+                            allEvents.addAll(stageEvents);
+                        }
+                    }
+                }
+                
+                // 尝试推送
+                boolean success = trySendViaStream(allEvents);
+                if (!success) {
+                    success = trySendViaFeign(allEvents);
+                }
+                
+                if (success) {
+                    // 推送成功，记录已推送的时间戳，flush时可以跳过
+                    log.debug("实时推送成功: logId={}, events={}", 
+                            eventsToPush.get(0).getLogId(), allEvents.size());
+                } else {
+                    // 推送失败，将事件重新加入缓冲，等待下次推送或flush
+                    synchronized (buffer) {
+                        buffer.addAll(eventsToPush);
+                    }
+                    log.warn("实时推送失败，事件已重新加入缓冲: logId={}", 
+                            eventsToPush.get(0).getLogId());
+                }
+            } catch (Exception e) {
+                log.error("实时推送异常: lockKey={}", lockKey, e);
+                // 推送异常，将事件重新加入缓冲
+                synchronized (buffer) {
+                    buffer.addAll(eventsToPush);
+                }
+            }
+        });
+    }
+
     private void flushTraceLog(String logId, String trigger) {
         if (StrUtil.isBlank(logId)) {
             return;
@@ -330,6 +465,29 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
         }
         String lockKey = stripExtension(traceFile.getFileName().toString());
         Object lock = traceLocks.computeIfAbsent(lockKey, key -> new Object());
+        
+        // 检查实时推送缓冲，如果有未推送的事件，先尝试推送缓冲中的事件
+        List<BusinessLogEvent> bufferedEvents = realtimeBuffers.get(lockKey);
+        if (bufferedEvents != null && !bufferedEvents.isEmpty()) {
+            synchronized (bufferedEvents) {
+                if (!bufferedEvents.isEmpty()) {
+                    List<BusinessLogEvent> eventsToPush = new ArrayList<>(bufferedEvents);
+                    bufferedEvents.clear();
+                    log.debug("flush时发现缓冲中有未推送事件，先推送缓冲: logId={}, events={}", 
+                            lockKey, eventsToPush.size());
+                    // 尝试推送缓冲中的事件
+                    boolean bufferedSuccess = trySendViaStream(eventsToPush);
+                    if (!bufferedSuccess) {
+                        bufferedSuccess = trySendViaFeign(eventsToPush);
+                    }
+                    if (!bufferedSuccess) {
+                        // 缓冲推送失败，将事件重新加入缓冲，等待文件推送
+                        bufferedEvents.addAll(eventsToPush);
+                    }
+                }
+            }
+        }
+        
         Path uploading = null;
         synchronized (lock) {
             try {
@@ -359,6 +517,9 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
             log.error("重放业务日志文件失败: {}", uploading, e);
         } finally {
             handleUploadCompletion(traceFile, uploading, lockKey, success, trigger, lock);
+            // 清理实时推送相关资源
+            realtimeBuffers.remove(lockKey);
+            lastPushTime.remove(lockKey);
         }
     }
 

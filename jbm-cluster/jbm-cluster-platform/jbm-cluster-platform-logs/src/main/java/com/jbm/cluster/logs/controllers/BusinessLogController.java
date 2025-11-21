@@ -14,6 +14,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -44,6 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @author wesley
  */
+@Slf4j
 @Api(tags = "业务日志接口")
 @RestController
 @RequestMapping("/businessLog")
@@ -80,45 +82,13 @@ public class BusinessLogController {
      * 追加日志内容
      * 根据logId追加新的日志内容
      * 
-     * 支持两种调用方式：
-     * 1. 传递完整的 AppendBusinessLogForm 对象
-     * 2. 通过路径参数 logId + 请求体 content（Feign 客户端使用）
-     * 
      * @param form 追加日志表单
      * @return 是否追加成功
      */
-    @ApiOperation(value = "追加日志内容", notes = "根据logId追加新的日志内容")
+    @ApiOperation(value = "追加日志内容", notes = "根据logId追加新的日志内容，传递完整的AppendBusinessLogForm对象")
     @PostMapping("/append")
     public ResultBody<Boolean> appendLog(@Validated @RequestBody AppendBusinessLogForm form) {
         try {
-            boolean success = businessLogService.appendLog(form);
-            if (success) {
-                return ResultBody.success(true, "追加日志成功");
-            } else {
-                return ResultBody.error(false, "追加日志失败");
-            }
-        } catch (Exception e) {
-            return ResultBody.error(false, "追加日志失败", e);
-        }
-    }
-    
-    /**
-     * 追加日志内容（简化版，供 Feign 客户端使用）
-     * 
-     * @param logId 日志ID
-     * @param content 日志内容
-     * @return 是否追加成功
-     */
-    @ApiOperation(value = "追加日志内容（简化版）", notes = "供Feign客户端使用的简化接口")
-    @PostMapping("/append/{logId}")
-    public ResultBody<Boolean> appendLogSimple(
-            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
-            @RequestBody String content) {
-        try {
-            AppendBusinessLogForm form = new AppendBusinessLogForm();
-            form.setLogId(logId);
-            form.setContent(content);
-            
             boolean success = businessLogService.appendLog(form);
             return ResultBody.success(success, success ? "追加日志成功" : "追加日志失败");
         } catch (Exception e) {
@@ -127,97 +97,72 @@ public class BusinessLogController {
     }
     
     /**
-     * 查询业务日志（多行格式）
-     * 返回该logId的所有日志记录，每条记录独立显示
+     * 追加日志内容（简化版，供 Feign 客户端使用）
+     * 通过路径参数 logId + 请求体 content
      * 
-     * @param logId 业务日志ID
-     * @return 日志记录列表
+     * @param logId 日志ID
+     * @param content 日志内容
+     * @return 是否追加成功
      */
-    @ApiOperation(value = "查询业务日志（多行格式）", notes = "返回指定logId的所有日志记录")
-    @GetMapping("/getMultiLine/{logId}")
-    public ResultBody<List<BusinessLog>> getLogMultiLine(
-            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
+    @ApiOperation(value = "追加日志内容（简化版）", notes = "供Feign客户端使用的简化接口，通过路径参数logId+字符串content")
+    @PostMapping("/append/{logId}")
+    public ResultBody<Boolean> appendLogSimple(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @RequestBody String content) {
         try {
-            List<BusinessLog> logs = businessLogService.getLogByIdMultiLine(logId);
-            return ResultBody.success(logs, "查询业务日志成功");
+            AppendBusinessLogForm form = new AppendBusinessLogForm();
+            form.setLogId(logId);
+            form.setContent(content);
+            return appendLog(form);
         } catch (Exception e) {
-            return ResultBody.error(null, "查询业务日志失败", e);
+            return ResultBody.error(false, "追加日志失败", e);
         }
     }
     
     /**
-     * 查询业务日志（整个文件格式）
-     * 返回该logId的所有日志内容拼接成一个完整文本
+     * 统一查询业务日志接口
+     * 通过format参数控制返回格式：
+     * - multiline: 返回多行格式（List<BusinessLog>）
+     * - full: 返回完整内容（String，JSON格式）
+     * - range: 按行号范围查询（需要startLine和endLine参数）
      * 
      * @param logId 业务日志ID
-     * @return 完整的日志内容
+     * @param format 返回格式：multiline（多行格式）、full（完整内容）、range（行号范围），默认为multiline
+     * @param formatted 是否格式化（仅当format=full时有效，true: 添加头部信息和行号，false: 仅返回原始日志内容）
+     * @param startLine 起始行号（从1开始，仅当format=range时有效）
+     * @param endLine 结束行号（-1表示到最后一行，仅当format=range时有效）
+     * @return 根据format返回不同格式的数据
      */
-    @ApiOperation(value = "查询业务日志（整个文件格式）", notes = "返回指定logId的所有日志拼接成的完整内容")
-    @GetMapping("/getFullContent/{logId}")
-    public ResultBody<String> getLogFullContent(
+    @ApiOperation(value = "查询业务日志（统一接口）", notes = "通过format参数控制返回格式：multiline（多行格式）、full（完整内容）、range（行号范围）")
+    @GetMapping("/get/{logId}")
+    public ResultBody<?> getLog(
             @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
-            @ApiParam(value = "是否格式化（true: 添加头部信息和行号，false: 仅返回原始日志内容）", required = false) 
-            @RequestParam(required = false, defaultValue = "true") Boolean formatted) {
+            @ApiParam(value = "返回格式：multiline（多行格式）、full（完整内容）、range（行号范围）", required = false) 
+            @RequestParam(required = false, defaultValue = "multiline") String format,
+            @ApiParam(value = "是否格式化（仅当format=full时有效）", required = false) 
+            @RequestParam(required = false, defaultValue = "true") Boolean formatted,
+            @ApiParam(value = "起始行号（仅当format=range时有效，从1开始）", required = false) 
+            @RequestParam(required = false, defaultValue = "1") Integer startLine,
+            @ApiParam(value = "结束行号（仅当format=range时有效，-1表示到最后一行）", required = false) 
+            @RequestParam(required = false, defaultValue = "-1") Integer endLine) {
         try {
-            String content = businessLogService.getLogByIdFullContent(logId, formatted);
-            return ResultBody.success(content, "查询业务日志成功");
+            switch (format.toLowerCase()) {
+                case "full":
+                    String content = businessLogService.getLogByIdFullContent(logId, formatted);
+                    return ResultBody.success(content, "查询业务日志成功");
+                case "range":
+                    List<BusinessLog> rangeLogs = businessLogService.getLogByLineRange(logId, startLine, endLine);
+                    return ResultBody.success(rangeLogs, "查询业务日志成功");
+                case "multiline":
+                default:
+                    List<BusinessLog> logs = businessLogService.getLogByIdMultiLine(logId);
+                    return ResultBody.success(logs, "查询业务日志成功");
+            }
         } catch (Exception e) {
             return ResultBody.error(null, "查询业务日志失败", e);
         }
     }
 
-
-    @ApiOperation(value = "查询业务日志（整个文件格式）", notes = "返回指定logId的所有日志拼接成的完整内容，用于浏览器预览。默认返回原始格式（不格式化）")
-    @GetMapping("/get/{logId}.log")
-    public void getLog(
-            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
-            @ApiParam(value = "是否格式化（true: 添加头部信息和行号，false: 仅返回原始日志内容）", required = false) 
-            @RequestParam(required = false, defaultValue = "false") Boolean formatted,
-            HttpServletResponse response) throws IOException {
-        try {
-            // 获取日志内容（预览接口默认不格式化，返回原始日志）
-            String logContent = businessLogService.getLogByIdFullContent(logId, formatted);
-            
-            // 设置响应头，确保浏览器正确显示换行
-            response.setContentType("text/plain; charset=utf-8");
-            response.setCharacterEncoding("UTF-8");
-            response.setHeader("Content-Disposition", "inline; filename=\"" + 
-                    java.net.URLEncoder.encode(logId  + ".log", "UTF-8") + "\"");
-            
-            // 写入日志内容
-            PrintWriter writer = response.getWriter();
-            writer.write(logContent);
-            writer.flush();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType("text/plain; charset=utf-8");
-            response.getWriter().write("获取日志失败: " + e.getMessage());
-        }
-    }
-    
-    
-    /**
-     * 按行号范围查询业务日志（类似tail -n功能）
-     * 
-     * @param logId 业务日志ID
-     * @param startLine 起始行号（从1开始）
-     * @param endLine 结束行号（-1表示到最后一行）
-     * @return 日志列表
-     */
-    @ApiOperation(value = "按行号范围查询业务日志", notes = "类似tail -n功能，返回指定行号范围的日志")
-    @GetMapping("/getByLineRange/{logId}")
-    public ResultBody<List<BusinessLog>> getLogByLineRange(
-            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
-            @ApiParam(value = "起始行号（从1开始）", required = false) @RequestParam(required = false, defaultValue = "1") Integer startLine,
-            @ApiParam(value = "结束行号（-1表示到最后一行）", required = false) @RequestParam(required = false, defaultValue = "-1") Integer endLine) {
-        try {
-            List<BusinessLog> logs = businessLogService.getLogByLineRange(logId, startLine, endLine);
-            return ResultBody.success(logs, "查询业务日志成功");
-        } catch (Exception e) {
-            return ResultBody.error(null, "查询业务日志失败", e);
-        }
-    }
-    
     /**
      * 获取日志总行数
      * 
@@ -225,7 +170,7 @@ public class BusinessLogController {
      * @return 总行数
      */
     @ApiOperation(value = "获取日志总行数", notes = "返回指定logId的日志总行数")
-    @GetMapping("/getTotalLines/{logId}")
+    @GetMapping("/get/{logId}/lines")
     public ResultBody<Integer> getLogTotalLines(
             @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId) {
         try {
@@ -233,6 +178,39 @@ public class BusinessLogController {
             return ResultBody.success(totalLines, "获取总行数成功");
         } catch (Exception e) {
             return ResultBody.error(0, "获取总行数失败", e);
+        }
+    }
+
+    /**
+     * 浏览器预览日志文件（直接返回文本格式）
+     * 用于浏览器直接打开.log文件
+     * 
+     * @param logId 业务日志ID
+     * @param formatted 是否格式化（true: 添加头部信息和行号，false: 仅返回原始日志内容）
+     * @param response HTTP响应
+     */
+    @ApiOperation(value = "浏览器预览日志文件", notes = "返回指定logId的日志内容，用于浏览器直接预览。默认返回原始格式（不格式化）")
+    @GetMapping("/get/{logId}.log")
+    public void getLogFile(
+            @ApiParam(value = "业务日志ID", required = true) @PathVariable String logId,
+            @ApiParam(value = "是否格式化（true: 添加头部信息和行号，false: 仅返回原始日志内容）", required = false) 
+            @RequestParam(required = false, defaultValue = "false") Boolean formatted,
+            HttpServletResponse response) throws IOException {
+        try {
+            String logContent = businessLogService.getLogByIdFullContent(logId, formatted);
+            
+            response.setContentType("text/plain; charset=utf-8");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition", "inline; filename=\"" + 
+                    java.net.URLEncoder.encode(logId + ".log", "UTF-8") + "\"");
+            
+            PrintWriter writer = response.getWriter();
+            writer.write(logContent);
+            writer.flush();
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("text/plain; charset=utf-8");
+            response.getWriter().write("获取日志失败: " + e.getMessage());
         }
     }
     
@@ -449,7 +427,13 @@ public class BusinessLogController {
                         buildStatusPayload("CONNECTED", "等待业务日志写入...")));
                 pushStageSnapshot(emitter, logId, stageVersionHolder);
             } catch (IOException ioException) {
-                emitter.completeWithError(ioException);
+                log.debug("SSE连接已断开: logId={}", logId);
+                active.set(false);
+                try {
+                    emitter.complete();
+                } catch (Exception ignored) {
+                    // ignore
+                }
                 return;
             }
 
@@ -464,13 +448,25 @@ public class BusinessLogController {
                     if (!logReady) {
                         logReady = true;
                         nextLine = Math.max(1, totalLines - 200 + 1);
-                        emitter.send(SseEmitter.event().name("status").data(
-                                buildStatusPayload("READY", "已找到业务日志，开始推送最新内容")));
+                        try {
+                            emitter.send(SseEmitter.event().name("status").data(
+                                    buildStatusPayload("READY", "已找到业务日志，开始推送最新内容")));
+                        } catch (IOException e) {
+                            log.debug("SSE连接已断开: logId={}", logId);
+                            active.set(false);
+                            break;
+                        }
                     }
 
                     List<BusinessLog> newLogs = businessLogService.getLogByLineRange(logId, nextLine, -1);
                     if (!CollectionUtils.isEmpty(newLogs)) {
-                        emitter.send(SseEmitter.event().name("log").data(newLogs));
+                        try {
+                            emitter.send(SseEmitter.event().name("log").data(newLogs));
+                        } catch (IOException e) {
+                            log.debug("SSE连接已断开: logId={}", logId);
+                            active.set(false);
+                            break;
+                        }
                         BusinessLog last = newLogs.get(newLogs.size() - 1);
                         Integer lineNumber = last.getLineNumber();
                         if (lineNumber != null && lineNumber > 0) {
@@ -483,15 +479,45 @@ public class BusinessLogController {
                     }
                     
                     pushStageSnapshot(emitter, logId, stageVersionHolder);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.debug("SSE轮询被中断: logId={}", logId);
+                    active.set(false);
+                    break;
                 } catch (Exception e) {
+                    log.error("SSE推送异常: logId={}", logId, e);
                     try {
                         emitter.send(SseEmitter.event().name("error").data(
                                 buildStatusPayload("ERROR", e.getMessage())));
-                    } catch (IOException ignored) {
-                        // ignore
+                    } catch (IOException ioException) {
+                        log.debug("SSE连接已断开，无法发送错误消息: logId={}", logId);
+                        active.set(false);
+                        break;
                     }
-                    emitter.completeWithError(e);
-                    break;
+                    // 对于业务异常，不立即关闭连接，继续尝试
+                    try {
+                        Thread.sleep(safeInterval);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        active.set(false);
+                        break;
+                    }
+                }
+            }
+            
+            // 优雅关闭连接
+            try {
+                if (active.get()) {
+                    emitter.send(SseEmitter.event().name("status").data(
+                            buildStatusPayload("CLOSED", "连接已关闭")));
+                }
+            } catch (Exception ignored) {
+                // ignore
+            } finally {
+                try {
+                    emitter.complete();
+                } catch (Exception ignored) {
+                    // ignore
                 }
             }
         });
@@ -536,30 +562,63 @@ public class BusinessLogController {
     @Autowired
     private DemoBusinessLogService demoBusinessLogService;
 
-    @ApiOperation(value = "创建阶段演示用例", notes = "快速创建一个演示日志，使用JbmBusinessLogTemplate模拟真实业务场景")
-    @PostMapping("/demo/stage")
-    public ResultBody<Map<String, String>> createStageDemo() {
+    /**
+     * 创建演示用例
+     * 快速创建一个演示日志，使用JbmBusinessLogTemplate模拟真实业务场景
+     * 
+     * @param mode 演示模式：simple（简单日志）、single-stage（单阶段进度跟踪）、multi-stage（多阶段进度跟踪）
+     * @return 返回生成的logId
+     */
+    @ApiOperation(value = "创建演示用例", notes = "快速创建一个演示日志，支持三种模式：simple（简单日志）、single-stage（单阶段进度跟踪）、multi-stage（多阶段进度跟踪）")
+    @PostMapping("/demo")
+    public ResultBody<Map<String, String>> createDemo(
+            @ApiParam(value = "演示模式：simple（简单日志）、single-stage（单阶段进度跟踪）、multi-stage（多阶段进度跟踪）", required = false) 
+            @RequestParam(required = false, defaultValue = "multi-stage") String mode) {
         try {
-            // 只创建logId，不进行任何演示逻辑
             CreateBusinessLogForm form = new CreateBusinessLogForm();
             form.setModule("DEMO");
-            form.setOperation("STAGE_DEMO");
+            form.setOperation("DEMO_" + mode.toUpperCase());
             form.setUsername("demo");
             form.setUserId("demo");
             form.setAutoTimestamp(true);
-            form.setContent("演示任务已创建，开始执行...");
+            
             String logId = businessLogService.createLog(form);
 
-            // 异步执行演示任务，使用JbmBusinessLogTemplate完成整个流程
-            CompletableFuture.runAsync(() -> demoBusinessLogService.executeDemo(logId));
+            // 根据模式异步执行不同的演示任务
+            CompletableFuture.runAsync(() -> {
+                switch (mode.toLowerCase()) {
+                    case "simple":
+                        demoBusinessLogService.executeSimpleDemo(logId);
+                        break;
+                    case "single-stage":
+                        demoBusinessLogService.executeSingleStageDemo(logId);
+                        break;
+                    case "multi-stage":
+                    default:
+                        demoBusinessLogService.executeMultiStageDemo(logId);
+                        break;
+                }
+            });
 
             Map<String, String> response = new HashMap<>();
             response.put("logId", logId);
             response.put("module", "DEMO");
+            response.put("mode", mode);
             return ResultBody.success(response, "演示任务创建成功，logId已返回");
         } catch (Exception e) {
             return ResultBody.error(null, "创建演示任务失败", e);
         }
+    }
+    
+    /**
+     * 创建阶段演示用例（兼容旧接口）
+     * 
+     * @return 返回生成的logId
+     */
+    @ApiOperation(value = "创建阶段演示用例（兼容接口）", notes = "快速创建一个多阶段演示日志，使用JbmBusinessLogTemplate模拟真实业务场景")
+    @PostMapping("/demo/stage")
+    public ResultBody<Map<String, String>> createStageDemo() {
+        return createDemo("multi-stage");
     }
 
     private Map<String, String> buildStatusPayload(String status, String message) {
@@ -581,8 +640,12 @@ public class BusinessLogController {
             }
             emitter.send(SseEmitter.event().name("progress").data(snapshot));
             versionHolder[0] = snapshotVersion;
-        } catch (IOException ignored) {
-            // ignore push failure
+        } catch (IOException e) {
+            // 连接已断开，忽略推送失败
+            log.debug("推送阶段快照时连接已断开: logId={}", logId);
+        } catch (Exception e) {
+            // 其他异常记录日志但不中断主流程
+            log.warn("推送阶段快照异常: logId={}", logId, e);
         }
     }
 }

@@ -16,15 +16,13 @@ import org.springframework.stereotype.Service;
 public class DemoBusinessLogService {
 
     /**
-     * 执行演示任务
-     * 模拟一个真实的数据导入处理流程
-     * 使用JbmBusinessLogTemplate记录日志，完全模拟真实使用情况
+     * 执行简单日志演示（模式1：最简单的日志收集）
+     * 只记录普通日志，不涉及阶段跟踪
      * 
      * @param logId 业务日志ID
      */
-    public void executeDemo(String logId) {
+    public void executeSimpleDemo(String logId) {
         try {
-            // 使用JbmBusinessLogTemplate的withLogContext方式，确保整个流程在同一个日志上下文中
             JbmBusinessLogTemplate.withLogContext(builder -> {
                 builder.logId(logId)
                         .businessId(logId)
@@ -34,7 +32,102 @@ public class DemoBusinessLogService {
                         .autoTimestamp(true);
             }, () -> {
                 try {
-                    // 初始化阶段（使用静态方法生成格式化的字符串）
+                    log.info("=== 简单日志演示开始 ===");
+                    log.info("开始执行任务...");
+                    Thread.sleep(500);
+                    
+                    log.info("步骤1：初始化系统配置");
+                    Thread.sleep(400);
+                    
+                    log.info("步骤2：加载数据文件");
+                    Thread.sleep(500);
+                    
+                    log.info("步骤3：处理业务逻辑");
+                    Thread.sleep(600);
+                    
+                    log.info("步骤4：保存处理结果");
+                    Thread.sleep(400);
+                    
+                    log.info("=== 任务执行完成 ===");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("演示任务被中断", e);
+                } catch (Exception e) {
+                    log.error("演示任务执行异常", e);
+                }
+            });
+        } catch (Exception e) {
+            log.error("演示任务执行失败，logId={}", logId, e);
+        }
+    }
+
+    /**
+     * 执行单阶段进度跟踪演示（模式2：单阶段进度跟踪）
+     * 只有一个阶段，展示进度百分比
+     * 
+     * @param logId 业务日志ID
+     */
+    public void executeSingleStageDemo(String logId) {
+        try {
+            JbmBusinessLogTemplate.withLogContext(builder -> {
+                builder.logId(logId)
+                        .businessId(logId)
+                        .businessType("DEMO")
+                        .source("business-log-demo")
+                        .expireDays(7)
+                        .autoTimestamp(true);
+            }, () -> {
+                try {
+                    // 初始化单个阶段
+                    log.info(JbmBusinessLogTemplate.stageInit("process,数据处理,1"));
+                    
+                    log.info("开始处理数据...");
+                    Thread.sleep(500);
+                    
+                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 20, "读取数据文件", 20));
+                    Thread.sleep(600);
+                    
+                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 40, "数据校验中...", 40));
+                    Thread.sleep(700);
+                    
+                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 60, "开始处理业务逻辑", 60));
+                    Thread.sleep(800);
+                    
+                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 80, "保存处理结果", 80));
+                    Thread.sleep(600);
+                    
+                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "DONE", 100, "数据处理完成，共处理1000条记录", 100));
+                    log.info("任务执行完成");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("演示任务被中断", e);
+                } catch (Exception e) {
+                    log.error("演示任务执行异常", e);
+                }
+            });
+        } catch (Exception e) {
+            log.error("演示任务执行失败，logId={}", logId, e);
+        }
+    }
+
+    /**
+     * 执行多阶段进度跟踪演示（模式3：复杂的多阶段进度跟踪）
+     * 多个阶段，每个阶段有独立的进度，同时有整体进度
+     * 
+     * @param logId 业务日志ID
+     */
+    public void executeMultiStageDemo(String logId) {
+        try {
+            JbmBusinessLogTemplate.withLogContext(builder -> {
+                builder.logId(logId)
+                        .businessId(logId)
+                        .businessType("DEMO")
+                        .source("business-log-demo")
+                        .expireDays(7)
+                        .autoTimestamp(true);
+            }, () -> {
+                try {
+                    // 初始化多个阶段
                     log.info(JbmBusinessLogTemplate.stageInit("prepare,准备资源,1;process,处理数据,2;archive,归档输出,3"));
                     
                     // 阶段1：准备资源
