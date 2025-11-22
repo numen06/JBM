@@ -83,7 +83,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
 
     @ApiOperation(value = "导出菜单JSON文件")
     @GetMapping("/exportMenu")
-    public void exportMenu(@RequestParam(required = false) Long appId,HttpServletResponse response ) throws IOException {
+    public void exportMenu(@RequestParam(required = false) Long appId, HttpServletResponse response) throws IOException {
         String fileName = "menus.json";
         List<BaseMenu> list = new ArrayList<>();
         BaseMenu baseMenu = new BaseMenu();
@@ -93,10 +93,33 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
         } else {
             list = baseResourceMenuService.findAllList(baseMenu);
         }
+        
+        // 清理不需要导出的字段，保留业务字段
+        List<BaseMenu> exportList = new ArrayList<>();
+        for (BaseMenu menu : list) {
+            BaseMenu exportMenu = new BaseMenu();
+            exportMenu.setMenuId(menu.getMenuId()); // 保留ID用于parentId映射
+            exportMenu.setMenuCode(menu.getMenuCode());
+            exportMenu.setMenuName(menu.getMenuName());
+            exportMenu.setIcon(menu.getIcon());
+            exportMenu.setParentId(menu.getParentId());
+            exportMenu.setScheme(menu.getScheme());
+            exportMenu.setPath(menu.getPath());
+            exportMenu.setTarget(menu.getTarget());
+            exportMenu.setPriority(menu.getPriority());
+            exportMenu.setMenuDesc(menu.getMenuDesc());
+            exportMenu.setStatus(menu.getStatus());
+            exportMenu.setIsPersist(menu.getIsPersist());
+            exportMenu.setServiceId(menu.getServiceId());
+            exportMenu.setAppId(menu.getAppId());
+            // 不导出createTime和updateTime，这些会在导入时自动生成
+            exportList.add(exportMenu);
+        }
+        
         //将list写入response作为JSON导出
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         WebUtils.setFileDownloadHeader(response, fileName);
-        byte[] jsonBytes = JSON.toJSONBytes(list);
+        byte[] jsonBytes = JSON.toJSONBytes(exportList);
 
         // 写入响应输出流
         response.getOutputStream().write(jsonBytes);
@@ -108,14 +131,22 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
     public ResultBody<String> importMenu(@RequestParam(value = "file", required = false) MultipartFile file) {
         return ResultBody.callback(() -> {
             try {
+                if (file == null || file.isEmpty()) {
+                    throw new ServiceException("请选择要导入的文件");
+                }
+                
                 // 读取文件内容
                 String jsonContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+                
+                if (ObjectUtil.isEmpty(jsonContent)) {
+                    throw new ServiceException("导入文件内容为空");
+                }
                 
                 // 解析JSON为菜单列表
                 List<BaseMenu> menus = JSON.parseArray(jsonContent, BaseMenu.class);
                 
                 if (menus == null || menus.isEmpty()) {
-                    throw new com.jbm.framework.exceptions.ServiceException("导入文件内容为空或格式错误");
+                    throw new ServiceException("导入文件内容为空或格式错误");
                 }
                 
                 // 批量导入菜单
@@ -125,8 +156,10 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
                 jbmClusterTemplate.refreshGateway();
                 
                 return String.format("成功导入 %d 个菜单", successCount);
+            } catch (ServiceException e) {
+                throw e;
             } catch (Exception e) {
-                throw ServiceException.of(e, "导入菜单失败");
+                throw ServiceException.of(e, "导入菜单失败: " + e.getMessage());
             }
         });
     }

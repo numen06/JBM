@@ -11,6 +11,7 @@ import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.center.mapper.BaseMenuMapper;
 import com.jbm.cluster.center.service.BaseActionService;
+import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -23,8 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -43,6 +45,9 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
 
     @Autowired
     private BaseActionService baseActionService;
+
+    @Autowired
+    private BaseAppService baseAppService;
 
     @Value("${spring.application.name}")
     private String DEFAULT_SERVICE_ID;
@@ -256,38 +261,153 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     }
 
     /**
+     * 根据menuCode查询菜单
+     *
+     * @param menuCode
+     * @return
+     */
+    @Override
+    public BaseMenu getMenuByCode(String menuCode) {
+        if (StrUtil.isEmpty(menuCode)) {
+            return null;
+        }
+        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseMenu::getMenuCode, menuCode);
+        List<BaseMenu> list = baseMenuMapper.selectList(queryWrapper);
+        return CollUtil.getFirst(list);
+    }
+
+    /**
      * 批量导入菜单
+     * 使用menuCode作为判断依据，因为不同系统已经添加了各自的菜单
      *
      * @param menus
      * @return
      */
     @Override
     public int importMenus(List<BaseMenu> menus) {
+        if (CollUtil.isEmpty(menus)) {
+            return 0;
+        }
+        
         int successCount = 0;
         int updateCount = 0;
         int insertCount = 0;
         
+        // 先按优先级排序，确保父菜单先处理
+        menus.sort((m1, m2) -> {
+            int p1 = m1.getPriority() != null ? m1.getPriority() : 0;
+            int p2 = m2.getPriority() != null ? m2.getPriority() : 0;
+            return Integer.compare(p1, p2);
+        });
+        
+        // 建立旧menuId到menuCode的映射（用于处理parentId）
+        // 导入的JSON中parentId是旧的menuId，我们需要找到对应的menuCode
+        Map<Long, String> oldMenuIdToCodeMapping = new HashMap<>();
+        for (BaseMenu menu : menus) {
+            if (menu.getMenuId() != null && StrUtil.isNotEmpty(menu.getMenuCode())) {
+                oldMenuIdToCodeMapping.put(menu.getMenuId(), menu.getMenuCode());
+            }
+        }
+        
+        // 建立menuCode到新menuId的映射（用于处理parentId）
+        Map<String, Long> menuCodeToIdMapping = new HashMap<>();
+        // 保存每个导入菜单的最终ID和原始parentId（用于第二遍更新parentId）
+        Map<BaseMenu, Long> menuFinalIdMap = new HashMap<>();
+        Map<BaseMenu, Long> menuOldParentIdMap = new HashMap<>();
+        
         for (BaseMenu importMenu : menus) {
             try {
-                // 根据path和appId查询是否已存在
-                BaseMenu existingMenu = getMenuByPathAndAppId(importMenu.getPath(), importMenu.getAppId());
+                // 验证menuCode不能为空
+                if (StrUtil.isEmpty(importMenu.getMenuCode())) {
+                    log.warn("跳过菜单导入，menuCode为空: {}", importMenu.getMenuName());
+                    continue;
+                }
                 
+                // 验证appId是否存在（如果appId不为null）
+                if (ObjectUtil.isNotEmpty(importMenu.getAppId())) {
+                    com.jbm.cluster.api.entitys.basic.BaseApp app = baseAppService.getAppInfo(importMenu.getAppId());
+                    if (app == null) {
+                        log.warn("跳过菜单导入，系统中不存在appId: {}, 菜单: {} [menuCode: {}]", 
+                            importMenu.getAppId(), importMenu.getMenuName(), importMenu.getMenuCode());
+                        continue;
+                    }
+                }
+                
+                // 保存原始的parentId（导入JSON中的旧menuId）
+                Long oldParentId = importMenu.getParentId();
+                
+                // 根据menuCode查询是否已存在
+                BaseMenu existingMenu = getMenuByCode(importMenu.getMenuCode());
+                
+                Long finalMenuId;
                 if (existingMenu != null) {
                     // 已存在，使用现有的menuId进行更新
                     importMenu.setMenuId(existingMenu.getMenuId());
-                    baseMenuMapper.updateById(importMenu);
+                    // 临时清空parentId，避免引用不存在的ID，后续会重新设置
+                    importMenu.setParentId(null);
+                    // 使用saveEntity方法，确保业务逻辑完整执行
+                    this.saveEntity(importMenu);
+                    finalMenuId = existingMenu.getMenuId();
                     updateCount++;
-                    log.info("更新菜单: {} - {}", importMenu.getMenuName(), importMenu.getPath());
+                    log.info("更新菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
                 } else {
                     // 不存在，清空menuId进行新增
                     importMenu.setMenuId(null);
-                    baseMenuMapper.insert(importMenu);
+                    // 临时清空parentId，避免引用不存在的ID，后续会重新设置
+                    importMenu.setParentId(null);
+                    // 使用saveEntity方法，确保业务逻辑完整执行
+                    this.saveEntity(importMenu);
+                    finalMenuId = importMenu.getMenuId();
                     insertCount++;
-                    log.info("新增菜单: {} - {}", importMenu.getMenuName(), importMenu.getPath());
+                    log.info("新增菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
                 }
+                
+                // 建立menuCode到menuId的映射关系
+                menuCodeToIdMapping.put(importMenu.getMenuCode(), finalMenuId);
+                
+                // 保存菜单的最终ID和原始parentId
+                menuFinalIdMap.put(importMenu, finalMenuId);
+                if (oldParentId != null && oldParentId > 0) {
+                    menuOldParentIdMap.put(importMenu, oldParentId);
+                }
+                
                 successCount++;
             } catch (Exception e) {
-                log.error("导入菜单失败: {} - {}, 错误: {}", importMenu.getMenuName(), importMenu.getPath(), e.getMessage(), e);
+                log.error("导入菜单失败: {} [menuCode: {}], 错误: {}", 
+                    importMenu.getMenuName(), importMenu.getMenuCode(), e.getMessage(), e);
+            }
+        }
+        
+        // 第二遍：更新parentId映射关系（基于menuCode）
+        for (Map.Entry<BaseMenu, Long> entry : menuFinalIdMap.entrySet()) {
+            BaseMenu importMenu = entry.getKey();
+            Long finalMenuId = entry.getValue();
+            
+            Long oldParentId = menuOldParentIdMap.get(importMenu);
+            if (oldParentId != null && oldParentId > 0) {
+                // 通过旧parentId找到对应的menuCode
+                String parentCode = oldMenuIdToCodeMapping.get(oldParentId);
+                if (StrUtil.isNotEmpty(parentCode)) {
+                    // 通过parentCode查找对应的新menuId
+                    Long newParentId = menuCodeToIdMapping.get(parentCode);
+                    if (newParentId != null) {
+                        // 需要更新parentId
+                        BaseMenu menuToUpdate = getMenu(finalMenuId);
+                        if (menuToUpdate != null && !newParentId.equals(menuToUpdate.getParentId())) {
+                            menuToUpdate.setParentId(newParentId);
+                            this.saveEntity(menuToUpdate);
+                            log.info("更新菜单parentId: {} [menuCode: {}] -> {} [menuCode: {}]", 
+                                finalMenuId, importMenu.getMenuCode(), newParentId, parentCode);
+                        }
+                    } else {
+                        log.warn("未找到父菜单menuCode: {}, 菜单: {} [menuCode: {}]", 
+                            parentCode, importMenu.getMenuName(), importMenu.getMenuCode());
+                    }
+                } else {
+                    log.warn("未找到父菜单的menuCode，oldParentId: {}, 菜单: {} [menuCode: {}]", 
+                        oldParentId, importMenu.getMenuName(), importMenu.getMenuCode());
+                }
             }
         }
         
