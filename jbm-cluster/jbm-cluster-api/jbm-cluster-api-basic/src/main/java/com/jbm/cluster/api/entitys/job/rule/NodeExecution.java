@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 @ApiModel("节点执行记录")
 public class NodeExecution extends MasterDataEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ApiModelProperty("节点执行记录id")
     private String id;
 
