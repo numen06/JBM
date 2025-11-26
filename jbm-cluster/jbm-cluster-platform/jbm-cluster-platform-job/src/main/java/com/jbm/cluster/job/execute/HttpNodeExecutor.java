@@ -43,8 +43,8 @@ public class HttpNodeExecutor implements NodeExecutor {
             }
 
             // 替换模板变量
-            String requestBody = buildRequestBody(nodeData, inputData);
-
+            //String requestBody = buildRequestBody(nodeData, inputData);
+            String requestBody = (String)nodeData.get("requestBody");
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
 
             // 执行HTTP请求
@@ -65,7 +65,7 @@ public class HttpNodeExecutor implements NodeExecutor {
 
     private String buildRequestBody(Map<String, Object> nodeData, Map<String, Object> inputData) {
         // 实现模板变量替换逻辑
-        String template = (String) nodeData.get("requestBody");
+        String template = (String)nodeData.get("requestBody") ;
         if (template == null) {
             return "";
         }

@@ -6,6 +6,7 @@ import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
 import com.jbm.cluster.api.form.job.ProcessInstancePageForm;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessRequest;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessResponse;
+import com.jbm.cluster.api.model.job.rule.ExecuteProcessByJsonRequest;
 import com.jbm.cluster.api.model.job.rule.RuleInstanceModel;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
@@ -58,7 +59,8 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
 
     @ApiOperation(value = "根据ID查询流程实例", notes = "根据ID查询流程实例详情，包含关联的规则信息和节点执行信息")
     @PostMapping("/getDetail")
-    public ResultBody<RuleInstanceModel> getProcessInstanceById(@RequestBody(required = false) ProcessInstancePageForm pageForm) {
+    public ResultBody<RuleInstanceModel> getProcessInstanceById(
+            @RequestBody(required = false) ProcessInstancePageForm pageForm) {
         try {
             Assert.notNull(pageForm.getId(), "流程实例ID不能为空");
             RuleInstanceModel result = this.service.getProcessInstanceById(pageForm.getId());
@@ -76,6 +78,19 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     public ResponseEntity<ExecuteProcessResponse> executeProcess(@RequestBody ExecuteProcessRequest request) {
         try {
             ExecuteProcessResponse response = processExecutionEngine.executeProcess(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    createErrorResponse(e.getMessage()));
+        }
+    }
+
+    @ApiOperation(value = "执行流程JSON", notes = "直接传入流程JSON和输入参数执行流程，不使用本地规则定义")
+    @PostMapping("/executeByJson")
+    public ResponseEntity<ExecuteProcessResponse> executeProcessByJson(
+            @RequestBody ExecuteProcessByJsonRequest request) {
+        try {
+            ExecuteProcessResponse response = processExecutionEngine.executeProcessByJson(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(

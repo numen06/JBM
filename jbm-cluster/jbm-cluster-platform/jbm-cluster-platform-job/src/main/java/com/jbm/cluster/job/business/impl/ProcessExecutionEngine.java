@@ -62,7 +62,7 @@ public class ProcessExecutionEngine {
     public ExecuteProcessResponse executeProcess(ExecuteProcessRequest request) {
         try {
             RuleDefinition ruleDefinition = ruleDefinitionService.selectById(request.getRuleDefinitionId());
-            Assert.notNull(ruleDefinition,() -> new ServiceException("流程定义不存在"));
+            Assert.notNull(ruleDefinition, () -> new ServiceException("流程定义不存在"));
 
             // 创建流程实例
             ProcessInstance processInstance = createProcessInstance(ruleDefinition, request);
@@ -75,6 +75,36 @@ public class ProcessExecutionEngine {
 
         } catch (Exception e) {
             log.error("执行流程失败", e);
+            throw new ServiceException("流程执行失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 直接执行流程JSON（不使用本地规则定义）
+     */
+    public ExecuteProcessResponse executeProcessByJson(ExecuteProcessByJsonRequest request) {
+        try {
+            Assert.notBlank(request.getRuleContent(), () -> new ServiceException("流程定义JSON不能为空"));
+            Assert.notNull(request.getInputParams(), () -> new ServiceException("输入参数不能为空"));
+
+            // 根据输入参数创建流程实例
+            ProcessInstance processInstance = new ProcessInstance();
+            processInstance.setId(request.getProcessInstanceId() != null ? request.getProcessInstanceId()
+                    : UUID.randomUUID().toString());
+            processInstance.setRuleDefinitionId(null); // 直接执行流程不需要引用定义ID
+            processInstance.setStatus(ProcessStatusEnum.RUNNING.getCode());
+            processInstance.setInputParams(JsonUtils.toJson(request.getInputParams()));
+            processInstance.setCreatedAt(LocalDateTime.now());
+            processInstanceService.saveEntity(processInstance);
+
+            // 会客流程数据
+            FlowData flowData = parseFlowData(request.getRuleContent());
+
+            // 开始执行
+            return executeFromStart(processInstance, flowData, request.getInputParams());
+
+        } catch (Exception e) {
+            log.error("直接执行流程JSON失败", e);
             throw new ServiceException("流程执行失败: " + e.getMessage());
         }
     }
@@ -105,15 +135,14 @@ public class ProcessExecutionEngine {
 
         // 继续执行
         FlowData flowData = parseFlowData(
-                ruleDefinitionService.selectById(processInstance.getRuleDefinitionId()).getRuleContent()
-        );
+                ruleDefinitionService.selectById(processInstance.getRuleDefinitionId()).getRuleContent());
 
         return continueExecution(processInstance, flowData, request.getTriggerNodeId(), request.getTriggerData());
     }
 
     private ExecuteProcessResponse executeFromStart(ProcessInstance processInstance,
-                                                    FlowData flowData,
-                                                    Map<String, Object> inputParams) {
+            FlowData flowData,
+            Map<String, Object> inputParams) {
         // 找到开始节点
         NodeData startNode = flowData.getNodes().stream()
                 .filter(node -> "start".equals(node.getType()))
@@ -124,9 +153,9 @@ public class ProcessExecutionEngine {
     }
 
     private ExecuteProcessResponse continueExecution(ProcessInstance processInstance,
-                                                     FlowData flowData,
-                                                     String currentNodeId,
-                                                     String triggerData) {
+            FlowData flowData,
+            String currentNodeId,
+            String triggerData) {
         NodeData currentNode = findNodeById(flowData, currentNodeId);
         NodeExecution currentExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
                 processInstance.getId(), currentNodeId);
@@ -137,7 +166,7 @@ public class ProcessExecutionEngine {
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
 
-        //triggerData 转map
+        // triggerData 转map
         Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
 
         // 继续执行后续节点
@@ -145,9 +174,9 @@ public class ProcessExecutionEngine {
     }
 
     private ExecuteProcessResponse executeNode(ProcessInstance processInstance,
-                                               FlowData flowData,
-                                               NodeData currentNode,
-                                               Map<String, Object> inputData) {
+            FlowData flowData,
+            NodeData currentNode,
+            Map<String, Object> inputData) {
         // 创建节点执行记录
         NodeExecution nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
 
@@ -190,9 +219,9 @@ public class ProcessExecutionEngine {
     }
 
     private ExecuteProcessResponse executeNextNodes(ProcessInstance processInstance,
-                                                    FlowData flowData,
-                                                    NodeData currentNode,
-                                                    Map<String, Object> outputData) {
+            FlowData flowData,
+            NodeData currentNode,
+            Map<String, Object> outputData) {
         // 找到当前节点的所有出边
         List<EdgeData> outgoingEdges = flowData.getEdges().stream()
                 .filter(edge -> currentNode.getId().equals(edge.getSource()))
@@ -228,10 +257,10 @@ public class ProcessExecutionEngine {
     }
 
     private ExecuteProcessResponse executeConditionNode(ProcessInstance processInstance,
-                                                        FlowData flowData,
-                                                        NodeData conditionNode,
-                                                        Map<String, Object> inputData,
-                                                        List<EdgeData> outgoingEdges) {
+            FlowData flowData,
+            NodeData conditionNode,
+            Map<String, Object> inputData,
+            List<EdgeData> outgoingEdges) {
         // 使用Drools规则引擎判断分支
         String ruleName = droolsRuleEngine.evaluateCondition(conditionNode, inputData);
 
@@ -261,8 +290,8 @@ public class ProcessExecutionEngine {
     }
 
     private NodeExecution createNodeExecution(ProcessInstance processInstance,
-                                              NodeData node,
-                                              Map<String, Object> inputData) {
+            NodeData node,
+            Map<String, Object> inputData) {
         NodeExecution execution = new NodeExecution();
         execution.setId(UUID.randomUUID().toString());
         execution.setProcessInstanceId(processInstance.getId());
@@ -275,7 +304,8 @@ public class ProcessExecutionEngine {
     }
 
     private void updateNodeExecution(NodeExecution execution, NodeExecutionResult result) {
-        execution.setStatus(result.isSuccess() ? ProcessStatusEnum.COMPLETED.getCode() : ProcessStatusEnum.FAILED.getCode());
+        execution.setStatus(
+                result.isSuccess() ? ProcessStatusEnum.COMPLETED.getCode() : ProcessStatusEnum.FAILED.getCode());
         execution.setOutputData(JsonUtils.toJson(result.getOutputData()));
         execution.setErrorMessage(result.getErrorMessage());
         execution.setCompletedAt(LocalDateTime.now());
@@ -283,8 +313,8 @@ public class ProcessExecutionEngine {
     }
 
     private void createProcessTrigger(ProcessInstance processInstance,
-                                      NodeData node,
-                                      NodeExecutionResult result) {
+            NodeData node,
+            NodeExecutionResult result) {
         ProcessTrigger trigger = new ProcessTrigger();
         trigger.setId(UUID.randomUUID().toString());
         trigger.setProcessInstanceId(processInstance.getId());
@@ -308,9 +338,9 @@ public class ProcessExecutionEngine {
     }
 
     private ExecuteProcessResponse createResponse(ProcessInstance processInstance,
-                                                  NodeData currentNode,
-                                                  NodeExecutionResult result,
-                                                  boolean waiting) {
+            NodeData currentNode,
+            NodeExecutionResult result,
+            boolean waiting) {
         ExecuteProcessResponse response = new ExecuteProcessResponse();
         response.setProcessInstanceId(processInstance.getId());
         response.setStatus(processInstance.getStatus());
