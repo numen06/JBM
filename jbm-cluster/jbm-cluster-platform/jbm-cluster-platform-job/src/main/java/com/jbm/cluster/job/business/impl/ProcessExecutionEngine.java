@@ -92,12 +92,15 @@ public class ProcessExecutionEngine {
             processInstance.setId(request.getProcessInstanceId() != null ? request.getProcessInstanceId()
                     : UUID.randomUUID().toString());
             processInstance.setRuleDefinitionId(null); // 直接执行流程不需要引用定义ID
+            // 设置ruleName和ruleContent
+            processInstance.setRuleName(request.getRuleName());
+            processInstance.setRuleContent(request.getRuleContent());
             processInstance.setStatus(ProcessStatusEnum.RUNNING.getCode());
             processInstance.setInputParams(JsonUtils.toJson(request.getInputParams()));
             processInstance.setCreatedAt(LocalDateTime.now());
             processInstanceService.saveEntity(processInstance);
 
-            // 会客流程数据
+            // 解析流程数据
             FlowData flowData = parseFlowData(request.getRuleContent());
 
             // 开始执行
@@ -283,6 +286,9 @@ public class ProcessExecutionEngine {
         ProcessInstance instance = new ProcessInstance();
         instance.setId(UUID.randomUUID().toString());
         instance.setRuleDefinitionId(ruleDefinition.getId());
+        // 设置规则名称和内容
+        instance.setRuleName(ruleDefinition.getRuleName());
+        instance.setRuleContent(ruleDefinition.getRuleContent());
         instance.setStatus(ProcessStatusEnum.RUNNING.getCode());
         instance.setInputParams(JsonUtils.toJson(request.getInputParams()));
         instance.setCreatedAt(LocalDateTime.now());

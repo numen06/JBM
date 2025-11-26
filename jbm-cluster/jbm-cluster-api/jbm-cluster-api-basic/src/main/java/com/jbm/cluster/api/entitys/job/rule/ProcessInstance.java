@@ -26,6 +26,11 @@ public class ProcessInstance extends MasterDataEntity {
 
     @Column(name = "rule_definition_id")
     private Long ruleDefinitionId;
+    // 规则名称
+    private String ruleName;
+    // 规则内容JSON
+    @Lob
+    private String ruleContent;
     // RUNNING, COMPLETED, FAILED, WAITING
     private String status;
     // JSON格式的输入参数

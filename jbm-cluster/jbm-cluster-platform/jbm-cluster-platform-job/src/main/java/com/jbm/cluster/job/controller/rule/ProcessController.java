@@ -75,26 +75,62 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
 
     @ApiOperation(value = "执行流程")
     @PostMapping("/execute")
-    public ResponseEntity<ExecuteProcessResponse> executeProcess(@RequestBody ExecuteProcessRequest request) {
+    public ResultBody<ExecuteProcessResponse> executeProcess(@RequestBody ExecuteProcessRequest request) {
         try {
             ExecuteProcessResponse response = processExecutionEngine.executeProcess(request);
-            return ResponseEntity.ok(response);
+            // 根据流程执行结果返回对应的ResponseBody
+            if (ProcessStatusEnum.FAILED.getCode().equals(response.getStatus())) {
+                // 流程执行失败
+                return ResultBody.failed(response)
+                        .code(500)
+                        .msg("流程执行失败");
+            } else if (ProcessStatusEnum.WAITING.getCode().equals(response.getStatus())) {
+                // 流程等待中
+                return ResultBody.ok(response)
+                        .msg("流程等待触发");
+            } else {
+                // 流程执行成功或其他状态
+                return ResultBody.ok(response)
+                        .msg("流程执行成功");
+            }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    createErrorResponse(e.getMessage()));
+            ExecuteProcessResponse errorResponse = new ExecuteProcessResponse();
+            errorResponse.setStatus(ProcessStatusEnum.FAILED.getCode());
+            errorResponse.setMessage("流程执行异常: " + e.getMessage());
+            return ResultBody.failed(errorResponse)
+                    .code(500)
+                    .msg("流程执行异常: " + e.getMessage());
         }
     }
 
     @ApiOperation(value = "执行流程JSON", notes = "直接传入流程JSON和输入参数执行流程，不使用本地规则定义")
     @PostMapping("/executeByJson")
-    public ResponseEntity<ExecuteProcessResponse> executeProcessByJson(
+    public ResultBody<ExecuteProcessResponse> executeProcessByJson(
             @RequestBody ExecuteProcessByJsonRequest request) {
         try {
             ExecuteProcessResponse response = processExecutionEngine.executeProcessByJson(request);
-            return ResponseEntity.ok(response);
+            // 根据流程执行结果返回对应的ResponseBody
+            if (ProcessStatusEnum.FAILED.getCode().equals(response.getStatus())) {
+                // 流程执行失败
+                return ResultBody.failed(response)
+                        .code(500)
+                        .msg("流程执行失败");
+            } else if (ProcessStatusEnum.WAITING.getCode().equals(response.getStatus())) {
+                // 流程等待中
+                return ResultBody.ok(response)
+                        .msg("流程等待触发");
+            } else {
+                // 流程执行成功或其他状态
+                return ResultBody.ok(response)
+                        .msg("流程执行成功");
+            }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    createErrorResponse(e.getMessage()));
+            ExecuteProcessResponse errorResponse = new ExecuteProcessResponse();
+            errorResponse.setStatus(ProcessStatusEnum.FAILED.getCode());
+            errorResponse.setMessage("流程执行异常: " + e.getMessage());
+            return ResultBody.failed(errorResponse)
+                    .code(500)
+                    .msg("流程执行异常: " + e.getMessage());
         }
     }
 

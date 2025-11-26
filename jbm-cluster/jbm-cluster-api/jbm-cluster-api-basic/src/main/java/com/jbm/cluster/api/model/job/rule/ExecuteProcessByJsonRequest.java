@@ -17,6 +17,9 @@ public class ExecuteProcessByJsonRequest {
     @ApiModelProperty("流程定义的JSON内容")
     private String ruleContent;
 
+    @ApiModelProperty("规则名称")
+    private String ruleName;
+
     @ApiModelProperty("输入参数")
     private Map<String, Object> inputParams;
 

@@ -136,8 +136,14 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
                 model.setRuleId(ruleDefinition.getId());
                 model.setRuleName(ruleDefinition.getRuleName());
                 model.setRuleCode(ruleDefinition.getRuleCode());
-                // 增强ruleContent，将nodeExecutions的status信息拼接进去
+                // 增强 ruleContent，将 nodeExecutions 的 status 信息拼接进去
                 String enhancedRuleContent = enhanceRuleContent(ruleDefinition.getRuleContent(), nodeExecutions);
+                model.setRuleContent(enhancedRuleContent);
+            } else {
+                // ruleDefinition 为 null 时，不使用本地规则，直接从 ProcessInstance 中取值
+                model.setRuleName(processInstance.getRuleName());
+                // 增强 ruleContent
+                String enhancedRuleContent = enhanceRuleContent(processInstance.getRuleContent(), nodeExecutions);
                 model.setRuleContent(enhancedRuleContent);
             }
 
