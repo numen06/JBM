@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -66,6 +67,7 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
      * 删除两个月前的数据
      */
     @Override
+    @Scheduled(cron = "0 0 1 1/1 * ?")
     public boolean clearTasks() {
         QueryWrapper<WebhookTask> queryWrapper = currentQueryWrapper();
         queryWrapper.lambda().le(WebhookTask::getCreateTime, DateUtil.offsetMonth(DateTime.now(), -2));
