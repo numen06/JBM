@@ -1,9 +1,10 @@
-package com.jbm.cluster.logs.entity;
+package com.jbm.cluster.api.entitys.log;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -14,7 +15,9 @@ import java.util.Date;
  */
 @Data
 @ApiModel(value = "业务日志实体")
-public class BusinessLog {
+public class BusinessLog implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     /**
      * 业务日志ID，用于追踪和追加日志
@@ -49,7 +52,7 @@ public class BusinessLog {
     /**
      * 日志内容（单行或多行）
      */
-    @ApiModelProperty(value = "日志内容（单行或多行）")
+    @ApiModelProperty(value = "日志内容")
     private String content;
     
     /**
@@ -111,5 +114,78 @@ public class BusinessLog {
      */
     @ApiModelProperty(value = "备注")
     private String remark;
+    
+    // ==================== 集成模块字段 ====================
+    
+    /**
+     * 业务类型（如：订单、支付、用户等）
+     * 用于集成模块
+     */
+    @ApiModelProperty(value = "业务类型")
+    private String businessType;
+    
+    /**
+     * 业务ID（如：订单号、支付流水号等）
+     * 用于集成模块
+     */
+    @ApiModelProperty(value = "业务ID")
+    private String businessId;
+    
+    /**
+     * 日志来源（如：订单服务、支付服务等）
+     * 用于集成模块
+     */
+    @ApiModelProperty(value = "日志来源")
+    private String source;
+
+    // ==================== 阶段进度扩展 ====================
+
+    /**
+     * 阶段编码
+     */
+    @ApiModelProperty(value = "阶段编码")
+    private String stageCode;
+
+    /**
+     * 阶段名称
+     */
+    @ApiModelProperty(value = "阶段名称")
+    private String stageName;
+
+    /**
+     * 阶段序号
+     */
+    @ApiModelProperty(value = "阶段序号")
+    private Integer stageIndex;
+
+    /**
+     * 阶段进度
+     */
+    @ApiModelProperty(value = "阶段进度（0-100）")
+    private Integer stageProgress;
+
+    /**
+     * 阶段状态
+     */
+    @ApiModelProperty(value = "阶段状态：WAITING、RUNNING、DONE、FAILED")
+    private String stageStatus;
+
+    /**
+     * 阶段总数
+     */
+    @ApiModelProperty(value = "阶段总数")
+    private Integer stageCount;
+
+    /**
+     * 整体进度
+     */
+    @ApiModelProperty(value = "整体进度（0-100）")
+    private Integer overallProgress;
+
+    /**
+     * 是否阶段事件
+     */
+    @ApiModelProperty(value = "是否阶段事件")
+    private Boolean stageEvent;
 }
 

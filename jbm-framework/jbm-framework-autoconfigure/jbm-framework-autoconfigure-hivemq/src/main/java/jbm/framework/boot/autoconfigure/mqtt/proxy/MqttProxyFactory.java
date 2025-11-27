@@ -52,6 +52,12 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     
     // 记录已经调用过 subscribeMethod 的 subscriptionKey，防止重复调用
     private final Set<String> subscribedKeys = ConcurrentHashMap.newKeySet();
+    
+    // 标记 find() 是否已经被调用过，防止重复初始化
+    private volatile boolean findCalled = false;
+    
+    // 标记 subscribe() 是否已经被调用过，防止重复订阅
+    private volatile boolean subscribeCalled = false;
 
     public MqttProxyFactory(ApplicationContext applicationContext, RealMqttPahoClientFactory mqttPahoClientFactory) {
         this.applicationContext = applicationContext;
@@ -73,6 +79,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
      * 订阅方法
      */
     public void subscribe() {
+        // 防止 subscribe() 被多次调用，避免重复订阅
+        if (subscribeCalled) {
+            log.warn("⚠️ subscribe() 已经被调用过，跳过重复订阅");
+            return;
+        }
+        subscribeCalled = true;
+        
         log.info("📡 Subscribing to {} MQTT topics", subscriptionMap.size());
         subscriptionMap.forEach((subscriptionKey, requiredBean) -> {
             try {
@@ -169,6 +182,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     public void find() {
+        // 防止重复调用 find()，避免重复注册订阅
+        if (findCalled) {
+            log.debug("⚠️ find() 已经被调用过，跳过重复初始化");
+            return;
+        }
+        findCalled = true;
+        
         Map<String, Object> mqttProxys = applicationContext.getBeansWithAnnotation(MqttMapper.class);
         log.info("🔍 Found {} beans with @MqttMapper annotation", mqttProxys.size());
 
@@ -249,7 +269,10 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     public void subscribeMethod(String subscriptionKey, MqttRequsetBean mqttRequsetBean, SimpleMqttClient simpleMqttClient) {
         // 检查是否已经调用过此方法（防止 subscribe() 被多次调用导致重复添加监听器）
         if (!subscribedKeys.add(subscriptionKey)) {
-            log.debug("⚠️ subscribeMethod 已经被调用过: {}, 跳过", subscriptionKey);
+            String beanName = mqttRequsetBean.getBean().getClass().getSimpleName();
+            String methodName = mqttRequsetBean.getMethod().getName();
+            log.warn("⚠️ subscribeMethod 已经被调用过，跳过重复订阅 - subscriptionKey: {}, Bean: {}, Method: {}", 
+                    subscriptionKey, beanName, methodName);
             return;
         }
         
@@ -259,6 +282,8 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         
         // 创建当前方法的监听器
         MqttRequestListener listener = new MqttRequestListener(mqttRequsetBean, simpleMqttClient);
+        String beanName = mqttRequsetBean.getBean().getClass().getSimpleName();
+        String methodName = mqttRequsetBean.getMethod().getName();
         
         // 使用 computeIfAbsent 确保线程安全
         mqttSubscriptionCache.compute(mqttSubscriptionKey, (key, listeners) -> {
@@ -268,43 +293,92 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                 listeners.add(listener);
                 
                 // 创建一个多播监听器，将消息分发给所有监听器
+                // 注意：使用 final 变量捕获 mqttSubscriptionKey，确保在多播监听器中能正确获取监听器列表
+                final String finalMqttSubscriptionKey = mqttSubscriptionKey;
                 AbstractMqttMessageListener multicastListener = new AbstractMqttMessageListener() {
+                    // 基于消息对象引用的去重缓存，防止同一个消息对象被处理多次
+                    // key: "topic:messageIdentityHash"，value: 处理时间戳
+                    private final Map<String, Long> messageObjectDeduplicationCache = new ConcurrentHashMap<>();
+                    
                     @Override
                     public void messageArrived(String msgTopic, jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage message) throws Exception {
-                        List<MqttRequestListener> currentListeners = mqttSubscriptionCache.get(mqttSubscriptionKey);
-                        if (currentListeners != null) {
-                            log.debug("📨 收到消息 Topic: {}, 分发给 {} 个监听器", msgTopic, currentListeners.size());
+                        // 基于消息对象的引用（identityHashCode）进行去重，防止同一个消息对象被处理多次
+                        // 这与消息内容去重不同：如果客户端发送两个不同的消息（即使内容相同），它们的对象引用不同，都会被处理
+                        String messageIdentityHash = Integer.toHexString(System.identityHashCode(message));
+                        String dedupKey = msgTopic + ":" + messageIdentityHash;
+                        long currentTime = System.currentTimeMillis();
+                        
+                        // 检查100ms内是否已处理过该消息对象
+                        Long lastProcessTime = messageObjectDeduplicationCache.get(dedupKey);
+                        if (lastProcessTime != null) {
+                            long timeSinceLastProcess = currentTime - lastProcessTime;
+                            if (timeSinceLastProcess < 100) {
+                                log.warn("⚠️ 检测到重复消息对象，跳过处理 - Topic: {}, MessageIdentityHash: {}, 距离上次处理: {}ms", 
+                                        msgTopic, messageIdentityHash, timeSinceLastProcess);
+                                return;
+                            }
+                        }
+                        
+                        // 记录处理时间
+                        messageObjectDeduplicationCache.put(dedupKey, currentTime);
+                        // 清理5秒前的条目
+                        messageObjectDeduplicationCache.entrySet().removeIf(entry -> currentTime - entry.getValue() > 5000);
+                        
+                        List<MqttRequestListener> currentListeners = mqttSubscriptionCache.get(finalMqttSubscriptionKey);
+                        if (currentListeners != null && !currentListeners.isEmpty()) {
+                            if (currentListeners.size() > 1) {
+                                log.warn("⚠️ 检测到多个监听器 - Topic: {}, 监听器数量: {}, 列表: {}", 
+                                        msgTopic, currentListeners.size(), 
+                                        currentListeners.stream()
+                                                .map(l -> l.getMqttRequsetBean().getBean().getClass().getSimpleName() 
+                                                        + "." + l.getMqttRequsetBean().getMethod().getName())
+                                                .collect(java.util.stream.Collectors.joining(", ")));
+                            }
                             for (MqttRequestListener l : currentListeners) {
                                 try {
                                     l.messageArrived(msgTopic, message);
                                 } catch (Exception e) {
-                                    log.error("监听器处理消息失败: {}.{}", 
-                                            l.getMqttRequsetBean().getBean().getClass().getSimpleName(),
-                                            l.getMqttRequsetBean().getMethod().getName(), e);
+                                    String beanName = l.getMqttRequsetBean().getBean().getClass().getSimpleName();
+                                    String methodName = l.getMqttRequsetBean().getMethod().getName();
+                                    log.error("多播监听器处理失败 - Topic: {}, Bean: {}, Method: {}", 
+                                            msgTopic, beanName, methodName, e);
                                 }
                             }
+                        } else {
+                            log.warn("多播监听器列表为空 - Topic: {}, mqttSubscriptionKey: {}", 
+                                    msgTopic, finalMqttSubscriptionKey);
                         }
                     }
                 };
                 
                 simpleMqttClient.subscribeWithResponse(topic, multicastListener);
-                log.info("📬 MQTT层订阅 Topic: {} (第1个监听器: [{}].{})",
-                        topic,
-                        mqttRequsetBean.getBean().getClass().getSimpleName(),
-                        mqttRequsetBean.getMethod().getName());
+                log.info("✅ MQTT订阅完成 - Topic: {}, Bean: {}, Method: {}, mqttSubscriptionKey: {}", 
+                        topic, beanName, methodName, mqttSubscriptionKey);
             } else {
                 // 已经订阅过了，直接添加监听器到列表
-                // 注意：由于 subscribedKeys 已经防止了重复调用，这里不会重复添加
-                listeners.add(listener);
-                log.info("📬 添加监听器到已订阅的Topic: {} (第{}个监听器: [{}].{})",
-                        topic,
-                        listeners.size(),
-                        mqttRequsetBean.getBean().getClass().getSimpleName(),
-                        mqttRequsetBean.getMethod().getName());
+                // 检查是否已存在相同的监听器（通过 bean 和方法来判断，而不是 identityHashCode）
+                boolean alreadyExists = false;
+                for (MqttRequestListener existingListener : listeners) {
+                    MqttRequsetBean existingBean = existingListener.getMqttRequsetBean();
+                    // 通过 bean 对象和方法来判断是否为同一个监听器
+                    if (existingBean.getBean() == mqttRequsetBean.getBean() 
+                            && existingBean.getMethod().equals(mqttRequsetBean.getMethod())) {
+                        alreadyExists = true;
+                        log.warn("⚠️ 监听器已存在，跳过添加 - Topic: {}, Bean: {}, Method: {}, 当前列表大小: {}", 
+                                mqttSubscriptionKey, beanName, methodName, listeners.size());
+                        break;
+                    }
+                }
+                if (!alreadyExists) {
+                    listeners.add(listener);
+                    log.warn("⚠️ 检测到重复订阅：监听器被添加到已订阅列表 - Topic: {}, Bean: {}, Method: {}, 列表大小: {} -> {} (这不应该发生，说明 subscribedKeys 检查可能失效)", 
+                            mqttSubscriptionKey, beanName, methodName, listeners.size() - 1, listeners.size());
+                }
             }
             return listeners;
         });
     }
+    
 
     @Override
     public void afterPropertiesSet() throws Exception {

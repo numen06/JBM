@@ -1,6 +1,6 @@
-package com.jbm.cluster.logs.form;
+package com.jbm.cluster.api.form.log;
 
-import com.jbm.cluster.logs.entity.BusinessLog;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
 import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -29,7 +29,9 @@ public class BusinessLogForm {
     @ApiModelProperty(value = "结束时间")
     private Date endTime;
     
-    @ApiModelProperty(value = "业务日志ID")
+    // ==================== 快捷查询字段 ====================
+    
+    @ApiModelProperty(value = "日志ID")
     private String logId;
     
     @ApiModelProperty(value = "业务模块")
@@ -46,5 +48,14 @@ public class BusinessLogForm {
     
     @ApiModelProperty(value = "关键词搜索")
     private String keyword;
+    
+    @ApiModelProperty(value = "业务类型")
+    private String businessType;
+    
+    @ApiModelProperty(value = "业务ID")
+    private String businessId;
+    
+    @ApiModelProperty(value = "日志来源")
+    private String source;
 }
 

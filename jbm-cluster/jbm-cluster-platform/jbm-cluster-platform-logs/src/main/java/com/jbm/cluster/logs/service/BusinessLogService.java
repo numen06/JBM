@@ -1,9 +1,12 @@
 package com.jbm.cluster.logs.service;
 
-import com.jbm.cluster.logs.entity.BusinessLog;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.BusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageSnapshot;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
+import com.jbm.cluster.api.form.log.InitBusinessLogStageForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -108,17 +111,6 @@ public interface BusinessLogService {
     boolean updateExpireTime(String logId, Integer expireDays);
     
     /**
-     * 清理过期的业务日志（已废弃）
-     * 
-     * @deprecated 过期管理已由OpenObserve自动处理（通过流的保留策略TTL），
-     * 此方法仅用于业务层面的状态标记，实际数据删除由OpenObserve自动完成。
-     * 
-     * @return 清理的日志数量（实际为标记数量）
-     */
-    @Deprecated
-    int cleanExpiredLogs();
-    
-    /**
      * 生成日志的临时访问URL参数（类似OSS签名URL）
      * 
      * @param logId 业务日志ID
@@ -135,5 +127,39 @@ public interface BusinessLogService {
      * @return 日志内容
      */
     String getLogByToken(String logId, String token);
+    
+    /**
+     * 通过业务类型和业务ID获取日志ID
+     * 用于消息队列场景，当只有业务信息而没有logId时使用
+     * 
+     * @param businessType 业务类型
+     * @param businessId 业务ID
+     * @return 日志ID，如果不存在则返回null
+     */
+    String getLogIdByBusinessId(String businessType, String businessId);
+
+    /**
+     * 初始化业务日志阶段
+     *
+     * @param form 阶段配置
+     * @return 阶段快照
+     */
+    BusinessLogStageSnapshot initStages(InitBusinessLogStageForm form);
+
+    /**
+     * 更新阶段进度
+     *
+     * @param form 更新表单
+     * @return 最新快照
+     */
+    BusinessLogStageSnapshot updateStage(BusinessLogStageUpdateForm form);
+
+    /**
+     * 查询阶段快照
+     *
+     * @param logId 日志ID
+     * @return 阶段快照
+     */
+    BusinessLogStageSnapshot getStageSnapshot(String logId);
 }
 

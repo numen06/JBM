@@ -102,6 +102,13 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
         return findRelegationCompany(baseOrg, ListUtil.toList(baseOrg));
     }
 
+    @Override
+    public BaseOrg getBaseOrgByOrgCode(BaseOrg baseOrg) {
+        Assert.notNull(baseOrg.getOrgCode(), () -> new ServiceException("组织编号不可为空"));
+        BaseOrg one = this.lambdaQuery().eq(BaseOrg::getOrgCode, baseOrg.getOrgCode()).one();
+        return one;
+    }
+
     /***
      * 获取下级公司
      * @param org 当前组织

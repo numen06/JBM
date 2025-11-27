@@ -1,8 +1,8 @@
 package com.jbm.cluster.logs;
 
-import com.jbm.cluster.logs.entity.BusinessLog;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +13,8 @@ import java.util.List;
 /**
  * 业务日志使用示例
  * 演示文件型日志（如编译日志、构建日志）的使用
+ * 
+ * 注意：现在使用共享的 Form/Entity（在 jbm-cluster-api-basic 模块中）
  * 
  * @author wesley
  */

@@ -24,4 +24,12 @@ public interface BaseOrgService extends IMultiPlatformTreeService<BaseOrg> {
      * @return
      */
     List<BaseOrg> findRelegationCompany(BaseOrg org);
+
+    /**
+     * 根据公司编码查询
+     *
+     * @param baseOrg
+     * @return
+     */
+    BaseOrg getBaseOrgByOrgCode(BaseOrg baseOrg);
 }

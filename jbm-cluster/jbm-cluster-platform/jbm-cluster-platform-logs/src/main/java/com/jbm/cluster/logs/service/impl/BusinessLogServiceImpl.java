@@ -1,14 +1,19 @@
 package com.jbm.cluster.logs.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSONObject;
-import com.jbm.cluster.logs.entity.BusinessLog;
-import com.jbm.cluster.logs.form.AppendBusinessLogForm;
-import com.jbm.cluster.logs.form.BusinessLogForm;
-import com.jbm.cluster.logs.form.CreateBusinessLogForm;
+import com.jbm.cluster.api.entitys.log.BusinessLog;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageItem;
+import com.jbm.cluster.api.entitys.log.BusinessLogStageSnapshot;
+import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogForm;
+import com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm;
+import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
+import com.jbm.cluster.api.form.log.InitBusinessLogStageForm;
 import com.jbm.cluster.logs.service.BusinessLogService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -26,12 +31,14 @@ import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -160,6 +167,13 @@ public class BusinessLogServiceImpl implements BusinessLogService {
      * 使用ConcurrentHashMap存储，key为logId，value为streamName
      */
     private final Map<String, String> logIdStreamCache = new ConcurrentHashMap<>();
+    /**
+     * 业务日志阶段缓存
+     */
+    private final Map<String, BusinessLogStageTracker> stageTrackers = new ConcurrentHashMap<>();
+    private static final String STATEMENT_SELECT_BY_LOG_ID_STREAM = "com.jbm.cluster.logs.mapper.BusinessLogMapper.queryLogByStream";
+    private static final String STATEMENT_SELECT_LOGS_BY_STREAM = "com.jbm.cluster.logs.mapper.BusinessLogMapper.queryLogsByStream";
+    private static final String[] ALL_STREAM_NAMES = {"business_log_30d", "business_log_7d", "business_log_90d", "business_log"};
     
     /**
      * 根据过期天数获取流类型标识
@@ -441,134 +455,7 @@ public class BusinessLogServiceImpl implements BusinessLogService {
         return null;
     }
     
-    /**
-     * 所有可能的流名称列表
-     */
-    private static final String[] ALL_STREAM_NAMES = {"business_log_30d", "business_log_7d", "business_log_90d", "business_log"};
-    
-    /**
-     * 查询所有流中的数据（通用方法）
-     * 用于处理多流查询，在Java代码中合并结果
-     * 
-     * @param sqlTemplate SQL模板，使用%s作为流名的占位符，例如："SELECT * FROM %s WHERE log_id = 'xxx'"
-     * @param params 查询参数（用于Mapper XML，如果使用直接SQL可传null）
-     * @param beginTime 开始时间
-     * @param endTime 结束时间
-     * @param pageForm 分页参数
-     * @param targetStreams 目标流列表，如果为null则查询所有流
-     * @return 查询结果列表
-     */
-    private List<BusinessLog> queryAllStreams(String sqlTemplate, Map<String, Object> params, 
-                                              Date beginTime, Date endTime, PageForm pageForm,
-                                              String[] targetStreams) {
-        if (targetStreams == null) {
-            targetStreams = ALL_STREAM_NAMES;
-        }
-        
-        List<BusinessLog> allLogs = new ArrayList<>();
-        
-        for (String streamName : targetStreams) {
-            try {
-                // 构建SQL：替换流名占位符
-                String sql = String.format(sqlTemplate, streamName);
-                
-                QueryBean queryBean = new QueryBean();
-                queryBean.getQuery().setSql(sql);
-                queryBean.getQuery().setFrom(0);
-                queryBean.getQuery().setSize(pageForm != null ? pageForm.getPageSize() : 1000);
-                
-                // 设置时间范围
-                if (beginTime != null) {
-                    queryBean.getQuery().setStartTime(beginTime.getTime() * 1000);
-                }
-                if (endTime != null) {
-                    queryBean.getQuery().setEndTime(endTime.getTime() * 1000);
-                }
-                
-                QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
-                List<Map<String, Object>> hits = queryResult.getHits();
-                
-                if (hits != null && !hits.isEmpty()) {
-                    List<BusinessLog> streamLogs = hits.stream().map(map -> {
-                        JSONObject jsonObject = new JSONObject(map);
-                        return jsonObject.toJavaObject(BusinessLog.class);
-                    }).collect(Collectors.toList());
-                    
-                    allLogs.addAll(streamLogs);
-                    log.debug("从流 {} 查询到 {} 条记录", streamName, streamLogs.size());
-                }
-            } catch (Exception e) {
-                // 如果某个流查询失败，继续查询其他流
-                log.debug("查询流 {} 失败: {}", streamName, e.getMessage());
-            }
-        }
-        
-        return allLogs;
-    }
-    
-    /**
-     * 构建WHERE条件SQL片段（用于直接SQL查询）
-     * 
-     * @param form 查询表单
-     * @return WHERE条件字符串
-     */
-    private String buildWhereClause(BusinessLogForm form) {
-        StringBuilder where = new StringBuilder();
-        
-        // 检查BusinessLog对象中的字段
-        BusinessLog businessLog = form.getBusinessLog();
-        if (businessLog != null) {
-            if (StrUtil.isNotEmpty(businessLog.getLogId())) {
-                where.append(" AND log_id = '").append(businessLog.getLogId()).append("'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getModule())) {
-                where.append(" AND module = '").append(businessLog.getModule()).append("'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getOperation())) {
-                where.append(" AND operation = '").append(businessLog.getOperation()).append("'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getUserId())) {
-                where.append(" AND user_id = '").append(businessLog.getUserId()).append("'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getUsername())) {
-                where.append(" AND username LIKE '%").append(businessLog.getUsername()).append("%'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getTraceId())) {
-                where.append(" AND trace_id = '").append(businessLog.getTraceId()).append("'");
-            }
-            if (StrUtil.isNotEmpty(businessLog.getStatus())) {
-                where.append(" AND status = '").append(businessLog.getStatus()).append("'");
-            }
-        }
-        
-        // 直接字段（如果BusinessLogForm有这些字段）
-        if (StrUtil.isNotEmpty(form.getLogId())) {
-            where.append(" AND log_id = '").append(form.getLogId()).append("'");
-        }
-        if (StrUtil.isNotEmpty(form.getModule())) {
-            where.append(" AND module = '").append(form.getModule()).append("'");
-        }
-        if (StrUtil.isNotEmpty(form.getUserId())) {
-            where.append(" AND user_id = '").append(form.getUserId()).append("'");
-        }
-        if (StrUtil.isNotEmpty(form.getLevel())) {
-            where.append(" AND level = '").append(form.getLevel()).append("'");
-        }
-        if (StrUtil.isNotEmpty(form.getTraceId())) {
-            where.append(" AND trace_id = '").append(form.getTraceId()).append("'");
-        }
-        if (StrUtil.isNotEmpty(form.getKeyword())) {
-            where.append(" AND (content LIKE '%").append(form.getKeyword()).append("%' OR biz_data LIKE '%").append(form.getKeyword()).append("%')");
-        }
-        if (form.getBeginTime() != null) {
-            where.append(" AND create_time >= '").append(DateUtil.formatDateTime(form.getBeginTime())).append("'");
-        }
-        if (form.getEndTime() != null) {
-            where.append(" AND create_time <= '").append(DateUtil.formatDateTime(form.getEndTime())).append("'");
-        }
-        
-        return where.toString();
-    }
+    // 其余业务逻辑...
     
     @Override
     public String createLog(CreateBusinessLogForm form) {
@@ -701,7 +588,12 @@ public class BusinessLogServiceImpl implements BusinessLogService {
                 scope.close();
             }
         }
-        
+        if (!CollectionUtils.isEmpty(form.getStages())) {
+            InitBusinessLogStageForm stageForm = new InitBusinessLogStageForm();
+            stageForm.setLogId(logId);
+            stageForm.setStages(form.getStages());
+            initStages(stageForm);
+        }
         return logId;
     }
     
@@ -752,6 +644,14 @@ public class BusinessLogServiceImpl implements BusinessLogService {
                 appendLog.setIsAppend(true);
                 appendLog.setUpdateTime(now);
                 appendLog.setStatus("ACTIVE");
+                appendLog.setStageCode(form.getStageCode());
+                appendLog.setStageName(form.getStageName());
+                appendLog.setStageIndex(form.getStageIndex());
+                appendLog.setStageProgress(form.getStageProgress());
+                appendLog.setStageStatus(form.getStageStatus());
+                appendLog.setStageCount(form.getStageCount());
+                appendLog.setOverallProgress(form.getOverallProgress());
+                appendLog.setStageEvent(form.getStageEvent());
                 
                 // 尝试从当前Span获取traceId
                 if (activeSpan != null && activeSpan.getSpanContext().isValid()) {
@@ -813,142 +713,16 @@ public class BusinessLogServiceImpl implements BusinessLogService {
         }
         
         try {
-            // 构建查询参数
-            Map<String, Object> params = new HashMap<>();
-            params.put("logId", logId);
-            
-            // 设置时间范围：使用较宽的范围以确保能查询到数据
-            // 对于新格式logId，从logId中解析流类型即可，不需要复杂的时间范围计算
             Date now = new Date();
-            Date beginTime = DateUtil.offsetDay(now, -7); // 过去7天
-            Date endTime = DateUtil.offsetHour(now, 2);   // 未来2小时（考虑索引延迟）
-            
-            PageForm pageForm = new PageForm(1, 1000); // 最多返回1000条记录
-            
-            // 先确定logId所在的流（优先从logId解析，如果无法解析则查询数据库）
-            String streamName = determineStreamByLogId(logId);
-            List<BusinessLog> allLogs = new ArrayList<>();
-            
-            if (StrUtil.isNotEmpty(streamName)) {
-                // 如果确定了流，直接查询对应的流（精准查询）
-                log.info("确定logId {} 所在的流: {}，进行精准查询，时间范围: {} ~ {}", 
-                        logId, streamName, DateUtil.formatDateTime(beginTime), DateUtil.formatDateTime(endTime));
-                try {
-                    String sql = String.format("SELECT * FROM %s WHERE log_id = '%s' ORDER BY update_time ASC", 
-                            streamName, logId);
-                    
-                    log.debug("执行SQL查询: {}", sql);
-                    log.debug("时间范围: startTime={} ({}), endTime={} ({})", 
-                            beginTime.getTime() * 1000, DateUtil.formatDateTime(beginTime),
-                            endTime.getTime() * 1000, DateUtil.formatDateTime(endTime));
-                    
-                    // 直接创建QueryBean并设置SQL（不使用mapper statement）
-                    QueryBean queryBean = new QueryBean();
-                    queryBean.getQuery().setSql(sql);
-                    queryBean.getQuery().setFrom(0);
-                    queryBean.getQuery().setSize(pageForm.getPageSize());
-                    queryBean.getQuery().setStartTime(beginTime.getTime() * 1000);
-                    queryBean.getQuery().setEndTime(endTime.getTime() * 1000);
-                    
-                    QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
-                    log.debug("查询结果: total={}, hits.size()={}, scanRecords={}", 
-                            queryResult.getTotal(), 
-                            queryResult.getHits() != null ? queryResult.getHits().size() : 0,
-                            queryResult.getScanRecords());
-                    List<Map<String, Object>> hits = queryResult.getHits();
-                    
-                    if (hits != null && !hits.isEmpty()) {
-                        allLogs = hits.stream().map(map -> {
-                            JSONObject jsonObject = new JSONObject(map);
-                            return jsonObject.toJavaObject(BusinessLog.class);
-                        }).collect(Collectors.toList());
-                        log.info("✓ 从流 {} 精准查询到 {} 条记录", streamName, allLogs.size());
-                    } else {
-                        log.warn("⚠ 从流 {} 查询logId {} 未找到数据，扫描记录数: {}，时间范围: {} ~ {}", 
-                                streamName, logId, queryResult.getScanRecords(), 
-                                DateUtil.formatDateTime(beginTime), DateUtil.formatDateTime(endTime));
-                    }
-                } catch (Exception e) {
-                    log.error("❌ 精准查询流 {} 失败，logId: {}，错误: {}", streamName, logId, e.getMessage(), e);
-                    // 查询失败，清除缓存，继续查询所有流
-                    logIdStreamCache.remove(logId);
-                    streamName = null;
-                }
-            } else {
-                log.warn("⚠ 无法确定logId {} 所在的流，将查询所有可能的流", logId);
-            }
-            
-            // 如果无法确定流或查询失败，查询所有可能的流
-            if (allLogs.isEmpty()) {
-                log.info("无法确定流或查询失败，查询所有可能的流（logId: {}）", logId);
-                String[] streamNames = {"business_log_30d", "business_log_7d", "business_log_90d", "business_log"};
-                
-                for (String sn : streamNames) {
-                    try {
-                        // 构建SQL：直接查询指定流
-                        String sql = String.format("SELECT * FROM %s WHERE log_id = '%s' ORDER BY update_time ASC", 
-                                sn, logId);
-                        
-                        QueryBean queryBean = new QueryBean();
-                        queryBean.getQuery().setSql(sql);
-                        queryBean.getQuery().setFrom(0);
-                        queryBean.getQuery().setSize(pageForm.getPageSize());
-                        queryBean.getQuery().setStartTime(beginTime.getTime() * 1000);
-                        queryBean.getQuery().setEndTime(endTime.getTime() * 1000);
-                        
-                        QueryResult queryResult = openObserveTemplate.selectLogs(queryBean);
-                        List<Map<String, Object>> hits = queryResult.getHits();
-                        
-                        if (hits != null && !hits.isEmpty()) {
-                            List<BusinessLog> streamLogs = hits.stream().map(map -> {
-                                JSONObject jsonObject = new JSONObject(map);
-                                return jsonObject.toJavaObject(BusinessLog.class);
-                            }).collect(Collectors.toList());
-                            
-                            allLogs.addAll(streamLogs);
-                            log.info("✓ 从流 {} 查询到 {} 条记录（扫描: {}）", sn, streamLogs.size(), queryResult.getScanRecords());
-                            
-                            // 如果找到了数据，更新本地缓存（使用第一个找到的流）
-                            if (StrUtil.isEmpty(streamName) && !streamLogs.isEmpty()) {
-                                BusinessLog firstLog = streamLogs.get(0);
-                                Integer expireDays = firstLog.getExpireDays();
-                                if (expireDays != null && expireDays > 0) {
-                                    String foundStreamName = getStreamName(expireDays);
-                                    logIdStreamCache.put(logId, foundStreamName);
-                                    log.info("更新logId {} 的流缓存: {}", logId, foundStreamName);
-                                } else {
-                                    // 如果没有expireDays，使用当前查询到的流
-                                    logIdStreamCache.put(logId, sn);
-                                }
-                            }
-                        } else {
-                            log.debug("流 {} 中未找到logId {}，扫描记录数: {}", sn, logId, queryResult.getScanRecords());
-                        }
-                    } catch (Exception e) {
-                        // 如果某个流查询失败，继续查询其他流
-                        log.warn("查询流 {} 失败: {}", sn, e.getMessage());
-                    }
-                }
-            }
-            
-            // 按行号排序并去重（按logId和lineNumber）
-            Map<String, BusinessLog> uniqueLogs = new HashMap<>();
-            for (BusinessLog log : allLogs) {
-                String key = log.getLogId() + "_" + (log.getLineNumber() != null ? log.getLineNumber() : 0);
-                uniqueLogs.putIfAbsent(key, log);
-            }
-            
-            List<BusinessLog> result = new ArrayList<>(uniqueLogs.values());
-            result.sort(Comparator.comparing(log -> {
-                Integer lineNum = log.getLineNumber();
-                return lineNum != null ? lineNum : Integer.MAX_VALUE;
-            }));
-            
+            Date beginTime = DateUtil.offsetDay(now, -7);
+            Date endTime = DateUtil.offsetHour(now, 2);
+            PageForm pageForm = new PageForm(1, 1000);
+
+            List<BusinessLog> result = queryLogByStream(logId, beginTime, endTime, pageForm, determineStreamByLogId(logId));
+
             if (result.isEmpty()) {
-                log.warn("⚠ 查询业务日志未找到数据，logId: {}，时间范围: {} ~ {}，已查询流: {}", 
-                        logId, DateUtil.formatDateTime(beginTime), DateUtil.formatDateTime(endTime), 
-                        StrUtil.isNotEmpty(streamName) ? streamName : "所有流");
-                log.warn("提示：如果数据刚写入，可能需要等待几秒钟让OpenObserve完成索引");
+                log.warn("⚠ 查询业务日志未找到数据，logId: {}，时间范围: {} ~ {}", 
+                        logId, DateUtil.formatDateTime(beginTime), DateUtil.formatDateTime(endTime));
             } else {
                 log.info("✓ 查询业务日志成功，logId: {}, 记录数: {}, 时间范围: {} ~ {}", 
                         logId, result.size(), DateUtil.formatDateTime(beginTime), DateUtil.formatDateTime(endTime));
@@ -1059,46 +833,96 @@ public class BusinessLogServiceImpl implements BusinessLogService {
         }
         
         try {
-            // 构建WHERE条件
-            String whereClause = buildWhereClause(form);
-            
-            // 构建SQL模板：查询所有流
-            String sqlTemplate = "SELECT * FROM %s WHERE 1=1" + whereClause + " ORDER BY update_time DESC";
-            
-            // 查询所有流并合并结果
-            List<BusinessLog> allLogs = queryAllStreams(sqlTemplate, null, 
-                    form.getBeginTime(), form.getEndTime(), form.getPageForm(), null);
-            
-            // 去重（按logId和lineNumber）
+            Map<String, Object> params = BeanUtil.beanToMap(form.getBusinessLog());
+            List<BusinessLog> allLogs = queryLogsFromAllStreams(params, form.getBeginTime(), form.getEndTime(), form.getPageForm());
+
             Map<String, BusinessLog> uniqueLogs = new HashMap<>();
             for (BusinessLog log : allLogs) {
                 String key = log.getLogId() + "_" + (log.getLineNumber() != null ? log.getLineNumber() : 0);
                 uniqueLogs.putIfAbsent(key, log);
             }
-            
-            List<BusinessLog> result = new ArrayList<>(uniqueLogs.values());
-            
-            // 重新排序
-            result.sort(Comparator.comparing((BusinessLog log) -> {
+
+            List<BusinessLog> deduped = new ArrayList<>(uniqueLogs.values());
+            deduped.sort(Comparator.comparing((BusinessLog log) -> {
                 Date updateTime = log.getUpdateTime();
                 return updateTime != null ? updateTime.getTime() : 0L;
             }).reversed());
-            
-            // 手动分页
-            int total = result.size();
+
+            int total = deduped.size();
             int pageSize = form.getPageForm().getPageSize();
             int currPage = form.getPageForm().getCurrPage();
-            int from = (currPage - 1) * pageSize;
+            int from = Math.max((currPage - 1) * pageSize, 0);
             int to = Math.min(from + pageSize, total);
-            
-            List<BusinessLog> pagedList = from < total ? result.subList(from, to) : Collections.emptyList();
-            
+
+            List<BusinessLog> pagedList = from < total ? deduped.subList(from, to) : Collections.emptyList();
+
+            long totalPage = pageSize > 0 ? (total + pageSize - 1) / pageSize : 0L;
             log.info("分页查询业务日志成功，总记录数: {}, 当前页: {}, 每页: {}", total, currPage, pageSize);
-            return new DataPaging<>(pagedList, (long) total, (long) ((total + pageSize - 1) / pageSize), form.getPageForm());
+            return new DataPaging<>(pagedList, (long) total, totalPage, form.getPageForm());
         } catch (Exception e) {
             log.error("分页查询业务日志失败", e);
             return new DataPaging<>(Collections.emptyList(), 0L, 0L, form.getPageForm());
         }
+    }
+    
+    private List<BusinessLog> convertHitsToLogs(List<Map<String, Object>> hits) {
+        if (hits == null || hits.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return hits.stream().map(map -> {
+            JSONObject jsonObject = new JSONObject(map);
+            return jsonObject.toJavaObject(BusinessLog.class);
+        }).collect(Collectors.toList());
+    }
+
+    private List<BusinessLog> queryLogByStream(String logId, Date beginTime, Date endTime, PageForm pageForm, String preferredStream) {
+        List<String> targetStreams = new ArrayList<>();
+        if (StrUtil.isNotEmpty(preferredStream)) {
+            targetStreams.add(preferredStream);
+        }
+        for (String stream : ALL_STREAM_NAMES) {
+            if (!stream.equals(preferredStream)) {
+                targetStreams.add(stream);
+            }
+        }
+
+        Map<String, Object> paramTemplate = new HashMap<>();
+        paramTemplate.put("logId", logId);
+
+        for (String stream : targetStreams) {
+            Map<String, Object> params = new HashMap<>(paramTemplate);
+            params.put("streamName", stream);
+            QueryResult queryResult = openObserveTemplate.selectLogs(
+                    STATEMENT_SELECT_BY_LOG_ID_STREAM,
+                    params,
+                    beginTime,
+                    endTime,
+                    pageForm);
+            List<BusinessLog> logs = convertHitsToLogs(queryResult.getHits());
+            if (!logs.isEmpty()) {
+                if (StrUtil.isEmpty(preferredStream)) {
+                    logIdStreamCache.put(logId, stream);
+                }
+                return logs;
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    private List<BusinessLog> queryLogsFromAllStreams(Map<String, Object> baseParams, Date beginTime, Date endTime, PageForm pageForm) {
+        List<BusinessLog> result = new ArrayList<>();
+        for (String stream : ALL_STREAM_NAMES) {
+            Map<String, Object> params = new HashMap<>(baseParams);
+            params.put("streamName", stream);
+            QueryResult queryResult = openObserveTemplate.selectLogs(
+                    STATEMENT_SELECT_LOGS_BY_STREAM,
+                    params,
+                    beginTime,
+                    endTime,
+                    pageForm);
+            result.addAll(convertHitsToLogs(queryResult.getHits()));
+        }
+        return result;
     }
     
     /**
@@ -1184,56 +1008,6 @@ public class BusinessLogServiceImpl implements BusinessLogService {
         }
     }
     
-    /**
-     * 清理过期的业务日志（已废弃）
-     * 
-     * @deprecated 过期管理已由OpenObserve自动处理（通过流的保留策略TTL），
-     * 此方法仅用于业务层面的状态标记，实际数据删除由OpenObserve自动完成。
-     * 
-     * ⚠️ 注意：由于OpenObserve会根据流的保留策略自动删除过期数据，
-     * 此方法仅用于兼容旧代码，不建议新代码使用。
-     */
-    @Deprecated
-    @Override
-    public int cleanExpiredLogs() {
-        log.warn("⚠️ cleanExpiredLogs() 已废弃：过期管理已由OpenObserve自动处理，无需手动清理");
-        log.info("提示：OpenObserve会根据流的保留策略（TTL）自动删除过期数据");
-        
-        // 仅用于业务层面的状态标记（可选）
-        // 查询所有流中的过期日志
-        try {
-            Date now = new Date();
-            String nowStr = DateUtil.formatDateTime(now);
-            // SQL模板：查询过期日志（expire_date < 当前时间）
-            String sqlTemplate = "SELECT * FROM %s WHERE status = 'ACTIVE' AND expire_date < '" + nowStr + "' ORDER BY expire_date ASC";
-            
-            PageForm pageForm = new PageForm(1, 1000);
-            List<BusinessLog> expiredLogs = queryAllStreams(sqlTemplate, null, null, null, pageForm, null);
-            
-            // 去重（按logId）
-            Set<String> processedLogIds = new HashSet<>();
-            int count = 0;
-            
-            for (BusinessLog log : expiredLogs) {
-                String logId = log.getLogId();
-                // 只处理每个logId一次（避免重复标记）
-                if (!processedLogIds.contains(logId)) {
-                    processedLogIds.add(logId);
-                    // 标记为EXPIRED（仅用于业务状态管理，实际数据删除由OpenObserve自动完成）
-                    if (deleteLog(logId)) {
-                        count++;
-                    }
-                }
-            }
-            
-            log.info("标记过期业务日志完成，标记数量: {}（实际数据删除由OpenObserve自动完成）", count);
-            return count;
-        } catch (Exception e) {
-            log.error("清理过期业务日志失败", e);
-            return 0;
-        }
-    }
-    
     @Override
     public Map<String, String> generateTemporaryUrlParams(String logId, Integer expireMinutes) {
         if (StrUtil.isEmpty(logId)) {
@@ -1308,6 +1082,367 @@ public class BusinessLogServiceImpl implements BusinessLogService {
             return java.net.URLEncoder.encode(signature, "UTF-8");
         } catch (Exception e) {
             return signature;
+        }
+    }
+    
+    @Override
+    public String getLogIdByBusinessId(String businessType, String businessId) {
+        if (StrUtil.isBlank(businessType) || StrUtil.isBlank(businessId)) {
+            log.error("businessType和businessId不能为空");
+            return null;
+        }
+        
+        try {
+            // 通过 businessType 和 businessId 查询日志
+            // 返回最新的一条记录的 logId
+            BusinessLogForm form = new BusinessLogForm();
+            
+            // 创建 BusinessLog 对象并设置查询条件
+            BusinessLog queryLog = new BusinessLog();
+            queryLog.setBusinessType(businessType);
+            queryLog.setBusinessId(businessId);
+            form.setBusinessLog(queryLog);
+            
+            // 设置分页参数，只查询第一条记录
+            PageForm pageForm = new PageForm();
+            pageForm.setCurrPage(1);
+            pageForm.setPageSize(1);
+            form.setPageForm(pageForm);
+            
+            // 查询日志
+            DataPaging<BusinessLog> dataPaging = queryLogs(form);
+            
+            if (dataPaging != null && dataPaging.getContents() != null && !dataPaging.getContents().isEmpty()) {
+                BusinessLog firstLog = dataPaging.getContents().get(0);
+                String logId = firstLog.getLogId();
+                log.debug("通过businessType={}, businessId={}查询到logId={}", businessType, businessId, logId);
+                return logId;
+            }
+            
+            log.warn("未找到对应的日志: businessType={}, businessId={}", businessType, businessId);
+            return null;
+            
+        } catch (Exception e) {
+            log.error("通过businessType和businessId查询logId失败", e);
+            return null;
+        }
+    }
+
+    @Override
+    public BusinessLogStageSnapshot initStages(InitBusinessLogStageForm form) {
+        if (form == null || StrUtil.isBlank(form.getLogId())) {
+            throw new IllegalArgumentException("logId不能为空");
+        }
+        BusinessLogStageTracker tracker = getOrCreateStageTracker(form.getLogId());
+        BusinessLogStageSnapshot snapshot = tracker.initStages(form.getStages());
+        log.info("初始化业务日志阶段，logId: {}, 阶段数: {}", form.getLogId(),
+                snapshot != null ? snapshot.getStageCount() : 0);
+        return snapshot;
+    }
+
+    @Override
+    public BusinessLogStageSnapshot updateStage(BusinessLogStageUpdateForm form) {
+        if (form == null || StrUtil.isBlank(form.getLogId())) {
+            throw new IllegalArgumentException("logId不能为空");
+        }
+        BusinessLogStageTracker tracker = getOrCreateStageTracker(form.getLogId());
+        BusinessLogStageSnapshot snapshot = tracker.update(form);
+        if (snapshot != null && Boolean.TRUE.equals(form.getAppendLog())) {
+            BusinessLogStageItem activeStage = resolveActiveStage(snapshot);
+            AppendBusinessLogForm appendForm = new AppendBusinessLogForm();
+            appendForm.setLogId(form.getLogId());
+            appendForm.setAutoTimestamp(form.getAutoTimestamp());
+            appendForm.setStageEvent(true);
+            appendForm.setStageCount(snapshot.getStageCount());
+            appendForm.setOverallProgress(snapshot.getOverallProgress());
+            if (activeStage != null) {
+                appendForm.setStageCode(activeStage.getStageCode());
+                appendForm.setStageName(activeStage.getStageName());
+                appendForm.setStageIndex(activeStage.getOrderIndex());
+                appendForm.setStageProgress(activeStage.getProgress());
+                appendForm.setStageStatus(activeStage.getStatus());
+            } else {
+                appendForm.setStageName(form.getStageName());
+                appendForm.setStageIndex(form.getStageIndex());
+                appendForm.setStageProgress(form.getProgress());
+                appendForm.setStageStatus(form.getStatus());
+            }
+            String stageContent = StrUtil.isNotBlank(form.getContent())
+                    ? form.getContent()
+                    : buildStageLogMessage(activeStage, form, snapshot);
+            appendForm.setContent(stageContent);
+            appendLog(appendForm);
+        }
+        log.debug("更新业务日志阶段，logId: {}, 当前阶段: {}, 总进度: {}%", form.getLogId(),
+                snapshot != null ? snapshot.getActiveStageName() : "-", 
+                snapshot != null ? snapshot.getOverallProgress() : 0);
+        return snapshot;
+    }
+
+    @Override
+    public BusinessLogStageSnapshot getStageSnapshot(String logId) {
+        if (StrUtil.isBlank(logId)) {
+            return null;
+        }
+        BusinessLogStageTracker tracker = stageTrackers.get(logId);
+        return tracker != null ? tracker.snapshot() : null;
+    }
+
+    private BusinessLogStageTracker getOrCreateStageTracker(String logId) {
+        return stageTrackers.computeIfAbsent(logId, BusinessLogStageTracker::new);
+    }
+
+    private BusinessLogStageItem resolveActiveStage(BusinessLogStageSnapshot snapshot) {
+        if (snapshot == null || CollectionUtils.isEmpty(snapshot.getStages())) {
+            return null;
+        }
+        if (snapshot.getActiveStageIndex() != null) {
+            for (BusinessLogStageItem item : snapshot.getStages()) {
+                if (Objects.equals(item.getOrderIndex(), snapshot.getActiveStageIndex())) {
+                    return item;
+                }
+            }
+        }
+        if (StrUtil.isNotBlank(snapshot.getActiveStageName())) {
+            for (BusinessLogStageItem item : snapshot.getStages()) {
+                if (snapshot.getActiveStageName().equals(item.getStageName())) {
+                    return item;
+                }
+            }
+        }
+        return snapshot.getStages().get(0);
+    }
+
+    private String buildStageLogMessage(BusinessLogStageItem stage,
+                                        BusinessLogStageUpdateForm form,
+                                        BusinessLogStageSnapshot snapshot) {
+        String stageName = stage != null ? stage.getStageName() : StrUtil.emptyToDefault(form.getStageName(), "阶段");
+        String status = StrUtil.emptyToDefault(
+                stage != null ? stage.getStatus() : form.getStatus(),
+                "RUNNING");
+        int progress = form.getProgress() != null ? form.getProgress()
+                : stage != null && stage.getProgress() != null ? stage.getProgress()
+                : snapshot != null && snapshot.getOverallProgress() != null ? snapshot.getOverallProgress() : 0;
+        String message = StrUtil.emptyToDefault(form.getMessage(), "");
+        return StrUtil.trim(String.format("阶段[%s] 状态: %s, 进度: %d%% %s",
+                stageName, status, progress, message));
+    }
+
+    private static int clampProgress(Integer value) {
+        if (value == null) {
+            return 0;
+        }
+        return Math.max(0, Math.min(100, value));
+    }
+
+    /**
+     * 阶段进度跟踪器
+     */
+    private static class BusinessLogStageTracker {
+        private final String logId;
+        private final LinkedHashMap<String, BusinessLogStageItem> stageMap = new LinkedHashMap<>();
+        private final AtomicLong version = new AtomicLong(0);
+        private int stageCount;
+        private int overallProgress;
+        private String overallStatus = "WAITING";
+        private Integer activeStageIndex;
+        private String activeStageName;
+        private Date updateTime;
+
+        private BusinessLogStageTracker(String logId) {
+            this.logId = logId;
+        }
+
+        private synchronized BusinessLogStageSnapshot initStages(List<BusinessLogStageItem> stages) {
+            stageMap.clear();
+            if (!CollectionUtils.isEmpty(stages)) {
+                List<BusinessLogStageItem> normalized = new ArrayList<>();
+                int fallbackOrder = 1;
+                for (BusinessLogStageItem item : stages) {
+                    BusinessLogStageItem copy = new BusinessLogStageItem();
+                    if (item != null) {
+                        BeanUtil.copyProperties(item, copy);
+                    }
+                    int orderIndex = item != null && item.getOrderIndex() != null ? item.getOrderIndex() : fallbackOrder;
+                    copy.setOrderIndex(orderIndex);
+                    copy.setStageCode(StrUtil.isNotBlank(copy.getStageCode()) ? copy.getStageCode() : "stage-" + orderIndex);
+                    copy.setStageName(StrUtil.isNotBlank(copy.getStageName()) ? copy.getStageName() : "阶段 " + orderIndex);
+                    copy.setProgress(copy.getProgress() == null ? 0 : clampProgress(copy.getProgress()));
+                    copy.setStatus(StrUtil.isNotBlank(copy.getStatus()) ? copy.getStatus().toUpperCase() : "WAITING");
+                    copy.setUpdateTime(new Date());
+                    normalized.add(copy);
+                    fallbackOrder++;
+                }
+                normalized.sort(Comparator.comparingInt(item -> item.getOrderIndex() == null ? Integer.MAX_VALUE : item.getOrderIndex()));
+                int index = 1;
+                for (BusinessLogStageItem stage : normalized) {
+                    if (stage.getOrderIndex() == null) {
+                        stage.setOrderIndex(index);
+                    }
+                    stageMap.put(stage.getStageCode(), stage);
+                    index++;
+                }
+            }
+            stageCount = stageMap.size();
+            overallProgress = calcOverallProgress();
+            overallStatus = computeOverallStatus();
+            BusinessLogStageItem first = stageMap.values().stream().findFirst().orElse(null);
+            activeStageIndex = first != null ? first.getOrderIndex() : null;
+            activeStageName = first != null ? first.getStageName() : null;
+            updateTime = new Date();
+            version.incrementAndGet();
+            return snapshotInternal();
+        }
+
+        private synchronized BusinessLogStageSnapshot update(BusinessLogStageUpdateForm form) {
+            BusinessLogStageItem stage = locateOrCreateStage(form);
+            if (stage == null) {
+                return snapshotInternal();
+            }
+            if (StrUtil.isNotBlank(form.getStageName())) {
+                stage.setStageName(form.getStageName());
+            }
+            if (form.getProgress() != null) {
+                stage.setProgress(clampProgress(form.getProgress()));
+            } else if (stage.getProgress() == null) {
+                stage.setProgress(0);
+            }
+            if (StrUtil.isNotBlank(form.getStatus())) {
+                stage.setStatus(form.getStatus().toUpperCase());
+            } else if (stage.getStatus() == null) {
+                stage.setStatus("RUNNING");
+            }
+            if (StrUtil.isNotBlank(form.getMessage())) {
+                stage.setMessage(form.getMessage());
+            }
+            stage.setUpdateTime(new Date());
+            activeStageIndex = stage.getOrderIndex();
+            activeStageName = stage.getStageName();
+            if (form.getOverallProgress() != null) {
+                overallProgress = clampProgress(form.getOverallProgress());
+            } else {
+                overallProgress = calcOverallProgress();
+            }
+            overallStatus = computeOverallStatus();
+            updateTime = new Date();
+            version.incrementAndGet();
+            return snapshotInternal();
+        }
+
+        private synchronized BusinessLogStageSnapshot snapshot() {
+            return snapshotInternal();
+        }
+
+        private BusinessLogStageItem locateOrCreateStage(BusinessLogStageUpdateForm form) {
+            BusinessLogStageItem target = null;
+            if (StrUtil.isNotBlank(form.getStageCode())) {
+                target = stageMap.get(form.getStageCode());
+            }
+            if (target == null && form.getStageIndex() != null) {
+                target = stageMap.values().stream()
+                        .filter(item -> Objects.equals(item.getOrderIndex(), form.getStageIndex()))
+                        .findFirst()
+                        .orElse(null);
+            }
+            if (target == null && StrUtil.isNotBlank(form.getStageCode())) {
+                target = buildStage(form, form.getStageCode());
+            }
+            if (target == null) {
+                String generatedCode = StrUtil.isNotBlank(form.getStageCode())
+                        ? form.getStageCode()
+                        : "stage-" + (stageMap.size() + 1);
+                target = buildStage(form, generatedCode);
+            }
+            return target;
+        }
+
+        private BusinessLogStageItem buildStage(BusinessLogStageUpdateForm form, String stageCode) {
+            BusinessLogStageItem stage = new BusinessLogStageItem();
+            stage.setStageCode(stageCode);
+            int orderIndex = form.getStageIndex() != null ? form.getStageIndex() : stageMap.size() + 1;
+            stage.setOrderIndex(orderIndex);
+            stage.setStageName(StrUtil.isNotBlank(form.getStageName()) ? form.getStageName() : "阶段 " + orderIndex);
+            stage.setProgress(form.getProgress() != null ? clampProgress(form.getProgress()) : 0);
+            stage.setStatus(StrUtil.isNotBlank(form.getStatus()) ? form.getStatus().toUpperCase() : "WAITING");
+            stage.setMessage(form.getMessage());
+            stage.setUpdateTime(new Date());
+            stageMap.put(stage.getStageCode(), stage);
+            reorder();
+            stageCount = stageMap.size();
+            return stageMap.get(stage.getStageCode());
+        }
+
+        private void reorder() {
+            List<BusinessLogStageItem> sorted = stageMap.values().stream()
+                    .sorted(Comparator.comparingInt(item -> item.getOrderIndex() == null ? Integer.MAX_VALUE : item.getOrderIndex()))
+                    .collect(Collectors.toList());
+            stageMap.clear();
+            int index = 1;
+            for (BusinessLogStageItem item : sorted) {
+                if (item.getOrderIndex() == null) {
+                    item.setOrderIndex(index);
+                }
+                stageMap.put(item.getStageCode(), item);
+                index++;
+            }
+        }
+
+        private int calcOverallProgress() {
+            if (stageMap.isEmpty()) {
+                return 0;
+            }
+            int total = stageMap.values().stream()
+                    .map(item -> item.getProgress() == null ? 0 : clampProgress(item.getProgress()))
+                    .reduce(0, Integer::sum);
+            return total / stageMap.size();
+        }
+
+        private String computeOverallStatus() {
+            if (stageMap.isEmpty()) {
+                return "WAITING";
+            }
+            if (stageMap.values().stream().anyMatch(item -> "FAILED".equalsIgnoreCase(
+                    StrUtil.emptyToDefault(item.getStatus(), "WAITING")))) {
+                return "FAILED";
+            }
+            boolean allDone = stageMap.values().stream().allMatch(item ->
+                    "DONE".equalsIgnoreCase(StrUtil.emptyToDefault(item.getStatus(), "WAITING")));
+            if (allDone) {
+                return "DONE";
+            }
+            boolean anyRunning = stageMap.values().stream().anyMatch(item ->
+                    "RUNNING".equalsIgnoreCase(StrUtil.emptyToDefault(item.getStatus(), "WAITING")));
+            if (anyRunning) {
+                return "RUNNING";
+            }
+            return "WAITING";
+        }
+
+        private BusinessLogStageSnapshot snapshotInternal() {
+            BusinessLogStageSnapshot snapshot = new BusinessLogStageSnapshot();
+            snapshot.setLogId(logId);
+            snapshot.setStageCount(stageCount);
+            snapshot.setOverallProgress(overallProgress);
+            snapshot.setOverallStatus(overallStatus);
+            snapshot.setActiveStageIndex(activeStageIndex);
+            snapshot.setActiveStageName(activeStageName);
+            snapshot.setUpdateTime(updateTime != null ? (Date) updateTime.clone() : null);
+            snapshot.setVersion(version.get());
+            List<BusinessLogStageItem> items = stageMap.values().stream()
+                    .sorted(Comparator.comparingInt(item -> item.getOrderIndex() == null ? Integer.MAX_VALUE : item.getOrderIndex()))
+                    .map(this::copyStage)
+                    .collect(Collectors.toList());
+            snapshot.setStages(items);
+            return snapshot;
+        }
+
+        private BusinessLogStageItem copyStage(BusinessLogStageItem source) {
+            BusinessLogStageItem target = new BusinessLogStageItem();
+            BeanUtil.copyProperties(source, target);
+            if (source.getUpdateTime() != null) {
+                target.setUpdateTime((Date) source.getUpdateTime().clone());
+            }
+            return target;
         }
     }
 }

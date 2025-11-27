@@ -76,20 +76,14 @@ public class MqttRequestListener extends AbstractMqttMessageListener {
      */
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        log.debug("📨 收到消息 Topic: {}, Method: {}, Payload: {}", 
-                topic, 
-                mqttRequsetBean.getMethod().getName(),
-                new String(message.getPayload(), Charsets.UTF_8));
-        
         // 提交到线程池异步处理
         executor.submit(() -> {
             try {
                 executeMqttRequest(topic, message);
-                log.debug("✅ 消息处理完成 Topic: {}, Method: {}", 
-                        topic, mqttRequsetBean.getMethod().getName());
             } catch (Exception e) {
-                log.error("❌ 消息处理失败 Topic: {}, Method: {}", 
-                        topic, mqttRequsetBean.getMethod().getName(), e);
+                String beanName = mqttRequsetBean.getBean().getClass().getSimpleName();
+                String methodName = mqttRequsetBean.getMethod().getName();
+                log.error("执行MQTT方法失败 - Topic: {}, Bean: {}, Method: {}", topic, beanName, methodName, e);
             }
         });
     }
