@@ -143,7 +143,10 @@ public class ThirdPartyAuthService {
         //OAuth2规范要求：如果获取授权码时使用了redirect_uri，换取token时也必须提供相同的redirect_uri
         if (StrUtil.isNotBlank(redirectUri)) {
             tokenUrlBuilder.addQueryParameter("redirect_uri", redirectUri);
-            log.info("[第三方认证] Step 1: 添加redirect_uri参数: {}", platformConfig.getRedirectUri());
+            log.info("[第三方认证] Step 1: 添加传过来的参数redirect_uri参数: {}", redirectUri);
+        }else if (StrUtil.isNotBlank(platformConfig.getRedirectUri())) {
+            tokenUrlBuilder.addQueryParameter("redirect_uri", platformConfig.getRedirectUri());
+            log.info("[第三方认证] Step 1: 添加后台配置redirect_uri参数: {}", platformConfig.getRedirectUri());
         }
 
         HttpUrl finalTokenUrl = tokenUrlBuilder.build();
