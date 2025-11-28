@@ -197,7 +197,7 @@ public class ProcessExecutionEngine {
                 // 节点需要等待触发
                 createProcessTrigger(processInstance, currentNode, result);
                 processInstance.setStatus(ProcessStatusEnum.WAITING.getCode());
-                processInstanceService.save(processInstance);
+                processInstanceService.saveOrUpdate(processInstance);
 
                 return createResponse(processInstance, currentNode, result, true);
             }

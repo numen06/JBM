@@ -41,6 +41,27 @@ public class CodeNodeExecutor implements NodeExecutor {
             // 执行代码
             Map<String, Object> executionContext = executeCode(code, inputData, inputVariables, outputVariables);
 
+            // 检查是否设置了__WAIT_TRIGGER__标识
+            Object waitTrigger = executionContext.get("__WAIT_TRIGGER__");
+            log.info("代码节点{}的__WAIT_TRIGGER__值: {}, 类型: {}", 
+                node.getId(), waitTrigger, waitTrigger != null ? waitTrigger.getClass().getName() : "null");
+            
+            if (waitTrigger != null && Boolean.parseBoolean(waitTrigger.toString())) {
+                // 代码节点设置了等待标识，进入等待触发状态
+                log.info("代码节点{}检测到__WAIT_TRIGGER__=true，进入等待触发状态", node.getId());
+
+                // 获取触发类型和触发键
+                String triggerType = nodeData.getOrDefault("triggerType", "code_waiting").toString();
+                String triggerKey = nodeData.getOrDefault("triggerKey", node.getId()).toString();
+
+                // 过滤掉__WAIT_TRIGGER__，回增其他输出变量
+                executionContext.remove("__WAIT_TRIGGER__");
+
+                return NodeExecutionResult.waiting(triggerType, triggerKey);
+            } else {
+                log.info("代码节点{}未设置等待标识，仃需执行成功", node.getId());
+            }
+
             return NodeExecutionResult.success(executionContext);
 
         } catch (Exception e) {
@@ -72,6 +93,18 @@ public class CodeNodeExecutor implements NodeExecutor {
         // 收集输出变量
         Map<String, Object> outputData = new HashMap<>(inputData != null ? inputData : new HashMap<>());
 
+        // 首先，从engine中提取所有全局变量（包括__WAIT_TRIGGER__）
+        try {
+            Object waitTrigger = engine.get("__WAIT_TRIGGER__");
+            if (waitTrigger != null) {
+                outputData.put("__WAIT_TRIGGER__", waitTrigger);
+            }
+        } catch (Exception e) {
+            // 如果__WAIT_TRIGGER__不存在，忽略
+            log.debug("未找到__WAIT_TRIGGER__变量", e);
+        }
+
+        // 然后，收集outputVariables中定义的其他输出变量
         if (outputVariables != null && !outputVariables.isEmpty()) {
             for (Map<String, Object> outputVar : outputVariables) {
                 String varName = (String) outputVar.get("name");

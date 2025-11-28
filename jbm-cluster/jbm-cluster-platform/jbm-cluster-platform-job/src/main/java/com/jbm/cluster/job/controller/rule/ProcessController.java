@@ -3,6 +3,7 @@ package com.jbm.cluster.job.controller.rule;
 import cn.hutool.core.lang.Assert;
 import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
 import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
+import com.jbm.cluster.api.form.job.AgvTestForm;
 import com.jbm.cluster.api.form.job.ProcessInstancePageForm;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessRequest;
 import com.jbm.cluster.api.model.job.rule.ExecuteProcessResponse;
@@ -143,6 +144,17 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
             return ResponseEntity.badRequest().body(
                     createErrorResponse(e.getMessage()));
         }
+    }
+
+    @PostMapping("/agvTest")
+    public ResultBody<String> agvTest(@RequestBody AgvTestForm form){
+        System.out.println(form);
+        return ResultBody.success();
+    }
+
+    @PostMapping("/alarmTest")
+    public ResultBody<String> agvTest(){
+        return ResultBody.success();
     }
 
     private ExecuteProcessResponse createErrorResponse(String message) {

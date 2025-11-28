@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,6 +48,11 @@ public class HttpNodeExecutor implements NodeExecutor {
             // 替换模板变量
             // String requestBody = buildRequestBody(nodeData, inputData);
             String requestBody = (String) nodeData.get("requestBody");
+
+            // 如果requestBody为空，尝试从requestParams构建
+            if (requestBody == null || requestBody.trim().isEmpty()) {
+                requestBody = buildRequestBodyFromParams(nodeData);
+            }
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
 
             // 执行HTTP请求
@@ -140,6 +146,83 @@ public class HttpNodeExecutor implements NodeExecutor {
         }
 
         return template;
+    }
+
+    /**
+     * 从requestParams构建POST请求体
+     * 当前端还没有实现requestBody时，从requestParams数组中的name和value组成JSON
+     */
+    private String buildRequestBodyFromParams(Map<String, Object> nodeData) {
+        Object requestParamsObj = nodeData.get("requestParams");
+        if (requestParamsObj == null) {
+            return "{}";
+        }
+
+        try {
+            List<Map<String, Object>> requestParams = (List<Map<String, Object>>) requestParamsObj;
+            Map<String, Object> bodyMap = new HashMap<>();
+
+            // 遍历requestParams，从name和value构建请求体
+            for (Map<String, Object> param : requestParams) {
+                String name = (String) param.get("name");
+                Object value = param.get("value");
+
+                if (name != null && !name.trim().isEmpty()) {
+                    // 尝试转换value的类型
+                    Object convertedValue = convertParamValue(value, (String) param.get("type"));
+                    bodyMap.put(name, convertedValue);
+                }
+            }
+
+            // 转换为JSON字符串
+            return JSONUtil.toJsonStr(bodyMap);
+        } catch (Exception e) {
+            log.warn("从requestParams构建请求体失败，将使用空JSON", e);
+            return "{}";
+        }
+    }
+
+    /**
+     * 转换参数值的类型
+     */
+    private Object convertParamValue(Object value, String type) {
+        if (value == null) {
+            return null;
+        }
+
+        if ("Number".equalsIgnoreCase(type) || "Integer".equalsIgnoreCase(type)) {
+            try {
+                if (value instanceof Number) {
+                    return value;
+                }
+                String valueStr = value.toString();
+                if (valueStr.contains(".")) {
+                    return Double.parseDouble(valueStr);
+                } else {
+                    return Long.parseLong(valueStr);
+                }
+            } catch (Exception e) {
+                return value;
+            }
+        } else if ("Boolean".equalsIgnoreCase(type)) {
+            if (value instanceof Boolean) {
+                return value;
+            }
+            return Boolean.parseBoolean(value.toString());
+        } else if ("Array".equalsIgnoreCase(type)) {
+            if (value instanceof List) {
+                return value;
+            }
+            // 尝试解析为JSON数组
+            try {
+                return JSONUtil.parseArray(value.toString());
+            } catch (Exception e) {
+                return value;
+            }
+        } else {
+            // 默认作为字符串
+            return value.toString();
+        }
     }
 
     @Override
