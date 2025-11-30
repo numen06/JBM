@@ -23,6 +23,7 @@ public class WebhookEventService {
     @Autowired
     private EventDeliveryService eventDeliveryService;
 
+    @Autowired
     private JbmRequestTemplate jbmRequestTemplate;
 
     @Autowired

@@ -13,7 +13,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,7 +149,7 @@ public class EventDeliveryService {
                 log.warn("⏳ 任务 {} 第 {} 次尝试失败，重试次数: {}，准备重试", 
                         task.getTaskId(), attemptCount, task.getRetryNumber());
 
-                long backoffMillis = (long) Math.pow(2, attemptCount - 1) * 1000;
+                long backoffMillis = 1000; // 固定1秒重试间隔
                 log.warn("⏳ 第 {} 次重试前等待 {}ms: {}", attemptCount, backoffMillis, task.getTaskId());
                 ThreadUtil.safeSleep(backoffMillis);
                 // ➿ 继续下一次尝试
