@@ -64,8 +64,5 @@ public class WebhookEventService {
         }
     }
 
-    /**
-     * 🆕 封装：入队列 + 触发投递
-     */
 
 }
