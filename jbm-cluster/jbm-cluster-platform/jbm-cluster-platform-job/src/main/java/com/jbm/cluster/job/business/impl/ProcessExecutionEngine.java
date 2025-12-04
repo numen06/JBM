@@ -137,8 +137,16 @@ public class ProcessExecutionEngine {
         processTriggerService.saveEntity(trigger);
 
         // 继续执行
-        FlowData flowData = parseFlowData(
-                ruleDefinitionService.selectById(processInstance.getRuleDefinitionId()).getRuleContent());
+        // 检查是使用本地规则定义还是直接使用流程实例中的JSON内容
+        String ruleContent;
+        if (processInstance.getRuleDefinitionId() != null) {
+            // 使用本地规则定义
+            ruleContent = ruleDefinitionService.selectById(processInstance.getRuleDefinitionId()).getRuleContent();
+        } else {
+            // 使用流程实例中直接存储的JSON内容
+            ruleContent = processInstance.getRuleContent();
+        }
+        FlowData flowData = parseFlowData(ruleContent);
 
         return continueExecution(processInstance, flowData, request.getTriggerNodeId(), request.getTriggerData());
     }

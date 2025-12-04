@@ -1,8 +1,7 @@
 package com.jbm.cluster.job.service.impl.rule;
 
-import com.jbm.cluster.api.entitys.job.rule.NodeExecution;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.job.rule.ProcessTrigger;
-import com.jbm.cluster.job.service.rule.NodeExecutionService;
 import com.jbm.cluster.job.service.rule.ProcessTriggerService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,9 @@ import org.springframework.stereotype.Service;
 public class ProcessTriggerServiceImpl extends MasterDataServiceImpl<ProcessTrigger> implements ProcessTriggerService {
     @Override
     public ProcessTrigger findByProcessInstanceIdAndNodeId(String processInstanceId, String triggerNodeId) {
-        return null;
+        QueryWrapper<ProcessTrigger> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("process_instance_id", processInstanceId);
+        queryWrapper.eq("node_id", triggerNodeId);
+        return this.selectEntityByWapper(queryWrapper);
     }
 }
