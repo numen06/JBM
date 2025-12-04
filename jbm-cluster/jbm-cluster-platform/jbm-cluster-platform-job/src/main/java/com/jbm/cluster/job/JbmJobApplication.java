@@ -4,6 +4,7 @@ import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.job.mapper.SysJobMapper;
 import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
+import jbm.framework.boot.autoconfigure.mqtt.registrar.EnableMqttMapperScan;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,6 +26,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan(basePackages = {"com.jbm.cluster.job.mapper"})
 @EnableJbmDictionary(basePackageClasses = MisfirePolicy.class)
 @EnableCodeAutoGeneate(entityPackages = "com.jbm.cluster.api.entitys.job", targetPackage = "com.jbm.cluster.job", excludePackages = {"com.jbm.cluster.api.entitys.job.rule"})
+@EnableMqttMapperScan(basePackages = {"com.jbm.cluster.job"})
 public class JbmJobApplication {
     public static void main(String[] args) {
         SpringApplication.run(JbmJobApplication.class, args);

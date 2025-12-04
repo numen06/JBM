@@ -8,6 +8,7 @@ import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
 import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
 import com.jbm.cluster.api.model.job.rule.*;
 import com.jbm.cluster.job.execute.*;
+import com.jbm.cluster.job.model.NodeExecutionMessage;
 import com.jbm.cluster.job.service.rule.NodeExecutionService;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
 import com.jbm.cluster.job.service.rule.ProcessTriggerService;
@@ -176,9 +177,13 @@ public class ProcessExecutionEngine {
         currentExecution.setOutputData(JsonUtils.toJson(triggerData));
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
+        
+        // 发送节点执行完成消息
+        Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        sendNodeExecutionMessage(processInstance, currentNode, triggerDataMap, "TRIGGERED");
 
         // triggerData 转map
-        Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
 
         // 继续执行后续节点
         return executeNextNodes(processInstance, flowData, currentNode, triggerDataMap);
@@ -190,6 +195,9 @@ public class ProcessExecutionEngine {
             Map<String, Object> inputData) {
         // 创建节点执行记录
         NodeExecution nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
+        
+        // 发送MQTT消息
+        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING");
 
         try {
             // 获取节点执行器
@@ -206,17 +214,27 @@ public class ProcessExecutionEngine {
                 createProcessTrigger(processInstance, currentNode, result);
                 processInstance.setStatus(ProcessStatusEnum.WAITING.getCode());
                 processInstanceService.saveOrUpdate(processInstance);
+                
+                // 发送节点等待触发消息
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING");
 
                 return createResponse(processInstance, currentNode, result, true);
             }
 
             if (result.isSuccess()) {
+                // 发送节点执行成功消息
+                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED");
+                
                 // 执行后续节点
                 return executeNextNodes(processInstance, flowData, currentNode, result.getOutputData());
             } else {
                 // 执行失败
                 processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
                 processInstanceService.saveEntity(processInstance);
+                
+                // 发送节点执行失败消息
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED");
+                
                 return createResponse(processInstance, currentNode, result, false);
             }
 
@@ -225,6 +243,10 @@ public class ProcessExecutionEngine {
             handleNodeExecutionError(nodeExecution, e);
             processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
             processInstanceService.saveEntity(processInstance);
+            
+            // 发送节点执行异常消息
+            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR");
+            
             throw new ServiceException("节点执行失败: " + e.getMessage(), e);
         }
     }
@@ -376,5 +398,36 @@ public class ProcessExecutionEngine {
         execution.setErrorMessage(e.getMessage());
         execution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(execution);
+    }
+
+    /**
+     * 发送节点执行消息
+     *
+     * @param processInstance 流程实例
+     * @param nodeData        节点数据
+     * @param inputData       输入数据
+     * @param status          状态
+     */
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status) {
+        try {
+            NodeExecutionMessage message = new NodeExecutionMessage();
+            message.setProcessInstanceId(processInstance.getId());
+            message.setProcessInstanceName(processInstance.getRuleName());
+            message.setNodeId(nodeData.getId());
+            message.setNodeType(nodeData.getType());
+            message.setNodeLabel(nodeData.getLabel());
+            message.setNodeData(nodeData.getData());
+            message.setInputParams(inputData);
+            message.setExecutionTime(LocalDateTime.now());
+            message.setStatus(status);
+
+            String messageJson = JsonUtils.toJson(message);
+            String topic = "process/node/execution/";
+            
+            // 发送MQTT消息
+            mqttService.publish(topic, messageJson);
+        } catch (Exception e) {
+            log.error("发送节点执行消息失败", e);
+        }
     }
 }
