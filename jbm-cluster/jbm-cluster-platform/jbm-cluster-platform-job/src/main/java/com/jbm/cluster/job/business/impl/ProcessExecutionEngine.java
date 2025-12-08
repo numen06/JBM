@@ -421,11 +421,11 @@ public class ProcessExecutionEngine {
             message.setExecutionTime(LocalDateTime.now());
             message.setStatus(status);
 
-            String messageJson = JsonUtils.toJson(message);
+            //String messageJson = JsonUtils.toJson(message);
             String topic = "process/node/execution/";
             
             // 发送MQTT消息
-            mqttService.publish(topic, messageJson);
+            mqttService.publish(topic, message);
         } catch (Exception e) {
             log.error("发送节点执行消息失败", e);
         }

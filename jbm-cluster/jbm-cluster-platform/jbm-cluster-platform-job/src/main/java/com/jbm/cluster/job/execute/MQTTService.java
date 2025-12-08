@@ -1,5 +1,6 @@
 package com.jbm.cluster.job.execute;
 
+import com.jbm.cluster.job.model.NodeExecutionMessage;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +61,7 @@ public class MQTTService {
 //        }
 //    }
 
-    public void publish(String topic, String message) {
+    public void publish(String topic, NodeExecutionMessage message) {
         if (simpleMqttClient == null) {
             log.error("MQTT客户端未初始化");
             return;
