@@ -80,10 +80,11 @@ public class ProcessExecutionEngine {
         }
     }
 
+
     /**
-     * 直接执行流程JSON（不使用本地规则定义）
+     * 创建流程实例（传入流程json）
      */
-    public ExecuteProcessResponse executeProcessByJson(ExecuteProcessByJsonRequest request) {
+    public ProcessInstance createProcessByJson(ExecuteProcessByJsonRequest request) {
         try {
             Assert.notBlank(request.getRuleContent(), () -> new ServiceException("流程定义JSON不能为空"));
             Assert.notNull(request.getInputParams(), () -> new ServiceException("输入参数不能为空"));
@@ -96,19 +97,35 @@ public class ProcessExecutionEngine {
             // 设置ruleName和ruleContent
             processInstance.setRuleName(request.getRuleName());
             processInstance.setRuleContent(request.getRuleContent());
-            processInstance.setStatus(ProcessStatusEnum.RUNNING.getCode());
+            processInstance.setStatus(ProcessStatusEnum.CREATED.getCode());
             processInstance.setInputParams(JsonUtils.toJson(request.getInputParams()));
             processInstance.setCreatedAt(LocalDateTime.now());
-            processInstanceService.saveEntity(processInstance);
+            return processInstanceService.saveEntity(processInstance);
+        } catch (Exception e) {
+            throw new ServiceException("生成流程实例失败: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * 直接执行流程JSON（不使用本地规则定义）
+     */
+    public ExecuteProcessResponse executeProcessByJson(ExecuteProcessByJsonRequest request) {
+        try {
+            Assert.notNull(request.getInputParams(), () -> new ServiceException("processInstanceId不能为空"));
+            Assert.notNull(request.getInputParams(), () -> new ServiceException("inputParams不能为空"));
+
+            ProcessInstance processInstance = processInstanceService.selectById(request.getProcessInstanceId());
+            Assert.notNull(processInstance, () -> new ServiceException("流程实例不存在"));
 
             // 解析流程数据
-            FlowData flowData = parseFlowData(request.getRuleContent());
+            FlowData flowData = parseFlowData(processInstance.getRuleContent());
 
             // 开始执行
+            processInstance.setStatus(ProcessStatusEnum.RUNNING.getCode());
             return executeFromStart(processInstance, flowData, request.getInputParams());
 
         } catch (Exception e) {
-            log.error("直接执行流程JSON失败", e);
             throw new ServiceException("流程执行失败: " + e.getMessage());
         }
     }

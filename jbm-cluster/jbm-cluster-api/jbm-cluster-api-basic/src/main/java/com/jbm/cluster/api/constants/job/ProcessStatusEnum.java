@@ -17,6 +17,11 @@ import lombok.Getter;
 public enum ProcessStatusEnum {
 
     /**
+     * 已创建
+     */
+    CREATED("已创建"),
+
+    /**
      * 等待中
      */
     WAITING("等待中"),

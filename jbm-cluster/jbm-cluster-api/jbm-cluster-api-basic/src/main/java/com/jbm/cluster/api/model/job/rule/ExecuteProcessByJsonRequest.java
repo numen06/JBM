@@ -23,6 +23,6 @@ public class ExecuteProcessByJsonRequest {
     @ApiModelProperty("输入参数")
     private Map<String, Object> inputParams;
 
-    @ApiModelProperty("流程实例ID（可选，用于跟踪）")
+    @ApiModelProperty("流程实例ID")
     private String processInstanceId;
 }

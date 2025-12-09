@@ -74,7 +74,7 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
         }
     }
 
-    @ApiOperation(value = "执行流程")
+    @ApiOperation(value = "执行流程", notes = "使用本地规则定义")
     @PostMapping("/execute")
     public ResultBody<ExecuteProcessResponse> executeProcess(@RequestBody ExecuteProcessRequest request) {
         try {
@@ -104,8 +104,17 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
         }
     }
 
-    @ApiOperation(value = "执行流程JSON", notes = "直接传入流程JSON和输入参数执行流程，不使用本地规则定义")
-    @PostMapping("/executeByJson")
+    @ApiOperation(value = "根据json创建流程实例", notes = "外部传入流程JSON，不使用本地规则定义")
+    @PostMapping("/createProcessByJson")
+    public ResultBody<ProcessInstance> createProcessByJson(
+            @RequestBody ExecuteProcessByJsonRequest request) {
+
+        ProcessInstance processInstance = processExecutionEngine.createProcessByJson(request);
+        return ResultBody.success(processInstance, "流程实例创建成功");
+    }
+
+    @ApiOperation(value = "根据流程实例id执行流程")
+    @PostMapping("/executeProcessById")
     public ResultBody<ExecuteProcessResponse> executeProcessByJson(
             @RequestBody ExecuteProcessByJsonRequest request) {
         try {
