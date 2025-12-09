@@ -197,10 +197,10 @@ public class ProcessExecutionEngine {
         
         // 发送节点执行完成消息
         Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
-        sendNodeExecutionMessage(processInstance, currentNode, triggerDataMap, "TRIGGERED");
+        //sendNodeExecutionMessage(processInstance, currentNode, triggerDataMap, "TRIGGERED");
 
         // triggerData 转map
-        triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        //triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
 
         // 继续执行后续节点
         return executeNextNodes(processInstance, flowData, currentNode, triggerDataMap);
@@ -213,8 +213,8 @@ public class ProcessExecutionEngine {
         // 创建节点执行记录
         NodeExecution nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
         
-        // 发送MQTT消息
-        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING");
+        // 发送MQTT消息 - 进入节点
+        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER");
 
         try {
             // 获取节点执行器
@@ -232,15 +232,15 @@ public class ProcessExecutionEngine {
                 processInstance.setStatus(ProcessStatusEnum.WAITING.getCode());
                 processInstanceService.saveOrUpdate(processInstance);
                 
-                // 发送节点等待触发消息
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING");
+                // 发送节点等待触发消息 - 离开节点
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING", "EXIT");
 
                 return createResponse(processInstance, currentNode, result, true);
             }
 
             if (result.isSuccess()) {
-                // 发送节点执行成功消息
-                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED");
+                // 发送节点执行成功消息 - 离开节点
+                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED", "EXIT");
                 
                 // 执行后续节点
                 return executeNextNodes(processInstance, flowData, currentNode, result.getOutputData());
@@ -249,8 +249,8 @@ public class ProcessExecutionEngine {
                 processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
                 processInstanceService.saveEntity(processInstance);
                 
-                // 发送节点执行失败消息
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED");
+                // 发送节点执行失败消息 - 离开节点
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED", "EXIT");
                 
                 return createResponse(processInstance, currentNode, result, false);
             }
@@ -261,8 +261,8 @@ public class ProcessExecutionEngine {
             processInstance.setStatus(ProcessStatusEnum.FAILED.getCode());
             processInstanceService.saveEntity(processInstance);
             
-            // 发送节点执行异常消息
-            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR");
+            // 发送节点执行异常消息 - 离开节点
+            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR", "EXIT");
             
             throw new ServiceException("节点执行失败: " + e.getMessage(), e);
         }
@@ -386,7 +386,7 @@ public class ProcessExecutionEngine {
                 .orElseThrow(() -> new ServiceException("未找到节点: " + nodeId));
     }
 
-    private FlowData parseFlowData(String flowDataJson) {
+    public FlowData parseFlowData(String flowDataJson) {
         return JsonUtils.fromJson(flowDataJson, FlowData.class);
     }
 
@@ -424,8 +424,9 @@ public class ProcessExecutionEngine {
      * @param nodeData        节点数据
      * @param inputData       输入数据
      * @param status          状态
+     * @param eventType       事件类型 ENTER-进入节点，EXIT-离开节点
      */
-    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status) {
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType) {
         try {
             NodeExecutionMessage message = new NodeExecutionMessage();
             message.setProcessInstanceId(processInstance.getId());
@@ -437,6 +438,7 @@ public class ProcessExecutionEngine {
             message.setInputParams(inputData);
             message.setExecutionTime(LocalDateTime.now());
             message.setStatus(status);
+            message.setEventType(eventType);
 
             //String messageJson = JsonUtils.toJson(message);
             String topic = "process/node/execution/";

@@ -56,4 +56,9 @@ public class NodeExecutionMessage {
      * 状态
      */
     private String status;
+    
+    /**
+     * 节点事件类型：ENTER-进入节点，EXIT-离开节点
+     */
+    private String eventType;
 }

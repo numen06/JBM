@@ -5,10 +5,7 @@ import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
 import com.jbm.cluster.api.constants.job.ProcessStatusEnum;
 import com.jbm.cluster.api.form.job.AgvTestForm;
 import com.jbm.cluster.api.form.job.ProcessInstancePageForm;
-import com.jbm.cluster.api.model.job.rule.ExecuteProcessRequest;
-import com.jbm.cluster.api.model.job.rule.ExecuteProcessResponse;
-import com.jbm.cluster.api.model.job.rule.ExecuteProcessByJsonRequest;
-import com.jbm.cluster.api.model.job.rule.RuleInstanceModel;
+import com.jbm.cluster.api.model.job.rule.*;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
 import com.jbm.cluster.job.service.rule.RuleDefinitionService;
@@ -153,6 +150,15 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
             return ResponseEntity.badRequest().body(
                     createErrorResponse(e.getMessage()));
         }
+    }
+
+    @ApiOperation(value = "解析流程json")
+    @PostMapping("/parseProcessByJson")
+    public ResultBody<FlowData> parseProcessByJson(
+            @RequestBody ExecuteProcessByJsonRequest request) {
+        Assert.notNull(request.getRuleContent(), "流程JSON不能为空");
+        FlowData flowData = processExecutionEngine.parseFlowData(request.getRuleContent());
+        return ResultBody.success(flowData, "解析流程json成功");
     }
 
     @PostMapping("/agvTest")
