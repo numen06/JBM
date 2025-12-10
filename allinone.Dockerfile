@@ -55,67 +55,41 @@ RUN yum install -y fontconfig
 RUN yum install -y lrzsz net-tools vim wget
 
 # ------------------------------------------------------------
-# 每个服务 stage 名称 = pom.xml 中的 <artifactId>
+# 每个服务 stage：硬编码 JAR 名（零变量依赖，buildx 100% 可识别）
 # ------------------------------------------------------------
 
 FROM base AS jbm-cluster-platform-auth
-
-ARG JAR_FILE=jbm-cluster-platform-auth.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-auth.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-bigscreen
-
-ARG JAR_FILE=jbm-cluster-platform-bigscreen.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-bigscreen.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-center
-
-ARG JAR_FILE=jbm-cluster-platform-center.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-center.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-doc
-
-ARG JAR_FILE=jbm-cluster-platform-doc.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-doc.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-gateway
-
-ARG JAR_FILE=jbm-cluster-platform-gateway.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-gateway.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-job
-
-ARG JAR_FILE=jbm-cluster-platform-job.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-job.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-logs
-
-ARG JAR_FILE=jbm-cluster-platform-logs.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
+COPY --from=builder /app/dist/jbm-cluster-platform-logs.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-push
-
-ARG JAR_FILE=jbm-cluster-platform-push.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-push.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-weixin
-
-ARG JAR_FILE=jbm-cluster-platform-weixin.jar
-COPY --from=builder /app/dist/${JAR_FILE} app.jar
-
+COPY --from=builder /app/dist/jbm-cluster-platform-weixin.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
