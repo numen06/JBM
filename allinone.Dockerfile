@@ -8,7 +8,8 @@ WORKDIR /app
 # 安装 wget、unzip（用于下载和解压 Maven）
 RUN dnf update -y && \
     dnf install -y --no-install-recommends wget unzip && \
-    rm -rf /var/lib/apt/lists/*
+    dnf clean all && \
+    rm -rf /var/cache/dnf
 
 # 从阿里云镜像下载 Maven（加速）
 ENV MAVEN_VERSION=3.9.2
