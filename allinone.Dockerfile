@@ -6,7 +6,7 @@ FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-ano
 WORKDIR /app
 
 # 安装 wget、unzip（用于下载和解压 Maven）
-RUN dnf update && \
+RUN dnf update -y && \
     dnf install -y --no-install-recommends wget unzip && \
     rm -rf /var/lib/apt/lists/*
 
