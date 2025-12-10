@@ -6,10 +6,15 @@ FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-ano
 WORKDIR /app
 
 # 安装 wget、unzip（用于下载和解压 Maven）
-RUN dnf update -y && \
-    dnf install -y --no-install-recommends wget unzip && \
+RUN set -xeuo pipefail && \
+    dnf makecache --refresh && \
+    dnf update -y && \
+    dnf install -y \
+        --setopt=install_weak_deps=False \
+        --setopt=skip_if_unavailable=True \
+        wget unzip && \
     dnf clean all && \
-    rm -rf /var/cache/dnf
+    rm -rf /var/cache/dnf* /tmp/* /var/tmp/*
 
 # 从阿里云镜像下载 Maven（加速）
 ENV MAVEN_VERSION=3.9.2
