@@ -58,7 +58,6 @@ RUN yum install -y lrzsz net-tools vim wget
 # 每个服务 stage：硬编码 JAR 名（零变量依赖，buildx 100% 可识别）
 # ------------------------------------------------------------
 
-
 FROM base AS jbm-cluster-platform-auth
 COPY --from=builder /app/dist/jbm-cluster-platform-auth.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
