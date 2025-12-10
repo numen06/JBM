@@ -66,40 +66,56 @@ COPY --from=builder /app/dist/${JAR_FILE} app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-bigscreen
+
+ARG JAR_FILE=jbm-cluster-platform-bigscreen.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-center
+
+ARG JAR_FILE=jbm-cluster-platform-center.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-doc
+
+ARG JAR_FILE=jbm-cluster-platform-doc.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-gateway
+
+ARG JAR_FILE=jbm-cluster-platform-gateway.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-job
+
+ARG JAR_FILE=jbm-cluster-platform-job.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-logs
+
+ARG JAR_FILE=jbm-cluster-platform-logs.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-push
+
+ARG JAR_FILE=jbm-cluster-platform-push.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM base AS jbm-cluster-platform-weixin
+
+ARG JAR_FILE=jbm-cluster-platform-weixin.jar
 COPY --from=builder /app/dist/${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
