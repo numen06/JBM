@@ -7,14 +7,10 @@ WORKDIR /app
 
 # 安装 wget、unzip（用于下载和解压 Maven）
 RUN set -xeuo pipefail && \
-    dnf makecache --refresh && \
-    dnf update -y && \
-    dnf install -y \
-        --setopt=install_weak_deps=False \
-        --setopt=skip_if_unavailable=True \
-        wget unzip && \
-    dnf clean all && \
-    rm -rf /var/cache/dnf* /tmp/* /var/tmp/*
+    microdnf update -y && \
+    microdnf install -y wget unzip && \
+    microdnf clean all && \
+    rm -rf /var/cache/microdnf /tmp/* /var/tmp/*
 
 # 从阿里云镜像下载 Maven（加速）
 ENV MAVEN_VERSION=3.9.2
