@@ -89,18 +89,38 @@ public class StationNodeExecutor implements NodeExecutor {
             if (params != null) {
                 Map<String, Object> newParams = new HashMap<>(params);
                 
-                // 获取当前站点 ID
+                // 获取字段映射配置（默认为 siteCoordinateId）
+                String currentSiteField = "siteCoordinateId";
+                String nextSiteField = "siteCoordinateId";
+                
+                // 检查 __HTTP_CALL__ 中是否有字段映射配置
+                if (result.containsKey("fieldMapping")) {
+                    Map<String, Object> fieldMapping = (Map<String, Object>) result.get("fieldMapping");
+                    if (fieldMapping != null) {
+                        if (fieldMapping.containsKey("currentSiteField")) {
+                            currentSiteField = fieldMapping.get("currentSiteField").toString();
+                        }
+                        if (fieldMapping.containsKey("nextSiteField")) {
+                            nextSiteField = fieldMapping.get("nextSiteField").toString();
+                        }
+                    }
+                }
+                
+                // 获取当前站点的指定字段值
                 String currentSiteId = null;
                 if (nodeData != null && nodeData.containsKey("site")) {
                     Object site = nodeData.get("site");
                     if (site instanceof Map) {
-                        currentSiteId = ((Map<String, Object>) site).get("siteCoordinateId").toString();
+                        Object fieldValue = ((Map<String, Object>) site).get(currentSiteField);
+                        if (fieldValue != null) {
+                            currentSiteId = fieldValue.toString();
+                        }
                     }
                 }
                 
-                // 获取下一个站点 ID (从 inputData 中的 nextSite 或 nextSiteList)
-                String nextSiteId = resolveNextSiteId(node, inputData, parsedConfig);
-                log.info("Resolved nextSiteId: {}", nextSiteId);
+                // 获取下一个站点的指定字段值
+                String nextSiteId = resolveNextSiteId(node, inputData, parsedConfig, nextSiteField);
+                log.info("Resolved nextSiteId: {} (field: {})", nextSiteId, nextSiteField);
                 
                 // 替换占位符
                 for (Map.Entry<String, Object> entry : newParams.entrySet()) {
@@ -109,10 +129,10 @@ public class StationNodeExecutor implements NodeExecutor {
                         String strValue = (String) value;
                         if ("${currentSiteId}".equals(strValue) && currentSiteId != null) {
                             entry.setValue(currentSiteId);
-                            log.info("Replace startLocation: {}", currentSiteId);
+                            log.info("Replace ${currentSiteId}: {} (field: {})", currentSiteId, currentSiteField);
                         } else if ("${nextSiteId}".equals(strValue) && nextSiteId != null) {
                             entry.setValue(nextSiteId);
-                            log.info("Replace endLocation: {}", nextSiteId);
+                            log.info("Replace ${nextSiteId}: {} (field: {})", nextSiteId, nextSiteField);
                         }
                     }
                 }
@@ -136,7 +156,7 @@ public class StationNodeExecutor implements NodeExecutor {
      *     ]
      *   }
      */
-    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig) {
+    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig, String fieldName) {
         if (inputData == null) {
             return null;
         }
@@ -161,12 +181,16 @@ public class StationNodeExecutor implements NodeExecutor {
                         for (Map<String, Object> route : routes) {
                             Object routeValue = route.get("value");
                             if (routeValue != null && routeValue.toString().equals(fieldValue.toString())) {
-                                String targetSiteId = route.get("siteCoordinateId").toString();
+                                String targetSiteId = route.get("siteId").toString();
                                 log.info("Condition matched: field '{}' = {}, selecting site {}", checkField, fieldValue, targetSiteId);
                                 // 验证 targetSiteId 是否在 nextSiteList 中
                                 for (Map<String, Object> site : nextSiteList) {
                                     if (targetSiteId.equals(site.get("siteCoordinateId").toString())) {
-                                        return targetSiteId;
+                                        // 返回指定字段的值
+                                        Object fieldValueToReturn = site.get(fieldName);
+                                        if (fieldValueToReturn != null) {
+                                            return fieldValueToReturn.toString();
+                                        }
                                     }
                                 }
                                 log.warn("Target site {} not found in nextSiteList", targetSiteId);
@@ -175,9 +199,12 @@ public class StationNodeExecutor implements NodeExecutor {
                     }
                 }
                 
-                // 如果没有配置条件或条件不匹配，返回第一个站点
+                // 如果没有配置条件或条件不匹配，返回第一个站点的指定字段
                 if (nextSiteList.size() > 0) {
-                    return nextSiteList.get(0).get("siteCoordinateId").toString();
+                    Object fieldValue = nextSiteList.get(0).get(fieldName);
+                    if (fieldValue != null) {
+                        return fieldValue.toString();
+                    }
                 }
             }
         }
@@ -186,7 +213,10 @@ public class StationNodeExecutor implements NodeExecutor {
         if (inputData.containsKey("nextSite")) {
             Object nextSite = inputData.get("nextSite");
             if (nextSite instanceof Map) {
-                return ((Map<String, Object>) nextSite).get("siteCoordinateId").toString();
+                Object fieldValue = ((Map<String, Object>) nextSite).get(fieldName);
+                if (fieldValue != null) {
+                    return fieldValue.toString();
+                }
             }
         }
         
