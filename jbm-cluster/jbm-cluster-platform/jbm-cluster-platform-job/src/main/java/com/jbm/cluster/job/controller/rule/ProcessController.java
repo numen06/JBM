@@ -163,7 +163,9 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
 
     @PostMapping("/agvTest")
     public ResultBody<String> agvTest(@RequestBody AgvTestForm form){
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(form);
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         return ResultBody.success();
     }
 

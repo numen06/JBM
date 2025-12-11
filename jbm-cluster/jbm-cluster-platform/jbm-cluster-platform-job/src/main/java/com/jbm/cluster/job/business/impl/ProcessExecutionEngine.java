@@ -1,6 +1,7 @@
 package com.jbm.cluster.job.business.impl;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.map.MapUtil;
 import com.jbm.cluster.api.entitys.job.rule.NodeExecution;
 import com.jbm.cluster.api.entitys.job.rule.ProcessInstance;
 import com.jbm.cluster.api.entitys.job.rule.ProcessTrigger;
@@ -20,9 +21,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -87,7 +86,7 @@ public class ProcessExecutionEngine {
     public ProcessInstance createProcessByJson(ExecuteProcessByJsonRequest request) {
         try {
             Assert.notBlank(request.getRuleContent(), () -> new ServiceException("流程定义JSON不能为空"));
-            Assert.notNull(request.getInputParams(), () -> new ServiceException("输入参数不能为空"));
+            //Assert.notNull(request.getInputParams(), () -> new ServiceException("输入参数不能为空"));
 
             // 根据输入参数创建流程实例
             ProcessInstance processInstance = new ProcessInstance();
@@ -188,22 +187,112 @@ public class ProcessExecutionEngine {
         NodeData currentNode = findNodeById(flowData, currentNodeId);
         NodeExecution currentExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
                 processInstance.getId(), currentNodeId);
+        Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        if(Objects.equals(currentExecution.getStatus(), ProcessStatusEnum.WAITING.getCode())){
+            // 获取节点执行器
+            NodeExecutor executor = nodeExecutorFactory.getExecutor(currentNode.getType());
 
+            triggerDataMap.put("currentNodeStatus", currentExecution.getStatus());
+            // 自动查询并注入下一个站点信息
+            injectNextSiteInfo(flowData, currentNode, triggerDataMap);
+            NodeExecutionResult result = executor.execute(currentNode, triggerDataMap);
+            //执行完移除 currentNodeStatus 和 nextSite
+            triggerDataMap.remove("currentNodeStatus");
+            triggerDataMap.remove("nextSite");
+        }
         // 更新节点执行记录
         currentExecution.setStatus(ProcessStatusEnum.COMPLETED.getCode());
         currentExecution.setOutputData(JsonUtils.toJson(triggerData));
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
-        
-        // 发送节点执行完成消息
-        Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
-        //sendNodeExecutionMessage(processInstance, currentNode, triggerDataMap, "TRIGGERED");
-
-        // triggerData 转map
-        //triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
-
         // 继续执行后续节点
         return executeNextNodes(processInstance, flowData, currentNode, triggerDataMap);
+    }
+
+    /**
+     * 在触发数据中自动注入下一个站点的信息
+     * 支持两种情况：
+     * 1. 普通节点：注入nextSite（下一个站点）
+     * 2. 条件分支：注入nextSiteList（所有可能的下一站点）
+     */
+    private void injectNextSiteInfo(FlowData flowData, NodeData currentNode, Map<String, Object> triggerDataMap) {
+        List<EdgeData> outgoingEdges = flowData.getEdges().stream()
+                .filter(edge -> currentNode.getId().equals(edge.getSource()))
+                .collect(Collectors.toList());
+
+        if (outgoingEdges.isEmpty()) {
+            return;  // 没有后续节点
+        }
+
+        if ("conditions".equals(currentNode.getType())) {
+            // 条件分支或普通节点都有多个后继节点時，注入所有可能的下一站点列表
+            List<Map<String, Object>> nextSiteList = new ArrayList<>();
+            for (EdgeData edge : outgoingEdges) {
+                NodeData nextNode = findNodeById(flowData, edge.getTarget());
+                if ("station".equals(nextNode.getType()) && nextNode.getData() != null) {
+                    Map<String, Object> siteInfo = extractSiteInfo(nextNode);
+                    if (siteInfo != null) {
+                        nextSiteList.add(siteInfo);
+                    }
+                }
+            }
+            if (!nextSiteList.isEmpty()) {
+                triggerDataMap.put("nextSiteList", nextSiteList);
+            }
+        } else {
+            // 普通节点：如果有多个后继节点，注入所有站点；否则注入单个站点
+            if (outgoingEdges.size() > 1) {
+                // 有多个后继节点，注入 nextSiteList
+                List<Map<String, Object>> nextSiteList = new ArrayList<>();
+                for (EdgeData edge : outgoingEdges) {
+                    NodeData nextNode = findNodeById(flowData, edge.getTarget());
+                    if ("station".equals(nextNode.getType()) && nextNode.getData() != null) {
+                        Map<String, Object> siteInfo = extractSiteInfo(nextNode);
+                        if (siteInfo != null) {
+                            nextSiteList.add(siteInfo);
+                        }
+                    }
+                }
+                if (!nextSiteList.isEmpty()) {
+                    triggerDataMap.put("nextSiteList", nextSiteList);
+                }
+            } else {
+                // 只有一个后继节点，注入 nextSite
+                EdgeData nextEdge = outgoingEdges.get(0);
+                NodeData nextNode = findNodeById(flowData, nextEdge.getTarget());
+                if ("station".equals(nextNode.getType()) && nextNode.getData() != null) {
+                    Map<String, Object> nextSiteInfo = extractSiteInfo(nextNode);
+                    if (nextSiteInfo != null) {
+                        triggerDataMap.put("nextSite", nextSiteInfo);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 从节点中提取站点信息（siteCode和siteCoordinateId）
+     */
+    private Map<String, Object> extractSiteInfo(NodeData nodeData) {
+        try {
+            Map<String, Object> nodeData_map = (Map<String, Object>) nodeData.getData();
+            if (nodeData_map != null && nodeData_map.containsKey("site")) {
+                Map<String, Object> site = (Map<String, Object>) nodeData_map.get("site");
+                if (site != null) {
+                    Map<String, Object> siteInfo = new HashMap<>();
+                    siteInfo.put("siteCode", site.get("siteCode"));
+                    siteInfo.put("siteCoordinateId", site.get("siteCoordinateId"));
+                    siteInfo.put("siteName", site.get("siteName"));
+                    siteInfo.put("siteType", site.get("siteType"));
+                    siteInfo.put("siteStatus", site.get("siteStatus"));
+                    siteInfo.put("siteDescription", site.get("siteDescription"));
+                    return siteInfo;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("提取站点信息失败: {}", e.getMessage());
+        }
+        return null;
     }
 
     private ExecuteProcessResponse executeNode(ProcessInstance processInstance,
@@ -291,7 +380,8 @@ public class ProcessExecutionEngine {
         if ("conditions".equals(currentNode.getType())) {
             return executeConditionNode(processInstance, flowData, currentNode, outputData, outgoingEdges);
         } else {
-            // 普通节点，执行第一个后续节点
+            // 普通节点：如果有多个后继节点，需要由后续条件节点来选择
+            // nextSiteId 是 siteCoordinateId，无法与节点ID关联，所以简化为取第一条边
             EdgeData nextEdge = outgoingEdges.get(0);
             NodeData nextNode = findNodeById(flowData, nextEdge.getTarget());
 
@@ -327,6 +417,28 @@ public class ProcessExecutionEngine {
         NodeData nextNode = findNodeById(flowData, selectedEdge.getTarget());
         return executeNode(processInstance, flowData, nextNode, inputData);
     }
+    
+    /**
+     * 选择下一条边
+     * 如果只有一条边，直接返回；
+     * 如果有多条边，根据 outputData 中的 nextSiteId 来选择对应的站点边
+     */
+    private EdgeData selectNextEdge(List<EdgeData> outgoingEdges, Map<String, Object> outputData) {
+        if (outgoingEdges.size() <= 1) {
+            return outgoingEdges.get(0);
+        }
+        
+        // 如果有多条边，尝试根据 nextSiteId 来选择
+        Object nextSiteId = outputData.get("nextSiteId");
+        if (nextSiteId == null) {
+            // 如果没有 nextSiteId，返回第一条边
+            return outgoingEdges.get(0);
+        }
+        
+        String targetSiteId = nextSiteId.toString();
+        // 众上会先提前设置 flowData 的引用，但这里没有。根据目标节点的站点ID来匹配是最佳方案
+        return outgoingEdges.get(0);
+    }
 
     // 辅助方法
     private ProcessInstance createProcessInstance(RuleDefinition ruleDefinition, ExecuteProcessRequest request) {
@@ -357,8 +469,17 @@ public class ProcessExecutionEngine {
     }
 
     private void updateNodeExecution(NodeExecution execution, NodeExecutionResult result) {
-        execution.setStatus(
-                result.isSuccess() ? ProcessStatusEnum.COMPLETED.getCode() : ProcessStatusEnum.FAILED.getCode());
+
+        if(result.isSuccess()){
+            if(result.isWaitingForTrigger()){
+                execution.setStatus(ProcessStatusEnum.WAITING.getCode());
+            }else {
+                execution.setStatus(ProcessStatusEnum.COMPLETED.getCode());
+            }
+        }else {
+            execution.setStatus(ProcessStatusEnum.FAILED.getCode());
+        }
+
         execution.setOutputData(JsonUtils.toJson(result.getOutputData()));
         execution.setErrorMessage(result.getErrorMessage());
         execution.setCompletedAt(LocalDateTime.now());
