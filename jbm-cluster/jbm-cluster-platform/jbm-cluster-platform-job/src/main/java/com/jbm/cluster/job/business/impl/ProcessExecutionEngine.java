@@ -299,8 +299,20 @@ public class ProcessExecutionEngine {
             FlowData flowData,
             NodeData currentNode,
             Map<String, Object> inputData) {
-        // 创建节点执行记录
-        NodeExecution nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
+        // ... existing code ...
+        // 先检查该节点是否已有执行记录，避免重复创建
+        NodeExecution nodeExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
+                processInstance.getId(), currentNode.getId());
+        
+        // 如果该节点已经有执行记录，说明是重复执行，直接返回而不是创建新记录
+        if (nodeExecution != null) {
+            log.warn("节点 {} 已有执行记录，避免重复执行", currentNode.getId());
+            // 已经执行过了，不再重复执行
+            return executeNextNodes(processInstance, flowData, currentNode, inputData);
+        }
+        
+        // 创建新的节点执行记录
+        nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
         
         // 发送MQTT消息 - 进入节点
         sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER");
