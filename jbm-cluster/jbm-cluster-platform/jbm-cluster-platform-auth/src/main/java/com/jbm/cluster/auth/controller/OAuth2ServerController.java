@@ -13,7 +13,6 @@ import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.CodeModel;
 import cn.dev33.satoken.oauth2.model.RequestAuthModel;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -105,36 +104,10 @@ public class OAuth2ServerController {
     @ApiOperation(value = "刷新token", notes = "")
     @RequestMapping("/refresh")
     public Object refresh() {
-        try {
-            // 处理刷新令牌逻辑
-            SaRequest req = SaHolder.getRequest();
-            String refreshToken = req.getParam("refresh_token");
-            
-            if (StrUtil.isBlank(refreshToken)) {
-                return ResultBody.failed().msg("缺少refresh_token参数");
-            }
-            
-            // 使用Sa-Token OAuth2的刷新令牌方法
-            AccessTokenModel accessTokenModel = SaOAuth2Util.refreshAccessToken(refreshToken);
-            
-            if (accessTokenModel != null) {
-                // 成功刷新，返回新的access_token和refresh_token
-                Map<String, Object> result = new HashMap<>();
-                result.put("access_token", accessTokenModel.accessToken);
-                result.put("refresh_token", accessTokenModel.refreshToken);
-                result.put("expires_in", accessTokenModel.expiresIn);
-                result.put("token_type", SaManager.getConfig().getTokenPrefix());
-                result.put("scope", accessTokenModel.scope);
-                
-                return ResultBody.ok().data(result);
-            } else {
-                return ResultBody.failed().msg("刷新令牌失败");
-            }
-        } catch (Exception e) {
-            log.error("刷新令牌异常", e);
-            return ResultBody.failed().msg("刷新令牌异常: " + e.getMessage());
-        }
+        Object object = this.oauth2();
+        return object;
     }
+
     @ApiOperation(value = "客户端Token", notes = "")
     @RequestMapping("/client_token")
     public Object client_token() {
@@ -227,61 +200,12 @@ public class OAuth2ServerController {
 
     @ApiOperation("续签")
     @PostMapping("/renewal")
-    public ResultBody<Map<String, Object>> renewal() {
-        try {
-            // 续签当前用户的token活动时间
-            if (StpUtil.isLogin()) {
-                // 获取当前用户的登录信息
-                Object loginId = StpUtil.getLoginId();
-                String currentToken = StpUtil.getTokenValue();
-                
-                // 更新Sa-Token的活动时间
-                StpUtil.updateLastActivityToNow();
-                log.info("用户 {} token续签成功", loginId);
-                
-                // 同时更新OAuth2 token的有效期
-                // 获取当前token对应的OAuth2信息
-                AccessTokenModel currentAccessToken = SaOAuth2Util.getAccessToken(currentToken);
-                if (currentAccessToken != null) {
-                    // 刷新OAuth2 token以延长其有效期
-                    AccessTokenModel refreshedToken = SaOAuth2Util.refreshAccessToken(currentAccessToken.refreshToken);
-                    if (refreshedToken != null) {
-                        // 使用刷新后的token信息
-                        SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-                        
-                        // 构造返回结果，与OAuth2保持一致
-                        Map<String, Object> result = new HashMap<>();
-                        result.put("access_token", refreshedToken.accessToken);
-                        result.put("refresh_token", refreshedToken.refreshToken);
-                        result.put("token_type", SaManager.getConfig().getTokenPrefix());
-                        result.put("expires_in", refreshedToken.expiresIn);
-                        result.put("scope", refreshedToken.scope);
-                        
-                        log.info("OAuth2 token续签成功，新的access_token: {}", refreshedToken.accessToken);
-                        return ResultBody.ok().data(result).msg("续签成功");
-                    }
-                }
-                
-                // 如果OAuth2 token刷新失败，仍然返回当前token信息
-                SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-                
-                // 构造返回结果，与OAuth2保持一致
-                Map<String, Object> result = new HashMap<>();
-                result.put("access_token", currentToken);
-                result.put("token_type", SaManager.getConfig().getTokenPrefix());
-                result.put("expires_in", tokenInfo.getTokenTimeout());
-                result.put("scope", "all");
-                
-                log.warn("OAuth2 token刷新失败，使用当前token信息");
-                return ResultBody.ok().data(result).msg("续签成功");
-            } else {
-                return ResultBody.failed().msg("用户未登录");
-            }
-        } catch (Exception e) {
-            log.error("续签异常", e);
-            return ResultBody.failed().msg("续签异常: " + e.getMessage());
-        }
+    public ResultBody<Void> renewal() {
+        // 用户注册
+        StpUtil.updateLastActivityToNow();
+        return ResultBody.ok();
     }
+
 
     // ---------- 开放相关资源接口： Client端根据 Access-Token ，置换相关资源 ------------
     // 获取Userinfo信息：昵称、头像、性别等等
