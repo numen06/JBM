@@ -101,31 +101,41 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
      */
     @Override
     public String randomAccessToken(String clientId, Object loginId, String scope) {
-        String token = null;
         try {
-            String tmp = StpUtil.getTokenValueByLoginId(loginId);
-            if (StrUtil.isNotEmpty(tmp)) {
-                token = tmp;
-            } else {
-                //没有的话，创建一个
-                token = StpUtil.createLoginSession(loginId);
-            }
+            // 总是创建一个新的access token，确保每次调用都生成新的token
+            String token = StpUtil.createLoginSession(loginId);
+            log.info("为用户 {} 创建新的access token: {}", loginId, token);
+            return token;
         } catch (Exception e) {
-            log.error("获取用户token失败", e);
+            log.error("生成用户token失败，clientId: {}, loginId: {}", clientId, loginId, e);
+            return null;
         }
-        return token;
     }
     // -------------- 其它需要重写的函数
 
 
     @Override
     public AccessTokenModel refreshAccessToken(String refreshToken) {
-        AccessTokenModel accessTokenModel = super.refreshAccessToken(refreshToken);
-        StpUtil.updateLastActivityToNow();
-        log.info("刷新后Token过期时间:{}", StpUtil.getTokenInfo().getTokenActivityTimeout());
-        return accessTokenModel;
+        try {
+            // 调用父类方法刷新access token
+            AccessTokenModel accessTokenModel = super.refreshAccessToken(refreshToken);
+            
+            if (accessTokenModel != null) {
+                // 记录日志
+                log.info("Token刷新成功，新的access_token: {}, 新的refresh_token: {}", 
+                         accessTokenModel.accessToken, accessTokenModel.refreshToken);
+                StpUtil.updateLastActivityToNow();
+                log.info("刷新后Token过期时间:{}", StpUtil.getTokenInfo().getTokenActivityTimeout());
+                return accessTokenModel;
+            } else {
+                log.warn("Token刷新失败，refreshToken可能已过期或无效: {}", refreshToken);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("刷新Token时发生异常，refreshToken: {}", refreshToken, e);
+            return null;
+        }
     }
-
     @Override
     public String randomClientToken(String clientId, String scope) {
         //使用IdToken接管
