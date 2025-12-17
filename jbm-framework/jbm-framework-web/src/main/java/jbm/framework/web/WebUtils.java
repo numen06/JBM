@@ -257,6 +257,7 @@ public class WebUtils {
             // 中文文件名支持
 //            String encodedfileName = new String(fileName.getBytes(), "ISO8859-1");
             String encodedfileName = URLEncoder.encode(fileName, "UTF-8");
+            response.setHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,   HttpHeaders.CONTENT_DISPOSITION);
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedfileName + "\"");
         } catch (UnsupportedEncodingException e) {
             e.getMessage();

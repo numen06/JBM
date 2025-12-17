@@ -2,7 +2,7 @@ package com.jbm.cluster.job.mapper;
 
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.framework.masterdata.annotation.MapperRepository;
-import com.jbm.cluster.api.entitys.job.WorkflowDefinition;
+import com.jbm.cluster.api.entitys.job.rule.WorkflowDefinition;
 
 /**
  * @Author: auto generate by jbm

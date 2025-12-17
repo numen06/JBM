@@ -2,10 +2,10 @@ package com.jbm.cluster.job.business.impl;
 
 import com.alibaba.ttl.threadpool.agent.internal.javassist.*;
 
-import com.jbm.cluster.api.entitys.job.DynamicClass;
-import com.jbm.cluster.api.entitys.job.DynamicField;
-import com.jbm.cluster.job.service.DynamicClassService;
-import com.jbm.cluster.job.service.DynamicFieldService;
+import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
+import com.jbm.cluster.api.entitys.job.rule.DynamicField;
+import com.jbm.cluster.job.service.rule.DynamicClassService;
+import com.jbm.cluster.job.service.rule.DynamicFieldService;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

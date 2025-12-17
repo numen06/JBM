@@ -113,4 +113,10 @@ public class BaseMenu extends MasterDataEntity {
      */
     @ApiModelProperty(value = "对应的APP")
     private Long appId;
+
+    /**
+     * 是否显示 0-不显示 1-显示
+     */
+    @ApiModelProperty(value = "是否显示 0-不显示 1-显示")
+    private Integer hidden;
 }

@@ -79,6 +79,14 @@ public class OAuth2ServerController {
                     if (saResult.getData() instanceof Map) {
                         Map<String, Object> data = (Map<String, Object>) saResult.getData();
                         data.put("token_type", SaManager.getConfig().getTokenPrefix());
+                        // 确保 access_token 是 Sa-Token 的 token
+                        if (data.containsKey("access_token") && StpUtil.isLogin()) {
+                            String currentToken = StpUtil.getTokenValue();
+                            if (StrUtil.isNotBlank(currentToken)) {
+                                data.put("access_token", currentToken);
+                                log.debug("统一 access_token 为 Sa-Token token: {}", currentToken);
+                            }
+                        }
                     }
                 }
                 return ResultBody.ok().data(saResult.getData());
@@ -201,9 +209,47 @@ public class OAuth2ServerController {
     @ApiOperation("续签")
     @PostMapping("/renewal")
     public ResultBody<Void> renewal() {
-        // 用户注册
-        StpUtil.updateLastActivityToNow();
-        return ResultBody.ok();
+        try {
+            // 检查当前登录状态
+            if (StpUtil.isLogin()) {
+                // 已登录，直接续期当前 token
+                StpUtil.updateLastActivityToNow();
+                log.info("续签成功：当前token={}, 过期时间={}", 
+                        StpUtil.getTokenValue(), StpUtil.getTokenInfo().getTokenActivityTimeout());
+            } else {
+                // 未登录，尝试通过 access_token 参数获取
+                SaRequest req = SaHolder.getRequest();
+                String accessToken = req.getParam("access_token");
+                if (StrUtil.isNotBlank(accessToken)) {
+                    try {
+                        Object loginId = SaOAuth2Util.getLoginIdByAccessToken(accessToken);
+                        if (loginId != null) {
+                            // 通过 loginId 续期对应的 token
+                            String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+                            if (StrUtil.isNotBlank(tokenValue)) {
+                                // 使用 token 值来续期
+                                StpUtil.updateLastActivityToNow();
+                                log.info("续签成功：通过access_token续期，loginId={}, token={}, 过期时间={}", 
+                                        loginId, tokenValue, StpUtil.getTokenInfo().getTokenActivityTimeout());
+                            } else {
+                                return ResultBody.<Void>failed().msg("无法找到对应的token");
+                            }
+                        } else {
+                            return ResultBody.<Void>failed().msg("无效的access_token");
+                        }
+                    } catch (Exception e) {
+                        log.error("续签失败", e);
+                        return ResultBody.<Void>failed().msg("续签失败：" + e.getMessage());
+                    }
+                } else {
+                    return ResultBody.<Void>failed().msg("未登录且未提供access_token");
+                }
+            }
+            return ResultBody.ok();
+        } catch (Exception e) {
+            log.error("续签异常", e);
+            return ResultBody.<Void>failed().msg("续签失败：" + e.getMessage());
+        }
     }
 
 
@@ -211,7 +257,7 @@ public class OAuth2ServerController {
     // 获取Userinfo信息：昵称、头像、性别等等
     @SaCheckLogin
     @RequestMapping("/userinfo")
-    public ResultBody userinfo() {
+    public ResultBody<JbmLoginUser> userinfo() {
         JbmLoginUser jbmLoginUser = null;
         if (StpUtil.isLogin()) {
             jbmLoginUser = LoginHelper.getLoginUser();
@@ -225,9 +271,9 @@ public class OAuth2ServerController {
             }
         }
         if (ObjectUtil.isNotEmpty(jbmLoginUser)) {
-            return ResultBody.ok().data(jbmLoginUser);
+            return ResultBody.<JbmLoginUser>ok().data(jbmLoginUser);
         }
-        return ResultBody.error("Token错误,无法获取用户信息");
+        return ResultBody.<JbmLoginUser>error("Token错误,无法获取用户信息");
     }
 
     @ApiOperation("登出方法")
@@ -265,16 +311,23 @@ public class OAuth2ServerController {
         //在request中默认设置参数设置为code模式
         log.info("登录回调，code: {}, state: {}", code, state);
         // 获取变量
-        SaRequest req = SaHolder.getRequest();
         SaResponse res = SaHolder.getResponse();
         // 获取参数
         CodeModel codeModel = SaOAuth2Util.getCode(code);
         if (codeModel == null) {
             res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            ResultBody.failed().msg("code参数错误");
+            return ResultBody.failed().msg("code参数错误");
         }
         // 构建 Access-Token
         AccessTokenModel token = SaOAuth2Util.generateAccessToken(code);
+        // 确保 access_token 是 Sa-Token 的 token
+        if (token != null && StpUtil.isLogin()) {
+            String currentToken = StpUtil.getTokenValue();
+            if (StrUtil.isNotBlank(currentToken)) {
+                token.accessToken = currentToken;
+                log.debug("统一 access_token 为 Sa-Token token: {}", currentToken);
+            }
+        }
         // 返回
         return ResultBody.ok(token);
     }
@@ -364,8 +417,14 @@ public class OAuth2ServerController {
             requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
             LoginHelper.login(myUser);
-            log.info("[第三方回调] 登录状态:{}，当前用户token:{}", StpUtil.isLogin(), StpUtil.getTokenValue());
+            String currentToken = StpUtil.getTokenValue();
+            log.info("[第三方回调] 登录状态:{}，当前用户token:{}", StpUtil.isLogin(), currentToken);
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel, true);
+            // 确保 access_token 是 Sa-Token 的 token
+            if (accessTokenResult != null && StrUtil.isNotBlank(currentToken)) {
+                accessTokenResult.accessToken = currentToken;
+                log.info("[第三方回调] 统一 access_token 为 Sa-Token token: {}", currentToken);
+            }
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken
@@ -378,6 +437,10 @@ public class OAuth2ServerController {
 //            }
             log.info("[第三方回调] Step 4: AccessToken获取成功");
             log.info("[第三方回调] AccessToken详情: {}", accessTokenResult);
+            if (accessTokenResult == null) {
+                log.error("[第三方回调] AccessToken获取失败，返回null");
+                return ResultBody.failed().msg("AccessToken获取失败");
+            }
             myUser.setToken(accessTokenResult.accessToken);
             //如果设置了跳转则跳转
             if (StrUtil.isNotEmpty(redirectUri)) {

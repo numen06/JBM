@@ -74,8 +74,8 @@ public class BusinessLogSnapshot {
         String tenantId = cached != null ? cached.getTenantId() : null;
         String appId = cached != null ? cached.getAppId() : source;
 
-        boolean autoTimestamp = cached == null || cached.getAutoTimestamp() == null
-                || Boolean.TRUE.equals(cached.getAutoTimestamp());
+        // 默认不加时间戳，因为log本身已经有时间戳了
+        boolean autoTimestamp = cached != null && Boolean.TRUE.equals(cached.getAutoTimestamp());
 
         boolean finished = cached != null && Boolean.TRUE.equals(cached.getFinished());
 

@@ -137,5 +137,55 @@ public class BusinessLog implements Serializable {
      */
     @ApiModelProperty(value = "日志来源")
     private String source;
+
+    // ==================== 阶段进度扩展 ====================
+
+    /**
+     * 阶段编码
+     */
+    @ApiModelProperty(value = "阶段编码")
+    private String stageCode;
+
+    /**
+     * 阶段名称
+     */
+    @ApiModelProperty(value = "阶段名称")
+    private String stageName;
+
+    /**
+     * 阶段序号
+     */
+    @ApiModelProperty(value = "阶段序号")
+    private Integer stageIndex;
+
+    /**
+     * 阶段进度
+     */
+    @ApiModelProperty(value = "阶段进度（0-100）")
+    private Integer stageProgress;
+
+    /**
+     * 阶段状态
+     */
+    @ApiModelProperty(value = "阶段状态：WAITING、RUNNING、DONE、FAILED")
+    private String stageStatus;
+
+    /**
+     * 阶段总数
+     */
+    @ApiModelProperty(value = "阶段总数")
+    private Integer stageCount;
+
+    /**
+     * 整体进度
+     */
+    @ApiModelProperty(value = "整体进度（0-100）")
+    private Integer overallProgress;
+
+    /**
+     * 是否阶段事件
+     */
+    @ApiModelProperty(value = "是否阶段事件")
+    private Boolean stageEvent;
 }
 

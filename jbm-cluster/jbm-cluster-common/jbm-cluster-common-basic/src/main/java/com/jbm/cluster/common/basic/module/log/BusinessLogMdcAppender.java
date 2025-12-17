@@ -1,9 +1,6 @@
 package com.jbm.cluster.common.basic.module.log;
 
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
@@ -12,7 +9,6 @@ import com.jbm.cluster.common.basic.module.JbmBusinessLogTemplate;
 import jbm.framework.spring.config.SpringContextHolder;
 import org.slf4j.MDC;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -143,22 +139,19 @@ public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
 
 
     private String buildPayload(ILoggingEvent event) {
-        StringBuilder builder = new StringBuilder();
-        builder.append('[')
-                .append(DateUtil.format(new Date(event.getTimeStamp()), DatePattern.NORM_DATETIME_MS_FORMAT))
-                .append("]");
-        Level level = event.getLevel();
-        if (level != null) {
-            builder.append('[').append(level.levelStr).append(']');
+        String message = event.getFormattedMessage();
+        
+        // 如果是阶段信息，直接返回原始内容，不添加时间戳等格式
+        if (StrUtil.isNotBlank(message) && message.startsWith("[STAGE:")) {
+            return message;
         }
-        if (StrUtil.isNotBlank(event.getLoggerName())) {
-            builder.append('[').append(event.getLoggerName()).append(']');
-        }
-        builder.append(' ').append(event.getFormattedMessage());
-
+        
+        // 普通日志也不添加时间戳，因为log本身已经有时间戳了
+        // 只返回日志消息内容，如果需要包含异常信息则追加
         if (includeThrowable) {
             IThrowableProxy throwableProxy = event.getThrowableProxy();
             if (throwableProxy != null) {
+                StringBuilder builder = new StringBuilder(message);
                 builder.append(System.lineSeparator())
                         .append(throwableProxy.getClassName())
                         .append(": ")
@@ -174,9 +167,11 @@ public class BusinessLogMdcAppender extends AppenderBase<ILoggingEvent> {
                         builder.append(System.lineSeparator()).append("  ...");
                     }
                 }
+                return builder.toString();
             }
         }
-        return builder.toString();
+        
+        return message;
     }
 
     private void cleanupExpiredContexts() {

@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -73,6 +75,12 @@ public class BusinessLogEventListener {
                         break;
                     case QUERY:
                         handleQueryEvent(event);
+                        break;
+                    case STAGE_INIT:
+                        handleStageInitEvent(event);
+                        break;
+                    case STAGE_UPDATE:
+                        handleStageUpdateEvent(event);
                         break;
                     default:
                         log.warn("未知的业务日志事件类型: {}", event.getEventType());
@@ -232,6 +240,106 @@ public class BusinessLogEventListener {
             
         } catch (Exception e) {
             log.error("查询业务日志异常", e);
+        }
+    }
+
+    /**
+     * 处理初始化阶段事件
+     * 阶段数据格式：code,name,order;code2,name2,order2
+     */
+    private void handleStageInitEvent(BusinessLogEvent event) {
+        try {
+            String logId = event.getLogId();
+            if (StrUtil.isBlank(logId)) {
+                log.error("初始化阶段失败：logId为空");
+                return;
+            }
+            
+            String stageData = event.getContent();
+            if (StrUtil.isBlank(stageData)) {
+                log.error("初始化阶段失败：阶段数据为空, logId={}", logId);
+                return;
+            }
+            
+            // 解析阶段数据：code,name,order;code2,name2,order2
+            String[] stageItems = stageData.split(";");
+            List<com.jbm.cluster.api.entitys.log.BusinessLogStageItem> stages = new ArrayList<>();
+            for (int i = 0; i < stageItems.length; i++) {
+                String[] parts = stageItems[i].split(",", 3);
+                if (parts.length >= 3) {
+                    com.jbm.cluster.api.entitys.log.BusinessLogStageItem item = 
+                            new com.jbm.cluster.api.entitys.log.BusinessLogStageItem();
+                    item.setStageCode(parts[0].trim());
+                    item.setStageName(parts[1].trim());
+                    item.setOrderIndex(Integer.parseInt(parts[2].trim()));
+                    item.setStatus("WAITING");
+                    item.setProgress(0);
+                    stages.add(item);
+                }
+            }
+            
+            if (stages.isEmpty()) {
+                log.warn("初始化阶段失败：没有有效的阶段数据, logId={}, stageData={}", logId, stageData);
+                return;
+            }
+            
+            com.jbm.cluster.api.form.log.InitBusinessLogStageForm form = 
+                    new com.jbm.cluster.api.form.log.InitBusinessLogStageForm();
+            form.setLogId(logId);
+            form.setStages(stages);
+            
+            businessLogService.initStages(form);
+            log.info("初始化阶段成功: logId={}, stages={}", logId, stages.size());
+            
+        } catch (Exception e) {
+            log.error("初始化阶段异常: logId={}", event.getLogId(), e);
+        }
+    }
+
+    /**
+     * 处理更新阶段事件
+     * 阶段数据格式：code,status,progress,message,overall
+     */
+    private void handleStageUpdateEvent(BusinessLogEvent event) {
+        try {
+            String logId = event.getLogId();
+            if (StrUtil.isBlank(logId)) {
+                log.error("更新阶段失败：logId为空");
+                return;
+            }
+            
+            String stageData = event.getContent();
+            if (StrUtil.isBlank(stageData)) {
+                log.error("更新阶段失败：阶段数据为空, logId={}", logId);
+                return;
+            }
+            
+            // 解析阶段数据：code,status,progress,message,overall
+            String[] parts = stageData.split(",", 5);
+            if (parts.length < 4) {
+                log.error("更新阶段失败：阶段数据格式错误, logId={}, stageData={}", logId, stageData);
+                return;
+            }
+            
+            com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm form = 
+                    new com.jbm.cluster.api.form.log.BusinessLogStageUpdateForm();
+            form.setLogId(logId);
+            form.setStageCode(parts[0].trim());
+            form.setStatus(parts[1].trim());
+            form.setProgress(Integer.parseInt(parts[2].trim()));
+            form.setMessage(parts.length > 3 ? parts[3].trim() : "");
+            if (parts.length > 4 && StrUtil.isNotBlank(parts[4])) {
+                form.setOverallProgress(Integer.parseInt(parts[4].trim()));
+            }
+            // 阶段信息已经在原始日志中，不需要再生成格式化的日志内容，避免重复
+            form.setAppendLog(false);
+            
+            businessLogService.updateStage(form);
+            log.debug("更新阶段成功: logId={}, stageCode={}, status={}, progress={}", 
+                    logId, form.getStageCode(), form.getStatus(), form.getProgress());
+            
+        } catch (Exception e) {
+            log.error("更新阶段异常: logId={}", event.getLogId(), e);
         }
     }
 }
