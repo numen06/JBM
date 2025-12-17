@@ -36,8 +36,8 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
     }
 
     @ApiOperation(value = "获取组织信息", notes = "获取组织信息")
-    @PostMapping("/getBaseOrgByOrgCode")
-    public ResultBody<BaseOrg> getBaseOrgByOrgCode(@RequestBody BaseOrg baseOrg) {
-        return ResultBody.callback(() -> this.service.getBaseOrgByOrgCode(baseOrg));
+    @PostMapping("/getBaseOrg")
+    public ResultBody<BaseOrg> getBaseOrg(@RequestBody BaseOrg baseOrg) {
+        return ResultBody.callback(() -> this.service.getBaseOrg(baseOrg));
     }
 }
