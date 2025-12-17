@@ -18,6 +18,7 @@ import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -458,6 +459,14 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+
+    @ApiOperation(value = "通过Ids获取多个用户")
+    @GetMapping("/getUsersByIds")
+    public ResultBody<List<BaseUser>> getUsersByIds( @RequestBody IdsForm ids) {
+        return ResultBody.callback(() -> {
+            return baseUserService.getUsersByIds(ids.getIds());
+        });
+    }
 
     @ApiOperation(value = "改变用户状态")
     @GetMapping("/updateUserStatus")
