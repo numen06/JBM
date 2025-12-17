@@ -120,9 +120,46 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public AccessTokenModel refreshAccessToken(String refreshToken) {
+        // 先调用父类方法获取新的 AccessTokenModel（这会验证 refreshToken 并更新 OAuth2 存储）
         AccessTokenModel accessTokenModel = super.refreshAccessToken(refreshToken);
-        StpUtil.updateLastActivityToNow();
-        log.info("刷新后Token过期时间:{}", StpUtil.getTokenInfo().getTokenActivityTimeout());
+        
+        if (accessTokenModel == null) {
+            log.error("刷新Token失败：父类返回null");
+            throw new RuntimeException("无效的refreshToken");
+        }
+        
+        // 从新的 AccessTokenModel 中获取 loginId
+        Object loginId = accessTokenModel.loginId;
+        String oldAccessToken = accessTokenModel.accessToken;
+        
+        log.info("刷新Token：loginId={}, 旧accessToken={}", loginId, oldAccessToken);
+        
+        // 获取用户信息，用于重新登录
+        com.jbm.cluster.api.model.auth.JbmLoginUser loginUser = LoginHelper.getLoginUser(loginId);
+        if (loginUser == null) {
+            log.error("刷新Token失败：无法获取用户信息，loginId={}", loginId);
+            throw new RuntimeException("用户信息不存在");
+        }
+        
+        // 踢掉旧 token（仅针对当前 access_token，不影响同一用户其它端）
+        try {
+            StpUtil.logoutByTokenValue(oldAccessToken);
+            log.info("已踢掉旧token，loginId={}, accessToken={}", loginId, oldAccessToken);
+        } catch (Exception e) {
+            log.warn("踢掉旧token时出现异常（可能已经失效）: {}", e.getMessage());
+        }
+        
+        // 重新登录生成新 token
+        LoginHelper.login(loginUser);
+        String newToken = StpUtil.getTokenValue();
+        log.info("已生成新token，loginId={}, 新accessToken={}", loginId, newToken);
+        
+        // 确保新的 accessToken 就是 Sa-Token 的 token
+        accessTokenModel.accessToken = newToken;
+        
+        log.info("刷新Token成功：loginId={}, 新accessToken={}, 过期时间={}", 
+                loginId, newToken, StpUtil.getTokenInfo().getTokenActivityTimeout());
+        
         return accessTokenModel;
     }
 
