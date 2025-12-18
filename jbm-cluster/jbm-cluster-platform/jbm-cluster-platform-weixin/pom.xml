@@ -5,36 +5,13 @@
     <parent>
         <artifactId>jbm-cluster-platform</artifactId>
         <groupId>com.jbm.cluster</groupId>
-        <version>7.2.0</version>
+        <version>7.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jbm-cluster-platform-weixin</artifactId>
 
     <dependencies>
-        <dependency>
-            <groupId>com.jbm.cluster</groupId>
-            <artifactId>jbm-cluster-common-basic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm.cluster</groupId>
-            <artifactId>jbm-cluster-common-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm.cluster</groupId>
-            <artifactId>jbm-cluster-api-basic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm.cluster</groupId>
-            <artifactId>jbm-cluster-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.9.3</version>
-        </dependency>
-
         <!-- 测试依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
