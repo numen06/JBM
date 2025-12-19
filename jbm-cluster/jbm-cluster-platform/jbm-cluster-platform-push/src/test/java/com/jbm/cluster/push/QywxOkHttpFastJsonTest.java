@@ -1,13 +1,14 @@
 package com.jbm.cluster.push;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.jbm.util.nacos.NacosConfigClient;
 import jbm.framework.spring.config.SpringPropsBinder;
-import jbm.framework.web.WebUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,19 +78,35 @@ public class QywxOkHttpFastJsonTest {
 
     // ✅ Test 3：发送消息给第一个用户（核心业务链路）
     @Test
-    @DisplayName("✅ 测试3：发送文本消息给首个用户")
+    @DisplayName("✅ 测试3：发送文本消息给所有用户")
     void shouldSendTextMessageToFirstUser() throws Exception {
         String token = getAccessToken();
         List<String> userIds = listSimpleUsers(token);
         assertNotEquals(0, userIds.size(), "用户列表为空，无法发送消息");
 
         String firstUserId = "@all";
-        boolean success = sendTextMessage(token, firstUserId,
-                "Hello from OkHttp + FastJSON! ✅\n" +
-                        "⏱️ 时间：" + Instant.now());
+        boolean success = sendTextMessage(token, firstUserId, null,
+                "Hello 用户推送 ✅\n" +
+                        "⏱️ 时间：" + DateUtil.now());
 
         assertTrue(success, "消息发送应成功");
         System.out.println("📤 已向用户 '" + firstUserId + "' 发送测试消息 ✅");
+    }
+
+    @Test
+    @DisplayName("✅ 测试3：发送文本消息给第一个部门")
+    void shouldSendTextMessageToDepartment() throws Exception {
+        String token = getAccessToken();
+        JSONArray departments = listDepartments(token);
+        assertNotEquals(0, departments.size(), "用户列表为空，无法发送消息");
+
+        String departmentsId = departments.getJSONObject(0).getString("id");
+        boolean success = sendTextMessage(token, null, departmentsId,
+                "Hello 部门推送 ✅\n" +
+                        "⏱️ 时间：" + DateUtil.now());
+
+        assertTrue(success, "消息发送应成功");
+        System.out.println("📤 已向用户 '" + departmentsId + "' 发送测试消息 ✅");
     }
 
     // ✅ Test 4：获取部门列表
@@ -163,7 +180,7 @@ public class QywxOkHttpFastJsonTest {
             // 根据文件创建时间计算过期时间,往前推1个小时安全时间
             Date createTime = FileUtil.lastModifiedTime(file);
             long expireTime = createTime.getTime() + expiresIn * 1000;
-            if (System.currentTimeMillis() < expireTime - 60 * 60 * 1000  ) {
+            if (System.currentTimeMillis() < expireTime - 60 * 60 * 1000) {
                 log.info("access_token未过期，直接返回");
                 return accessToken;
             }
@@ -208,7 +225,7 @@ public class QywxOkHttpFastJsonTest {
             log.info("access_token: {}", accessToken);
             log.info("有效期: {}秒", expiresIn);
             // 存在本地临时文件
-            FileUtil.writeUtf8String(jsonResponse.toJSONString(),file);
+            FileUtil.writeUtf8String(jsonResponse.toJSONString(), file);
             return accessToken;
         }
     }
@@ -253,7 +270,8 @@ public class QywxOkHttpFastJsonTest {
         }
     }
 
-    private boolean sendTextMessage(String token, String userId, String content) throws IOException {
+
+    private boolean sendTextMessage(String token, String userId, String toparty, String content) throws IOException {
         // 使用HttpUrl.Builder构造URL
         HttpUrl url = new HttpUrl.Builder()
                 .scheme("https")
@@ -266,6 +284,7 @@ public class QywxOkHttpFastJsonTest {
 
         JSONObject msg = new JSONObject();
         msg.put("touser", userId);
+        msg.put("toparty", toparty);
         msg.put("msgtype", "text");
         msg.put("agentid", workWeixinProperties.getAgentId());
         msg.put("text", new JSONObject().fluentPut("content", content));
@@ -273,7 +292,7 @@ public class QywxOkHttpFastJsonTest {
 
         RequestBody body = RequestBody.create(
                 MediaType.parse("application/json; charset=utf-8"),
-                msg.toJSONString()
+                JSON.toJSONString(msg, SerializerFeature.IgnoreNonFieldGetter)
         );
 
         Request request = new Request.Builder()
@@ -400,8 +419,8 @@ public class QywxOkHttpFastJsonTest {
      * 上传临时素材
      * 文档地址：https://developer.work.weixin.qq.com/document/path/90253
      *
-     * @param token 有效的access_token
-     * @param type  媒体文件类型，分别有图片（image）、语音（voice）、视频（video），普通文件（file）
+     * @param token    有效的access_token
+     * @param type     媒体文件类型，分别有图片（image）、语音（voice）、视频（video），普通文件（file）
      * @param filePath 文件路径
      * @return 上传结果JSONObject
      * @throws IOException 网络请求异常
