@@ -1,6 +1,7 @@
-package com.jbm.cluster.push;
+package com.jbm.util.nacos;
 
 import okhttp3.*;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -34,12 +35,17 @@ public class NacosConfigClient {
         this.httpClient = builder.build();
     }
 
+
+    public String getConfig(String dataId, String tenant) {
+        return getConfig(dataId, "DEFAULT_GROUP", tenant);
+    }
+
     /**
      * 获取 Nacos 配置（同步阻塞）
      *
-     * @param dataId   配置 ID，如 "app.yaml"
-     * @param group    分组，默认 "DEFAULT_GROUP"
-     * @param tenant   命名空间 ID（即 namespaceId），可为 null/"" 表示 public
+     * @param dataId 配置 ID，如 "app.yaml"
+     * @param group  分组，默认 "DEFAULT_GROUP"
+     * @param tenant 命名空间 ID（即 namespaceId），可为 null/"" 表示 public
      * @return 配置内容（原始字符串，如 YAML/Properties 内容），失败返回 null
      */
     public String getConfig(String dataId, String group, String tenant) {
