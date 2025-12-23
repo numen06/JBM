@@ -280,12 +280,26 @@ public class ProcessExecutionEngine {
                 Map<String, Object> site = (Map<String, Object>) nodeData_map.get("site");
                 if (site != null) {
                     Map<String, Object> siteInfo = new HashMap<>();
+                    siteInfo.put("allowCall", site.get("allowCall"));
+                    siteInfo.put("businessType", site.get("businessType"));
+                    siteInfo.put("id", site.get("id"));
+                    siteInfo.put("manualPass", site.get("manualPass"));
+                    siteInfo.put("outCoordinate", site.get("outCoordinate"));
+                    siteInfo.put("receiveRule", site.get("receiveRule"));
+                    siteInfo.put("reject", site.get("reject"));
                     siteInfo.put("siteCode", site.get("siteCode"));
                     siteInfo.put("siteCoordinateId", site.get("siteCoordinateId"));
+                    siteInfo.put("siteLocation", site.get("siteLocation"));
                     siteInfo.put("siteName", site.get("siteName"));
                     siteInfo.put("siteType", site.get("siteType"));
                     siteInfo.put("siteStatus", site.get("siteStatus"));
-                    siteInfo.put("siteDescription", site.get("siteDescription"));
+                    siteInfo.put("siteTypeId", site.get("siteTypeId"));
+                    siteInfo.put("siteTypeName", site.get("siteTypeName"));
+                    siteInfo.put("warehouseId", site.get("warehouseId"));
+                    siteInfo.put("warehouseName", site.get("warehouseName"));
+                    siteInfo.put("x", site.get("x"));
+                    siteInfo.put("y", site.get("y"));
+                    siteInfo.put("z", site.get("z"));
                     return siteInfo;
                 }
             }
