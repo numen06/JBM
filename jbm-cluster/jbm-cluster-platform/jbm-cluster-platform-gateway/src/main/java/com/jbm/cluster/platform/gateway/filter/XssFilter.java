@@ -1,10 +1,11 @@
 package com.jbm.cluster.platform.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HtmlUtil;
 import com.jbm.cluster.platform.gateway.config.properties.XssProperties;
 import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
 import io.netty.buffer.ByteBufAllocator;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -22,7 +23,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 /**
  * 跨站脚本过滤器
@@ -58,46 +58,24 @@ public class XssFilter implements GlobalFilter, Ordered {
 
     }
 
-    private static final Map<String, Set<String>> WHITE_LIST = new HashMap<>();
+    // ✅ Jsoup 1.14.3 中叫 Safelist（Whitelist 已废弃，但 1.14.3 仍保留兼容）
+    private static final Safelist SAFELIST = Safelist.relaxed() // ← 先放松，再收紧
+            .addTags("p", "br", "b", "strong", "i", "em", "u", "s",
+                    "sub", "sup", "ol", "ul", "li", "a", "img",
+                    "blockquote", "pre", "code", "hr")
+            .addAttributes("p", "class", "style")
+            .addAttributes("a", "href", "title", "target")
+            .addAttributes("img", "src", "alt", "title", "width", "height")
+            .addProtocols("a", "href", "http", "https", "/");
 
-    static {
-        // ✅ 所有 Set 初始化均使用 JDK 8 支持的写法
-        WHITE_LIST.put("p", new HashSet<>(Arrays.asList("class", "style")));
-        WHITE_LIST.put("br", Collections.emptySet());
-        WHITE_LIST.put("b", Collections.emptySet());
-        WHITE_LIST.put("strong", Collections.emptySet());
-        WHITE_LIST.put("i", Collections.emptySet());
-        WHITE_LIST.put("em", Collections.emptySet());
-        WHITE_LIST.put("u", Collections.emptySet());
-        WHITE_LIST.put("s", Collections.emptySet());
-        WHITE_LIST.put("sub", Collections.emptySet());
-        WHITE_LIST.put("sup", Collections.emptySet());
-        WHITE_LIST.put("ol", new HashSet<>(Arrays.asList("type", "start")));
-        WHITE_LIST.put("ul", Collections.emptySet());
-        WHITE_LIST.put("li", Collections.emptySet());
-        WHITE_LIST.put("a", new HashSet<>(Arrays.asList("href", "title", "target")));
-        WHITE_LIST.put("img", new HashSet<>(Arrays.asList("src", "alt", "title", "width", "height")));
-        WHITE_LIST.put("blockquote", new HashSet<>(Arrays.asList("cite")));
-        WHITE_LIST.put("pre", new HashSet<>(Arrays.asList("class")));
-        WHITE_LIST.put("code", Collections.emptySet());
-        WHITE_LIST.put("hr", Collections.emptySet());
-    }
-
-
-    public static String cleanHtmlTag(String html) {
+    public static String filter(String html) {
         if (StrUtil.isBlank(html)) {
             return html;
         }
-        String filtered = HtmlUtil.filter(html);
-        return cleanDangerousHref(filtered);
+        // ✅ Jsoup 原生净化（比 Hutool 更底层、更可控）
+        return Jsoup.clean(html, SAFELIST)
+                .replaceAll("<a([^>]*)target=\"_blank\"([^>]*)>", "<a$1target=\"_blank\" rel=\"noopener noreferrer\"$2>");
     }
-
-    private static String cleanDangerousHref(String html) {
-        // 替换危险协议 href（不区分大小写）
-        return html.replaceAll("(?i)href\\s*=\\s*\"(javascript|data|vbscript):[^\">]*\"", "href=\"#\"")
-                .replaceAll("(?i)href\\s*=\\s*'((javascript|data|vbscript):[^'>]*)'", "href='#'");
-    }
-
 
     private ServerHttpRequestDecorator requestDecorator(ServerWebExchange exchange) {
         ServerHttpRequestDecorator serverHttpRequestDecorator = new ServerHttpRequestDecorator(exchange.getRequest()) {
@@ -112,7 +90,7 @@ public class XssFilter implements GlobalFilter, Ordered {
                     DataBufferUtils.release(join);
                     String bodyStr = new String(content, StandardCharsets.UTF_8);
                     // 防xss攻击过滤
-                    bodyStr = cleanHtmlTag(bodyStr);
+                    bodyStr = filter(bodyStr);
                     // 转成字节
                     byte[] bytes = bodyStr.getBytes();
                     NettyDataBufferFactory nettyDataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);
