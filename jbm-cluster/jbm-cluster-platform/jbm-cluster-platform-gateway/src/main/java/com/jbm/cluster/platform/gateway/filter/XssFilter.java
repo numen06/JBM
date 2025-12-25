@@ -86,7 +86,7 @@ public class XssFilter implements GlobalFilter, Ordered {
 
     public static String cleanHtmlTag(String html) {
         if (StrUtil.isBlank(html)) {
-            return "";
+            return html;
         }
         String filtered = HtmlUtil.filter(html);
         return cleanDangerousHref(filtered);
