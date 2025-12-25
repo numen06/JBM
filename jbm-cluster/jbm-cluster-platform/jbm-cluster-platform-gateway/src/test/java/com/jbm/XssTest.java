@@ -30,4 +30,11 @@ public class XssTest {
          System.out.println(html.equals(softHtml));
 
     }
+
+    @Test
+    public void testClear3() {
+        String html = "{\"userId\":\"0\"}";
+        String softHtml = XssFilter.filter(html);
+        System.out.println(html.equals(softHtml));
+    }
 }
