@@ -1,6 +1,7 @@
 package com.jbm.cluster.platform.gateway.filter;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HtmlUtil;
 import com.jbm.cluster.platform.gateway.config.properties.XssProperties;
 import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
 import io.netty.buffer.ByteBufAllocator;
@@ -90,7 +91,8 @@ public class XssFilter implements GlobalFilter, Ordered {
                     DataBufferUtils.release(join);
                     String bodyStr = new String(content, StandardCharsets.UTF_8);
                     // 防xss攻击过滤
-                    bodyStr = filter(bodyStr);
+//                    bodyStr = filter(bodyStr);
+                    bodyStr = HtmlUtil.cleanHtmlTag(bodyStr);
                     // 转成字节
                     byte[] bytes = bodyStr.getBytes();
                     NettyDataBufferFactory nettyDataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);
