@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * 跨站脚本过滤器
@@ -57,6 +58,47 @@ public class XssFilter implements GlobalFilter, Ordered {
 
     }
 
+    private static final Map<String, Set<String>> WHITE_LIST = new HashMap<>();
+
+    static {
+        // ✅ 所有 Set 初始化均使用 JDK 8 支持的写法
+        WHITE_LIST.put("p", new HashSet<>(Arrays.asList("class", "style")));
+        WHITE_LIST.put("br", Collections.emptySet());
+        WHITE_LIST.put("b", Collections.emptySet());
+        WHITE_LIST.put("strong", Collections.emptySet());
+        WHITE_LIST.put("i", Collections.emptySet());
+        WHITE_LIST.put("em", Collections.emptySet());
+        WHITE_LIST.put("u", Collections.emptySet());
+        WHITE_LIST.put("s", Collections.emptySet());
+        WHITE_LIST.put("sub", Collections.emptySet());
+        WHITE_LIST.put("sup", Collections.emptySet());
+        WHITE_LIST.put("ol", new HashSet<>(Arrays.asList("type", "start")));
+        WHITE_LIST.put("ul", Collections.emptySet());
+        WHITE_LIST.put("li", Collections.emptySet());
+        WHITE_LIST.put("a", new HashSet<>(Arrays.asList("href", "title", "target")));
+        WHITE_LIST.put("img", new HashSet<>(Arrays.asList("src", "alt", "title", "width", "height")));
+        WHITE_LIST.put("blockquote", new HashSet<>(Arrays.asList("cite")));
+        WHITE_LIST.put("pre", new HashSet<>(Arrays.asList("class")));
+        WHITE_LIST.put("code", Collections.emptySet());
+        WHITE_LIST.put("hr", Collections.emptySet());
+    }
+
+
+    public static String cleanHtmlTag(String html) {
+        if (StrUtil.isBlank(html)) {
+            return "";
+        }
+        String filtered = HtmlUtil.filter(html);
+        return cleanDangerousHref(filtered);
+    }
+
+    private static String cleanDangerousHref(String html) {
+        // 替换危险协议 href（不区分大小写）
+        return html.replaceAll("(?i)href\\s*=\\s*\"(javascript|data|vbscript):[^\">]*\"", "href=\"#\"")
+                .replaceAll("(?i)href\\s*=\\s*'((javascript|data|vbscript):[^'>]*)'", "href='#'");
+    }
+
+
     private ServerHttpRequestDecorator requestDecorator(ServerWebExchange exchange) {
         ServerHttpRequestDecorator serverHttpRequestDecorator = new ServerHttpRequestDecorator(exchange.getRequest()) {
             @Override
@@ -70,7 +112,7 @@ public class XssFilter implements GlobalFilter, Ordered {
                     DataBufferUtils.release(join);
                     String bodyStr = new String(content, StandardCharsets.UTF_8);
                     // 防xss攻击过滤
-                    bodyStr = HtmlUtil.cleanHtmlTag(bodyStr);
+                    bodyStr = cleanHtmlTag(bodyStr);
                     // 转成字节
                     byte[] bytes = bodyStr.getBytes();
                     NettyDataBufferFactory nettyDataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);
