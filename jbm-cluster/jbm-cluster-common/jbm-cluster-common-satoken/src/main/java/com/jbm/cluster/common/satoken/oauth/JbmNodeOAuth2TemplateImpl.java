@@ -15,6 +15,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.jbm.cluster.common.satoken.config.TokenConfig;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,11 +33,17 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements InitializingBean {
 
-    private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache = Caffeine.newBuilder()
-            .expireAfterWrite(1, TimeUnit.HOURS)
-//            .refreshAfterWrite(1, TimeUnit.HOURS)
-            .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
-            );
+    private TokenConfig tokenConfig;
+    
+    private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache;
+
+    public JbmNodeOAuth2TemplateImpl() {
+        // 延迟初始化，避免循环依赖
+        this.clientTokenModelLoadingCache = Caffeine.newBuilder()
+                .expireAfterWrite(24, TimeUnit.HOURS) // 默认24小时
+                .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
+                );
+    }
 
 
     @Override
@@ -176,7 +183,18 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.info("初始化当前应用的默认的ClientToken");
+        // 获取TokenConfig并重新初始化cache
+        try {
+            this.tokenConfig = SpringUtil.getBean(TokenConfig.class);
+            // 重新创建cache，使用配置的时间
+            this.clientTokenModelLoadingCache = Caffeine.newBuilder()
+                    .expireAfterWrite(tokenConfig.getClientTokenCacheHours(), TimeUnit.HOURS)
+                    .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
+                    );
+            log.info("初始化当前应用的默认的ClientToken，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());
+        } catch (Exception e) {
+            log.warn("无法获取TokenConfig，使用默认24小时缓存时间");
+        }
         this.generateClientToken(SpringUtil.getApplicationName(), "*");
     }
 }

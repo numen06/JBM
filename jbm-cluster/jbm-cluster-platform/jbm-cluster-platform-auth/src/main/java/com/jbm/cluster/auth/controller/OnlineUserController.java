@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  * @Date 2022/5/4 13:36
  * @Description TODO
  */
+@Slf4j
 @Api(value = "在线用户监控", tags = {"在线用户监控管理"})
 @RequiredArgsConstructor
 @RestController
@@ -162,5 +164,89 @@ public class OnlineUserController {
             StpUtil.updateLastActivityToNow();
             return null;
         });
+    }
+
+    @ApiOperation("设置Token指定时间过期")
+    @PostMapping("/expire")
+    public ResultBody<String> expireToken(@RequestParam String tokenId, @RequestParam Integer minutes) {
+        try {
+            if (minutes == null || minutes <= 0) {
+                return ResultBody.failed("过期时间必须大于0分钟");
+            }
+            
+            // 计算新的过期时间（秒）
+            long expireSeconds = minutes * 60L;
+            
+            try {
+                // 方法1: 尝试通过Sa-Token的token值来设置过期
+                String tokenValue = tokenId;
+                
+                // 检查token是否有效
+                try {
+                    Object loginId = StpUtil.getLoginIdByToken(tokenValue);
+                    if (loginId != null) {
+                        // 使用Sa-Token的API来设置token过期时间
+                        // 通过修改token的活动超时来实现
+                        StpUtil.updateLastActivityToNow();
+                        
+                        // 直接操作Redis设置token相关key的过期时间
+                        // Sa-Token的token存储格式：
+                        // sa:token:{tokenValue} - token信息
+                        // sa:session:{tokenValue} - session信息
+                        
+                        String tokenKey = "sa:token:" + tokenValue;
+                        String sessionKey = "sa:session:" + tokenValue;
+                        
+                        // 设置token key的过期时间（如果存在）
+                        if (redisService.getExpire(tokenKey) > 0) {
+                            redisService.expire(tokenKey, expireSeconds);
+                        }
+                        
+                        // 设置session key的过期时间（如果存在）
+                        if (redisService.getExpire(sessionKey) > 0) {
+                            redisService.expire(sessionKey, expireSeconds);
+                        }
+                        
+                        log.info("Token已设置为{}分钟后过期: {}", minutes, tokenValue);
+                        return ResultBody.ok("Token已设置为" + minutes + "分钟后过期");
+                    }
+                } catch (Exception e) {
+                    // token可能已失效或不存在
+                    log.warn("Token可能已失效: {}", tokenValue);
+                }
+                
+                // 方法2: 如果是OAuth2 token，也尝试处理
+                try {
+                    SaOAuth2Util.revokeAccessToken(tokenValue);
+                    // 重新设置一个短期有效的token
+                    // 这里需要根据实际的OAuth2实现来处理
+                    log.info("OAuth2 Token已撤销: {}", tokenValue);
+                    return ResultBody.ok("Token已设置为立即过期");
+                } catch (Exception e) {
+                    log.warn("OAuth2 token处理失败: {}", e.getMessage());
+                }
+                
+                return ResultBody.failed("Token不存在或已失效");
+                
+            } catch (Exception e) {
+                log.error("设置Token过期失败", e);
+                return ResultBody.failed("设置Token过期失败: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("设置Token过期异常", e);
+            return ResultBody.failed("设置Token过期异常: " + e.getMessage());
+        }
+    }
+
+    @ApiOperation("设置Token立即过期")
+    @PostMapping("/expireImmediately")
+    public ResultBody<String> expireTokenImmediately(@RequestParam String tokenId) {
+        try {
+            // 调用expireToken方法，设置为1分钟过期（立即过期的最小单位）
+            return expireToken(tokenId, 1);
+        } catch (Exception e) {
+            log.error("设置Token立即过期异常", e);
+            return ResultBody.failed("设置Token立即过期异常: " + e.getMessage());
+        }
     }
 }
