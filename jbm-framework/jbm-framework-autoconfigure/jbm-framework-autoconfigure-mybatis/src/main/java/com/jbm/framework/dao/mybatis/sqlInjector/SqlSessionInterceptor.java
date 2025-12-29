@@ -56,7 +56,7 @@ public class SqlSessionInterceptor implements Interceptor {
         } finally {
             stopWatch.stop();
             if (readableSql != null) {
-                log.info("[SQL Run Time] {} ms , [SQL Mapper] :{} \n {}", stopWatch.getTotal(TimeUnit.MILLISECONDS), ms.getId(), readableSql);
+                log.info("[SQL Run Time : {} ms ],[SQL Mapper : {}] \n {}", stopWatch.getTotal(TimeUnit.MILLISECONDS), ms.getId(), readableSql);
             }
             MappedStatementHolder.clear();
         }
