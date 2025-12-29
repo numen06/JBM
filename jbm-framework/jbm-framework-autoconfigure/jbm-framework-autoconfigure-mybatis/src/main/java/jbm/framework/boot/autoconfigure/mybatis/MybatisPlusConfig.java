@@ -9,8 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.google.common.collect.Sets;
 import com.jbm.framework.dao.JdbcDataSourceProperties;
+import com.jbm.framework.dao.SqlLogProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
+import com.jbm.framework.dao.mybatis.sqlInjector.SqlSessionInterceptor;
 import com.jbm.framework.dao.tenant.SpringTenantLineInnerInterceptor;
 import com.jbm.framework.dao.tenant.TenantProperties;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
@@ -49,7 +51,11 @@ import java.util.Set;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({JdbcDataSourceProperties.class,TenantProperties.class})
+@EnableConfigurationProperties({
+        JdbcDataSourceProperties.class,
+        TenantProperties.class,
+        SqlLogProperties.class,
+})
 public class MybatisPlusConfig {
 
 
@@ -102,6 +108,12 @@ public class MybatisPlusConfig {
     @Bean
     public CameHumpInterceptor cameHumpInterceptor() {
         return new CameHumpInterceptor();
+    }
+
+
+    @Bean
+    public SqlSessionInterceptor sqlSessionInterceptor(SqlLogProperties sqlLogProperties) {
+        return new SqlSessionInterceptor(sqlLogProperties);
     }
 
     /**
