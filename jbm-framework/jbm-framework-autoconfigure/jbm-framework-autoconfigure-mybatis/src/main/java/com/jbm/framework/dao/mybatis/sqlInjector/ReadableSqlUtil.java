@@ -41,10 +41,10 @@ public class ReadableSqlUtil {
             String formattedValue = formatValue(value);
             // 替换第一个 ? （注意：不能全局替换，避免 SQL 中有 ? 字符）
             sql = sql.replaceFirst("\\?", formattedValue);
-            sql = SqlUtil.formatSql(sql);
         }
 
-        return sql;
+        // 在所有参数替换完成后格式化 SQL
+        return SqlUtil.formatSql(sql);
     }
 
     private static String formatValue(Object value) {

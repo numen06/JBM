@@ -1,7 +1,6 @@
 package com.jbm.framework.dao.mybatis.sqlInjector;
 
 import cn.hutool.core.date.StopWatch;
-import cn.hutool.db.sql.SqlUtil;
 import com.jbm.framework.dao.SqlLogProperties;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +30,7 @@ public class SqlSessionInterceptor implements Interceptor {
 
 
     private final SqlLogProperties sqlLogProperties;
+
     public SqlSessionInterceptor(SqlLogProperties sqlLogProperties) {
         this.sqlLogProperties = sqlLogProperties;
     }
@@ -46,12 +47,16 @@ public class SqlSessionInterceptor implements Interceptor {
         // ✅ 关键：存入全限定方法名
         MappedStatementHolder.set(ms.getId());
         String readableSql = null;
-        if (printLog(ms.getId())) {
-            Object parameter = invocation.getArgs()[1];
-            BoundSql boundSql = ms.getBoundSql(parameter);
-            readableSql = ReadableSqlUtil.getReadableSql(boundSql);
-        }
         try {
+            try {
+                if (printLog(ms.getId())) {
+                    Object parameter = invocation.getArgs()[1];
+                    BoundSql boundSql = ms.getBoundSql(parameter);
+                    readableSql = ReadableSqlUtil.getReadableSql(boundSql);
+                }
+            } catch (Exception e) {
+                log.error("获取SQL失败", e);
+            }
             return invocation.proceed();
         } finally {
             stopWatch.stop();
@@ -65,12 +70,16 @@ public class SqlSessionInterceptor implements Interceptor {
 
     public boolean printLog(String msId) {
         // ✅ 从当前线程栈中提取 MappedStatement.getId()
-        if (msId == null || sqlLogProperties.getWhitelist().isEmpty()) {
+        if (msId == null) {
+            return false;
+        }
+        List<String> whitelist = sqlLogProperties.getWhitelist();
+        if (whitelist == null || whitelist.isEmpty()) {
             return false;
         }
 //        logger.info("msId: {}", msId);
         AntPathMatcher matcher = new AntPathMatcher();
-        for (String pattern : sqlLogProperties.getWhitelist()) {
+        for (String pattern : whitelist) {
             if (matcher.match(pattern, msId)) {
                 return true;
             }
