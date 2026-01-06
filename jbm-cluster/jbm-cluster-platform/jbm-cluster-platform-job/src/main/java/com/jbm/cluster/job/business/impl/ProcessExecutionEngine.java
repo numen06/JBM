@@ -187,26 +187,49 @@ public class ProcessExecutionEngine {
         NodeData currentNode = findNodeById(flowData, currentNodeId);
         NodeExecution currentExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
                 processInstance.getId(), currentNodeId);
+
+        // 1. 恢复之前的输入参数作为基础上下文
+        Map<String, Object> executionData = new HashMap<>();
+        if (currentExecution.getInputData() != null) {
+            Map<String, Object> previousInput = JsonUtils.fromJson(currentExecution.getInputData(), Map.class);
+            if (previousInput != null) {
+                executionData.putAll(previousInput);
+            }
+        }
+
+        // 2. 合并当前的触发参数到上下文中
         Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        if (triggerDataMap != null) {
+            executionData.putAll(triggerDataMap);
+        }
+
         if(Objects.equals(currentExecution.getStatus(), ProcessStatusEnum.WAITING.getCode())){
             // 获取节点执行器
             NodeExecutor executor = nodeExecutorFactory.getExecutor(currentNode.getType());
 
-            triggerDataMap.put("currentNodeStatus", currentExecution.getStatus());
+            executionData.put("currentNodeStatus", currentExecution.getStatus());
             // 自动查询并注入下一个站点信息
-            injectNextSiteInfo(flowData, currentNode, triggerDataMap);
-            NodeExecutionResult result = executor.execute(currentNode, triggerDataMap);
-            //执行完移除 currentNodeStatus 和 nextSite
-            triggerDataMap.remove("currentNodeStatus");
-            triggerDataMap.remove("nextSite");
+            injectNextSiteInfo(flowData, currentNode, executionData);
+
+            NodeExecutionResult result = executor.execute(currentNode, executionData);
+
+            // 3. 执行成功则更新上下文为执行后的输出
+            if (result.isSuccess()) {
+                executionData = result.getOutputData();
+            }
+
+            // 执行完移除辅助字段，避免污染后续节点
+            executionData.remove("currentNodeStatus");
+            executionData.remove("nextSite");
+            executionData.remove("nextSiteList");
         }
         // 更新节点执行记录
         currentExecution.setStatus(ProcessStatusEnum.COMPLETED.getCode());
-        currentExecution.setOutputData(JsonUtils.toJson(triggerData));
+        currentExecution.setOutputData(JsonUtils.toJson(executionData));
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
-        // 继续执行后续节点
-        return executeNextNodes(processInstance, flowData, currentNode, triggerDataMap);
+        // 继续执行后续节点，传入完整的上下文
+        return executeNextNodes(processInstance, flowData, currentNode, executionData);
     }
 
     /**

@@ -81,92 +81,128 @@ public class StationNodeExecutor implements NodeExecutor {
     }
     
     private Map<String, Object> replaceParamsPlaceholders(Map<String, Object> httpCall, NodeData node, Map<String, Object> nodeData, Map<String, Object> inputData, Map<String, Object> parsedConfig) {
-        // ... existing code ...
         Map<String, Object> result = new HashMap<>(httpCall);
-        
+
+        // 获取上下文信息
+        Map<String, Object> currentSite = new HashMap<>();
+        if (nodeData != null && nodeData.containsKey("site")) {
+            Object site = nodeData.get("site");
+            if (site instanceof Map) {
+                currentSite = (Map<String, Object>) site;
+            }
+        }
+        Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
+
+        // 1. 处理 URL 占位符
+        if (result.containsKey("url")) {
+            String url = result.get("url").toString();
+            result.put("url", replacePlaceholderString(url, currentSite, nextSite, inputData));
+        }
+
+        // 2. 处理 Params 占位符
         if (result.containsKey("params")) {
             Map<String, Object> params = (Map<String, Object>) result.get("params");
             if (params != null) {
                 Map<String, Object> newParams = new HashMap<>(params);
-                
-                // 获取当前站点完整信息
-                Map<String, Object> currentSite = new HashMap<>();
-                if (nodeData != null && nodeData.containsKey("site")) {
-                    Object site = nodeData.get("site");
-                    if (site instanceof Map) {
-                        currentSite = (Map<String, Object>) site;
-                    }
-                }
-                
-                // 获取下一个站点完整信息
-                Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
-                
-                // 替换占位符：支持三种格式
-                // 1. ${currentSiteId} - 向后兼容，默认使用 siteCoordinateId
-                // 2. ${nextSiteId} - 向后兼容，默认使用 siteCoordinateId
-                // 3. ${currentSite.fieldName} - 灵活方案，可使用任意当前站点字段
-                // 4. ${nextSite.fieldName} - 灵活方案，可使用任意下一站点字段
                 for (Map.Entry<String, Object> entry : newParams.entrySet()) {
                     Object value = entry.getValue();
                     if (value instanceof String) {
-                        String strValue = (String) value;
-                        String replacedValue = strValue;
-                        
-                        // 替换 ${currentSite.fieldName} 格式
-                        java.util.regex.Pattern currentSitePattern = java.util.regex.Pattern.compile("\\$\\{currentSite\\.(\\w+)\\}");
-                        java.util.regex.Matcher currentSiteMatcher = currentSitePattern.matcher(replacedValue);
-                        while (currentSiteMatcher.find()) {
-                            String fieldName = currentSiteMatcher.group(1);
-                            Object fieldValue = currentSite.get(fieldName);
-                            if (fieldValue != null) {
-                                replacedValue = replacedValue.replace("${currentSite." + fieldName + "}", fieldValue.toString());
-                                log.info("Replace ${currentSite.{}}: {}", fieldName, fieldValue);
-                            }
-                        }
-                        
-                        // 替换 ${nextSite.fieldName} 格式
-                        java.util.regex.Pattern nextSitePattern = java.util.regex.Pattern.compile("\\$\\{nextSite\\.(\\w+)\\}");
-                        java.util.regex.Matcher nextSiteMatcher = nextSitePattern.matcher(replacedValue);
-                        while (nextSiteMatcher.find()) {
-                            String fieldName = nextSiteMatcher.group(1);
-                            if (nextSite != null) {
-                                Object fieldValue = nextSite.get(fieldName);
-                                if (fieldValue != null) {
-                                    replacedValue = replacedValue.replace("${nextSite." + fieldName + "}", fieldValue.toString());
-                                    log.info("Replace ${nextSite.{}}: {}", fieldName, fieldValue);
-                                }
-                            }
-                        }
-                        
-                        // 向后兼容：替换 ${currentSiteId} 格式（默认使用 siteCoordinateId）
-                        if (replacedValue.contains("${currentSiteId}")) {
-                            Object fieldValue = currentSite.get("siteCoordinateId");
-                            if (fieldValue != null) {
-                                replacedValue = replacedValue.replace("${currentSiteId}", fieldValue.toString());
-                                log.info("Replace ${currentSiteId}: {} (field: siteCoordinateId)", fieldValue);
-                            }
-                        }
-                        
-                        // 向后兼容：替换 ${nextSiteId} 格式（默认使用 siteCoordinateId）
-                        if (replacedValue.contains("${nextSiteId}")) {
-                            if (nextSite != null) {
-                                Object fieldValue = nextSite.get("siteCoordinateId");
-                                if (fieldValue != null) {
-                                    replacedValue = replacedValue.replace("${nextSiteId}", fieldValue.toString());
-                                    log.info("Replace ${nextSiteId}: {} (field: siteCoordinateId)", fieldValue);
-                                }
-                            }
-                        }
-                        
-                        entry.setValue(replacedValue);
+                        entry.setValue(replacePlaceholderString((String) value, currentSite, nextSite, inputData));
                     }
                 }
-                
                 result.put("params", newParams);
             }
         }
-        
+
         return result;
+    }
+
+    /**
+     * 统一字符串占位符替换逻辑
+     */
+    private String replacePlaceholderString(String str, Map<String, Object> currentSite, Map<String, Object> nextSite, Map<String, Object> inputData) {
+        if (str == null || !str.contains("${")) {
+            return str;
+        }
+
+        String replacedValue = str;
+
+        // 1. 替换 ${currentSite.fieldName} 格式
+        java.util.regex.Pattern currentSitePattern = java.util.regex.Pattern.compile("\\$\\{currentSite\\.(\\w+)\\}");
+        java.util.regex.Matcher currentSiteMatcher = currentSitePattern.matcher(replacedValue);
+        while (currentSiteMatcher.find()) {
+            String fieldName = currentSiteMatcher.group(1);
+            Object fieldValue = currentSite.get(fieldName);
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${currentSite." + fieldName + "}", fieldValue.toString());
+            }
+        }
+
+        // 2. 替换 ${nextSite.fieldName} 格式
+        java.util.regex.Pattern nextSitePattern = java.util.regex.Pattern.compile("\\$\\{nextSite\\.(\\w+)\\}");
+        java.util.regex.Matcher nextSiteMatcher = nextSitePattern.matcher(replacedValue);
+        while (nextSiteMatcher.find()) {
+            String fieldName = nextSiteMatcher.group(1);
+            if (nextSite != null) {
+                Object fieldValue = nextSite.get(fieldName);
+                if (fieldValue != null) {
+                    replacedValue = replacedValue.replace("${nextSite." + fieldName + "}", fieldValue.toString());
+                }
+            }
+        }
+
+        // 3. 替换 ${inputData.fieldName} 格式
+        java.util.regex.Pattern inputDataPattern = java.util.regex.Pattern.compile("\\$\\{inputData\\.(\\w+)\\}");
+        java.util.regex.Matcher inputDataMatcher = inputDataPattern.matcher(replacedValue);
+        while (inputDataMatcher.find()) {
+            String fieldName = inputDataMatcher.group(1);
+            if (inputData != null) {
+                Object fieldValue = inputData.get(fieldName);
+                if (fieldValue != null) {
+                    replacedValue = replacedValue.replace("${inputData." + fieldName + "}", fieldValue.toString());
+                }
+            }
+        }
+
+        // 4. 替换通用的 ${fieldName} 格式 (优先从 inputData -> currentSite -> nextSite 顺序查找)
+        java.util.regex.Pattern generalPattern = java.util.regex.Pattern.compile("\\$\\{(\\w+)\\}");
+        java.util.regex.Matcher generalMatcher = generalPattern.matcher(replacedValue);
+        while (generalMatcher.find()) {
+            String fieldName = generalMatcher.group(1);
+            // 排除特殊保留字
+            if ("currentSiteId".equals(fieldName) || "nextSiteId".equals(fieldName)) {
+                continue;
+            }
+            
+            Object fieldValue = null;
+            if (inputData != null && inputData.containsKey(fieldName)) {
+                fieldValue = inputData.get(fieldName);
+            } else if (currentSite.containsKey(fieldName)) {
+                fieldValue = currentSite.get(fieldName);
+            } else if (nextSite != null && nextSite.containsKey(fieldName)) {
+                fieldValue = nextSite.get(fieldName);
+            }
+
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${" + fieldName + "}", fieldValue.toString());
+            }
+        }
+
+        // 5. 向后兼容：替换 ${currentSiteId} 和 ${nextSiteId} (默认 siteCoordinateId)
+        if (replacedValue.contains("${currentSiteId}")) {
+            Object fieldValue = currentSite.get("siteCoordinateId");
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${currentSiteId}", fieldValue.toString());
+            }
+        }
+        if (replacedValue.contains("${nextSiteId}") && nextSite != null) {
+            Object fieldValue = nextSite.get("siteCoordinateId");
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${nextSiteId}", fieldValue.toString());
+            }
+        }
+
+        return replacedValue;
     }
     
     /**

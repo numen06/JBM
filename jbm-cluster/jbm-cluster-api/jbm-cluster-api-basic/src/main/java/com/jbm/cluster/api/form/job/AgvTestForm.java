@@ -20,4 +20,6 @@ public class AgvTestForm {
     private String startCode;
     @ApiModelProperty("目的编号")
     private String endCode;
+    private String www;
+    private String aaaa;
 }
