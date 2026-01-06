@@ -59,14 +59,14 @@ third-party:
       local:
         client-id: 7gBZcbsC7kLIWCdELIl8nxcs
         client-secret: 0osTIhce7uPvDKHz6aa67bhCukaKoYl4
-        redirect-uri: http://127.0.0.1:5555/oauth2/callback
+#        redirect-uri: http://127.0.0.1:5555/oauth2/callback
         token-url: http://127.0.0.1:5555/oauth2/token
         user-info-url: http://127.0.0.1:5555/oauth2/userinfo
-      shuiwu:
-        client-id: 95168541
-        client-secret: 3403b44bc698e3092a040f48dc83cabc
-        redirect-uri: http://172.16.73.211
-        logout-url: https://172.16.73.177:600/oauth2/user_logout
-        login-url: https://172.16.73.177:600
-        token-url: https://172.16.73.177:600/oauth2/token
-        user-info-url: https://172.16.73.177:600/oauth2/get_user_info
+#      shuiwu:
+#        client-id: 95168541
+#        client-secret: 3403b44bc698e3092a040f48dc83cabc
+#        redirect-uri: http://172.16.73.211
+#        logout-url: https://172.16.73.177:600/oauth2/user_logout
+#        login-url: https://172.16.73.177:600
+#        token-url: https://172.16.73.177:600/oauth2/token
+#        user-info-url: https://172.16.73.177:600/oauth2/get_user_info

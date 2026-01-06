@@ -32,8 +32,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -78,7 +79,29 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
     @Value("${business.log.feign.enabled:true}")
     private boolean feignEnabled;
 
+    @Value("${business.log.realtime.enabled:true}")
+    private boolean realtimeEnabled = true;
+
+    @Value("${business.log.realtime.batch.size:10}")
+    private int realtimeBatchSize = 10;
+
+    @Value("${business.log.realtime.batch.interval.ms:500}")
+    private long realtimeBatchIntervalMs = 500;
+
     private final ConcurrentMap<String, Object> traceLocks = new ConcurrentHashMap<>();
+    
+    // 实时推送缓冲：logId -> 事件列表
+    private final ConcurrentMap<String, List<BusinessLogEvent>> realtimeBuffers = new ConcurrentHashMap<>();
+    
+    // 实时推送调度器
+    private final ScheduledExecutorService realtimeScheduler = Executors.newScheduledThreadPool(2, r -> {
+        Thread t = new Thread(r, "business-log-realtime-pusher");
+        t.setDaemon(true);
+        return t;
+    });
+    
+    // 最后推送时间记录
+    private final ConcurrentMap<String, AtomicLong> lastPushTime = new ConcurrentHashMap<>();
 
     public static BusinessLogContext.BusinessLogContextBuilder log() {
         return BusinessLogContext.builder();
@@ -187,6 +210,63 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
     }
 
     /**
+     * 生成阶段初始化日志字符串
+     * 使用方式：log.info(JbmBusinessLogTemplate.stageInit("prepare,准备资源,1;process,处理数据,2;archive,归档输出,3"))
+     * 
+     * @param stages 阶段列表，格式：code,name,order（用分号分隔多个阶段）
+     * @return 格式化的阶段初始化字符串，格式：[STAGE:INIT:stages]
+     */
+    public static String stageInit(String stages) {
+        return StrUtil.format("[STAGE:INIT:{}]", stages);
+    }
+
+    /**
+     * 生成阶段初始化日志字符串（便捷方法，单个阶段）
+     * 使用方式：log.info(JbmBusinessLogTemplate.stageInit("prepare", "准备资源", 1))
+     * 
+     * @param stageCode 阶段代码
+     * @param stageName 阶段名称
+     * @param order 顺序
+     * @return 格式化的阶段初始化字符串
+     */
+    public static String stageInit(String stageCode, String stageName, int order) {
+        return stageInit(StrUtil.format("{},{},{}", stageCode, stageName, order));
+    }
+
+    /**
+     * 生成阶段更新日志字符串
+     * 使用方式：log.info(JbmBusinessLogTemplate.stageUpdate("prepare", "RUNNING", 20, "正在准备基础资源", 10))
+     * 
+     * @param stageCode 阶段代码
+     * @param status 状态（WAITING/RUNNING/DONE/FAILED）
+     * @param progress 进度（0-100）
+     * @param message 消息
+     * @param overallProgress 总体进度（0-100，可选）
+     * @return 格式化的阶段更新字符串，格式：[STAGE:UPDATE:code,status,progress,message,overall]
+     */
+    public static String stageUpdate(String stageCode, String status, int progress, String message, Integer overallProgress) {
+        String stageInfo = StrUtil.format("{},{},{},{}", stageCode, status, progress, message);
+        if (overallProgress != null) {
+            stageInfo += "," + overallProgress;
+        }
+        return StrUtil.format("[STAGE:UPDATE:{}]", stageInfo);
+    }
+
+    /**
+     * 生成阶段更新日志字符串（简化版，不包含总体进度）
+     * 使用方式：log.info(JbmBusinessLogTemplate.stageUpdate("prepare", "RUNNING", 20, "正在准备基础资源"))
+     * 
+     * @param stageCode 阶段代码
+     * @param status 状态（WAITING/RUNNING/DONE/FAILED）
+     * @param progress 进度（0-100）
+     * @param message 消息
+     * @return 格式化的阶段更新字符串
+     */
+    public static String stageUpdate(String stageCode, String status, int progress, String message) {
+        return stageUpdate(stageCode, status, progress, message, null);
+    }
+
+    /**
      * 发布业务日志事件。
      */
     private void publishEvent(BusinessLogEventType eventType, String content) {
@@ -222,6 +302,12 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
                 .build();
 
         persistEvent(event);
+        
+        // 实时推送：写入文件的同时尝试推送
+        if (realtimeEnabled) {
+            tryRealtimePush(event);
+        }
+        
         if (context.isFinished()) {
             flushTraceLog(finalLogId, "mdc-finished");
         }
@@ -259,6 +345,112 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
         }
     }
 
+    /**
+     * 尝试实时推送日志事件
+     * 使用缓冲机制，累积一定数量或时间后批量推送，提高实时性
+     */
+    private void tryRealtimePush(BusinessLogEvent event) {
+        if (event == null || StrUtil.isBlank(event.getLogId())) {
+            return;
+        }
+        
+        String logId = event.getLogId();
+        String lockKey = BusinessLogTraceUtils.traceLockKey(logId);
+        
+        // 添加到缓冲
+        List<BusinessLogEvent> buffer = realtimeBuffers.computeIfAbsent(lockKey, k -> {
+            List<BusinessLogEvent> newBuffer = new CopyOnWriteArrayList<>();
+            // 启动定时推送任务
+            scheduleRealtimePush(lockKey, newBuffer);
+            return newBuffer;
+        });
+        
+        buffer.add(event);
+        lastPushTime.put(lockKey, new AtomicLong(System.currentTimeMillis()));
+        
+        // 如果缓冲达到批量大小，立即推送
+        if (buffer.size() >= realtimeBatchSize) {
+            triggerRealtimePush(lockKey, buffer);
+        }
+    }
+
+    /**
+     * 调度定时推送任务
+     */
+    private void scheduleRealtimePush(String lockKey, List<BusinessLogEvent> buffer) {
+        realtimeScheduler.scheduleWithFixedDelay(() -> {
+            AtomicLong lastTime = lastPushTime.get(lockKey);
+            if (lastTime != null && !buffer.isEmpty()) {
+                long elapsed = System.currentTimeMillis() - lastTime.get();
+                if (elapsed >= realtimeBatchIntervalMs) {
+                    triggerRealtimePush(lockKey, buffer);
+                }
+            }
+        }, realtimeBatchIntervalMs, realtimeBatchIntervalMs, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 触发实时推送
+     */
+    private void triggerRealtimePush(String lockKey, List<BusinessLogEvent> buffer) {
+        if (buffer.isEmpty()) {
+            return;
+        }
+        
+        // 复制缓冲并清空
+        List<BusinessLogEvent> eventsToPush = new ArrayList<>(buffer);
+        buffer.clear();
+        
+        // 异步推送
+        realtimeScheduler.execute(() -> {
+            try {
+                // 解析阶段信息
+                List<BusinessLogEvent> allEvents = new ArrayList<>();
+                for (BusinessLogEvent event : eventsToPush) {
+                    allEvents.add(event);
+                    // 解析阶段信息
+                    if (event.getContent() != null && event.getContent().contains("[STAGE:")) {
+                        List<BusinessLogEvent> stageEvents = parseStageEvents(event);
+                        if (!stageEvents.isEmpty()) {
+                            String trimmedContent = StrUtil.trim(event.getContent());
+                            boolean isOnlyStage = trimmedContent.startsWith("[STAGE:") && trimmedContent.endsWith("]");
+                            if (isOnlyStage) {
+                                // 只包含阶段信息，不添加原始事件
+                                allEvents.remove(event);
+                            }
+                            allEvents.addAll(stageEvents);
+                        }
+                    }
+                }
+                
+                // 尝试推送
+                boolean success = trySendViaStream(allEvents);
+                if (!success) {
+                    success = trySendViaFeign(allEvents);
+                }
+                
+                if (success) {
+                    // 推送成功，记录已推送的时间戳，flush时可以跳过
+                    log.debug("实时推送成功: logId={}, events={}", 
+                            eventsToPush.get(0).getLogId(), allEvents.size());
+                } else {
+                    // 推送失败，将事件重新加入缓冲，等待下次推送或flush
+                    synchronized (buffer) {
+                        buffer.addAll(eventsToPush);
+                    }
+                    log.warn("实时推送失败，事件已重新加入缓冲: logId={}", 
+                            eventsToPush.get(0).getLogId());
+                }
+            } catch (Exception e) {
+                log.error("实时推送异常: lockKey={}", lockKey, e);
+                // 推送异常，将事件重新加入缓冲
+                synchronized (buffer) {
+                    buffer.addAll(eventsToPush);
+                }
+            }
+        });
+    }
+
     private void flushTraceLog(String logId, String trigger) {
         if (StrUtil.isBlank(logId)) {
             return;
@@ -273,6 +465,29 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
         }
         String lockKey = stripExtension(traceFile.getFileName().toString());
         Object lock = traceLocks.computeIfAbsent(lockKey, key -> new Object());
+        
+        // 检查实时推送缓冲，如果有未推送的事件，先尝试推送缓冲中的事件
+        List<BusinessLogEvent> bufferedEvents = realtimeBuffers.get(lockKey);
+        if (bufferedEvents != null && !bufferedEvents.isEmpty()) {
+            synchronized (bufferedEvents) {
+                if (!bufferedEvents.isEmpty()) {
+                    List<BusinessLogEvent> eventsToPush = new ArrayList<>(bufferedEvents);
+                    bufferedEvents.clear();
+                    log.debug("flush时发现缓冲中有未推送事件，先推送缓冲: logId={}, events={}", 
+                            lockKey, eventsToPush.size());
+                    // 尝试推送缓冲中的事件
+                    boolean bufferedSuccess = trySendViaStream(eventsToPush);
+                    if (!bufferedSuccess) {
+                        bufferedSuccess = trySendViaFeign(eventsToPush);
+                    }
+                    if (!bufferedSuccess) {
+                        // 缓冲推送失败，将事件重新加入缓冲，等待文件推送
+                        bufferedEvents.addAll(eventsToPush);
+                    }
+                }
+            }
+        }
+        
         Path uploading = null;
         synchronized (lock) {
             try {
@@ -302,6 +517,9 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
             log.error("重放业务日志文件失败: {}", uploading, e);
         } finally {
             handleUploadCompletion(traceFile, uploading, lockKey, success, trigger, lock);
+            // 清理实时推送相关资源
+            realtimeBuffers.remove(lockKey);
+            lastPushTime.remove(lockKey);
         }
     }
 
@@ -337,12 +555,105 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
                 continue;
             }
             try {
-                events.add(JSON.parseObject(line, BusinessLogEvent.class));
+                BusinessLogEvent event = JSON.parseObject(line, BusinessLogEvent.class);
+                
+                // 解析日志内容中的阶段信息
+                if (event.getContent() != null && event.getContent().contains("[STAGE:")) {
+                    List<BusinessLogEvent> stageEvents = parseStageEvents(event);
+                    if (!stageEvents.isEmpty()) {
+                        // 如果内容只包含阶段信息（去除空白后就是阶段信息），则不添加原始事件，只添加阶段事件
+                        String trimmedContent = StrUtil.trim(event.getContent());
+                        boolean isOnlyStage = trimmedContent.startsWith("[STAGE:") && trimmedContent.endsWith("]");
+                        
+                        if (isOnlyStage) {
+                            // 只包含阶段信息，不添加原始事件，避免重复
+                            events.addAll(stageEvents);
+                        } else {
+                            // 包含其他内容，添加原始事件和阶段事件
+                            events.add(event);
+                            events.addAll(stageEvents);
+                        }
+                    } else {
+                        // 解析失败，仍然添加原始事件
+                        events.add(event);
+                    }
+                } else {
+                    // 不包含阶段信息，正常添加
+                    events.add(event);
+                }
             } catch (Exception ex) {
                 log.error("解析本地业务日志失败: {}", line, ex);
             }
         }
         return events;
+    }
+
+    /**
+     * 解析日志内容中的阶段信息，生成阶段事件
+     */
+    private List<BusinessLogEvent> parseStageEvents(BusinessLogEvent originalEvent) {
+        List<BusinessLogEvent> stageEvents = new ArrayList<>();
+        String content = originalEvent.getContent();
+        
+        if (StrUtil.isBlank(content)) {
+            return stageEvents;
+        }
+        
+        // 查找所有阶段信息：[STAGE:INIT:...] 或 [STAGE:UPDATE:...]
+        int startIndex = 0;
+        while (true) {
+            int initIndex = content.indexOf("[STAGE:INIT:", startIndex);
+            int updateIndex = content.indexOf("[STAGE:UPDATE:", startIndex);
+            
+            int nextIndex = -1;
+            String stageType = null;
+            String stageData = null;
+            String prefix;
+            
+            if (initIndex >= 0 && (updateIndex < 0 || initIndex < updateIndex)) {
+                nextIndex = initIndex;
+                stageType = "INIT";
+                prefix = "[STAGE:INIT:";
+            } else if (updateIndex >= 0) {
+                nextIndex = updateIndex;
+                stageType = "UPDATE";
+                prefix = "[STAGE:UPDATE:";
+            } else {
+                break;
+            }
+            
+            // 找到匹配的右括号，从nextIndex开始查找
+            int endIndex = content.indexOf("]", nextIndex + prefix.length());
+            if (endIndex > nextIndex) {
+                stageData = content.substring(nextIndex + prefix.length(), endIndex);
+            }
+            
+            if (StrUtil.isBlank(stageData)) {
+                startIndex = nextIndex + 1;
+                continue;
+            }
+            
+            // 创建阶段事件
+            BusinessLogEvent stageEvent = BusinessLogEvent.builder()
+                    .eventType("INIT".equals(stageType) ? BusinessLogEventType.STAGE_INIT : BusinessLogEventType.STAGE_UPDATE)
+                    .logId(originalEvent.getLogId())
+                    .businessType(originalEvent.getBusinessType())
+                    .businessId(originalEvent.getBusinessId())
+                    .content(stageData) // 阶段数据存储在content中
+                    .expireDays(originalEvent.getExpireDays())
+                    .source(originalEvent.getSource())
+                    .operator(originalEvent.getOperator())
+                    .operatorId(originalEvent.getOperatorId())
+                    .tenantId(originalEvent.getTenantId())
+                    .appId(originalEvent.getAppId())
+                    .timestamp(originalEvent.getTimestamp())
+                    .build();
+            
+            stageEvents.add(stageEvent);
+            startIndex = endIndex + 1;
+        }
+        
+        return stageEvents;
     }
 
     private boolean trySendViaStream(List<BusinessLogEvent> events) {
@@ -382,6 +693,11 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
                 success = sendViaFeignCreate(event);
             } else if (event.getEventType() == BusinessLogEventType.APPEND) {
                 success = sendViaFeignAppend(event);
+            } else if (event.getEventType() == BusinessLogEventType.STAGE_INIT 
+                    || event.getEventType() == BusinessLogEventType.STAGE_UPDATE) {
+                // 阶段事件通过extData传递，由日志服务解析处理
+                // 这里先跳过，阶段事件会在日志服务端解析日志内容时处理
+                success = true;
             } else {
                 log.debug("忽略不支持的事件类型: {}", event.getEventType());
                 continue;

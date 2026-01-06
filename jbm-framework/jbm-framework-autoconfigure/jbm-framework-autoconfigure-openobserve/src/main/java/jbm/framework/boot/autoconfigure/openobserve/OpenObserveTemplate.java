@@ -2,6 +2,7 @@ package jbm.framework.boot.autoconfigure.openobserve;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.StrUtil;
@@ -22,6 +23,7 @@ import org.apache.commons.io.Charsets;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
@@ -29,6 +31,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
@@ -388,16 +391,58 @@ public class OpenObserveTemplate implements InitializingBean {
 
     private String getGeneratedSql(String statement, Map<String, Object> params) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
-            // 获取 Mapper 接口的代理对象
-//            Object mapper = sqlSession.getMapper(Class.forName(statement.split("\\.")[0]));
-//            if( params ==null ){
-//                params = new HashMap<>();
-//            }
-            // 获取 BoundSql 对象，包含生成的 SQL 语句和参数信息
             BoundSql boundSql = sqlSession.getConfiguration().getMappedStatement(statement).getBoundSql(params);
-            // 返回生成的 SQL 语句
-            return boundSql.getSql();
+            return applyParameters(boundSql, params, sqlSession.getConfiguration());
         }
+    }
+
+    private String applyParameters(BoundSql boundSql, Map<String, Object> originalParams, Configuration configuration) {
+        String sql = boundSql.getSql();
+        List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+        if (CollUtil.isEmpty(parameterMappings)) {
+            return sql;
+        }
+
+        Object parameterObject = boundSql.getParameterObject();
+        TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+        org.apache.ibatis.reflection.MetaObject metaObject =
+                parameterObject == null ? null : configuration.newMetaObject(parameterObject);
+
+        for (ParameterMapping parameterMapping : parameterMappings) {
+            String propertyName = parameterMapping.getProperty();
+            Object value;
+
+            if (boundSql.hasAdditionalParameter(propertyName)) {
+                value = boundSql.getAdditionalParameter(propertyName);
+            } else if (parameterObject == null) {
+                value = null;
+            } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+                value = parameterObject;
+            } else if (metaObject != null && metaObject.hasGetter(propertyName)) {
+                value = metaObject.getValue(propertyName);
+            } else if (originalParams != null && originalParams.containsKey(propertyName)) {
+                value = originalParams.get(propertyName);
+            } else {
+                value = null;
+            }
+
+            sql = sql.replaceFirst("\\?", Matcher.quoteReplacement(formatParameter(value)));
+        }
+        return sql;
+    }
+
+    private String formatParameter(Object value) {
+        if (value == null) {
+            return "NULL";
+        }
+        if (value instanceof Number || value instanceof Boolean) {
+            return value.toString();
+        }
+        if (value instanceof Date) {
+            return "'" + DateUtil.format((Date) value, DatePattern.NORM_DATETIME_PATTERN) + "'";
+        }
+        String stringValue = String.valueOf(value).replace("'", "''");
+        return "'" + stringValue + "'";
     }
 
     /**

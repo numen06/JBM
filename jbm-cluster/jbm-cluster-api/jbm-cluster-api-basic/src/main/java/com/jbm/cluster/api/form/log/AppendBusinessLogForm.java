@@ -26,5 +26,31 @@ public class AppendBusinessLogForm {
     
     @ApiModelProperty(value = "是否自动添加时间戳前缀", notes = "true: 每行自动添加 [时间戳] 前缀")
     private Boolean autoTimestamp = false;
+
+    // ==================== 阶段元数据（可选） ====================
+
+    @ApiModelProperty(value = "阶段编码")
+    private String stageCode;
+
+    @ApiModelProperty(value = "阶段名称")
+    private String stageName;
+
+    @ApiModelProperty(value = "阶段序号")
+    private Integer stageIndex;
+
+    @ApiModelProperty(value = "阶段进度（0-100）")
+    private Integer stageProgress;
+
+    @ApiModelProperty(value = "阶段状态：WAITING、RUNNING、DONE、FAILED")
+    private String stageStatus;
+
+    @ApiModelProperty(value = "阶段总数")
+    private Integer stageCount;
+
+    @ApiModelProperty(value = "整体进度（0-100）")
+    private Integer overallProgress;
+
+    @ApiModelProperty(value = "是否为阶段事件")
+    private Boolean stageEvent = false;
 }
 

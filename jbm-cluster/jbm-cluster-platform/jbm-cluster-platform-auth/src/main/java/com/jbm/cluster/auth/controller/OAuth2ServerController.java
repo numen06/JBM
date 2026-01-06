@@ -74,7 +74,7 @@ public class OAuth2ServerController {
             }
             SaResult saResult = (SaResult) result;
             if (SaResult.CODE_SUCCESS == saResult.getCode()) {
-                  req = SaHolder.getRequest();
+                req = SaHolder.getRequest();
                 if (req.isPath(SaOAuth2Consts.Api.token)) {
                     if (saResult.getData() instanceof Map) {
                         Map<String, Object> data = (Map<String, Object>) saResult.getData();
@@ -147,7 +147,7 @@ public class OAuth2ServerController {
             if (StrUtil.isBlank(jbmLoginUser.getDevice())) {
                 jbmLoginUser.setDevice(RequestDeviceType.PC.getDevice());
             }
-            
+
             LoginHelper.login(jbmLoginUser);
 
             // 登录成功后，直接生成授权码
@@ -257,13 +257,13 @@ public class OAuth2ServerController {
         });
     }
 
-    @ApiOperation("第三方登录回调")
+    @ApiOperation("登录回调")
     @GetMapping("/callback")
     public Object callback(
             @RequestParam String code,
             @RequestParam(required = false) String state) throws IOException {
         //在request中默认设置参数设置为code模式
-        log.info("第三方登录回调，code: {}, state: {}", code, state);
+        log.info("登录回调，code: {}, state: {}", code, state);
         // 获取变量
         SaRequest req = SaHolder.getRequest();
         SaResponse res = SaHolder.getResponse();
@@ -289,6 +289,7 @@ public class OAuth2ServerController {
             @PathVariable String provider,
             @RequestParam String code,
             @RequestParam(value = "client_id", required = false) String targetClientId,
+            @RequestParam(value = "client_secret", required = false) String targetClientSecret,
             @RequestParam(required = false) String state,
             @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             HttpServletResponse response) throws IOException {
@@ -309,7 +310,7 @@ public class OAuth2ServerController {
         try {
             // 2. 用 code 换取第三方用户信息
             log.info("[第三方回调] Step 1: 开始获取第三方用户信息...");
-            ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code, provider);
+            ThirdPartyUser thirdUser = thirdPartyAuthService.getUserInfoByCode(code, redirectUri, provider);
 
             if (thirdUser == null) {
                 log.error("[第三方回调] Step 1: 获取第三方用户信息失败，返回null");
@@ -342,7 +343,7 @@ public class OAuth2ServerController {
                     myUser.setClientId(targetClientId);
                 }
             }
-            
+
             // 设置 AppId (通过 clientId 获取)
             BaseApp baseApp = baseAppPreprocessing.getAppByKey(myUser.getClientId());
             myUser.setAppId(baseApp.getAppId());
@@ -350,7 +351,7 @@ public class OAuth2ServerController {
             if (StrUtil.isBlank(myUser.getDevice())) {
                 myUser.setDevice(RequestDeviceType.PC.getDevice());
             }
-            
+
             log.info("[第三方回调] Step 2: 系统用户映射成功");
             log.info("[第三方回调] 系统用户ID: {}", myUser.getLoginId());
             log.info("[第三方回调] 系统用户名: {}", myUser.getUsername());

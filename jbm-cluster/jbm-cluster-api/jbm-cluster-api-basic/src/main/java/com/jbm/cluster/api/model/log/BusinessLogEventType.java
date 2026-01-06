@@ -35,6 +35,16 @@ public enum BusinessLogEventType {
     /**
      * 查询日志
      */
-    QUERY
+    QUERY,
+    
+    /**
+     * 初始化阶段
+     */
+    STAGE_INIT,
+    
+    /**
+     * 更新阶段进度
+     */
+    STAGE_UPDATE
 }
 
