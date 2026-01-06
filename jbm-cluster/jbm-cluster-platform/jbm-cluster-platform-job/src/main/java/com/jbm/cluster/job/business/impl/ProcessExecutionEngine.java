@@ -334,7 +334,7 @@ public class ProcessExecutionEngine {
         nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
         
         // 发送MQTT消息 - 进入节点
-        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER");
+        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER", flowData);
 
         try {
             // 获取节点执行器
@@ -353,14 +353,14 @@ public class ProcessExecutionEngine {
                 processInstanceService.saveOrUpdate(processInstance);
                 
                 // 发送节点等待触发消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING", "EXIT", flowData);
 
                 return createResponse(processInstance, currentNode, result, true);
             }
 
             if (result.isSuccess()) {
                 // 发送节点执行成功消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED", "EXIT", flowData);
                 
                 // 执行后续节点
                 return executeNextNodes(processInstance, flowData, currentNode, result.getOutputData());
@@ -370,7 +370,7 @@ public class ProcessExecutionEngine {
                 processInstanceService.saveEntity(processInstance);
                 
                 // 发送节点执行失败消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED", "EXIT", flowData);
                 
                 return createResponse(processInstance, currentNode, result, false);
             }
@@ -382,7 +382,7 @@ public class ProcessExecutionEngine {
             processInstanceService.saveEntity(processInstance);
             
             // 发送节点执行异常消息 - 离开节点
-            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR", "EXIT");
+            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR", "EXIT", flowData);
             
             throw new ServiceException("节点执行失败: " + e.getMessage(), e);
         }
@@ -568,6 +568,24 @@ public class ProcessExecutionEngine {
         execution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(execution);
     }
+    
+    /**
+     * 判断是否存在结束节点
+     */
+    private boolean hasEndNodeInOutgoing(FlowData flowData, NodeData currentNode) {
+        List<EdgeData> outgoingEdges = flowData.getEdges().stream()
+                .filter(edge -> currentNode.getId().equals(edge.getSource()))
+                .collect(Collectors.toList());
+        
+        if (outgoingEdges.isEmpty()) {
+            return false;
+        }
+        
+        // 检查所有正子节点是否含有结束节点
+        return outgoingEdges.stream()
+                .map(edge -> findNodeById(flowData, edge.getTarget()))
+                .anyMatch(node -> "end".equals(node.getType()));
+    }
 
     /**
      * 发送节点执行消息
@@ -577,8 +595,9 @@ public class ProcessExecutionEngine {
      * @param inputData       输入数据
      * @param status          状态
      * @param eventType       事件类型 ENTER-进入节点，EXIT-离开节点
+     * @param flowData        流程数据
      */
-    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType) {
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType, FlowData flowData) {
         try {
             NodeExecutionMessage message = new NodeExecutionMessage();
             message.setProcessInstanceId(processInstance.getId());
@@ -591,8 +610,12 @@ public class ProcessExecutionEngine {
             message.setExecutionTime(LocalDateTime.now());
             message.setStatus(status);
             message.setEventType(eventType);
+            
+            // 添加是否存在结束节点
+            if (flowData != null) {
+                message.setHasEndNode(hasEndNodeInOutgoing(flowData, nodeData));
+            }
 
-            //String messageJson = JsonUtils.toJson(message);
             String topic = "process/node/execution/";
             
             // 发送MQTT消息
@@ -600,5 +623,12 @@ public class ProcessExecutionEngine {
         } catch (Exception e) {
             log.error("发送节点执行消息失败", e);
         }
+    }
+    
+    /**
+     * 重载方法：不包含FlowData的情况（不推荐）
+     */
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType) {
+        sendNodeExecutionMessage(processInstance, nodeData, inputData, status, eventType, null);
     }
 }
