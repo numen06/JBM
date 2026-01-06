@@ -11,6 +11,12 @@ import java.util.Map;
 @Component
 @Slf4j
 public class StationNodeExecutor implements NodeExecutor {
+    
+    // HTTP 请求重试配置
+    private static final int MAX_RETRY_ATTEMPTS = 3;  // 最多重试次数
+    private static final long RETRY_DELAY_MS = 1000;  // 重试延迟（毫秒）
+    private static final int CONNECT_TIMEOUT_MS = 10000;  // 连接超时
+    private static final int READ_TIMEOUT_MS = 10000;  // 读取超时
 
     @Override
     public NodeExecutionResult execute(NodeData node, Map<String, Object> inputData) {
@@ -46,7 +52,6 @@ public class StationNodeExecutor implements NodeExecutor {
                     }
                     
                     // 触发继续执行或不需要等待触发时，执行完整的 code 逻辑
-                    // ... existing code ...
                     if (config.containsKey("__HTTP_CALL__")) {
                         Map<String, Object> httpCall = (Map<String, Object>) config.get("__HTTP_CALL__");
                         // 替换参数中的占位符
@@ -423,34 +428,108 @@ public class StationNodeExecutor implements NodeExecutor {
     private Map<String, Object> executeHttpCall(String method, String url, Map<String, Object> params) throws Exception {
         log.info("执行 HTTP 调用: {} {}", method, url);
         
-        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-        conn.setRequestMethod(method);
-        conn.setRequestProperty("Content-Type", "application/json");
-        // 添加 Authorization 请求头
-        try {
-            // token认证
-            conn.setRequestProperty("Authorization", "Bearer " + SecurityUtils.getToken());
-            log.info("已添加 Authorization 请求头");
-        } catch (Exception e) {
-            log.warn("获取 token 失败，将继续执行不带 Authorization 的请求: {}", e.getMessage());
+        Exception lastException = null;
+        int attempt = 0;
+        
+        // 重试逻辑：最多尝试 MAX_RETRY_ATTEMPTS 次
+        while (attempt < MAX_RETRY_ATTEMPTS) {
+            attempt++;
+            try {
+                log.info("开始第 {} 次 HTTP 请求尝试", attempt);
+                
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                conn.setRequestMethod(method);
+                conn.setRequestProperty("Content-Type", "application/json");
+                
+                // 添加 Authorization 请求头
+                try {
+                    conn.setRequestProperty("Authorization", "Bearer " + SecurityUtils.getToken());
+                    log.info("已添加 Authorization 请求头");
+                } catch (Exception e) {
+                    log.warn("获取 token 失败，将继续执行不带 Authorization 的请求: {}", e.getMessage());
+                }
+                
+                conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+                conn.setReadTimeout(READ_TIMEOUT_MS);
+                
+                if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+                    conn.setDoOutput(true);
+                    String json = com.alibaba.fastjson.JSON.toJSONString(params);
+                    log.info("HTTP 请求体: {}", json);
+                    conn.getOutputStream().write(json.getBytes("UTF-8"));
+                    conn.getOutputStream().flush();
+                }
+                
+                int responseCode = conn.getResponseCode();
+                log.info("HTTP 响应码: {}", responseCode);
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("httpCode", responseCode);
+                result.put("success", responseCode >= 200 && responseCode < 300);
+                result.put("attempt", attempt);
+                
+                // 响应成功或已达到最大重试次数，直接返回
+                return result;
+                
+            } catch (java.net.SocketTimeoutException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求超时: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (java.net.ConnectException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 连接异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (java.io.IOException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求 IO 异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            }
         }
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
         
-        if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
-            conn.setDoOutput(true);
-            String json = com.alibaba.fastjson.JSON.toJSONString(params);
-            log.info("HTTP 请求体: {}", json);
-            conn.getOutputStream().write(json.getBytes("UTF-8"));
-            conn.getOutputStream().flush();
-        }
-        
-        int responseCode = conn.getResponseCode();
-        log.info("HTTP 响应码: {}", responseCode);
-        
+        // 所有重试都失败了
+        log.error("经过 {} 次重试后 HTTP 请求仍然失败，最后错误: {}", MAX_RETRY_ATTEMPTS, 
+                  lastException != null ? lastException.getMessage() : "未知错误");
         Map<String, Object> result = new HashMap<>();
-        result.put("httpCode", responseCode);
-        result.put("success", responseCode >= 200 && responseCode < 300);
+        result.put("httpCode", 0);
+        result.put("success", false);
+        result.put("error", lastException != null ? lastException.getMessage() : "HTTP 请求失败");
+        result.put("attempt", MAX_RETRY_ATTEMPTS);
         
         return result;
     }
