@@ -16,4 +16,8 @@ public class AgvTestForm {
     private String startLocation;
     @ApiModelProperty("目的地")
     private String endLocation;
+    @ApiModelProperty("出发编号")
+    private String startCode;
+    @ApiModelProperty("目的编号")
+    private String endCode;
 }

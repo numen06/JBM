@@ -89,51 +89,76 @@ public class StationNodeExecutor implements NodeExecutor {
             if (params != null) {
                 Map<String, Object> newParams = new HashMap<>(params);
                 
-                // 获取字段映射配置（默认为 siteCoordinateId）
-                String currentSiteField = "siteCoordinateId";
-                String nextSiteField = "siteCoordinateId";
-                
-                // 检查 __HTTP_CALL__ 中是否有字段映射配置
-                if (result.containsKey("fieldMapping")) {
-                    Map<String, Object> fieldMapping = (Map<String, Object>) result.get("fieldMapping");
-                    if (fieldMapping != null) {
-                        if (fieldMapping.containsKey("currentSiteField")) {
-                            currentSiteField = fieldMapping.get("currentSiteField").toString();
-                        }
-                        if (fieldMapping.containsKey("nextSiteField")) {
-                            nextSiteField = fieldMapping.get("nextSiteField").toString();
-                        }
-                    }
-                }
-                
-                // 获取当前站点的指定字段值
-                String currentSiteId = null;
+                // 获取当前站点完整信息
+                Map<String, Object> currentSite = new HashMap<>();
                 if (nodeData != null && nodeData.containsKey("site")) {
                     Object site = nodeData.get("site");
                     if (site instanceof Map) {
-                        Object fieldValue = ((Map<String, Object>) site).get(currentSiteField);
-                        if (fieldValue != null) {
-                            currentSiteId = fieldValue.toString();
-                        }
+                        currentSite = (Map<String, Object>) site;
                     }
                 }
                 
-                // 获取下一个站点的指定字段值
-                String nextSiteId = resolveNextSiteId(node, inputData, parsedConfig, nextSiteField);
-                log.info("Resolved nextSiteId: {} (field: {})", nextSiteId, nextSiteField);
+                // 获取下一个站点完整信息
+                Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
                 
-                // 替换占位符
+                // 替换占位符：支持三种格式
+                // 1. ${currentSiteId} - 向后兼容，默认使用 siteCoordinateId
+                // 2. ${nextSiteId} - 向后兼容，默认使用 siteCoordinateId
+                // 3. ${currentSite.fieldName} - 灵活方案，可使用任意当前站点字段
+                // 4. ${nextSite.fieldName} - 灵活方案，可使用任意下一站点字段
                 for (Map.Entry<String, Object> entry : newParams.entrySet()) {
                     Object value = entry.getValue();
                     if (value instanceof String) {
                         String strValue = (String) value;
-                        if ("${currentSiteId}".equals(strValue) && currentSiteId != null) {
-                            entry.setValue(currentSiteId);
-                            log.info("Replace ${currentSiteId}: {} (field: {})", currentSiteId, currentSiteField);
-                        } else if ("${nextSiteId}".equals(strValue) && nextSiteId != null) {
-                            entry.setValue(nextSiteId);
-                            log.info("Replace ${nextSiteId}: {} (field: {})", nextSiteId, nextSiteField);
+                        String replacedValue = strValue;
+                        
+                        // 替换 ${currentSite.fieldName} 格式
+                        java.util.regex.Pattern currentSitePattern = java.util.regex.Pattern.compile("\\$\\{currentSite\\.(\\w+)\\}");
+                        java.util.regex.Matcher currentSiteMatcher = currentSitePattern.matcher(replacedValue);
+                        while (currentSiteMatcher.find()) {
+                            String fieldName = currentSiteMatcher.group(1);
+                            Object fieldValue = currentSite.get(fieldName);
+                            if (fieldValue != null) {
+                                replacedValue = replacedValue.replace("${currentSite." + fieldName + "}", fieldValue.toString());
+                                log.info("Replace ${currentSite.{}}: {}", fieldName, fieldValue);
+                            }
                         }
+                        
+                        // 替换 ${nextSite.fieldName} 格式
+                        java.util.regex.Pattern nextSitePattern = java.util.regex.Pattern.compile("\\$\\{nextSite\\.(\\w+)\\}");
+                        java.util.regex.Matcher nextSiteMatcher = nextSitePattern.matcher(replacedValue);
+                        while (nextSiteMatcher.find()) {
+                            String fieldName = nextSiteMatcher.group(1);
+                            if (nextSite != null) {
+                                Object fieldValue = nextSite.get(fieldName);
+                                if (fieldValue != null) {
+                                    replacedValue = replacedValue.replace("${nextSite." + fieldName + "}", fieldValue.toString());
+                                    log.info("Replace ${nextSite.{}}: {}", fieldName, fieldValue);
+                                }
+                            }
+                        }
+                        
+                        // 向后兼容：替换 ${currentSiteId} 格式（默认使用 siteCoordinateId）
+                        if (replacedValue.contains("${currentSiteId}")) {
+                            Object fieldValue = currentSite.get("siteCoordinateId");
+                            if (fieldValue != null) {
+                                replacedValue = replacedValue.replace("${currentSiteId}", fieldValue.toString());
+                                log.info("Replace ${currentSiteId}: {} (field: siteCoordinateId)", fieldValue);
+                            }
+                        }
+                        
+                        // 向后兼容：替换 ${nextSiteId} 格式（默认使用 siteCoordinateId）
+                        if (replacedValue.contains("${nextSiteId}")) {
+                            if (nextSite != null) {
+                                Object fieldValue = nextSite.get("siteCoordinateId");
+                                if (fieldValue != null) {
+                                    replacedValue = replacedValue.replace("${nextSiteId}", fieldValue.toString());
+                                    log.info("Replace ${nextSiteId}: {} (field: siteCoordinateId)", fieldValue);
+                                }
+                            }
+                        }
+                        
+                        entry.setValue(replacedValue);
                     }
                 }
                 
@@ -145,18 +170,10 @@ public class StationNodeExecutor implements NodeExecutor {
     }
     
     /**
-     * 根据条件判断和 nextSiteList 来解析下一个站点 ID
-     * 如果配置了 __CONDITION__，则根据条件字段值从 nextSiteList 中选择
-     * 条件配置示例：
-     *   "__CONDITION__": {
-     *     "checkField": "checkResult",
-     *     "routes": [
-     *       {"value": 1, "siteId": "1915633766512988168"},
-     *       {"value": 0, "siteId": "1915633766512988169"}
-     *     ]
-     *   }
+     * 根据条件判断和 nextSiteList 来返回下一个站点对象
+     * 子方法为 resolveNextSiteId（获取整个对象）
      */
-    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig, String fieldName) {
+    private Map<String, Object> resolveNextSite(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig) {
         if (inputData == null) {
             return null;
         }
@@ -186,11 +203,7 @@ public class StationNodeExecutor implements NodeExecutor {
                                 // 验证 targetSiteId 是否在 nextSiteList 中
                                 for (Map<String, Object> site : nextSiteList) {
                                     if (targetSiteId.equals(site.get("siteCoordinateId").toString())) {
-                                        // 返回指定字段的值
-                                        Object fieldValueToReturn = site.get(fieldName);
-                                        if (fieldValueToReturn != null) {
-                                            return fieldValueToReturn.toString();
-                                        }
+                                        return site;
                                     }
                                 }
                                 log.warn("Target site {} not found in nextSiteList", targetSiteId);
@@ -199,12 +212,9 @@ public class StationNodeExecutor implements NodeExecutor {
                     }
                 }
                 
-                // 如果没有配置条件或条件不匹配，返回第一个站点的指定字段
+                // 如果没有配置条件或条件不匹配，返回第一个站点
                 if (nextSiteList.size() > 0) {
-                    Object fieldValue = nextSiteList.get(0).get(fieldName);
-                    if (fieldValue != null) {
-                        return fieldValue.toString();
-                    }
+                    return nextSiteList.get(0);
                 }
             }
         }
@@ -213,13 +223,33 @@ public class StationNodeExecutor implements NodeExecutor {
         if (inputData.containsKey("nextSite")) {
             Object nextSite = inputData.get("nextSite");
             if (nextSite instanceof Map) {
-                Object fieldValue = ((Map<String, Object>) nextSite).get(fieldName);
-                if (fieldValue != null) {
-                    return fieldValue.toString();
-                }
+                return (Map<String, Object>) nextSite;
             }
         }
         
+        return null;
+    }
+    
+    /**
+     * 根据条件判断和 nextSiteList 来解析下一个站点 ID
+     * 如果配置了 __CONDITION__，则根据条件字段值从 nextSiteList 中选择
+     * 条件配置示例：
+     *   "__CONDITION__": {
+     *     "checkField": "checkResult",
+     *     "routes": [
+     *       {"value": 1, "siteId": "1915633766512988168"},
+     *       {"value": 0, "siteId": "1915633766512988169"}
+     *     ]
+     *   }
+     */
+    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig, String fieldName) {
+        Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
+        if (nextSite != null) {
+            Object fieldValue = nextSite.get(fieldName);
+            if (fieldValue != null) {
+                return fieldValue.toString();
+            }
+        }
         return null;
     }
     
