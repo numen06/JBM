@@ -1,7 +1,7 @@
 package com.jbm.cluster.platform.gateway.filter;
 
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HtmlUtil;
 import com.jbm.cluster.platform.gateway.config.properties.XssProperties;
 import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
 import io.netty.buffer.ByteBufAllocator;
@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 /**
  * 跨站脚本过滤器
@@ -57,6 +58,17 @@ public class XssFilter implements GlobalFilter, Ordered {
 
     }
 
+    private static final Pattern SCRIPT = Pattern.compile("<script[^>]*>.*?</script>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern EVENT = Pattern.compile("\\s+on[a-z]+\\s*=[^>]*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern JS = Pattern.compile("javascript:", Pattern.CASE_INSENSITIVE);
+
+    public static String filter(String input) {
+        if (StrUtil.isBlank(input)) return input;
+        String s = ReUtil.replaceAll(input, SCRIPT, "");
+        s = ReUtil.replaceAll(s, EVENT, "");
+        return ReUtil.replaceAll(s, JS, "#");
+    }
+
     private ServerHttpRequestDecorator requestDecorator(ServerWebExchange exchange) {
         ServerHttpRequestDecorator serverHttpRequestDecorator = new ServerHttpRequestDecorator(exchange.getRequest()) {
             @Override
@@ -70,7 +82,8 @@ public class XssFilter implements GlobalFilter, Ordered {
                     DataBufferUtils.release(join);
                     String bodyStr = new String(content, StandardCharsets.UTF_8);
                     // 防xss攻击过滤
-                    bodyStr = HtmlUtil.cleanHtmlTag(bodyStr);
+                    bodyStr = filter(bodyStr);
+//                    bodyStr = HtmlUtil.cleanHtmlTag(bodyStr);
                     // 转成字节
                     byte[] bytes = bodyStr.getBytes();
                     NettyDataBufferFactory nettyDataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);

@@ -621,4 +621,11 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         return roleIds.stream().filter(role -> currentUserRoleIds.contains(role)).collect(Collectors.toList());
     }
 
+    @Override
+    public List<BaseUser> getUsersByIds(List<Long> ids) {
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().in(BaseUser::getUserId, ids);
+        return this.selectEntitys(queryWrapper);
+    }
+
 }

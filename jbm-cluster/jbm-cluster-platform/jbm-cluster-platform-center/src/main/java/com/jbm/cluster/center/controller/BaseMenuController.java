@@ -112,6 +112,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             exportMenu.setIsPersist(menu.getIsPersist());
             exportMenu.setServiceId(menu.getServiceId());
             exportMenu.setAppId(menu.getAppId());
+            exportMenu.setHidden(menu.getHidden());
             // 不导出createTime和updateTime，这些会在导入时自动生成
             exportList.add(exportMenu);
         }
@@ -234,6 +235,8 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "menuDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
+
     })
     @PostMapping("/add")
     public ResultBody<Long> addMenu(
@@ -246,7 +249,8 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "parentId", required = false, defaultValue = "0") Long parentId,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
-            @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc
+            @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc,
+            @RequestParam(value = "hidden", required = false, defaultValue = "1") Integer hidden
     ) {
         return ResultBody.callback(() -> {
             BaseMenu menu = new BaseMenu();
@@ -260,6 +264,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             menu.setParentId(parentId);
             menu.setPriority(priority);
             menu.setMenuDesc(menuDesc);
+            menu.setHidden(hidden);
             Long menuId = null;
             BaseMenu result = baseResourceMenuService.addMenu(menu);
             if (result != null) {
@@ -298,6 +303,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
             @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
             @ApiImplicitParam(name = "menuDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
     })
     @PostMapping("/update")
     public ResultBody updateMenu(
@@ -311,7 +317,8 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
             @RequestParam(value = "status", defaultValue = "1") Integer status,
             @RequestParam(value = "parentId", required = false, defaultValue = "0") Long parentId,
             @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
-            @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc
+            @RequestParam(value = "menuDesc", required = false, defaultValue = "") String menuDesc,
+            @RequestParam(value = "hidden", required = false, defaultValue = "1") Integer hidden
     ) {
         BaseMenu menu = new BaseMenu();
         menu.setMenuId(menuId);
@@ -325,6 +332,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
         menu.setParentId(parentId);
         menu.setPriority(priority);
         menu.setMenuDesc(menuDesc);
+        menu.setHidden(hidden);
         baseResourceMenuService.updateMenu(menu);
         jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();

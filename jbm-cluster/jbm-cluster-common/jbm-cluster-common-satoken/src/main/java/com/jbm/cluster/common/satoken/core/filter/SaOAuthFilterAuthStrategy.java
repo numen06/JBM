@@ -15,9 +15,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.common.basic.utils.IpUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -29,8 +30,9 @@ import java.net.InetAddress;
  * @Date 2022/5/31 10:46
  * @Description TODO
  */
-@Slf4j
 public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
+    
+    private static final Logger log = LoggerFactory.getLogger(SaOAuthFilterAuthStrategy.class);
 
     private PathMatcher pathMatcher = new AntPathMatcher();
 
