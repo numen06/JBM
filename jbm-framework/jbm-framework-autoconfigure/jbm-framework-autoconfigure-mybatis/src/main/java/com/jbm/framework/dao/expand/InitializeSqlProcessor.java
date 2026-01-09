@@ -11,6 +11,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 import javax.sql.DataSource;
 import java.util.Map;
@@ -98,7 +100,11 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
             }
 
             log.info("开始扫描并执行SQL schema文件...");
-            SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(dataSource, sqlAutoExecuteProperties);
+            // 获取Spring的资源解析器（ResourcePatternResolver通常就是ApplicationContext）
+            ResourcePatternResolver resourcePatternResolver = context;
+            ResourceLoader resourceLoader = context;
+            SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(dataSource, sqlAutoExecuteProperties, 
+                                                                      resourcePatternResolver, resourceLoader);
             sqlPrepareRunner.scanSqlFiles();
             initialized = true;
             log.info("SQL自动执行完成");
