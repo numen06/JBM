@@ -168,7 +168,7 @@ public class SqlResourceHelper {
 
     /**
      * 从 SQL 资源路径中提取模块名称
-     * 例如：从 classpath:jbm-cluster-platform-push/sql/schema/xxx.sql 中提取 jbm-cluster-platform-push
+     * 支持从JAR文件名或文件系统路径中提取模块名
      * 
      * @return 模块名称，如果无法提取则返回null
      */
@@ -182,8 +182,8 @@ public class SqlResourceHelper {
                 String resourceUrl = firstResource.getURL().toString();
                 
                 // 解析路径，查找模块标识
-                // 例如：jar:file:/path/to/jbm-cluster-platform-push-1.0.0.jar!/BOOT-INF/classes!/sql/schema/xxx.sql
-                // 或：file:/path/to/jbm-cluster-platform-push/src/main/resources/sql/schema/xxx.sql
+                // 例如：jar:file:/path/to/my-module-1.0.0.jar!/BOOT-INF/classes!/sql/schema/xxx.sql
+                // 或：file:/path/to/my-module/src/main/resources/sql/schema/xxx.sql
                 
                 if (resourceUrl.contains(".jar!")) {
                     // JAR包中的资源：提取JAR文件名中的模块名
@@ -191,24 +191,42 @@ public class SqlResourceHelper {
                     if (StrUtil.isNotBlank(jarPart)) {
                         String jarFileName = jarPart.substring(jarPart.lastIndexOf("/") + 1);
                         // 移除版本号和扩展名，提取模块名
-                        // 例如：jbm-cluster-platform-push-1.0.0.jar -> jbm-cluster-platform-push
+                        // 例如：my-module-1.0.0.jar -> my-module
+                        // 匹配模式：-数字开头的内容（版本号）
                         String moduleName = jarFileName.replaceAll("-\\d+.*$", "");
+                        // 移除常见的后缀
+                        moduleName = moduleName.replaceAll("-SNAPSHOT$", "");
+                        moduleName = moduleName.replaceAll("-RELEASE$", "");
                         if (StrUtil.isNotBlank(moduleName) && !moduleName.equals(jarFileName)) {
                             return moduleName;
+                        }
+                        // 如果移除版本号后没有变化，直接返回文件名（去掉.jar）
+                        if (jarFileName.endsWith(".jar")) {
+                            return jarFileName.substring(0, jarFileName.length() - 4);
                         }
                     }
                 } else {
                     // 文件系统中的资源：从路径中提取模块名
-                    // 例如：/path/to/jbm-cluster-platform-push/src/main/resources/sql/schema/xxx.sql
+                    // 例如：/path/to/my-module/src/main/resources/sql/schema/xxx.sql
+                    // 或：/path/to/my-module/target/classes/sql/schema/xxx.sql
                     String[] pathParts = resourceUrl.split("/");
+                    // 从后往前查找，找到包含项目特征的目录名
+                    // 通常在 src/main/resources 或 target/classes 之前的目录就是项目/模块目录
                     for (int i = pathParts.length - 1; i >= 0; i--) {
                         String part = pathParts[i];
-                        // 查找包含 jbm- 或 cluster- 等标识的路径段
-                        if (StrUtil.isNotBlank(part) && (part.contains("jbm-") || part.contains("cluster-"))) {
+                        if (StrUtil.isNotBlank(part)) {
+                            // 跳过常见的构建目录和资源目录
+                            if (part.equals("resources") || part.equals("classes") || 
+                                part.equals("target") || part.equals("src") || 
+                                part.equals("main") || part.equals("test")) {
+                                continue;
+                            }
+                            // 找到第一个非标准目录名，通常是项目/模块名
                             // 移除可能的后缀（如 -SNAPSHOT, 版本号等）
                             String moduleName = part.replaceAll("-\\d+.*$", "");
                             moduleName = moduleName.replaceAll("-SNAPSHOT$", "");
-                            if (StrUtil.isNotBlank(moduleName)) {
+                            moduleName = moduleName.replaceAll("-RELEASE$", "");
+                            if (StrUtil.isNotBlank(moduleName) && moduleName.length() > 1) {
                                 return moduleName;
                             }
                         }
