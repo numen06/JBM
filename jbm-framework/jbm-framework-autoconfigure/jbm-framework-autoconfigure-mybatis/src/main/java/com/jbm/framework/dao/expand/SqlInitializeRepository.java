@@ -7,12 +7,9 @@ import cn.hutool.db.Session;
 import cn.hutool.db.sql.SqlExecutor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,14 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SqlInitializeRepository {
 
     private final static String TABLE_NAME = "sql_initialize";
-    private final static String SELECT_INIT_TABLE = "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name ='sql_initialize' AND table_schema = DATABASE();";
     private final static String DROP_INIT_TABLE = "DROP TABLE IF EXISTS `sql_initialize`";
-    
-    // 必需的字段列表
-    private final static String[] REQUIRED_COLUMNS = {
-        "file_name", "version", "module_name", "file_hash", 
-        "execute_status", "error_message", "execution_time", "create_time"
-    };
 
     private final Session session;
 
@@ -41,57 +31,20 @@ public class SqlInitializeRepository {
     }
 
     /**
-     * 检查表是否存在
+     * 尝试查询表数据，用于检测表是否存在和结构是否正确
+     * 使用 SELECT * 来检测表结构和字段
      * 
-     * @return true表示表存在，false表示不存在
+     * @return true表示表存在且结构正确，false表示表不存在或结构有问题
      */
-    public boolean tableExists() {
+    public boolean tryQueryTable() {
         try {
-            ResultSet rs = SqlExecutor.callQuery(session.getConnection(), SELECT_INIT_TABLE);
-            int count = 0;
-            while (rs.next()) {
-                count = rs.getInt(1);
-            }
-            return count > 0;
-        } catch (Exception e) {
-            log.error("检查表是否存在失败", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * 检查表结构是否完整（所有必需字段是否存在）
-     * 一次性查询所有字段，避免多次SQL查询
-     * 
-     * @return true表示表结构完整，false表示缺少字段
-     */
-    public boolean isTableStructureValid() {
-        try {
-            // 一次性查询所有字段
-            String checkAllColumnsSql = "SELECT column_name FROM information_schema.COLUMNS " +
-                    "WHERE table_name = 'sql_initialize' AND table_schema = DATABASE()";
-            ResultSet rs = SqlExecutor.callQuery(session.getConnection(), checkAllColumnsSql);
-            
-            // 收集所有存在的字段名
-            Set<String> existingColumns = new HashSet<>();
-            while (rs.next()) {
-                String columnName = rs.getString("column_name");
-                if (columnName != null) {
-                    existingColumns.add(columnName);
-                }
-            }
-            
-            // 检查所有必需字段是否存在
-            for (String requiredColumn : REQUIRED_COLUMNS) {
-                if (!existingColumns.contains(requiredColumn)) {
-                    log.warn("sql_initialize 表缺少必需字段: {}", requiredColumn);
-                    return false;
-                }
-            }
+            // 使用 SELECT * 查询，如果表不存在或字段缺失会抛出异常
+            Entity queryEntity = Entity.create(TABLE_NAME);
+            session.find(queryEntity);
             return true;
         } catch (Exception e) {
-            log.error("检查表结构失败", e);
-            throw new RuntimeException(e);
+            log.debug("查询表失败，表可能不存在或结构不正确: {}", e.getMessage());
+            return false;
         }
     }
 
@@ -193,39 +146,38 @@ public class SqlInitializeRepository {
 
     /**
      * 插入执行成功记录
+     * 如果插入失败（字段错误），会抛出异常，由调用者判断是否需要重建表
      * 
      * @param sqlFileName 文件名
      * @param version 版本号
      * @param moduleName 模块名
      * @param fileHash 文件哈希值
      * @param executionTime 执行耗时（毫秒）
+     * @throws SQLException 如果字段不存在或其他SQL错误
      */
     public void insertSuccessRecord(String sqlFileName, String version, String moduleName, 
-                                     String fileHash, long executionTime) {
-        try {
-            // 使用Entity方式插入记录
-            Entity entity = Entity.create(TABLE_NAME)
-                    .set("file_name", sqlFileName)
-                    .set("version", version)
-                    .set("module_name", moduleName)
-                    .set("file_hash", fileHash)
-                    .set("execute_status", "SUCCESS")
-                    .set("error_message", null)
-                    .set("execution_time", executionTime)
-                    .set("create_time", DateUtil.now());
+                                     String fileHash, long executionTime) throws SQLException {
+        // 使用Entity方式插入记录
+        Entity entity = Entity.create(TABLE_NAME)
+                .set("file_name", sqlFileName)
+                .set("version", version)
+                .set("module_name", moduleName)
+                .set("file_hash", fileHash)
+                .set("execute_status", "SUCCESS")
+                .set("error_message", null)
+                .set("execution_time", executionTime)
+                .set("create_time", DateUtil.now());
+        
+        int result = session.insert(entity);
             
-            int result = session.insert(entity);
-                
-            if (result < 1) {
-                throw new RuntimeException("插入记录失败");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        if (result < 1) {
+            throw new SQLException("插入记录失败");
         }
     }
 
     /**
      * 插入执行失败记录
+     * 如果插入失败（字段错误），会抛出异常，由调用者判断是否需要重建表
      * 
      * @param sqlFileName 文件名
      * @param version 版本号
@@ -233,28 +185,25 @@ public class SqlInitializeRepository {
      * @param fileHash 文件哈希值
      * @param executionTime 执行耗时（毫秒）
      * @param errorMessage 错误信息
+     * @throws SQLException 如果字段不存在或其他SQL错误
      */
     public void insertFailedRecord(String sqlFileName, String version, String moduleName, 
-                                    String fileHash, long executionTime, String errorMessage) {
-        try {
-            // 使用Entity方式插入记录
-            Entity entity = Entity.create(TABLE_NAME)
-                    .set("file_name", sqlFileName)
-                    .set("version", version)
-                    .set("module_name", moduleName)
-                    .set("file_hash", fileHash)
-                    .set("execute_status", "FAILED")
-                    .set("error_message", errorMessage)
-                    .set("execution_time", executionTime)
-                    .set("create_time", DateUtil.now());
+                                    String fileHash, long executionTime, String errorMessage) throws SQLException {
+        // 使用Entity方式插入记录
+        Entity entity = Entity.create(TABLE_NAME)
+                .set("file_name", sqlFileName)
+                .set("version", version)
+                .set("module_name", moduleName)
+                .set("file_hash", fileHash)
+                .set("execute_status", "FAILED")
+                .set("error_message", errorMessage)
+                .set("execution_time", executionTime)
+                .set("create_time", DateUtil.now());
+        
+        int result = session.insert(entity);
             
-            int result = session.insert(entity);
-                
-            if (result < 1) {
-                throw new RuntimeException("插入记录失败");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        if (result < 1) {
+            throw new SQLException("插入记录失败");
         }
     }
 

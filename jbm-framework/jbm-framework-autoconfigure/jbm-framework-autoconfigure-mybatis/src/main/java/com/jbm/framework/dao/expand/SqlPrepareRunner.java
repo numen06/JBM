@@ -16,6 +16,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -99,29 +100,16 @@ public class SqlPrepareRunner {
 
     /**
      * 初始化：检查表结构、加载已执行记录、获取当前版本
+     * 使用 SELECT * 查询来检测表是否存在和结构是否正确
      */
     public void ready() {
-        // 检查并创建/重建 sql_initialize 表（只有当字段不对时才重建）
+        // 尝试查询表，如果失败则创建/重建表
         this.execute(session -> {
             SqlInitializeRepository repository = new SqlInitializeRepository(session);
             
-            boolean needRebuild = false;
-            
-            if (!repository.tableExists()) {
-                // 表不存在，需要创建
-                log.info("sql_initialize 表不存在，开始创建...");
-                needRebuild = true;
-            } else if (!repository.isTableStructureValid()) {
-                // 表存在但结构不完整，需要重建
-                log.info("sql_initialize 表结构不完整，需要重建...");
-                needRebuild = true;
-            } else {
-                log.debug("sql_initialize 表结构正确，保留现有数据");
-            }
-            
-            if (needRebuild) {
-                // 需要重建表
-                log.info("重建 sql_initialize 表...");
+            if (!repository.tryQueryTable()) {
+                // 表不存在或结构有问题，需要创建/重建
+                log.info("sql_initialize 表不存在或结构不正确，开始创建/重建...");
                 repository.dropTable();
                 // 执行创建表的SQL文件（使用Spring的ResourceLoader，支持JAR包）
                 try {
@@ -141,7 +129,9 @@ public class SqlPrepareRunner {
                     log.error("执行 sql_initialize.sql 失败", e);
                     throw new RuntimeException(e);
                 }
-                log.info("sql_initialize 表重建成功");
+                log.info("sql_initialize 表创建/重建成功");
+            } else {
+                log.debug("sql_initialize 表存在且结构正确，保留现有数据");
             }
         });
         
@@ -172,11 +162,17 @@ public class SqlPrepareRunner {
         this.execute(session -> {
             SqlInitializeRepository repository = new SqlInitializeRepository(session);
             String fileHash = sqlResourceHelper.calculateFileHash(resource, sqlFileName);
-            repository.insertSuccessRecord(sqlFileName, version, moduleName, fileHash, executionTime);
-            
-            // 如果有版本号，更新当前数据库版本（内存中）
-            if (StrUtil.isNotBlank(version) && SqlVersionParser.compareVersion(version, currentDbVersion) > 0) {
-                currentDbVersion = version;
+            try {
+                repository.insertSuccessRecord(sqlFileName, version, moduleName, fileHash, executionTime);
+                
+                // 如果有版本号，更新当前数据库版本（内存中）
+                if (StrUtil.isNotBlank(version) && SqlVersionParser.compareVersion(version, currentDbVersion) > 0) {
+                    currentDbVersion = version;
+                }
+            } catch (SQLException e) {
+                // 插入失败，可能是字段错误，需要重建表
+                log.warn("插入记录失败，可能是表结构问题: {}", e.getMessage());
+                throw new RuntimeException("表结构可能不正确，需要重建表", e);
             }
         });
     }
@@ -195,7 +191,13 @@ public class SqlPrepareRunner {
         this.execute(session -> {
             SqlInitializeRepository repository = new SqlInitializeRepository(session);
             String fileHash = sqlResourceHelper.calculateFileHash(resource, sqlFileName);
-            repository.insertFailedRecord(sqlFileName, version, moduleName, fileHash, executionTime, errorMessage);
+            try {
+                repository.insertFailedRecord(sqlFileName, version, moduleName, fileHash, executionTime, errorMessage);
+            } catch (SQLException e) {
+                // 插入失败，可能是字段错误，需要重建表
+                log.warn("插入失败记录失败，可能是表结构问题: {}", e.getMessage());
+                throw new RuntimeException("表结构可能不正确，需要重建表", e);
+            }
         });
     }
 
