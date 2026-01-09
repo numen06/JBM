@@ -16,10 +16,8 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,18 +31,18 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService, ApplicationListener<ApplicationReadyEvent> {
+public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService {
 
     @Resource
     private DiscoveryClient discoveryClient;
 
     /**
-     * 系统启动之后加载所有大屏
-     *
-     * @param event
+     * 加载所有大屏
+     * 由 DocServiceReadyListener 在文档服务就绪后调用
      */
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void loadAllBigscreens() {
+        log.info("开始加载所有大屏");
         try {
             List<BigscreenView> list = this.selectAll();
             for (BigscreenView bigscreenView : list) {
@@ -58,6 +56,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
                     log.error("部署大屏{}错误", bigscreenView.getViewName(), e);
                 }
             }
+            log.info("完成所有大屏加载");
         } catch (Exception e) {
             log.error("部署大屏异常", e);
         }
@@ -182,13 +181,14 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         return super.deleteById(id);
     }
 
+    /**
+     * 获取文档服务器地址
+     * 注意：该方法应该在文档服务就绪后调用（由 DocServiceReadyListener 保证）
+     *
+     * @return 文档服务器地址
+     */
     public String getDocAddress() {
         List<ServiceInstance> instances = discoveryClient.getInstances("jbm-cluster-platform-doc");
-//        for (ServiceInstance instance : instances) {
-//            log.info(instance.getServiceId());
-//            log.info(instance.getHost());
-//            log.info(instance.getUri().toString());
-//        }
         ServiceInstance instance = CollUtil.getFirst(instances);
         if (ObjectUtil.isEmpty(instance)) {
             throw new ServiceException("文档服务器不在线");
