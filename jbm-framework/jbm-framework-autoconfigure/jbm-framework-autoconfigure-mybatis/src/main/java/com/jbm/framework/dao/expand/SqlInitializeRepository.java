@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -59,20 +61,30 @@ public class SqlInitializeRepository {
 
     /**
      * 检查表结构是否完整（所有必需字段是否存在）
+     * 一次性查询所有字段，避免多次SQL查询
      * 
      * @return true表示表结构完整，false表示缺少字段
      */
     public boolean isTableStructureValid() {
         try {
-            for (String columnName : REQUIRED_COLUMNS) {
-                String checkColumnSql = buildCheckColumnSql(columnName);
-                ResultSet rs = SqlExecutor.callQuery(session.getConnection(), checkColumnSql);
-                int columnCount = 0;
-                while (rs.next()) {
-                    columnCount = rs.getInt(1);
+            // 一次性查询所有字段
+            String checkAllColumnsSql = "SELECT column_name FROM information_schema.COLUMNS " +
+                    "WHERE table_name = 'sql_initialize' AND table_schema = DATABASE()";
+            ResultSet rs = SqlExecutor.callQuery(session.getConnection(), checkAllColumnsSql);
+            
+            // 收集所有存在的字段名
+            Set<String> existingColumns = new HashSet<>();
+            while (rs.next()) {
+                String columnName = rs.getString("column_name");
+                if (columnName != null) {
+                    existingColumns.add(columnName);
                 }
-                if (columnCount < 1) {
-                    log.warn("sql_initialize 表缺少必需字段: {}", columnName);
+            }
+            
+            // 检查所有必需字段是否存在
+            for (String requiredColumn : REQUIRED_COLUMNS) {
+                if (!existingColumns.contains(requiredColumn)) {
+                    log.warn("sql_initialize 表缺少必需字段: {}", requiredColumn);
                     return false;
                 }
             }
@@ -246,11 +258,4 @@ public class SqlInitializeRepository {
         }
     }
 
-    /**
-     * 检查列是否存在
-     * @param columnName 列名（必须是常量，安全）
-     */
-    private static String buildCheckColumnSql(String columnName) {
-        return "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE table_name ='sql_initialize' AND column_name ='" + columnName + "' AND table_schema = DATABASE();";
-    }
 }
