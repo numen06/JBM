@@ -34,6 +34,17 @@ import java.util.regex.Pattern;
 public class SqlPrepareRunner {
 
 
+    private final static String SELECT_INIT_TABLE = "SELECT COUNT(*) FROM information_schema.TABLES WHERE table_name ='sql_initialize' AND table_schema = DATABASE();";
+    private final static String DROP_INIT_TABLE = "DROP TABLE IF EXISTS `sql_initialize`";
+    
+    /**
+     * 检查列是否存在
+     * @param columnName 列名（必须是常量，安全）
+     */
+    private static String buildCheckColumnSql(String columnName) {
+        return "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE table_name ='sql_initialize' AND column_name ='" + columnName + "' AND table_schema = DATABASE();";
+    }
+    
     private final static String INSERT_SQL_FILE = "INSERT INTO `sql_initialize` (`file_name`, `version`, `module_name`, `file_hash`, `execute_status`, `error_message`, `execution_time`, `create_time`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
     private final static String FIND_SQL_FILES = "SELECT * FROM `sql_initialize`";
     // 获取最大版本号：优先日期格式（8位数字），其次语义化版本
@@ -42,6 +53,12 @@ public class SqlPrepareRunner {
             "FROM `sql_initialize` WHERE version IS NOT NULL AND version != '' AND (execute_status IS NULL OR execute_status = 'SUCCESS')";
 
     private final static String DELETE_SQL_FILE = "DELETE FROM `sql_initialize` WHERE `file_name` = ? ;";
+    
+    // 必需的字段列表
+    private final static String[] REQUIRED_COLUMNS = {
+        "file_name", "version", "module_name", "file_hash", 
+        "execute_status", "error_message", "execution_time", "create_time"
+    };
 
     // 版本号解析正则：支持日期格式（优先）和语义化版本（向后兼容）
     // 日期格式：20240101, 2024-01-01, 2024_01_01（统一规范化为8位数字）
@@ -153,13 +170,49 @@ public class SqlPrepareRunner {
     }
 
     public void ready() {
-        // 重建 sql_initialize 表（简化逻辑：直接执行创建脚本，脚本中已包含 DROP TABLE IF EXISTS）
+        // 检查并创建/重建 sql_initialize 表（只有当字段不对时才重建）
         this.execute(session -> {
             try {
-                log.info("重建 sql_initialize 表...");
-                // SQL脚本中已包含 DROP TABLE IF EXISTS，直接执行即可
-                executeSqlFile(SQL_INIT_TABLE);
-                log.info("sql_initialize 表重建成功");
+                // 1. 检查表是否存在
+                ResultSet rs = SqlExecutor.callQuery(session.getConnection(), SELECT_INIT_TABLE);
+                int tableCount = 0;
+                while (rs.next()) {
+                    tableCount = rs.getInt(1);
+                }
+                
+                boolean needRebuild = false;
+                
+                if (tableCount < 1) {
+                    // 表不存在，需要创建
+                    log.info("sql_initialize 表不存在，开始创建...");
+                    needRebuild = true;
+                } else {
+                    // 表存在，检查必需字段是否存在
+                    log.debug("sql_initialize 表已存在，检查表结构...");
+                    for (String columnName : REQUIRED_COLUMNS) {
+                        String checkColumnSql = buildCheckColumnSql(columnName);
+                        rs = SqlExecutor.callQuery(session.getConnection(), checkColumnSql);
+                        int columnCount = 0;
+                        while (rs.next()) {
+                            columnCount = rs.getInt(1);
+                        }
+                        if (columnCount < 1) {
+                            log.warn("sql_initialize 表缺少必需字段: {}，需要重建表", columnName);
+                            needRebuild = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (needRebuild) {
+                    // 需要重建表
+                    log.info("重建 sql_initialize 表...");
+                    session.execute(DROP_INIT_TABLE);
+                    executeSqlFile(SQL_INIT_TABLE);
+                    log.info("sql_initialize 表重建成功");
+                } else {
+                    log.debug("sql_initialize 表结构正确，保留现有数据");
+                }
             } catch (Exception e) {
                 log.error("执行初始化失败", e);
                 throw new RuntimeException(e);
