@@ -9,6 +9,7 @@ import com.jbm.cluster.api.model.job.rule.*;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
 import com.jbm.cluster.job.service.rule.RuleDefinitionService;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -166,7 +167,8 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(form);
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        return ResultBody.success();
+        throw new ServiceException("测试异常");
+        //return ResultBody.success();
     }
 
     @PostMapping("/alarmTest")

@@ -1,11 +1,11 @@
 {
   "nodes": [{
-    "id": "28654",
+    "id": "102583",
     "type": "start",
     "initialized": false,
     "position": {
-      "x": -241.73076798037545,
-      "y": 354.5977300268514
+      "x": 60.45833333333337,
+      "y": 441.5416666666667
     },
     "data": {},
     "label": "开始",
@@ -14,44 +14,27 @@
       "class": ["bg-blue"]
     }
   }, {
-    "id": "13577",
+    "id": "112985",
     "type": "station",
     "initialized": false,
     "position": {
-      "x": 64.53667379131231,
-      "y": 351.1868041299848
+      "x": 410.7065675490348,
+      "y": 438.13904771601403
     },
     "data": {
-      "site": {
-        "allowCall": true,
-        "businessType": "QUALITY_INSPECTION",
-        "createTime": 1762842402000,
-        "id": "1988131248675819522",
-        "manualPass": false,
-        "receiveRule": 1,
-        "reject": false,
-        "siteCode": "待检区接驳位",
-        "siteCoordinateId": "1915633766512988167",
-        "siteLocation": "0",
-        "siteName": "待检区接驳位",
-        "siteStatus": 0,
-        "siteType": "1",
-        "siteTypeId": "1915633766466850817",
-        "updateTime": 1765189854000,
-        "warehouseId": "1915633454121226242"
-      },
       "outputVariables": [{
-        "id": 74437,
+        "id": 36345,
         "name": "site",
         "displayName": "",
         "value": {
           "allowCall": true,
-          "businessType": "QUALITY_INSPECTION",
+          "businessType": "TRANSPORTATION",
           "createTime": 1762842402000,
           "id": "1988131248675819522",
           "manualPass": false,
+          "outCoordinate": "1-19-1",
           "receiveRule": 1,
-          "reject": false,
+          "reject": true,
           "siteCode": "待检区接驳位",
           "siteCoordinateId": "1915633766512988167",
           "siteLocation": "0",
@@ -59,7 +42,7 @@
           "siteStatus": 0,
           "siteType": "1",
           "siteTypeId": "1915633766466850817",
-          "updateTime": 1765189854000,
+          "updateTime": 1767754385000,
           "warehouseId": "1915633454121226242"
         },
         "type": "Object",
@@ -71,7 +54,7 @@
         "metadata": null,
         "expand": false,
         "children": [{
-          "id": 46098,
+          "id": 79080,
           "name": "allowCall",
           "displayName": "",
           "value": true,
@@ -85,13 +68,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 16772,
+          "id": 37021,
           "name": "businessType",
           "displayName": "",
-          "value": "QUALITY_INSPECTION",
+          "value": "TRANSPORTATION",
           "type": "String",
           "description": "",
           "category": [],
@@ -102,10 +85,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 90275,
+          "id": 95750,
           "name": "createTime",
           "displayName": "",
           "value": 1762842402000,
@@ -119,10 +102,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 63338,
+          "id": 28103,
           "name": "id",
           "displayName": "",
           "value": "1988131248675819522",
@@ -136,10 +119,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 80155,
+          "id": 13066,
           "name": "manualPass",
           "displayName": "",
           "value": false,
@@ -153,10 +136,27 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 58958,
+          "id": 5603,
+          "name": "outCoordinate",
+          "displayName": "",
+          "value": "1-19-1",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
+        }, {
+          "id": 9506,
           "name": "receiveRule",
           "displayName": "",
           "value": 1,
@@ -170,13 +170,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 73808,
+          "id": 27547,
           "name": "reject",
           "displayName": "",
-          "value": false,
+          "value": true,
           "type": "Boolean",
           "description": "",
           "category": [],
@@ -187,10 +187,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 32168,
+          "id": 13656,
           "name": "siteCode",
           "displayName": "",
           "value": "待检区接驳位",
@@ -204,10 +204,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 93032,
+          "id": 65065,
           "name": "siteCoordinateId",
           "displayName": "",
           "value": "1915633766512988167",
@@ -221,10 +221,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 85709,
+          "id": 91787,
           "name": "siteLocation",
           "displayName": "",
           "value": "0",
@@ -238,10 +238,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 69040,
+          "id": 23339,
           "name": "siteName",
           "displayName": "",
           "value": "待检区接驳位",
@@ -255,10 +255,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 105920,
+          "id": 84884,
           "name": "siteStatus",
           "displayName": "",
           "value": 0,
@@ -272,10 +272,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 106175,
+          "id": 27813,
           "name": "siteType",
           "displayName": "",
           "value": "1",
@@ -289,10 +289,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 66739,
+          "id": 25149,
           "name": "siteTypeId",
           "displayName": "",
           "value": "1915633766466850817",
@@ -306,13 +306,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 117145,
+          "id": 24683,
           "name": "updateTime",
           "displayName": "",
-          "value": 1765189854000,
+          "value": 1767754385000,
           "type": "Number",
           "description": "",
           "category": [],
@@ -323,10 +323,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }, {
-          "id": 26547,
+          "id": 18381,
           "name": "warehouseId",
           "displayName": "",
           "value": "1915633454121226242",
@@ -340,71 +340,103 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:24:43.337Z",
-          "updatedAt": "2025-12-09T09:24:43.337Z"
+          "createdAt": "2026-01-09T11:12:10.865Z",
+          "updatedAt": "2026-01-09T11:12:10.865Z"
         }],
         "private": false,
-        "createdAt": "2025-12-09T09:24:43.337Z",
-        "updatedAt": "2025-12-09T09:24:43.337Z"
+        "createdAt": "2026-01-09T11:12:10.865Z",
+        "updatedAt": "2026-01-09T11:12:10.865Z"
+      }, {
+        "id": "82472",
+        "name": "httpCode",
+        "displayName": "",
+        "value": null,
+        "type": "Number",
+        "description": "",
+        "category": [],
+        "source": "",
+        "readonly": false,
+        "required": false,
+        "metadata": null,
+        "expand": false,
+        "children": [],
+        "private": false,
+        "createdAt": "2026-01-09T11:12:27.770Z",
+        "updatedAt": "2026-01-09T11:12:27.770Z"
       }],
-      "code": "__WAIT_TRIGGER__ = true;",
-      "method": "POST",
-      "url": "http://test"
+      "inputVariables": [],
+      "site": {
+        "allowCall": true,
+        "businessType": "TRANSPORTATION",
+        "createTime": 1762842402000,
+        "id": "1988131248675819522",
+        "manualPass": false,
+        "outCoordinate": "1-19-1",
+        "receiveRule": 1,
+        "reject": true,
+        "siteCode": "待检区接驳位",
+        "siteCoordinateId": "1915633766512988167",
+        "siteLocation": "0",
+        "siteName": "待检区接驳位",
+        "siteStatus": 0,
+        "siteType": "1",
+        "siteTypeId": "1915633766466850817",
+        "updateTime": 1767754385000,
+        "warehouseId": "1915633454121226242"
+      }
     },
-    "label": "站点1",
+    "label": "站点",
     "icon": {
       "name": "map-3d",
       "class": ["bg-blue-9"]
     }
   }, {
-    "id": "46384",
+    "id": "46698",
     "type": "station",
     "initialized": false,
     "position": {
-      "x": 365.5652020939042,
-      "y": 350.388319970031
+      "x": 1106.0777128573716,
+      "y": 340.7870873728468
     },
     "data": {
       "site": {
-        "allowCall": true,
+        "allowCall": false,
         "businessType": "QUALITY_INSPECTION",
-        "createTime": 1762842417000,
-        "id": "1988131311103840258",
+        "createTime": 1753091422000,
+        "id": "1947232675630804994",
         "manualPass": true,
-        "outCoordinate": "1-9-1",
         "receiveRule": 0,
         "reject": true,
-        "siteCode": "检验区接驳位",
-        "siteCoordinateId": "1915640593682272257",
+        "siteCode": "1015",
+        "siteCoordinateId": "1915633766722703364",
         "siteLocation": "0",
-        "siteName": "检验区接驳位",
+        "siteName": "高纯氧气充装工位1",
         "siteStatus": 0,
-        "siteType": "2",
-        "siteTypeId": "1915640593682272257",
-        "updateTime": 1765192173000,
+        "siteType": "3",
+        "siteTypeId": "1915641682225815554",
+        "updateTime": 1758300143000,
         "warehouseId": "1915633454121226242"
       },
       "outputVariables": [{
-        "id": 30748,
+        "id": 30516,
         "name": "site",
         "displayName": "",
         "value": {
-          "allowCall": true,
+          "allowCall": false,
           "businessType": "QUALITY_INSPECTION",
-          "createTime": 1762842417000,
-          "id": "1988131311103840258",
+          "createTime": 1753091422000,
+          "id": "1947232675630804994",
           "manualPass": true,
-          "outCoordinate": "1-9-1",
           "receiveRule": 0,
           "reject": true,
-          "siteCode": "检验区接驳位",
-          "siteCoordinateId": "1915640593682272257",
+          "siteCode": "1015",
+          "siteCoordinateId": "1915633766722703364",
           "siteLocation": "0",
-          "siteName": "检验区接驳位",
+          "siteName": "高纯氧气充装工位1",
           "siteStatus": 0,
-          "siteType": "2",
-          "siteTypeId": "1915640593682272257",
-          "updateTime": 1765192173000,
+          "siteType": "3",
+          "siteTypeId": "1915641682225815554",
+          "updateTime": 1758300143000,
           "warehouseId": "1915633454121226242"
         },
         "type": "Object",
@@ -416,10 +448,10 @@
         "metadata": null,
         "expand": false,
         "children": [{
-          "id": 8523,
+          "id": 59304,
           "name": "allowCall",
           "displayName": "",
-          "value": true,
+          "value": false,
           "type": "Boolean",
           "description": "",
           "category": [],
@@ -430,10 +462,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 80590,
+          "id": 14007,
           "name": "businessType",
           "displayName": "",
           "value": "QUALITY_INSPECTION",
@@ -447,13 +479,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 76251,
+          "id": 38043,
           "name": "createTime",
           "displayName": "",
-          "value": 1762842417000,
+          "value": 1753091422000,
           "type": "Number",
           "description": "",
           "category": [],
@@ -464,13 +496,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 68641,
+          "id": 100072,
           "name": "id",
           "displayName": "",
-          "value": "1988131311103840258",
+          "value": "1947232675630804994",
           "type": "String",
           "description": "",
           "category": [],
@@ -481,10 +513,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 76004,
+          "id": 39429,
           "name": "manualPass",
           "displayName": "",
           "value": true,
@@ -498,27 +530,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 96883,
-          "name": "outCoordinate",
-          "displayName": "",
-          "value": "1-9-1",
-          "type": "String",
-          "description": "",
-          "category": [],
-          "source": "",
-          "readonly": false,
-          "required": false,
-          "metadata": null,
-          "expand": false,
-          "children": [],
-          "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
-        }, {
-          "id": 66453,
+          "id": 67932,
           "name": "receiveRule",
           "displayName": "",
           "value": 0,
@@ -532,10 +547,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 41201,
+          "id": 13302,
           "name": "reject",
           "displayName": "",
           "value": true,
@@ -549,13 +564,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 39572,
+          "id": 24658,
           "name": "siteCode",
           "displayName": "",
-          "value": "检验区接驳位",
+          "value": "1015",
           "type": "String",
           "description": "",
           "category": [],
@@ -566,13 +581,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 11842,
+          "id": 7365,
           "name": "siteCoordinateId",
           "displayName": "",
-          "value": "1915640593682272257",
+          "value": "1915633766722703364",
           "type": "String",
           "description": "",
           "category": [],
@@ -583,10 +598,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 57378,
+          "id": 96255,
           "name": "siteLocation",
           "displayName": "",
           "value": "0",
@@ -600,13 +615,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 86032,
+          "id": 58420,
           "name": "siteName",
           "displayName": "",
-          "value": "检验区接驳位",
+          "value": "高纯氧气充装工位1",
           "type": "String",
           "description": "",
           "category": [],
@@ -617,10 +632,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 30921,
+          "id": 30984,
           "name": "siteStatus",
           "displayName": "",
           "value": 0,
@@ -634,13 +649,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 111286,
+          "id": 89798,
           "name": "siteType",
           "displayName": "",
-          "value": "2",
+          "value": "3",
           "type": "String",
           "description": "",
           "category": [],
@@ -651,13 +666,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 58994,
+          "id": 106521,
           "name": "siteTypeId",
           "displayName": "",
-          "value": "1915640593682272257",
+          "value": "1915641682225815554",
           "type": "String",
           "description": "",
           "category": [],
@@ -668,13 +683,13 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 111345,
+          "id": 44122,
           "name": "updateTime",
           "displayName": "",
-          "value": 1765192173000,
+          "value": 1758300143000,
           "type": "Number",
           "description": "",
           "category": [],
@@ -685,10 +700,10 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }, {
-          "id": 73390,
+          "id": 56797,
           "name": "warehouseId",
           "displayName": "",
           "value": "1915633454121226242",
@@ -702,29 +717,66 @@
           "expand": false,
           "children": [],
           "private": false,
-          "createdAt": "2025-12-09T09:25:33.749Z",
-          "updatedAt": "2025-12-09T09:25:33.749Z"
+          "createdAt": "2026-01-09T11:11:56.529Z",
+          "updatedAt": "2026-01-09T11:11:56.529Z"
         }],
         "private": false,
-        "createdAt": "2025-12-09T09:25:33.749Z",
-        "updatedAt": "2025-12-09T09:25:33.749Z"
-      }],
-      "code": "__WAIT_TRIGGER__ = true;",
-      "method": "POST",
-      "url": "http://test"
+        "createdAt": "2026-01-09T11:11:56.529Z",
+        "updatedAt": "2026-01-09T11:11:56.529Z"
+      }]
     },
-    "label": "站点2",
+    "label": "站点",
     "icon": {
       "name": "map-3d",
       "class": ["bg-blue-9"]
     }
   }, {
-    "id": "89509",
+    "id": "12830",
+    "type": "conditions",
+    "initialized": false,
+    "position": {
+      "x": 732.7508146406,
+      "y": 388.6905377213643
+    },
+    "data": {
+      "rule": {
+        "id": "91124",
+        "branches": [{
+          "id": "53534",
+          "type": "if",
+          "priority": 1,
+          "conditions": [{
+            "id": "83373",
+            "field": {
+              "value": "58906",
+              "type": "Number",
+              "name": "httpCode",
+              "displayName": "httpCode",
+              "isRef": true
+            },
+            "operator": "EQUAL",
+            "value": "200"
+          }]
+        }, {
+          "id": "17333",
+          "type": "else",
+          "priority": 2
+        }],
+        "drools": "package com.jajachina.rules\n\nimport java.util.Map\n\nrule \"Rule_91124_if_53534\"\n    salience 100\n    no-loop true\n    when\n        $f : Map( this[\"httpCode\"] == 200 )\n    then\n        System.out.println(\"✅ Fired: Rule_91124_if_53534\");\n        // TODO: Add dynamic action\nend"
+      }
+    },
+    "label": "条件分支",
+    "icon": {
+      "name": "git-merge",
+      "class": ["bg-blue-3"]
+    }
+  }, {
+    "id": "26772",
     "type": "end",
     "initialized": false,
     "position": {
-      "x": 723.3113828191656,
-      "y": 350.86101060712576
+      "x": 1465.0630666228005,
+      "y": 480.7305303661497
     },
     "data": {},
     "label": "结束",
@@ -732,66 +784,448 @@
       "name": "chat-checked",
       "class": ["bg-orange"]
     }
+  }, {
+    "id": "50070",
+    "type": "station",
+    "initialized": false,
+    "position": {
+      "x": 1100.5150485699724,
+      "y": 516.0126183865988
+    },
+    "data": {
+      "site": {
+        "allowCall": false,
+        "businessType": "QUALITY_INSPECTION",
+        "createTime": 1753091373000,
+        "id": "1947232466867712001",
+        "manualPass": true,
+        "receiveRule": 0,
+        "reject": false,
+        "siteCode": "1012",
+        "siteCoordinateId": "1915633766722703363",
+        "siteLocation": "0",
+        "siteName": "工业氧气充装工位2",
+        "siteStatus": 0,
+        "siteType": "3",
+        "siteTypeId": "1915641417741393922",
+        "updateTime": 1758300159000,
+        "warehouseId": "1915633454121226242"
+      },
+      "outputVariables": [{
+        "id": 55604,
+        "name": "site",
+        "displayName": "",
+        "value": {
+          "allowCall": false,
+          "businessType": "QUALITY_INSPECTION",
+          "createTime": 1753091373000,
+          "id": "1947232466867712001",
+          "manualPass": true,
+          "receiveRule": 0,
+          "reject": false,
+          "siteCode": "1012",
+          "siteCoordinateId": "1915633766722703363",
+          "siteLocation": "0",
+          "siteName": "工业氧气充装工位2",
+          "siteStatus": 0,
+          "siteType": "3",
+          "siteTypeId": "1915641417741393922",
+          "updateTime": 1758300159000,
+          "warehouseId": "1915633454121226242"
+        },
+        "type": "Object",
+        "description": "",
+        "category": [],
+        "source": "",
+        "readonly": false,
+        "required": false,
+        "metadata": null,
+        "expand": false,
+        "children": [{
+          "id": 86424,
+          "name": "allowCall",
+          "displayName": "",
+          "value": false,
+          "type": "Boolean",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 53198,
+          "name": "businessType",
+          "displayName": "",
+          "value": "QUALITY_INSPECTION",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 18331,
+          "name": "createTime",
+          "displayName": "",
+          "value": 1753091373000,
+          "type": "Number",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 87117,
+          "name": "id",
+          "displayName": "",
+          "value": "1947232466867712001",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 44019,
+          "name": "manualPass",
+          "displayName": "",
+          "value": true,
+          "type": "Boolean",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 78095,
+          "name": "receiveRule",
+          "displayName": "",
+          "value": 0,
+          "type": "Number",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 98958,
+          "name": "reject",
+          "displayName": "",
+          "value": false,
+          "type": "Boolean",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 47742,
+          "name": "siteCode",
+          "displayName": "",
+          "value": "1012",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 61609,
+          "name": "siteCoordinateId",
+          "displayName": "",
+          "value": "1915633766722703363",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 53664,
+          "name": "siteLocation",
+          "displayName": "",
+          "value": "0",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 11255,
+          "name": "siteName",
+          "displayName": "",
+          "value": "工业氧气充装工位2",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 58439,
+          "name": "siteStatus",
+          "displayName": "",
+          "value": 0,
+          "type": "Number",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 54802,
+          "name": "siteType",
+          "displayName": "",
+          "value": "3",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 61664,
+          "name": "siteTypeId",
+          "displayName": "",
+          "value": "1915641417741393922",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 67512,
+          "name": "updateTime",
+          "displayName": "",
+          "value": 1758300159000,
+          "type": "Number",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }, {
+          "id": 13431,
+          "name": "warehouseId",
+          "displayName": "",
+          "value": "1915633454121226242",
+          "type": "String",
+          "description": "",
+          "category": [],
+          "source": "",
+          "readonly": false,
+          "required": false,
+          "metadata": null,
+          "expand": false,
+          "children": [],
+          "private": false,
+          "createdAt": "2026-01-09T11:11:50.083Z",
+          "updatedAt": "2026-01-09T11:11:50.083Z"
+        }],
+        "private": false,
+        "createdAt": "2026-01-09T11:11:50.083Z",
+        "updatedAt": "2026-01-09T11:11:50.083Z"
+      }]
+    },
+    "label": "站点",
+    "icon": {
+      "name": "map-3d",
+      "class": ["bg-blue-9"]
+    }
   }],
   "edges": [{
-    "id": "vueflow__edge-28654start-source-13577station-left-handle",
-    "type": "default",
-    "source": "28654",
-    "target": "13577",
+    "id": "vueflow__edge-102583start-source-112985station-left-handle",
+    "type": "action",
+    "source": "102583",
+    "target": "112985",
     "sourceHandle": "start-source",
     "targetHandle": "station-left-handle",
     "data": {},
     "label": "",
     "markerEnd": "arrow",
-    "sourceX": 2.269129651639929,
-    "sourceY": 378.59777671612966,
-    "targetX": 60.536664453456666,
-    "targetY": 375.18678860007566,
+    "sourceX": 304.4593282308906,
+    "sourceY": 465.54178694803784,
+    "targetX": 406.70654349276055,
+    "targetY": 462.1391149445574,
     "animated": false,
     "style": {
       "stroke": "rgba(0, 82, 217, 1)"
     }
   }, {
-    "id": "vueflow__edge-13577-46384",
+    "id": "vueflow__edge-112985-12830",
     "type": "default",
-    "source": "13577",
-    "target": "46384",
+    "source": "112985",
+    "target": "12830",
     "sourceHandle": "station-right-handle",
     "data": {},
     "label": "",
     "markerEnd": "arrow",
-    "sourceX": 308.536540313734,
-    "sourceY": 375.18678860007566,
-    "targetX": 361.5652549752359,
-    "targetY": 374.3883666593092,
+    "sourceX": 654.7075624465921,
+    "sourceY": 462.1391149445574,
+    "targetX": 728.7507905843257,
+    "targetY": 458.53461449282963,
     "animated": false,
     "style": {
       "stroke": "rgba(0, 82, 217, 1)"
     }
   }, {
-    "id": "vueflow__edge-46384station-right-handle-89509end-target",
-    "type": "action",
-    "source": "46384",
-    "target": "89509",
+    "id": "vueflow__edge-12830-46698",
+    "type": "default",
+    "source": "12830",
+    "target": "46698",
+    "targetHandle": "station-left-handle",
+    "data": {},
+    "label": "",
+    "markerEnd": "arrow",
+    "sourceX": 974.7518240364341,
+    "sourceY": 446.11266623748503,
+    "targetX": 1102.0776357482696,
+    "targetY": 364.78715460139017,
+    "animated": false,
+    "style": {
+      "stroke": "rgba(0, 82, 217, 1)"
+    }
+  }, {
+    "id": "vueflow__edge-46698station-right-handle-26772end-target",
+    "type": "default",
+    "source": "46698",
+    "target": "26772",
     "sourceHandle": "station-right-handle",
     "targetHandle": "end-target",
     "data": {},
     "label": "",
     "markerEnd": "arrow",
-    "sourceX": 609.5650686163259,
-    "sourceY": 374.3883666593092,
-    "targetX": 719.3114357004973,
-    "targetY": 374.8609950772166,
+    "sourceX": 1350.0786547021012,
+    "sourceY": 364.78715460139017,
+    "targetX": 1461.0629895136985,
+    "targetY": 504.73059759469305,
     "animated": false,
     "style": {
       "stroke": "rgba(0, 82, 217, 1)"
     }
+  }, {
+    "id": "vueflow__edge-12830-50070",
+    "type": "default",
+    "source": "12830",
+    "target": "50070",
+    "sourceHandle": "conditions-17333-else-source-handle",
+    "data": {},
+    "label": "",
+    "markerEnd": "arrow",
+    "sourceX": 974.7518240364341,
+    "sourceY": 502.9566490927125,
+    "targetX": 1096.5149714608704,
+    "targetY": 540.0126856151421
+  }, {
+    "id": "vueflow__edge-50070-26772",
+    "type": "default",
+    "source": "50070",
+    "target": "26772",
+    "data": {},
+    "label": "",
+    "markerEnd": "arrow",
+    "sourceX": 1344.5159904147017,
+    "sourceY": 540.0126856151421,
+    "targetX": 1461.0629895136985,
+    "targetY": 504.73059759469305
   }],
-  "position": [333.83640387761625, 56.02574170612871],
-  "zoom": 0.8798701592475102,
+  "position": [-661.503433966242, -116.0635357646164],
+  "zoom": 1.150464763166538,
   "viewport": {
-    "x": 333.83640387761625,
-    "y": 56.02574170612871,
-    "zoom": 0.8798701592475102
+    "x": -661.503433966242,
+    "y": -116.0635357646164,
+    "zoom": 1.150464763166538
   }
 }

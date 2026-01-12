@@ -465,7 +465,7 @@ public class StationNodeExecutor implements NodeExecutor {
                 
                 Map<String, Object> result = new HashMap<>();
                 result.put("httpCode", responseCode);
-                result.put("success", responseCode >= 200 && responseCode < 300);
+                result.put("success", responseCode == 200);
                 result.put("attempt", attempt);
                 
                 // 响应成功或已达到最大重试次数，直接返回
@@ -530,6 +530,7 @@ public class StationNodeExecutor implements NodeExecutor {
         result.put("success", false);
         result.put("error", lastException != null ? lastException.getMessage() : "HTTP 请求失败");
         result.put("attempt", MAX_RETRY_ATTEMPTS);
+        result.put("lastException", lastException);
         
         return result;
     }
