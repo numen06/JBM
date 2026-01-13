@@ -9,6 +9,7 @@ import com.jbm.cluster.api.model.job.rule.*;
 import com.jbm.cluster.job.business.impl.ProcessExecutionEngine;
 import com.jbm.cluster.job.service.rule.ProcessInstanceService;
 import com.jbm.cluster.job.service.rule.RuleDefinitionService;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -162,11 +163,14 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     }
 
     @PostMapping("/agvTest")
-    public ResultBody<String> agvTest(@RequestBody AgvTestForm form){
+    public ResultBody<AgvTestForm> agvTest(@RequestBody AgvTestForm form){
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(form);
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        return ResultBody.success();
+        //throw new ServiceException("测试异常");
+        AgvTestForm result = new AgvTestForm();
+        result.setWww("66666");
+        return ResultBody.ok(result);
     }
 
     @PostMapping("/alarmTest")

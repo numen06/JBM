@@ -340,8 +340,15 @@ public class ProcessExecutionEngine {
             // 获取节点执行器
             NodeExecutor executor = nodeExecutorFactory.getExecutor(currentNode.getType());
 
+            // 自动查询并注入下一个站点信息，确保即使不等待触发也能获取到 nextSite/nextSiteList
+            injectNextSiteInfo(flowData, currentNode, inputData);
+
             // 执行节点
             NodeExecutionResult result = executor.execute(currentNode, inputData);
+
+            // 执行完移除辅助字段，避免污染后续节点
+            inputData.remove("nextSite");
+            inputData.remove("nextSiteList");
 
             // 更新执行记录
             updateNodeExecution(nodeExecution, result);
