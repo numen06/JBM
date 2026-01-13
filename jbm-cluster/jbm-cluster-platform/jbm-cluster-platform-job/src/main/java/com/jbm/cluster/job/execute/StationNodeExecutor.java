@@ -61,8 +61,20 @@ public class StationNodeExecutor implements NodeExecutor {
                         Map<String, Object> params = (Map<String, Object>) httpCall.get("params");
                         
                         if (method != null && url != null) {
-                            Map<String, Object> httpResult = executeHttpCall(method, url, params);
+                            // 确定结果封装的 Key，优先使用 siteCode，没有则使用 nodeId
+                            String resultKey = "result";
+                            if (nodeData != null && nodeData.containsKey("site")) {
+                                Map<String, Object> site = (Map<String, Object>) nodeData.get("site");
+                                if (site != null && site.get("siteCode") != null) {
+                                    resultKey = site.get("siteCode").toString();
+                                }
+                            }
+                            
+                            Map<String, Object> httpResult = executeHttpCall(method, url, params, resultKey);
                             outputData.putAll(httpResult);
+
+                            // 处理 outputVariables 映射逻辑
+                            processOutputVariables(nodeData, outputData);
                         }
                     }
                     
@@ -444,9 +456,59 @@ public class StationNodeExecutor implements NodeExecutor {
         }
         return -1;
     }
-    
-    private Map<String, Object> executeHttpCall(String method, String url, Map<String, Object> params) throws Exception {
-        log.info("执行 HTTP 调用: {} {}", method, url);
+
+    /**
+     * 根据节点配置的 outputVariables 动态从 outputData 中提取嵌套值并打平存储
+     */
+    private void processOutputVariables(Map<String, Object> nodeData, Map<String, Object> outputData) {
+        if (nodeData == null || !nodeData.containsKey("outputVariables")) {
+            return;
+        }
+
+        Object outputVarsObj = nodeData.get("outputVariables");
+        if (!(outputVarsObj instanceof java.util.List)) {
+            return;
+        }
+
+        java.util.List<Map<String, Object>> outputVariables = (java.util.List<Map<String, Object>>) outputVarsObj;
+        for (Map<String, Object> var : outputVariables) {
+            String varName = (String) var.get("name");
+            if (varName == null || varName.trim().isEmpty() || !varName.contains(".")) {
+                continue;
+            }
+
+            // 尝试从嵌套的 outputData 中根据路径解析值
+            Object resolvedValue = resolveValueByPath(outputData, varName);
+            if (resolvedValue != null) {
+                log.info("动态映射输出变量: {} = {}", varName, resolvedValue);
+                outputData.put(varName, resolvedValue);
+            }
+        }
+    }
+
+    /**
+     * 递归解析嵌套 Map 中的路径值 (例如: "a.b.c")
+     */
+    private Object resolveValueByPath(Map<String, Object> data, String path) {
+        if (data == null || path == null) return null;
+        
+        String[] parts = path.split("\\.");
+        Object current = data;
+        
+        for (String part : parts) {
+            if (current instanceof Map) {
+                current = ((Map<String, Object>) current).get(part);
+            } else {
+                return null;
+            }
+            if (current == null) return null;
+        }
+        
+        return current;
+    }
+
+    private Map<String, Object> executeHttpCall(String method, String url, Map<String, Object> params, String resultKey) throws Exception {
+        log.info("执行 HTTP 调用: {} {}, 结果将封装在 Key: {} 下", method, url, resultKey);
         
         Exception lastException = null;
         int attempt = 0;
@@ -484,9 +546,38 @@ public class StationNodeExecutor implements NodeExecutor {
                 log.info("HTTP 响应码: {}", responseCode);
                 
                 Map<String, Object> result = new HashMap<>();
-                result.put("httpCode", responseCode);
-                result.put("success", responseCode == 200);
-                result.put("attempt", attempt);
+                Map<String, Object> responseData = new HashMap<>();
+                
+                // 读取响应体
+                java.io.InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+                if (is != null) {
+                    try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is, "UTF-8"))) {
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        String responseBody = response.toString();
+                        log.info("HTTP 响应体: {}", responseBody);
+                        if (!responseBody.isEmpty()) {
+                            try {
+                                // 尝试解析为 JSON 对象
+                                Map<String, Object> bodyMap = com.alibaba.fastjson.JSON.parseObject(responseBody, Map.class);
+                                responseData.putAll(bodyMap);
+                            } catch (Exception e) {
+                                // 如果不是 JSON 对象，则存入 rawResponse 字段
+                                responseData.put("rawResponse", responseBody);
+                            }
+                        }
+                    }
+                }
+
+                //responseData.put("httpCode", responseCode);
+                //responseData.put("success", responseCode >= 200 && responseCode < 300);
+                responseData.put("attempt", attempt);
+                
+                // 将所有响应数据封装在站点特定的 Key 下
+                result.put(resultKey, responseData);
                 
                 // 响应成功或已达到最大重试次数，直接返回
                 return result;

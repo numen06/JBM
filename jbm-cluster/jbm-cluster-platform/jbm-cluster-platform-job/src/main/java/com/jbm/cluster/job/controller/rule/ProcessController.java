@@ -163,12 +163,14 @@ public class ProcessController extends MasterDataCollection<ProcessInstance, Pro
     }
 
     @PostMapping("/agvTest")
-    public ResultBody<String> agvTest(@RequestBody AgvTestForm form){
+    public ResultBody<AgvTestForm> agvTest(@RequestBody AgvTestForm form){
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(form);
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        throw new ServiceException("测试异常");
-        //return ResultBody.success();
+        //throw new ServiceException("测试异常");
+        AgvTestForm result = new AgvTestForm();
+        result.setWww("66666");
+        return ResultBody.ok(result);
     }
 
     @PostMapping("/alarmTest")
