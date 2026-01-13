@@ -104,22 +104,42 @@ public class StationNodeExecutor implements NodeExecutor {
             result.put("url", replacePlaceholderString(url, currentSite, nextSite, inputData));
         }
 
-        // 2. 处理 Params 占位符
+        // 2. 处理 Params 占位符 (支持深层嵌套)
         if (result.containsKey("params")) {
-            Map<String, Object> params = (Map<String, Object>) result.get("params");
-            if (params != null) {
-                Map<String, Object> newParams = new HashMap<>(params);
-                for (Map.Entry<String, Object> entry : newParams.entrySet()) {
-                    Object value = entry.getValue();
-                    if (value instanceof String) {
-                        entry.setValue(replacePlaceholderString((String) value, currentSite, nextSite, inputData));
-                    }
-                }
-                result.put("params", newParams);
-            }
+            Object params = result.get("params");
+            result.put("params", processObjectPlaceholders(params, currentSite, nextSite, inputData));
         }
 
         return result;
+    }
+
+    /**
+     * 递归处理对象中的占位符 (支持 Map, List, String)
+     */
+    private Object processObjectPlaceholders(Object value, Map<String, Object> currentSite, Map<String, Object> nextSite, Map<String, Object> inputData) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String) {
+            return replacePlaceholderString((String) value, currentSite, nextSite, inputData);
+        } else if (value instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) value;
+            Map<String, Object> newMap = new HashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey(), processObjectPlaceholders(entry.getValue(), currentSite, nextSite, inputData));
+            }
+            return newMap;
+        } else if (value instanceof java.util.List) {
+            java.util.List<Object> list = (java.util.List<Object>) value;
+            java.util.List<Object> newList = new java.util.ArrayList<>();
+            for (Object item : list) {
+                newList.add(processObjectPlaceholders(item, currentSite, nextSite, inputData));
+            }
+            return newList;
+        }
+
+        return value;
     }
 
     /**
