@@ -61,4 +61,9 @@ public class NodeExecutionMessage {
      * 节点事件类型：ENTER-进入节点，EXIT-离开节点
      */
     private String eventType;
+    
+    /**
+     * 是否存在结束节点
+     */
+    private Boolean hasEndNode;
 }

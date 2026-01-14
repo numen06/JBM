@@ -55,6 +55,7 @@ import java.util.Set;
         JdbcDataSourceProperties.class,
         TenantProperties.class,
         SqlLogProperties.class,
+        com.jbm.framework.dao.SqlAutoExecuteProperties.class,
 })
 public class MybatisPlusConfig {
 
@@ -145,6 +146,18 @@ public class MybatisPlusConfig {
         return mybatisMapperRefresh;
     }
 
-
+    /**
+     * SQL自动执行处理器
+     * 注册为Bean确保能够监听ApplicationReadyEvent
+     */
+    @Bean
+    public com.jbm.framework.dao.expand.InitializeSqlProcessor initializeSqlProcessor(
+            com.jbm.framework.dao.SqlAutoExecuteProperties sqlAutoExecuteProperties) {
+        com.jbm.framework.dao.expand.InitializeSqlProcessor processor = 
+            new com.jbm.framework.dao.expand.InitializeSqlProcessor();
+        processor.setSqlAutoExecuteProperties(sqlAutoExecuteProperties);
+        processor.setApplicationContext(applicationContext);
+        return processor;
+    }
 
 }

@@ -187,26 +187,49 @@ public class ProcessExecutionEngine {
         NodeData currentNode = findNodeById(flowData, currentNodeId);
         NodeExecution currentExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
                 processInstance.getId(), currentNodeId);
+
+        // 1. 恢复之前的输入参数作为基础上下文
+        Map<String, Object> executionData = new HashMap<>();
+        if (currentExecution.getInputData() != null) {
+            Map<String, Object> previousInput = JsonUtils.fromJson(currentExecution.getInputData(), Map.class);
+            if (previousInput != null) {
+                executionData.putAll(previousInput);
+            }
+        }
+
+        // 2. 合并当前的触发参数到上下文中
         Map<String, Object> triggerDataMap = JsonUtils.fromJson(triggerData, Map.class);
+        if (triggerDataMap != null) {
+            executionData.putAll(triggerDataMap);
+        }
+
         if(Objects.equals(currentExecution.getStatus(), ProcessStatusEnum.WAITING.getCode())){
             // 获取节点执行器
             NodeExecutor executor = nodeExecutorFactory.getExecutor(currentNode.getType());
 
-            triggerDataMap.put("currentNodeStatus", currentExecution.getStatus());
+            executionData.put("currentNodeStatus", currentExecution.getStatus());
             // 自动查询并注入下一个站点信息
-            injectNextSiteInfo(flowData, currentNode, triggerDataMap);
-            NodeExecutionResult result = executor.execute(currentNode, triggerDataMap);
-            //执行完移除 currentNodeStatus 和 nextSite
-            triggerDataMap.remove("currentNodeStatus");
-            triggerDataMap.remove("nextSite");
+            injectNextSiteInfo(flowData, currentNode, executionData);
+
+            NodeExecutionResult result = executor.execute(currentNode, executionData);
+
+            // 3. 执行成功则更新上下文为执行后的输出
+            if (result.isSuccess()) {
+                executionData = result.getOutputData();
+            }
+
+            // 执行完移除辅助字段，避免污染后续节点
+            executionData.remove("currentNodeStatus");
+            executionData.remove("nextSite");
+            executionData.remove("nextSiteList");
         }
         // 更新节点执行记录
         currentExecution.setStatus(ProcessStatusEnum.COMPLETED.getCode());
-        currentExecution.setOutputData(JsonUtils.toJson(triggerData));
+        currentExecution.setOutputData(JsonUtils.toJson(executionData));
         currentExecution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(currentExecution);
-        // 继续执行后续节点
-        return executeNextNodes(processInstance, flowData, currentNode, triggerDataMap);
+        // 继续执行后续节点，传入完整的上下文
+        return executeNextNodes(processInstance, flowData, currentNode, executionData);
     }
 
     /**
@@ -271,7 +294,8 @@ public class ProcessExecutionEngine {
     }
 
     /**
-     * 从节点中提取站点信息（siteCode和siteCoordinateId）
+     * 从节点中提取站点信息（动态获取所有字段）
+     * 直接复制site对象中的所有字段到siteInfo中，避免硬编码字段列表
      */
     private Map<String, Object> extractSiteInfo(NodeData nodeData) {
         try {
@@ -279,27 +303,8 @@ public class ProcessExecutionEngine {
             if (nodeData_map != null && nodeData_map.containsKey("site")) {
                 Map<String, Object> site = (Map<String, Object>) nodeData_map.get("site");
                 if (site != null) {
-                    Map<String, Object> siteInfo = new HashMap<>();
-                    siteInfo.put("allowCall", site.get("allowCall"));
-                    siteInfo.put("businessType", site.get("businessType"));
-                    siteInfo.put("id", site.get("id"));
-                    siteInfo.put("manualPass", site.get("manualPass"));
-                    siteInfo.put("outCoordinate", site.get("outCoordinate"));
-                    siteInfo.put("receiveRule", site.get("receiveRule"));
-                    siteInfo.put("reject", site.get("reject"));
-                    siteInfo.put("siteCode", site.get("siteCode"));
-                    siteInfo.put("siteCoordinateId", site.get("siteCoordinateId"));
-                    siteInfo.put("siteLocation", site.get("siteLocation"));
-                    siteInfo.put("siteName", site.get("siteName"));
-                    siteInfo.put("siteType", site.get("siteType"));
-                    siteInfo.put("siteStatus", site.get("siteStatus"));
-                    siteInfo.put("siteTypeId", site.get("siteTypeId"));
-                    siteInfo.put("siteTypeName", site.get("siteTypeName"));
-                    siteInfo.put("warehouseId", site.get("warehouseId"));
-                    siteInfo.put("warehouseName", site.get("warehouseName"));
-                    siteInfo.put("x", site.get("x"));
-                    siteInfo.put("y", site.get("y"));
-                    siteInfo.put("z", site.get("z"));
+                    // 动态复制site中的所有字段，实现自动适配新增字段
+                    Map<String, Object> siteInfo = new HashMap<>(site);
                     return siteInfo;
                 }
             }
@@ -329,14 +334,21 @@ public class ProcessExecutionEngine {
         nodeExecution = createNodeExecution(processInstance, currentNode, inputData);
         
         // 发送MQTT消息 - 进入节点
-        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER");
+        sendNodeExecutionMessage(processInstance, currentNode, inputData, "RUNNING", "ENTER", flowData);
 
         try {
             // 获取节点执行器
             NodeExecutor executor = nodeExecutorFactory.getExecutor(currentNode.getType());
 
+            // 自动查询并注入下一个站点信息，确保即使不等待触发也能获取到 nextSite/nextSiteList
+            injectNextSiteInfo(flowData, currentNode, inputData);
+
             // 执行节点
             NodeExecutionResult result = executor.execute(currentNode, inputData);
+
+            // 执行完移除辅助字段，避免污染后续节点
+            inputData.remove("nextSite");
+            inputData.remove("nextSiteList");
 
             // 更新执行记录
             updateNodeExecution(nodeExecution, result);
@@ -348,14 +360,14 @@ public class ProcessExecutionEngine {
                 processInstanceService.saveOrUpdate(processInstance);
                 
                 // 发送节点等待触发消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "WAITING", "EXIT", flowData);
 
                 return createResponse(processInstance, currentNode, result, true);
             }
 
             if (result.isSuccess()) {
                 // 发送节点执行成功消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, result.getOutputData(), "COMPLETED", "EXIT", flowData);
                 
                 // 执行后续节点
                 return executeNextNodes(processInstance, flowData, currentNode, result.getOutputData());
@@ -365,7 +377,7 @@ public class ProcessExecutionEngine {
                 processInstanceService.saveEntity(processInstance);
                 
                 // 发送节点执行失败消息 - 离开节点
-                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED", "EXIT");
+                sendNodeExecutionMessage(processInstance, currentNode, inputData, "FAILED", "EXIT", flowData);
                 
                 return createResponse(processInstance, currentNode, result, false);
             }
@@ -377,7 +389,7 @@ public class ProcessExecutionEngine {
             processInstanceService.saveEntity(processInstance);
             
             // 发送节点执行异常消息 - 离开节点
-            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR", "EXIT");
+            sendNodeExecutionMessage(processInstance, currentNode, inputData, "ERROR", "EXIT", flowData);
             
             throw new ServiceException("节点执行失败: " + e.getMessage(), e);
         }
@@ -563,6 +575,24 @@ public class ProcessExecutionEngine {
         execution.setCompletedAt(LocalDateTime.now());
         nodeExecutionService.saveEntity(execution);
     }
+    
+    /**
+     * 判断是否存在结束节点
+     */
+    private boolean hasEndNodeInOutgoing(FlowData flowData, NodeData currentNode) {
+        List<EdgeData> outgoingEdges = flowData.getEdges().stream()
+                .filter(edge -> currentNode.getId().equals(edge.getSource()))
+                .collect(Collectors.toList());
+        
+        if (outgoingEdges.isEmpty()) {
+            return false;
+        }
+        
+        // 检查所有正子节点是否含有结束节点
+        return outgoingEdges.stream()
+                .map(edge -> findNodeById(flowData, edge.getTarget()))
+                .anyMatch(node -> "end".equals(node.getType()));
+    }
 
     /**
      * 发送节点执行消息
@@ -572,8 +602,9 @@ public class ProcessExecutionEngine {
      * @param inputData       输入数据
      * @param status          状态
      * @param eventType       事件类型 ENTER-进入节点，EXIT-离开节点
+     * @param flowData        流程数据
      */
-    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType) {
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType, FlowData flowData) {
         try {
             NodeExecutionMessage message = new NodeExecutionMessage();
             message.setProcessInstanceId(processInstance.getId());
@@ -586,8 +617,12 @@ public class ProcessExecutionEngine {
             message.setExecutionTime(LocalDateTime.now());
             message.setStatus(status);
             message.setEventType(eventType);
+            
+            // 添加是否存在结束节点
+            if (flowData != null) {
+                message.setHasEndNode(hasEndNodeInOutgoing(flowData, nodeData));
+            }
 
-            //String messageJson = JsonUtils.toJson(message);
             String topic = "process/node/execution/";
             
             // 发送MQTT消息
@@ -595,5 +630,12 @@ public class ProcessExecutionEngine {
         } catch (Exception e) {
             log.error("发送节点执行消息失败", e);
         }
+    }
+    
+    /**
+     * 重载方法：不包含FlowData的情况（不推荐）
+     */
+    private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType) {
+        sendNodeExecutionMessage(processInstance, nodeData, inputData, status, eventType, null);
     }
 }

@@ -27,9 +27,6 @@
             <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
                 AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
             </if>
-            <if test="form.webhookEventConfig.businessEventCode != null and form.webhookEventConfig.businessEventCode != ''">
-                AND wec.business_event_code like concat('%', #{form.webhookEventConfig.businessEventCode}, '%')
-            </if>
             <if test="form.webhookEventConfig.eventName != null and form.webhookEventConfig.eventName != ''">
                 AND wec.event_name like concat('%', #{form.webhookEventConfig.eventName}, '%')
             </if>
@@ -37,10 +34,10 @@
                 AND wec.event_group like concat('%', #{form.webhookEventConfig.eventGroup}, '%')
             </if>
             <if test="form.beginTime != null"><!-- 开始时间检索 -->
-                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &gt;= date_format(#{form.beginTime},'%Y-%m-%d %H:%i:%s')
+                AND wt.create_time &gt;= #{form.beginTime}
             </if>
             <if test="form.endTime != null"><!-- 结束时间检索 -->
-                and date_format(wt.create_time,'%Y-%m-%d %H:%i:%s') &lt;= date_format(#{form.endTime},'%Y-%m-%d %H:%i:%s')
+                AND wt.create_time &lt;= #{form.endTime}
             </if>
         </where>
     </select>

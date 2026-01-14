@@ -11,6 +11,12 @@ import java.util.Map;
 @Component
 @Slf4j
 public class StationNodeExecutor implements NodeExecutor {
+    
+    // HTTP 请求重试配置
+    private static final int MAX_RETRY_ATTEMPTS = 3;  // 最多重试次数
+    private static final long RETRY_DELAY_MS = 1000;  // 重试延迟（毫秒）
+    private static final int CONNECT_TIMEOUT_MS = 10000;  // 连接超时
+    private static final int READ_TIMEOUT_MS = 10000;  // 读取超时
 
     @Override
     public NodeExecutionResult execute(NodeData node, Map<String, Object> inputData) {
@@ -46,7 +52,6 @@ public class StationNodeExecutor implements NodeExecutor {
                     }
                     
                     // 触发继续执行或不需要等待触发时，执行完整的 code 逻辑
-                    // ... existing code ...
                     if (config.containsKey("__HTTP_CALL__")) {
                         Map<String, Object> httpCall = (Map<String, Object>) config.get("__HTTP_CALL__");
                         // 替换参数中的占位符
@@ -56,8 +61,20 @@ public class StationNodeExecutor implements NodeExecutor {
                         Map<String, Object> params = (Map<String, Object>) httpCall.get("params");
                         
                         if (method != null && url != null) {
-                            Map<String, Object> httpResult = executeHttpCall(method, url, params);
+                            // 确定结果封装的 Key，优先使用 siteCode，没有则使用 nodeId
+                            String resultKey = "result";
+                            if (nodeData != null && nodeData.containsKey("site")) {
+                                Map<String, Object> site = (Map<String, Object>) nodeData.get("site");
+                                if (site != null && site.get("siteCode") != null) {
+                                    resultKey = site.get("siteCode").toString();
+                                }
+                            }
+                            
+                            Map<String, Object> httpResult = executeHttpCall(method, url, params, resultKey);
                             outputData.putAll(httpResult);
+
+                            // 处理 outputVariables 映射逻辑
+                            processOutputVariables(nodeData, outputData);
                         }
                     }
                     
@@ -81,82 +98,155 @@ public class StationNodeExecutor implements NodeExecutor {
     }
     
     private Map<String, Object> replaceParamsPlaceholders(Map<String, Object> httpCall, NodeData node, Map<String, Object> nodeData, Map<String, Object> inputData, Map<String, Object> parsedConfig) {
-        // ... existing code ...
         Map<String, Object> result = new HashMap<>(httpCall);
-        
-        if (result.containsKey("params")) {
-            Map<String, Object> params = (Map<String, Object>) result.get("params");
-            if (params != null) {
-                Map<String, Object> newParams = new HashMap<>(params);
-                
-                // 获取字段映射配置（默认为 siteCoordinateId）
-                String currentSiteField = "siteCoordinateId";
-                String nextSiteField = "siteCoordinateId";
-                
-                // 检查 __HTTP_CALL__ 中是否有字段映射配置
-                if (result.containsKey("fieldMapping")) {
-                    Map<String, Object> fieldMapping = (Map<String, Object>) result.get("fieldMapping");
-                    if (fieldMapping != null) {
-                        if (fieldMapping.containsKey("currentSiteField")) {
-                            currentSiteField = fieldMapping.get("currentSiteField").toString();
-                        }
-                        if (fieldMapping.containsKey("nextSiteField")) {
-                            nextSiteField = fieldMapping.get("nextSiteField").toString();
-                        }
-                    }
-                }
-                
-                // 获取当前站点的指定字段值
-                String currentSiteId = null;
-                if (nodeData != null && nodeData.containsKey("site")) {
-                    Object site = nodeData.get("site");
-                    if (site instanceof Map) {
-                        Object fieldValue = ((Map<String, Object>) site).get(currentSiteField);
-                        if (fieldValue != null) {
-                            currentSiteId = fieldValue.toString();
-                        }
-                    }
-                }
-                
-                // 获取下一个站点的指定字段值
-                String nextSiteId = resolveNextSiteId(node, inputData, parsedConfig, nextSiteField);
-                log.info("Resolved nextSiteId: {} (field: {})", nextSiteId, nextSiteField);
-                
-                // 替换占位符
-                for (Map.Entry<String, Object> entry : newParams.entrySet()) {
-                    Object value = entry.getValue();
-                    if (value instanceof String) {
-                        String strValue = (String) value;
-                        if ("${currentSiteId}".equals(strValue) && currentSiteId != null) {
-                            entry.setValue(currentSiteId);
-                            log.info("Replace ${currentSiteId}: {} (field: {})", currentSiteId, currentSiteField);
-                        } else if ("${nextSiteId}".equals(strValue) && nextSiteId != null) {
-                            entry.setValue(nextSiteId);
-                            log.info("Replace ${nextSiteId}: {} (field: {})", nextSiteId, nextSiteField);
-                        }
-                    }
-                }
-                
-                result.put("params", newParams);
+
+        // 获取上下文信息
+        Map<String, Object> currentSite = new HashMap<>();
+        if (nodeData != null && nodeData.containsKey("site")) {
+            Object site = nodeData.get("site");
+            if (site instanceof Map) {
+                currentSite = (Map<String, Object>) site;
             }
         }
-        
+        Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
+
+        // 1. 处理 URL 占位符
+        if (result.containsKey("url")) {
+            String url = result.get("url").toString();
+            result.put("url", replacePlaceholderString(url, currentSite, nextSite, inputData));
+        }
+
+        // 2. 处理 Params 占位符 (支持深层嵌套)
+        if (result.containsKey("params")) {
+            Object params = result.get("params");
+            result.put("params", processObjectPlaceholders(params, currentSite, nextSite, inputData));
+        }
+
         return result;
+    }
+
+    /**
+     * 递归处理对象中的占位符 (支持 Map, List, String)
+     */
+    private Object processObjectPlaceholders(Object value, Map<String, Object> currentSite, Map<String, Object> nextSite, Map<String, Object> inputData) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String) {
+            return replacePlaceholderString((String) value, currentSite, nextSite, inputData);
+        } else if (value instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) value;
+            Map<String, Object> newMap = new HashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                newMap.put(entry.getKey(), processObjectPlaceholders(entry.getValue(), currentSite, nextSite, inputData));
+            }
+            return newMap;
+        } else if (value instanceof java.util.List) {
+            java.util.List<Object> list = (java.util.List<Object>) value;
+            java.util.List<Object> newList = new java.util.ArrayList<>();
+            for (Object item : list) {
+                newList.add(processObjectPlaceholders(item, currentSite, nextSite, inputData));
+            }
+            return newList;
+        }
+
+        return value;
+    }
+
+    /**
+     * 统一字符串占位符替换逻辑
+     */
+    private String replacePlaceholderString(String str, Map<String, Object> currentSite, Map<String, Object> nextSite, Map<String, Object> inputData) {
+        if (str == null || !str.contains("${")) {
+            return str;
+        }
+
+        String replacedValue = str;
+
+        // 1. 替换 ${currentSite.fieldName} 格式
+        java.util.regex.Pattern currentSitePattern = java.util.regex.Pattern.compile("\\$\\{currentSite\\.(\\w+)\\}");
+        java.util.regex.Matcher currentSiteMatcher = currentSitePattern.matcher(replacedValue);
+        while (currentSiteMatcher.find()) {
+            String fieldName = currentSiteMatcher.group(1);
+            Object fieldValue = currentSite.get(fieldName);
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${currentSite." + fieldName + "}", fieldValue.toString());
+            }
+        }
+
+        // 2. 替换 ${nextSite.fieldName} 格式
+        java.util.regex.Pattern nextSitePattern = java.util.regex.Pattern.compile("\\$\\{nextSite\\.(\\w+)\\}");
+        java.util.regex.Matcher nextSiteMatcher = nextSitePattern.matcher(replacedValue);
+        while (nextSiteMatcher.find()) {
+            String fieldName = nextSiteMatcher.group(1);
+            if (nextSite != null) {
+                Object fieldValue = nextSite.get(fieldName);
+                if (fieldValue != null) {
+                    replacedValue = replacedValue.replace("${nextSite." + fieldName + "}", fieldValue.toString());
+                }
+            }
+        }
+
+        // 3. 替换 ${inputData.fieldName} 格式
+        java.util.regex.Pattern inputDataPattern = java.util.regex.Pattern.compile("\\$\\{inputData\\.(\\w+)\\}");
+        java.util.regex.Matcher inputDataMatcher = inputDataPattern.matcher(replacedValue);
+        while (inputDataMatcher.find()) {
+            String fieldName = inputDataMatcher.group(1);
+            if (inputData != null) {
+                Object fieldValue = inputData.get(fieldName);
+                if (fieldValue != null) {
+                    replacedValue = replacedValue.replace("${inputData." + fieldName + "}", fieldValue.toString());
+                }
+            }
+        }
+
+        // 4. 替换通用的 ${fieldName} 格式 (优先从 inputData -> currentSite -> nextSite 顺序查找)
+        java.util.regex.Pattern generalPattern = java.util.regex.Pattern.compile("\\$\\{(\\w+)\\}");
+        java.util.regex.Matcher generalMatcher = generalPattern.matcher(replacedValue);
+        while (generalMatcher.find()) {
+            String fieldName = generalMatcher.group(1);
+            // 排除特殊保留字
+            if ("currentSiteId".equals(fieldName) || "nextSiteId".equals(fieldName)) {
+                continue;
+            }
+            
+            Object fieldValue = null;
+            if (inputData != null && inputData.containsKey(fieldName)) {
+                fieldValue = inputData.get(fieldName);
+            } else if (currentSite.containsKey(fieldName)) {
+                fieldValue = currentSite.get(fieldName);
+            } else if (nextSite != null && nextSite.containsKey(fieldName)) {
+                fieldValue = nextSite.get(fieldName);
+            }
+
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${" + fieldName + "}", fieldValue.toString());
+            }
+        }
+
+        // 5. 向后兼容：替换 ${currentSiteId} 和 ${nextSiteId} (默认 siteCoordinateId)
+        if (replacedValue.contains("${currentSiteId}")) {
+            Object fieldValue = currentSite.get("siteCoordinateId");
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${currentSiteId}", fieldValue.toString());
+            }
+        }
+        if (replacedValue.contains("${nextSiteId}") && nextSite != null) {
+            Object fieldValue = nextSite.get("siteCoordinateId");
+            if (fieldValue != null) {
+                replacedValue = replacedValue.replace("${nextSiteId}", fieldValue.toString());
+            }
+        }
+
+        return replacedValue;
     }
     
     /**
-     * 根据条件判断和 nextSiteList 来解析下一个站点 ID
-     * 如果配置了 __CONDITION__，则根据条件字段值从 nextSiteList 中选择
-     * 条件配置示例：
-     *   "__CONDITION__": {
-     *     "checkField": "checkResult",
-     *     "routes": [
-     *       {"value": 1, "siteId": "1915633766512988168"},
-     *       {"value": 0, "siteId": "1915633766512988169"}
-     *     ]
-     *   }
+     * 根据条件判断和 nextSiteList 来返回下一个站点对象
+     * 子方法为 resolveNextSiteId（获取整个对象）
      */
-    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig, String fieldName) {
+    private Map<String, Object> resolveNextSite(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig) {
         if (inputData == null) {
             return null;
         }
@@ -186,11 +276,7 @@ public class StationNodeExecutor implements NodeExecutor {
                                 // 验证 targetSiteId 是否在 nextSiteList 中
                                 for (Map<String, Object> site : nextSiteList) {
                                     if (targetSiteId.equals(site.get("siteCoordinateId").toString())) {
-                                        // 返回指定字段的值
-                                        Object fieldValueToReturn = site.get(fieldName);
-                                        if (fieldValueToReturn != null) {
-                                            return fieldValueToReturn.toString();
-                                        }
+                                        return site;
                                     }
                                 }
                                 log.warn("Target site {} not found in nextSiteList", targetSiteId);
@@ -199,12 +285,9 @@ public class StationNodeExecutor implements NodeExecutor {
                     }
                 }
                 
-                // 如果没有配置条件或条件不匹配，返回第一个站点的指定字段
+                // 如果没有配置条件或条件不匹配，返回第一个站点
                 if (nextSiteList.size() > 0) {
-                    Object fieldValue = nextSiteList.get(0).get(fieldName);
-                    if (fieldValue != null) {
-                        return fieldValue.toString();
-                    }
+                    return nextSiteList.get(0);
                 }
             }
         }
@@ -213,13 +296,33 @@ public class StationNodeExecutor implements NodeExecutor {
         if (inputData.containsKey("nextSite")) {
             Object nextSite = inputData.get("nextSite");
             if (nextSite instanceof Map) {
-                Object fieldValue = ((Map<String, Object>) nextSite).get(fieldName);
-                if (fieldValue != null) {
-                    return fieldValue.toString();
-                }
+                return (Map<String, Object>) nextSite;
             }
         }
         
+        return null;
+    }
+    
+    /**
+     * 根据条件判断和 nextSiteList 来解析下一个站点 ID
+     * 如果配置了 __CONDITION__，则根据条件字段值从 nextSiteList 中选择
+     * 条件配置示例：
+     *   "__CONDITION__": {
+     *     "checkField": "checkResult",
+     *     "routes": [
+     *       {"value": 1, "siteId": "1915633766512988168"},
+     *       {"value": 0, "siteId": "1915633766512988169"}
+     *     ]
+     *   }
+     */
+    private String resolveNextSiteId(NodeData node, Map<String, Object> inputData, Map<String, Object> parsedConfig, String fieldName) {
+        Map<String, Object> nextSite = resolveNextSite(node, inputData, parsedConfig);
+        if (nextSite != null) {
+            Object fieldValue = nextSite.get(fieldName);
+            if (fieldValue != null) {
+                return fieldValue.toString();
+            }
+        }
         return null;
     }
     
@@ -353,38 +456,192 @@ public class StationNodeExecutor implements NodeExecutor {
         }
         return -1;
     }
-    
-    private Map<String, Object> executeHttpCall(String method, String url, Map<String, Object> params) throws Exception {
-        log.info("执行 HTTP 调用: {} {}", method, url);
-        
-        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-        conn.setRequestMethod(method);
-        conn.setRequestProperty("Content-Type", "application/json");
-        // 添加 Authorization 请求头
-        try {
-            // token认证
-            conn.setRequestProperty("Authorization", "Bearer " + SecurityUtils.getToken());
-            log.info("已添加 Authorization 请求头");
-        } catch (Exception e) {
-            log.warn("获取 token 失败，将继续执行不带 Authorization 的请求: {}", e.getMessage());
+
+    /**
+     * 根据节点配置的 outputVariables 动态从 outputData 中提取嵌套值并打平存储
+     */
+    private void processOutputVariables(Map<String, Object> nodeData, Map<String, Object> outputData) {
+        if (nodeData == null || !nodeData.containsKey("outputVariables")) {
+            return;
         }
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
+
+        Object outputVarsObj = nodeData.get("outputVariables");
+        if (!(outputVarsObj instanceof java.util.List)) {
+            return;
+        }
+
+        java.util.List<Map<String, Object>> outputVariables = (java.util.List<Map<String, Object>>) outputVarsObj;
+        for (Map<String, Object> var : outputVariables) {
+            String varName = (String) var.get("name");
+            if (varName == null || varName.trim().isEmpty() || !varName.contains(".")) {
+                continue;
+            }
+
+            // 尝试从嵌套的 outputData 中根据路径解析值
+            Object resolvedValue = resolveValueByPath(outputData, varName);
+            if (resolvedValue != null) {
+                log.info("动态映射输出变量: {} = {}", varName, resolvedValue);
+                outputData.put(varName, resolvedValue);
+            }
+        }
+    }
+
+    /**
+     * 递归解析嵌套 Map 中的路径值 (例如: "a.b.c")
+     */
+    private Object resolveValueByPath(Map<String, Object> data, String path) {
+        if (data == null || path == null) return null;
         
-        if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
-            conn.setDoOutput(true);
-            String json = com.alibaba.fastjson.JSON.toJSONString(params);
-            log.info("HTTP 请求体: {}", json);
-            conn.getOutputStream().write(json.getBytes("UTF-8"));
-            conn.getOutputStream().flush();
+        String[] parts = path.split("\\.");
+        Object current = data;
+        
+        for (String part : parts) {
+            if (current instanceof Map) {
+                current = ((Map<String, Object>) current).get(part);
+            } else {
+                return null;
+            }
+            if (current == null) return null;
         }
         
-        int responseCode = conn.getResponseCode();
-        log.info("HTTP 响应码: {}", responseCode);
+        return current;
+    }
+
+    private Map<String, Object> executeHttpCall(String method, String url, Map<String, Object> params, String resultKey) throws Exception {
+        log.info("执行 HTTP 调用: {} {}, 结果将封装在 Key: {} 下", method, url, resultKey);
         
+        Exception lastException = null;
+        int attempt = 0;
+        
+        // 重试逻辑：最多尝试 MAX_RETRY_ATTEMPTS 次
+        while (attempt < MAX_RETRY_ATTEMPTS) {
+            attempt++;
+            try {
+                log.info("开始第 {} 次 HTTP 请求尝试", attempt);
+                
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                conn.setRequestMethod(method);
+                conn.setRequestProperty("Content-Type", "application/json");
+                
+                // 添加 Authorization 请求头
+                try {
+                    conn.setRequestProperty("Authorization", "Bearer " + SecurityUtils.getToken());
+                    log.info("已添加 Authorization 请求头");
+                } catch (Exception e) {
+                    log.warn("获取 token 失败，将继续执行不带 Authorization 的请求: {}", e.getMessage());
+                }
+                
+                conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+                conn.setReadTimeout(READ_TIMEOUT_MS);
+                
+                if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)) {
+                    conn.setDoOutput(true);
+                    String json = com.alibaba.fastjson.JSON.toJSONString(params);
+                    log.info("HTTP 请求体: {}", json);
+                    conn.getOutputStream().write(json.getBytes("UTF-8"));
+                    conn.getOutputStream().flush();
+                }
+                
+                int responseCode = conn.getResponseCode();
+                log.info("HTTP 响应码: {}", responseCode);
+                
+                Map<String, Object> result = new HashMap<>();
+                Map<String, Object> responseData = new HashMap<>();
+                
+                // 读取响应体
+                java.io.InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+                if (is != null) {
+                    try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is, "UTF-8"))) {
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        String responseBody = response.toString();
+                        log.info("HTTP 响应体: {}", responseBody);
+                        if (!responseBody.isEmpty()) {
+                            try {
+                                // 尝试解析为 JSON 对象
+                                Map<String, Object> bodyMap = com.alibaba.fastjson.JSON.parseObject(responseBody, Map.class);
+                                responseData.putAll(bodyMap);
+                            } catch (Exception e) {
+                                // 如果不是 JSON 对象，则存入 rawResponse 字段
+                                responseData.put("rawResponse", responseBody);
+                            }
+                        }
+                    }
+                }
+
+                //responseData.put("httpCode", responseCode);
+                //responseData.put("success", responseCode >= 200 && responseCode < 300);
+                responseData.put("attempt", attempt);
+                
+                // 将所有响应数据封装在站点特定的 Key 下
+                result.put(resultKey, responseData);
+                
+                // 响应成功或已达到最大重试次数，直接返回
+                return result;
+                
+            } catch (java.net.SocketTimeoutException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求超时: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (java.net.ConnectException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 连接异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (java.io.IOException e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求 IO 异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("第 {} 次 HTTP 请求异常: {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRY_ATTEMPTS) {
+                    log.info("将在 {} ms 后进行第 {} 次重试", RETRY_DELAY_MS, attempt + 1);
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new Exception("重试被中断", ie);
+                    }
+                }
+            }
+        }
+        
+        // 所有重试都失败了
+        log.error("经过 {} 次重试后 HTTP 请求仍然失败，最后错误: {}", MAX_RETRY_ATTEMPTS, 
+                  lastException != null ? lastException.getMessage() : "未知错误");
         Map<String, Object> result = new HashMap<>();
-        result.put("httpCode", responseCode);
-        result.put("success", responseCode >= 200 && responseCode < 300);
+        result.put("httpCode", 0);
+        result.put("success", false);
+        result.put("error", lastException != null ? lastException.getMessage() : "HTTP 请求失败");
+        result.put("attempt", MAX_RETRY_ATTEMPTS);
+        result.put("lastException", lastException);
         
         return result;
     }

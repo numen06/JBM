@@ -2,4 +2,3 @@ org.springframework.context.ApplicationListener=\
 jbm.framework.boot.autoconfigure.mybatis.event.ApplicationEnvironmentDefaultEvent
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 jbm.framework.boot.autoconfigure.mybatis.MybatisPlusConfig
-#com.jbm.framework.dao.expand.InitializeSqlProcessor

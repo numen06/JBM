@@ -58,7 +58,7 @@ public class PushMessageBody extends MasterDataCodeEntity {
     @ApiModelProperty("扩展字段")
     @ElementCollection(targetClass = String.class)
     @Column(columnDefinition = "text")
-    @TableField(typeHandler = FastjsonTypeHandler.class)
+    @TableField(typeHandler = FastjsonTypeHandler.class, exist = false)
     private Map<String, Object> extend;
 
 }

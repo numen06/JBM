@@ -15,4 +15,9 @@ public interface BigscreenViewService extends IMasterDataService<BigscreenView> 
     boolean deleteById(Long id);
 
     BigscreenView upload(BigscreenView bigscreenView);
+
+    /**
+     * 加载所有大屏
+     */
+    void loadAllBigscreens();
 }

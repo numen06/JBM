@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -118,5 +119,6 @@ public class BaseMenu extends MasterDataEntity {
      * 是否显示 0-不显示 1-显示
      */
     @ApiModelProperty(value = "是否显示 0-不显示 1-显示")
-    private Integer hidden;
+    @Column(columnDefinition = "int default 1")
+    private Integer hidden = 1;
 }
