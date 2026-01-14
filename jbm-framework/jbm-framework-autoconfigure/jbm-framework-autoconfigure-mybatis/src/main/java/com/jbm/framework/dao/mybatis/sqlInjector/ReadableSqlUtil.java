@@ -1,6 +1,7 @@
 package com.jbm.framework.dao.mybatis.sqlInjector;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import org.apache.ibatis.mapping.BoundSql;
@@ -11,6 +12,9 @@ import org.apache.ibatis.reflection.SystemMetaObject;
 import java.util.*;
 
 public class ReadableSqlUtil {
+
+    private final static ConverterRegistry converterRegistry = ConverterRegistry.getInstance();
+
     /**
      * 将 MyBatis 的 BoundSql 转换为可读的完整 SQL（用于日志）
      * 安全处理：字符串加单引号，日期格式化，null 转为 NULL
@@ -38,28 +42,13 @@ public class ReadableSqlUtil {
             }
 
             // 格式化值
-            String formattedValue = formatValue(value);
+            String formattedValue = converterRegistry.convert(String.class, value);
             // 替换第一个 ? （注意：不能全局替换，避免 SQL 中有 ? 字符）
             sql = sql.replaceFirst("\\?", formattedValue);
         }
 
         // 转换为单行：将换行符和多个空格压缩为单个空格
         return sql.replaceAll("\\s+", " ").trim();
-    }
-
-    private static String formatValue(Object value) {
-        if (value == null) {
-            return "NULL";
-        } else if (value instanceof String) {
-            // 转义单引号
-            return "'" + value.toString().replace("'", "''") + "'";
-        } else if (value instanceof Date) {
-            return "'" + DateUtil.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS") + "'";
-        } else if (value instanceof Number) {
-            return value.toString();
-        } else {
-            return "'" + StrUtil.toString(value) + "'";
-        }
     }
 
     /**
@@ -69,26 +58,6 @@ public class ReadableSqlUtil {
     public static String formatParameterForOfficial(Object value) {
         if (value == null) {
             return "NULL";
-        } else if (value instanceof String) {
-            return "'" + value.toString().replace("'", "''") + "'(String)";
-        } else if (value instanceof Integer) {
-            return value + "(Integer)";
-        } else if (value instanceof Long) {
-            return value + "(Long)";
-        } else if (value instanceof Short) {
-            return value + "(Short)";
-        } else if (value instanceof Byte) {
-            return value + "(Byte)";
-        } else if (value instanceof Float) {
-            return value + "(Float)";
-        } else if (value instanceof Double) {
-            return value + "(Double)";
-        } else if (value instanceof Boolean) {
-            return value + "(Boolean)";
-        } else if (value instanceof Date) {
-            return "'" + DateUtil.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS") + "'(Date)";
-        } else if (value instanceof Number) {
-            return value + "(Number)";
         } else {
             return "'" + StrUtil.toString(value) + "'(" + value.getClass().getSimpleName() + ")";
         }
@@ -160,7 +129,7 @@ public class ReadableSqlUtil {
         }
 
         List<Map<String, Object>> rows = convertToListOfMaps(result);
-        if (rows == null || rows.isEmpty()) {
+        if (rows.isEmpty()) {
             if (showTotal) {
                 lines.add("<==      Total: 0");
             }
@@ -182,7 +151,7 @@ public class ReadableSqlUtil {
                 List<String> rowValues = new ArrayList<>();
                 for (String column : columns) {
                     Object value = row.get(column);
-                    rowValues.add(formatResultValue(value));
+                    rowValues.add(converterRegistry.convert(String.class, value));
                 }
                 lines.add("<==        Row: " + String.join(", ", rowValues));
             }
@@ -234,18 +203,4 @@ public class ReadableSqlUtil {
         }
     }
 
-    /**
-     * 格式化结果值用于输出
-     */
-    private static String formatResultValue(Object value) {
-        if (value == null) {
-            return "NULL";
-        } else if (value instanceof String) {
-            return value.toString();
-        } else if (value instanceof Date) {
-            return DateUtil.formatDateTime((Date) value);
-        } else {
-            return StrUtil.toString(value);
-        }
-    }
 }
