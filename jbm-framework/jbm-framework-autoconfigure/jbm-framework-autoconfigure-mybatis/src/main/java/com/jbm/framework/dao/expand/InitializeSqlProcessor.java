@@ -1,17 +1,12 @@
 package com.jbm.framework.dao.expand;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.db.ds.simple.SimpleDataSource;
-import com.jbm.framework.dao.JdbcDataSourceProperties;
 import com.jbm.framework.dao.SqlAutoExecuteProperties;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
@@ -20,16 +15,15 @@ import java.util.Map;
 
 /**
  * SQL自动执行处理器
- * 在应用完全就绪后，自动扫描并执行 classpath:sql/schema/ 目录下的SQL文件
- * 使用 ApplicationReadyEvent 确保数据源已完全初始化
+ * 在MyBatis初始化完成后，自动扫描并执行 classpath:sql/schema/ 目录下的SQL文件
+ * 使用 InitializingBean 接口，在 SqlSessionFactory 创建完成后立即初始化
  * 
- * 注意：此类需要在配置类中注册为Bean（在MybatisPlusConfig中）
+ * 注意：此类需要在配置类中注册为Bean（在MybatisPlusConfig中），并使用 @DependsOn("sqlSessionFactory")
  * 
  * @author wesley
  */
 @Slf4j
-@Order
-public class InitializeSqlProcessor implements ApplicationListener<ApplicationReadyEvent> {
+public class InitializeSqlProcessor implements InitializingBean {
 
     /**
      * -- SETTER --
@@ -43,13 +37,20 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
      */
     @Setter
     private ApplicationContext applicationContext;
+    /**
+     * -- SETTER --
+     *  设置SqlSessionFactory（通过Bean后处理或直接注入）
+     *  用于从MyBatis获取DataSource
+     */
+    @Setter
+    private SqlSessionFactory sqlSessionFactory;
     private volatile boolean initialized = false;
 
     public InitializeSqlProcessor() {
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void afterPropertiesSet() throws Exception {
         log.info("========== InitializeSqlProcessor 初始化开始 ==========");
         
         // 避免重复执行
@@ -64,15 +65,18 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
             return;
         }
 
-        ApplicationContext context = event.getApplicationContext();
+        if (applicationContext == null) {
+            log.error("ApplicationContext 未设置，跳过SQL自动执行");
+            return;
+        }
         
         try {
-            DataSource dataSource = getDataSource(context);
+            DataSource dataSource = getDataSource(applicationContext);
             if (dataSource == null) {
                 log.error("获取数据源失败，跳过SQL自动执行。请检查数据源配置。");
                 // 输出详细调试信息
                 try {
-                    Map<String, DataSource> allDataSources = context.getBeansOfType(DataSource.class);
+                    Map<String, DataSource> allDataSources = applicationContext.getBeansOfType(DataSource.class);
                     if (allDataSources.isEmpty()) {
                         log.error("容器中没有找到任何DataSource Bean！");
                     } else {
@@ -86,8 +90,8 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
             log.info("数据源获取成功: {}", dataSource.getClass().getSimpleName());
 
             // 获取Spring的资源解析器（ResourcePatternResolver通常就是ApplicationContext）
-            ResourcePatternResolver resourcePatternResolver = context;
-            ResourceLoader resourceLoader = context;
+            ResourcePatternResolver resourcePatternResolver = applicationContext;
+            ResourceLoader resourceLoader = applicationContext;
             SqlPrepareRunner sqlPrepareRunner = new SqlPrepareRunner(dataSource, sqlAutoExecuteProperties, 
                                                                       resourcePatternResolver, resourceLoader);
             sqlPrepareRunner.scanSqlFiles();
@@ -104,9 +108,8 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
      * 获取数据源
      * 优先级：
      * 1. 配置指定的数据源Bean名称
-     * 2. Spring容器中@Primary标注的DataSource
-     * 3. 唯一的DataSource Bean
-     * 4. 从配置属性创建SimpleDataSource
+     * 2. 从SqlSessionFactory获取DataSource（MyBatis使用的数据源，多数据源场景下为默认数据源）
+     * 3. Spring容器中@Primary标注的DataSource（fallback）
      */
     private DataSource getDataSource(ApplicationContext context) {
         // 1. 如果配置了指定的数据源Bean名称，优先使用
@@ -120,45 +123,30 @@ public class InitializeSqlProcessor implements ApplicationListener<ApplicationRe
             }
         }
 
-        // 2. 尝试获取@Primary标注的DataSource
+        // 2. 从SqlSessionFactory获取DataSource（MyBatis使用的数据源）
+        if (sqlSessionFactory != null) {
+            try {
+                DataSource dataSource = sqlSessionFactory.getConfiguration()
+                        .getEnvironment()
+                        .getDataSource();
+                if (dataSource != null) {
+                    log.debug("从SqlSessionFactory获取数据源");
+                    return dataSource;
+                }
+            } catch (Exception e) {
+                log.debug("从SqlSessionFactory获取数据源失败: {}", e.getMessage());
+            }
+        }
+
+        // 3. 尝试获取@Primary标注的DataSource（fallback）
         try {
             DataSource primaryDataSource = context.getBean(DataSource.class);
             log.debug("使用Spring容器中的主数据源");
             return primaryDataSource;
         } catch (org.springframework.beans.factory.NoUniqueBeanDefinitionException e) {
-            log.debug("发现多个DataSource Bean，尝试查找所有DataSource Bean");
+            log.debug("发现多个DataSource Bean，但未找到@Primary标注的数据源");
         } catch (Exception e) {
-            log.debug("未找到主数据源，尝试查找所有DataSource Bean");
-        }
-
-        // 3. 查找所有DataSource Bean，如果只有一个则使用
-        try {
-            Map<String, DataSource> dataSourceMap = context.getBeansOfType(DataSource.class);
-            if (dataSourceMap.size() == 1) {
-                String beanName = dataSourceMap.keySet().iterator().next();
-                log.debug("使用唯一的DataSource Bean: {}", beanName);
-                return dataSourceMap.values().iterator().next();
-            } else if (dataSourceMap.size() > 1) {
-                log.warn("发现多个DataSource Bean: {}, 使用第一个", dataSourceMap.keySet());
-                return dataSourceMap.values().iterator().next();
-            }
-        } catch (Exception e) {
-            log.debug("查找DataSource Bean失败: {}", e.getMessage());
-        }
-
-        // 4. 从配置属性创建SimpleDataSource
-        try {
-            JdbcDataSourceProperties dataSourceProperties = context.getBean(JdbcDataSourceProperties.class);
-            if (dataSourceProperties != null && StrUtil.isNotBlank(dataSourceProperties.getUrl())) {
-                log.debug("从配置属性创建数据源");
-                return new SimpleDataSource(
-                    dataSourceProperties.getUrl(),
-                    dataSourceProperties.getUsername(),
-                    dataSourceProperties.getPassword()
-                );
-            }
-        } catch (Exception e) {
-            log.debug("从配置属性创建数据源失败: {}", e.getMessage());
+            log.debug("未找到主数据源: {}", e.getMessage());
         }
 
         return null;
