@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.io.Resource;
 
 import java.util.Arrays;
@@ -148,15 +149,19 @@ public class MybatisPlusConfig {
 
     /**
      * SQL自动执行处理器
-     * 注册为Bean确保能够监听ApplicationReadyEvent
+     * 在SqlSessionFactory创建完成后立即初始化，跟随MyBatis的生命周期
+     * 从SqlSessionFactory获取DataSource，确保使用MyBatis配置的数据源
      */
     @Bean
+    @DependsOn("sqlSessionFactory")
     public com.jbm.framework.dao.expand.InitializeSqlProcessor initializeSqlProcessor(
-            com.jbm.framework.dao.SqlAutoExecuteProperties sqlAutoExecuteProperties) {
+            com.jbm.framework.dao.SqlAutoExecuteProperties sqlAutoExecuteProperties,
+            SqlSessionFactory sqlSessionFactory) {
         com.jbm.framework.dao.expand.InitializeSqlProcessor processor = 
             new com.jbm.framework.dao.expand.InitializeSqlProcessor();
         processor.setSqlAutoExecuteProperties(sqlAutoExecuteProperties);
         processor.setApplicationContext(applicationContext);
+        processor.setSqlSessionFactory(sqlSessionFactory);
         return processor;
     }
 
