@@ -180,4 +180,54 @@ public class ApplicationInstanceInfo {
         getIp();
         getInstanceId();
     }
+    
+    /**
+     * 使用指定的 ApplicationContext 初始化应用信息
+     * 用于在 SpringContextHolder 还未注入时直接使用事件中的 ApplicationContext
+     * 
+     * @param context ApplicationContext
+     */
+    public static void initializeWithContext(ApplicationContext context) {
+        if (context == null) {
+            log.warn("ApplicationContext 为 null，无法初始化");
+            return;
+        }
+        
+        synchronized (ApplicationInstanceInfo.class) {
+            try {
+                Environment env = context.getEnvironment();
+                
+                // 直接设置应用名称和端口
+                applicationName = env.getProperty("spring.application.name", "unknown-application");
+                port = env.getProperty("server.port", "unknown-port");
+                
+                // 获取主机名（如果还未初始化）
+                if (hostname == null) {
+                    try {
+                        hostname = InetAddress.getLocalHost().getHostName();
+                    } catch (UnknownHostException e) {
+                        log.warn("获取主机名失败，使用默认值", e);
+                        hostname = "unknown-host";
+                    }
+                }
+                
+                // 获取IP（如果还未初始化）
+                if (ip == null) {
+                    try {
+                        ip = InetAddress.getLocalHost().getHostAddress();
+                    } catch (UnknownHostException e) {
+                        log.warn("获取IP地址失败，使用默认值", e);
+                        ip = "unknown-ip";
+                    }
+                }
+                
+                // 生成实例ID
+                instanceId = String.format("%s:%s:%s", applicationName, port, hostname);
+                
+                log.debug("使用 ApplicationContext 直接初始化完成 - 应用名称: {}, 端口: {}", applicationName, port);
+            } catch (Exception e) {
+                log.warn("使用 ApplicationContext 初始化失败", e);
+            }
+        }
+    }
 }

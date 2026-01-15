@@ -3,11 +3,13 @@ package jbm.framework.spring.config;
 import jbm.framework.spring.ApplicationInstanceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.env.Environment;
 
 /**
  * ApplicationInstanceInfo 事件监听器
- * 监听 Spring 应用准备完成事件（ApplicationPreparedEvent），这是最早能访问 ApplicationContext 的事件
+ * 监听 Spring 应用准备完成事件（ApplicationPreparedEvent），直接使用事件中的 ApplicationContext 初始化
  * 确保在上下文就绪后能够正确获取应用信息
  * 
  * @author wesley
@@ -29,9 +31,13 @@ public class ApplicationInstanceInfoListener implements ApplicationListener<Appl
         }
         
         try {
+            ApplicationContext context = event.getApplicationContext();
             log.info("Spring 应用准备完成，开始初始化 ApplicationInstanceInfo");
+            
+            // 直接使用事件中的 ApplicationContext 初始化，而不是通过 SpringContextHolder
+            // 因为此时 SpringContextHolder 可能还未通过 ApplicationContextAware 注入
             ApplicationInstanceInfo.reset();
-            ApplicationInstanceInfo.initialize();
+            ApplicationInstanceInfo.initializeWithContext(context);
             initialized = true;
             
             log.info("ApplicationInstanceInfo 初始化完成 - 应用名称: {}, 端口: {}, 实例ID: {}", 

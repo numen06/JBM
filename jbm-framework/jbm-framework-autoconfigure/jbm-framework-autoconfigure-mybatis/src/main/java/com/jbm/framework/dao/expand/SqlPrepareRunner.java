@@ -64,7 +64,7 @@ public class SqlPrepareRunner {
         this.sqlResourceHelper = new SqlResourceHelper(resourcePatternResolver, resourceLoader);
         // 初始化模块名称
         this.moduleName = determineModuleName();
-        log.debug("SQL执行模块名称: {}", this.moduleName);
+        log.debug("SqlPrepareRunner 初始化完成，模块名称: {}", this.moduleName);
     }
 
     /**
@@ -77,24 +77,20 @@ public class SqlPrepareRunner {
     private String determineModuleName() {
         // 1. 优先使用配置项
         if (sqlAutoExecuteProperties != null && StrUtil.isNotBlank(sqlAutoExecuteProperties.getModuleName())) {
-            String configModuleName = sqlAutoExecuteProperties.getModuleName();
-            log.info("使用配置的模块名称: {}", configModuleName);
-            return configModuleName;
+            return sqlAutoExecuteProperties.getModuleName();
         }
         
         // 2. 尝试从 SQL 文件路径中提取模块名
         try {
             String extractedModuleName = sqlResourceHelper.extractModuleNameFromResource();
             if (StrUtil.isNotBlank(extractedModuleName)) {
-                log.info("从资源路径提取的模块名称: {}", extractedModuleName);
                 return extractedModuleName;
             }
         } catch (Exception e) {
-            log.debug("从资源路径提取模块名称失败", e);
+            log.debug("从资源路径提取模块名称失败: {}", e.getMessage());
         }
         
         // 3. 使用默认值
-        log.info("使用默认模块名称: default");
         return "default";
     }
 
@@ -103,21 +99,20 @@ public class SqlPrepareRunner {
      * 使用 SELECT * 查询来检测表是否存在和结构是否正确
      */
     public void ready() {
+        log.info("准备SQL执行环境...");
+        
         // 尝试查询表，如果失败则创建/重建表
         this.execute(session -> {
             SqlInitializeRepository repository = new SqlInitializeRepository(session);
             
             if (!repository.tryQueryTable()) {
-                // 表不存在或结构有问题，需要创建/重建
-                log.info("sql_initialize 表不存在或结构不正确，开始创建/重建...");
+                log.info("sql_initialize 表不存在，开始创建...");
                 repository.dropTable();
-                // 执行创建表的SQL文件（使用Spring的ResourceLoader，支持JAR包）
                 try {
                     Resource initTableResource = sqlResourceHelper.getResourceLoader().getResource(SqlResourceHelper.SQl_DIR + SQL_INIT_TABLE);
                     if (initTableResource.exists()) {
                         executeSqlFile(initTableResource, SQL_INIT_TABLE);
                     } else {
-                        // 尝试使用 classpath*: 模式
                         Resource[] resources = sqlResourceHelper.getResourcePatternResolver().getResources("classpath*:sql/schema/" + SQL_INIT_TABLE);
                         if (resources != null && resources.length > 0 && resources[0].exists()) {
                             executeSqlFile(resources[0], SQL_INIT_TABLE);
@@ -129,9 +124,7 @@ public class SqlPrepareRunner {
                     log.error("执行 sql_initialize.sql 失败", e);
                     throw new RuntimeException(e);
                 }
-                log.info("sql_initialize 表创建/重建成功");
-            } else {
-                log.debug("sql_initialize 表存在且结构正确，保留现有数据");
+                log.info("sql_initialize 表创建成功");
             }
         });
         
@@ -146,6 +139,8 @@ public class SqlPrepareRunner {
             SqlInitializeRepository repository = new SqlInitializeRepository(session);
             initializeList.putAll(repository.loadAllRecords());
         });
+        
+        log.info("SQL执行环境准备完成 - 当前版本: {}, 已执行记录: {} 条", currentDbVersion, initializeList.size());
     }
 
     /**
@@ -205,40 +200,18 @@ public class SqlPrepareRunner {
      * 扫描并执行SQL文件
      */
     public void scanSqlFiles() throws IOException {
+        log.info("开始扫描SQL文件...");
         this.ready();
         
-        log.debug("开始扫描SQL文件，扫描路径: {}", SqlResourceHelper.BASE_SQl_DIR);
         // 使用Spring的ResourcePatternResolver来扫描资源
         Resource[] resources = sqlResourceHelper.getResourcePatternResolver().getResources(SqlResourceHelper.BASE_SQl_DIR);
         
         if (resources == null || resources.length == 0) {
-            log.warn("未找到SQL schema文件，扫描路径: {}，跳过执行", SqlResourceHelper.BASE_SQl_DIR);
-            // 尝试输出一些调试信息
-            try {
-                Resource testResource = sqlResourceHelper.getResourceLoader().getResource(SqlResourceHelper.SQl_DIR);
-                if (testResource != null && testResource.exists()) {
-                    log.debug("classpath:sql/schema/ 路径存在: {}", testResource.getURL());
-                } else {
-                    log.debug("classpath:sql/schema/ 路径不存在");
-                }
-            } catch (Exception e) {
-                log.debug("检查 classpath:sql/schema/ 路径失败", e);
-            }
+            log.warn("未找到SQL schema文件，扫描路径: {}", SqlResourceHelper.BASE_SQl_DIR);
             return;
         }
         
-        log.info("找到 {} 个SQL文件，当前数据库版本: {}", resources.length, currentDbVersion);
-        // 输出前几个资源的URL，用于调试
-        if (log.isDebugEnabled() && resources.length > 0) {
-            int debugCount = Math.min(3, resources.length);
-            for (int i = 0; i < debugCount; i++) {
-                try {
-                    log.debug("SQL资源[{}]: {}", i, resources[i].getURL());
-                } catch (Exception e) {
-                    log.debug("无法获取资源URL: {}", resources[i].getDescription(), e);
-                }
-            }
-        }
+        log.info("找到 {} 个SQL文件资源，当前数据库版本: {}", resources.length, currentDbVersion);
         
         // 解析所有SQL文件，提取版本号
         List<SqlFileInfo> sqlFiles = parseSqlFiles(resources);
@@ -250,14 +223,10 @@ public class SqlPrepareRunner {
         for (SqlFileInfo fileInfo : sqlFiles) {
             if (StrUtil.isNotBlank(fileInfo.version)) {
                 versionedFiles.add(fileInfo);
-                log.debug("发现版本化SQL文件: {} (版本: {})", fileInfo.fileName, fileInfo.version);
             } else {
                 unversionedFiles.add(fileInfo);
-                log.debug("发现无版本号SQL文件: {}", fileInfo.fileName);
             }
         }
-        
-        log.info("SQL文件分类 - 版本化文件: {} 个, 无版本号文件: {} 个", versionedFiles.size(), unversionedFiles.size());
         
         // 过滤需要执行的版本化文件（版本号 > 当前数据库版本）
         List<SqlFileInfo> toExecuteVersioned = filterVersionedFiles(versionedFiles);
@@ -275,9 +244,8 @@ public class SqlPrepareRunner {
         toExecute.addAll(toExecuteUnversioned);
         
         if (toExecute.isEmpty()) {
-            log.warn("没有需要执行的SQL文件 - 总计: {} 个, 版本化文件: {} 个(已过滤: {} 个), 无版本号文件: {} 个(已过滤: {} 个)", 
-                sqlFiles.size(), versionedFiles.size(), versionedFiles.size() - toExecuteVersioned.size(),
-                unversionedFiles.size(), unversionedFiles.size() - toExecuteUnversioned.size());
+            log.info("没有需要执行的SQL文件 - 总计: {} 个（版本化: {}, 无版本号: {}）", 
+                sqlFiles.size(), versionedFiles.size(), unversionedFiles.size());
             return;
         }
         
@@ -297,12 +265,10 @@ public class SqlPrepareRunner {
             try {
                 String fileName = sqlResourceHelper.getSqlFileName(resource);
                 if (fileName.equalsIgnoreCase(SQL_INIT_TABLE)) {
-                    log.debug("跳过初始化表SQL文件: {}", fileName);
                     continue;
                 }
                 
                 String version = SqlVersionParser.parseVersionFromPath(fileName, resource.getFilename());
-                log.debug("解析SQL文件: {} -> 版本号: {}", fileName, version != null ? version : "无版本号");
                 sqlFiles.add(new SqlFileInfo(resource, fileName, version));
             } catch (Exception e) {
                 log.warn("解析SQL文件失败: {}", resource.getFilename(), e);
@@ -317,14 +283,9 @@ public class SqlPrepareRunner {
     private List<SqlFileInfo> filterVersionedFiles(List<SqlFileInfo> versionedFiles) {
         List<SqlFileInfo> toExecute = new ArrayList<>();
         for (SqlFileInfo fileInfo : versionedFiles) {
-            int compareResult = SqlVersionParser.compareVersion(fileInfo.version, currentDbVersion);
-            if (compareResult > 0) {
+            if (SqlVersionParser.compareVersion(fileInfo.version, currentDbVersion) > 0) {
                 toExecute.add(fileInfo);
-                log.info("SQL文件需要执行: {} (版本: {}, 当前数据库版本: {})", 
-                    fileInfo.fileName, fileInfo.version, currentDbVersion);
-            } else {
-                log.warn("SQL文件版本号 <= 当前数据库版本，跳过执行: {} (文件版本: {}, 数据库版本: {}, 比较结果: {})", 
-                    fileInfo.fileName, fileInfo.version, currentDbVersion, compareResult);
+                log.debug("版本化文件需要执行: {} (版本: {})", fileInfo.fileName, fileInfo.version);
             }
         }
         return toExecute;
@@ -338,9 +299,7 @@ public class SqlPrepareRunner {
         for (SqlFileInfo fileInfo : unversionedFiles) {
             if (!initializeList.containsKey(fileInfo.fileName)) {
                 toExecute.add(fileInfo);
-                log.info("无版本号SQL文件需要执行: {} (未在数据库中记录)", fileInfo.fileName);
-            } else {
-                log.warn("SQL文件已执行过，跳过: {} (已在数据库中记录)", fileInfo.fileName);
+                log.debug("无版本号文件需要执行: {}", fileInfo.fileName);
             }
         }
         return toExecute;
@@ -351,15 +310,17 @@ public class SqlPrepareRunner {
      */
     private void executeSqlFiles(List<SqlFileInfo> toExecute, int totalCount) {
         int executedCount = 0;
-        for (SqlFileInfo fileInfo : toExecute) {
+        int totalFiles = toExecute.size();
+        
+        for (int i = 0; i < toExecute.size(); i++) {
+            SqlFileInfo fileInfo = toExecute.get(i);
             long startTime = System.currentTimeMillis();
-            String errorMessage = null;
             
             try {
                 if (StrUtil.isNotBlank(fileInfo.version)) {
-                    log.info("执行SQL文件: {} (版本: {}, 模块: {})", fileInfo.fileName, fileInfo.version, moduleName);
+                    log.info("执行SQL文件 [{}/{}]: {} (版本: {})", i + 1, totalFiles, fileInfo.fileName, fileInfo.version);
                 } else {
-                    log.info("执行SQL文件: {} (模块: {})", fileInfo.fileName, moduleName);
+                    log.info("执行SQL文件 [{}/{}]: {}", i + 1, totalFiles, fileInfo.fileName);
                 }
                 
                 executeSqlFile(fileInfo.resource, fileInfo.fileName);
@@ -367,22 +328,19 @@ public class SqlPrepareRunner {
                 executeSuccess(fileInfo.resource, fileInfo.fileName, fileInfo.version, executionTime);
                 executedCount++;
                 
-                if (StrUtil.isNotBlank(fileInfo.version)) {
-                    log.info("SQL文件执行成功: {} (版本: {}, 耗时: {}ms)", fileInfo.fileName, fileInfo.version, executionTime);
-                } else {
-                    log.info("SQL文件执行成功: {} (耗时: {}ms)", fileInfo.fileName, executionTime);
-                }
+                log.info("SQL文件执行成功 [{}/{}]: {} (耗时: {}ms)", 
+                    i + 1, totalFiles, fileInfo.fileName, executionTime);
             } catch (Exception e) {
                 long executionTime = System.currentTimeMillis() - startTime;
-                errorMessage = e.getMessage();
-                log.error("执行SQL文件失败: {} (版本: {}, 模块: {}, 耗时: {}ms)", 
-                    fileInfo.fileName, fileInfo.version, moduleName, executionTime, e);
+                String errorMessage = e.getMessage();
+                log.error("SQL文件执行失败 [{}/{}]: {} (耗时: {}ms)", 
+                    i + 1, totalFiles, fileInfo.fileName, executionTime, e);
                 
                 // 记录失败信息到数据库
                 try {
                     executeFailed(fileInfo.resource, fileInfo.fileName, fileInfo.version, executionTime, errorMessage);
                 } catch (Exception ex) {
-                    log.error("记录失败信息到数据库失败", ex);
+                    log.error("记录失败信息到数据库异常", ex);
                 }
                 
                 // 执行失败，抛出异常阻止启动
@@ -390,11 +348,8 @@ public class SqlPrepareRunner {
             }
         }
         
-        log.info("SQL文件执行完成 - 总计: {}, 已执行: {}, 用时: {}秒", 
+        log.info("SQL文件执行完成 - 总计: {}, 已执行: {}, 总用时: {}秒", 
             totalCount, executedCount, stopWatch.getTotalTimeSeconds());
-        if (stopWatch.getTaskCount() > 0) {
-            log.debug(stopWatch.prettyPrint(TimeUnit.SECONDS));
-        }
     }
 
     /**
@@ -410,13 +365,11 @@ public class SqlPrepareRunner {
                 initializeSql = resource.getInputStream();
             } else if (StrUtil.isNotBlank(fileName)) {
                 // 备用方案：使用Spring的ResourceLoader加载资源
-                log.warn("Resource对象不存在，尝试使用ResourceLoader加载: {}", SqlResourceHelper.SQl_DIR + fileName);
                 try {
                     Resource fileResource = sqlResourceHelper.getResourceLoader().getResource(SqlResourceHelper.SQl_DIR + fileName);
                     if (fileResource.exists()) {
                         initializeSql = fileResource.getInputStream();
                     } else {
-                        // 尝试使用classpath*模式
                         Resource[] resources = sqlResourceHelper.getResourcePatternResolver().getResources("classpath*:sql/schema/" + fileName);
                         if (resources != null && resources.length > 0 && resources[0].exists()) {
                             initializeSql = resources[0].getInputStream();
@@ -438,7 +391,7 @@ public class SqlPrepareRunner {
                     ScriptUtils.executeSqlScript(session.getConnection(), new InputStreamResource(sqlStream));
                     stopWatch.stop();
                 } catch (Exception e) {
-                    log.error("执行SQL文件失败:{}", fileName, e);
+                    log.error("执行SQL脚本失败: {}", fileName, e);
                     throw new RuntimeException(e);
                 }
             });
