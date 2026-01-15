@@ -11,7 +11,6 @@ import com.jbm.cluster.api.model.job.JbmClusterJobResource;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterResourceScan;
 import com.jbm.cluster.core.constant.QueueConstants;
-import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -44,11 +43,12 @@ public class JbmClusterJobScan extends JbmClusterResourceScan<JbmClusterJobResou
     }
 
     @Override
-    public JbmClusterJobResource scan() {
-        // 服务名称
-        String serviceId = SpringContextHolder.geteApplicationName();
-        // 所有接口映射
-        final RequestMappingHandlerMapping mapping = SpringContextHolder.getBean(RequestMappingHandlerMapping.class);
+    public JbmClusterJobResource scan(String serviceId) {
+        // 使用父类共享的 mapping 资源，避免重复初始化
+        if (mapping == null) {
+            log.warn("RequestMappingHandlerMapping 未找到，无法扫描任务资源");
+            return new JbmClusterJobResource();
+        }
         // 获取url与类和方法的对应信息
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
         List<JbmClusterJob> jbmClusterJobs = Lists.newArrayList();

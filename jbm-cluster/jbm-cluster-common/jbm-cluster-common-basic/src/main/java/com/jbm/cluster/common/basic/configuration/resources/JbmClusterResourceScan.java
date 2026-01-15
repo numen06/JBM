@@ -8,10 +8,10 @@ import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Slf4j
 public abstract class JbmClusterResourceScan<T extends JbmClusterResource> implements ApplicationListener<ApplicationReadyEvent> {
@@ -20,6 +20,11 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
     private JbmClusterProperties jbmClusterProperties;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    private JbmClusterStreamTemplate streamTemplate;
+    @Autowired(required = false)
+    protected RequestMappingHandlerMapping mapping;
+    protected String serviceId;
 
     public JbmClusterResourceScan() {
     }
@@ -33,10 +38,10 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
         StopWatch stopWatch = new StopWatch("资源采集开始");
         stopWatch.start();
         try {
-            T resource = this.scan();
-            String serviceId = SpringContextHolder.geteApplicationName();
-            resource.setServiceId(serviceId);
-            final JbmClusterStreamTemplate streamTemplate = SpringContextHolder.getBean(JbmClusterStreamTemplate.class);
+            // 获取 serviceId 一次并缓存，避免重复获取
+            this.serviceId = SpringContextHolder.geteApplicationName();
+            T resource = this.scan(this.serviceId);
+            resource.setServiceId(this.serviceId);
             streamTemplate.sendResource(this.queue(), resource);
         } catch (Exception e) {
             log.error("资源采集失败");
@@ -52,6 +57,6 @@ public abstract class JbmClusterResourceScan<T extends JbmClusterResource> imple
     public abstract boolean enable(JbmClusterProperties jbmClusterProperties);
 
 
-    public abstract T scan();
+    public abstract T scan(String serviceId);
 
 }

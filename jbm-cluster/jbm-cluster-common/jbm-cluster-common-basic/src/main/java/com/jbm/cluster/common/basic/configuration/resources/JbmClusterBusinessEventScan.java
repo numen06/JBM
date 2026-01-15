@@ -15,7 +15,6 @@ import com.jbm.cluster.api.model.event.JbmClusterBusinessEventResource;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.core.constant.QueueConstants;
 import jbm.framework.spring.SpelExpressionUtils;
-import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -57,11 +56,12 @@ public class JbmClusterBusinessEventScan extends JbmClusterResourceScan<JbmClust
     private ApplicationContext applicationContext;
 
     @Override
-    public JbmClusterBusinessEventResource scan() {
-        // 服务名称
-        String serviceId = SpringContextHolder.geteApplicationName();
-        // 所有接口映射
-        final RequestMappingHandlerMapping mapping = SpringContextHolder.getBean(RequestMappingHandlerMapping.class);
+    public JbmClusterBusinessEventResource scan(String serviceId) {
+        // 使用父类共享的 mapping 资源，避免重复初始化
+        if (mapping == null) {
+            log.warn("RequestMappingHandlerMapping 未找到，无法扫描业务事件资源");
+            return new JbmClusterBusinessEventResource();
+        }
         // 获取url与类和方法的对应信息
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
         List<JbmClusterBusinessEventBean> jbmClusterBusinessEventBeans = Lists.newArrayList();

@@ -35,7 +35,7 @@ public class JbmClusterDicScan extends JbmClusterResourceScan<JbmDicResource> {
     }
 
     @Override
-    public JbmDicResource scan() {
+    public JbmDicResource scan(String serviceId) {
         JbmDicResource jbmDicResource = new JbmDicResource();
         Map<String, List<JbmDictionary>> dics = dictionaryTemplate.getJbmDicMapCache();
         for (String key : dics.keySet()) {
