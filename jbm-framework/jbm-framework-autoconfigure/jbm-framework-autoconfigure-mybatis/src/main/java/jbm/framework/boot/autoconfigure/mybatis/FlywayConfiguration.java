@@ -7,6 +7,8 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.flyway.FlywayProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +16,11 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +41,7 @@ import java.util.Map;
 @Configuration
 @ConditionalOnProperty(prefix = "jbm.sql.auto-execute", name = "enabled", havingValue = "true", matchIfMissing = true)
 @org.springframework.boot.autoconfigure.condition.ConditionalOnClass(Flyway.class)
+@EnableConfigurationProperties(FlywayProperties.class)
 public class FlywayConfiguration {
 
     @Autowired
@@ -44,6 +52,9 @@ public class FlywayConfiguration {
 
     @Autowired(required = false)
     private SqlAutoExecuteProperties sqlAutoExecuteProperties;
+    
+    @Autowired
+    private FlywayProperties flywayProperties;
 
     /**
      * 配置Flyway Bean，覆盖Spring Boot自动配置的Flyway
@@ -52,14 +63,15 @@ public class FlywayConfiguration {
      * Spring Boot的FlywayAutoConfiguration会自动读取spring.flyway.*配置
      * 我们只需要提供一个自定义的Flyway Bean，使用正确的数据源即可
      * 
+     * 如果检测到DynamicRoutingDataSource，会为每个实际数据源分别创建Flyway实例
      * 使用initMethod = "migrate"确保Bean创建后自动执行迁移
      */
     @Bean(initMethod = "migrate")
     @Primary
     @DependsOn("sqlSessionFactory")
-    public Flyway flyway(org.springframework.boot.autoconfigure.flyway.FlywayProperties flywayProperties) {
+    public Flyway flyway() {
         log.info("========== Flyway 初始化开始 ==========");
-        
+
         DataSource dataSource = getDataSource();
         if (dataSource == null) {
             log.error("获取数据源失败，Flyway初始化被跳过。请检查数据源配置。");
@@ -76,32 +88,225 @@ public class FlywayConfiguration {
             }
             throw new IllegalStateException("无法获取数据源，Flyway初始化失败");
         }
-        
+
         log.info("数据源获取成功: {}", dataSource.getClass().getSimpleName());
 
-        // 使用Spring Boot的FlywayProperties配置，只替换数据源
+        // 检测是否是DynamicRoutingDataSource
+        Map<String, DataSource> resolvedDataSources = resolveDataSources(dataSource);
+        
+        if (resolvedDataSources.size() > 1) {
+            // 多数据源场景：为每个数据源分别创建Flyway并执行迁移
+            log.info("检测到多数据源场景，共 {} 个数据源，将分别为每个数据源执行Flyway迁移", resolvedDataSources.size());
+            Flyway primaryFlyway = null;
+            for (Map.Entry<String, DataSource> entry : resolvedDataSources.entrySet()) {
+                String dsKey = entry.getKey();
+                DataSource ds = entry.getValue();
+                log.info("========== 为数据源 [{}] 初始化Flyway ==========", dsKey);
+                Flyway flyway = createFlywayForDataSource(ds, dsKey);
+                if (primaryFlyway == null) {
+                    primaryFlyway = flyway; // 返回第一个作为主Flyway Bean
+                }
+            }
+            log.info("========== 所有数据源的Flyway初始化完成 ==========");
+            return primaryFlyway != null ? primaryFlyway : createFlywayForDataSource(dataSource, "default");
+        } else {
+            // 单数据源场景
+            return createFlywayForDataSource(dataSource, "default");
+        }
+    }
+    
+    /**
+     * 解析数据源，如果是DynamicRoutingDataSource，则获取其内部的所有数据源
+     * 
+     * @param dataSource 数据源
+     * @return 数据源Map，key为数据源标识，value为数据源实例
+     */
+    private Map<String, DataSource> resolveDataSources(DataSource dataSource) {
+        Map<String, DataSource> result = new LinkedHashMap<>();
+        
+        // 检查是否是DynamicRoutingDataSource类型
+        String className = dataSource.getClass().getName();
+        if (className.contains("DynamicRoutingDataSource") || className.contains("DynamicDataSource")) {
+            try {
+                // 尝试通过反射获取targetDataSources或resolvedDataSources
+                Method[] methods = dataSource.getClass().getMethods();
+                Method targetDataSourcesMethod = null;
+                Method resolvedDataSourcesMethod = null;
+                
+                for (Method method : methods) {
+                    String methodName = method.getName();
+                    if (methodName.equals("getTargetDataSources") || methodName.equals("getResolvedDataSources")) {
+                        if (method.getParameterCount() == 0) {
+                            Class<?> returnType = method.getReturnType();
+                            if (Map.class.isAssignableFrom(returnType)) {
+                                if (methodName.contains("Resolved")) {
+                                    resolvedDataSourcesMethod = method;
+                                } else {
+                                    targetDataSourcesMethod = method;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 优先使用resolvedDataSources，其次使用targetDataSources
+                Method methodToUse = resolvedDataSourcesMethod != null ? resolvedDataSourcesMethod : targetDataSourcesMethod;
+                if (methodToUse != null) {
+                    methodToUse.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    Map<Object, DataSource> targetDataSources = (Map<Object, DataSource>) methodToUse.invoke(dataSource);
+                    if (targetDataSources != null && !targetDataSources.isEmpty()) {
+                        for (Map.Entry<Object, DataSource> entry : targetDataSources.entrySet()) {
+                            String key = entry.getKey() != null ? entry.getKey().toString() : "unknown";
+                            result.put(key, entry.getValue());
+                            log.info("解析到数据源: {} -> {}", key, entry.getValue().getClass().getSimpleName());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("无法从DynamicRoutingDataSource中解析数据源，将使用原始数据源: {}", e.getMessage());
+            }
+        }
+        
+        // 如果解析失败或不是DynamicRoutingDataSource，返回原始数据源
+        if (result.isEmpty()) {
+            result.put("default", dataSource);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 为指定数据源创建Flyway实例
+     * 
+     * @param dataSource 数据源
+     * @param dataSourceKey 数据源标识
+     * @return Flyway实例
+     */
+    private Flyway createFlywayForDataSource(DataSource dataSource, String dataSourceKey) {
+        // 使用FlywayProperties中的配置
         org.flywaydb.core.api.configuration.FluentConfiguration flywayConfig = Flyway.configure()
-                .dataSource(dataSource);  // 使用MyBatis的数据源
+                .dataSource(dataSource);
 
         // 复用配置文件中的所有设置
-        if (flywayProperties.getLocations() != null && !flywayProperties.getLocations().isEmpty()) {
-            flywayConfig.locations(flywayProperties.getLocations().toArray(new String[0]));
-            log.info("Flyway locations: {}", flywayProperties.getLocations());
+        List<String> locations = buildLocations(dataSource, dataSourceKey);
+        Charset encoding = flywayProperties.getEncoding();
+        boolean baselineOnMigrate = flywayProperties.isBaselineOnMigrate();
+        boolean validateOnMigrate = flywayProperties.isValidateOnMigrate();
+        boolean cleanDisabled = flywayProperties.isCleanDisabled();
+
+        // 应用配置
+        if (!locations.isEmpty()) {
+            flywayConfig.locations(locations.toArray(new String[0]));
+            log.info("数据源 [{}] Flyway locations: {}", dataSourceKey, locations);
         } else {
-            flywayConfig.locations("classpath:sql/schema");
-            log.info("Flyway locations: classpath:sql/schema (默认)");
+            flywayConfig.locations("classpath:db/migration/");
+            log.info("数据源 [{}] Flyway locations: classpath:db/migration/ (默认)", dataSourceKey);
         }
-        if (flywayProperties.getEncoding() != null) {
-            flywayConfig.encoding(flywayProperties.getEncoding());
+        if (encoding != null) {
+            flywayConfig.encoding(encoding);
         }
-        flywayConfig.baselineOnMigrate(flywayProperties.isBaselineOnMigrate());
-        flywayConfig.validateOnMigrate(flywayProperties.isValidateOnMigrate());
-        flywayConfig.cleanDisabled(flywayProperties.isCleanDisabled());
+        flywayConfig.baselineOnMigrate(baselineOnMigrate);
+        flywayConfig.validateOnMigrate(validateOnMigrate);
+        flywayConfig.cleanDisabled(cleanDisabled);
 
         Flyway flyway = flywayConfig.load();
-
-        log.info("========== Flyway Bean创建完成，将在初始化时执行迁移 ==========");
+        log.info("数据源 [{}] Flyway Bean创建完成，将在初始化时执行迁移", dataSourceKey);
         return flyway;
+    }
+
+    /**
+     * 构建Flyway的locations配置
+     * 规则：
+     * 1. 如果是单数据源或主数据源，使用spring.flyway.locations配置（默认：db/migration/）
+     * 2. 如果是多数据源的非主数据源，动态指定到classpath:{db}/migration/目录
+     * 
+     * @param dataSource 当前使用的数据源
+     * @param dataSourceKey 数据源标识
+     * @return locations列表
+     */
+    private List<String> buildLocations(DataSource dataSource, String dataSourceKey) {
+        // 获取所有数据源
+        Map<String, DataSource> allDataSources = applicationContext.getBeansOfType(DataSource.class);
+        boolean isMultiDataSource = allDataSources.size() > 1;
+        
+        // 获取基础配置
+        List<String> baseLocations = flywayProperties.getLocations();
+        
+        // 判断是否是主数据源（@Primary标注的数据源）
+        boolean isPrimaryDataSource = isPrimaryDataSource(dataSource, allDataSources);
+        
+        // 如果提供了dataSourceKey且不是"default"，说明是多数据源场景
+        if (isMultiDataSource && !isPrimaryDataSource && StrUtil.isNotBlank(dataSourceKey) && !"default".equals(dataSourceKey)) {
+            // 多数据源的非主数据源场景：使用动态目录 classpath:{db}/migration/
+            String dynamicLocation = "classpath:" + dataSourceKey + "/migration/";
+            log.info("数据源 [{}] 多数据源非主数据源场景，使用动态目录: {}", dataSourceKey, dynamicLocation);
+            return java.util.Arrays.asList(dynamicLocation);
+        }
+        
+        // 单数据源或主数据源：使用spring.flyway.locations配置
+        if (baseLocations != null && !baseLocations.isEmpty()) {
+            log.info("数据源 [{}] 单数据源或主数据源场景，使用配置的locations: {}", dataSourceKey, baseLocations);
+            return baseLocations;
+        } else {
+            log.info("数据源 [{}] 单数据源或主数据源场景，使用默认locations: classpath:db/migration/", dataSourceKey);
+            return Collections.singletonList("classpath:db/migration/");
+        }
+    }
+    
+    /**
+     * 判断是否是主数据源（@Primary标注的数据源）
+     * 
+     * @param dataSource 当前数据源
+     * @param allDataSources 所有数据源Map
+     * @return 是否是主数据源
+     */
+    private boolean isPrimaryDataSource(DataSource dataSource, Map<String, DataSource> allDataSources) {
+        try {
+            // 尝试获取@Primary标注的数据源
+            DataSource primaryDataSource = applicationContext.getBean(DataSource.class);
+            // 如果当前数据源就是主数据源，返回true
+            return primaryDataSource == dataSource;
+        } catch (org.springframework.beans.factory.NoUniqueBeanDefinitionException e) {
+            // 如果有多个数据源但没有@Primary，返回false
+            return false;
+        } catch (Exception e) {
+            // 其他异常，返回false
+            return false;
+        }
+    }
+    
+    /**
+     * 获取数据源标识
+     * 优先级：
+     * 1. 配置中指定的datasourceBeanName
+     * 2. 从ApplicationContext中找到对应的Bean名称
+     * 3. 如果找不到，返回null（使用默认配置）
+     * 
+     * @param dataSource 当前数据源
+     * @param allDataSources 所有数据源Map
+     * @return 数据源标识
+     */
+    private String getDataSourceIdentifier(DataSource dataSource, Map<String, DataSource> allDataSources) {
+        // 1. 如果配置了datasourceBeanName，直接使用
+        if (sqlAutoExecuteProperties != null && StrUtil.isNotBlank(sqlAutoExecuteProperties.getDatasourceBeanName())) {
+            String beanName = sqlAutoExecuteProperties.getDatasourceBeanName();
+            log.debug("使用配置的数据源标识: {}", beanName);
+            return beanName;
+        }
+        
+        // 2. 从ApplicationContext中找到对应的Bean名称
+        for (Map.Entry<String, DataSource> entry : allDataSources.entrySet()) {
+            if (entry.getValue() == dataSource) {
+                String beanName = entry.getKey();
+                log.debug("从Bean名称获取数据源标识: {}", beanName);
+                return beanName;
+            }
+        }
+        
+        // 3. 如果找不到，返回null（将使用默认配置）
+        log.debug("未找到数据源标识，将使用默认配置");
+        return null;
     }
 
     /**
