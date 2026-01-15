@@ -18,6 +18,11 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>${mybatis-plus.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>9.22.3</version> <!-- 兼容 SB 2.7 的最新稳定版 -->
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.baomidou</groupId>-->
 <!--            <artifactId>mybatis-plus-extension</artifactId>-->
@@ -27,11 +32,6 @@
         <!--            <groupId>org.mybatis.spring.boot</groupId>-->
         <!--            <artifactId>mybatis-spring-boot-starter</artifactId>-->
         <!--        </dependency>-->
-        <!--		<dependency>-->
-        <!--			<groupId>com.alibaba</groupId>-->
-        <!--			<artifactId>druid</artifactId>-->
-        <!--			<optional>true</optional>-->
-        <!--		</dependency>-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

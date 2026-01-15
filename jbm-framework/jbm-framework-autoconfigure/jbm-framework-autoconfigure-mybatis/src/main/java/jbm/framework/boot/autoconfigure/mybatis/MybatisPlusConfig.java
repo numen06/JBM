@@ -147,22 +147,5 @@ public class MybatisPlusConfig {
         return mybatisMapperRefresh;
     }
 
-    /**
-     * SQL自动执行处理器
-     * 在SqlSessionFactory创建完成后立即初始化，跟随MyBatis的生命周期
-     * 从SqlSessionFactory获取DataSource，确保使用MyBatis配置的数据源
-     */
-    @Bean
-    @DependsOn("sqlSessionFactory")
-    public com.jbm.framework.dao.expand.InitializeSqlProcessor initializeSqlProcessor(
-            com.jbm.framework.dao.SqlAutoExecuteProperties sqlAutoExecuteProperties,
-            SqlSessionFactory sqlSessionFactory) {
-        com.jbm.framework.dao.expand.InitializeSqlProcessor processor = 
-            new com.jbm.framework.dao.expand.InitializeSqlProcessor();
-        processor.setSqlAutoExecuteProperties(sqlAutoExecuteProperties);
-        processor.setApplicationContext(applicationContext);
-        processor.setSqlSessionFactory(sqlSessionFactory);
-        return processor;
-    }
 
 }

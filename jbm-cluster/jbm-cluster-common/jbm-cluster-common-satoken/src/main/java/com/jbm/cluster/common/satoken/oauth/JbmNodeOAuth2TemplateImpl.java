@@ -19,8 +19,13 @@ import com.jbm.cluster.common.satoken.config.TokenConfig;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,11 +36,15 @@ import java.util.concurrent.TimeUnit;
  * @Description TODO
  */
 @Slf4j
-public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements InitializingBean {
+public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements InitializingBean, ApplicationContextAware, ApplicationListener<ApplicationReadyEvent> {
 
     private TokenConfig tokenConfig;
     
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache;
+    
+    private ApplicationContext applicationContext;
+    
+    private volatile boolean clientTokenInitialized = false;
 
     public JbmNodeOAuth2TemplateImpl() {
         // 延迟初始化，避免循环依赖
@@ -179,22 +188,91 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
     }
 
     /**
+     * 初始化方法，只负责配置缓存，不进行耗时的token生成操作
      * @throws Exception
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        // 获取TokenConfig并重新初始化cache
+        long startTime = System.currentTimeMillis();
+        log.debug("开始初始化 JbmNodeOAuth2TemplateImpl");
+        
+        // 优化TokenConfig获取方式，使用ApplicationContext安全获取
         try {
-            this.tokenConfig = SpringUtil.getBean(TokenConfig.class);
+            if (applicationContext != null) {
+                // 尝试从ApplicationContext获取TokenConfig，如果不存在则返回null
+                try {
+                    this.tokenConfig = applicationContext.getBean(TokenConfig.class);
+                    log.debug("成功获取TokenConfig，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());
+                } catch (Exception e) {
+                    log.debug("ApplicationContext中未找到TokenConfig，尝试使用SpringUtil获取: {}", e.getMessage());
+                    // 降级方案：使用SpringUtil获取
+                    this.tokenConfig = SpringUtil.getBean(TokenConfig.class);
+                }
+            } else {
+                // 如果ApplicationContext还未注入，尝试使用SpringUtil
+                this.tokenConfig = SpringUtil.getBean(TokenConfig.class);
+            }
+            
             // 重新创建cache，使用配置的时间
-            this.clientTokenModelLoadingCache = Caffeine.newBuilder()
-                    .expireAfterWrite(tokenConfig.getClientTokenCacheHours(), TimeUnit.HOURS)
-                    .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
-                    );
-            log.info("初始化当前应用的默认的ClientToken，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());
+            if (this.tokenConfig != null) {
+                this.clientTokenModelLoadingCache = Caffeine.newBuilder()
+                        .expireAfterWrite(tokenConfig.getClientTokenCacheHours(), TimeUnit.HOURS)
+                        .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
+                        );
+                log.info("初始化ClientToken缓存完成，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());
+            } else {
+                log.warn("无法获取TokenConfig，使用默认24小时缓存时间");
+            }
         } catch (Exception e) {
-            log.warn("无法获取TokenConfig，使用默认24小时缓存时间");
+            log.warn("无法获取TokenConfig，使用默认24小时缓存时间，异常: {}", e.getMessage());
         }
-        this.generateClientToken(SpringUtil.getApplicationName(), "*");
+        
+        long duration = System.currentTimeMillis() - startTime;
+        log.debug("JbmNodeOAuth2TemplateImpl初始化完成，耗时: {}ms", duration);
+        
+        // 不再同步调用generateClientToken，改为在ApplicationReadyEvent中异步执行
+    }
+    
+    /**
+     * 设置ApplicationContext，用于安全获取Bean
+     */
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+    
+    /**
+     * 监听应用启动完成事件，异步初始化ClientToken
+     * 避免阻塞主线程启动流程
+     */
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        if (clientTokenInitialized) {
+            return;
+        }
+        
+        log.info("应用启动完成，开始异步初始化ClientToken");
+        long startTime = System.currentTimeMillis();
+        
+        // 异步初始化ClientToken，避免阻塞
+        CompletableFuture.runAsync(() -> {
+            try {
+                String applicationName = SpringUtil.getApplicationName();
+                log.debug("开始生成ClientToken，应用名称: {}", applicationName);
+                
+                // 延迟一小段时间，确保所有Bean都已完全初始化
+                Thread.sleep(100);
+                
+                this.generateClientToken(applicationName, "*");
+                clientTokenInitialized = true;
+                
+                long duration = System.currentTimeMillis() - startTime;
+                log.info("ClientToken异步初始化完成，应用名称: {}，耗时: {}ms", applicationName, duration);
+            } catch (Exception e) {
+                long duration = System.currentTimeMillis() - startTime;
+                log.warn("ClientToken异步初始化失败，耗时: {}ms，错误: {}", duration, e.getMessage(), e);
+                // 不抛出异常，允许应用继续运行
+            }
+        });
     }
 }
