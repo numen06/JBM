@@ -1,18 +1,17 @@
 package com.jbm.framework.dao.mybatis.sqlAudit.impl;
 
-import com.jbm.framework.dao.SqlLogFormat;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.dao.SqlLogProperties;
 import com.jbm.framework.dao.mybatis.sqlAudit.SqlAuditPushHandler;
 import com.jbm.framework.dao.mybatis.sqlAudit.SqlAuditPushType;
 import com.jbm.framework.dao.mybatis.sqlAudit.SqlExecutionInfo;
-import com.jbm.framework.dao.mybatis.sqlInjector.ReadableSqlUtil;
+import com.jbm.framework.dao.mybatis.sqlAudit.SqlLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 /**
  * 本地日志打印推送处理器（默认方式）
+ * 统一使用一行打印格式，便于日志采集
  * 
  * @author wesley
  */
@@ -36,50 +35,29 @@ public class LocalLogPushHandler implements SqlAuditPushHandler {
             return;
         }
         
-        SqlLogFormat format = sqlLogProperties.getFormat();
-        if (format == null) {
-            format = SqlLogFormat.MERGED;
-        }
-        
         try {
-            if (format == SqlLogFormat.OFFICIAL) {
-                // 官方格式：完整输出 Preparing、Parameters 和结果信息
-                // 注意：官方格式在执行后统一输出所有信息
-                String sql = executionInfo.getOriginalSql();
-                log.info("==>  Preparing: {}", sql.endsWith(";") ? sql : sql + ";");
-                
-                if (executionInfo.getParametersFormatted() != null && !executionInfo.getParametersFormatted().isEmpty()) {
-                    log.info("==> Parameters: {}", executionInfo.getParametersFormatted());
-                }
-                
-                // 输出结果信息（如果是查询且配置了显示）
-                if ("query".equals(executionInfo.getOperationType())) {
-                    Boolean showColumns = sqlLogProperties.getShowColumns();
-                    Boolean showRows = sqlLogProperties.getShowRows();
-                    Boolean showTotal = sqlLogProperties.getShowTotal();
-                    
-                    if ((showColumns != null && showColumns) || 
-                        (showRows != null && showRows) || 
-                        (showTotal != null && showTotal)) {
-                        
-                        List<String> resultLines = ReadableSqlUtil.formatResultForOfficial(
-                            executionInfo.getResult(), 
-                            showColumns != null && showColumns,
-                            showRows != null && showRows,
-                            showTotal != null && showTotal
-                        );
-                        for (String line : resultLines) {
-                            log.info(line);
-                        }
-                    }
-                }
-            } else if (format == SqlLogFormat.MERGED) {
-                // 合并格式：输出包含执行时间和mapper信息的完整日志
-                if (executionInfo.getReadableSql() != null && executionInfo.getExecutionTime() != null) {
-                    String sql = executionInfo.getReadableSql().endsWith(";") ? executionInfo.getReadableSql() : executionInfo.getReadableSql() + ";";
-                    log.info("[SQL Run Time : {} ms ],[SQL Mapper : {}] \n {}", 
-                            executionInfo.getExecutionTime(), executionInfo.getMapperId(), sql);
-                }
+            // 检查是否为慢查询且需要打印慢查询日志
+            SqlLogProperties.SlowQueryProperties slowQueryProps = sqlLogProperties.getSlowQuery();
+            boolean isSlowQuery = executionInfo.getSlowQuery() != null && executionInfo.getSlowQuery();
+            boolean shouldLogSlowQuery = slowQueryProps != null && 
+                                       (slowQueryProps.getLogSlowQuery() == null || slowQueryProps.getLogSlowQuery());
+            
+            // 如果是慢查询，输出慢查询警告（单独一行）
+            if (isSlowQuery && shouldLogSlowQuery) {
+                log.warn("⚠️ [慢查询警告] SQL执行时间: {} ms，超过阈值: {} ms", 
+                        executionInfo.getExecutionTime(), executionInfo.getSlowQueryThreshold());
+            }
+            
+            // 统一使用格式化字符串，一行打印
+            String customFormat = sqlLogProperties.getCustomFormat();
+            if (StrUtil.isBlank(customFormat)) {
+                // 如果没有配置，使用默认格式
+                customFormat = "%(currentTime) | DS: %(dataSource) | took %(executionTime)ms | %(sql)";
+            }
+            
+            String formattedLog = SqlLogFormatter.format(customFormat, executionInfo);
+            if (StrUtil.isNotBlank(formattedLog)) {
+                log.info(formattedLog);
             }
         } catch (Exception e) {
             log.error("本地日志推送失败", e);

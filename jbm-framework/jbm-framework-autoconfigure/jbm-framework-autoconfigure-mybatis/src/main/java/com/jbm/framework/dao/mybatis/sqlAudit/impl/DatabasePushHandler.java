@@ -36,9 +36,13 @@ public class DatabasePushHandler implements SqlAuditPushHandler {
             // 例如：使用 JPA 或 MyBatis 将 executionInfo 保存到数据库
             // sqlAuditRepository.save(convertToEntity(executionInfo));
             
-            log.debug("数据库推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms", 
+            String slowQueryInfo = executionInfo.getSlowQuery() != null && executionInfo.getSlowQuery() 
+                    ? String.format(" [慢查询: %sms > %sms]", 
+                            executionInfo.getExecutionTime(), executionInfo.getSlowQueryThreshold())
+                    : "";
+            log.debug("数据库推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms{}", 
                     executionInfo.getApplicationName(), executionInfo.getInstanceId(), 
-                    executionInfo.getMapperId(), executionInfo.getExecutionTime());
+                    executionInfo.getMapperId(), executionInfo.getExecutionTime(), slowQueryInfo);
         } catch (Exception e) {
             log.error("数据库推送 SQL 审计信息失败", e);
         }

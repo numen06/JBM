@@ -22,6 +22,15 @@ public class SqlLogProperties {
      * 默认 MERGED，保持向后兼容
      */
     private SqlLogFormat format = SqlLogFormat.MERGED;
+    
+    /**
+     * 自定义日志格式化字符串（类似 p6spy）
+     * 支持占位符：%(currentTime)、%(dataSource)、%(executionTime)、%(sql)、%(mapperId)、%(operationType)、%(applicationName)、%(instanceId)、%(slowQuery)、%(result)
+     * 默认格式：%(currentTime) | DS: %(dataSource) | took %(executionTime)ms | %(sql)
+     * 如果设置了此配置，将使用此格式替代 format 配置
+     * 如果为空，则使用 format 配置的格式（MERGED 或 OFFICIAL）
+     */
+    private String customFormat = "%(currentTime) | DS: %(dataSource) | took %(executionTime)ms | %(sql)";
 
     /**
      * 是否显示列信息（仅official格式时有效）
@@ -40,6 +49,24 @@ public class SqlLogProperties {
      * 默认 false
      */
     private Boolean showTotal = false;
+    
+    /**
+     * 是否启用 SQL 过滤（过滤掉无用语句，如 SET NAMES、SELECT 1 等）
+     * 默认 true（启用）
+     */
+    private Boolean filter = true;
+    
+    /**
+     * SQL 排除规则（正则表达式，多个规则用 | 分隔）
+     * 匹配的 SQL 语句将被过滤掉，不记录日志
+     * 默认：SELECT 1;|SHOW VARIABLES;|SET .*
+     */
+    private String exclude = "SELECT 1;|SHOW VARIABLES;|SET .*";
+    
+    /**
+     * 慢查询配置
+     */
+    private SlowQueryProperties slowQuery = new SlowQueryProperties();
     
     /**
      * SQL 审计配置
@@ -147,5 +174,29 @@ public class SqlLogProperties {
              */
             private Boolean async = true;
         }
+    }
+    
+    /**
+     * 慢查询配置类
+     */
+    @Data
+    public static class SlowQueryProperties {
+        /**
+         * 是否启用慢查询检测
+         * 默认 true（启用）
+         */
+        private Boolean enabled = true;
+        
+        /**
+         * 慢查询阈值（毫秒）
+         * 默认 3000（3秒）
+         */
+        private Long threshold = 3000L;
+        
+        /**
+         * 是否打印慢查询日志
+         * 默认 true（打印）
+         */
+        private Boolean logSlowQuery = true;
     }
 }

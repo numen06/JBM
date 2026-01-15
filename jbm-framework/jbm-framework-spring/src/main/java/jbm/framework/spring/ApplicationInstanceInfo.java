@@ -1,6 +1,7 @@
-package com.jbm.framework.dao.mybatis.sqlAudit;
+package jbm.framework.spring;
 
 import jbm.framework.spring.config.SpringContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -15,9 +16,9 @@ import java.util.UUID;
  * 
  * @author wesley
  */
+@Slf4j
 public class ApplicationInstanceInfo {
-    private static final Logger log = LoggerFactory.getLogger(ApplicationInstanceInfo.class);
-    
+
     private static volatile String applicationName;
     private static volatile String instanceId;
     private static volatile String hostname;

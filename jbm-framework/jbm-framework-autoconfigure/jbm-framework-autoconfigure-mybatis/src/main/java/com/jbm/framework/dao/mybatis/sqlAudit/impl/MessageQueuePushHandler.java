@@ -42,9 +42,13 @@ public class MessageQueuePushHandler implements SqlAuditPushHandler {
             // 或
             // rabbitTemplate.convertAndSend(exchange, routingKey, executionInfo);
             
-            log.debug("消息队列推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms, topic={}", 
+            String slowQueryInfo = executionInfo.getSlowQuery() != null && executionInfo.getSlowQuery() 
+                    ? String.format(" [慢查询: %sms > %sms]", 
+                            executionInfo.getExecutionTime(), executionInfo.getSlowQueryThreshold())
+                    : "";
+            log.debug("消息队列推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms{}, topic={}", 
                     executionInfo.getApplicationName(), executionInfo.getInstanceId(), 
-                    executionInfo.getMapperId(), executionInfo.getExecutionTime(), topic);
+                    executionInfo.getMapperId(), executionInfo.getExecutionTime(), slowQueryInfo, topic);
         } catch (Exception e) {
             log.error("消息队列推送 SQL 审计信息失败", e);
         }

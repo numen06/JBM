@@ -40,9 +40,13 @@ public class HttpPushHandler implements SqlAuditPushHandler {
             // restTemplate.postForObject(url, convertToJson(executionInfo), String.class);
             // 或使用异步方式
             
-            log.debug("HTTP 推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms, url={}", 
+            String slowQueryInfo = executionInfo.getSlowQuery() != null && executionInfo.getSlowQuery() 
+                    ? String.format(" [慢查询: %sms > %sms]", 
+                            executionInfo.getExecutionTime(), executionInfo.getSlowQueryThreshold())
+                    : "";
+            log.debug("HTTP 推送 SQL 审计信息: application={}, instanceId={}, mapperId={}, executionTime={}ms{}, url={}", 
                     executionInfo.getApplicationName(), executionInfo.getInstanceId(), 
-                    executionInfo.getMapperId(), executionInfo.getExecutionTime(), url);
+                    executionInfo.getMapperId(), executionInfo.getExecutionTime(), slowQueryInfo, url);
         } catch (Exception e) {
             log.error("HTTP 推送 SQL 审计信息失败", e);
         }

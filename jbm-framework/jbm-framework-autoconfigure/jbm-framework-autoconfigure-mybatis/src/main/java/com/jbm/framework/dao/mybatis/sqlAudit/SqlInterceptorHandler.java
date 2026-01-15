@@ -1,17 +1,18 @@
 package com.jbm.framework.dao.mybatis.sqlAudit;
 
 import cn.hutool.core.date.StopWatch;
-import com.jbm.framework.dao.SqlLogFormat;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.dao.SqlLogProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.ReadableSqlUtil;
+import jbm.framework.spring.ApplicationInstanceInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * SQL 拦截处理器
@@ -19,18 +20,39 @@ import java.util.concurrent.TimeUnit;
  * 
  * @author wesley
  */
+@Slf4j
 public class SqlInterceptorHandler {
-    private static final Logger log = LoggerFactory.getLogger(SqlInterceptorHandler.class);
-    
+
     private final SqlLogProperties sqlLogProperties;
     private final AntPathMatcher pathMatcher;
     private final SqlAuditService sqlAuditService;
+    private Pattern excludePattern;
     
     public SqlInterceptorHandler(SqlLogProperties sqlLogProperties) {
         this.sqlLogProperties = sqlLogProperties;
         this.pathMatcher = new AntPathMatcher();
         // 初始化审计服务
         this.sqlAuditService = new SqlAuditService(sqlLogProperties);
+        // 初始化过滤规则
+        initializeExcludePattern();
+    }
+    
+    /**
+     * 初始化排除规则正则表达式
+     */
+    private void initializeExcludePattern() {
+        if (sqlLogProperties.getFilter() != null && sqlLogProperties.getFilter()) {
+            String exclude = sqlLogProperties.getExclude();
+            if (StrUtil.isNotBlank(exclude)) {
+                try {
+                    // 将多个规则用 | 分隔，编译成正则表达式
+                    this.excludePattern = Pattern.compile(exclude, Pattern.CASE_INSENSITIVE);
+                } catch (Exception e) {
+                    log.warn("SQL 过滤规则编译失败，将不使用过滤功能: {}", exclude, e);
+                    this.excludePattern = null;
+                }
+            }
+        }
     }
     
     /**
@@ -111,52 +133,24 @@ public class SqlInterceptorHandler {
         info.setExecutionTime(stopWatch.getTotal(TimeUnit.MILLISECONDS));
         info.setSuccess(true);
         
+        // 判断是否为慢查询
+        SqlLogProperties.SlowQueryProperties slowQueryProps = sqlLogProperties.getSlowQuery();
+        if (slowQueryProps != null && (slowQueryProps.getEnabled() == null || slowQueryProps.getEnabled())) {
+            Long threshold = slowQueryProps.getThreshold() != null ? slowQueryProps.getThreshold() : 3000L;
+            info.setSlowQueryThreshold(threshold);
+            
+            if (info.getExecutionTime() != null && info.getExecutionTime() >= threshold) {
+                info.setSlowQuery(true);
+            } else {
+                info.setSlowQuery(false);
+            }
+        } else {
+            info.setSlowQuery(false);
+        }
+        
         if ("query".equals(info.getOperationType())) {
             info.setResult(result);
-            
-            // 格式化查询结果信息
-            try {
-                Boolean showColumns = sqlLogProperties.getShowColumns();
-                Boolean showRows = sqlLogProperties.getShowRows();
-                Boolean showTotal = sqlLogProperties.getShowTotal();
-                
-                if ((showColumns != null && showColumns) || 
-                    (showRows != null && showRows) || 
-                    (showTotal != null && showTotal)) {
-                    
-                    List<String> resultLines = ReadableSqlUtil.formatResultForOfficial(
-                        result, 
-                        showColumns != null && showColumns,
-                        showRows != null && showRows,
-                        showTotal != null && showTotal
-                    );
-                    
-                    // 提取列信息和行数
-                    if (showColumns != null && showColumns && !resultLines.isEmpty()) {
-                        String columnsLine = resultLines.stream()
-                            .filter(line -> line.startsWith("<==    Columns:"))
-                            .findFirst()
-                            .orElse(null);
-                        if (columnsLine != null) {
-                            String columnsStr = columnsLine.replace("<==    Columns: ", "");
-                            info.setColumns(java.util.Arrays.asList(columnsStr.split(", ")));
-                        }
-                    }
-                    
-                    if (showTotal != null && showTotal) {
-                        String totalLine = resultLines.stream()
-                            .filter(line -> line.startsWith("<==      Total:"))
-                            .findFirst()
-                            .orElse(null);
-                        if (totalLine != null) {
-                            String totalStr = totalLine.replace("<==      Total: ", "");
-                            info.setTotalRows(Integer.parseInt(totalStr));
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.error("格式化查询结果失败", e);
-            }
+            // 不再提取列信息和行数，统一使用格式化字符串一行打印，避免内容过多
         }
     }
     
@@ -176,6 +170,42 @@ public class SqlInterceptorHandler {
     }
     
     /**
+     * 检查 SQL 是否应该被过滤掉
+     * 
+     * @param sql SQL 语句
+     * @return true 表示应该过滤掉，false 表示不过滤
+     */
+    public boolean shouldFilter(String sql) {
+        // 如果未启用过滤，不过滤
+        if (sqlLogProperties.getFilter() == null || !sqlLogProperties.getFilter()) {
+            return false;
+        }
+        
+        // 如果没有排除规则，不过滤
+        if (excludePattern == null) {
+            return false;
+        }
+        
+        // 如果 SQL 为空，不过滤
+        if (StrUtil.isBlank(sql)) {
+            return false;
+        }
+        
+        // 检查 SQL 是否匹配排除规则（使用 find 来匹配部分内容）
+        try {
+            String trimmedSql = sql.trim();
+            // 如果 SQL 末尾有分号，先去掉分号再匹配（因为配置中可能包含分号）
+            if (trimmedSql.endsWith(";")) {
+                trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1).trim();
+            }
+            return excludePattern.matcher(trimmedSql).find();
+        } catch (Exception e) {
+            log.warn("SQL 过滤检查失败", e);
+            return false;
+        }
+    }
+    
+    /**
      * 处理 SQL 执行信息（统一进行打印和推送）
      * 先收集完整信息，然后统一委托给 SqlAuditService 处理打印和推送
      * 本地打印和推送可以同时存在，不冲突
@@ -184,6 +214,16 @@ public class SqlInterceptorHandler {
      */
     public void handleSqlExecutionInfo(SqlExecutionInfo info) {
         if (info == null || !shouldLog(info.getMapperId())) {
+            return;
+        }
+        
+        // 检查是否需要过滤 SQL
+        String sql = info.getReadableSql();
+        if (StrUtil.isBlank(sql)) {
+            sql = info.getOriginalSql();
+        }
+        if (shouldFilter(sql)) {
+            // 如果应该过滤，直接返回，不记录日志
             return;
         }
         

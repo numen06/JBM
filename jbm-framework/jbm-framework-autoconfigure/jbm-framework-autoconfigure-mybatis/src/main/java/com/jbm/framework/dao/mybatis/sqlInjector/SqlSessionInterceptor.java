@@ -4,6 +4,7 @@ import cn.hutool.core.date.StopWatch;
 import com.jbm.framework.dao.SqlLogProperties;
 import com.jbm.framework.dao.mybatis.sqlAudit.SqlExecutionInfo;
 import com.jbm.framework.dao.mybatis.sqlAudit.SqlInterceptorHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -25,6 +26,7 @@ import java.util.Properties;
         @Signature(type = Executor.class, method = "update",
                 args = {MappedStatement.class, Object.class})
 })
+@Slf4j
 public class SqlSessionInterceptor implements Interceptor {
     
     private final SqlInterceptorHandler sqlInterceptorHandler;

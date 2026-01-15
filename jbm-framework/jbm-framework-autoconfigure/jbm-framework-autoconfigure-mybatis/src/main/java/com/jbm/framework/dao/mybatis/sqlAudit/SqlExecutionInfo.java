@@ -106,4 +106,14 @@ public class SqlExecutionInfo {
      * 端口号
      */
     private String port;
+    
+    /**
+     * 是否为慢查询
+     */
+    private Boolean slowQuery;
+    
+    /**
+     * 慢查询阈值（毫秒）
+     */
+    private Long slowQueryThreshold;
 }
