@@ -124,15 +124,16 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
 
     @Override
     public DataPaging<Entity> selectEntitys(CriteriaQueryWrapper<Entity> wrapper) {
-        PageParams pageParams = wrapper.getPageParams();
-        IPage list = this.baseMapper.selectPage(pageParams, wrapper);
+        IPage list = super.pageList(wrapper);
         //EntityMap.setEnumConvertInterceptor(null);
         return ServiceUtils.pageToDataPaging(list);
     }
 
     @Override
     public DataPaging<Entity> selectEntitys(PageParams pageParams, QueryWrapper queryWrapper) {
-        IPage list = this.baseMapper.selectPage(pageParams, queryWrapper);
+        Page<Entity> page = new Page<>(pageParams.getCurrent(), pageParams.getSize());
+        @SuppressWarnings("unchecked")
+        IPage<Entity> list = super.page(page, queryWrapper);
         return ServiceUtils.pageToDataPaging(list);
     }
 
