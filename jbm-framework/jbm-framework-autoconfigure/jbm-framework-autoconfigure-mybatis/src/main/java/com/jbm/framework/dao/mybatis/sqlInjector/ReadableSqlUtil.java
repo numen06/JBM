@@ -12,6 +12,7 @@ import org.apache.ibatis.reflection.SystemMetaObject;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
 
 public class ReadableSqlUtil {
 
@@ -46,7 +47,8 @@ public class ReadableSqlUtil {
             // 格式化值
             String formattedValue = formatValueForSql(value);
             // 替换第一个 ? （注意：不能全局替换，避免 SQL 中有 ? 字符）
-            sql = sql.replaceFirst("\\?", formattedValue);
+            // 使用 Matcher.quoteReplacement 转义替换字符串中的 $ 和 \ 等特殊字符，避免被解释为正则表达式组引用
+            sql = sql.replaceFirst("\\?", Matcher.quoteReplacement(formattedValue));
         }
 
         // 转换为单行：将换行符和多个空格压缩为单个空格
