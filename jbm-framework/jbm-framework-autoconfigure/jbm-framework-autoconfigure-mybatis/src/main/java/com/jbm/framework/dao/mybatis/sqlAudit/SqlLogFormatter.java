@@ -128,11 +128,19 @@ public class SqlLogFormatter {
             variables.put("slowQuery", "");
         }
         
-        // 执行结果
+        // 执行结果（优化显示）
         if (executionInfo.getSuccess() != null && executionInfo.getSuccess()) {
-            variables.put("result", "SUCCESS");
+            variables.put("result", "✓ SUCCESS");
         } else {
-            variables.put("result", "FAILED");
+            variables.put("result", "✗ FAILED");
+        }
+        
+        // 错误信息（如果失败且有错误信息）
+        if (executionInfo.getSuccess() != null && !executionInfo.getSuccess() 
+            && StrUtil.isNotBlank(executionInfo.getErrorMessage())) {
+            variables.put("errorMessage", " | Error: " + executionInfo.getErrorMessage());
+        } else {
+            variables.put("errorMessage", "");
         }
         
         return variables;

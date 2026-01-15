@@ -30,8 +30,10 @@ import java.util.Properties;
 public class SqlSessionInterceptor implements Interceptor {
     
     private final SqlInterceptorHandler sqlInterceptorHandler;
+    private final SqlLogProperties sqlLogProperties;
 
     public SqlSessionInterceptor(SqlLogProperties sqlLogProperties) {
+        this.sqlLogProperties = sqlLogProperties;
         this.sqlInterceptorHandler = new SqlInterceptorHandler(sqlLogProperties);
     }
 
@@ -53,11 +55,17 @@ public class SqlSessionInterceptor implements Interceptor {
         BoundSql boundSql = null;
         SqlExecutionInfo executionInfo = null;
         
-        // 判断是否需要记录日志
+        // 判断是否需要记录日志（白名单检查）
         boolean shouldLog = sqlInterceptorHandler.shouldLog(ms.getId());
         
+        // 检查慢查询功能是否启用（慢查询需要绕过白名单检查）
+        boolean slowQueryEnabled = isSlowQueryEnabled();
+        
         // 准备 SQL 执行信息（执行前收集基础信息）
-        if (shouldLog) {
+        // 如果满足以下任一条件，都需要准备执行信息：
+        // 1. 通过白名单检查（shouldLog = true）
+        // 2. 慢查询功能启用（需要检测慢查询，即使不在白名单中）
+        if (shouldLog || slowQueryEnabled) {
             try {
                 executionInfo = sqlInterceptorHandler.prepareExecutionInfo(ms, parameter, operationType);
                 boundSql = ms.getBoundSql(parameter);
@@ -81,7 +89,10 @@ public class SqlSessionInterceptor implements Interceptor {
             stopWatch.stop();
             
             // 完成 SQL 执行信息收集，然后统一进行打印和推送
-            if (shouldLog && executionInfo != null) {
+            // 如果满足以下任一条件，都需要处理执行信息：
+            // 1. 通过白名单检查（shouldLog = true）
+            // 2. 慢查询功能启用（需要检测慢查询，即使不在白名单中）
+            if (executionInfo != null && (shouldLog || slowQueryEnabled)) {
                 try {
                     if (boundSql == null) {
                         boundSql = ms.getBoundSql(parameter);
@@ -91,6 +102,7 @@ public class SqlSessionInterceptor implements Interceptor {
                     
                     // 统一处理：先收集完整信息，然后统一进行打印和推送操作
                     // 本地打印和推送可以同时存在，不冲突
+                    // handleSqlExecutionInfo 内部会检查慢查询并绕过白名单限制
                     sqlInterceptorHandler.handleSqlExecutionInfo(executionInfo);
                 } catch (Exception e) {
                     // 日志处理失败不影响主流程
@@ -110,5 +122,22 @@ public class SqlSessionInterceptor implements Interceptor {
 
     @Override
     public void setProperties(Properties properties) {
+    }
+    
+    /**
+     * 检查慢查询功能是否启用
+     * 
+     * @return 是否启用慢查询检测
+     */
+    private boolean isSlowQueryEnabled() {
+        if (sqlLogProperties == null) {
+            return false;
+        }
+        SqlLogProperties.SlowQueryProperties slowQuery = sqlLogProperties.getSlowQuery();
+        if (slowQuery == null) {
+            return false;
+        }
+        // 如果 enabled 为 null，默认启用
+        return slowQuery.getEnabled() == null || slowQuery.getEnabled();
     }
 }

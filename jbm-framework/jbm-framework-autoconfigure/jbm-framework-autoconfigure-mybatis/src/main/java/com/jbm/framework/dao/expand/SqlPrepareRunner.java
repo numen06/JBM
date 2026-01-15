@@ -250,10 +250,14 @@ public class SqlPrepareRunner {
         for (SqlFileInfo fileInfo : sqlFiles) {
             if (StrUtil.isNotBlank(fileInfo.version)) {
                 versionedFiles.add(fileInfo);
+                log.debug("发现版本化SQL文件: {} (版本: {})", fileInfo.fileName, fileInfo.version);
             } else {
                 unversionedFiles.add(fileInfo);
+                log.debug("发现无版本号SQL文件: {}", fileInfo.fileName);
             }
         }
+        
+        log.info("SQL文件分类 - 版本化文件: {} 个, 无版本号文件: {} 个", versionedFiles.size(), unversionedFiles.size());
         
         // 过滤需要执行的版本化文件（版本号 > 当前数据库版本）
         List<SqlFileInfo> toExecuteVersioned = filterVersionedFiles(versionedFiles);
@@ -271,7 +275,9 @@ public class SqlPrepareRunner {
         toExecute.addAll(toExecuteUnversioned);
         
         if (toExecute.isEmpty()) {
-            log.info("没有需要执行的SQL文件");
+            log.warn("没有需要执行的SQL文件 - 总计: {} 个, 版本化文件: {} 个(已过滤: {} 个), 无版本号文件: {} 个(已过滤: {} 个)", 
+                sqlFiles.size(), versionedFiles.size(), versionedFiles.size() - toExecuteVersioned.size(),
+                unversionedFiles.size(), unversionedFiles.size() - toExecuteUnversioned.size());
             return;
         }
         
@@ -291,10 +297,12 @@ public class SqlPrepareRunner {
             try {
                 String fileName = sqlResourceHelper.getSqlFileName(resource);
                 if (fileName.equalsIgnoreCase(SQL_INIT_TABLE)) {
+                    log.debug("跳过初始化表SQL文件: {}", fileName);
                     continue;
                 }
                 
                 String version = SqlVersionParser.parseVersionFromPath(fileName, resource.getFilename());
+                log.debug("解析SQL文件: {} -> 版本号: {}", fileName, version != null ? version : "无版本号");
                 sqlFiles.add(new SqlFileInfo(resource, fileName, version));
             } catch (Exception e) {
                 log.warn("解析SQL文件失败: {}", resource.getFilename(), e);
@@ -309,10 +317,14 @@ public class SqlPrepareRunner {
     private List<SqlFileInfo> filterVersionedFiles(List<SqlFileInfo> versionedFiles) {
         List<SqlFileInfo> toExecute = new ArrayList<>();
         for (SqlFileInfo fileInfo : versionedFiles) {
-            if (SqlVersionParser.compareVersion(fileInfo.version, currentDbVersion) > 0) {
+            int compareResult = SqlVersionParser.compareVersion(fileInfo.version, currentDbVersion);
+            if (compareResult > 0) {
                 toExecute.add(fileInfo);
+                log.info("SQL文件需要执行: {} (版本: {}, 当前数据库版本: {})", 
+                    fileInfo.fileName, fileInfo.version, currentDbVersion);
             } else {
-                log.debug("SQL文件版本号 <= 当前数据库版本，跳过: {} (版本: {})", fileInfo.fileName, fileInfo.version);
+                log.warn("SQL文件版本号 <= 当前数据库版本，跳过执行: {} (文件版本: {}, 数据库版本: {}, 比较结果: {})", 
+                    fileInfo.fileName, fileInfo.version, currentDbVersion, compareResult);
             }
         }
         return toExecute;
@@ -326,8 +338,9 @@ public class SqlPrepareRunner {
         for (SqlFileInfo fileInfo : unversionedFiles) {
             if (!initializeList.containsKey(fileInfo.fileName)) {
                 toExecute.add(fileInfo);
+                log.info("无版本号SQL文件需要执行: {} (未在数据库中记录)", fileInfo.fileName);
             } else {
-                log.debug("SQL文件已执行过，跳过: {}", fileInfo.fileName);
+                log.warn("SQL文件已执行过，跳过: {} (已在数据库中记录)", fileInfo.fileName);
             }
         }
         return toExecute;

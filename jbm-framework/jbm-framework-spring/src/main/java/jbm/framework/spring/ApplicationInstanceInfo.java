@@ -2,8 +2,7 @@ package jbm.framework.spring;
 
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
 import java.net.InetAddress;
@@ -13,17 +12,37 @@ import java.util.UUID;
 /**
  * 应用实例信息工具类
  * 用于获取应用名称、实例ID、主机名、端口等信息
+ * 通过 Spring 事件监听确保在 Spring 环境就绪后正确初始化
  * 
  * @author wesley
  */
 @Slf4j
 public class ApplicationInstanceInfo {
 
+    // 缓存的应用信息（静态变量，单例模式）
     private static volatile String applicationName;
     private static volatile String instanceId;
     private static volatile String hostname;
     private static volatile String port;
     private static volatile String ip;
+    
+    /**
+     * 安全地获取 ApplicationContext，如果未初始化则返回 null
+     * 
+     * @return ApplicationContext 或 null
+     */
+    private static ApplicationContext getApplicationContextSafely() {
+        try {
+            return SpringContextHolder.getApplicationContext();
+        } catch (IllegalStateException e) {
+            // ApplicationContext 未初始化，返回 null
+            return null;
+        } catch (Exception e) {
+            // 其他异常也返回 null
+            log.debug("获取 ApplicationContext 失败", e);
+            return null;
+        }
+    }
     
     /**
      * 获取应用名称
@@ -33,8 +52,14 @@ public class ApplicationInstanceInfo {
             synchronized (ApplicationInstanceInfo.class) {
                 if (applicationName == null) {
                     try {
-                        Environment env = SpringContextHolder.getApplicationContext().getEnvironment();
-                        applicationName = env.getProperty("spring.application.name", "unknown-application");
+                        ApplicationContext context = getApplicationContextSafely();
+                        if (context != null) {
+                            Environment env = context.getEnvironment();
+                            applicationName = env.getProperty("spring.application.name", "unknown-application");
+                        } else {
+                            log.debug("ApplicationContext 未初始化，使用默认应用名称");
+                            applicationName = "unknown-application";
+                        }
                     } catch (Exception e) {
                         log.warn("获取应用名称失败，使用默认值", e);
                         applicationName = "unknown-application";
@@ -113,8 +138,14 @@ public class ApplicationInstanceInfo {
             synchronized (ApplicationInstanceInfo.class) {
                 if (port == null) {
                     try {
-                        Environment env = SpringContextHolder.getApplicationContext().getEnvironment();
-                        port = env.getProperty("server.port", "unknown-port");
+                        ApplicationContext context = getApplicationContextSafely();
+                        if (context != null) {
+                            Environment env = context.getEnvironment();
+                            port = env.getProperty("server.port", "unknown-port");
+                        } else {
+                            log.debug("ApplicationContext 未初始化，使用默认端口号");
+                            port = "unknown-port";
+                        }
                     } catch (Exception e) {
                         log.warn("获取端口号失败，使用默认值", e);
                         port = "unknown-port";
@@ -136,5 +167,17 @@ public class ApplicationInstanceInfo {
             port = null;
             ip = null;
         }
+    }
+    
+    /**
+     * 初始化应用信息（由 Spring 事件监听器调用，确保在 Spring 环境就绪后初始化）
+     */
+    public static void initialize() {
+        // 预加载所有信息，确保后续调用能够获取到正确的值
+        getApplicationName();
+        getPort();
+        getHostname();
+        getIp();
+        getInstanceId();
     }
 }
