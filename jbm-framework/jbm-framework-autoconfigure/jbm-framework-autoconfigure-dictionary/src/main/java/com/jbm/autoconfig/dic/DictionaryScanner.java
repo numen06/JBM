@@ -3,16 +3,18 @@ package com.jbm.autoconfig.dic;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.EnumUtil;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.jbm.framework.dictionary.JbmDictionary;
-import com.jbm.util.ListUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 字典扫描类</br>
@@ -22,15 +24,17 @@ import java.util.Set;
  * @date 2018年11月29日 下午4:43:26
  */
 @Slf4j
-public class DictionaryScanner implements InitializingBean {
+public class DictionaryScanner implements SmartInitializingSingleton {
 
 
     private final EnumScanPackages enumScanPackages;
 
 //    private final DictionaryTemplate dictionaryTemplate;
 
-    private Map<String, List<JbmDictionary>> jbmDicMapCache = Maps.newLinkedHashMap();
-    private ITypeConverter typeConverter = new EnumTypeConverter();
+    @Getter
+    private final Map<String, List<JbmDictionary>> jbmDicMapCache = new ConcurrentHashMap<>();
+    private final ITypeConverter typeConverter = new EnumTypeConverter();
+    @Getter
     @Value("${spring.application.name:}")
     private String application;
 
@@ -40,21 +44,12 @@ public class DictionaryScanner implements InitializingBean {
 //        this.dictionaryTemplate = dictionaryTemplate;
     }
 
-    public Map<String, List<JbmDictionary>> getJbmDicMapCache() {
-        return jbmDicMapCache;
-    }
-
-    public String getApplication() {
-        return application;
-    }
-
     private void putIfAbsent(List<JbmDictionary> jbmDictionaries) {
         for (JbmDictionary jbmDictionary : jbmDictionaries) {
             jbmDictionary.setApplication(application);
-            log.info("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
+            log.debug("put application:[{}] cache type:[{}] typeName:[{}] code:[{}],value[{}]", jbmDictionary.getApplication(), jbmDictionary.getType(), jbmDictionary.getTypeName(), jbmDictionary.getCode(), jbmDictionary.getValue());
             this.putIfAbsent(jbmDictionary);
         }
-//        jbmDictionaryArrayList.addAll(jbmDictionaries);
     }
 
     /**
@@ -63,37 +58,51 @@ public class DictionaryScanner implements InitializingBean {
      * @param jbmDictionary
      */
     public void putIfAbsent(JbmDictionary jbmDictionary) {
-        if (!this.jbmDicMapCache.containsKey(jbmDictionary.getType())) {
-            this.jbmDicMapCache.putIfAbsent(jbmDictionary.getType(), Lists.newArrayList());
-        }
         jbmDictionary.setApplication(application);
-        jbmDicMapCache.get(jbmDictionary.getType()).add(jbmDictionary);
+        jbmDicMapCache.computeIfAbsent(jbmDictionary.getType(), k -> Collections.synchronizedList(Lists.newArrayList())).add(jbmDictionary);
     }
 
-    public List<JbmDictionary> scanner() {
-        List<JbmDictionary> jbmDictionaryArrayList = ListUtils.newArrayList();
-        for (String pack : enumScanPackages.getPackageNames()) {
-            Set<Class<?>> classes = ClassUtil.scanPackage(pack, new cn.hutool.core.lang.Filter() {
-                @Override
-                public boolean accept(Object o) {
-                    return EnumUtil.isEnum((Class<?>) o);
-                }
-            });
-            for (Class emClass : classes) {
-                this.putIfAbsent(typeConverter.convert(emClass));
-            }
+    public void scanner() {
+        List<String> packageNames = enumScanPackages.getPackageNames();
+        if (packageNames.isEmpty()) {
+            log.info("JBM字典扫描：未配置扫描包");
+            return;
         }
-        return jbmDictionaryArrayList;
+
+        log.info("JBM开始扫描字典，扫描包数量: {}", packageNames.size());
+        long startTime = System.currentTimeMillis();
+
+        // 并行扫描所有包
+        packageNames.parallelStream().forEach(pack -> {
+            try {
+                Set<Class<?>> classes = ClassUtil.scanPackage(pack, o -> EnumUtil.isEnum((Class<?>) o));
+                for (Class<?> emClass : classes) {
+                    List<JbmDictionary> dictionaries = typeConverter.convert(emClass);
+                    if (dictionaries != null && !dictionaries.isEmpty()) {
+                        this.putIfAbsent(dictionaries);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("扫描包 [{}] 时发生错误", pack, e);
+            }
+        });
+
+        long endTime = System.currentTimeMillis();
+        int totalTypes = jbmDicMapCache.size();
+        int totalItems = jbmDicMapCache.values().stream().mapToInt(List::size).sum();
+        log.info("JBM结束扫描字典，耗时: {}ms, 字典类型数: {}, 字典项总数: {}", 
+                (endTime - startTime), totalTypes, totalItems);
     }
 
     @Override
-    public void afterPropertiesSet() {
-        try {
-            log.info("JBM开始扫描字典");
-            scanner();
-            log.info("JBM结束扫描字典");
-        } catch (Exception e) {
-            log.error("扫描字典错误", e);
-        }
+    public void afterSingletonsInstantiated() {
+        // 异步执行扫描，不阻塞应用启动
+        CompletableFuture.runAsync(() -> {
+            try {
+                scanner();
+            } catch (Exception e) {
+                log.error("扫描字典错误", e);
+            }
+        });
     }
 }
