@@ -64,54 +64,75 @@ public class FlywayConfiguration {
      * 我们只需要提供一个自定义的Flyway Bean，使用正确的数据源即可
      * 
      * 如果检测到DynamicRoutingDataSource，会为每个实际数据源分别创建Flyway实例
-     * 使用initMethod = "migrate"确保Bean创建后自动执行迁移
+     * 如果初始化失败，将打印异常日志但不影响应用启动
      */
-    @Bean(initMethod = "migrate")
+    @Bean
     @Primary
     @DependsOn("sqlSessionFactory")
     public Flyway flyway() {
-        log.info("========== Flyway 初始化开始 ==========");
+        try {
+            log.info("========== Flyway 初始化开始 ==========");
 
-        DataSource dataSource = getDataSource();
-        if (dataSource == null) {
-            log.error("获取数据源失败，Flyway初始化被跳过。请检查数据源配置。");
-            // 输出详细调试信息
-            try {
-                Map<String, DataSource> allDataSources = applicationContext.getBeansOfType(DataSource.class);
-                if (allDataSources.isEmpty()) {
-                    log.error("容器中没有找到任何DataSource Bean！");
-                } else {
-                    log.error("容器中所有的DataSource Bean: {}", allDataSources.keySet());
+            DataSource dataSource = getDataSource();
+            if (dataSource == null) {
+                log.error("获取数据源失败，Flyway初始化被跳过。请检查数据源配置。");
+                // 输出详细调试信息
+                try {
+                    Map<String, DataSource> allDataSources = applicationContext.getBeansOfType(DataSource.class);
+                    if (allDataSources.isEmpty()) {
+                        log.error("容器中没有找到任何DataSource Bean！");
+                    } else {
+                        log.error("容器中所有的DataSource Bean: {}", allDataSources.keySet());
+                    }
+                } catch (Exception e) {
+                    log.error("无法获取DataSource Bean列表", e);
                 }
-            } catch (Exception e) {
-                log.error("无法获取DataSource Bean列表", e);
+                log.warn("Flyway初始化失败，但不影响应用正常启动");
+                return null;
             }
-            throw new IllegalStateException("无法获取数据源，Flyway初始化失败");
-        }
 
-        log.info("数据源获取成功: {}", dataSource.getClass().getSimpleName());
+            log.info("数据源获取成功: {}", dataSource.getClass().getSimpleName());
 
-        // 检测是否是DynamicRoutingDataSource
-        Map<String, DataSource> resolvedDataSources = resolveDataSources(dataSource);
-        
-        if (resolvedDataSources.size() > 1) {
-            // 多数据源场景：为每个数据源分别创建Flyway并执行迁移
-            log.info("检测到多数据源场景，共 {} 个数据源，将分别为每个数据源执行Flyway迁移", resolvedDataSources.size());
+            // 检测是否是DynamicRoutingDataSource
+            Map<String, DataSource> resolvedDataSources = resolveDataSources(dataSource);
+            
             Flyway primaryFlyway = null;
-            for (Map.Entry<String, DataSource> entry : resolvedDataSources.entrySet()) {
-                String dsKey = entry.getKey();
-                DataSource ds = entry.getValue();
-                log.info("========== 为数据源 [{}] 初始化Flyway ==========", dsKey);
-                Flyway flyway = createFlywayForDataSource(ds, dsKey);
-                if (primaryFlyway == null) {
-                    primaryFlyway = flyway; // 返回第一个作为主Flyway Bean
+            if (resolvedDataSources.size() > 1) {
+                // 多数据源场景：为每个数据源分别创建Flyway并执行迁移
+                log.info("检测到多数据源场景，共 {} 个数据源，将分别为每个数据源执行Flyway迁移", resolvedDataSources.size());
+                for (Map.Entry<String, DataSource> entry : resolvedDataSources.entrySet()) {
+                    String dsKey = entry.getKey();
+                    DataSource ds = entry.getValue();
+                    log.info("========== 为数据源 [{}] 初始化Flyway ==========", dsKey);
+                    try {
+                        Flyway flyway = createFlywayForDataSource(ds, dsKey);
+                        if (primaryFlyway == null) {
+                            primaryFlyway = flyway; // 返回第一个作为主Flyway Bean
+                        }
+                        // 手动执行迁移
+                        flyway.migrate();
+                        log.info("数据源 [{}] Flyway迁移执行成功", dsKey);
+                    } catch (Exception e) {
+                        log.error("数据源 [{}] Flyway迁移执行失败，但不影响应用正常启动", dsKey, e);
+                    }
+                }
+                log.info("========== 所有数据源的Flyway初始化完成 ==========");
+            } else {
+                // 单数据源场景
+                try {
+                    primaryFlyway = createFlywayForDataSource(dataSource, "default");
+                    // 手动执行迁移
+                    primaryFlyway.migrate();
+                    log.info("Flyway迁移执行成功");
+                } catch (Exception e) {
+                    log.error("Flyway迁移执行失败，但不影响应用正常启动", e);
                 }
             }
-            log.info("========== 所有数据源的Flyway初始化完成 ==========");
-            return primaryFlyway != null ? primaryFlyway : createFlywayForDataSource(dataSource, "default");
-        } else {
-            // 单数据源场景
-            return createFlywayForDataSource(dataSource, "default");
+            
+            return primaryFlyway;
+        } catch (Exception e) {
+            log.error("Flyway初始化过程中发生异常，但不影响应用正常启动", e);
+            return null;
         }
     }
     
