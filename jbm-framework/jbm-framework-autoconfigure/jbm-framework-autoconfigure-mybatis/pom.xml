@@ -21,7 +21,6 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>9.22.3</version> <!-- 兼容 SB 2.7 的最新稳定版 -->
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.baomidou</groupId>-->

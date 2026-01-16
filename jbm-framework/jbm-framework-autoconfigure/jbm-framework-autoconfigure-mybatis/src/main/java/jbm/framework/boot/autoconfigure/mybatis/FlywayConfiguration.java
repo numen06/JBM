@@ -210,6 +210,7 @@ public class FlywayConfiguration {
         flywayConfig.validateOnMigrate(validateOnMigrate);
         flywayConfig.cleanDisabled(cleanDisabled);
 
+
         Flyway flyway = flywayConfig.load();
         log.info("数据源 [{}] Flyway Bean创建完成，将在初始化时执行迁移", dataSourceKey);
         return flyway;
