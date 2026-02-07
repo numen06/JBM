@@ -159,16 +159,14 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     /**
-     * 生成当前程序唯一的MQTT客户端ID
-     *
-     * @param mqttMapper
-     * @return
+     * 生成 MQTT 客户端 ID：默认使用共享 clientId（一个程序一个客户端），
+     * 若 @MqttMapper(clientId="xxx") 显式指定则单独开客户端（特殊需求如协议驱动、设备代理）。
      */
     private String getMqttClientId(MqttMapper mqttMapper, Class<?> bean) {
         if (StrUtil.isNotBlank(mqttMapper.clientId())) {
             return mqttMapper.clientId();
         }
-        return bean.getSimpleName();
+        return mqttPahoClientFactory.getSharedClientId();
     }
 
     /**

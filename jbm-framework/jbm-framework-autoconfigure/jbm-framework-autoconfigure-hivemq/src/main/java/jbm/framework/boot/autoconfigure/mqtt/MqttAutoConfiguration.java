@@ -1,6 +1,5 @@
 package jbm.framework.boot.autoconfigure.mqtt;
 
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3BlockingClient;
@@ -21,6 +20,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nullable;
 
@@ -40,10 +40,13 @@ public class MqttAutoConfiguration {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Autowired(required = false)
+    private Environment environment;
+
     @Bean
     public RealMqttPahoClientFactory realMqttPahoClientFactory(final Mqtt5ClientFactory clientFactory) {
         mqttProperties.setAutomaticReconnect(true);
-        return new RealMqttPahoClientFactory(clientFactory, mqttProperties);
+        return new RealMqttPahoClientFactory(clientFactory, mqttProperties, environment);
     }
 
     @Bean
@@ -65,14 +68,13 @@ public class MqttAutoConfiguration {
             throw new BeanCreationException("Mqtt5AsyncClient is not available for MQTT version 5. Use Mqtt3AsyncClient instead.");
         }
         mqttProperties.setAutomaticReconnect(true);
-        
-        // 🔧 如果ClientId为空，自动生成一个短ClientId（避免MQTT服务器拒绝）
+        // 未配置 client-id 时默认使用 spring.application.name，保证一个程序一个客户端
         if (StrUtil.isBlank(mqttProperties.getClientId())) {
-            String autoClientId = "AUTO" + IdUtil.simpleUUID().substring(0, 6);
-            mqttProperties.setClientId(autoClientId);
-            log.warn("⚠️ MQTT ClientId not configured, auto-generated: {} (Please configure spring.mqtt.client-id in production)", autoClientId);
+            String appName = applicationContext.getEnvironment().getProperty("spring.application.name");
+            String defaultClientId = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            mqttProperties.setClientId(defaultClientId);
+            log.info("MQTT client-id not configured, using: {}", defaultClientId);
         }
-        
         return clientFactory.mqttClient(mqttProperties, enhancedAuthMechanism);
     }
 
@@ -104,14 +106,12 @@ public class MqttAutoConfiguration {
             throw new BeanCreationException("Mqtt3AsyncClient is not available for MQTT version 5. Use Mqtt5AsyncClient instead.");
         }
         mqttProperties.setAutomaticReconnect(true);
-        
-        // 🔧 如果ClientId为空，自动生成一个短ClientId（MQTT 3.1.1限制23字符）
         if (StrUtil.isBlank(mqttProperties.getClientId())) {
-            String autoClientId = "AUTO" + IdUtil.simpleUUID().substring(0, 6);
-            mqttProperties.setClientId(autoClientId);
-            log.warn("⚠️ MQTT ClientId not configured, auto-generated: {} (Please configure spring.mqtt.client-id in production)", autoClientId);
+            String appName = applicationContext.getEnvironment().getProperty("spring.application.name");
+            String defaultClientId = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            mqttProperties.setClientId(defaultClientId);
+            log.info("MQTT client-id not configured, using: {}", defaultClientId);
         }
-        
         return clientFactory.mqttClient(mqttProperties);
     }
 
