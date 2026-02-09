@@ -45,6 +45,18 @@ public class GenerateMasterData {
 
     private String daoModule;
 
+    private String mapperModule;
+
+    private String mapperXmlModule;
+
+    private String serviceImplModule;
+
+    private String controllerModule;
+
+    private String businessModule;
+
+    private String businessImplModule;
+
     private final List<IGenerateCode> generateCodeList = new ArrayList<>();
 
     private final static String MASTERDATA_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
@@ -90,6 +102,12 @@ public class GenerateMasterData {
                 }
                 generateSource.setServiceModule(StrUtil.trimToNull(serviceModule));
                 generateSource.setDaoModule(StrUtil.trimToNull(daoModule));
+                generateSource.setMapperModule(StrUtil.trimToNull(mapperModule));
+                generateSource.setMapperXmlModule(StrUtil.trimToNull(mapperXmlModule));
+                generateSource.setServiceImplModule(StrUtil.trimToNull(serviceImplModule));
+                generateSource.setControllerModule(StrUtil.trimToNull(controllerModule));
+                generateSource.setBusinessModule(StrUtil.trimToNull(businessModule));
+                generateSource.setBusinessImplModule(StrUtil.trimToNull(businessImplModule));
                 generateSourceList.add(generateSource);
             }
         });

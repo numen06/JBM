@@ -1,8 +1,10 @@
 package com.jbm.framework.masterdata.code.model;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.Template;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
 import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
+import com.jbm.framework.masterdata.code.constants.CodeType;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
@@ -56,6 +58,36 @@ public class GenerateSource {
     private String daoModule;
 
     /**
+     * Mapper 接口输出模块路径
+     */
+    private String mapperModule;
+
+    /**
+     * Mapper XML 输出模块路径
+     */
+    private String mapperXmlModule;
+
+    /**
+     * ServiceImpl 输出模块路径
+     */
+    private String serviceImplModule;
+
+    /**
+     * Controller 输出模块路径
+     */
+    private String controllerModule;
+
+    /**
+     * Business 接口输出模块路径
+     */
+    private String businessModule;
+
+    /**
+     * BusinessImpl 输出模块路径
+     */
+    private String businessImplModule;
+
+    /**
      * 具体包的位置
      */
     private String codePackage;
@@ -78,5 +110,31 @@ public class GenerateSource {
 
     private ApiModel apiModel;
 
+    /**
+     * 按代码类型解析输出模块路径。未配置时返回 null 表示使用当前应用模块。
+     */
+    public String getOutputModuleFor(CodeType codeType) {
+        if (codeType == null) {
+            return null;
+        }
+        switch (codeType) {
+            case mapper:
+                return StrUtil.emptyToDefault(StrUtil.trimToNull(mapperModule), daoModule);
+            case mapperXml:
+                return StrUtil.emptyToDefault(StrUtil.trimToNull(mapperXmlModule), daoModule);
+            case service:
+                return StrUtil.trimToNull(serviceModule);
+            case serviceImpl:
+                return StrUtil.emptyToDefault(StrUtil.trimToNull(serviceImplModule), serviceModule);
+            case controller:
+                return StrUtil.trimToNull(controllerModule);
+            case business:
+                return StrUtil.trimToNull(businessModule);
+            case businessImpl:
+                return StrUtil.trimToNull(businessImplModule);
+            default:
+                return null;
+        }
+    }
 
 }

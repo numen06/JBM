@@ -53,7 +53,11 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         return file;
     }
 
-    public Path getModuleRootPath(URL url,GenerateSource generateSource) throws URISyntaxException {
+    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws URISyntaxException {
+        String modulePath = generateSource.getOutputModuleFor(this.getCodeType());
+        if (StrUtil.isNotBlank(modulePath)) {
+            return Paths.get(url.toURI()).getParent().getParent().getParent().resolve(modulePath);
+        }
         return Paths.get(url.toURI()).getParent().getParent();
     }
 

@@ -55,6 +55,39 @@ public @interface EnableCodeAutoGeneate {
      * @return
      */
     String daoModule() default "";
-    // 排除包目录
+
+    /**
+     * Mapper 接口输出模块路径（未配置时回退到 daoModule）
+     */
+    String mapperModule() default "";
+
+    /**
+     * Mapper XML 输出模块路径（未配置时回退到 daoModule）
+     */
+    String mapperXmlModule() default "";
+
+    /**
+     * ServiceImpl 输出模块路径（未配置时回退到 serviceModule）
+     */
+    String serviceImplModule() default "";
+
+    /**
+     * Controller 输出模块路径（未配置时使用当前应用模块）
+     */
+    String controllerModule() default "";
+
+    /**
+     * Business 接口输出模块路径（未配置时使用当前应用模块）
+     */
+    String businessModule() default "";
+
+    /**
+     * BusinessImpl 输出模块路径（未配置时使用当前应用模块）
+     */
+    String businessImplModule() default "";
+
+    /**
+     * 排除包目录
+     */
     String[] excludePackages() default {};
 }

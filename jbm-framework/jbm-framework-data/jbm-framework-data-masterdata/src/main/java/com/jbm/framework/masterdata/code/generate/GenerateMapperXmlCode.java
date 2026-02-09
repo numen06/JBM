@@ -7,20 +7,10 @@ import com.jbm.framework.masterdata.mapper.SuperMapper;
 import com.jbm.util.StringUtils;
 import lombok.SneakyThrows;
 
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class GenerateMapperXmlCode extends BaseGenerateCodeImpl {
-
-    @Override
-    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws URISyntaxException {
-        if (generateSource.getDaoModule() != null) {
-            return Paths.get(url.toURI()).getParent().getParent().getParent().resolve(generateSource.getDaoModule());
-        }
-        return Paths.get(url.toURI()).getParent().getParent();
-    }
 
     public String getSuperClass(GenerateSource generateSource) {
         String extClass = SuperMapper.class.getName();
@@ -38,9 +28,7 @@ public class GenerateMapperXmlCode extends BaseGenerateCodeImpl {
 
     @Override
     public String getCodeFileName(GenerateSource generateSource) {
-        CodeType codeType = this.getCodeType();
-        String fileName = generateSource.getEntityClass().getSimpleName() + "Mapper.xml";
-        return fileName;
+        return generateSource.getEntityClass().getSimpleName() + "Mapper.xml";
     }
 
 
