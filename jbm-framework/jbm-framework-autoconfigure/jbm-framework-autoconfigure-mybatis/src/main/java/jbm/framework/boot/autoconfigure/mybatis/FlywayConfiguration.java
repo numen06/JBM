@@ -209,7 +209,7 @@ public class FlywayConfiguration {
         org.flywaydb.core.api.configuration.FluentConfiguration flywayConfig = Flyway.configure()
                 .dataSource(dataSource);
 
-        flywayConfig.initSql("SET @__flyway_session_var__ = 'workaround_for_tidb';");
+//        flywayConfig.initSql("SET @__flyway_session_var__ = 'workaround_for_tidb';");
 
         // 复用配置文件中的所有设置
         List<String> locations = buildLocations(dataSource, dataSourceKey);
