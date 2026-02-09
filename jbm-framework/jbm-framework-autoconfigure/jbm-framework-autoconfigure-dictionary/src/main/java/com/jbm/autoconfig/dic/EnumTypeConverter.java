@@ -61,7 +61,7 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
                 if (CollectionUtil.contains(keys.values(), field)) {
                     continue;
                 }
-                jsonObject.put(field, ReflectUtil.getFieldValue(e, field));
+                jsonObject.put(field, getFieldValueSafely(e, field));
             }
             jbmDictionary = jsonObject.toJavaObject(JbmDictionary.class);
 //            jbmDictionary.setValues(jsonObject);
@@ -90,7 +90,7 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
         if (!CollectionUtil.contains(fields, key)) {
             return null;
         }
-        jsonObject.put(VALUE_FIELD, ReflectUtil.getFieldValue(e, key));
+        jsonObject.put(VALUE_FIELD, getFieldValueSafely(e, key));
         jbmDictionary.setValue(jsonObject.getString(VALUE_FIELD));
 //        fields.remove(key);
         return jbmDictionary;
@@ -99,10 +99,26 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
     private void putCodeValue(JSONObject jsonObject, Map<String, String> keys, Enum<?> e) {
         final String key = keys.get(CODE_FIELD);
         if (ObjectUtil.isNotEmpty(key)) {
-            jsonObject.put("code", ReflectUtil.getFieldValue(e, keys.get(CODE_FIELD)));
+            jsonObject.put("code", getFieldValueSafely(e, keys.get(CODE_FIELD)));
         } else {
             jsonObject.put("code", e.toString());
         }
+    }
+
+    /**
+     * 安全地获取枚举字段值，避免 Java 9+ 模块系统限制
+     * 当字段名为 "name" 时，使用 name() 方法代替反射访问
+     *
+     * @param e     枚举实例
+     * @param field 字段名
+     * @return 字段值
+     */
+    private Object getFieldValueSafely(Enum<?> e, String field) {
+        // 特殊处理 name 字段，避免 Java 9+ 模块系统限制
+        if ("name".equals(field)) {
+            return e.name();
+        }
+        return ReflectUtil.getFieldValue(e, field);
     }
 
     public Map<String, String> parseCodeAnnotation(Class<? extends Enum<?>> emClass, List<String> fields) {
