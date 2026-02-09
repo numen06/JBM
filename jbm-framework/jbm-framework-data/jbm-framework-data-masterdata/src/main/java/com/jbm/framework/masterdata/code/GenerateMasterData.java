@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
 import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
+import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.generate.*;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,8 +45,6 @@ public class GenerateMasterData {
 
     private String serviceModule;
 
-    private String daoModule;
-
     private String mapperModule;
 
     private String mapperXmlModule;
@@ -57,14 +57,31 @@ public class GenerateMasterData {
 
     private String businessImplModule;
 
+    private String mapperPackage;
+
+    private String servicePackage;
+
+    private String controllerPackage;
+
+    private String businessPackage;
+
+    /** 是否生成 Mapper 模块（mapper + mapperXml），默认 true */
+    private boolean enableMapper = true;
+    /** 是否生成 Service 模块（service + serviceImpl），默认 true */
+    private boolean enableService = true;
+    /** 是否生成 Controller 模块，默认 true */
+    private boolean enableController = true;
+    /** 是否生成 Business 模块（business + businessImpl），默认 true */
+    private boolean enableBusiness = true;
+
     private final List<IGenerateCode> generateCodeList = new ArrayList<>();
 
-    private final static String MASTERDATA_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
+    private final static String MASTERCARD_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
 
     public GenerateMasterData() {
         try {
             //构建模板引擎
-            TemplateConfig templateConfig = new TemplateConfig(MASTERDATA_TEMP_PATH, TemplateConfig.ResourceMode.CLASSPATH);
+            TemplateConfig templateConfig = new TemplateConfig(MASTERCARD_TEMP_PATH, TemplateConfig.ResourceMode.CLASSPATH);
             templateConfig = templateConfig.setCustomEngine(SimpleTemplateEngine.class);
             templateEngine = TemplateUtil.createEngine(templateConfig);
 
@@ -85,7 +102,7 @@ public class GenerateMasterData {
         }
     }
 
-    private final Map<Class, List<Class>> businessGroups = Maps.newConcurrentMap();
+    private final Map<Class<?>, List<Class<?>>> businessGroups = Maps.newConcurrentMap();
 
     public List<GenerateSource> filter(Set<Class<?>> entitys) throws Exception {
         List<GenerateSource> generateSourceList = new ArrayList<>();
@@ -101,13 +118,16 @@ public class GenerateMasterData {
                     }
                 }
                 generateSource.setServiceModule(StrUtil.trimToNull(serviceModule));
-                generateSource.setDaoModule(StrUtil.trimToNull(daoModule));
                 generateSource.setMapperModule(StrUtil.trimToNull(mapperModule));
                 generateSource.setMapperXmlModule(StrUtil.trimToNull(mapperXmlModule));
                 generateSource.setServiceImplModule(StrUtil.trimToNull(serviceImplModule));
                 generateSource.setControllerModule(StrUtil.trimToNull(controllerModule));
                 generateSource.setBusinessModule(StrUtil.trimToNull(businessModule));
                 generateSource.setBusinessImplModule(StrUtil.trimToNull(businessImplModule));
+                generateSource.setMapperPackage(StrUtil.trimToNull(mapperPackage));
+                generateSource.setServicePackage(StrUtil.trimToNull(servicePackage));
+                generateSource.setControllerPackage(StrUtil.trimToNull(controllerPackage));
+                generateSource.setBusinessPackage(StrUtil.trimToNull(businessPackage));
                 generateSourceList.add(generateSource);
             }
         });
@@ -116,13 +136,26 @@ public class GenerateMasterData {
 
     public GenerateSource generate(GenerateSource generateSource) throws Exception {
         for (IGenerateCode iGenerateCode : this.generateCodeList) {
-//            generateSource = this.buildSource(entityClass, targetPackage);
+            if (!isModuleEnabled(iGenerateCode.getCodeType())) {
+                log.debug("跳过[{}]生成: 模块已禁用", iGenerateCode.getCodeType().name());
+                continue;
+            }
             try {
                 Template template = templateEngine.getTemplate(iGenerateCode.getTemplateName(generateSource) + ".btl");
                 generateSource.setTemplate(template);
                 if (generateSource.getBussinessGroup() != null) {
-                    //将业务范围加入模板
-                    generateSource.getData().put("bussinessEntityList", businessGroups.get(generateSource.getBussinessGroup().businessClass()));
+                    // 将业务范围加入模板（使用 Map 列表避免模板引擎对 Class 反射，兼容 Java 9+ 模块）
+                    List<Class<?>> entityClasses = businessGroups.get(generateSource.getBussinessGroup().businessClass());
+                    List<Map<String, String>> bussinessEntityList = new ArrayList<>();
+                    if (entityClasses != null) {
+                        for (Class<?> c : entityClasses) {
+                            Map<String, String> m = new HashMap<>();
+                            m.put("simpleName", c.getSimpleName());
+                            m.put("name", c.getName());
+                            bussinessEntityList.add(m);
+                        }
+                    }
+                    generateSource.getData().put("bussinessEntityList", bussinessEntityList);
                 }
                 try {
                     iGenerateCode.pre(generateSource);
@@ -140,6 +173,28 @@ public class GenerateMasterData {
             }
         }
         return generateSource;
+    }
+
+    /**
+     * 按代码类型判断所属模块是否启用。mapper/mapperXml 属 mapper 模块，service/serviceImpl 属 service 模块，controller 属 controller 模块，business/businessImpl 属 business 模块。
+     */
+    private boolean isModuleEnabled(CodeType codeType) {
+        if (codeType == null) return false;
+        switch (codeType) {
+            case mapper:
+            case mapperXml:
+                return enableMapper;
+            case service:
+            case serviceImpl:
+                return enableService;
+            case controller:
+                return enableController;
+            case business:
+            case businessImpl:
+                return enableBusiness;
+            default:
+                return true;
+        }
     }
 
     public GenerateSource buildSource(Class<?> entityClass, String targetPackage) {

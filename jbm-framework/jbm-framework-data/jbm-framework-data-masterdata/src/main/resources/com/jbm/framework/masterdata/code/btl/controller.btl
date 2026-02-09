@@ -1,7 +1,7 @@
-package ${basePackage}.controller;
+package ${codePackage};
 
-import ${entityClass.name};
-import ${basePackage}.service.${entityClass.simpleName}Service;
+import ${entityClassName};
+import ${servicePackage}.${entityClassSimpleName}Service;
 import ${extClass};
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "${entityDesc}开放接口")
 @RestController
 @RequestMapping("/${entityFieldName}")
-public class ${entityClass.simpleName}Controller extends ${extClassName}<${entityClass.simpleName}, ${entityClass.simpleName}Service> {
+public class ${entityClassSimpleName}Controller extends ${extClassName}<${entityClassSimpleName}, ${entityClassSimpleName}Service> {
 }

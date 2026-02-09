@@ -1,13 +1,13 @@
-package ${basePackage}.service;
+package ${codePackage};
 
-import ${entityClass.name};
+import ${entityClassName};
 import ${extClass};
 
 /**
  * @Author: auto generate by jbm
  * @Create: ${time}
  */
-public interface ${entityClass.simpleName}Service extends ${extClassName}<${entityClass.simpleName}> {
+public interface ${entityClassSimpleName}Service extends ${extClassName}<${entityClassSimpleName}> {
 
 
 }

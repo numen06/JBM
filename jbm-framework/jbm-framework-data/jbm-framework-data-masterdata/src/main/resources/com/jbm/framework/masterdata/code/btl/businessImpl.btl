@@ -3,12 +3,12 @@ package ${codePackage};
 import ${extClass};
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import ${basePackage}.business.${businessName}Business;
+import ${businessPackage}.${businessName}Business;
     <%
     for(entity in bussinessEntityList){
-    var name = @entity.getSimpleName() +"Service";
+    var name = entity.simpleName +"Service";
     %>
-import ${basePackage}.service.${name};
+import ${servicePackage}.${name};
     <%}%>
 
 /**
@@ -21,8 +21,8 @@ public class ${fileName} extends ${extClassName} implements ${businessName}Busin
 
     <%
     for(entity in bussinessEntityList){
-    var name = @entity.getSimpleName() +"Service";
-    var nameFeild = @cn.hutool.core.util.StrUtil.lowerFirst(@entity.getSimpleName() +"Service");
+    var name = entity.simpleName +"Service";
+    var nameFeild = @cn.hutool.core.util.StrUtil.lowerFirst(entity.simpleName +"Service");
     %>
     @Autowired
     private ${name} ${nameFeild};

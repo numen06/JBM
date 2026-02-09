@@ -14,6 +14,7 @@ import java.lang.annotation.*;
 @Documented
 @Import({AutoScanCodePackages.CodeRegistrar.class})
 public @interface EnableCodeAutoGeneate {
+
     /**
      * 需要生产实体的扫描包路径
      *
@@ -43,51 +44,83 @@ public @interface EnableCodeAutoGeneate {
     String targetPackage();
 
     /**
-     * 代码生成目录
-     *
-     * @return
+     * Mapper 模块配置（dao/mapper/mapperXml 的 module 与 packageBase），未配置时由平铺属性或 targetPackage 派生。
      */
-    String serviceModule() default "";
+    MapperConfig mapper() default @MapperConfig();
 
     /**
-     * 代码生成目录
-     *
-     * @return
+     * Service 模块配置（service/serviceImpl 的 module 与 packageBase）。
      */
-    String daoModule() default "";
+    ServiceConfig service() default @ServiceConfig();
 
     /**
-     * Mapper 接口输出模块路径（未配置时回退到 daoModule）
+     * Controller 模块配置（controller 的 module 与 packageBase）。
      */
-    String mapperModule() default "";
+    ControllerConfig controller() default @ControllerConfig();
 
     /**
-     * Mapper XML 输出模块路径（未配置时回退到 daoModule）
+     * Business 模块配置（business/businessImpl 的 module 与 packageBase）。
      */
-    String mapperXmlModule() default "";
+    BusinessConfig business() default @BusinessConfig();
 
     /**
-     * ServiceImpl 输出模块路径（未配置时回退到 serviceModule）
+     * 是否生成 Mapper 模块（mapper + mapperXml），默认 true。
      */
-    String serviceImplModule() default "";
+    boolean enableMapper() default true;
 
     /**
-     * Controller 输出模块路径（未配置时使用当前应用模块）
+     * 是否生成 Service 模块（service + serviceImpl），默认 true。
      */
-    String controllerModule() default "";
+    boolean enableService() default true;
 
     /**
-     * Business 接口输出模块路径（未配置时使用当前应用模块）
+     * 是否生成 Controller 模块，默认 true。
      */
-    String businessModule() default "";
+    boolean enableController() default true;
 
     /**
-     * BusinessImpl 输出模块路径（未配置时使用当前应用模块）
+     * 是否生成 Business 模块（business + businessImpl），默认 true。
      */
-    String businessImplModule() default "";
+    boolean enableBusiness() default true;
 
     /**
      * 排除包目录
      */
     String[] excludePackages() default {};
+
+    /**
+     * Mapper 模块独立配置，仅作用于 dao/mapper/mapperXml。
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface MapperConfig {
+        String module() default "";
+        String packageBase() default "";
+    }
+
+    /**
+     * Service 模块独立配置，仅作用于 service/serviceImpl。
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface ServiceConfig {
+        String module() default "";
+        String packageBase() default "";
+    }
+
+    /**
+     * Controller 模块独立配置。
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface ControllerConfig {
+        String module() default "";
+        String packageBase() default "";
+    }
+
+    /**
+     * Business 模块独立配置，仅作用于 business/businessImpl。
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface BusinessConfig {
+        String module() default "";
+        String packageBase() default "";
+    }
 }
