@@ -81,7 +81,11 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     public void subscribe() {
         // 防止 subscribe() 被多次调用，避免重复订阅
         if (subscribeCalled) {
-            log.warn("⚠️ subscribe() 已经被调用过，跳过重复订阅");
+            if (isUsingOnlySharedClient()) {
+                log.debug("subscribe() 已经被调用过，跳过重复订阅（使用默认共享客户端）");
+            } else {
+                log.warn("⚠️ subscribe() 已经被调用过，跳过重复订阅");
+            }
             return;
         }
         subscribeCalled = true;
@@ -170,10 +174,23 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     /**
-     * 获取或创建 MQTT 客户端（带缓存）
+     * 是否仅使用默认共享客户端（用于重复类提示降级）
+     */
+    private boolean isUsingOnlySharedClient() {
+        String sharedId = mqttPahoClientFactory.getSharedClientId();
+        return clientCache.size() == 1 && clientCache.containsKey(sharedId);
+    }
+
+    /**
+     * 获取或创建 MQTT 客户端（带缓存）。
+     * 默认共享 clientId 时复用 getClientInstance()，不重复申请带 tag 的客户端。
      */
     private SimpleMqttClient getOrCreateClient(String clientId) {
         return clientCache.computeIfAbsent(clientId, id -> {
+            if (id.equals(mqttPahoClientFactory.getSharedClientId())) {
+                log.debug("Using shared MQTT client");
+                return mqttPahoClientFactory.getClientInstance();
+            }
             log.info("🔌 Creating new MQTT client with ID: {}", id);
             return mqttPahoClientFactory.getAppClientInstance(id);
         });
@@ -182,7 +199,11 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     public void find() {
         // 防止重复调用 find()，避免重复注册订阅
         if (findCalled) {
-            log.debug("⚠️ find() 已经被调用过，跳过重复初始化");
+            if (isUsingOnlySharedClient()) {
+                log.debug("find() 已经被调用过，跳过重复初始化（使用默认共享客户端）");
+            } else {
+                log.debug("⚠️ find() 已经被调用过，跳过重复初始化");
+            }
             return;
         }
         findCalled = true;
@@ -234,8 +255,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
                         new RequiredBean(simpleMqttClient, mqttRequsetBean));
                 
                 if (existingBean != null) {
-                    log.warn("⚠️ Duplicate subscription detected for [{}].{} on topic [{}], skipping duplicate",
-                            bean.getClass().getSimpleName(), method.getName(), mqttRequsetBean.getRequestTopic());
+                    if (isUsingOnlySharedClient()) {
+                        log.debug("Duplicate subscription detected for [{}].{} on topic [{}], skipping duplicate (using default shared client)",
+                                bean.getClass().getSimpleName(), method.getName(), mqttRequsetBean.getRequestTopic());
+                    } else {
+                        log.warn("⚠️ Duplicate subscription detected for [{}].{} on topic [{}], skipping duplicate",
+                                bean.getClass().getSimpleName(), method.getName(), mqttRequsetBean.getRequestTopic());
+                    }
                 } else {
                     log.debug("✅ Registered subscription: [{}].{} -> {}", 
                             bean.getClass().getSimpleName(), method.getName(), mqttRequsetBean.getRequestTopic());
@@ -269,8 +295,13 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
         if (!subscribedKeys.add(subscriptionKey)) {
             String beanName = mqttRequsetBean.getBean().getClass().getSimpleName();
             String methodName = mqttRequsetBean.getMethod().getName();
-            log.warn("⚠️ subscribeMethod 已经被调用过，跳过重复订阅 - subscriptionKey: {}, Bean: {}, Method: {}", 
-                    subscriptionKey, beanName, methodName);
+            if (isUsingOnlySharedClient()) {
+                log.debug("subscribeMethod 已经被调用过，跳过重复订阅 - subscriptionKey: {}, Bean: {}, Method: {} (using default shared client)",
+                        subscriptionKey, beanName, methodName);
+            } else {
+                log.warn("⚠️ subscribeMethod 已经被调用过，跳过重复订阅 - subscriptionKey: {}, Bean: {}, Method: {}",
+                        subscriptionKey, beanName, methodName);
+            }
             return;
         }
         

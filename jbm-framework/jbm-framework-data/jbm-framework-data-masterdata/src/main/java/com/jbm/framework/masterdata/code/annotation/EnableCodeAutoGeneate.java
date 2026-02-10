@@ -64,26 +64,6 @@ public @interface EnableCodeAutoGeneate {
     BusinessConfig business() default @BusinessConfig();
 
     /**
-     * 是否生成 Mapper 模块（mapper + mapperXml），默认 true。
-     */
-    boolean enableMapper() default true;
-
-    /**
-     * 是否生成 Service 模块（service + serviceImpl），默认 true。
-     */
-    boolean enableService() default true;
-
-    /**
-     * 是否生成 Controller 模块，默认 true。
-     */
-    boolean enableController() default true;
-
-    /**
-     * 是否生成 Business 模块（business + businessImpl），默认 true。
-     */
-    boolean enableBusiness() default true;
-
-    /**
      * 排除包目录
      */
     String[] excludePackages() default {};
@@ -96,10 +76,11 @@ public @interface EnableCodeAutoGeneate {
         String module() default "";
         String packageBase() default "";
         /**
-         * Mapper XML 的 namespace 包名，不随 packageBase 变化；为空时使用 mapper 包名。
-         * XML 始终生成到 resources/mapper（扁平），不按包路径建子目录。
+         * Mapper XML 输出目录名（相对 resources 下），如 test、mapper；为空时使用 mapper。
          */
-        String mapperXmlPackage() default "";
+        String mapperXmlDir() default "";
+        /** 是否生成 Mapper 模块（mapper + mapperXml），默认 true */
+        boolean enabled() default true;
     }
 
     /**
@@ -109,6 +90,8 @@ public @interface EnableCodeAutoGeneate {
     @interface ServiceConfig {
         String module() default "";
         String packageBase() default "";
+        /** 是否生成 Service 模块（service + serviceImpl），默认 true */
+        boolean enabled() default true;
     }
 
     /**
@@ -118,6 +101,8 @@ public @interface EnableCodeAutoGeneate {
     @interface ControllerConfig {
         String module() default "";
         String packageBase() default "";
+        /** 是否生成 Controller 模块，默认 true */
+        boolean enabled() default true;
     }
 
     /**
@@ -127,5 +112,7 @@ public @interface EnableCodeAutoGeneate {
     @interface BusinessConfig {
         String module() default "";
         String packageBase() default "";
+        /** 是否生成 Business 模块（business + businessImpl），默认 true */
+        boolean enabled() default true;
     }
 }

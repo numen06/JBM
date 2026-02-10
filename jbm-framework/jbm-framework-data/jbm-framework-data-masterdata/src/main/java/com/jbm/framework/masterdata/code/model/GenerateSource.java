@@ -93,9 +93,9 @@ public class GenerateSource {
     private String mapperPackage;
 
     /**
-     * Mapper XML 的 namespace 包名，不随 packageBase 变化；未配置时回退到 mapperPackage。
+     * Mapper XML 输出目录名（相对 resources 下），如 test、mapper；未配置时使用 mapper。
      */
-    private String mapperXmlPackage;
+    private String mapperXmlDir;
 
     /**
      * Service 层 Java 包名（未配置时回退 targetPackage + ".service"）
@@ -164,7 +164,7 @@ public class GenerateSource {
 
     /**
      * 按代码类型解析 Java 包名。未配置 *Package 时回退为 targetPackage + 类型对应路径段（与 BaseGenerateCodeImpl 路径一致）。
-     * mapperXml 优先使用 mapperXmlPackage，未配置时回退到 mapperPackage；serviceImpl 在 servicePackage 下加 impl 子包；businessImpl 回退到 businessPackage。
+     * mapperXml 的 namespace 使用 mapperPackage；serviceImpl 在 servicePackage 下加 impl 子包；businessImpl 回退到 businessPackage。
      */
     public String getPackageFor(CodeType codeType) {
         if (codeType == null || StrUtil.isBlank(targetPackage)) {
@@ -177,10 +177,7 @@ public class GenerateSource {
                 configured = StrUtil.trimToNull(mapperPackage);
                 break;
             case mapperXml:
-                configured = StrUtil.trimToNull(mapperXmlPackage);
-                if (configured == null) {
-                    configured = StrUtil.trimToNull(mapperPackage);
-                }
+                configured = StrUtil.trimToNull(mapperPackage);
                 break;
             case service:
                 configured = StrUtil.trimToNull(servicePackage);

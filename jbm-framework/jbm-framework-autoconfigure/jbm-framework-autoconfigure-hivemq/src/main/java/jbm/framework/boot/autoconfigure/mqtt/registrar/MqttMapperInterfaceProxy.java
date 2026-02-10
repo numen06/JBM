@@ -40,7 +40,7 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
         if (StrUtil.isNotBlank(mqttMapper.clientId())) {
             return mqttMapper.clientId();
         }
-        return mqttMapperInterface.getSimpleName() ;
+        return mqttPahoClientFactory.getSharedClientId();
     }
 
     @Override
@@ -48,7 +48,10 @@ public class MqttMapperInterfaceProxy<T> implements InvocationHandler, Serializa
         if (this.mqttMapperInterface.isAnnotationPresent(MqttMapper.class)) {
             // 读取类上注解
             MqttMapper mqttMapper = this.mqttMapperInterface.getAnnotation(MqttMapper.class);
-            SimpleMqttClient simpleMqttClient = mqttPahoClientFactory.getAppClientInstance(getMqttClientId(mqttMapper, this.mqttMapperInterface));
+            String clientId = getMqttClientId(mqttMapper, this.mqttMapperInterface);
+            SimpleMqttClient simpleMqttClient = clientId.equals(mqttPahoClientFactory.getSharedClientId())
+                    ? mqttPahoClientFactory.getClientInstance()
+                    : mqttPahoClientFactory.getAppClientInstance(clientId);
             if (method.isAnnotationPresent(MqttSend.class)) {
                 // 读取方法上注解
                 MqttSend methodAnnotation = method.getAnnotation(MqttSend.class);

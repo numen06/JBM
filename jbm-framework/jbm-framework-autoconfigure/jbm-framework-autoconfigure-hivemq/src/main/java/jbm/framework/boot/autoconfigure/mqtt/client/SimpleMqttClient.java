@@ -134,15 +134,14 @@ public class SimpleMqttClient {
                             return;
                         }
                         
-                        log.info("🔄 Some subscriptions need recovery, will restore {} subscriptions after delay", subscriptions.size());
-                        // 延迟2秒后恢复订阅，确保连接稳定（弱网环境需要更长时间）
+                        log.info("🔄 Some subscriptions need recovery, restoring {} subscriptions to avoid 'No publish flow registered'", subscriptions.size());
+                        // 尽量立即恢复订阅（100ms），减少重连后消息先于 flow 到达导致的 "No publish flow registered" 窗口
                         healthCheckScheduler.schedule(() -> {
                             try {
                                 restoreSubscriptions();
                                 log.info("✅ Subscriptions recovery completed");
                             } catch (Exception e) {
                                 log.error("❌ Error restoring subscriptions", e);
-                                // 失败后再次尝试
                                 healthCheckScheduler.schedule(() -> {
                                     try {
                                         restoreSubscriptions();
@@ -152,7 +151,7 @@ public class SimpleMqttClient {
                                     }
                                 }, 5, TimeUnit.SECONDS);
                             }
-                        }, 2000, TimeUnit.MILLISECONDS);
+                        }, 100, TimeUnit.MILLISECONDS);
                     }
                 }
                 

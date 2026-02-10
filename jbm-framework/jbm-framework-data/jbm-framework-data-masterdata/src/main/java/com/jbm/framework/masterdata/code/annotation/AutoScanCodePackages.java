@@ -81,6 +81,7 @@ public class AutoScanCodePackages {
             effective.remove("service");
             effective.remove("controller");
             effective.remove("business");
+            effective.put("codeGenApplicationClass", metadata.getClassName());
             gnerate(registry, effective, getPackagesToScan(metadata));
         }
 
@@ -96,9 +97,10 @@ public class AutoScanCodePackages {
             Object obj = raw != null ? raw.get("mapper") : null;
             if (!(obj instanceof AnnotationAttributes)) return;
             AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableMapper", a.getBoolean("enabled"));
             String module = a.getString("module");
             String packageBase = a.getString("packageBase");
-            String mapperXmlPackage = a.getString("mapperXmlPackage");
+            String mapperXmlDir = a.getString("mapperXmlDir");
             if (StringUtils.hasText(module)) {
                 putIfBlank(effective, "daoModule", module);
                 putIfBlank(effective, "mapperModule", module);
@@ -107,8 +109,8 @@ public class AutoScanCodePackages {
             if (StringUtils.hasText(packageBase)) {
                 putIfBlank(effective, "mapperPackage", packageBase + ".mapper");
             }
-            if (StringUtils.hasText(mapperXmlPackage)) {
-                putIfBlank(effective, "mapperXmlPackage", mapperXmlPackage);
+            if (StringUtils.hasText(mapperXmlDir)) {
+                putIfBlank(effective, "mapperXmlDir", mapperXmlDir);
             }
         }
 
@@ -116,6 +118,7 @@ public class AutoScanCodePackages {
             Object obj = raw != null ? raw.get("service") : null;
             if (!(obj instanceof AnnotationAttributes)) return;
             AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableService", a.getBoolean("enabled"));
             String module = a.getString("module");
             String packageBase = a.getString("packageBase");
             if (StringUtils.hasText(module)) {
@@ -131,6 +134,7 @@ public class AutoScanCodePackages {
             Object obj = raw != null ? raw.get("controller") : null;
             if (!(obj instanceof AnnotationAttributes)) return;
             AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableController", a.getBoolean("enabled"));
             String module = a.getString("module");
             String packageBase = a.getString("packageBase");
             if (StringUtils.hasText(module)) {
@@ -145,6 +149,7 @@ public class AutoScanCodePackages {
             Object obj = raw != null ? raw.get("business") : null;
             if (!(obj instanceof AnnotationAttributes)) return;
             AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableBusiness", a.getBoolean("enabled"));
             String module = a.getString("module");
             String packageBase = a.getString("packageBase");
             if (StringUtils.hasText(module)) {
