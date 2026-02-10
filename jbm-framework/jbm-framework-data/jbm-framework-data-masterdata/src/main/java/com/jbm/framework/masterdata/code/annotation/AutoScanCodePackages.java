@@ -98,6 +98,7 @@ public class AutoScanCodePackages {
             AnnotationAttributes a = (AnnotationAttributes) obj;
             String module = a.getString("module");
             String packageBase = a.getString("packageBase");
+            String mapperXmlPackage = a.getString("mapperXmlPackage");
             if (StringUtils.hasText(module)) {
                 putIfBlank(effective, "daoModule", module);
                 putIfBlank(effective, "mapperModule", module);
@@ -105,6 +106,9 @@ public class AutoScanCodePackages {
             }
             if (StringUtils.hasText(packageBase)) {
                 putIfBlank(effective, "mapperPackage", packageBase + ".mapper");
+            }
+            if (StringUtils.hasText(mapperXmlPackage)) {
+                putIfBlank(effective, "mapperXmlPackage", mapperXmlPackage);
             }
         }
 

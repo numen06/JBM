@@ -95,6 +95,11 @@ public @interface EnableCodeAutoGeneate {
     @interface MapperConfig {
         String module() default "";
         String packageBase() default "";
+        /**
+         * Mapper XML 的 namespace 包名，不随 packageBase 变化；为空时使用 mapper 包名。
+         * XML 始终生成到 resources/mapper（扁平），不按包路径建子目录。
+         */
+        String mapperXmlPackage() default "";
     }
 
     /**

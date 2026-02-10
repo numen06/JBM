@@ -59,6 +59,8 @@ public class GenerateMasterData {
 
     private String mapperPackage;
 
+    private String mapperXmlPackage;
+
     private String servicePackage;
 
     private String controllerPackage;
@@ -125,6 +127,7 @@ public class GenerateMasterData {
                 generateSource.setBusinessModule(StrUtil.trimToNull(businessModule));
                 generateSource.setBusinessImplModule(StrUtil.trimToNull(businessImplModule));
                 generateSource.setMapperPackage(StrUtil.trimToNull(mapperPackage));
+                generateSource.setMapperXmlPackage(StrUtil.trimToNull(mapperXmlPackage));
                 generateSource.setServicePackage(StrUtil.trimToNull(servicePackage));
                 generateSource.setControllerPackage(StrUtil.trimToNull(controllerPackage));
                 generateSource.setBusinessPackage(StrUtil.trimToNull(businessPackage));
