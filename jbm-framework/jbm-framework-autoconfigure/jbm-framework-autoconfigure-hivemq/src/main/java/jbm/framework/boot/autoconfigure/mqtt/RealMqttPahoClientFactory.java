@@ -204,5 +204,22 @@ public class RealMqttPahoClientFactory {
         });
         clientCache.clear();
     }
+    
+    /**
+     * 恢复所有缓存的客户端订阅（在 MQTT 连接成功后调用）
+     */
+    public void restoreAllSubscriptions() {
+        if (clientCache.isEmpty()) {
+            return;
+        }
+        log.info("🔄 Restoring subscriptions for {} MQTT clients from RealMqttPahoClientFactory", clientCache.size());
+        clientCache.values().forEach(client -> {
+            try {
+                client.restoreSubscriptions();
+            } catch (Exception e) {
+                log.error("❌ Failed to restore subscriptions for client", e);
+            }
+        });
+    }
 
 }

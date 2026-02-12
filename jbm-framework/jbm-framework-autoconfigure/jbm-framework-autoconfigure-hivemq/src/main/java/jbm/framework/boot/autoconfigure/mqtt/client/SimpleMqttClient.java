@@ -312,6 +312,7 @@ public class SimpleMqttClient {
         // 未连接时仅存储订阅，不立即执行 MQTT subscribe，避免 "No publish flow registered"
         // 连接成功后会通过 MqttConnectedEvent 触发 restoreSubscriptions 完成实际订阅
         if (!isConnected()) {
+            subscribingTopics.remove(topicFilter);  // defer 时未实际发起订阅，需移除，否则 restoreSubscriptions 时 doSubscribe 会跳过
             log.debug("Client not connected, deferring subscribe for topic: {} (will subscribe on connect)", topicFilter);
             return;
         }
