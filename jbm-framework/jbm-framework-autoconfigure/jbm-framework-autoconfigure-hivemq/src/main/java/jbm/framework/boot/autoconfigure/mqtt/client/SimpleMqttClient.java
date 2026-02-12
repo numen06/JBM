@@ -118,23 +118,9 @@ public class SimpleMqttClient {
                 // 检测到从断连到连接的状态变化，触发订阅恢复
                 if (currentlyConnected && !wasConnected) {
                     if (!subscriptions.isEmpty()) {
-                        log.info("🔄 Connection restored, checking if subscription recovery is needed ({} subscriptions)", subscriptions.size());
-                        // 检查是否需要恢复订阅（如果所有订阅都已经活跃，就不需要恢复）
-                        boolean needRestore = false;
-                        for (String topic : subscriptions.keySet()) {
-                            if (!successfullySubscribedTopics.contains(topic)) {
-                                needRestore = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!needRestore) {
-                            log.debug("🔄 All subscriptions already active, skipping restore");
-                            wasConnected = currentlyConnected;
-                            return;
-                        }
-                        
-                        log.info("🔄 Some subscriptions need recovery, restoring {} subscriptions to avoid 'No publish flow registered'", subscriptions.size());
+                        // 重连后 HiveMQ 客户端的 publish flow 会丢失，必须清空成功标记并强制重新订阅
+                        successfullySubscribedTopics.clear();
+                        log.info("🔄 Connection restored, restoring {} subscriptions to avoid 'No publish flow registered'", subscriptions.size());
                         // 尽量立即恢复订阅（100ms），减少重连后消息先于 flow 到达导致的 "No publish flow registered" 窗口
                         healthCheckScheduler.schedule(() -> {
                             try {
@@ -215,57 +201,10 @@ public class SimpleMqttClient {
         if (subscriptions.isEmpty()) {
             return;
         }
-        
-        // 检查是否已经成功订阅过（避免重复订阅）
-        // 如果会话没有过期，MQTT 服务器可能已经保存了订阅，不需要重新订阅
-        // 但如果会话过期了，需要重新订阅
-        boolean needRestore = false;
-        for (String topic : subscriptions.keySet()) {
-            if (!successfullySubscribedTopics.contains(topic)) {
-                needRestore = true;
-                break;
-            }
-        }
-        
-        if (!needRestore) {
-            if (log.isDebugEnabled()) {
-                log.debug("🔄 All subscriptions already active, skipping restore");
-            }
-            return;
-        }
-        
-        // 清空成功订阅标记，因为重连后需要重新订阅
+        // 重连后 HiveMQ 的 publish flow 会丢失，必须清空并重新订阅；MqttConnectedEvent 触发时同样需要
         successfullySubscribedTopics.clear();
-        
         log.info("🔄 Restoring {} subscriptions", subscriptions.size());
-        
-        subscriptions.forEach((topicFilter, wrapper) -> {
-            // 如果正在订阅中，跳过（防止并发）
-            if (!subscribingTopics.add(topicFilter)) {
-                log.warn("⚠️ Topic: {} 正在订阅中，跳过恢复订阅", topicFilter);
-                return;
-            }
-            
-            mqttClient.subscribeWith()
-                    .topicFilter(topicFilter)
-                    .qos(MqttQos.AT_LEAST_ONCE)
-                    .callback(wrapper)
-                    .send()
-                    .whenComplete((subAck, throwable) -> {
-                        // 无论成功或失败，都从"订阅中"集合中移除
-                        subscribingTopics.remove(topicFilter);
-                        
-                        if (throwable != null) {
-                            log.warn("⚠️ Failed to restore subscription for topic {}, will retry", topicFilter);
-                            // 订阅失败后重试
-                            scheduleRetrySubscription(topicFilter, wrapper, 1);
-                        } else {
-                            // 恢复订阅成功，标记为已成功订阅
-                            successfullySubscribedTopics.add(topicFilter);
-                            log.info("✅ Restored subscription: {}", topicFilter);
-                        }
-                    });
-        });
+        subscriptions.forEach((topicFilter, wrapper) -> doSubscribe(topicFilter, wrapper));
     }
     
     /**
@@ -369,26 +308,39 @@ public class SimpleMqttClient {
         // 保存订阅信息用于重连恢复（使用包装器）
         MutableListenerWrapper wrapper = new MutableListenerWrapper(messageListener);
         subscriptions.put(topicFilter, wrapper);
-        
+
+        // 未连接时仅存储订阅，不立即执行 MQTT subscribe，避免 "No publish flow registered"
+        // 连接成功后会通过 MqttConnectedEvent 触发 restoreSubscriptions 完成实际订阅
+        if (!isConnected()) {
+            log.debug("Client not connected, deferring subscribe for topic: {} (will subscribe on connect)", topicFilter);
+            return;
+        }
+
         // 订阅主题并设置消息监听器（使用包装器，这样即使监听器更新，包装器引用不变）
+        doSubscribe(topicFilter, wrapper);
+    }
+
+    /**
+     * 执行实际的 MQTT 订阅
+     */
+    private void doSubscribe(String topicFilter, MutableListenerWrapper wrapper) {
+        if (!subscribingTopics.add(topicFilter)) {
+            log.debug("Topic: {} already subscribing, skip", topicFilter);
+            return;
+        }
         mqttClient.subscribeWith()
                 .topicFilter(topicFilter)
                 .qos(MqttQos.AT_LEAST_ONCE)
                 .callback(wrapper)
                 .send()
                 .whenComplete((subAck, throwable) -> {
-                    // 无论成功或失败，都从"订阅中"集合中移除
                     subscribingTopics.remove(topicFilter);
-                    
                     if (throwable != null) {
                         log.warn("订阅失败 - Topic: {}, 错误: {}", topicFilter, throwable.getMessage());
-                        // 订阅失败时，从成功订阅集合中移除（如果存在）
                         successfullySubscribedTopics.remove(topicFilter);
-                        // 订阅失败时启动重试机制
                         scheduleRetrySubscription(topicFilter, wrapper, 1);
                         return;
                     }
-                    // 订阅成功，标记为已成功订阅
                     successfullySubscribedTopics.add(topicFilter);
                     log.info("✅ 订阅成功 - Topic: {}", topicFilter);
                 });

@@ -12,8 +12,11 @@ import com.jbm.framework.dictionary.annotation.JbmDicValue;
 import lombok.Data;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>>> {
 
@@ -35,6 +38,11 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
 
 
     private final static String TYPE_NAME_FIELD = "typeName";
+
+    /**
+     * java.lang.Enum 内部字段，反射无法访问（Java 9+ 模块限制），需跳过或使用公共 API
+     */
+    private static final Set<String> ENUM_INTERNAL_FIELDS = new HashSet<>(Arrays.asList("ordinal", "hash"));
 
     @Override
     public List<JbmDictionary> convert(Class<? extends Enum<?>> emClass) {
@@ -59,6 +67,9 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
             putCodeValue(jsonObject, keys, e);
             for (String field : fields) {
                 if (CollectionUtil.contains(keys.values(), field)) {
+                    continue;
+                }
+                if (ENUM_INTERNAL_FIELDS.contains(field)) {
                     continue;
                 }
                 jsonObject.put(field, getFieldValueSafely(e, field));
@@ -107,7 +118,7 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
 
     /**
      * 安全地获取枚举字段值，避免 Java 9+ 模块系统限制
-     * 当字段名为 "name" 时，使用 name() 方法代替反射访问
+     * 对 java.lang.Enum 内部字段使用公共 API 代替反射，反射失败时返回 null
      *
      * @param e     枚举实例
      * @param field 字段名
@@ -118,7 +129,19 @@ public class EnumTypeConverter implements ITypeConverter<Class<? extends Enum<?>
         if ("name".equals(field)) {
             return e.name();
         }
-        return ReflectUtil.getFieldValue(e, field);
+        // ordinal 使用公共 API
+        if ("ordinal".equals(field)) {
+            return e.ordinal();
+        }
+        // hash 为 Enum 内部实现字段，跳过
+        if ("hash".equals(field)) {
+            return null;
+        }
+        try {
+            return ReflectUtil.getFieldValue(e, field);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public Map<String, String> parseCodeAnnotation(Class<? extends Enum<?>> emClass, List<String> fields) {

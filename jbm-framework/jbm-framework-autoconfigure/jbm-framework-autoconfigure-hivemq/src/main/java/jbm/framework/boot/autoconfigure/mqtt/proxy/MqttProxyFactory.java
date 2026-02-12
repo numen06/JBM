@@ -12,6 +12,7 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttMapper;
 import jbm.framework.boot.autoconfigure.mqtt.annotation.MqttRequest;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
+import jbm.framework.boot.autoconfigure.mqtt.event.MqttConnectedEvent;
 import jbm.framework.boot.autoconfigure.mqtt.event.MqttMapperSubscribeEvent;
 import jbm.framework.boot.autoconfigure.mqtt.useage.MqttRequsetBean;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author wesley
  */
 @Slf4j
-public class MqttProxyFactory implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
+public class MqttProxyFactory implements InitializingBean, ApplicationListener<org.springframework.context.ApplicationEvent> {
 
 
     private final ApplicationContext applicationContext;
@@ -65,13 +66,21 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<A
     }
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        try {
-            subscribe();
-            applicationContext.publishEvent(new MqttMapperSubscribeEvent(mqttPahoClientFactory));
-            log.info("✅ MQTT Mapper subscriptions initialized successfully, {} subscriptions registered", subscriptionMap.size());
-        } catch (Exception e) {
-            log.error("❌ Failed to initialize MQTT subscriptions", e);
+    public void onApplicationEvent(org.springframework.context.ApplicationEvent event) {
+        if (event instanceof ApplicationReadyEvent) {
+            try {
+                subscribe();
+                applicationContext.publishEvent(new MqttMapperSubscribeEvent(mqttPahoClientFactory));
+                log.info("✅ MQTT Mapper subscriptions initialized successfully, {} subscriptions registered", subscriptionMap.size());
+            } catch (Exception e) {
+                log.error("❌ Failed to initialize MQTT subscriptions", e);
+            }
+        } else if (event instanceof MqttConnectedEvent) {
+            try {
+                restoreAllSubscriptions();
+            } catch (Exception e) {
+                log.error("❌ Failed to restore subscriptions on MQTT connected", e);
+            }
         }
     }
 

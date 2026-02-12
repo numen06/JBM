@@ -27,11 +27,13 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
+import jbm.framework.boot.autoconfigure.mqtt.event.MqttConnectedEvent;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.KeyManagerFactoryCreationException;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.TrustManagerFactoryCreationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanInstantiationException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.lang.Nullable;
 
 import java.util.Objects;
@@ -45,6 +47,16 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public final class Mqtt5ClientFactory implements IMqttClientFactory {
+
+    private final ApplicationContext applicationContext;
+
+    public Mqtt5ClientFactory() {
+        this.applicationContext = null;
+    }
+
+    public Mqtt5ClientFactory(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * Creates a new instance of a {@link Mqtt5AsyncClient} with the given configuration.
@@ -116,10 +128,17 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
 
         final Mqtt5AsyncClient client = clientBuilder
                 .addConnectedListener(connectedEvent -> {
-                    // 只在 DEBUG 级别记录连接成功，减少日志量
                     if (log.isDebugEnabled()) {
                         log.debug("✅ Connected to MQTT5 Client:{}", 
                                 connectedEvent.getClientConfig().getClientIdentifier());
+                    }
+                    // 连接成功后立即发布事件，触发订阅恢复，避免 "No publish flow registered"
+                    if (applicationContext != null) {
+                        try {
+                            applicationContext.publishEvent(new MqttConnectedEvent(Mqtt5ClientFactory.this));
+                        } catch (Exception e) {
+                            log.warn("Failed to publish MqttConnectedEvent: {}", e.getMessage());
+                        }
                     }
                 }).addDisconnectedListener(disconnectedEvent -> {
                     Throwable cause = disconnectedEvent.getCause();

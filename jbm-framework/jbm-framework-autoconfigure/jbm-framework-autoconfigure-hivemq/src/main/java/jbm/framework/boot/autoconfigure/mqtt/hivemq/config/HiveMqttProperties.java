@@ -51,7 +51,11 @@ public class HiveMqttProperties {
     private WillMessageProperties willMessage = null;
     private SslProperties sslProperties = null;
     private boolean cleanSession = Mqtt3Connect.DEFAULT_CLEAN_SESSION;
-    private boolean cleanStart = false; // 优化：不清除会话，保持订阅和消息
+    /**
+     * 默认 true：每次连接使用全新会话，避免 Broker 在订阅完成前推送会话恢复消息导致 "No publish flow registered"。
+     * 若需离线消息缓冲，可配置 spring.mqtt.clean-start=false。
+     */
+    private boolean cleanStart = true;
     private Long sessionExpiryInterval = 86400L; // 优化：会话保持24小时（支持长时间断连）
     private Integer receiveMaximum = Mqtt5ConnectRestrictions.DEFAULT_RECEIVE_MAXIMUM;
     private Integer maximumPacketSize = Mqtt5ConnectRestrictions.DEFAULT_MAXIMUM_PACKET_SIZE;

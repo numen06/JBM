@@ -44,9 +44,11 @@ public class MqttAutoConfiguration {
     private Environment environment;
 
     @Bean
-    public RealMqttPahoClientFactory realMqttPahoClientFactory(final Mqtt5ClientFactory clientFactory) {
+    public RealMqttPahoClientFactory realMqttPahoClientFactory(
+            final Mqtt5ClientFactory clientFactory,
+            @Autowired(required = false) Mqtt5AsyncClient mqtt5AsyncClient) {
         mqttProperties.setAutomaticReconnect(true);
-        return new RealMqttPahoClientFactory(clientFactory, mqttProperties, environment);
+        return new RealMqttPahoClientFactory(clientFactory, mqttProperties, environment, mqtt5AsyncClient);
     }
 
     @Bean
@@ -57,7 +59,7 @@ public class MqttAutoConfiguration {
     @Bean
     @ConditionalOnProperty(name = "spring.mqtt.mqtt-version", havingValue = "5", matchIfMissing = true)
     public Mqtt5ClientFactory mqtt5ClientFactory() {
-        return new Mqtt5ClientFactory();
+        return new Mqtt5ClientFactory(applicationContext);
     }
 
     @Bean(destroyMethod = "disconnect")
@@ -68,10 +70,11 @@ public class MqttAutoConfiguration {
             throw new BeanCreationException("Mqtt5AsyncClient is not available for MQTT version 5. Use Mqtt3AsyncClient instead.");
         }
         mqttProperties.setAutomaticReconnect(true);
-        // 未配置 client-id 时默认使用 spring.application.name，保证一个程序一个客户端
+        // 未配置 client-id 时默认使用 spring.application.name + 实例后缀（IP 或随机码），防止多实例冲突
         if (StrUtil.isBlank(mqttProperties.getClientId())) {
             String appName = applicationContext.getEnvironment().getProperty("spring.application.name");
-            String defaultClientId = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            String base = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            String defaultClientId = base + "-" + RealMqttPahoClientFactory.generateInstanceSuffix();
             mqttProperties.setClientId(defaultClientId);
             log.info("MQTT client-id not configured, using: {}", defaultClientId);
         }
@@ -106,9 +109,11 @@ public class MqttAutoConfiguration {
             throw new BeanCreationException("Mqtt3AsyncClient is not available for MQTT version 5. Use Mqtt5AsyncClient instead.");
         }
         mqttProperties.setAutomaticReconnect(true);
+        // 未配置 client-id 时默认使用 spring.application.name + 实例后缀（IP 或随机码），防止多实例冲突
         if (StrUtil.isBlank(mqttProperties.getClientId())) {
             String appName = applicationContext.getEnvironment().getProperty("spring.application.name");
-            String defaultClientId = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            String base = StrUtil.isNotBlank(appName) ? appName : "default-mqtt-client";
+            String defaultClientId = base + "-" + RealMqttPahoClientFactory.generateInstanceSuffix();
             mqttProperties.setClientId(defaultClientId);
             log.info("MQTT client-id not configured, using: {}", defaultClientId);
         }
