@@ -114,7 +114,7 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<o
      * 恢复所有客户端的订阅（在重连后调用）
      */
     public void restoreAllSubscriptions() {
-        log.info("🔄 Restoring subscriptions for {} MQTT clients from MqttProxyFactory", clientCache.size());
+        log.info("🔄 Restoring subscriptions for {} MQTT clients", clientCache.size());
         // 直接使用缓存的客户端，避免遍历 requiredBeans
         clientCache.values().forEach(client -> {
             try {
@@ -123,14 +123,6 @@ public class MqttProxyFactory implements InitializingBean, ApplicationListener<o
                 log.error("❌ Failed to restore subscriptions for client", e);
             }
         });
-        
-        // 同时恢复 RealMqttPahoClientFactory 缓存中的所有客户端订阅
-        // 这包括通过 getClientInstance() 直接获取的客户端（如 ThingModelTopicSubscriber）
-        try {
-            mqttPahoClientFactory.restoreAllSubscriptions();
-        } catch (Exception e) {
-            log.error("❌ Failed to restore subscriptions from RealMqttPahoClientFactory", e);
-        }
     }
 
     /**
