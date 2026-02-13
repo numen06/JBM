@@ -90,6 +90,9 @@ public class SimpleMqttClient {
     // 记录上一次的连接状态
     private volatile boolean wasConnected = false;
     
+    // 首次健康检查不触发 restore，避免将「首次连接」误判为「重连」
+    private volatile boolean hasCompletedFirstHealthCheck = false;
+    
     private final MqttRequestResponseManager requestResponseManager;
 
     public SimpleMqttClient(Mqtt5AsyncClient mqttClient, MqttProperties mqttProperties) {
@@ -115,6 +118,12 @@ public class SimpleMqttClient {
             try {
                 boolean currentlyConnected = isConnected();
                 
+                // 首次健康检查仅更新状态，不触发 restore（首次连接 ≠ 重连）
+                if (!hasCompletedFirstHealthCheck) {
+                    hasCompletedFirstHealthCheck = true;
+                    wasConnected = currentlyConnected;
+                    return;
+                }
                 // 检测到从断连到连接的状态变化，触发订阅恢复
                 if (currentlyConnected && !wasConnected) {
                     if (!subscriptions.isEmpty()) {
@@ -204,7 +213,7 @@ public class SimpleMqttClient {
         // 重连后 HiveMQ 的 publish flow 会丢失，必须清空并重新订阅；MqttConnectedEvent 触发时同样需要
         successfullySubscribedTopics.clear();
         log.info("🔄 Restoring {} subscriptions", subscriptions.size());
-        subscriptions.forEach((topicFilter, wrapper) -> doSubscribe(topicFilter, wrapper));
+        subscriptions.forEach((topicFilter, wrapper) -> doSubscribe(topicFilter, wrapper, null));
     }
     
     /**
@@ -254,79 +263,76 @@ public class SimpleMqttClient {
     }
 
     public void subscribe(String topicFilter, Consumer<Mqtt5Publish> messageListener) {
-        // 检查是否已经成功订阅过该 topic（防止重复订阅，即使监听器相同）
+        subscribeInternal(topicFilter, messageListener, null);
+    }
+
+    /**
+     * 订阅主题并阻塞直到收到 SUBACK 或超时，确保 publish flow 已注册后再发布消息
+     *
+     * @param topicFilter 主题过滤
+     * @param messageListener 消息回调
+     * @param timeout 超时时间
+     * @param unit 时间单位
+     * @return 订阅是否成功完成
+     */
+    public boolean subscribeAndWait(String topicFilter, Consumer<Mqtt5Publish> messageListener,
+                                    long timeout, TimeUnit unit) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        subscribeInternal(topicFilter, messageListener, future);
+        try {
+            future.get(timeout, unit);
+            return true;
+        } catch (TimeoutException e) {
+            log.warn("⏳ 订阅超时 - Topic: {}", topicFilter);
+            return false;
+        } catch (Exception e) {
+            log.warn("❌ 订阅异常 - Topic: {}, 错误: {}", topicFilter, e.getMessage());
+            return false;
+        }
+    }
+
+    private void subscribeInternal(String topicFilter, Consumer<Mqtt5Publish> messageListener,
+                                   CompletableFuture<Void> onComplete) {
+        if (topicFilter == null || topicFilter.isEmpty()) {
+            throw new IllegalArgumentException("topicFilter must not be null or empty");
+        }
+        if (messageListener == null) {
+            throw new IllegalArgumentException("messageListener must not be null");
+        }
         if (successfullySubscribedTopics.contains(topicFilter)) {
             MutableListenerWrapper existingWrapper = subscriptions.get(topicFilter);
-            if (existingWrapper != null) {
-                Consumer<Mqtt5Publish> existingListener = existingWrapper.getDelegate();
-                // 如果监听器不同，直接更新包装器内的监听器引用（无需取消订阅）
-                if (existingListener != messageListener) {
-                    log.debug("⚠️ Topic: {} 已订阅，监听器不同，更新监听器引用（无需取消订阅）", topicFilter);
-                    existingWrapper.setDelegate(messageListener);
-                    // 同时更新 subscriptions map 中的包装器（虽然引用相同，但确保一致性）
-                    subscriptions.put(topicFilter, existingWrapper);
-                } else {
-                    log.debug("Topic: {} 已订阅，跳过重复订阅", topicFilter);
-                }
-            } else {
-                // 包装器不存在，创建新的包装器并更新
-                log.debug("⚠️ Topic: {} 已订阅但包装器丢失，创建新包装器", topicFilter);
+            if (existingWrapper != null && existingWrapper.getDelegate() != messageListener) {
+                existingWrapper.setDelegate(messageListener);
+            } else if (existingWrapper == null) {
                 subscriptions.put(topicFilter, new MutableListenerWrapper(messageListener));
             }
+            if (onComplete != null) onComplete.complete(null);
             return;
         }
-        
-        // 检查是否正在取消订阅中（如果正在取消订阅，等待完成后再订阅）
         if (unsubscribingTopics.contains(topicFilter)) {
-            log.debug("⚠️ Topic: {} 正在取消订阅中，等待完成后重新订阅", topicFilter);
-            // 更新监听器引用，等待取消订阅完成后会重新订阅
             subscriptions.put(topicFilter, new MutableListenerWrapper(messageListener));
-            // 延迟后重试订阅
-            healthCheckScheduler.schedule(() -> {
-                subscribe(topicFilter, messageListener);
-            }, 200, TimeUnit.MILLISECONDS);
+            healthCheckScheduler.schedule(() -> subscribeInternal(topicFilter, messageListener, onComplete),
+                    200, TimeUnit.MILLISECONDS);
             return;
         }
-        
-        // 检查是否正在订阅中（防止并发订阅）
-        if (!subscribingTopics.add(topicFilter)) {
-            log.warn("⚠️ Topic: {} 正在订阅中，跳过重复订阅（并发订阅防护）", topicFilter);
-            // 如果监听器不同，更新监听器引用（当前订阅完成后，下次重连时会使用新监听器）
-            MutableListenerWrapper existingWrapper = subscriptions.get(topicFilter);
-            if (existingWrapper != null) {
-                Consumer<Mqtt5Publish> existingListener = existingWrapper.getDelegate();
-                if (existingListener != messageListener) {
-                    log.debug("⚠️ Topic: {} 订阅进行中，监听器不同，更新监听器引用（将在订阅完成后生效）", topicFilter);
-                    existingWrapper.setDelegate(messageListener);
-                }
-            } else {
-                subscriptions.put(topicFilter, new MutableListenerWrapper(messageListener));
-            }
-            return;
-        }
-        
-        // 保存订阅信息用于重连恢复（使用包装器）
         MutableListenerWrapper wrapper = new MutableListenerWrapper(messageListener);
         subscriptions.put(topicFilter, wrapper);
-
-        // 未连接时仅存储订阅，不立即执行 MQTT subscribe，避免 "No publish flow registered"
-        // 连接成功后会通过 MqttConnectedEvent 触发 restoreSubscriptions 完成实际订阅
         if (!isConnected()) {
-            subscribingTopics.remove(topicFilter);  // defer 时未实际发起订阅，需移除，否则 restoreSubscriptions 时 doSubscribe 会跳过
-            log.debug("Client not connected, deferring subscribe for topic: {} (will subscribe on connect)", topicFilter);
+            subscribingTopics.remove(topicFilter);
+            if (onComplete != null) onComplete.completeExceptionally(new IllegalStateException("Client not connected"));
             return;
         }
-
-        // 订阅主题并设置消息监听器（使用包装器，这样即使监听器更新，包装器引用不变）
-        doSubscribe(topicFilter, wrapper);
+        doSubscribe(topicFilter, wrapper, onComplete);
     }
 
     /**
      * 执行实际的 MQTT 订阅
      */
-    private void doSubscribe(String topicFilter, MutableListenerWrapper wrapper) {
+    private void doSubscribe(String topicFilter, MutableListenerWrapper wrapper,
+                             CompletableFuture<Void> onComplete) {
         if (!subscribingTopics.add(topicFilter)) {
             log.debug("Topic: {} already subscribing, skip", topicFilter);
+            if (onComplete != null) onComplete.complete(null);
             return;
         }
         mqttClient.subscribeWith()
@@ -340,10 +346,12 @@ public class SimpleMqttClient {
                         log.warn("订阅失败 - Topic: {}, 错误: {}", topicFilter, throwable.getMessage());
                         successfullySubscribedTopics.remove(topicFilter);
                         scheduleRetrySubscription(topicFilter, wrapper, 1);
+                        if (onComplete != null) onComplete.completeExceptionally(throwable);
                         return;
                     }
                     successfullySubscribedTopics.add(topicFilter);
                     log.info("✅ 订阅成功 - Topic: {}", topicFilter);
+                    if (onComplete != null) onComplete.complete(null);
                 });
     }
 

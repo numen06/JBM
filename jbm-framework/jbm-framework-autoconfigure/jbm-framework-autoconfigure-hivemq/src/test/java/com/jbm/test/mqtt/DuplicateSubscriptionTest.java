@@ -1,6 +1,7 @@
 package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import com.jbm.test.mqtt.proxy.impl.MqttExecuteImpl;
 import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,6 +42,17 @@ public class DuplicateSubscriptionTest {
     @Autowired
     private RealMqttPahoClientFactory mqttPahoClientFactory;
 
+    /** 等待连接并订阅完成（确保 publish flow 已注册） */
+    private void subscribeReady(SimpleMqttClient client, String topic, Consumer<Mqtt5Publish> handler) throws Exception {
+        int retries = 0;
+        while (!client.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        assertTrue(client.isConnected(), "客户端应已连接");
+        assertTrue(client.subscribeAndWait(topic, handler, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
+    }
+
     /**
      * 测试场景1: 同一客户端重复订阅同一主题
      * 预期结果: 只会订阅一次，消息不会被重复处理
@@ -54,13 +67,11 @@ public class DuplicateSubscriptionTest {
         
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance(clientId);
         
-        // 第一次订阅
-        client.subscribe(testTopic, publish -> {
+        // 第一次订阅（等待 SUBACK 完成）
+        subscribeReady(client, testTopic, publish -> {
             int count = messageCount.incrementAndGet();
             log.info("📨 [订阅1] 接收到消息 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(200);
         
         // 尝试重复订阅（应该被忽略或覆盖）
         client.subscribe(testTopic, publish -> {
@@ -68,15 +79,12 @@ public class DuplicateSubscriptionTest {
             log.info("📨 [订阅2] 接收到消息 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
         
-        ThreadUtil.sleep(200);
-        
-        // 再次尝试订阅
         client.subscribe(testTopic, publish -> {
             int count = messageCount.incrementAndGet();
             log.info("📨 [订阅3] 接收到消息 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
         
-        ThreadUtil.sleep(500);
+        ThreadUtil.sleep(200);
         
         // 发送一条测试消息
         client.publishObject(testTopic, "测试消息-场景1");
@@ -110,22 +118,18 @@ public class DuplicateSubscriptionTest {
         SimpleMqttClient client3 = mqttPahoClientFactory.getAppClientInstance("client-3");
         
         // 三个不同的客户端订阅同一主题
-        client1.subscribe(testTopic, publish -> {
+        subscribeReady(client1, testTopic, publish -> {
             client1Count.incrementAndGet();
             log.info("📨 Client1 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        
-        client2.subscribe(testTopic, publish -> {
+        subscribeReady(client2, testTopic, publish -> {
             client2Count.incrementAndGet();
             log.info("📨 Client2 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        
-        client3.subscribe(testTopic, publish -> {
+        subscribeReady(client3, testTopic, publish -> {
             client3Count.incrementAndGet();
             log.info("📨 Client3 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送消息
         client1.publishObject(testTopic, "广播消息-场景2");
@@ -155,14 +159,12 @@ public class DuplicateSubscriptionTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance(clientId);
         
         // 订阅通配符主题
-        client.subscribe("/test/wildcard/#", publish -> {
+        subscribeReady(client, "/test/wildcard/#", publish -> {
             messageCount.incrementAndGet();
             log.info("📨 接收到消息: {} -> {}", 
                     publish.getTopic(), 
                     new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送多条消息到不同的子主题
         client.publishObject("/test/wildcard/sub1", "消息1");
@@ -223,7 +225,7 @@ public class DuplicateSubscriptionTest {
             new Thread(() -> {
                 try {
                     startLatch.await();
-                    client.subscribe(testTopic, publish -> {
+                    subscribeReady(client, testTopic, publish -> {
                         int count = messageCount.incrementAndGet();
                         log.info("📨 [线程{}] 接收消息 #{}: {}", 
                                 threadId, count, new String(publish.getPayloadAsBytes()));
@@ -241,10 +243,8 @@ public class DuplicateSubscriptionTest {
         startLatch.countDown();
         
         // 等待所有订阅完成
-        boolean finished = endLatch.await(5, TimeUnit.SECONDS);
+        boolean finished = endLatch.await(15, TimeUnit.SECONDS);
         assertTrue(finished, "所有线程应该在超时前完成订阅");
-        
-        ThreadUtil.sleep(500);
         
         // 发送一条测试消息
         client.publishObject(testTopic, "并发测试消息");
@@ -308,19 +308,20 @@ public class DuplicateSubscriptionTest {
         
         long startTime = System.currentTimeMillis();
         
-        // 执行1000次重复订阅
-        for (int i = 0; i < 1000; i++) {
-            final int index = i;
+        // 第一次订阅需等待完成，后续重复订阅仅更新监听器
+        subscribeReady(client, testTopic, publish -> {
+            messageCount.incrementAndGet();
+            log.debug("📨 接收: {}", new String(publish.getPayloadAsBytes()));
+        });
+        for (int i = 1; i < 1000; i++) {
             client.subscribe(testTopic, publish -> {
                 messageCount.incrementAndGet();
-                log.debug("📨 [订阅{}] 接收: {}", index, new String(publish.getPayloadAsBytes()));
+                log.debug("📨 接收: {}", new String(publish.getPayloadAsBytes()));
             });
         }
         
         long endTime = System.currentTimeMillis();
         log.info("⏱️ 1000次订阅耗时: {}ms", (endTime - startTime));
-        
-        ThreadUtil.sleep(500);
         
         // 发送一条测试消息
         client.publishObject(testTopic, "压力测试消息");
@@ -349,11 +350,10 @@ public class DuplicateSubscriptionTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance(clientId);
         
         // 第1次订阅
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             messageCount.incrementAndGet();
             log.info("📨 [第1次订阅] 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        ThreadUtil.sleep(200);
         
         // 发送消息1
         client.publishObject(testTopic, "消息1");
@@ -373,11 +373,10 @@ public class DuplicateSubscriptionTest {
         log.info("✅ 取消订阅后未收到新消息");
         
         // 重新订阅
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             messageCount.incrementAndGet();
             log.info("📨 [重新订阅] 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        ThreadUtil.sleep(200);
         
         // 发送消息3
         client.publishObject(testTopic, "消息3");

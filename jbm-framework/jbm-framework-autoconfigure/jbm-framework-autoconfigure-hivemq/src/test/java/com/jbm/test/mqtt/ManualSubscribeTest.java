@@ -15,6 +15,7 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +61,10 @@ public class ManualSubscribeTest {
         // 等待订阅完成（MQTT订阅是异步的，需要等待 SUBACK）
         // 从日志看，订阅成功后会有 "✅ 订阅成功 - Topic: {}" 日志
         // 但测试中无法直接检查，所以增加等待时间确保订阅完成
-        ThreadUtil.sleep(3000);
+        // 增加等待时间到5秒，确保订阅请求完成并收到 SUBACK
+        log.info("⏳ 等待订阅完成...");
+        ThreadUtil.sleep(5000);
+        log.info("✅ 等待完成，假设订阅已成功");
     }
 
     /**
@@ -75,8 +79,8 @@ public class ManualSubscribeTest {
         AtomicInteger receivedCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
         
-        // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-basic");
+        // 创建测试用的 MQTT 客户端（唯一 clientId 避免并发/顺序执行时的冲突）
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-basic-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待客户端连接稳定
@@ -92,18 +96,18 @@ public class ManualSubscribeTest {
         // 等待连接稳定
         ThreadUtil.sleep(1000);
         
-        // 手动订阅主题
+        // 手动订阅主题，并等待 SUBACK 完成（确保 publish flow 已注册后再发布）
         log.info("📡 手动订阅主题: {}", testTopic);
-        mqttClient.subscribe(testTopic, (Mqtt5Publish publish) -> {
+        log.info("🔍 订阅前 - 客户端连接状态: {}", mqttClient.isConnected());
+        boolean subscribed = mqttClient.subscribeAndWait(testTopic, (Mqtt5Publish publish) -> {
             int count = receivedCount.incrementAndGet();
             String message = new String(publish.getPayloadAsBytes());
             log.info("📨 收到第 {} 条消息 - Topic: {}, Message: {}", 
                     count, publish.getTopic(), message);
             latch.countDown();
-        });
-        
-        // 等待订阅完成（MQTT订阅是异步的，需要等待 SUBACK）
-        ThreadUtil.sleep(3000);
+        }, 10, TimeUnit.SECONDS);
+        assertTrue(subscribed, "订阅应在10秒内完成");
+        log.info("✅ 订阅已完成，publish flow 已注册");
         
         // 发送测试消息
         log.info("📤 发送测试消息到主题: {}", testTopic);
@@ -139,41 +143,31 @@ public class ManualSubscribeTest {
         CountDownLatch latch = new CountDownLatch(3);
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-multiple");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-multiple-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
         waitForConnection(mqttClient);
         
-        // 订阅第一个主题
+        // 订阅（并等待 SUBACK 完成）
         log.info("📡 订阅主题1: {}", topic1);
-        mqttClient.subscribe(topic1, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(topic1, (Mqtt5Publish publish) -> {
             topic1Count.incrementAndGet();
             log.info("📨 主题1收到消息: {}", new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 订阅第二个主题
+        }, 10, TimeUnit.SECONDS), "主题1订阅应在10秒内完成");
         log.info("📡 订阅主题2: {}", topic2);
-        mqttClient.subscribe(topic2, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(topic2, (Mqtt5Publish publish) -> {
             topic2Count.incrementAndGet();
             log.info("📨 主题2收到消息: {}", new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 订阅第三个主题
+        }, 10, TimeUnit.SECONDS), "主题2订阅应在10秒内完成");
         log.info("📡 订阅主题3: {}", topic3);
-        mqttClient.subscribe(topic3, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(topic3, (Mqtt5Publish publish) -> {
             topic3Count.incrementAndGet();
             log.info("📨 主题3收到消息: {}", new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 等待连接稳定
-        waitForConnection(mqttClient);
-        
-        // 等待所有订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "主题3订阅应在10秒内完成");
         
         // 发送消息到各个主题
         log.info("📤 发送消息到各个主题");
@@ -208,25 +202,19 @@ public class ManualSubscribeTest {
         CountDownLatch latch = new CountDownLatch(3);
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-wildcard");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-wildcard-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
         waitForConnection(mqttClient);
         
         log.info("📡 订阅通配符主题: {}", wildcardTopic);
-        mqttClient.subscribe(wildcardTopic, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(wildcardTopic, (Mqtt5Publish publish) -> {
             int count = receivedCount.incrementAndGet();
             log.info("📨 通配符订阅收到第 {} 条消息 - Topic: {}, Message: {}", 
                     count, publish.getTopic(), new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 等待连接稳定
-        waitForConnection(mqttClient);
-        
-        // 等待订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "通配符订阅应在10秒内完成");
         
         // 发送消息到匹配通配符的不同主题
         log.info("📤 发送消息到匹配通配符的主题");
@@ -258,7 +246,7 @@ public class ManualSubscribeTest {
         CountDownLatch latch = new CountDownLatch(messageCount);
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-multiple-msg");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-multiple-msg-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
@@ -266,15 +254,12 @@ public class ManualSubscribeTest {
         
         // 订阅主题
         log.info("📡 订阅主题: {}", testTopic);
-        mqttClient.subscribe(testTopic, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(testTopic, (Mqtt5Publish publish) -> {
             int count = receivedCount.incrementAndGet();
             log.info("📨 收到第 {}/{} 条消息: {}", 
                     count, messageCount, new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 等待订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
         
         // 发送多条消息
         log.info("📤 发送 {} 条消息", messageCount);
@@ -305,7 +290,7 @@ public class ManualSubscribeTest {
         CountDownLatch latch = new CountDownLatch(1);
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-unsubscribe");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-unsubscribe-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
@@ -313,14 +298,11 @@ public class ManualSubscribeTest {
         
         // 订阅主题
         log.info("📡 订阅主题: {}", testTopic);
-        mqttClient.subscribe(testTopic, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(testTopic, (Mqtt5Publish publish) -> {
             receivedCount.incrementAndGet();
             log.info("📨 收到消息: {}", new String(publish.getPayloadAsBytes()));
             latch.countDown();
-        });
-        
-        // 等待订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
         
         // 发送第一条消息（订阅状态下应该能收到）
         log.info("📤 发送第一条消息（订阅状态下）");
@@ -359,7 +341,7 @@ public class ManualSubscribeTest {
         String[] receivedMessage = new String[1];
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-json");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-json-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
@@ -367,15 +349,12 @@ public class ManualSubscribeTest {
         
         // 订阅主题
         log.info("📡 订阅主题: {}", testTopic);
-        mqttClient.subscribe(testTopic, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(testTopic, (Mqtt5Publish publish) -> {
             String message = new String(publish.getPayloadAsBytes());
             receivedMessage[0] = message;
             log.info("📨 收到 JSON 消息: {}", message);
             latch.countDown();
-        });
-        
-        // 等待订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
         
         // 创建测试对象
         TestData testData = new TestData();
@@ -410,7 +389,7 @@ public class ManualSubscribeTest {
         log.info("========== 测试：连接状态检查 ==========");
         
         // 创建测试用的 MQTT 客户端
-        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-connection");
+        SimpleMqttClient mqttClient = mqttPahoClientFactory.getClientInstance("manual-subscribe-test-connection-" + UUID.randomUUID().toString().substring(0, 8));
         log.info("✅ MQTT 客户端已创建");
         
         // 等待连接稳定
@@ -427,16 +406,10 @@ public class ManualSubscribeTest {
         CountDownLatch latch = new CountDownLatch(1);
         
         log.info("📡 订阅主题以验证连接: {}", testTopic);
-        mqttClient.subscribe(testTopic, (Mqtt5Publish publish) -> {
+        assertTrue(mqttClient.subscribeAndWait(testTopic, (Mqtt5Publish publish) -> {
             log.info("📨 收到消息，连接正常");
             latch.countDown();
-        });
-        
-        // 等待连接稳定
-        waitForConnection(mqttClient);
-        
-        // 等待订阅完成
-        waitForSubscriptionComplete();
+        }, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
         
         // 发送测试消息
         mqttClient.publishObject(testTopic, "连接测试消息");

@@ -551,14 +551,18 @@ public class SendAndResponseTest {
         
         AtomicInteger processed = new AtomicInteger(0);
         
-        // 设置一个不返回 requestId 的响应处理器
-        responseClient.subscribe(requestTopic, publish -> {
+        // 设置一个不返回 requestId 的响应处理器（使用 subscribeAndWait 确保订阅完成）
+        int retries = 0;
+        while (!responseClient.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        boolean ok = responseClient.subscribeAndWait(requestTopic, publish -> {
             try {
                 String payload = new String(publish.getPayloadAsBytes());
                 @SuppressWarnings("unchecked")
                 Map<String, Object> request = (Map<String, Object>) JSON.parseObject(payload, Map.class);
                 
-                // 模拟一些处理耗时
                 ThreadUtil.sleep(50);
                 
                 Map<String, Object> response = new java.util.HashMap<>();
@@ -574,50 +578,30 @@ public class SendAndResponseTest {
             } catch (Exception e) {
                 log.error("处理请求失败", e);
             }
-        });
+        }, 10, TimeUnit.SECONDS);
+        assertTrue(ok, "订阅应在10秒内完成");
         
-        ThreadUtil.sleep(500);
-        
-        int concurrency = 10;
-        ExecutorService executor = Executors.newFixedThreadPool(concurrency);
-        CountDownLatch latch = new CountDownLatch(concurrency);
-        AtomicInteger successCount = new AtomicInteger(0);
-        
-        for (int i = 0; i < concurrency; i++) {
-            final int requestNum = i;
-            executor.submit(() -> {
-                try {
-                    Map<String, Object> request = new java.util.HashMap<>();
-                    request.put("message", "no-id-" + requestNum);
-                    
-                    String response = requestClient.sendAndResponse(
-                            requestTopic,
-                            responseTopic,
-                            request,
-                            10,
-                            TimeUnit.SECONDS
-                    );
-                    
-                    assertNotNull(response, "响应不应为空");
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> responseMap = (Map<String, Object>) JSON.parseObject(response, Map.class);
-                    assertEquals("OK", responseMap.get("result"));
-                    assertEquals("no-id-" + requestNum, responseMap.get("echo"),
-                            "响应应该与对应的请求匹配");
-                    successCount.incrementAndGet();
-                } catch (Exception e) {
-                    log.error("请求 {} 失败", requestNum, e);
-                } finally {
-                    latch.countDown();
-                }
-            });
+        // 无 requestId 时依赖 FIFO 匹配，需顺序执行以保证请求与响应一一对应
+        int requestCount = 10;
+        for (int i = 0; i < requestCount; i++) {
+            Map<String, Object> request = new java.util.HashMap<>();
+            request.put("message", "no-id-" + i);
+            
+            String response = requestClient.sendAndResponse(
+                    requestTopic,
+                    responseTopic,
+                    request,
+                    10,
+                    TimeUnit.SECONDS
+            );
+            
+            assertNotNull(response, "响应不应为空");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> responseMap = (Map<String, Object>) JSON.parseObject(response, Map.class);
+            assertEquals("OK", responseMap.get("result"));
+            assertEquals("no-id-" + i, responseMap.get("echo"),
+                    "响应应该与对应的请求匹配");
         }
-        
-        boolean finished = latch.await(60, TimeUnit.SECONDS);
-        executor.shutdown();
-        
-        assertTrue(finished, "所有请求应在超时前完成");
-        assertEquals(concurrency, successCount.get(), "所有请求都应该成功");
     }
 
     /**
@@ -660,10 +644,23 @@ public class SendAndResponseTest {
                 if (subscribed) {
                     return;
                 }
-                client.subscribe(requestTopic, publish -> {
+                int retries = 0;
+                while (!client.isConnected() && retries < 50) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                    retries++;
+                }
+                boolean ok = client.subscribeAndWait(requestTopic, publish -> {
                     String payload = new String(publish.getPayloadAsBytes());
                     handleMessage(payload);
-                });
+                }, 10, TimeUnit.SECONDS);
+                if (!ok) {
+                    throw new IllegalStateException("Subscribe failed for topic: " + requestTopic);
+                }
                 subscribed = true;
             }
         }
