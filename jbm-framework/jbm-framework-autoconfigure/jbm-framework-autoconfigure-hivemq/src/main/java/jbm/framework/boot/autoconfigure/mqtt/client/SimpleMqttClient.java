@@ -330,8 +330,13 @@ public class SimpleMqttClient {
      */
     private void doSubscribe(String topicFilter, MutableListenerWrapper wrapper,
                              CompletableFuture<Void> onComplete) {
+        final String clientId = getSafeClientId();
         if (!subscribingTopics.add(topicFilter)) {
-            log.debug("Topic: {} already subscribing, skip", topicFilter);
+            if (clientId != null) {
+                log.debug("Topic: {} already subscribing, skip (ClientId: {})", topicFilter, clientId);
+            } else {
+                log.debug("Topic: {} already subscribing, skip", topicFilter);
+            }
             if (onComplete != null) onComplete.complete(null);
             return;
         }
@@ -343,16 +348,39 @@ public class SimpleMqttClient {
                 .whenComplete((subAck, throwable) -> {
                     subscribingTopics.remove(topicFilter);
                     if (throwable != null) {
-                        log.warn("订阅失败 - Topic: {}, 错误: {}", topicFilter, throwable.getMessage());
+                        if (clientId != null) {
+                            log.warn("订阅失败 - ClientId: {}, Topic: {}, 错误: {}", clientId, topicFilter, throwable.getMessage());
+                        } else {
+                            log.warn("订阅失败 - Topic: {}, 错误: {}", topicFilter, throwable.getMessage());
+                        }
                         successfullySubscribedTopics.remove(topicFilter);
                         scheduleRetrySubscription(topicFilter, wrapper, 1);
                         if (onComplete != null) onComplete.completeExceptionally(throwable);
                         return;
                     }
                     successfullySubscribedTopics.add(topicFilter);
-                    log.info("✅ 订阅成功 - Topic: {}", topicFilter);
+                    if (clientId != null) {
+                        log.info("✅ 订阅成功 - ClientId: {}, Topic: {}", clientId, topicFilter);
+                    } else {
+                        log.info("✅ 订阅成功 - Topic: {}", topicFilter);
+                    }
                     if (onComplete != null) onComplete.complete(null);
                 });
+    }
+
+    /**
+     * 安全获取当前底层 MQTT 客户端的 ClientId，供日志使用
+     */
+    private String getSafeClientId() {
+        try {
+            if (mqttClient != null
+                    && mqttClient.getConfig() != null
+                    && mqttClient.getConfig().getClientIdentifier() != null) {
+                return mqttClient.getConfig().getClientIdentifier().toString();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     public void subscribeWithResponse(String topicFilter, IMqttMessageListener mqttRequestListener) {

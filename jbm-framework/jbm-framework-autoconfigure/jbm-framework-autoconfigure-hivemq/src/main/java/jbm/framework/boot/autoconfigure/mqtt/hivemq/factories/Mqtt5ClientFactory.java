@@ -24,9 +24,11 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5ClientBuilder;
 import com.hivemq.client.mqtt.mqtt5.auth.Mqtt5EnhancedAuthMechanism;
 import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties;
 import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
+import com.hivemq.client.mqtt.mqtt5.exceptions.Mqtt5DisconnectException;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectBuilder;
 import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
+import com.hivemq.client.mqtt.mqtt5.message.disconnect.Mqtt5DisconnectReasonCode;
 import jbm.framework.boot.autoconfigure.mqtt.event.MqttConnectedEvent;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.config.HiveMqttProperties;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.ssl.KeyManagerFactoryCreationException;
@@ -36,7 +38,10 @@ import org.springframework.beans.BeanInstantiationException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.lang.Nullable;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,6 +52,14 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public final class Mqtt5ClientFactory implements IMqttClientFactory {
+
+    /** 同一 ClientId 的「会话被接管」冲突告警冷却时间（毫秒），冷却期内不重复打 ERROR */
+    private static final long CONFLICT_LOG_COOLDOWN_MS = TimeUnit.MINUTES.toMillis(5);
+    /** 冲突告警去重 map 最大条目数，超过时清理过期记录 */
+    private static final int CONFLICT_LOG_MAP_MAX_SIZE = 1000;
+
+    /** clientId -> 上次打印冲突告警的时间戳，用于去重避免重复刷屏 */
+    private static final Map<String, Long> CLIENT_ID_CONFLICT_LAST_LOG_TIME = new ConcurrentHashMap<>();
 
     private final ApplicationContext applicationContext;
 
@@ -67,8 +80,9 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
      */
 
     public Mqtt5AsyncClient mqttClient(final HiveMqttProperties configuration, @Nullable final Mqtt5EnhancedAuthMechanism enhancedAuthMechanism) {
-        // ⚠️ 诊断日志：无论如何都输出，确认代码是否重新编译
-        log.warn("🔧🔧🔧 MQTT5ClientFactory.mqttClient() called - CODE VERSION: 2025-10-27-v2");
+        if (log.isDebugEnabled()) {
+            log.debug("MQTT5ClientFactory.mqttClient() called");
+        }
         
         final Mqtt5ClientBuilder clientBuilder = MqttClient.builder()
                 .useMqttVersion5()
@@ -142,19 +156,36 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                     }
                 }).addDisconnectedListener(disconnectedEvent -> {
                     Throwable cause = disconnectedEvent.getCause();
-                    String clientId = disconnectedEvent.getClientConfig().getClientIdentifier().toString();
+                    String clientId = normalizeClientIdForLog(disconnectedEvent.getClientConfig().getClientIdentifier().toString());
                     int attempts = disconnectedEvent.getReconnector().getAttempts();
-                    
-                    // 检测 Client ID 冲突
-                    boolean isClientIdConflict = (attempts == 0 && cause != null && 
-                            (cause.getMessage().contains("DISCONNECT") || 
-                             cause.getMessage().contains("Session taken over")));
-                    
+
+                    // 更精确地检测 Client ID 冲突：仅当服务器返回 SESSION_TAKEN_OVER 时才认为是冲突
+                    boolean isClientIdConflict = false;
+                    if (cause instanceof Mqtt5DisconnectException) {
+                        Mqtt5DisconnectException disconnectException = (Mqtt5DisconnectException) cause;
+                        Mqtt5DisconnectReasonCode reasonCode = disconnectException.getMqttMessage().getReasonCode();
+                        if (reasonCode == Mqtt5DisconnectReasonCode.SESSION_TAKEN_OVER) {
+                            isClientIdConflict = true;
+                        }
+                    }
+
                     if (isClientIdConflict) {
-                        log.error("🚨 CRITICAL: Client ID conflict detected! ClientId:{}, Reason:{}", 
-                                clientId, cause != null ? cause.getMessage() : "Unknown");
-                        log.error("🚨 Another system is using the same Client ID. Please ensure Client ID is unique!");
-                        log.error("🚨 Suggestion: Use spring.mqtt.client-id=${{spring.application.name}}-${{random.uuid}}");
+                        // 按 clientId 去重：冷却期内不重复打 ERROR，避免重连循环刷屏
+                        long now = System.currentTimeMillis();
+                        Long lastLog = CLIENT_ID_CONFLICT_LAST_LOG_TIME.get(clientId);
+                        boolean withinCooldown = lastLog != null && (now - lastLog) < CONFLICT_LOG_COOLDOWN_MS;
+                        if (withinCooldown) {
+                            if (log.isDebugEnabled()) {
+                                log.debug("ClientId {} SESSION_TAKEN_OVER again, skip duplicate conflict alert (cooldown)", clientId);
+                            }
+                        } else {
+                            pruneConflictLogMapIfNeeded(now);
+                            CLIENT_ID_CONFLICT_LAST_LOG_TIME.put(clientId, now);
+                            log.error("🚨 CRITICAL: Client ID conflict detected! ClientId:{}, Reason:{}",
+                                    clientId, cause != null ? cause.getMessage() : "Unknown");
+                            log.error("🚨 Another system is using the same Client ID. Please ensure Client ID is unique!");
+                            log.error("🚨 Suggestion: Use spring.mqtt.client-id=${{spring.application.name}}-${{random.uuid}}");
+                        }
                     } else if (attempts > 0) {
                         // 正常重连，输出详细原因便于排查
                         if (cause != null) {
@@ -168,7 +199,7 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                             log.info("🔄 Disconnected (Reconnect attempts:{}), will auto reconnect", attempts);
                         }
                     } else if (log.isDebugEnabled()) {
-                        // 其他情况只在 DEBUG 级别记录
+                        // 其他情况只在 DEBUG 级别记录，避免不必要的告警
                         log.debug("❌ Disconnected: ClientId:{}, Attempts:{}, Reason:{}", 
                                 clientId, attempts, cause != null ? cause.getMessage() : "Unknown");
                     }
@@ -201,6 +232,35 @@ public final class Mqtt5ClientFactory implements IMqttClientFactory {
                 });
 
         return client;
+    }
+
+    /**
+     * 规范化 clientId 用于日志和去重：去掉 HiveMQ 返回的 Optional[...] 包装，只保留实际 ID。
+     */
+    private static String normalizeClientIdForLog(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        if (raw.startsWith("Optional[") && raw.endsWith("]")) {
+            return raw.substring(9, raw.length() - 1);
+        }
+        return raw;
+    }
+
+    /**
+     * 当冲突告警去重 map 超过容量时，移除超过 2 倍冷却时间的旧记录，避免无限增长。
+     */
+    private static void pruneConflictLogMapIfNeeded(long now) {
+        if (CLIENT_ID_CONFLICT_LAST_LOG_TIME.size() < CONFLICT_LOG_MAP_MAX_SIZE) {
+            return;
+        }
+        long expireThreshold = now - 2 * CONFLICT_LOG_COOLDOWN_MS;
+        Iterator<Map.Entry<String, Long>> it = CLIENT_ID_CONFLICT_LAST_LOG_TIME.entrySet().iterator();
+        while (it.hasNext()) {
+            if (it.next().getValue() < expireThreshold) {
+                it.remove();
+            }
+        }
     }
 
     public Mqtt5UserProperties buildUserProperties(final HiveMqttProperties configuration) {
