@@ -17,8 +17,8 @@ public class VCoderService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String getVcodePath(String scope, String vcode) {
-        String key = StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), vcode);
-        return key;
+        String codeKey = StrUtil.lower(vcode);
+        return StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), codeKey);
     }
 
     public LineCaptcha build(String scope, Integer width, Integer height, Integer codeCount) {
