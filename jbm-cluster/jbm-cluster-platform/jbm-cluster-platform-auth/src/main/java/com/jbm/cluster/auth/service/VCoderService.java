@@ -17,8 +17,8 @@ public class VCoderService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String getVcodePath(String scope, String vcode) {
-        String key = StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), vcode);
-        return key;
+        String codeKey = vcode.toLowerCase();
+        return StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), codeKey);
     }
 
     public LineCaptcha build(String scope, Integer width, Integer height, Integer codeCount) {
@@ -38,7 +38,7 @@ public class VCoderService {
             return true;
         }
         String key = this.getVcodePath(scope, vcode);
-        boolean has = stringRedisTemplate.hasKey(key);
+//        boolean has = stringRedisTemplate.hasKey(key);
         if (!has) {
             throw new ValidationException("验证码错误");
         }
