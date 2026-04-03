@@ -38,7 +38,7 @@ public class VCoderService {
             return true;
         }
         String key = this.getVcodePath(scope, vcode);
-//        boolean has = stringRedisTemplate.hasKey(key);
+        boolean has = stringRedisTemplate.hasKey(key);
         if (!has) {
             throw new ValidationException("验证码错误");
         }
