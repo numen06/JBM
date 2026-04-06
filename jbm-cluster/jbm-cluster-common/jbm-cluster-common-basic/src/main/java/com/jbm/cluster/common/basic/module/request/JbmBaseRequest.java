@@ -82,7 +82,13 @@ public abstract class JbmBaseRequest implements ICustomizeRequest {
     }
 
     public static String readResponseBody(Response response) throws IOException {
-        if (!response.isSuccessful()) return null;
+        if (!response.isSuccessful()) {
+            ResponseBody responseBody = response.body();
+            if (responseBody != null) {
+                responseBody.close();
+            }
+            return null;
+        }
         ResponseBody responseBody = response.body();
         if (responseBody == null) return null;
         // 可以多次读取 buffer 的克隆

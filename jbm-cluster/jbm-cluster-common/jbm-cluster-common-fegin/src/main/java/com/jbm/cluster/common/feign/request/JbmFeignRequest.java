@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.feign.request;
 
 import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.collection.CollUtil;
@@ -46,6 +47,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
         final String authorization = SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken;
         log.info("[互信诊断] JbmFeignRequest.buildRequest 注入Authorization header: {}", authorization.substring(0, Math.min(authorization.length(), 30)) + "...");
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
+        httpRequest.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
         return httpRequest;
     }
 
