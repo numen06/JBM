@@ -41,12 +41,10 @@ public class JbmFeignRequest extends JbmBaseRequest {
     public Request.Builder buildRequest(Request.Builder httpRequest) {
         SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-//        try {
-//            SaOAuth2Util.checkClientToken(clientTokenModel.clientToken);
-//        } catch (Exception e) {
-//            log.warn("客户端Token验证失败", e);
-//        }
+        log.info("[互信诊断] JbmFeignRequest.buildRequest 生成ClientToken: clientId={}, clientToken={}, tokenPrefix={}",
+                clientTokenModel.clientId, clientTokenModel.clientToken, SaManager.getConfig().getTokenPrefix());
         final String authorization = SaManager.getConfig().getTokenPrefix() + " " + clientTokenModel.clientToken;
+        log.info("[互信诊断] JbmFeignRequest.buildRequest 注入Authorization header: {}", authorization.substring(0, Math.min(authorization.length(), 30)) + "...");
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
         return httpRequest;
     }

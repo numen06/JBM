@@ -181,9 +181,8 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public String randomClientToken(String clientId, String scope) {
-        //使用IdToken接管
         final String idToken = SaIdUtil.getToken();
-//        SaIdUtil.saIdTemplate.saveToken(idToken);
+        log.info("[互信诊断] randomClientToken 生成: clientId={}, idToken={} (长度:{})", clientId, idToken, idToken != null ? idToken.length() : 0);
         return idToken;
     }
 
