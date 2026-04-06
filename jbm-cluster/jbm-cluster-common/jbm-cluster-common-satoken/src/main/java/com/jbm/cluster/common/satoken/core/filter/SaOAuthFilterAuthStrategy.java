@@ -63,7 +63,7 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 throw new SaOAuth2Exception("无效Token");
             }
             SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
-            log.info("[互信诊断] SaTokenInfo: isLogin={}, tokenTimeout={}, tokenType={}", saTokenInfo != null ? saTokenInfo.isLogin : "null", saTokenInfo != null ? saTokenInfo.tokenTimeout : "null", saTokenInfo != null ? saTokenInfo.getTokenType() : "null");
+            log.info("[互信诊断] SaTokenInfo: isLogin={}, tokenTimeout={}", saTokenInfo != null ? saTokenInfo.isLogin : "null", saTokenInfo != null ? saTokenInfo.tokenTimeout : "null");
 
             if (ObjectUtil.isNotEmpty(saTokenInfo)) {
                 if (saTokenInfo.isLogin) {
