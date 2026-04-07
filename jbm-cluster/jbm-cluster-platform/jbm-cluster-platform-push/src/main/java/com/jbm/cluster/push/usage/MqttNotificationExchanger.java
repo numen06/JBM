@@ -14,9 +14,10 @@ import com.jbm.cluster.api.model.push.PushCallback;
 import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.util.FastJsonUtils;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
-import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
-import lombok.SneakyThrows;
+import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttAsyncClient;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
@@ -30,9 +31,11 @@ import org.springframework.util.Assert;
 @Slf4j
 public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNotification> {
 
+    private static final long MQTT_PUBLISH_TIMEOUT_MS = 10_000L;
+
     private RealMqttPahoClientFactory realMqttPahoClientFactory;
 
-    private SimpleMqttClient mqttClient;
+    private SimpleMqttAsyncClient mqttAsyncClient;
 
 
     public MqttNotificationExchanger(RealMqttPahoClientFactory realMqttPahoClientFactory) {
@@ -43,8 +46,8 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
         try {
             // 使用极短Client ID：PUSH + 6位UUID（总长度11字符，符合最严格的MQTT限制）
             String shortClientId = "PUSH" + IdUtil.simpleUUID().substring(0, 6);
-            mqttClient = realMqttPahoClientFactory.getClientInstance(shortClientId);
-            log.info("MQTT通知客户端初始化成功, ClientId={}", shortClientId);
+            mqttAsyncClient = realMqttPahoClientFactory.getAsyncClientInstance(shortClientId);
+            log.info("MQTT通知异步客户端初始化成功, ClientId={}", shortClientId);
         } catch (Exception e) {
             log.error("MQTT通知客户端初始化失败", e);
         }
@@ -53,21 +56,26 @@ public class MqttNotificationExchanger extends BaseNotificationExchanger<MqttNot
     @Autowired(required = false)
     private FastJsonHttpMessageConverter fastJsonHttpMessageConverter;
 
-    @SneakyThrows
     @Override
     public PushCallback apply(MqttNotification mqttNotification) {
         Assert.notNull(realMqttPahoClientFactory, "MQTT链接未初始化");
+        Assert.notNull(mqttAsyncClient, "MQTT客户端未初始化");
+        Assert.notNull(mqttNotification, "mqttNotification");
         MqttMessage message = new MqttMessage();
-        if (ObjectUtil.isEmpty(mqttNotification)) {
+        if (ObjectUtil.isEmpty(mqttNotification.getBody())) {
             mqttNotification.setBody("");
         }
-        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody(),FastJsonUtils.defaultWebConfig()));
+        message.setPayload(JSON.toJSONBytes(mqttNotification.getBody(), FastJsonUtils.defaultWebConfig()));
         message.setQos(mqttNotification.getQos());
         if (StrUtil.isBlank(mqttNotification.getTopic())) {
             throw new NullPointerException("没有指定Topic");
         }
-        mqttClient.publish(mqttNotification.getTopic(), message);
-//            log.info("发送MQTT通知成功:{}", JSON.toJSONString(mqttNotification));
+        try {
+            IMqttDeliveryToken token = mqttAsyncClient.getClient().publish(mqttNotification.getTopic(), message);
+            token.waitForCompletion(MQTT_PUBLISH_TIMEOUT_MS);
+        } catch (MqttException e) {
+            throw new RuntimeException("MQTT发布失败或超时: " + mqttNotification.getTopic(), e);
+        }
         PushCallback pushCallback = this.success(mqttNotification);
         pushCallback.setPushWay(PushWay.mqtt);
         return pushCallback;

@@ -3,7 +3,6 @@ package com.jbm.cluster.push.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -56,12 +54,6 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
 //    @Autowired
 //    private WebhookTaskService webhookTaskService;
-
-    /***
-     * 异步执行线程池
-     */
-    private final ExecutorService executorService = ThreadUtil.newExecutor(100);
-
 
     /**
      * 删除两个月前的数据
