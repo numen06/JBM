@@ -17,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import feign.FeignException;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -76,8 +77,24 @@ public class ApiFilter implements AccessLogFilter {
                     && e.getMessage().contains("blocking")) {
                 log.warn("[ApiFilter]获取API元数据跳过(线程模型): {}", e.getMessage());
             } else {
-                log.error("获取API信息异常", e);
+                FeignException fe = findFeignException(e);
+                if (fe != null && fe.status() >= 400 && fe.status() < 500) {
+                    // 中心返回 4xx（如无效 Token）：访问类问题，不打 stack
+                    log.warn("[ApiFilter]获取API元数据失败 HTTP {}: {}", fe.status(), fe.getMessage());
+                } else {
+                    log.error("获取API信息异常", e);
+                }
             }
         }
+    }
+
+    private static FeignException findFeignException(Throwable t) {
+        while (t != null) {
+            if (t instanceof FeignException) {
+                return (FeignException) t;
+            }
+            t = t.getCause();
+        }
+        return null;
     }
 }
