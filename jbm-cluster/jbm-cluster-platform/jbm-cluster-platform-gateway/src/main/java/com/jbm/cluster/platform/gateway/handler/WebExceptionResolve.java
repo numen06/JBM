@@ -132,7 +132,8 @@ public class WebExceptionResolve {
         } else if (className.contains("MethodArgumentNotValidException")) {
             BindingResult bindingResult = ((MethodArgumentNotValidException) ex).getBindingResult();
             code = ErrorCode.ALERT;
-            return ResultBody.failed().code(code.getCode()).msg(bindingResult.getFieldError().getDefaultMessage());
+            return ResultBody.failed().code(code.getCode()).msg(bindingResult.getFieldError().getDefaultMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST.value());
         } else if (className.contains("IllegalArgumentException")) {
             //参数错误
             code = ErrorCode.ALERT;

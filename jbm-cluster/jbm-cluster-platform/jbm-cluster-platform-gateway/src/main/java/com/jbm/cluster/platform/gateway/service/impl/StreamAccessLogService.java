@@ -33,7 +33,6 @@ import org.springframework.web.server.ServerWebExchange;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 
 /**
@@ -100,10 +99,10 @@ public class StreamAccessLogService implements AccessLogService {
             if (ignore(requestPath)) {
                 return;
             }
-            //获取路由
+            //获取路由（无匹配路由、404、异常路径等可能为 null，仍应记访问日志）
             Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
             //获取HTTP状态
-            int httpStatus = response.getStatusCode().value();
+            int httpStatus = response.getStatusCode() != null ? response.getStatusCode().value() : 0;
             //获取访问方法
             String method = request.getMethodValue();
             //忽略OPTIONS请求
@@ -116,12 +115,10 @@ public class StreamAccessLogService implements AccessLogService {
             if (gatewayContext != null) {
                 data = gatewayContext.getAllRequestData().toSingleValueMap();
             }
-            //获取服务号
+            //获取服务号；无路由时回落为网关应用名，保证只要打到端口就有日志
             String serviceId = null;
             if (route != null) {
                 serviceId = route.getUri().getAuthority();
-            }else{
-                return;
             }
             //获取IP地址
             String ip = ReactiveWebUtils.getRemoteAddress(exchange);
@@ -155,17 +152,14 @@ public class StreamAccessLogService implements AccessLogService {
             gatewayLogs.setUseTime(userTime);
             Map<String, AccessLogFilter> accessLogFilterMap = applicationContext.getBeansOfType(AccessLogFilter.class);
 
-            //异步处理所有数据
-            accessLogFilterMap.values().parallelStream().forEach(new Consumer<AccessLogFilter>() {
-                @Override
-                public void accept(AccessLogFilter accessLogFilter) {
-                    try {
-                        accessLogFilter.filter(gatewayLogs, headers);
-                    } catch (Exception e) {
-                        log.error("日志过滤器[{}]失败", accessLogFilter.getClass(), e);
-                    }
+            //处理所有数据（避免parallelStream在boundedElastic线程中产生子线程中断问题）
+            for (AccessLogFilter accessLogFilter : accessLogFilterMap.values()) {
+                try {
+                    accessLogFilter.filter(gatewayLogs, headers);
+                } catch (Exception e) {
+                    log.error("日志过滤器[{}]失败", accessLogFilter.getClass().getSimpleName(), e);
                 }
-            });
+            }
             //大于0代表记录日志
             if (gatewayLogs.getLoglevel() > 0) {
                 //发送数据

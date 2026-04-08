@@ -49,10 +49,6 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if ("/favicon.ico".equals(requestPath)) {
             return Mono.empty();
         }
-        // 404 No matching handler：不写错误访问日志（见下）
-        boolean isNotFound = (ex instanceof ResponseStatusException)
-                && ((ResponseStatusException) ex).getStatus() == HttpStatus.NOT_FOUND
-                && ex.getMessage() != null && ex.getMessage().contains("No matching handler");
         ResultBody resultBody;
         if (ex instanceof NotFoundException) {
             resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, requestPath, HttpStatus.SERVICE_UNAVAILABLE.value());
@@ -77,17 +73,22 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (client4xx) {
             // 全部 4xx：与 WebExceptionResolve 一致，只 warn、不打 stack
             log.warn("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
-            if (!isNotFound) {
-                // sendLog 内会同步 Feign，禁止在 reactor-http 线程执行
-                Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
-            }
+            // 含 404 No matching handler：凡经异常处理都要 sendLog，与「打到端口即有日志」一致
+            Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
         } else {
             // 5xx、未知异常等：保留完整堆栈便于排障
             log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage(), ex);
             Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
         }
-        if (resultBody.getHttpStatus() == null || resultBody.getHttpStatus() == 200) {
+        Integer resolvedHttpStatus = resultBody.getHttpStatus();
+        if (resolvedHttpStatus == null || resolvedHttpStatus == 200) {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            try {
+                response.setStatusCode(HttpStatus.valueOf(resolvedHttpStatus));
+            } catch (IllegalArgumentException ignored) {
+                response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         DataBuffer dataBuffer = response.bufferFactory().wrap(JSON.toJSONBytes(resultBody));

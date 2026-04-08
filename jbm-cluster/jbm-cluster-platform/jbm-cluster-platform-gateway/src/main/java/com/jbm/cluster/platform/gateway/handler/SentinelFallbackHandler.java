@@ -4,6 +4,7 @@ import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManag
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.jbm.cluster.platform.gateway.utils.WebFluxUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
@@ -19,7 +20,8 @@ public class SentinelFallbackHandler implements WebExceptionHandler {
 
 
     private Mono<Void> writeResponse(ServerResponse response, ServerWebExchange exchange) {
-        return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), "请求超过最大数，请稍候再试");
+        return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), HttpStatus.TOO_MANY_REQUESTS,
+                "请求超过最大数，请稍候再试", null, HttpStatus.TOO_MANY_REQUESTS.value());
     }
 
     @Override

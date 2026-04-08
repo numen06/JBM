@@ -36,9 +36,14 @@ public class ApiFilter implements AccessLogFilter {
             .build(new CacheLoader<String, BaseApi>() {
                 @Override
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
-                    String serviceId = StrUtil.subBefore(path, "/", false);
-                    String realPath = StrUtil.removePrefix(path, serviceId);
-                    return baseApiServiceClient.findApiByPath(serviceId, realPath).getResult();
+                    try {
+                        String serviceId = StrUtil.subBefore(path, "/", false);
+                        String realPath = StrUtil.removePrefix(path, serviceId);
+                        return baseApiServiceClient.findApiByPath(serviceId, realPath).getResult();
+                    } catch (Exception e) {
+                        log.warn("[ApiFilter]加载API元数据异常，将在短暂时间后重试: {}", e.getMessage());
+                        throw e;
+                    }
                 }
             });
 
