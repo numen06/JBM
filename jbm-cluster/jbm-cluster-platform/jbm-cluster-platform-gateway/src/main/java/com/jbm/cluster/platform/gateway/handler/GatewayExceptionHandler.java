@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -42,16 +43,20 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
             return Mono.error(ex);
         }
 
-        ResultBody resultBody;
         ServerHttpRequest request = exchange.getRequest();
-        if ("/favicon.ico".equals(exchange.getRequest().getURI().getPath())) {
+        String requestPath = exchange.getRequest().getURI().getPath();
+        if ("/favicon.ico".equals(requestPath)) {
             return Mono.empty();
         }
+        // 判断是否为404 No matching handler，这类请求很常见，不需要打印完整堆栈
+        boolean isNotFound = (ex instanceof ResponseStatusException)
+                && ((ResponseStatusException) ex).getStatus() == HttpStatus.NOT_FOUND
+                && ex.getMessage() != null && ex.getMessage().contains("No matching handler");
+        ResultBody resultBody;
         if (ex instanceof NotFoundException) {
-            resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, exchange.getRequest().getURI().getPath(), HttpStatus.SERVICE_UNAVAILABLE.value());
-//            log.error("==> 错误解析:{}", resultBody);
+            resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, requestPath, HttpStatus.SERVICE_UNAVAILABLE.value());
         } else {
-            resultBody = webExceptionResolve.resolveException(ex, exchange.getRequest().getURI().getPath());
+            resultBody = webExceptionResolve.resolveException(ex, requestPath);
         }
         /**
          * 参考AbstractErrorWebExceptionHandler
@@ -59,9 +64,12 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
-        log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
-        //保存错误日志
-        accessLogService.sendLog(exchange, ex);
+        if (isNotFound) {
+            log.warn("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
+        } else {
+            log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
+            accessLogService.sendLog(exchange, ex);
+        }
         if (resultBody.getHttpStatus() == null || resultBody.getHttpStatus() == 200) {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -3,6 +3,7 @@ package com.jbm.cluster.platform.gateway.handler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.jbm.cluster.platform.gateway.utils.WebFluxUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
  *
  * @author wesley.zhang
  */
+@Slf4j
 public class SentinelFallbackHandler implements WebExceptionHandler {
 
 
@@ -22,7 +24,9 @@ public class SentinelFallbackHandler implements WebExceptionHandler {
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-        ex.printStackTrace();
+        if (BlockException.isBlockException(ex)) {
+            log.warn("请求被限流或阻断", ex);
+        }
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }

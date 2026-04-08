@@ -137,7 +137,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
                 log.info("=============加载动态权限:{}==============", resources.size());
             }
         } catch (Exception e) {
-            log.error("加载动态权限错误:{}", e);
+            log.error("加载动态权限错误", e);
         }
         return resources;
     }
@@ -156,7 +156,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
                 log.info("=============加载IP黑名单:{}==============", list.size());
             }
         } catch (Exception e) {
-            log.error("加载IP黑名单错误:{}", e);
+            log.error("加载IP黑名单错误", e);
         }
         return list;
     }
@@ -175,7 +175,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
                 log.info("=============加载IP白名单:{}==============", list.size());
             }
         } catch (Exception e) {
-            log.error("加载IP白名单错误:{}", e);
+            log.error("加载IP白名单错误", e);
         }
         return list;
     }

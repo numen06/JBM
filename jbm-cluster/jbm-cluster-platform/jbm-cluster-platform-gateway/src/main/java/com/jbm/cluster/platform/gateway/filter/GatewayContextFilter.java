@@ -132,6 +132,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
                             }
                         }
                     } catch (UnsupportedEncodingException e) {
+                        log.debug("[GatewayContext]FormData encode error: {}", e.getMessage());
                     }
                     // 字段字符串截取最后一个字符 '&'
                     String formDataBodyString = "";

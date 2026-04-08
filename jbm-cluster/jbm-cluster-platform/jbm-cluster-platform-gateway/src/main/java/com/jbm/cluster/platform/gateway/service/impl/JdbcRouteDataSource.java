@@ -103,7 +103,7 @@ public class JdbcRouteDataSource implements RouteDataSource {
             });
             log.info("查询到API数量为:{}条", entityList.size());
         } catch (SQLException e) {
-            log.error("查询到API成功!", e);
+            log.error("查询API限流配置失败", e);
         } finally {
             DbUtil.close(conn);
         }

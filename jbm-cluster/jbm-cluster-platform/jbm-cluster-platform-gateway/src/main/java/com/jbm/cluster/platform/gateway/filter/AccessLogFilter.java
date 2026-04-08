@@ -2,7 +2,6 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.service.AccessLogService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
@@ -35,7 +34,6 @@ import javax.annotation.Resource;
  *
  * @author wesley.zhang
  */
-@Slf4j
 @Component
 public class AccessLogFilter implements WebFilter {
 

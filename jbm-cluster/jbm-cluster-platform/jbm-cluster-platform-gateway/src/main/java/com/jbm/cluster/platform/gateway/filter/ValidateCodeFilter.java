@@ -52,7 +52,7 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
                 Dict obj = JSON.parseObject(rspStr, Dict.class);
                 validateCodeService.checkCaptcha(obj.getStr(CODE), obj.getStr(UUID));
             } catch (Exception e) {
-                log.error("验证码错误", e);
+                log.warn("[验证码]验证码校验失败, uri:{}", request.getURI().getPath());
                 return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), "验证码错误,请重试", null);
             }
             return chain.filter(exchange);

@@ -173,7 +173,7 @@ public class StreamAccessLogService implements AccessLogService {
             }
 
         } catch (Exception e) {
-            log.error("access logs save error:{}", e);
+            log.error("access logs save error", e);
         }
     }
 

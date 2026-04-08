@@ -42,6 +42,9 @@ public class WebExceptionResolve {
         String className = ex.getClass().getName();
         if (className.contains("ResponseStatusException")) {
             httpStatus = ((ResponseStatusException) ex).getStatus().value();
+            if (httpStatus == HttpStatus.NOT_FOUND.value()) {
+                code = ErrorCode.NOT_FOUND;
+            }
         }
         if (className.contains("UsernameNotFoundException")) {
             httpStatus = HttpStatus.UNAUTHORIZED.value();
@@ -169,7 +172,11 @@ public class WebExceptionResolve {
         }
         ResultBody resultBody = ResultBody.failed().code(errorCode.getCode()).msg(errorMsg)
                 .path(path).httpStatus(httpStatus).exception(exception);
-        log.error("==> error:{}", resultBody, exception);
+        if (httpStatus == HttpStatus.NOT_FOUND.value()) {
+            log.warn("==> warn:{}", resultBody);
+        } else {
+            log.error("==> error:{}", resultBody, exception);
+        }
         return resultBody;
     }
 
