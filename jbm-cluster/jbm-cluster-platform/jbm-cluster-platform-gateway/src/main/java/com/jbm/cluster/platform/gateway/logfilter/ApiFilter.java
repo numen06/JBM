@@ -72,7 +72,12 @@ public class ApiFilter implements AccessLogFilter {
             gatewayLogInfo.setApiPath(baseApi.getPath());
             gatewayLogInfo.setPath(realPath);
         } catch (Exception e) {
-            log.error("获取API信息异常", e);
+            if (e instanceof IllegalStateException && e.getMessage() != null
+                    && e.getMessage().contains("blocking")) {
+                log.warn("[ApiFilter]获取API元数据跳过(线程模型): {}", e.getMessage());
+            } else {
+                log.error("获取API信息异常", e);
+            }
         }
     }
 }

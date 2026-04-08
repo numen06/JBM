@@ -25,7 +25,7 @@ public class SentinelFallbackHandler implements WebExceptionHandler {
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         if (BlockException.isBlockException(ex)) {
-            log.warn("请求被限流或阻断", ex);
+            log.warn("请求被限流或阻断: {}", ex.toString());
         }
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);

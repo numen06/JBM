@@ -19,6 +19,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * 网关统一异常处理
@@ -48,7 +49,7 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if ("/favicon.ico".equals(requestPath)) {
             return Mono.empty();
         }
-        // 判断是否为404 No matching handler，这类请求很常见，不需要打印完整堆栈
+        // 404 No matching handler：不写错误访问日志（见下）
         boolean isNotFound = (ex instanceof ResponseStatusException)
                 && ((ResponseStatusException) ex).getStatus() == HttpStatus.NOT_FOUND
                 && ex.getMessage() != null && ex.getMessage().contains("No matching handler");
@@ -64,11 +65,26 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
-        if (isNotFound) {
+        boolean client4xx = ex instanceof ResponseStatusException
+                && ((ResponseStatusException) ex).getStatus().is4xxClientError();
+        if (!client4xx && resultBody.getHttpStatus() != null) {
+            try {
+                client4xx = HttpStatus.valueOf(resultBody.getHttpStatus()).is4xxClientError();
+            } catch (IllegalArgumentException ignored) {
+                // ignore
+            }
+        }
+        if (client4xx) {
+            // 全部 4xx：与 WebExceptionResolve 一致，只 warn、不打 stack
             log.warn("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
+            if (!isNotFound) {
+                // sendLog 内会同步 Feign，禁止在 reactor-http 线程执行
+                Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
+            }
         } else {
-            log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
-            accessLogService.sendLog(exchange, ex);
+            // 5xx、未知异常等：保留完整堆栈便于排障
+            log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage(), ex);
+            Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
         }
         if (resultBody.getHttpStatus() == null || resultBody.getHttpStatus() == 200) {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);

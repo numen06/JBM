@@ -27,6 +27,8 @@ import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 import javax.annotation.Resource;
 
 /**
@@ -71,9 +73,11 @@ public class AccessLogFilter implements WebFilter {
                 return super.writeWith(body);
             }
         };
-        return chain.filter(exchange.mutate().response(decoratedResponse).build()).then(Mono.fromRunnable(() -> {
-            accessLogService.sendLog(exchange, responseBodys.toString(), null);
-        }));
+        // sendLog -> ApiFilter 等会同步调用 Feign（LoadBalancer.block），禁止在 reactor-http 线程执行
+        return chain.filter(exchange.mutate().response(decoratedResponse).build())
+                .then(Mono.fromRunnable(() -> accessLogService.sendLog(exchange, responseBodys.toString(), null))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .then());
     }
 
     private String getResponseBody(ServerHttpResponse response, byte[] content) {

@@ -172,12 +172,24 @@ public class WebExceptionResolve {
         }
         ResultBody resultBody = ResultBody.failed().code(errorCode.getCode()).msg(errorMsg)
                 .path(path).httpStatus(httpStatus).exception(exception);
-        if (httpStatus == HttpStatus.NOT_FOUND.value()) {
+        if (isRoutineAccessHttpStatus(httpStatus)) {
+            // 4xx 等常见访问类问题：只记摘要，不打 stack
             log.warn("==> warn:{}", resultBody);
         } else {
             log.error("==> error:{}", resultBody, exception);
         }
         return resultBody;
+    }
+
+    /**
+     * 客户端/访问类 HTTP 状态：非“系统真正故障”，日志不打异常堆栈。
+     */
+    private static boolean isRoutineAccessHttpStatus(int httpStatus) {
+        try {
+            return HttpStatus.valueOf(httpStatus).is4xxClientError();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
 }
