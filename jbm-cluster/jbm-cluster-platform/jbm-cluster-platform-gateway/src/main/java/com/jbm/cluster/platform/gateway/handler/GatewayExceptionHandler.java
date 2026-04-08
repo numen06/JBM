@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -61,26 +60,8 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
-        boolean client4xx = ex instanceof ResponseStatusException
-                && ((ResponseStatusException) ex).getStatus().is4xxClientError();
-        if (!client4xx && resultBody.getHttpStatus() != null) {
-            try {
-                client4xx = HttpStatus.valueOf(resultBody.getHttpStatus()).is4xxClientError();
-            } catch (IllegalArgumentException ignored) {
-                // ignore
-            }
-        }
-        boolean routineAccessException = client4xx || ex instanceof NotFoundException;
-        if (routineAccessException) {
-            // 4xx + 网关找不到服务实例(503)：常见访问类异常，只记摘要
-            log.warn("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
-            // 含 404 No matching handler：凡经异常处理都要 sendLog，与「打到端口即有日志」一致
-            Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
-        } else {
-            // 5xx、未知异常等：保留完整堆栈便于排障
-            log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage(), ex);
-            Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
-        }
+        // 异常摘要/堆栈统一由 WebExceptionResolve 输出；这里仅保证操作日志落地
+        Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
         Integer resolvedHttpStatus = resultBody.getHttpStatus();
         if (resolvedHttpStatus == null || resolvedHttpStatus == 200) {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
