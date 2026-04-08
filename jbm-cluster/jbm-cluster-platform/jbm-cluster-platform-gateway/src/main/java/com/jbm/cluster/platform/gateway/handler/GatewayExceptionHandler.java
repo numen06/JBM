@@ -70,8 +70,9 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
                 // ignore
             }
         }
-        if (client4xx) {
-            // 全部 4xx：与 WebExceptionResolve 一致，只 warn、不打 stack
+        boolean routineAccessException = client4xx || ex instanceof NotFoundException;
+        if (routineAccessException) {
+            // 4xx + 网关找不到服务实例(503)：常见访问类异常，只记摘要
             log.warn("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
             // 含 404 No matching handler：凡经异常处理都要 sendLog，与「打到端口即有日志」一致
             Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
