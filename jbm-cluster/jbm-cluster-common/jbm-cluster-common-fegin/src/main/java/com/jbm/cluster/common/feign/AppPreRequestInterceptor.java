@@ -10,7 +10,6 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import feign.RequestTemplate;
 import jbm.framework.web.ServletUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,9 +24,6 @@ import java.util.Map;
  */
 public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AppPreRequestInterceptor.class);
-
-
     @Autowired
     private SaOAuth2Template saOAuth2Template;
 
@@ -38,24 +34,14 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
             String authentication = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
             if (StrUtil.isEmpty(authentication)) {
                 ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-                requestTemplate.header(SaIdUtil.ID_TOKEN, getTokenSafely());
+                requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
                 requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
             }
         } else {
             ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-            requestTemplate.header(SaIdUtil.ID_TOKEN, getTokenSafely());
+            requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
             requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
         }
     }
-
-    private String getTokenSafely() {
-        try {
-            return SaIdUtil.getToken();
-        } catch (Exception e) {
-            log.warn("[AppPreRequestInterceptor]获取IdToken失败(可能Redis不可用): {}", e.getMessage());
-            return null;
-        }
-    }
-
 
 }

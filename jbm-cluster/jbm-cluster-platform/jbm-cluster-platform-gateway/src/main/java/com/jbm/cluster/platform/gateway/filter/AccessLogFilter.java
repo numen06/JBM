@@ -73,11 +73,10 @@ public class AccessLogFilter implements WebFilter {
                 return super.writeWith(body);
             }
         };
-        // sendLog -> ApiFilter 等会同步调用 Feign（LoadBalancer.block），禁止在 reactor-http 线程执行
+        // sendLog 使用独立调度，与上游响应生命周期解耦，避免客户端断开时日志线程被中断
         return chain.filter(exchange.mutate().response(decoratedResponse).build())
-                .then(Mono.fromRunnable(() -> accessLogService.sendLog(exchange, responseBodys.toString(), null))
-                        .subscribeOn(Schedulers.boundedElastic())
-                        .then());
+                .doFinally(signal -> Schedulers.boundedElastic().schedule(
+                        () -> accessLogService.sendLog(exchange, responseBodys.toString(), null)));
     }
 
     private String getResponseBody(ServerHttpResponse response, byte[] content) {
