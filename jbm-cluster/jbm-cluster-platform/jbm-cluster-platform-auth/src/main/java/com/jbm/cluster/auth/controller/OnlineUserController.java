@@ -1,6 +1,7 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.stp.StpUtil;
@@ -194,8 +195,14 @@ public class OnlineUserController {
                         // sa:token:{tokenValue} - token信息
                         // sa:session:{tokenValue} - session信息
                         
-                        String tokenKey = "sa:token:" + tokenValue;
-                        String sessionKey = "sa:session:" + tokenValue;
+                        String tokenPrefix = SaManager.getConfig().getTokenName();
+                        if (StrUtil.isBlank(tokenPrefix)) {
+                            tokenPrefix = "satoken";
+                        }
+                        String tokenKey = tokenPrefix + ":login:token:" + tokenValue;
+                        String sessionKey = tokenPrefix + ":login:session:" + tokenValue;
+                        String lastActivityKey = tokenPrefix + ":login:last-activity:" + tokenValue;
+                        String oauth2AccessKey = tokenPrefix + ":oauth2:access-token:" + tokenValue;
                         
                         // 设置token key的过期时间（如果存在）
                         if (redisService.getExpire(tokenKey) > 0) {
@@ -205,6 +212,14 @@ public class OnlineUserController {
                         // 设置session key的过期时间（如果存在）
                         if (redisService.getExpire(sessionKey) > 0) {
                             redisService.expire(sessionKey, expireSeconds);
+                        }
+                        // 调整活动超时 key
+                        if (redisService.getExpire(lastActivityKey) > 0) {
+                            redisService.expire(lastActivityKey, expireSeconds);
+                        }
+                        // 同步调整 OAuth2 access token key，避免双层 token 过期不一致
+                        if (redisService.getExpire(oauth2AccessKey) > 0) {
+                            redisService.expire(oauth2AccessKey, expireSeconds);
                         }
                         
                         log.info("Token已设置为{}分钟后过期: {}", minutes, tokenValue);
