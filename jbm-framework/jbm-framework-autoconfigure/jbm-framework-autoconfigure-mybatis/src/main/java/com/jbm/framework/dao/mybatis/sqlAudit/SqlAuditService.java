@@ -12,7 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * SQL 审计服务
@@ -24,7 +28,7 @@ public class SqlAuditService {
     private static final Logger log = LoggerFactory.getLogger(SqlAuditService.class);
     
     private final List<SqlAuditPushHandler> handlers = new ArrayList<>();
-    private final ExecutorService executorService;
+    private ExecutorService executorService;
     private final boolean enabled;
     private final SqlLogProperties.SqlAuditProperties auditProperties;
     
@@ -33,15 +37,34 @@ public class SqlAuditService {
         this.enabled = auditProperties != null && auditProperties.getEnabled() != null && auditProperties.getEnabled();
         
         if (!enabled) {
-            this.executorService = null;
             return;
         }
         
-        // 创建线程池用于异步推送
-        this.executorService = Executors.newFixedThreadPool(5);
+        // 创建带名称的线程池，便于监控和排查
+        // 核心线程数2，最大线程数5，空闲60秒回收，队列容量100，拒绝策略为丢弃（审计日志不应阻塞主流程）
+        this.executorService = new ThreadPoolExecutor(
+            2, 5, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100),
+            new SqlAuditThreadFactory(),
+            new ThreadPoolExecutor.DiscardPolicy()
+        );
         
         // 初始化推送处理器
         initializeHandlers(sqlLogProperties, auditProperties);
+    }
+    
+    /**
+     * SQL 审计线程工厂，为线程设置有意义的名称便于排查
+     */
+    private static class SqlAuditThreadFactory implements ThreadFactory {
+        private final AtomicInteger counter = new AtomicInteger(0);
+        
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "sql-audit-" + counter.incrementAndGet());
+            thread.setDaemon(true); // 守护线程，不阻塞 JVM 关闭
+            return thread;
+        }
     }
     
     /**
@@ -129,6 +152,16 @@ public class SqlAuditService {
     public void shutdown() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
+            try {
+                // 等待已提交的任务在3秒内完成
+                if (!executorService.awaitTermination(3, TimeUnit.SECONDS)) {
+                    log.warn("SQL 审计线程池未在超时时间内关闭，执行强制关闭");
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

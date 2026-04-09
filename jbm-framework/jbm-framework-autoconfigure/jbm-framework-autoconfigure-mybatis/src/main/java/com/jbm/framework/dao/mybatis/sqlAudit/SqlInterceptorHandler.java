@@ -284,9 +284,8 @@ public class SqlInterceptorHandler {
      * @param info SQL 执行信息对象
      * @param result 执行结果
      * @param stopWatch 计时器
-     * @param boundSql BoundSql 对象（用于格式化结果）
      */
-    public void completeExecutionInfo(SqlExecutionInfo info, Object result, StopWatch stopWatch, BoundSql boundSql) {
+    public void completeExecutionInfo(SqlExecutionInfo info, Object result, StopWatch stopWatch) {
         info.setEndTime(System.currentTimeMillis());
         info.setExecutionTime(stopWatch.getTotal(TimeUnit.MILLISECONDS));
         info.setSuccess(true);
