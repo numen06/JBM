@@ -1,7 +1,9 @@
 package com.jbm.autoconfig.dic;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.jbm.framework.dictionary.JbmDictionary;
+import com.jbm.framework.dictionary.annotation.JbmDicType;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +63,12 @@ public class DictionaryTemplate {
      * @return
      */
     public List<JbmDictionary> getValues(Class<? extends Enum<?>> clazz) {
-        return getValues(clazz.getSimpleName());
+        JbmDicType dicType = clazz.getAnnotation(JbmDicType.class);
+        String typeKey = clazz.getSimpleName();
+        if (dicType != null && StrUtil.isNotBlank(dicType.value())) {
+            typeKey = dicType.value();
+        }
+        return getValues(typeKey);
     }
 
     /**
