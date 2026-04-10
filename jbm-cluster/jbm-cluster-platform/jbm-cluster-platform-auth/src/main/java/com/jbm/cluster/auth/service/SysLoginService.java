@@ -155,7 +155,7 @@ public class SysLoginService {
             recordLogininfor(resultBody.getResult(), true, null);
         } else {
             checkLogin(loginProcessModel.getLoginType(), loginProcessModel.getUsername(), () -> false);
-            throw new SaOAuth2Exception(resultBody.getMessage());
+            throw new SaOAuth2Exception(StrUtil.emptyToDefault(resultBody.getMessage(), "登录验证失败"));
 //                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
         }
         return resultBody;
