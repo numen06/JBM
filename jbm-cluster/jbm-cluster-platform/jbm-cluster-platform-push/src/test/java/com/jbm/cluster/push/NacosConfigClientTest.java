@@ -1,5 +1,6 @@
 package com.jbm.cluster.push;
 
+import com.jbm.util.nacos.NacosConfigClient;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

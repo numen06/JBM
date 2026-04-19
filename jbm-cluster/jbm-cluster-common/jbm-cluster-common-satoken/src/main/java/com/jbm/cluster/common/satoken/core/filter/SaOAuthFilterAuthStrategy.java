@@ -39,33 +39,47 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     @Override
     public void run(Object r) {
         try {
-            //如果是本机IP不要认证
             HttpServletRequest httpServletRequest = getCurrentRequest();
             if (httpServletRequest == null) return;
 
-            String clientIp =IpUtils.getRequestIp(httpServletRequest); // Hutool 一行获取真实IP（自动处理代理）
+            String clientIp =IpUtils.getRequestIp(httpServletRequest);
             if (isLocalIp(clientIp)) {
-                return; // 是本机请求，跳过认证
+                return;
             }
 
+            // [互信诊断] 打印接收到的关键 header
+            log.debug("[互信诊断] SaOAuthFilter 收到请求: clientIp={}, requestURI={}, Authorization={}, Satoken-Id-Token={}",
+                    clientIp, httpServletRequest.getRequestURI(),
+                    httpServletRequest.getHeader("Authorization") != null
+                            ? httpServletRequest.getHeader("Authorization").substring(0, Math.min(50, httpServletRequest.getHeader("Authorization").length())) + "..."
+                            : "null",
+                    httpServletRequest.getHeader(SaIdUtil.ID_TOKEN) != null
+                            ? httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).substring(0, Math.min(50, httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).length())) + "..."
+                            : "null");
+
             final String tokenValue = StpUtil.getTokenValue();
+            log.debug("[互信诊断] StpUtil.getTokenValue()={}", tokenValue != null ? tokenValue.substring(0, Math.min(30, tokenValue.length())) + "..." : "null");
             if (StrUtil.isBlank(tokenValue)) {
                 throw new SaOAuth2Exception("无效Token");
             }
             SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
+            log.debug("[互信诊断] SaTokenInfo: isLogin={}, tokenTimeout={}", saTokenInfo != null ? saTokenInfo.isLogin : "null", saTokenInfo != null ? saTokenInfo.tokenTimeout : "null");
 
             if (ObjectUtil.isNotEmpty(saTokenInfo)) {
                 if (saTokenInfo.isLogin) {
                     if (saTokenInfo.tokenTimeout <= 0) {
                         throw new SaOAuth2Exception("Token已失效");
                     }
+                    log.debug("[互信诊断] 认证通过路径: StpUtil用户Token有效");
                     return;
                 } else {
                     SaRequest req = SaHolder.getRequest();
                     if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
                         SaIdUtil.checkCurrentRequestToken();
+                        log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
                         return;
                     }
+                    log.debug("[互信诊断] StpUtil未登录且无Satoken-Id-Token header，继续走OAuth2校验");
                 }
             }
             SaRequest req = SaHolder.getRequest();
@@ -74,19 +88,17 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             if (ObjectUtil.isNotEmpty(accessTokenModel)) {
                 clientId = accessTokenModel.clientId;
                 SaOAuth2Util.checkAccessToken(tokenValue);
-//                // 先检查是否已过期
-//                StpUtil.checkActivityTimeout();
-//                // 检查通过后继续续签
-//                StpUtil.updateLastActivityToNow();
+                log.debug("[互信诊断] 认证通过路径: AccessToken有效, clientId={}", clientId);
             } else {
                 ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
+                log.debug("[互信诊断] AccessToken未找到, 查找ClientToken结果: {}", clientTokenModel != null ? "找到, clientId=" + clientTokenModel.clientId : "未找到");
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {
                     clientId = clientTokenModel.clientId;
                     log.info("Client Token Info:{}", JSON.toJSONString(clientTokenModel));
-//                    SaOAuth2Util.checkClientToken(tokenValue);
                 }
             }
             if (ObjectUtil.isEmpty(clientId)) {
+                log.debug("[互信诊断] 认证失败: 所有分支均未匹配, tokenValue={}", tokenValue != null ? tokenValue.substring(0, Math.min(30, tokenValue.length())) + "..." : "null");
                 throw new SaOAuth2Exception(StrUtil.format("无效的访问客户端:{}", clientId));
             }
         } catch (Exception e) {

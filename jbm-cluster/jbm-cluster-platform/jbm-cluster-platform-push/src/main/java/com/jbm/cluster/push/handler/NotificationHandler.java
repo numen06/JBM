@@ -7,19 +7,21 @@ import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.cluster.push.usage.MqttNotificationExchanger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import java.util.Date;
 import java.util.function.Function;
 
 /**
  * 通知处理器配置类
  */
+@Slf4j
 @Configuration
 public class NotificationHandler {
 
@@ -35,10 +37,15 @@ public class NotificationHandler {
 
     @Bean
     public Function<Flux<Message<Notification>>, Mono<Void>> notification() {
-        return flux -> flux.map(message -> {
-            notificationDispatcher.receive(message);
-            return message;
-        }).then();
+        return flux -> flux.flatMap(message ->
+                Mono.fromRunnable(() -> notificationDispatcher.receive(message))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .onErrorResume(e -> {
+                            log.error("notification 通道消费失败", e);
+                            return Mono.empty();
+                        })
+                        .then()
+        ).then();
     }
 
     /**
@@ -48,10 +55,15 @@ public class NotificationHandler {
      */
     @Bean
     public Function<Flux<Message<MqttNotification>>, Mono<Void>> mqtt() {
-        return flux -> flux.map(message -> {
-            mqttNotificationExchanger.send(message.getPayload());
-            return message;
-        }).then();
+        return flux -> flux.flatMap(message ->
+                Mono.fromRunnable(() -> mqttNotificationExchanger.send(message.getPayload()))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .onErrorResume(e -> {
+                            log.error("mqtt 通道消费失败", e);
+                            return Mono.empty();
+                        })
+                        .then()
+        ).then();
     }
 
     /**
@@ -61,10 +73,15 @@ public class NotificationHandler {
      */
     @Bean
     public Function<Flux<Message<PushCallback>>, Mono<Void>> pushCallBack() {
-        return flux -> flux.map(message -> {
-            pushMessageItemService.sendCallBack(message.getPayload());
-            return message;
-        }).then();
+        return flux -> flux.flatMap(message ->
+                Mono.fromRunnable(() -> pushMessageItemService.sendCallBack(message.getPayload()))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .onErrorResume(e -> {
+                            log.error("pushCallBack 通道消费失败", e);
+                            return Mono.empty();
+                        })
+                        .then()
+        ).then();
     }
 
     @Autowired

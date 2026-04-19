@@ -1,6 +1,7 @@
 package com.jbm.framework.dao.mybatis.sqlInjector;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import org.apache.ibatis.mapping.BoundSql;
@@ -8,9 +9,15 @@ import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
 
 public class ReadableSqlUtil {
+
+    private final static ConverterRegistry converterRegistry = ConverterRegistry.getInstance();
+
     /**
      * 将 MyBatis 的 BoundSql 转换为可读的完整 SQL（用于日志）
      * 安全处理：字符串加单引号，日期格式化，null 转为 NULL
@@ -38,28 +45,95 @@ public class ReadableSqlUtil {
             }
 
             // 格式化值
-            String formattedValue = formatValue(value);
+            String formattedValue = formatValueForSql(value);
             // 替换第一个 ? （注意：不能全局替换，避免 SQL 中有 ? 字符）
-            sql = sql.replaceFirst("\\?", formattedValue);
+            // 使用 Matcher.quoteReplacement 转义替换字符串中的 $ 和 \ 等特殊字符，避免被解释为正则表达式组引用
+            sql = sql.replaceFirst("\\?", Matcher.quoteReplacement(formattedValue));
         }
 
         // 转换为单行：将换行符和多个空格压缩为单个空格
         return sql.replaceAll("\\s+", " ").trim();
     }
 
-    private static String formatValue(Object value) {
+    /**
+     * 格式化参数值用于 SQL 语句
+     * 处理日期、字符串、数字等类型的格式化
+     * 
+     * @param value 参数值
+     * @return 格式化后的字符串，用于替换 SQL 中的 ?
+     */
+    private static String formatValueForSql(Object value) {
         if (value == null) {
             return "NULL";
-        } else if (value instanceof String) {
-            // 转义单引号
-            return "'" + value.toString().replace("'", "''") + "'";
-        } else if (value instanceof Date) {
-            return "'" + DateUtil.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS") + "'";
-        } else if (value instanceof Number) {
-            return value.toString();
-        } else {
-            return "'" + StrUtil.toString(value) + "'";
         }
+        
+        // 1. 处理日期时间类型（需要加单引号）
+        if (value instanceof Date) {
+            // java.util.Date, java.sql.Date, java.sql.Timestamp
+            return "'" + DateUtil.formatDateTime((Date) value) + "'";
+        } else if (value instanceof LocalDateTime) {
+            return "'" + ((LocalDateTime) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "'";
+        } else if (value instanceof LocalDate) {
+            return "'" + ((LocalDate) value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "'";
+        } else if (value instanceof LocalTime) {
+            return "'" + ((LocalTime) value).format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "'";
+        } else if (value instanceof Instant) {
+            return "'" + DateUtil.formatDateTime(Date.from((Instant) value)) + "'";
+        } else if (value instanceof ZonedDateTime) {
+            return "'" + DateUtil.formatDateTime(Date.from(((ZonedDateTime) value).toInstant())) + "'";
+        } else if (value instanceof OffsetDateTime) {
+            return "'" + DateUtil.formatDateTime(Date.from(((OffsetDateTime) value).toInstant())) + "'";
+        }
+        
+        // 2. 处理数字类型（不加引号，直接转换为字符串）
+        if (value instanceof Number) {
+            // 包括：Integer, Long, Double, Float, BigDecimal, BigInteger, Short, Byte 等
+            return String.valueOf(value);
+        }
+        
+        // 3. 处理布尔类型（不加引号，转换为数字或字符串，根据数据库习惯使用 true/false）
+        if (value instanceof Boolean) {
+            // 布尔值转换为字符串，大多数数据库支持 true/false
+            return String.valueOf(value);
+        }
+        
+        // 4. 处理字符串类型（必须加单引号，并转义单引号）
+        if (value instanceof String) {
+            String str = (String) value;
+            // 转义单引号：' -> ''
+            return "'" + str.replace("'", "''") + "'";
+        }
+        
+        // 5. 处理其他类型（使用转换器转换后判断）
+        String converted = converterRegistry.convert(String.class, value);
+        if (converted == null) {
+            return "NULL";
+        }
+        
+        // 判断转换后的字符串是否为数字格式
+        // 匹配：整数、小数（正负号可选）
+        if (isNumericString(converted)) {
+            // 数字格式，不加引号
+            return converted;
+        } else {
+            // 非数字格式，当作字符串处理，加单引号并转义
+            return "'" + converted.replace("'", "''") + "'";
+        }
+    }
+    
+    /**
+     * 判断字符串是否为数字格式
+     * 
+     * @param str 待判断的字符串
+     * @return true 表示是数字格式，false 表示不是
+     */
+    private static boolean isNumericString(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        // 匹配整数和小数（包括负数）
+        // 支持：123, -123, 123.45, -123.45, .5, -.5 等格式
+        return str.matches("^-?\\d+(\\.\\d+)?$|^-?\\d*\\.\\d+$");
     }
 
     /**
@@ -69,26 +143,6 @@ public class ReadableSqlUtil {
     public static String formatParameterForOfficial(Object value) {
         if (value == null) {
             return "NULL";
-        } else if (value instanceof String) {
-            return "'" + value.toString().replace("'", "''") + "'(String)";
-        } else if (value instanceof Integer) {
-            return value + "(Integer)";
-        } else if (value instanceof Long) {
-            return value + "(Long)";
-        } else if (value instanceof Short) {
-            return value + "(Short)";
-        } else if (value instanceof Byte) {
-            return value + "(Byte)";
-        } else if (value instanceof Float) {
-            return value + "(Float)";
-        } else if (value instanceof Double) {
-            return value + "(Double)";
-        } else if (value instanceof Boolean) {
-            return value + "(Boolean)";
-        } else if (value instanceof Date) {
-            return "'" + DateUtil.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS") + "'(Date)";
-        } else if (value instanceof Number) {
-            return value + "(Number)";
         } else {
             return "'" + StrUtil.toString(value) + "'(" + value.getClass().getSimpleName() + ")";
         }
@@ -160,7 +214,7 @@ public class ReadableSqlUtil {
         }
 
         List<Map<String, Object>> rows = convertToListOfMaps(result);
-        if (rows == null || rows.isEmpty()) {
+        if (rows.isEmpty()) {
             if (showTotal) {
                 lines.add("<==      Total: 0");
             }
@@ -182,7 +236,9 @@ public class ReadableSqlUtil {
                 List<String> rowValues = new ArrayList<>();
                 for (String column : columns) {
                     Object value = row.get(column);
-                    rowValues.add(formatResultValue(value));
+                    String convertedValue = converterRegistry.convert(String.class, value);
+                    // 如果转换结果为 null，使用 "NULL" 字符串
+                    rowValues.add(convertedValue != null ? convertedValue : "NULL");
                 }
                 lines.add("<==        Row: " + String.join(", ", rowValues));
             }
@@ -234,18 +290,4 @@ public class ReadableSqlUtil {
         }
     }
 
-    /**
-     * 格式化结果值用于输出
-     */
-    private static String formatResultValue(Object value) {
-        if (value == null) {
-            return "NULL";
-        } else if (value instanceof String) {
-            return value.toString();
-        } else if (value instanceof Date) {
-            return DateUtil.formatDateTime((Date) value);
-        } else {
-            return StrUtil.toString(value);
-        }
-    }
 }

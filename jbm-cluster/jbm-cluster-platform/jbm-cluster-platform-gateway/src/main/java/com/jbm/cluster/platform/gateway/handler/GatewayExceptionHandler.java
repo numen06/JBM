@@ -18,6 +18,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * 网关统一异常处理
@@ -42,16 +43,16 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
             return Mono.error(ex);
         }
 
-        ResultBody resultBody;
         ServerHttpRequest request = exchange.getRequest();
-        if ("/favicon.ico".equals(exchange.getRequest().getURI().getPath())) {
+        String requestPath = exchange.getRequest().getURI().getPath();
+        if ("/favicon.ico".equals(requestPath)) {
             return Mono.empty();
         }
+        ResultBody resultBody;
         if (ex instanceof NotFoundException) {
-            resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, exchange.getRequest().getURI().getPath(), HttpStatus.SERVICE_UNAVAILABLE.value());
-//            log.error("==> 错误解析:{}", resultBody);
+            resultBody = webExceptionResolve.buildBody(ex, ErrorCode.SERVICE_UNAVAILABLE, requestPath, HttpStatus.SERVICE_UNAVAILABLE.value());
         } else {
-            resultBody = webExceptionResolve.resolveException(ex, exchange.getRequest().getURI().getPath());
+            resultBody = webExceptionResolve.resolveException(ex, requestPath);
         }
         /**
          * 参考AbstractErrorWebExceptionHandler
@@ -59,11 +60,17 @@ public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
-        log.error("[网关异常处理]请求路径:{},异常信息:{}", exchange.getRequest().getPath(), ex.getMessage());
-        //保存错误日志
-        accessLogService.sendLog(exchange, ex);
-        if (resultBody.getHttpStatus() == null || resultBody.getHttpStatus() == 200) {
+        // 异常摘要/堆栈统一由 WebExceptionResolve 输出；这里仅保证操作日志落地
+        Schedulers.boundedElastic().schedule(() -> accessLogService.sendLog(exchange, ex));
+        Integer resolvedHttpStatus = resultBody.getHttpStatus();
+        if (resolvedHttpStatus == null || resolvedHttpStatus == 200) {
             response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            try {
+                response.setStatusCode(HttpStatus.valueOf(resolvedHttpStatus));
+            } catch (IllegalArgumentException ignored) {
+                response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         DataBuffer dataBuffer = response.bufferFactory().wrap(JSON.toJSONBytes(resultBody));

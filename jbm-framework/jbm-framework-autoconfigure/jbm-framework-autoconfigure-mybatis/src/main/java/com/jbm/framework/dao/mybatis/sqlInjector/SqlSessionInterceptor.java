@@ -1,23 +1,22 @@
 package com.jbm.framework.dao.mybatis.sqlInjector;
 
 import cn.hutool.core.date.StopWatch;
-import com.jbm.framework.dao.SqlLogFormat;
 import com.jbm.framework.dao.SqlLogProperties;
+import com.jbm.framework.dao.mybatis.sqlAudit.SqlExecutionInfo;
+import com.jbm.framework.dao.mybatis.sqlAudit.SqlInterceptorHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
-import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.*;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.AntPathMatcher;
 
-import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 /**
+ * SQL 会话拦截器
+ * 负责拦截 MyBatis 的 SQL 执行，委托给 SqlInterceptorHandler 处理
+ * 
  * @author wesley
  */
 @Intercepts({
@@ -26,14 +25,15 @@ import java.util.concurrent.TimeUnit;
         @Signature(type = Executor.class, method = "update",
                 args = {MappedStatement.class, Object.class})
 })
+@Slf4j
 public class SqlSessionInterceptor implements Interceptor {
-    private static final Logger log = LoggerFactory.getLogger(SqlSessionInterceptor.class);
-
-
+    
+    private final SqlInterceptorHandler sqlInterceptorHandler;
     private final SqlLogProperties sqlLogProperties;
 
     public SqlSessionInterceptor(SqlLogProperties sqlLogProperties) {
         this.sqlLogProperties = sqlLogProperties;
+        this.sqlInterceptorHandler = new SqlInterceptorHandler(sqlLogProperties);
     }
 
     @Override
@@ -43,43 +43,31 @@ public class SqlSessionInterceptor implements Interceptor {
         if (args == null || args.length == 0) {
             return invocation.proceed();
         }
+        
         stopWatch.start();
         MappedStatement ms = (MappedStatement) args[0];
         // ✅ 关键：存入全限定方法名
         MappedStatementHolder.set(ms.getId());
         
-        boolean shouldLog = printLog(ms.getId());
-        SqlLogFormat format = sqlLogProperties.getFormat();
-        if (format == null) {
-            format = SqlLogFormat.MERGED; // 默认合并格式
-        }
+        String operationType = "query".equals(invocation.getMethod().getName()) ? "query" : "update";
+        Object parameter = args[1];
+        SqlExecutionInfo executionInfo = null;
         
-        BoundSql boundSql = null;
-        boolean isQuery = "query".equals(invocation.getMethod().getName());
-        String readableSql = null;
+        // 判断是否需要记录日志（白名单检查）
+        boolean shouldLog = sqlInterceptorHandler.shouldLog(ms.getId());
         
-        // 在执行前输出 Preparing（官方格式或合并格式）
-        if (shouldLog) {
+        // 检查慢查询功能是否启用（慢查询需要绕过白名单检查）
+        boolean slowQueryEnabled = isSlowQueryEnabled();
+        
+        // 准备 SQL 执行信息（执行前收集基础信息）
+        // 如果满足以下任一条件，都需要准备执行信息：
+        // 1. 通过白名单检查（shouldLog = true）
+        // 2. 慢查询功能启用（需要检测慢查询，即使不在白名单中）
+        if (shouldLog || slowQueryEnabled) {
             try {
-                Object parameter = invocation.getArgs()[1];
-                boundSql = ms.getBoundSql(parameter);
-                
-                if (SqlLogFormat.OFFICIAL == format) {
-                    // 官方格式：分别输出 Preparing 和 Parameters
-                    String sql = boundSql.getSql();
-                    log.info("==>  Preparing: {}", sql.endsWith(";") ? sql : sql + ";");
-                    
-                    // 输出 Parameters
-                    String parameters = ReadableSqlUtil.formatParametersForOfficial(boundSql);
-                    if (!parameters.isEmpty()) {
-                        log.info("==> Parameters: {}", parameters);
-                    }
-                } else if (SqlLogFormat.MERGED == format) {
-                    // 合并格式：准备替换参数后的 SQL（在执行后输出，包含执行时间和mapper信息）
-                    readableSql = ReadableSqlUtil.getReadableSql(boundSql);
-                }
+                executionInfo = sqlInterceptorHandler.prepareExecutionInfo(ms, parameter, operationType);
             } catch (Exception e) {
-                log.error("获取SQL失败", e);
+                log.error("准备 SQL 执行信息失败", e);
             }
         }
         
@@ -87,67 +75,27 @@ public class SqlSessionInterceptor implements Interceptor {
         try {
             result = invocation.proceed();
             return result;
+        } catch (Throwable e) {
+            // 记录异常信息
+            if (executionInfo != null) {
+                sqlInterceptorHandler.recordException(executionInfo, e);
+            }
+            throw e;
         } finally {
             stopWatch.stop();
             
-            if (shouldLog) {
-                if (SqlLogFormat.OFFICIAL == format) {
-                    // 官方格式：输出结果信息（如果配置了）
-                    if (isQuery && boundSql != null) {
-                        Boolean showColumns = sqlLogProperties.getShowColumns();
-                        Boolean showRows = sqlLogProperties.getShowRows();
-                        Boolean showTotal = sqlLogProperties.getShowTotal();
-                        
-                        if ((showColumns != null && showColumns) || 
-                            (showRows != null && showRows) || 
-                            (showTotal != null && showTotal)) {
-                            try {
-                                List<String> resultLines = ReadableSqlUtil.formatResultForOfficial(
-                                    result, 
-                                    showColumns != null && showColumns,
-                                    showRows != null && showRows,
-                                    showTotal != null && showTotal
-                                );
-                                for (String line : resultLines) {
-                                    log.info(line);
-                                }
-                            } catch (Exception e) {
-                                log.error("格式化查询结果失败", e);
-                            }
-                        }
-                    }
-                } else if (SqlLogFormat.MERGED == format) {
-                    // 合并格式：输出包含执行时间和mapper信息的完整日志
-                    if (readableSql != null) {
-                        String sql = readableSql.endsWith(";") ? readableSql : readableSql + ";";
-                        log.info("[SQL Run Time : {} ms ],[SQL Mapper : {}] \n {}", 
-                                stopWatch.getTotal(TimeUnit.MILLISECONDS), ms.getId(), sql);
-                    }
+            if (executionInfo != null && (shouldLog || slowQueryEnabled)) {
+                try {
+                    sqlInterceptorHandler.completeExecutionInfo(executionInfo, result, stopWatch);
+                    sqlInterceptorHandler.handleSqlExecutionInfo(executionInfo);
+                } catch (Exception e) {
+                    log.error("处理 SQL 执行信息失败", e);
                 }
             }
             
+            // ✅ 必须清理！防内存泄漏
             MappedStatementHolder.clear();
         }
-        // ✅ 必须清理！防内存泄漏
-    }
-
-    public boolean printLog(String msId) {
-        // ✅ 从当前线程栈中提取 MappedStatement.getId()
-        if (msId == null) {
-            return false;
-        }
-        List<String> whitelist = sqlLogProperties.getWhitelist();
-        if (whitelist == null || whitelist.isEmpty()) {
-            return false;
-        }
-//        logger.info("msId: {}", msId);
-        AntPathMatcher matcher = new AntPathMatcher();
-        for (String pattern : whitelist) {
-            if (matcher.match(pattern, msId)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -157,5 +105,22 @@ public class SqlSessionInterceptor implements Interceptor {
 
     @Override
     public void setProperties(Properties properties) {
+    }
+    
+    /**
+     * 检查慢查询功能是否启用
+     * 
+     * @return 是否启用慢查询检测
+     */
+    private boolean isSlowQueryEnabled() {
+        if (sqlLogProperties == null) {
+            return false;
+        }
+        SqlLogProperties.SlowQueryProperties slowQuery = sqlLogProperties.getSlowQuery();
+        if (slowQuery == null) {
+            return false;
+        }
+        // 如果 enabled 为 null，默认启用
+        return slowQuery.getEnabled() == null || slowQuery.getEnabled();
     }
 }

@@ -116,6 +116,11 @@
     <logger name="com.jbm" level="info"/>
     <!-- Spring日志级别控制  -->
     <logger name="org.springframework" level="warn"/>
+    <!-- 抑制 Swagger/SpringDoc 的警告日志（由于 @ApiImplicitParam 缺少 dataType 属性导致的警告） -->
+    <logger name="springfox.documentation.spring.web.readers.parameter.FormParameterSpecificationProvider" level="ERROR"/>
+    <logger name="springfox.documentation.spring.web.readers.operation.OperationImplicitParameterReader" level="ERROR"/>
+    <logger name="springdoc.documentation.builder.FormParameterSpecificationProvider" level="ERROR"/>
+    <logger name="springdoc.documentation.swagger.readers.operation.OperationImplicitParameterReader" level="ERROR"/>
 
 
     <root level="info">

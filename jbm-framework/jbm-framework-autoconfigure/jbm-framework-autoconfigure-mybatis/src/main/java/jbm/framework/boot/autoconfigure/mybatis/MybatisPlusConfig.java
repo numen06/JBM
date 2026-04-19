@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.io.Resource;
 
 import java.util.Arrays;
@@ -146,18 +147,5 @@ public class MybatisPlusConfig {
         return mybatisMapperRefresh;
     }
 
-    /**
-     * SQL自动执行处理器
-     * 注册为Bean确保能够监听ApplicationReadyEvent
-     */
-    @Bean
-    public com.jbm.framework.dao.expand.InitializeSqlProcessor initializeSqlProcessor(
-            com.jbm.framework.dao.SqlAutoExecuteProperties sqlAutoExecuteProperties) {
-        com.jbm.framework.dao.expand.InitializeSqlProcessor processor = 
-            new com.jbm.framework.dao.expand.InitializeSqlProcessor();
-        processor.setSqlAutoExecuteProperties(sqlAutoExecuteProperties);
-        processor.setApplicationContext(applicationContext);
-        return processor;
-    }
 
 }

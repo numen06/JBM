@@ -138,6 +138,8 @@ sa-token:
   jwt-secret-key: abcdefghijklmnopqrstuvwxyz
   # 是否输出操作日志
   is-log: true
+  # 关闭启动时版本 ASCII（Bootstrap + 主上下文会各初始化一次，否则会打两遍）
+  is-print: false
 
 # 安全配置
 security:

@@ -2,6 +2,7 @@ package com.jbm.cluster.auth.service;
 
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
@@ -42,7 +43,7 @@ public class UserService {
         thirdPartyUserForm.setNickName(userName);
         ResultBody<UserAccount> resultBody = baseUserServiceClient.loginAndRegisterMobileUser(thirdPartyUserForm);
         if (!resultBody.getSuccess()) {
-            throw new ServiceException(resultBody.getMessage());
+            throw new ServiceException(StrUtil.emptyToDefault(resultBody.getMessage(), "手机号登录失败，请稍后重试"));
         }
         return resultBody.action(userAccount -> {
             return userAccountToLoginUser(userAccount);

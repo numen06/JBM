@@ -3,6 +3,8 @@ package com.jbm.cluster.platform.gateway.handler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.jbm.cluster.platform.gateway.utils.WebFluxUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
@@ -13,16 +15,20 @@ import reactor.core.publisher.Mono;
  *
  * @author wesley.zhang
  */
+@Slf4j
 public class SentinelFallbackHandler implements WebExceptionHandler {
 
 
     private Mono<Void> writeResponse(ServerResponse response, ServerWebExchange exchange) {
-        return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), "请求超过最大数，请稍候再试");
+        return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), HttpStatus.TOO_MANY_REQUESTS,
+                "请求超过最大数，请稍候再试", null, HttpStatus.TOO_MANY_REQUESTS.value());
     }
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-        ex.printStackTrace();
+        if (BlockException.isBlockException(ex)) {
+            log.warn("请求被限流或阻断: {}", ex.toString());
+        }
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
