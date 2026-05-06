@@ -107,6 +107,7 @@ public class MqttRequestResponseManager {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> json = (Map<String, Object>) JSON.parseObject(payload, Map.class);
                     json.put("requestId", requestId);
+                    alignV2ThingMessageIdWithRequestId(json, requestId);
                     return JSON.toJSONString(json);
                 } catch (Exception e) {
                     return payload;
@@ -118,10 +119,25 @@ public class MqttRequestResponseManager {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> json = (Map<String, Object>) JSON.parseObject(JSON.toJSONString(requestMessage), Map.class);
                 json.put("requestId", requestId);
+                alignV2ThingMessageIdWithRequestId(json, requestId);
                 return JSON.toJSONString(json);
             } catch (Exception e) {
                 return JSON.toJSONString(requestMessage);
             }
+        }
+    }
+
+    /**
+     * V2 物模型（阿里云 thing/*）请求体含 {@code version} + {@code params}，平台回复通常只回显 {@code id}。
+     * 若 {@code id} 与 RPC 侧 {@link ResponseTopicHandler} 注册的 requestId 不一致，会误走 FIFO fallback，并发时可能错配响应。
+     * 将 {@code id} 与内部 {@code requestId} 对齐，保证 reply 可被正确关联。
+     */
+    private static void alignV2ThingMessageIdWithRequestId(Map<String, Object> json, String requestId) {
+        if (json == null || requestId == null) {
+            return;
+        }
+        if (json.containsKey("params") && json.get("version") != null) {
+            json.put("id", requestId);
         }
     }
 
