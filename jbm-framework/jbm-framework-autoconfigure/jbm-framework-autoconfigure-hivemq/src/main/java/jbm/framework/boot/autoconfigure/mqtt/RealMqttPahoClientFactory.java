@@ -11,7 +11,10 @@ import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.factories.Mqtt5ClientFactory;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
+import org.springframework.lang.Nullable;
 
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,21 +27,96 @@ public class RealMqttPahoClientFactory {
     private final Mqtt5ClientFactory mqtt5ClientFactory;
 
     private final MqttProperties mqttConnectProperties;
-    
+
+    private final Environment environment;
+
     // 客户端缓存，避免重复创建相同 Client ID 的客户端
     private final Map<String, SimpleMqttClient> clientCache = new ConcurrentHashMap<>();
 
+    /** 可选，MQTT5 时由容器注入的共享 Mqtt5AsyncClient Bean，用于复用避免重复连接 */
+    private final Mqtt5AsyncClient sharedMqtt5AsyncClient;
+
     public RealMqttPahoClientFactory(Mqtt5ClientFactory mqtt5ClientFactory, MqttProperties mqttConnectProperties) {
+        this(mqtt5ClientFactory, mqttConnectProperties, null, null);
+    }
+
+    public RealMqttPahoClientFactory(Mqtt5ClientFactory mqtt5ClientFactory, MqttProperties mqttConnectProperties, Environment environment) {
+        this(mqtt5ClientFactory, mqttConnectProperties, environment, null);
+    }
+
+    public RealMqttPahoClientFactory(Mqtt5ClientFactory mqtt5ClientFactory, MqttProperties mqttConnectProperties,
+            Environment environment, @Nullable Mqtt5AsyncClient sharedMqtt5AsyncClient) {
         super();
         this.mqtt5ClientFactory = mqtt5ClientFactory;
         this.mqttConnectProperties = mqttConnectProperties;
+        this.environment = environment;
+        this.sharedMqtt5AsyncClient = sharedMqtt5AsyncClient;
+    }
+
+    /**
+     * 生成实例唯一后缀：优先本机 IP，失败时用 8 位随机码。
+     * 用于多实例部署时避免共享 clientId 冲突。
+     */
+    public static String generateInstanceSuffix() {
+        try {
+            String ip = InetAddress.getLocalHost().getHostAddress();
+            if (StrUtil.isNotBlank(ip) && !ip.startsWith("127.") && !"0.0.0.0".equals(ip)) {
+                return ip.replace(".", "_");
+            }
+        } catch (Exception ignored) {
+        }
+        return IdUtil.simpleUUID().substring(0, 8);
+    }
+
+    /**
+     * 从完整 clientId 中提取设备基础 key，用于缓存复用。
+     * 例如：device:123:20240412170442 → device:123；device_123_xxx → device_123。
+     * 相同设备只保留一个连接，避免因时间戳变化导致重复创建和 Client ID 冲突。
+     */
+    private static String extractDeviceCacheKey(String fullClientId) {
+        if (StrUtil.isBlank(fullClientId)) {
+            return fullClientId;
+        }
+        if (fullClientId.contains(":")) {
+            String[] parts = fullClientId.split(":", 3);
+            if (parts.length >= 2) {
+                return parts[0] + ":" + parts[1];
+            }
+        }
+        if (fullClientId.contains("_")) {
+            String[] parts = fullClientId.split("_", 3);
+            if (parts.length >= 2) {
+                return parts[0] + "_" + parts[1];
+            }
+        }
+        return fullClientId;
+    }
+
+    /**
+     * 获取共享 clientId：优先使用 spring.mqtt.client-id，未配置则使用 spring.application.name + 实例后缀（IP 或随机码），防止多实例冲突
+     */
+    public String getSharedClientId() {
+        if (StrUtil.isNotBlank(mqttConnectProperties.getClientId())) {
+            return mqttConnectProperties.getClientId();
+        }
+        String base;
+        if (environment != null) {
+            String appName = environment.getProperty("spring.application.name");
+            if (StrUtil.isNotBlank(appName)) {
+                base = appName;
+            } else {
+                base = "default-mqtt-client";
+            }
+        } else {
+            base = "default-mqtt-client";
+        }
+        return base + "-" + generateInstanceSuffix();
     }
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance() {
-        // 创建客户端
-        String clientId = "simple:" + System.currentTimeMillis();
-        return this.getClientInstance(clientId);
+        // 默认一个程序只开一个客户端，使用共享 clientId
+        return this.getClientInstance(getSharedClientId());
     }
 
     // 使用短UUID作为标签（去除连字符，只有8位）
@@ -59,7 +137,7 @@ public class RealMqttPahoClientFactory {
         
         // 使用缓存，避免重复创建相同 Client ID 的客户端
         return clientCache.computeIfAbsent(fullClientId, id -> {
-            log.info("🔌 Creating new MQTT client: ClientId={}", id);
+            log.debug("Creating MQTT client: ClientId={}", id);
             MqttProperties properties = new MqttProperties();
             BeanUtil.copyProperties(mqttConnectProperties, properties);
             properties.setClientId(id);
@@ -71,15 +149,20 @@ public class RealMqttPahoClientFactory {
 
     @SneakyThrows
     public SimpleMqttClient getClientInstance(String clientId) {
-        log.warn("🔍 getClientInstance called with clientId: {}", clientId);
-        // 使用缓存，避免重复创建
-        return clientCache.computeIfAbsent(clientId, id -> {
-            log.info("🔌 Creating new MQTT client: ClientId={}", id);
+        // 共享 clientId 不参与设备缓存 key，直接按原逻辑
+        if (clientId.equals(getSharedClientId()) && sharedMqtt5AsyncClient != null) {
+            return clientCache.computeIfAbsent(clientId, id -> {
+                log.debug("Reusing shared Mqtt5AsyncClient bean for ClientId={}", id);
+                return new SimpleMqttClient(sharedMqtt5AsyncClient, mqttConnectProperties);
+            });
+        }
+        // 按设备基础 key 缓存，避免 device:123:时间戳 每次不同导致重复建连和 Client ID 冲突
+        String cacheKey = extractDeviceCacheKey(clientId);
+        return clientCache.computeIfAbsent(cacheKey, key -> {
+            log.debug("Creating MQTT client: ClientId={} (cacheKey={})", clientId, key);
             MqttProperties properties = new MqttProperties();
             BeanUtil.copyProperties(mqttConnectProperties, properties);
-            log.warn("🔍 After copyProperties, clientId in properties: {}", properties.getClientId());
-            properties.setClientId(id);
-            log.warn("🔍 After setClientId, clientId in properties: {}", properties.getClientId());
+            properties.setClientId(clientId);
             Mqtt5AsyncClient mqtt5AsyncClient = mqtt5ClientFactory.mqttClient(properties, null);
             return new SimpleMqttClient(mqtt5AsyncClient, properties);
         });
@@ -122,12 +205,13 @@ public class RealMqttPahoClientFactory {
     /**
      * 清理指定的客户端缓存
      * 
-     * @param clientId 客户端ID
+     * @param clientId 客户端ID（支持完整 id 或设备基础 key，会按 extractDeviceCacheKey 解析）
      */
     public void removeClient(String clientId) {
-        SimpleMqttClient client = clientCache.remove(clientId);
+        String key = extractDeviceCacheKey(clientId);
+        SimpleMqttClient client = clientCache.remove(key);
         if (client != null) {
-            log.info("🗑️ Removed MQTT client from cache: ClientId={}", clientId);
+            log.info("🗑️ Removed MQTT client from cache: clientId={}, cacheKey={}", clientId, key);
             try {
                 client.shutdown();
             } catch (Exception e) {

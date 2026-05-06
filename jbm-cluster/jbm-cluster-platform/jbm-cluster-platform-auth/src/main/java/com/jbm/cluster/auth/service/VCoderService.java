@@ -17,7 +17,7 @@ public class VCoderService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String getVcodePath(String scope, String vcode) {
-        String codeKey = vcode.toLowerCase();
+        String codeKey = StrUtil.lower(vcode);
         return StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), codeKey);
     }
 

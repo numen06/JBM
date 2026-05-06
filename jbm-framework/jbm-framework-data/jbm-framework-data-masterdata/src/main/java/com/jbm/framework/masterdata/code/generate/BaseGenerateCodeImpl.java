@@ -53,7 +53,11 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         return file;
     }
 
-    public Path getModuleRootPath(URL url,GenerateSource generateSource) throws URISyntaxException {
+    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws URISyntaxException {
+        String modulePath = generateSource.getOutputModuleFor(this.getCodeType());
+        if (StrUtil.isNotBlank(modulePath)) {
+            return Paths.get(url.toURI()).getParent().getParent().getParent().resolve(modulePath);
+        }
         return Paths.get(url.toURI()).getParent().getParent();
     }
 
@@ -61,11 +65,10 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
     @Override
     public Path getTargetDir(GenerateSource generateSource) {
         URL url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
-        String temp = generateSource.getTargetPackage().replace(".", "/");
-        String codeInPackge = StrUtil.replace(StrUtil.toUnderlineCase(this.getCodeType().name()), "_", "/");
-        String codePackage = StrUtil.replace(StrUtil.concat(true, temp, "/", codeInPackge), "/", ".");
+        String codePackage = generateSource.getPackageFor(this.getCodeType());
         generateSource.getData().put("codePackage", codePackage);
-        Path wp = getModuleRootPath(url, generateSource).resolve("src").resolve("main").resolve("java").resolve(temp).resolve(codeInPackge);
+        String packagePath = codePackage.replace(".", "/");
+        Path wp = getModuleRootPath(url, generateSource).resolve("src").resolve("main").resolve("java").resolve(packagePath);
         PathUtil.mkdir(wp);
         return wp;
     }
@@ -87,8 +90,15 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         if (ClassUtil.isAbstract(generateSource.getEntityClass())) {
             throw new ValidateException("该类为虚拟类");
         } else {
-            generateSource.getData().put("basePackage", generateSource.getTargetPackage());
-            generateSource.getData().put("entityClass", generateSource.getEntityClass());
+            String currentPackage = generateSource.getPackageFor(this.getCodeType());
+            generateSource.getData().put("basePackage", currentPackage);
+            Class<?> entityClass = generateSource.getEntityClass();
+            generateSource.getData().put("entityClassName", entityClass.getName());
+            generateSource.getData().put("entityClassSimpleName", entityClass.getSimpleName());
+            generateSource.getData().put("mapperPackage", generateSource.getPackageFor(CodeType.mapper));
+            generateSource.getData().put("servicePackage", generateSource.getPackageFor(CodeType.service));
+            generateSource.getData().put("controllerPackage", generateSource.getPackageFor(CodeType.controller));
+            generateSource.getData().put("businessPackage", generateSource.getPackageFor(CodeType.business));
         }
         if (ObjectUtil.isNotEmpty(generateSource.getIgnoreGeneate())) {
             if (ArrayUtil.contains(generateSource.getIgnoreGeneate().value(), this.getCodeType())) {

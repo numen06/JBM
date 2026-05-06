@@ -1,7 +1,7 @@
-package ${basePackage}.service.impl;
+package ${codePackage};
 
-import ${entityClass.name};
-import ${basePackage}.service.${entityClass.simpleName}Service;
+import ${entityClassName};
+import ${servicePackage}.${entityClassSimpleName}Service;
 import ${extClass};
 import org.springframework.stereotype.Service;
 
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * @Create: ${time}
  */
 @Service
-public class ${entityClass.simpleName}ServiceImpl extends ${extClassName}<${entityClass.simpleName}> implements ${entityClass.simpleName}Service {
+public class ${entityClassSimpleName}ServiceImpl extends ${extClassName}<${entityClassSimpleName}> implements ${entityClassSimpleName}Service {
 
 
 }

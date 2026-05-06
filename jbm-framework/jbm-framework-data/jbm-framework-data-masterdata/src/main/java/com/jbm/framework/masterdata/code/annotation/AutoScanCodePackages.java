@@ -71,8 +71,94 @@ public class AutoScanCodePackages {
 
         @Override
         public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-            Map<String, Object> attributes = metadata.getAnnotationAttributes(EnableCodeAutoGeneate.class.getName());
-            gnerate(registry, attributes, getPackagesToScan(metadata));
+            Map<String, Object> raw = metadata.getAnnotationAttributes(EnableCodeAutoGeneate.class.getName());
+            Map<String, Object> effective = new LinkedHashMap<>(raw != null ? raw : Collections.emptyMap());
+            expandMapperConfig(effective, raw);
+            expandServiceConfig(effective, raw);
+            expandControllerConfig(effective, raw);
+            expandBusinessConfig(effective, raw);
+            effective.remove("mapper");
+            effective.remove("service");
+            effective.remove("controller");
+            effective.remove("business");
+            effective.put("codeGenApplicationClass", metadata.getClassName());
+            gnerate(registry, effective, getPackagesToScan(metadata));
+        }
+
+        private static void putIfBlank(Map<String, Object> effective, String key, String value) {
+            if (value == null) return;
+            Object cur = effective.get(key);
+            if (cur == null || (cur instanceof String && !StringUtils.hasText((String) cur))) {
+                effective.put(key, value);
+            }
+        }
+
+        private static void expandMapperConfig(Map<String, Object> effective, Map<String, Object> raw) {
+            Object obj = raw != null ? raw.get("mapper") : null;
+            if (!(obj instanceof AnnotationAttributes)) return;
+            AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableMapper", a.getBoolean("enabled"));
+            String module = a.getString("module");
+            String packageBase = a.getString("packageBase");
+            String mapperXmlDir = a.getString("mapperXmlDir");
+            if (StringUtils.hasText(module)) {
+                putIfBlank(effective, "daoModule", module);
+                putIfBlank(effective, "mapperModule", module);
+                putIfBlank(effective, "mapperXmlModule", module);
+            }
+            if (StringUtils.hasText(packageBase)) {
+                putIfBlank(effective, "mapperPackage", packageBase + ".mapper");
+            }
+            if (StringUtils.hasText(mapperXmlDir)) {
+                putIfBlank(effective, "mapperXmlDir", mapperXmlDir);
+            }
+        }
+
+        private static void expandServiceConfig(Map<String, Object> effective, Map<String, Object> raw) {
+            Object obj = raw != null ? raw.get("service") : null;
+            if (!(obj instanceof AnnotationAttributes)) return;
+            AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableService", a.getBoolean("enabled"));
+            String module = a.getString("module");
+            String packageBase = a.getString("packageBase");
+            if (StringUtils.hasText(module)) {
+                putIfBlank(effective, "serviceModule", module);
+                putIfBlank(effective, "serviceImplModule", module);
+            }
+            if (StringUtils.hasText(packageBase)) {
+                putIfBlank(effective, "servicePackage", packageBase + ".service");
+            }
+        }
+
+        private static void expandControllerConfig(Map<String, Object> effective, Map<String, Object> raw) {
+            Object obj = raw != null ? raw.get("controller") : null;
+            if (!(obj instanceof AnnotationAttributes)) return;
+            AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableController", a.getBoolean("enabled"));
+            String module = a.getString("module");
+            String packageBase = a.getString("packageBase");
+            if (StringUtils.hasText(module)) {
+                putIfBlank(effective, "controllerModule", module);
+            }
+            if (StringUtils.hasText(packageBase)) {
+                putIfBlank(effective, "controllerPackage", packageBase + ".controller");
+            }
+        }
+
+        private static void expandBusinessConfig(Map<String, Object> effective, Map<String, Object> raw) {
+            Object obj = raw != null ? raw.get("business") : null;
+            if (!(obj instanceof AnnotationAttributes)) return;
+            AnnotationAttributes a = (AnnotationAttributes) obj;
+            effective.put("enableBusiness", a.getBoolean("enabled"));
+            String module = a.getString("module");
+            String packageBase = a.getString("packageBase");
+            if (StringUtils.hasText(module)) {
+                putIfBlank(effective, "businessModule", module);
+                putIfBlank(effective, "businessImplModule", module);
+            }
+            if (StringUtils.hasText(packageBase)) {
+                putIfBlank(effective, "businessPackage", packageBase + ".business");
+            }
         }
 
 //        private String getPackagesToGeneate(AnnotationMetadata metadata) {

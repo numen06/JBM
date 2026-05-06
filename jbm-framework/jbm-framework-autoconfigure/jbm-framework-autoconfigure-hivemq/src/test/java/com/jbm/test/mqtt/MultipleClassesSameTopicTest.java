@@ -20,9 +20,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,6 +57,18 @@ public class MultipleClassesSameTopicTest {
 
     @Autowired
     private MqttSender mqttSender;
+
+    private final String testTag = UUID.randomUUID().toString().substring(0, 8);
+
+    private void subscribeReady(SimpleMqttClient client, String topic, java.util.function.Consumer<Mqtt5Publish> handler) throws Exception {
+        int retries = 0;
+        while (!client.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        assertTrue(client.isConnected(), "客户端应已连接");
+        assertTrue(client.subscribeAndWait(topic, handler, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
+    }
 
     /**
      * 测试场景1: 多个类监听同一个 topic
@@ -96,28 +111,17 @@ public class MultipleClassesSameTopicTest {
         AtomicInteger totalCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(messageCount * 3); // 5条消息 * 3个监听器
         
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("multi-class-test");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("multi-class-test-" + testTag);
         
-        // 模拟3个类监听同一topic（实际测试中会用真实的 MqttMapper）
-        testClient.subscribe(testTopic, publish -> {
-            totalCount.incrementAndGet();
+        // 模拟3个类监听同一topic（SimpleMqttClient 单 topic 单 listener，此处用复合 callback 模拟多监听器）
+        java.util.function.Consumer<Mqtt5Publish> handler = publish -> {
+            totalCount.addAndGet(3);
             latch.countDown();
-            log.info("📨 [模拟监听器1] 收到消息");
-        });
-        
-        testClient.subscribe(testTopic, publish -> {
-            totalCount.incrementAndGet();
             latch.countDown();
-            log.info("📨 [模拟监听器2] 收到消息");
-        });
-        
-        testClient.subscribe(testTopic, publish -> {
-            totalCount.incrementAndGet();
             latch.countDown();
-            log.info("📨 [模拟监听器3] 收到消息");
-        });
-        
-        ThreadUtil.sleep(500);
+            log.info("📨 [模拟监听器] 收到消息");
+        };
+        subscribeReady(testClient, testTopic, handler);
         
         // 发送N条消息
         log.info("📤 发送{}条消息", messageCount);

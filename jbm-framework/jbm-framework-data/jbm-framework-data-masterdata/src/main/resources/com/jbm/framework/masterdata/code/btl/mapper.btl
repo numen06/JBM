@@ -1,13 +1,13 @@
-package ${basePackage}.mapper;
+package ${codePackage};
 
 import ${extClass};
 import com.jbm.framework.masterdata.annotation.MapperRepository;
-import ${entityClass.name};
+import ${entityClassName};
 
 /**
  * @Author: auto generate by jbm
  * @Create: ${time}
  */
 @MapperRepository
-public interface ${entityClass.simpleName}Mapper extends ${extClassName}<${entityClass.simpleName}> {
+public interface ${entityClassSimpleName}Mapper extends ${extClassName}<${entityClassSimpleName}> {
 }

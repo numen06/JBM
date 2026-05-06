@@ -1,6 +1,7 @@
 package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import com.jbm.test.mqtt.proxy.impl.MqttExecuteImpl;
 import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
@@ -17,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +37,17 @@ public class MessageDeduplicationTest {
     @Autowired
     private RealMqttPahoClientFactory mqttPahoClientFactory;
 
+    /** 等待连接并订阅完成（确保 publish flow 已注册） */
+    private void subscribeReady(SimpleMqttClient client, String topic, Consumer<Mqtt5Publish> handler) throws Exception {
+        int retries = 0;
+        while (!client.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        assertTrue(client.isConnected(), "客户端应已连接");
+        assertTrue(client.subscribeAndWait(topic, handler, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
+    }
+
     /**
      * 测试场景1: 验证同一消息不会被重复执行
      * 问题描述：订阅 topic 只收到了一次，但代码执行了两次
@@ -50,13 +63,11 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("dedup-test-client-1");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 第 {} 次执行处理逻辑", count);
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送一条消息
         log.info("📤 发送测试消息");
@@ -88,12 +99,10 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("rapid-test-client");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 执行处理逻辑 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         String message = "相同内容的消息";
         int sendCount = 3;
@@ -128,12 +137,10 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("multiple-test-client");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 执行处理逻辑 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         String message = "相同内容的消息";
         int sendCount = 5;
@@ -168,12 +175,10 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("dedup-test-client-4");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 执行处理逻辑 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送多条不同内容的消息
         log.info("📤 发送5条不同内容的消息");
@@ -206,12 +211,10 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("concurrent-test-client");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 执行处理逻辑 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
-        
-        ThreadUtil.sleep(500);
         
         // 并发发送10条不同的消息
         log.info("📤 并发发送{}条消息", sendCount);
@@ -256,13 +259,11 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("normal-flow-client");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             String content = new String(publish.getPayloadAsBytes());
             log.info("📨 执行处理逻辑 #{}: {}", count, content);
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送一系列不同内容的消息
         log.info("📤 发送{}条不同内容的消息", sendCount);
@@ -294,7 +295,7 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("real-world-test");
         
         // 订阅主题（模拟实际的 MqttMapper）
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             String content = new String(publish.getPayloadAsBytes());
             log.info("📨 第 {} 次执行业务逻辑: {}", count, content);
@@ -311,8 +312,6 @@ public class MessageDeduplicationTest {
                 latch.countDown();
             }
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送消息
         log.info("📤 发送1条业务消息");
@@ -355,13 +354,11 @@ public class MessageDeduplicationTest {
         SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("stability-test");
         
         // 订阅主题
-        client.subscribe(testTopic, publish -> {
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 处理第 {} 条消息: {}", count, new String(publish.getPayloadAsBytes()));
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送10条消息
         log.info("📤 发送{}条消息", expectedCount);

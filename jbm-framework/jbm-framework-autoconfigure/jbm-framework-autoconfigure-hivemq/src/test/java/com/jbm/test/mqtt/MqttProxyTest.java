@@ -19,12 +19,16 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,6 +54,19 @@ public class MqttProxyTest {
     // 消息计数器，用于验证是否有重复订阅导致的重复消息
     private final AtomicInteger messageCounter = new AtomicInteger(0);
     
+    private final String testTag = UUID.randomUUID().toString().substring(0, 8);
+
+    /** 等待连接并订阅完成（确保 publish flow 已注册） */
+    private void subscribeReady(SimpleMqttClient client, String topic, Consumer<Mqtt5Publish> handler) throws Exception {
+        int retries = 0;
+        while (!client.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        assertTrue(client.isConnected(), "客户端应已连接");
+        assertTrue(client.subscribeAndWait(topic, handler, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
+    }
+
     @BeforeEach
     public void setUp() throws Exception {
         messageCounter.set(0);
@@ -96,24 +113,16 @@ public class MqttProxyTest {
         log.info("========== 测试重复订阅检测 ==========");
         
         String testTopic = "/test/duplicate/check";
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("duplicate-test-client");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("duplicate-test-client-" + testTag);
         
-        // 订阅主题并计数
-        testClient.subscribe(testTopic, publish -> {
+        subscribeReady(testClient, testTopic, publish -> {
             int count = messageCounter.incrementAndGet();
             log.info("📨 接收到消息 #{}: {}", count, new String(publish.getPayloadAsBytes()));
         });
         
-        // 等待订阅生效
-        ThreadUtil.sleep(500);
-        
-        // 发送一条消息
         testClient.publishObject(testTopic, "测试重复订阅");
-        
-        // 等待消息处理
         ThreadUtil.sleep(1000);
         
-        // 验证消息只被处理了一次
         int finalCount = messageCounter.get();
         log.info("✅ 消息处理次数: {}", finalCount);
         assertEquals(1, finalCount, "消息应该只被处理一次，而不是被重复处理");
@@ -142,11 +151,16 @@ public class MqttProxyTest {
                     startLatch.await(); // 等待所有线程就绪
                     
                     String topic = "/test/concurrent/topic";
-                    SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("concurrent-test-client");
+                    SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("concurrent-test-client-" + testTag);
                     
-                    client.subscribe(topic, publish -> {
+                    int retries = 0;
+                    while (!client.isConnected() && retries < 50) {
+                        ThreadUtil.sleep(100);
+                        retries++;
+                    }
+                    client.subscribeAndWait(topic, publish -> {
                         log.info("🧵 线程 {} 接收到消息: {}", index, new String(publish.getPayloadAsBytes()));
-                    });
+                    }, 10, TimeUnit.SECONDS);
                     
                     log.info("✅ 线程 {} 订阅完成", index);
                 } catch (Exception e) {
@@ -178,7 +192,7 @@ public class MqttProxyTest {
     public void testSubscribeWithNullTopic() {
         log.info("========== 测试空主题异常处理 ==========");
         
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("exception-test-client");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("exception-test-client-" + testTag);
         
         assertThrows(Exception.class, () -> {
             testClient.subscribe(null, publish -> {
@@ -196,7 +210,7 @@ public class MqttProxyTest {
     public void testSubscribeWithNullCallback() {
         log.info("========== 测试空回调异常处理 ==========");
         
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("exception-test-client-2");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("exception-test-client-2-" + testTag);
         
         assertThrows(Exception.class, () -> {
             testClient.subscribe("/test/null/callback", null);
@@ -213,20 +227,16 @@ public class MqttProxyTest {
         log.info("========== 大量消息并发处理测试 ==========");
         
         String testTopic = "/test/high/volume";
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("high-volume-test-client");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("high-volume-test-client-" + testTag);
         
         AtomicInteger receivedCount = new AtomicInteger(0);
         CountDownLatch messageLatch = new CountDownLatch(100);
         
-        // 订阅主题
-        testClient.subscribe(testTopic, publish -> {
+        subscribeReady(testClient, testTopic, publish -> {
             receivedCount.incrementAndGet();
             messageLatch.countDown();
             log.debug("📨 接收消息: {}", new String(publish.getPayloadAsBytes()));
         });
-        
-        // 等待订阅生效
-        ThreadUtil.sleep(500);
         
         // 并发发送大量消息
         ExecutorService publishExecutor = Executors.newFixedThreadPool(5);
@@ -290,25 +300,19 @@ public class MqttProxyTest {
         AtomicInteger handler1Count = new AtomicInteger(0);
         AtomicInteger handler2Count = new AtomicInteger(0);
         
-        SimpleMqttClient client1 = mqttPahoClientFactory.getAppClientInstance("mapper1-client");
-        SimpleMqttClient client2 = mqttPahoClientFactory.getAppClientInstance("mapper2-client");
+        SimpleMqttClient client1 = mqttPahoClientFactory.getAppClientInstance("mapper1-client-" + testTag);
+        SimpleMqttClient client2 = mqttPahoClientFactory.getAppClientInstance("mapper2-client-" + testTag);
         
-        // 两个处理器订阅相同主题
-        client1.subscribe(sharedTopic, publish -> {
+        subscribeReady(client1, sharedTopic, publish -> {
             handler1Count.incrementAndGet();
             log.info("📨 Handler1 接收: {}", new String(publish.getPayloadAsBytes()));
         });
-        
-        client2.subscribe(sharedTopic, publish -> {
+        subscribeReady(client2, sharedTopic, publish -> {
             handler2Count.incrementAndGet();
             log.info("📨 Handler2 接收: {}", new String(publish.getPayloadAsBytes()));
         });
         
-        ThreadUtil.sleep(500);
-        
-        // 发送消息
         client1.publishObject(sharedTopic, "共享主题测试消息");
-        
         ThreadUtil.sleep(1000);
         
         log.info("✅ Handler1 接收次数: {}", handler1Count.get());
@@ -327,16 +331,12 @@ public class MqttProxyTest {
         log.info("========== 长时间运行稳定性测试 ==========");
         
         String testTopic = "/test/stability";
-        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("stability-test-client");
+        SimpleMqttClient testClient = mqttPahoClientFactory.getAppClientInstance("stability-test-client-" + testTag);
         
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger errorCount = new AtomicInteger(0);
         
-        testClient.subscribe(testTopic, publish -> {
-            successCount.incrementAndGet();
-        });
-        
-        ThreadUtil.sleep(500);
+        subscribeReady(testClient, testTopic, publish -> successCount.incrementAndGet());
         
         // 持续发送消息 30 秒
         long endTime = System.currentTimeMillis() + 30_000;

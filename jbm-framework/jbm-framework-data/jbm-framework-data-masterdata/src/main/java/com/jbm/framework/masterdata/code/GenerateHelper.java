@@ -16,7 +16,11 @@ import java.util.*;
 @Slf4j
 public class GenerateHelper {
     public static void scanGnerate(String entityPackage, Map<String, Object> attributes) {
-
+        Object appClass = attributes.get("codeGenApplicationClass");
+        if (appClass != null && isRunningFromJar(appClass.toString())) {
+            log.debug("jar 运行，跳过代码生成");
+            return;
+        }
         GenerateMasterData generateMasterData = new GenerateMasterData();
         BeanUtil.fillBeanWithMap(attributes, generateMasterData, true);
         try {
@@ -55,10 +59,25 @@ public class GenerateHelper {
                     log.error("生成代码错误Class:{}", generateSource.getEntityClass(), e);
                 }
             });
+            generateMasterData.writeRecordFile();
         } catch (Exception e) {
             log.error("生成代码错误", e);
         }
         // TODO: 2022/7/29
 //        throw new RuntimeException("测试结束");
+    }
+
+    /**
+     * 判断指定类是否从 jar 中加载（生产 jar 运行），若是则跳过代码生成。
+     */
+    private static boolean isRunningFromJar(String className) {
+        try {
+            java.net.URL loc = Class.forName(className).getProtectionDomain().getCodeSource().getLocation();
+            if (loc == null) return false;
+            String path = loc.getPath();
+            return path != null && (path.endsWith(".jar") || path.contains(".jar!"));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
