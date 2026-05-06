@@ -5,6 +5,7 @@ import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class VCoderService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String getVcodePath(String scope, String vcode) {
-        String codeKey = StrUtil.lower(vcode);
+        String codeKey = vcode.toLowerCase();
         return StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), codeKey);
     }
 
