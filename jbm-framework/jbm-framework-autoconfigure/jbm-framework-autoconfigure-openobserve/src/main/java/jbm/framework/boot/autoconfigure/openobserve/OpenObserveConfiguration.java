@@ -14,10 +14,11 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
 
-//@Configuration
+@Configuration
 @EnableConfigurationProperties(OpenObserveProperties.class)
 @ConditionalOnProperty(prefix = "open-observe", name = "url")
 public class OpenObserveConfiguration {
