@@ -574,14 +574,14 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      *
      * @param userId
      * @param appId
-     * @param root   true：超管或 ROOT 用户，走全量菜单且忽略菜单 app_id 过滤
+     * @param root   true：超管或 ROOT 用户，不按角色/用户授权表过滤，直接返回当前 app 下全部菜单权限（与角色查询相同的 app_id 规则：当前应用 + 平台菜单）
      * @return
      */
     @Override
     public List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root) {
         if (root) {
-            // 超级管理员 / ROOT 用户：不按 appId 过滤，避免登录态 appId 与菜单 app_id 不一致时返回空列表
-            return findAuthorityMenu(null, appId, true);
+            // 超级管理员 / ROOT：仍按 appId 聚合（当前应用菜单 + app_id 为空的平台菜单），与 selectAuthorityMenuByRole 等一致
+            return findAuthorityMenu(null, appId, false);
         }
         // 用户权限列表
         List<AuthorityMenu> authorities = Lists.newArrayList();

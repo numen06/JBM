@@ -42,7 +42,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      *
      * @param status               菜单状态过滤，null 表示不按菜单状态过滤
      * @param appId                应用维度过滤
-     * @param ignoreAppIdFilter    true 时不按 m.app_id 过滤（超管 / ROOT 全量菜单）
+     * @param ignoreAppIdFilter    true 时不按 m.app_id 过滤（跨应用全量菜单，慎用；一般传 false）
      */
     List<AuthorityMenu> findAuthorityMenu(Integer status, Long appId, boolean ignoreAppIdFilter);
 
@@ -208,7 +208,7 @@ public interface BaseAuthorityService extends IMasterDataService<BaseAuthority> 
      *
      * @param userId 用户 ID
      * @param appId  当前应用 ID（登录会话）
-     * @param root     true：超管（userId=0）或 ROOT 用户名，返回全量菜单且不按菜单 app_id 过滤
+     * @param root     true：超管或 ROOT 用户名，不按角色/用户授权聚合，直接返回当前 app 下全部菜单权限（appId 与菜单 app_id 规则同角色查询）
      * @return
      */
     List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root);
