@@ -10,6 +10,7 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -319,6 +320,7 @@ public class SysLoginService {
         log.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
         log.setOs(userAgent.getOs().getName());
         log.setLoginStatus(loginStatus);
+        log.setLoginTime(DateTime.now());
         jbmClusterStreamTemplate.sendAccountLogs(log);
     }
 

@@ -110,11 +110,16 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
 
     @Override
     public List<AuthorityMenu> findAuthorityMenu(Integer status, Long appId) {
+        return findAuthorityMenu(status, appId, false);
+    }
+
+    @Override
+    public List<AuthorityMenu> findAuthorityMenu(Integer status, Long appId, boolean ignoreAppIdFilter) {
         Map map = Maps.newHashMap();
         map.put("status", status);
         map.put("appId", appId);
-        List<AuthorityMenu> authorities = baseAuthorityMapper.selectAuthorityMenu(map);
-        return authorities;
+        map.put("ignoreAppIdFilter", ignoreAppIdFilter);
+        return baseAuthorityMapper.selectAuthorityMenu(map);
     }
 
 
@@ -568,14 +573,15 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * 获取用户已授权权限详情
      *
      * @param userId
-     * @param root   超级管理员
+     * @param appId
+     * @param root   true：超管或 ROOT 用户，走全量菜单且忽略菜单 app_id 过滤
      * @return
      */
     @Override
     public List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root) {
         if (root) {
-            // 超级管理员返回所有
-            return findAuthorityMenu(null, appId);
+            // 超级管理员 / ROOT 用户：不按 appId 过滤，避免登录态 appId 与菜单 app_id 不一致时返回空列表
+            return findAuthorityMenu(null, appId, true);
         }
         // 用户权限列表
         List<AuthorityMenu> authorities = Lists.newArrayList();

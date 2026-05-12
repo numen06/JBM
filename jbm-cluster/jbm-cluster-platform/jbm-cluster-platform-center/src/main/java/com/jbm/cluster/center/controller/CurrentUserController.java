@@ -10,6 +10,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -119,12 +120,13 @@ public class CurrentUserController {
      *
      * @return
      */
-//    @SaCheckLogin
+    @SaCheckLogin
     @ApiOperation(value = "获取当前登录用户已分配菜单权限", notes = "获取当前登录用户已分配菜单权限")
     @GetMapping("/user/menu")
     public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(SecurityUtils.getLoginUser().getUserId(), SecurityUtils.getLoginUser().getAppId(),
-                LoginHelper.isAdmin());
+        JbmLoginUser loginUser = SecurityUtils.getLoginUser();
+        boolean fullMenu = LoginHelper.isAdmin() || JbmConstants.ROOT.equals(loginUser.getUsername());
+        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(loginUser.getUserId(), loginUser.getAppId(), fullMenu);
         return ResultBody.callback(() -> result);
     }
 }

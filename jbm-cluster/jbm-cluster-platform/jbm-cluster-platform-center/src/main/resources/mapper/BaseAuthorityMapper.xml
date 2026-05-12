@@ -63,12 +63,18 @@
             <if test="status != null">
                 AND m.status = #{status}
             </if>
-            <if test="appId != null">
-                AND (m.app_id = #{appId} OR m.app_id is null)
-            </if>
-            <if test="appId == null">
-                AND m.app_id is null
-            </if>
+            <choose>
+                <when test="ignoreAppIdFilter != null and ignoreAppIdFilter">
+                </when>
+                <otherwise>
+                    <if test="appId != null">
+                        AND (m.app_id = #{appId} OR m.app_id is null)
+                    </if>
+                    <if test="appId == null">
+                        AND m.app_id is null
+                    </if>
+                </otherwise>
+            </choose>
         </where>
     </select>
 
