@@ -3,7 +3,6 @@ package com.jbm.cluster.push.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -56,12 +54,6 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
 
 //    @Autowired
 //    private WebhookTaskService webhookTaskService;
-
-    /***
-     * 异步执行线程池
-     */
-    private final ExecutorService executorService = ThreadUtil.newExecutor(100);
-
 
     /**
      * 删除两个月前的数据
@@ -271,12 +263,18 @@ public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask
     public void webhookEventEnd(WebhookTaskEndEvent webhookTaskEndEvent) {
         WebhookTaskService webhookTaskService = SpringContextHolder.getBean(WebhookTaskService.class);
         try {
+            WebhookTask task = webhookTaskEndEvent.getWebhookTask();
+            // 确保状态和重试次数都被更新
             if (webhookTaskEndEvent.getTaskStatus() == TaskStatus.SUCCESS) {
-                webhookTaskEndEvent.getWebhookTask().setStatus(TaskStatus.SUCCESS.toString());
+                task.setStatus(TaskStatus.SUCCESS.toString());
             } else {
-                webhookTaskEndEvent.getWebhookTask().setStatus(TaskStatus.FAILED.toString());
+                task.setStatus(TaskStatus.FAILED.toString());
             }
-            webhookTaskService.updateEntity(webhookTaskEndEvent.getWebhookTask());
+            // 重要：同时更新 retryNumber，确保重试次数被保存到数据库
+            // task 对象中的 retryNumber 已经在 sendTaskWithRetry 中更新过了
+            webhookTaskService.updateEntity(task);
+            log.debug("✅ 任务 {} 状态已更新: status={}, retryNumber={}", 
+                    task.getTaskId(), task.getStatus(), task.getRetryNumber());
         }catch (Exception e){
             log.error("更新任务错误", e);
         }

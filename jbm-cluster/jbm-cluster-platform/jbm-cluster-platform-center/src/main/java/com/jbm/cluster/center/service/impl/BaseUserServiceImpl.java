@@ -566,7 +566,7 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 throw new ServiceException("手机为空");
             }
             BaseUser user = this.getUserByPhone(thirdPartyUserForm.getPhone());
-            if (ObjectUtil.isEmpty(user) || user.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
+            if (ObjectUtil.isEmpty(user) || (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now())))) {
                 user = this.getUserByUsername(thirdPartyUserForm.getPhone());
                 if (ObjectUtil.isEmpty(user) || (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now())))) {
                     user = new BaseUser();
@@ -592,10 +592,16 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
                 this.addUserThirdParty(user, thirdPartyUserForm.getAccountType());
             }
             //最后再登录一次
-            return this.login(user.getUserName(), thirdPartyUserForm.getAccountType());
+            UserAccount finalAccount = this.login(user.getUserName(), thirdPartyUserForm.getAccountType());
+            if (ObjectUtil.isEmpty(finalAccount)) {
+                throw new ServiceException("无法完成手机号登录，请确认已绑定手机号或使用账号密码登录");
+            }
+            return finalAccount;
+        } catch (ServiceException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("添加登录日志失败:{}", e);
-            throw new ServiceException(e);
+            log.error("手机号登录处理失败", e);
+            throw ServiceException.of(e, "手机号登录处理失败：{}", StrUtil.emptyToDefault(e.getMessage(), e.getClass().getSimpleName()));
         }
     }
 
@@ -619,6 +625,13 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         // 仅返回当前用户拥有的角色
         Set<Long> currentUserRoleIds = LoginHelper.getLoginUser().getRoleIds();
         return roleIds.stream().filter(role -> currentUserRoleIds.contains(role)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BaseUser> getUsersByIds(List<Long> ids) {
+        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().in(BaseUser::getUserId, ids);
+        return this.selectEntitys(queryWrapper);
     }
 
 }

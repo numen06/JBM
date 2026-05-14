@@ -23,6 +23,7 @@ public class WebhookEventService {
     @Autowired
     private EventDeliveryService eventDeliveryService;
 
+    @Autowired
     private JbmRequestTemplate jbmRequestTemplate;
 
     @Autowired
@@ -64,8 +65,5 @@ public class WebhookEventService {
         }
     }
 
-    /**
-     * 🆕 封装：入队列 + 触发投递
-     */
 
 }

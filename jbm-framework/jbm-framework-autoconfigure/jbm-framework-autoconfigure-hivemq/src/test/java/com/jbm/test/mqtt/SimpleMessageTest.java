@@ -1,6 +1,7 @@
 package com.jbm.test.mqtt;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import jbm.framework.boot.autoconfigure.mqtt.MqttAutoConfiguration;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
@@ -12,9 +13,11 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +34,18 @@ public class SimpleMessageTest {
     @Autowired
     private RealMqttPahoClientFactory mqttPahoClientFactory;
 
+    private final String testTag = UUID.randomUUID().toString().substring(0, 8);
+
+    private void subscribeReady(SimpleMqttClient client, String topic, Consumer<Mqtt5Publish> handler) throws Exception {
+        int retries = 0;
+        while (!client.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        assertTrue(client.isConnected(), "客户端应已连接");
+        assertTrue(client.subscribeAndWait(topic, handler, 10, TimeUnit.SECONDS), "订阅应在10秒内完成");
+    }
+
     /**
      * 测试：发送1条消息，执行1次
      */
@@ -42,16 +57,12 @@ public class SimpleMessageTest {
         AtomicInteger executionCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
         
-        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-test-1");
-        
-        // 订阅
-        client.subscribe(testTopic, publish -> {
+        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-test-1-" + testTag);
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 第 {} 次执行", count);
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送1条消息
         log.info("📤 发送1条消息");
@@ -81,16 +92,12 @@ public class SimpleMessageTest {
         int messageCount = 5;
         CountDownLatch latch = new CountDownLatch(messageCount);
         
-        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-test-5");
-        
-        // 订阅
-        client.subscribe(testTopic, publish -> {
+        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-test-5-" + testTag);
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 第 {} 次执行: {}", count, new String(publish.getPayloadAsBytes()));
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送5条消息
         log.info("📤 发送{}条消息", messageCount);
@@ -123,16 +130,12 @@ public class SimpleMessageTest {
         int expectedCount = 10;
         CountDownLatch latch = new CountDownLatch(expectedCount);
         
-        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-stability-test");
-        
-        // 订阅主题（仅订阅一次）
-        client.subscribe(testTopic, publish -> {
+        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-stability-test-" + testTag);
+        subscribeReady(client, testTopic, publish -> {
             int count = executionCount.incrementAndGet();
             log.info("📨 处理第 {} 条消息: {}", count, new String(publish.getPayloadAsBytes()));
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 发送10条消息，每秒1条
         log.info("📤 开始测试，发送{}条消息，每秒1条", expectedCount);
@@ -181,15 +184,11 @@ public class SimpleMessageTest {
         int messageCount = 10;
         CountDownLatch latch = new CountDownLatch(messageCount);
         
-        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-rapid-test");
-        
-        // 订阅
-        client.subscribe(testTopic, publish -> {
+        SimpleMqttClient client = mqttPahoClientFactory.getAppClientInstance("simple-rapid-test-" + testTag);
+        subscribeReady(client, testTopic, publish -> {
             executionCount.incrementAndGet();
             latch.countDown();
         });
-        
-        ThreadUtil.sleep(500);
         
         // 快速发送10条不同消息
         log.info("📤 快速发送{}条消息", messageCount);

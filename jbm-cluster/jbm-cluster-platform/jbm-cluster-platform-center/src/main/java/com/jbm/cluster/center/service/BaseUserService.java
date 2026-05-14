@@ -145,4 +145,6 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
      * @return
      */
     List<Long> getUserRoleIds(Long userId);
+
+    List<BaseUser> getUsersByIds(List<Long> ids);
 }

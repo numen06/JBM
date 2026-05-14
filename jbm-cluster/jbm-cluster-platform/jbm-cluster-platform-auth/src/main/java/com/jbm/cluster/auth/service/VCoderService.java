@@ -2,13 +2,14 @@ package com.jbm.cluster.auth.service;
 
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.validation.ValidationException;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -17,8 +18,8 @@ public class VCoderService {
     private StringRedisTemplate stringRedisTemplate;
 
     public String getVcodePath(String scope, String vcode) {
-        String key = StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), vcode);
-        return key;
+        String codeKey = vcode.toLowerCase();
+        return StrUtil.format("/vcode/{}/{}", StrUtil.blankToDefault(scope, "system"), codeKey);
     }
 
     public LineCaptcha build(String scope, Integer width, Integer height, Integer codeCount) {
@@ -40,7 +41,7 @@ public class VCoderService {
         String key = this.getVcodePath(scope, vcode);
         boolean has = stringRedisTemplate.hasKey(key);
         if (!has) {
-            throw new ValidationException("验证码错误");
+            throw new ValidateException("验证码错误");
         }
 //        if (has) {
 //            try {

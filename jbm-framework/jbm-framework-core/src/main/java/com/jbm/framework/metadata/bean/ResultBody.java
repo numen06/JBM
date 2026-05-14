@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.xml.bind.ValidationException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
@@ -144,6 +145,9 @@ public class ResultBody<T> implements Serializable {
             return ResultBody.error(e.getMessage());
         }
         if (e instanceof ValidateException) {
+            return ResultBody.error(e.getMessage());
+        }
+        if (e instanceof ValidationException) {
             return ResultBody.error(e.getMessage());
         }
         return (ResultBody<T>) ResultBody.failed().exception(e);

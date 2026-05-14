@@ -29,6 +29,11 @@ public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
     @Resource
     private PlatformTransactionManager transactionManager;
 
+    /**
+     * 全局事务切面配置
+     * 只对写操作方法（add*, save*, delete*, update*, exec*, set*）添加事务
+     * 查询方法（get*, query*, find*, list*, count*, is*）不添加事务，避免影响写操作
+     */
     @Bean
     public TransactionInterceptor txAdvice() {
         log.info("JBM开始切面事务");
@@ -36,24 +41,17 @@ public class TransactionAdviceConfig implements ImportBeanDefinitionRegistrar {
         DefaultTransactionAttribute txAttr_REQUIRED = new DefaultTransactionAttribute();
         txAttr_REQUIRED.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
 
-        DefaultTransactionAttribute txAttr_REQUIRED_READONLY = new DefaultTransactionAttribute();
-        txAttr_REQUIRED_READONLY.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        txAttr_REQUIRED_READONLY.setReadOnly(true);
-
         NameMatchTransactionAttributeSource source = new NameMatchTransactionAttributeSource();
+        // 只对写操作方法添加事务
         source.addTransactionalMethod("add*", txAttr_REQUIRED);
         source.addTransactionalMethod("save*", txAttr_REQUIRED);
         source.addTransactionalMethod("delete*", txAttr_REQUIRED);
         source.addTransactionalMethod("update*", txAttr_REQUIRED);
         source.addTransactionalMethod("exec*", txAttr_REQUIRED);
         source.addTransactionalMethod("set*", txAttr_REQUIRED);
-        source.addTransactionalMethod("get*", txAttr_REQUIRED_READONLY);
-        source.addTransactionalMethod("query*", txAttr_REQUIRED_READONLY);
-        source.addTransactionalMethod("find*", txAttr_REQUIRED_READONLY);
-        source.addTransactionalMethod("list*", txAttr_REQUIRED_READONLY);
-        source.addTransactionalMethod("count*", txAttr_REQUIRED_READONLY);
-        source.addTransactionalMethod("is*", txAttr_REQUIRED_READONLY);
-        log.info("JBM开始切面结束");
+        // 查询方法不添加事务，已移除以下配置：
+        // get*, query*, find*, list*, count*, is* 等方法不再自动添加事务
+        log.info("JBM切面事务配置完成：只对写操作添加事务，查询操作不添加事务");
         return new TransactionInterceptor(transactionManager, source);
     }
 

@@ -3,7 +3,6 @@ package com.jbm.cluster.center.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
@@ -19,6 +18,7 @@ import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -456,6 +456,28 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             userInfoStatistics.setOnlineUser(new Long(list.size()));
             userInfoStatistics.setUsersTotal(baseUserService.count(new BaseUser()));
             return userInfoStatistics;
+        });
+    }
+
+
+    @ApiOperation(value = "通过Ids获取多个用户")
+    @GetMapping("/getUsersByIds")
+    public ResultBody<List<BaseUser>> getUsersByIds( @RequestBody IdsForm ids) {
+        return ResultBody.callback(() -> {
+            return baseUserService.getUsersByIds(ids.getIds());
+        });
+    }
+
+    @ApiOperation(value = "改变用户状态")
+    @GetMapping("/updateUserStatus")
+    public ResultBody<BaseUser> updateUserStatus(@RequestParam(value = "userId") Long userId,
+                                                 @RequestParam(value = "status") Integer status) {
+        return ResultBody.callback(() -> {
+            BaseUser baseUser = new BaseUser();
+            baseUser.setUserId(userId);
+            baseUser.setStatus(status);
+            baseUserService.updateUser(baseUser);
+            return baseUser;
         });
     }
 

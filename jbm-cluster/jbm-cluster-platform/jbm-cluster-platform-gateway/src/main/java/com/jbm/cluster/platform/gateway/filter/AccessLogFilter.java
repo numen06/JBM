@@ -2,7 +2,6 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.service.AccessLogService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
@@ -28,6 +27,8 @@ import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 import javax.annotation.Resource;
 
 /**
@@ -35,7 +36,6 @@ import javax.annotation.Resource;
  *
  * @author wesley.zhang
  */
-@Slf4j
 @Component
 public class AccessLogFilter implements WebFilter {
 
@@ -73,9 +73,10 @@ public class AccessLogFilter implements WebFilter {
                 return super.writeWith(body);
             }
         };
-        return chain.filter(exchange.mutate().response(decoratedResponse).build()).then(Mono.fromRunnable(() -> {
-            accessLogService.sendLog(exchange, responseBodys.toString(), null);
-        }));
+        // sendLog 使用独立调度，与上游响应生命周期解耦，避免客户端断开时日志线程被中断
+        return chain.filter(exchange.mutate().response(decoratedResponse).build())
+                .doFinally(signal -> Schedulers.boundedElastic().schedule(
+                        () -> accessLogService.sendLog(exchange, responseBodys.toString(), null)));
     }
 
     private String getResponseBody(ServerHttpResponse response, byte[] content) {

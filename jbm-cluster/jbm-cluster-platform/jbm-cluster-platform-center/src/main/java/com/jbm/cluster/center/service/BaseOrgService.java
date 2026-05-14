@@ -31,5 +31,5 @@ public interface BaseOrgService extends IMultiPlatformTreeService<BaseOrg> {
      * @param baseOrg
      * @return
      */
-    BaseOrg getBaseOrgByOrgCode(BaseOrg baseOrg);
+    BaseOrg getBaseOrg(BaseOrg baseOrg);
 }

@@ -8,6 +8,7 @@ import com.jbm.framework.metadata.enumerate.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -42,6 +43,9 @@ public class WebExceptionResolve {
         String className = ex.getClass().getName();
         if (className.contains("ResponseStatusException")) {
             httpStatus = ((ResponseStatusException) ex).getStatus().value();
+            if (httpStatus == HttpStatus.NOT_FOUND.value()) {
+                code = ErrorCode.NOT_FOUND;
+            }
         }
         if (className.contains("UsernameNotFoundException")) {
             httpStatus = HttpStatus.UNAUTHORIZED.value();
@@ -129,7 +133,8 @@ public class WebExceptionResolve {
         } else if (className.contains("MethodArgumentNotValidException")) {
             BindingResult bindingResult = ((MethodArgumentNotValidException) ex).getBindingResult();
             code = ErrorCode.ALERT;
-            return ResultBody.failed().code(code.getCode()).msg(bindingResult.getFieldError().getDefaultMessage());
+            return ResultBody.failed().code(code.getCode()).msg(bindingResult.getFieldError().getDefaultMessage())
+                    .httpStatus(HttpStatus.BAD_REQUEST.value());
         } else if (className.contains("IllegalArgumentException")) {
             //参数错误
             code = ErrorCode.ALERT;
@@ -169,8 +174,34 @@ public class WebExceptionResolve {
         }
         ResultBody resultBody = ResultBody.failed().code(errorCode.getCode()).msg(errorMsg)
                 .path(path).httpStatus(httpStatus).exception(exception);
-        log.error("==> error:{}", resultBody, exception);
+        if (isRoutineAccessException(exception, httpStatus)) {
+            // 4xx 等常见访问类问题：只记摘要，不打 stack
+            log.warn("==> warn:{}", resultBody);
+        } else {
+            log.error("==> error:{}", resultBody, exception);
+        }
         return resultBody;
+    }
+
+    /**
+     * 客户端/访问类 HTTP 状态：非“系统真正故障”，日志不打异常堆栈。
+     */
+    private static boolean isRoutineAccessHttpStatus(int httpStatus) {
+        try {
+            return HttpStatus.valueOf(httpStatus).is4xxClientError();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 常见访问异常：4xx + 网关 LB 未找到服务实例(503)。
+     */
+    private static boolean isRoutineAccessException(Throwable exception, int httpStatus) {
+        if (isRoutineAccessHttpStatus(httpStatus)) {
+            return true;
+        }
+        return httpStatus == HttpStatus.SERVICE_UNAVAILABLE.value() && exception instanceof NotFoundException;
     }
 
 }

@@ -14,6 +14,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -28,6 +29,7 @@ import java.io.IOException;
 @Slf4j
 @EnableCaching
 @EnableDiscoveryClient
+@EnableScheduling
 @SpringBootApplication
 @ComponentScans(value = {@ComponentScan(basePackageClasses = JbmBigscreenApplication.class)})
 @EntityScan(basePackages = {"com.jbm.cluster.api.model.entitys.bigscreen"})

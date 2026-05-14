@@ -1,7 +1,6 @@
 package com.jbm.cluster.platform.gateway.filter;
 
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -11,7 +10,6 @@ import reactor.core.publisher.Mono;
 /**
  * 移除GatewayContext过滤器
  */
-@Slf4j
 public class RemoveGatewayContextFilter implements WebFilter, Ordered {
 
     @Override

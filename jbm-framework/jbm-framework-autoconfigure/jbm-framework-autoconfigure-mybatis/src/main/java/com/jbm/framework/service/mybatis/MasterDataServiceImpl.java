@@ -221,7 +221,6 @@ public abstract class MasterDataServiceImpl<Entity extends MasterDataEntity> ext
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public DataPaging<Entity> selectEntitys(PageRequestBody pageRequestBody) {
         final Entity entity = pageRequestBody.tryGet(this.currentEntityClass());
         final PageParams pageParams = pageRequestBody.getPageParams();

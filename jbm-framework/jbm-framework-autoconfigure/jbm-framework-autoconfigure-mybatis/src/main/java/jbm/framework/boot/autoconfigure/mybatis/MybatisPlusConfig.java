@@ -9,8 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.google.common.collect.Sets;
 import com.jbm.framework.dao.JdbcDataSourceProperties;
+import com.jbm.framework.dao.SqlLogProperties;
 import com.jbm.framework.dao.mybatis.sqlInjector.CameHumpInterceptor;
 import com.jbm.framework.dao.mybatis.sqlInjector.MasterDataSqlInjector;
+import com.jbm.framework.dao.mybatis.sqlInjector.SqlSessionInterceptor;
 import com.jbm.framework.dao.tenant.SpringTenantLineInnerInterceptor;
 import com.jbm.framework.dao.tenant.TenantProperties;
 import jbm.framework.boot.autoconfigure.mybatis.handler.MasterdataObjectHandler;
@@ -21,6 +23,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.io.Resource;
 
 import java.util.Arrays;
@@ -49,7 +52,12 @@ import java.util.Set;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties({JdbcDataSourceProperties.class,TenantProperties.class})
+@EnableConfigurationProperties({
+        JdbcDataSourceProperties.class,
+        TenantProperties.class,
+        SqlLogProperties.class,
+        com.jbm.framework.dao.SqlAutoExecuteProperties.class,
+})
 public class MybatisPlusConfig {
 
 
@@ -104,6 +112,12 @@ public class MybatisPlusConfig {
         return new CameHumpInterceptor();
     }
 
+
+    @Bean
+    public SqlSessionInterceptor sqlSessionInterceptor(SqlLogProperties sqlLogProperties) {
+        return new SqlSessionInterceptor(sqlLogProperties);
+    }
+
     /**
      * 乐观锁插件
      */
@@ -132,7 +146,6 @@ public class MybatisPlusConfig {
 
         return mybatisMapperRefresh;
     }
-
 
 
 }

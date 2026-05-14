@@ -14,12 +14,14 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class TokenFilter implements AccessLogFilter {
     @Autowired
@@ -54,7 +56,7 @@ public class TokenFilter implements AccessLogFilter {
                 gatewayLogInfo.setAppId(app.getAppId());
                 gatewayLogInfo.setAppName(app.getAppName());
             } catch (Exception e) {
-
+                log.debug("[TokenFilter]获取应用信息失败: {}", e.getMessage());
             }
             //gatewayLogs.setAuthentication(jbmLoginUser.getToken());
         }

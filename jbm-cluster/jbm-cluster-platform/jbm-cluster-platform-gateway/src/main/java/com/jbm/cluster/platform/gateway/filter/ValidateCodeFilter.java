@@ -12,6 +12,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -52,8 +53,9 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
                 Dict obj = JSON.parseObject(rspStr, Dict.class);
                 validateCodeService.checkCaptcha(obj.getStr(CODE), obj.getStr(UUID));
             } catch (Exception e) {
-                log.error("验证码错误", e);
-                return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), "验证码错误,请重试", null);
+                log.warn("[验证码]验证码校验失败, uri:{}", request.getURI().getPath());
+                return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), HttpStatus.BAD_REQUEST,
+                        "验证码错误,请重试", null, HttpStatus.BAD_REQUEST.value());
             }
             return chain.filter(exchange);
         };

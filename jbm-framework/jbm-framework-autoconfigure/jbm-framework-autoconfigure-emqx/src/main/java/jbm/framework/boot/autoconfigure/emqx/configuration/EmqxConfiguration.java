@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Bean;
 import javax.annotation.Resource;
 
 /**
- * @author wesley
+ * EMQX 自动配置：仅提供 API 与 MQTT 监听等能力，不提供 REST 钩子端点。
+ * 使用方（如 tpm）自行提供 REST 接口后，调用本模块的 Handler 接口与事件完成“REST 之后的处理”。
  */
 @Slf4j
 @EnableConfigurationProperties({EmqxProperties.class, EmqxMqttProperties.class})
@@ -35,6 +36,4 @@ public class EmqxConfiguration {
     public EmqxApiListener getEmqxApiClientService(ApplicationEventPublisher applicationEventPublisher) {
         return new EmqxApiListener(emqxMqttProperties, applicationEventPublisher);
     }
-
-
 }

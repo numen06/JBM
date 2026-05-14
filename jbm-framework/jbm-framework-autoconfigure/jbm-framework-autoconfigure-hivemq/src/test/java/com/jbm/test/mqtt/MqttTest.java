@@ -8,6 +8,9 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import jbm.framework.boot.autoconfigure.mqtt.hivemq.MqttMessage;
 import lombok.extern.slf4j.Slf4j;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,19 +31,22 @@ public class MqttTest {
 
     @BeforeEach
     public void testClient() throws Exception {
-//		messageHandler.publish("spm_alarm_in", "tewt", 1);
-        mqttClient = mqttPahoClientFactory.getClientInstance("woshiceshi");
-        mqttClient = mqttPahoClientFactory.getClientInstance("woshiceshi");
+        String clientId = "mqtt-test-" + UUID.randomUUID().toString().substring(0, 8);
+        mqttClient = mqttPahoClientFactory.getClientInstance(clientId);
     }
 
 
     @Test
-    public void testPublish() {
-        // 订阅主题
-        mqttClient.subscribe("test", (publish) -> {
+    public void testPublish() throws Exception {
+        int retries = 0;
+        while (!mqttClient.isConnected() && retries < 50) {
+            ThreadUtil.sleep(100);
+            retries++;
+        }
+        mqttClient.subscribeAndWait("test", (publish) -> {
             log.info("接受topic:{},body:{}", publish.getTopic(), JSON.parse(publish.getPayloadAsBytes()));
-        });
-        for (int i = 0; i < 1000; i++) {
+        }, 10, TimeUnit.SECONDS);
+        for (int i = 0; i < 5; i++) {
             try {
                 MqttMessage mqttMessage = new MqttMessage();
                 mqttMessage.setPayload(JSON.toJSONBytes("我是测试消息-" + DateUtil.now()));

@@ -26,6 +26,14 @@ spring:
           group: ${spring.application.name}
         businessEventResource-in-0:
           group: ${spring.application.name}
+      rabbit:
+        bindings:
+          notification-in-0:
+            consumer:
+              prefetch: 50
+          mqtt-in-0:
+            consumer:
+              prefetch: 100
     nacos:
       config:
         refreshable-dataids: common.properties

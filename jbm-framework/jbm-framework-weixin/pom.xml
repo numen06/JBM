@@ -12,6 +12,7 @@
     <artifactId>jbm-framework-weixin</artifactId>
     <modules>
         <module>jbm-framework-weixin-mp</module>
+        <module>jbm-framework-weixin-miniapp</module>
     </modules>
     <dependencies>
         <dependency>

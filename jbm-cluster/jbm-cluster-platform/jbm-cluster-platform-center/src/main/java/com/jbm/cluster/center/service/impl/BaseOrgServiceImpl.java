@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
@@ -7,6 +8,7 @@ import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.entity.MultiPlatformIdEntity;
 import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -103,10 +105,14 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     }
 
     @Override
-    public BaseOrg getBaseOrgByOrgCode(BaseOrg baseOrg) {
-        Assert.notNull(baseOrg.getOrgCode(), () -> new ServiceException("组织编号不可为空"));
-        BaseOrg one = this.lambdaQuery().eq(BaseOrg::getOrgCode, baseOrg.getOrgCode()).one();
-        return one;
+    public BaseOrg getBaseOrg(BaseOrg baseOrg) {
+        List<BaseOrg> baseOrgList = this.lambdaQuery()
+                .eq(ObjectUtil.isNotNull(baseOrg.getOrgCode()), BaseOrg::getOrgCode, baseOrg.getOrgCode())
+                .eq(ObjectUtil.isNotNull(baseOrg.getId()), MultiPlatformIdEntity::getId, baseOrg.getId())
+                .eq(ObjectUtil.isNotNull(baseOrg.getOrgName()), BaseOrg::getOrgName, baseOrg.getOrgName())
+                .list();
+        //默认返回第一条、会存在参数未传的情况
+        return CollUtil.getFirst(baseOrgList);
     }
 
     /***

@@ -1,8 +1,6 @@
 package com.jbm.cluster.job.execute;
 
 import cn.hutool.json.JSONUtil;
-import com.alibaba.druid.support.json.JSONUtils;
-import com.alibaba.otter.canal.common.utils.JsonUtils;
 import com.jbm.cluster.api.model.job.rule.NodeData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

@@ -13,7 +13,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,12 +68,12 @@ public class EventDeliveryService {
 
                     boolean success = TaskStatus.SUCCESS.toString().equals(task.getStatus());
 
-                    // 🎉 无论成功失败，发布任务结束事件
-                    eventPublisher.publishEvent(new WebhookTaskEndEvent(this, task));
-                    // ✅ 如果成功，ACK 单个任务（从队列中移除）
+                    // 🎉 无论成功失败，发布任务结束事件（使用正确的静态方法确保状态正确传递）
                     if (success) {
-
+                        eventPublisher.publishEvent(WebhookTaskEndEvent.success(this, task));
                         log.debug("✅ 任务 {} 投递成功，尝试 {} 次，已ACK", task.getTaskId(), attemptCount);
+                    } else {
+                        eventPublisher.publishEvent(WebhookTaskEndEvent.failed(this, task));
                     }
                     eventStorageService.ackTask(url);
                 } catch (Exception e) {
@@ -103,10 +102,13 @@ public class EventDeliveryService {
      * @return 实际尝试次数（最小为1，最大为 MAX_RETRY + 1）
      */
     private int sendTaskWithRetry(WebhookTask task) {
-        int currentRetry = task.getRetryNumber() != null ? task.getRetryNumber() : 0;
+        // 获取原有的重试次数（如果是手动重试，会保留之前的重试次数）
+        int baseRetryNumber = task.getRetryNumber() != null ? task.getRetryNumber() : 0;
         int attemptCount = 0;
         while (true) {
             attemptCount++;
+            // 计算当前总的重试次数（原有次数 + 本次尝试次数）
+            int currentTotalRetry = baseRetryNumber + attemptCount;
             try {
                 Response response = jbmRequestTemplate.request(
                         task.getTaskUrl(),
@@ -120,31 +122,40 @@ public class EventDeliveryService {
                     if (response.body() != null) {
                         task.setResponse(response.body().string());
                     }
-                    task.setRetryNumber(currentRetry);
-                    log.info("✅ 任务 {} 第 {} 次尝试成功", task.getTaskId(), attemptCount);
+                    // 无论成功失败，都记录累计的重试次数（原有次数 + 本次尝试次数）
+                    task.setRetryNumber(currentTotalRetry);
+                    log.info("✅ 任务 {} 第 {} 次尝试成功，累计重试次数: {} (原有: {} + 本次: {})", 
+                            task.getTaskId(), attemptCount, task.getRetryNumber(), baseRetryNumber, attemptCount);
                     return attemptCount;
                 } else {
                     throw new RuntimeException("HTTP " + response.code() + " " + response.message());
                 }
             } catch (Exception e) {
-                task.setRetryNumber(currentRetry);
-                String msg = StrUtil.format("第{}次失败: ", currentRetry + 1, e.getMessage());
-                this.buildErrorMsg(task, msg);
-
                 // 💀 最后一次尝试（第 MAX_RETRY + 1 次）失败 → 标记失败
                 if (attemptCount > MAX_RETRY) {
                     // 🎯 关键：用 attemptCount 判断是否超限
+                    // 无论成功失败，都记录累计的重试次数
+                    task.setRetryNumber(currentTotalRetry);
                     task.setStatus(TaskStatus.FAILED.toString());
-                    task.setErrorMsg("已达最大尝试次数 " + (MAX_RETRY + 1) + "，最终错误: " + e.getMessage());
-                    log.error("💀 任务 {} 经过 {} 次尝试后最终失败", task.getTaskId(), attemptCount);
+                    String finalErrorMsg = "已达最大尝试次数 " + (MAX_RETRY + 1) + "，最终错误: " + e.getMessage();
+                    task.setErrorMsg(finalErrorMsg);
+                    this.buildErrorMsg(task, StrUtil.format("第{}次失败: {}", currentTotalRetry, e.getMessage()));
+                    log.error("💀 任务 {} 经过 {} 次尝试后最终失败，累计重试次数: {} (原有: {} + 本次: {})", 
+                            task.getTaskId(), attemptCount, task.getRetryNumber(), baseRetryNumber, attemptCount);
                     return attemptCount;
                 }
 
                 // 🔄 否则，准备重试
-                currentRetry++;
-                task.setRetryNumber(currentRetry);
+                // 无论成功失败，都记录累计的重试次数
+                task.setRetryNumber(currentTotalRetry);
+                String msg = StrUtil.format("第{}次失败: {}", currentTotalRetry, e.getMessage());
+                this.buildErrorMsg(task, msg);
+                // 设置状态为 RETRYING，表示正在重试中
+                task.setStatus(TaskStatus.RETRYING.toString());
+                log.warn("⏳ 任务 {} 第 {} 次尝试失败，累计重试次数: {} (原有: {} + 本次: {})，准备重试", 
+                        task.getTaskId(), attemptCount, task.getRetryNumber(), baseRetryNumber, attemptCount);
 
-                long backoffMillis = (long) Math.pow(2, attemptCount - 1) * 1000;
+                long backoffMillis = 1000; // 固定1秒重试间隔
                 log.warn("⏳ 第 {} 次重试前等待 {}ms: {}", attemptCount, backoffMillis, task.getTaskId());
                 ThreadUtil.safeSleep(backoffMillis);
                 // ➿ 继续下一次尝试
