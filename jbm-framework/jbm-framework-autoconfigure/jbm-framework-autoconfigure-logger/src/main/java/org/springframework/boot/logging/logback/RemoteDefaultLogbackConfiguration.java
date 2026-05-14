@@ -8,7 +8,9 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.util.FileSize;
 import ch.qos.logback.core.util.OptionHelper;
-import jodd.io.FileNameUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.util.StrUtil;
 import net.logstash.logback.appender.LogstashTcpSocketAppender;
 import net.logstash.logback.encoder.LogstashEncoder;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
@@ -19,6 +21,8 @@ import org.springframework.boot.logging.LoggingInitializationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.env.PropertySourcesPropertyResolver;
+
+import java.io.File;
 
 public class RemoteDefaultLogbackConfiguration extends DefaultLogbackConfiguration {
 
@@ -88,9 +92,10 @@ public class RemoteDefaultLogbackConfiguration extends DefaultLogbackConfigurati
                 .resolvePlaceholders("${logging.max-file-size:50MB}");
         rollingPolicy.setMaxHistory(Integer.parseInt(maxHistory));
         rollingPolicy.setMaxFileSize(FileSize.valueOf(maxFileSize));
-        String path = FileNameUtil.getPath(logFile);
-        String fileName = FileNameUtil.getBaseName(logFile);
-        String ext = FileNameUtil.getExtension(logFile);
+        String dir = FileUtil.getParent(logFile, 1);
+        String path = StrUtil.isBlank(dir) ? "" : StrUtil.appendIfMissing(dir, File.separator);
+        String fileName = FileNameUtil.mainName(logFile);
+        String ext = FileNameUtil.extName(logFile);
         rollingPolicy.setFileNamePattern(path + fileName + ".%d{yyyy-MM-dd}.%i." + ext);
         appender.setRollingPolicy(rollingPolicy);
         rollingPolicy.setParent(appender);

@@ -372,7 +372,7 @@ public class BusinessLogHttpTest {
         content.append("[INFO] Scanning for projects...\n");
         content.append("[INFO] \n");
         content.append("[INFO] ------------------------------------------------------------------------\n");
-        content.append("[INFO] Building jbm-cluster-platform 7.2.0-SNAPSHOT\n");
+        content.append("[INFO] Building jbm-cluster-platform 7.3.0-SNAPSHOT\n");
         content.append("[INFO] ------------------------------------------------------------------------\n");
         content.append("[INFO] \n");
         content.append("[INFO] --- maven-clean-plugin:3.1.0:clean (default-clean) ---\n");
@@ -383,7 +383,7 @@ public class BusinessLogHttpTest {
         content.append("[INFO] Compiling 156 source files to /workspace/target/classes\n");
         content.append("[INFO] \n");
         content.append("[INFO] --- maven-jar-plugin:3.2.0:jar (default-jar) ---\n");
-        content.append("[INFO] Building jar: /workspace/target/jbm-cluster-platform-7.2.0-SNAPSHOT.jar\n");
+        content.append("[INFO] Building jar: /workspace/target/jbm-cluster-platform-7.3.0-SNAPSHOT.jar\n");
         content.append("[INFO] ------------------------------------------------------------------------\n");
         content.append("[INFO] BUILD SUCCESS\n");
         content.append("[INFO] ------------------------------------------------------------------------\n");

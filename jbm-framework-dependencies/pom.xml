@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jbm</groupId>
-    <version>7.2.0-SNAPSHOT</version>
+    <version>7.3.0-SNAPSHOT</version>
     <artifactId>jbm-framework-dependencies</artifactId>
     <packaging>pom</packaging>
     <distributionManagement>
@@ -50,14 +50,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <jdk.version>1.8</jdk.version>
-        <jbm.framework.version>7.2.0-SNAPSHOT</jbm.framework.version>
+        <jbm.framework.version>7.3.0-SNAPSHOT</jbm.framework.version>
         <druid.version>1.2.27</druid.version>
         <dubbo.version>2.7.13</dubbo.version>
         <fastjson.version>1.2.83</fastjson.version>
         <fastjson2.version>2.0.15</fastjson2.version>
         <minio.version>8.3.0</minio.version>
         <jpush.version>3.2.7</jpush.version>
-        <jodd.version>5.0.6</jodd.version>
         <camel.version>2.17.1</camel.version>
         <guava.version>32.1.3-jre</guava.version>
         <kryo.version>0.42</kryo.version>
@@ -488,7 +487,7 @@
             <dependency>
                 <groupId>com.jbm</groupId>
                 <artifactId>jbm-framework-autoconfigure-openobserve</artifactId>
-                <version>7.2.0-SNAPSHOT</version>
+                <version>7.3.0-SNAPSHOT</version>
             </dependency>
             <!-- webjars -->
             <dependency>
@@ -596,47 +595,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
-            </dependency>
-            <!-- jodd -->
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-core</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-bean</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-props</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-proxetta</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-json</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-http</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-all</artifactId>
-                <version>${jodd.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jodd</groupId>
-                <artifactId>jodd-db</artifactId>
-                <version>${jodd.version}</version>
             </dependency>
             <!-- commons -->
             <dependency>

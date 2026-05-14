@@ -3,6 +3,7 @@ package com.jbm.cluster.job.service.impl.rule;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -16,7 +17,6 @@ import com.jbm.cluster.job.service.rule.RuleOperationLogService;
 import com.jbm.cluster.job.util.DroolsUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
-import jodd.util.StringUtil;
 import org.drools.core.event.DefaultAgendaEventListener;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.runtime.KieContainer;
@@ -48,11 +48,11 @@ public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinit
             //新增时校验
             Assert.notNull(ruleDefinition.getRuleName(), () -> new ServiceException("规则名称不能为空"));
             //如果前端未传规则code，则自动生成
-            if (StringUtil.isBlank(ruleDefinition.getRuleCode())) {
+            if (StrUtil.isBlank(ruleDefinition.getRuleCode())) {
                 ruleDefinition.setRuleCode("RULE_" + System.currentTimeMillis());
             }
             //初始化版本号
-            if (StringUtil.isBlank(ruleDefinition.getVersion())) {
+            if (StrUtil.isBlank(ruleDefinition.getVersion())) {
                 ruleDefinition.setVersion("1.0.0");
             }
         }else {
@@ -61,7 +61,7 @@ public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinit
             Assert.notNull(ruleDefinitionOld, () -> new ServiceException("该id查询不到规则"));
         }
         //通过原始json内容解析出drools内容
-        if (StringUtil.isNotBlank(ruleDefinition.getRuleContent())) {
+        if (StrUtil.isNotBlank(ruleDefinition.getRuleContent())) {
             JSONArray jsonArray = compileRule(ruleDefinition.getRuleContent(),null);
             if(!jsonArray.isEmpty()){
                 ruleDefinition.setDroolsContent(jsonArray.toString());
@@ -70,7 +70,7 @@ public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinit
 
         super.saveEntity(ruleDefinition);
         //校验规则
-        if (StringUtil.isNotEmpty(ruleDefinition.getDroolsContent())) {
+        if (StrUtil.isNotBlank(ruleDefinition.getDroolsContent())) {
             JSONArray jsonArray = JSONUtil.parseArray(ruleDefinition.getDroolsContent());
             for (Object o : jsonArray) {
                 JSONObject jsonObject = new JSONObject(o);
@@ -156,13 +156,13 @@ public class RuleDefinitionServiceImpl extends MasterDataServiceImpl<RuleDefinit
                 }
                 String drools = jsonRule.get("drools").toString();
 
-                if (StringUtil.isNotBlank(nodeId)) {
+                if (StrUtil.isNotBlank(nodeId)) {
                     if (!currNodeId.equals(nodeId)) {
                         continue;
                     }
                 }
 
-                if (StringUtil.isBlank(drools)) {
+                if (StrUtil.isBlank(drools)) {
                     throw new ServiceException("规则内容不能为空");
                 }
                 DroolsUtil.checkRule(drools);

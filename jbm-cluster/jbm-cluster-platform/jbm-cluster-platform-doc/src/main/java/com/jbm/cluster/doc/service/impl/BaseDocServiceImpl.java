@@ -12,9 +12,10 @@ import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
+import com.jbm.util.FileNameUtils;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
 import jbm.framework.boot.autoconfigure.minio.MinioService;
-import jodd.io.FileNameUtil;
+import cn.hutool.core.io.file.FileNameUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,7 +94,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
     @Override
     public void removeDoc(String filePath) {
         BaseDoc baseDoc = new BaseDoc();
-        baseDoc.setDocId(FileNameUtil.getBaseName(filePath));
+        baseDoc.setDocId(FileNameUtil.mainName(filePath));
         try {
             minioService.remove(Paths.get(filePath));
         } catch (Exception e) {
@@ -119,7 +120,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
 
     @Override
     public InputStream getDoc(BaseDoc baseDoc) {
-        baseDoc.setDocId(FileNameUtil.getBaseName(baseDoc.getDocPath()));
+        baseDoc.setDocId(FileNameUtil.mainName(baseDoc.getDocPath()));
         try {
             InputStream inputStream = minioService.get(Paths.get(baseDoc.getDocPath()));
             BaseDoc dbDoc = this.getById(baseDoc.getDocId());
@@ -147,7 +148,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
     @Override
     public BaseDoc createDoc(File file) {
         BaseDoc baseDoc = new BaseDoc();
-        baseDoc.setDocId(FileNameUtil.getBaseName(file.getName()));
+        baseDoc.setDocId(FileNameUtil.mainName(file.getName()));
         baseDoc.setDocName(file.getName());
         baseDoc.setSize(FileUtil.size(file));
         // 创建一个版本对象
@@ -207,7 +208,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         Path path = Paths.get(StrUtil.nullToDefault(group, ""), filePath, fileName);
         baseDoc.setContentType(FileUtil.getMimeType(path));
         // 文件路径
-        baseDoc.setDocPath(FileNameUtil.normalize(path.toString(), true));
+        baseDoc.setDocPath(FileNameUtils.normalize(path.toString(), true));
         this.setCreator(baseDoc);
         return baseDoc;
     }

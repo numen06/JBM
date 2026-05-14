@@ -82,7 +82,7 @@
 <parent>
     <groupId>com.jbm</groupId>
     <artifactId>jbm-framework-dependencies</artifactId>
-    <version>7.1.0-SNAPSHOT</version>
+    <version>7.3.0-SNAPSHOT</version>
 </parent>
 ```
 
@@ -103,7 +103,7 @@
 @EnableCodeAutoGeneate(entityPackageClasses = {BigscreenView.class}, targetPackage = "com.jbm.cluster.bigscreen")
 ```
 
-提升为framework等级，提升整体util实用程度，基于jodd和hutool轻量级封装，延续两个的版本生命力，提升使用开发力度
+提升为framework等级，提升整体util实用程度，基于hutool轻量级封装，提升使用开发力度
 
 ### Docker集群快速部署
 

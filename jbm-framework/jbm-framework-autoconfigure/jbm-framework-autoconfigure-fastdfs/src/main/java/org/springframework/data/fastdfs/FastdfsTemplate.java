@@ -1,10 +1,9 @@
 package org.springframework.data.fastdfs;
 
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.usage.bean.FileInfoBean;
-import jodd.io.FileNameUtil;
-import jodd.net.MimeTypes;
-import jodd.util.StringUtil;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PoolUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -15,6 +14,7 @@ import org.csource.fastdfs.*;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -91,7 +91,22 @@ public class FastdfsTemplate {
     }
 
     public String pathToId(String path) {
-        return FileNameUtil.getBaseName(StringUtils.getFilename(path));
+        return FileNameUtil.mainName(StringUtils.getFilename(path));
+    }
+
+    /**
+     * 根据扩展名解析 MIME（基于 JDK {@link java.net.URLConnection#getFileNameMap()}）
+     */
+    private static String lookupMimeTypeByExtension(String ext) {
+        if (StrUtil.isBlank(ext)) {
+            return "application/octet-stream";
+        }
+        String normalized = ext.trim().toLowerCase();
+        if (normalized.startsWith(".")) {
+            normalized = normalized.substring(1);
+        }
+        String type = URLConnection.getFileNameMap().getContentTypeFor("file." + normalized);
+        return StrUtil.isBlank(type) ? "application/octet-stream" : type;
     }
 
     // private NameValuePair[] mapToNameValuePair(FileInfoBean fileInfoBean) {
@@ -117,21 +132,21 @@ public class FastdfsTemplate {
         synchronized (storageClient1) {
             try {
                 boolean hasFile = false;
-                if (StringUtil.isNotBlank(fileInfoBean.getFilePath())) {
+                if (StrUtil.isNotBlank(fileInfoBean.getFilePath())) {
                     FileInfo fileInfo = storageClient1.get_file_info1(fileInfoBean.getFilePath());
                     if (fileInfo != null) {
                         hasFile = true;
                     }
                 }
                 if (!hasFile) {
-                    if (StringUtil.isBlank(fileInfoBean.getExtension())) {
-                        fileInfoBean.setExtension(FileNameUtil.getExtension(fileInfoBean.getFileName()));
+                    if (StrUtil.isBlank(fileInfoBean.getExtension())) {
+                        fileInfoBean.setExtension(FileNameUtil.extName(fileInfoBean.getFileName()));
                     }
-                    if (StringUtil.isBlank(fileInfoBean.getExtension())) {
+                    if (StrUtil.isBlank(fileInfoBean.getExtension())) {
                         fileInfoBean.setExtension("bin");
                     }
-                    if (StringUtil.isBlank(fileInfoBean.getContentType()))
-                        fileInfoBean.setContentType(MimeTypes.lookupMimeType(fileInfoBean.getExtension()));
+                    if (StrUtil.isBlank(fileInfoBean.getContentType()))
+                        fileInfoBean.setContentType(lookupMimeTypeByExtension(fileInfoBean.getExtension()));
                     if (fileInfoBean.getLocalFilePath() != null) {
                         localPath = Paths.get(fileInfoBean.getLocalFilePath());
                         if (Files.exists(localPath)) {

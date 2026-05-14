@@ -4,6 +4,7 @@ package com.jbm.cluster.job.business.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
@@ -11,7 +12,6 @@ import com.jbm.cluster.api.entitys.job.rule.DynamicClass;
 import com.jbm.cluster.job.service.rule.RuleDefinitionService;
 import com.jbm.cluster.job.service.rule.DynamicClassService;
 import com.jbm.framework.exceptions.ServiceException;
-import jodd.util.StringUtil;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
 import org.kie.api.runtime.KieContainer;
@@ -173,7 +173,7 @@ public class RuleReloadService {
      * @return
      */
     public synchronized KieContainer addRulesForFlow(String rule,String nodeId) {
-        if(StringUtil.isBlank(rule)){
+        if(StrUtil.isBlank(rule)){
             throw new ServiceException("规则不能为空");
         }
 
