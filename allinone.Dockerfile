@@ -32,7 +32,7 @@ RUN wget https://maven.aliyun.com/repository/public/org/apache/maven/apache-mave
 COPY . .
 
 # 执行构建，跳过测试（生产环境可移除）指定setting.xml
-RUN --mount=type=cache,target=/root/.m2 mvn clean deploy -DskipTests -s settings.xml
+RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -s settings.xml
 
 # ------------------------------------------------------------
 # 公共运行基础（使用轻量 Dragonwell JRE）
