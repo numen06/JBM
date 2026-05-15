@@ -9,7 +9,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.baidu.aip.face.AipFace;
 import com.jbm.cluster.api.entitys.basic.BaseUserCertification;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.center.service.BaseUserCertificationService;
+import com.jbm.cluster.common.mysql.service.BaseUserCertificationService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;

@@ -3,7 +3,7 @@ package com.jbm.cluster.center;
 import com.jbm.autoconfig.dic.annotation.EnableJbmDictionary;
 import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.entitys.basic.BaseDic;
-import com.jbm.cluster.center.mapper.BaseMenuMapper;
+import com.jbm.cluster.common.mysql.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -22,12 +22,18 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableCaching
 @EnableFeignClients
 @EnableDiscoveryClient
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.jbm.cluster.center", "com.jbm.cluster.common.mysql"})
 //@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
 @EntityScan(basePackages = {"com.jbm.cluster.api.entitys"})
 @MapperScan(basePackageClasses = BaseMenuMapper.class)
 @EnableJbmDictionary(basePackageClasses = OrgType.class)
-@EnableCodeAutoGeneate(entityPackageClasses = {BaseDic.class}, targetPackage = "com.jbm.cluster.center")
+@EnableCodeAutoGeneate(
+        entityPackageClasses = {BaseDic.class},
+        targetPackage = "com.jbm.cluster.common.mysql",
+        mapper = @EnableCodeAutoGeneate.MapperConfig(module = "jbm-cluster-common-mysql"),
+        service = @EnableCodeAutoGeneate.ServiceConfig(module = "jbm-cluster-common-mysql"),
+        controller = @EnableCodeAutoGeneate.ControllerConfig(module = "jbm-cluster-platform-center", packageBase = "com.jbm.cluster.center")
+)
 public class JbmCenterApplication {
 
     public static void main(String[] args) {

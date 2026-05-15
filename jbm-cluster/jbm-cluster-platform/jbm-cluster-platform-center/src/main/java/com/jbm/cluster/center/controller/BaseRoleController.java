@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
-import com.jbm.cluster.center.service.BaseRoleService;
+import com.jbm.cluster.common.mysql.service.BaseRoleService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;

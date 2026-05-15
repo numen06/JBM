@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
-import com.jbm.cluster.center.service.GatewayRouteService;
+import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;

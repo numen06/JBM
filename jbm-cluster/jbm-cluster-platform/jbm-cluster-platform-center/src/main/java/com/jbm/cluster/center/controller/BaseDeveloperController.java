@@ -4,7 +4,7 @@ import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
-import com.jbm.cluster.center.service.BaseDeveloperService;
+import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;

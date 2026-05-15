@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityRole;
-import com.jbm.cluster.center.service.BaseAuthorityRoleService;
+import com.jbm.cluster.common.mysql.service.BaseAuthorityRoleService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

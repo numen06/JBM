@@ -17,6 +17,7 @@
         <module>jbm-cluster-common-idempotent</module>
         <module>jbm-cluster-common-satoken</module>
         <module>jbm-cluster-common-fegin</module>
+        <module>jbm-cluster-common-mysql</module>
         <!--        <module>jbm-cluster-common-oauth</module>-->
     </modules>
 

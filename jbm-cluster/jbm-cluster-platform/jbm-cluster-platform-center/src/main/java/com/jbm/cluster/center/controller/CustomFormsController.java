@@ -4,7 +4,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.api.entitys.center.CustomForms;
 import com.jbm.cluster.api.form.center.CustomFormsForm;
 import com.jbm.cluster.api.result.CustomFormsResult;
-import com.jbm.cluster.center.service.CustomFormsService;
+import com.jbm.cluster.common.mysql.service.CustomFormsService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;

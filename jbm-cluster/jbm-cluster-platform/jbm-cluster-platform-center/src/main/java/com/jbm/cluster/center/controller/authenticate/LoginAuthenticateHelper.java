@@ -6,7 +6,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

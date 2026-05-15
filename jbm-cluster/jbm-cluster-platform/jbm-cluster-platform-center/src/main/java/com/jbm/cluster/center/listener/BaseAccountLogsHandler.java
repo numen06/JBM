@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.listener;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
-import com.jbm.cluster.center.service.BaseAccountLogsService;
+import com.jbm.cluster.common.mysql.service.BaseAccountLogsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

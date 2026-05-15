@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
-import com.jbm.cluster.center.service.BaseAppService;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;

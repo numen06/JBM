@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseOpenUser;
-import com.jbm.cluster.center.service.BaseOpenUserService;
+import com.jbm.cluster.common.mysql.service.BaseOpenUserService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;

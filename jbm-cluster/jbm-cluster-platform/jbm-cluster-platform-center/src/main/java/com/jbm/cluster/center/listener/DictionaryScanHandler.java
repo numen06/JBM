@@ -6,7 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.api.model.dic.JbmDicResource;
-import com.jbm.cluster.center.service.BaseDicService;
+import com.jbm.cluster.common.mysql.service.BaseDicService;
 import com.jbm.framework.dictionary.JbmDictionary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

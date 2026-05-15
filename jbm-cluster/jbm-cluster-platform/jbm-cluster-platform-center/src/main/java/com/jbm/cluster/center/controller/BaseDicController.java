@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseDic;
-import com.jbm.cluster.center.service.BaseDicService;
+import com.jbm.cluster.common.mysql.service.BaseDicService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataTreeCollection;
 import io.swagger.annotations.Api;

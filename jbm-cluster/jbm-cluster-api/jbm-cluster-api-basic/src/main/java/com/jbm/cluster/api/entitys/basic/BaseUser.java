@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.annotation.TableAlias;
+import com.jbm.framework.masterdata.code.annotation.IgnoreGeneate;
+import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,6 +32,7 @@ import java.util.Date;
 @TableAlias("user")
 @TableName("base_user")
 @ApiModel("系统用户")
+@IgnoreGeneate({CodeType.service, CodeType.serviceImpl})
 public class BaseUser extends MasterDataEntity {
 
     private static final long serialVersionUID = -735161640894047414L;

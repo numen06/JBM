@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller.authenticate;
 
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.center.service.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;

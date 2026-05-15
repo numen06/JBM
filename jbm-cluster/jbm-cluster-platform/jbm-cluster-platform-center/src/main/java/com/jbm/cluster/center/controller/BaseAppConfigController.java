@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
-import com.jbm.cluster.center.service.BaseAppConfigService;
+import com.jbm.cluster.common.mysql.service.BaseAppConfigService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.framework.exceptions.ServiceException;

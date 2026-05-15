@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 
 import com.jbm.cluster.api.entitys.center.CustomFormsItem;
-import com.jbm.cluster.center.service.CustomFormsItemService;
+import com.jbm.cluster.common.mysql.service.CustomFormsItemService;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;

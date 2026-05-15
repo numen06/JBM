@@ -4,7 +4,7 @@ import cn.hutool.core.lang.Assert;
 import com.jbm.cluster.api.constants.center.DataSourceType;
 import com.jbm.cluster.api.entitys.center.DataSourceManagement;
 import com.jbm.cluster.api.form.center.DataSourceManagementForm;
-import com.jbm.cluster.center.service.DataSourceManagementService;
+import com.jbm.cluster.common.mysql.service.DataSourceManagementService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;

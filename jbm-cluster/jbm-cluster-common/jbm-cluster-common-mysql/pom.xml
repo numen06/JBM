@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jbm</groupId>
+        <artifactId>jbm-cluster-common</artifactId>
+        <version>7.3.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jbm-cluster-common-mysql</artifactId>
+    <name>jbm-cluster-common-mysql</name>
+    <description>集群公共 MySQL 数据访问层（Mapper / Service），供各平台微服务复用</description>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-api-basic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-micro-mysql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-satoken</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

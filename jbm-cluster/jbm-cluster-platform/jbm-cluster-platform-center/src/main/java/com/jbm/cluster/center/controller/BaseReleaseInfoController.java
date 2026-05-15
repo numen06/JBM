@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseReleaseInfo;
-import com.jbm.cluster.center.service.BaseReleaseInfoService;
+import com.jbm.cluster.common.mysql.service.BaseReleaseInfoService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;

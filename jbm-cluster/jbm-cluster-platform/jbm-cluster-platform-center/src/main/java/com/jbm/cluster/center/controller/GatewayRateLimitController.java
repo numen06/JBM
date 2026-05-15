@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
-import com.jbm.cluster.center.service.GatewayRateLimitService;
+import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;

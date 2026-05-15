@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.auth.AuthorityAction;
 import com.jbm.cluster.api.entitys.basic.BaseAction;
-import com.jbm.cluster.center.service.BaseActionService;
+import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
