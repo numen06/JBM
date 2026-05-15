@@ -22,16 +22,16 @@
             <artifactId>jbm-cluster-node-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- Quartz -->
+        <!-- 分布式定时任务锁（Redis），替代 Quartz 集群锁 -->
         <dependency>
-            <groupId>org.quartz-scheduler</groupId>
-            <artifactId>quartz</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.mchange</groupId>
-                    <artifactId>c3p0</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>4.42.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-redis-spring</artifactId>
+            <version>4.42.0</version>
         </dependency>
         <!-- Drools 核心 -->
         <dependency>
@@ -93,12 +93,28 @@
             <version>4.0.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <!-- 打包名称 -->
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- 父工程 jbm-cluster 默认 skipTests=true，本模块需显式开启单测 -->
+                    <skipTests>false</skipTests>
+                    <!-- 防止单测进程或 fork 内后台线程挂死导致 Maven 长时间不退出；含 Nacos 全量上下文时略放宽 -->
+                    <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

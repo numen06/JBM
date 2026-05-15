@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,23 +26,21 @@ import java.util.List;
 @Entity
 @ApiModel("流程实例")
 public class ProcessInstance extends MasterDataEntity {
-    @TableField(exist = false)
-    private Long id;
-    @TableField(exist = false)
-    private String code;
-    @TableField(exist = false)
-    private Long appId;
-    @TableField(exist = false)
-    private Long parentId;
-    @TableField(exist = false)
-    private Integer level;
-    @TableField(exist = false)
-    private String leafPath;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     @Id
     @TableId(value = "id", type = IdType.ASSIGN_UUID)
     @Column(name = "id")
     private String instanceId;
+
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
 
     @Column(name = "rule_definition_id")
     private Long ruleDefinitionId;

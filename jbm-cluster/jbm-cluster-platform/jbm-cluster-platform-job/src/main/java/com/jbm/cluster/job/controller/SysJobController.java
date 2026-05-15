@@ -9,6 +9,7 @@ import com.jbm.cluster.common.basic.annotation.JbmClusterEvent;
 import com.jbm.cluster.common.basic.annotation.JbmClusterScheduled;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;
+import com.jbm.cluster.job.exception.JobSchedulerException;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
 import com.jbm.framework.exceptions.job.TaskException;
@@ -17,7 +18,6 @@ import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.SchedulerException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -69,7 +69,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     @ApiOperation(value = "新增定时任务", notes = "")
     @RequiresPermissions("monitor:job:add")
     @PostMapping("/add")
-    public ResultBody add(@RequestBody SysJob job) throws SchedulerException, TaskException {
+    public ResultBody add(@RequestBody SysJob job) throws JobSchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("新增任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         }
@@ -95,7 +95,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     @ApiOperation(value = "修改定时任务", notes = "")
     @RequiresPermissions("monitor:job:edit")
     @PostMapping("/edit")
-    public ResultBody edit(@RequestBody SysJob job) throws SchedulerException, TaskException {
+    public ResultBody edit(@RequestBody SysJob job) throws JobSchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
             return ResultBody.failed().msg("修改任务'" + job.getJobName() + "'失败，Cron表达式不正确");
         }
@@ -127,7 +127,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
         return ResultBody.callback(() -> {
             try {
                 return this.service.changeStatus(newJob);
-            } catch (SchedulerException e) {
+            } catch (JobSchedulerException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -143,7 +143,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
         return ResultBody.callback(() -> {
             try {
                 return this.service.run(job);
-            } catch (SchedulerException e) {
+            } catch (JobSchedulerException e) {
                 throw new RuntimeException(e);
             }
         });

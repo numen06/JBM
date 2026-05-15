@@ -1,53 +1,59 @@
 package com.jbm.cluster.job.util;
 
-import org.quartz.CronExpression;
+import org.springframework.scheduling.support.CronExpression;
 
-import java.text.ParseException;
+import java.time.Instant;
 import java.util.Date;
 
 /**
- * cron表达式工具类
- *
- * @author wesley
+ * cron 表达式工具类（基于 Spring {@link CronExpression}，不依赖 Quartz）。
  */
-public class CronUtils {
-    /**
-     * 返回一个布尔值代表一个给定的Cron表达式的有效性
-     *
-     * @param cronExpression Cron表达式
-     * @return boolean 表达式是否有效
-     */
-    public static boolean isValid(String cronExpression) {
-        return CronExpression.isValidExpression(cronExpression);
+public final class CronUtils {
+
+    private CronUtils() {
     }
 
     /**
-     * 返回一个字符串值,表示该消息无效Cron表达式给出有效性
-     *
-     * @param cronExpression Cron表达式
-     * @return String 无效时返回表达式错误描述,如果有效返回null
+     * 返回一个布尔值代表一个给定的Cron表达式的有效性
+     */
+    public static boolean isValid(String cronExpression) {
+        try {
+            CronExpression.parse(cronExpression);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 无效时返回表达式错误描述,如果有效返回null
      */
     public static String getInvalidMessage(String cronExpression) {
         try {
-            new CronExpression(cronExpression);
+            CronExpression.parse(cronExpression);
             return null;
-        } catch (ParseException pe) {
+        } catch (Exception pe) {
             return pe.getMessage();
         }
     }
 
     /**
-     * 返回下一个执行时间根据给定的Cron表达式
-     *
-     * @param cronExpression Cron表达式
-     * @return Date 下次Cron表达式执行时间
+     * 下次执行时间（相对给定时间点之后）
      */
     public static Date getNextExecution(String cronExpression) {
-        try {
-            CronExpression cron = new CronExpression(cronExpression);
-            return cron.getNextValidTimeAfter(new Date(System.currentTimeMillis()));
-        } catch (ParseException e) {
-            throw new IllegalArgumentException(e.getMessage());
+        Instant next = nextInstant(cronExpression, Instant.now());
+        return Date.from(next);
+    }
+
+    /**
+     * 下次执行时间点
+     */
+    public static Instant nextInstant(String cronExpression, Instant base) {
+        CronExpression cron = CronExpression.parse(cronExpression);
+        Instant next = cron.next(base);
+        if (next == null) {
+            throw new IllegalArgumentException("Cron 表达式无后续触发时间: " + cronExpression);
         }
+        return next;
     }
 }

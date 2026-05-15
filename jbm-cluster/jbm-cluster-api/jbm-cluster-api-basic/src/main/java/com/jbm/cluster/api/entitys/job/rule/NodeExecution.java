@@ -6,7 +6,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
@@ -22,24 +25,22 @@ import java.time.LocalDateTime;
 @Entity
 @ApiModel("节点执行记录")
 public class NodeExecution extends MasterDataEntity {
-    @TableField(exist = false)
-    private Long id;
-    @TableField(exist = false)
-    private String code;
-    @TableField(exist = false)
-    private Long appId;
-    @TableField(exist = false)
-    private Long parentId;
-    @TableField(exist = false)
-    private Integer level;
-    @TableField(exist = false)
-    private String leafPath;
 
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     @Id
     @TableId(value = "id", type = IdType.ASSIGN_UUID)
     @Column(name = "id")
     @ApiModelProperty("节点执行记录id")
     private String nodeExecutionId;
+
+    public String getNodeExecutionId() {
+        return nodeExecutionId;
+    }
+
+    public void setNodeExecutionId(String nodeExecutionId) {
+        this.nodeExecutionId = nodeExecutionId;
+    }
 
     @ApiModelProperty("流程实例id")
     private String processInstanceId;

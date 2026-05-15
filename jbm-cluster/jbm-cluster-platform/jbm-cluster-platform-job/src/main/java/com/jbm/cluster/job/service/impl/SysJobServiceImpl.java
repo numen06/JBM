@@ -4,21 +4,17 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
-import com.jbm.cluster.api.constants.job.ScheduleConstants;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
 import com.jbm.cluster.api.entitys.job.SysJob;
+import com.jbm.cluster.job.exception.JobSchedulerException;
+import com.jbm.cluster.job.scheduler.JobSchedulerManager;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
-import com.jbm.cluster.job.util.ScheduleUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.job.TaskException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDataMap;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +23,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 定时任务调度信息 服务层
+ * 定时任务调度信息 服务层（基于 ShedLock + ScheduledThreadPoolExecutor，不再使用 Quartz）。
  *
  * @author wesley
  */
@@ -36,21 +32,31 @@ import java.util.List;
 public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements SysJobService {
 
     @Resource
-    private Scheduler scheduler;
+    private JobSchedulerManager jobSchedulerManager;
+
+    @Resource
+    private SysJobService self;
+
+    /**
+     * 是否在启动时从库全量加载并注册调度（测试或临时排障可设为 false，避免后台 Cron 链持续运行）。
+     */
+    @Value("${jbm.job.load-on-startup:true}")
+    private boolean loadOnStartup;
 
     /**
      * 项目启动时，初始化定时器 主要是防止手动修改数据库导致未同步到定时任务处理（注：不能手动修改数据库ID和任务组名，否则会导致脏数据）
      */
     @PostConstruct
-    public void init() throws SchedulerException, TaskException {
-        scheduler.clear();
-        List<SysJob> jobList = this.selectAll();
-        for (SysJob job : jobList) {
-            try {
-                ScheduleUtils.createScheduleJob(scheduler, job);
-            } catch (Exception e) {
-                log.error("初始化任务失败:{}", job.getJobName(), e);
-            }
+    public void init() {
+        if (!loadOnStartup) {
+            log.info("已跳过启动时定时任务全量加载（jbm.job.load-on-startup=false）");
+            return;
+        }
+        try {
+            jobSchedulerManager.reloadAllJobs();
+        } catch (Exception e) {
+            log.error("初始化定时任务失败", e);
+            throw new IllegalStateException("初始化定时任务失败", e);
         }
     }
 
@@ -69,46 +75,43 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         if (ObjectUtil.isEmpty(entity.getConcurrent())) {
             entity.setConcurrent(false);
         }
-        return super.saveEntity(entity);
+        SysJob saved = super.saveEntity(entity);
+        if (saved != null && saved.getJobId() != null) {
+            jobSchedulerManager.refreshJob(this.selectById(saved.getJobId()));
+        }
+        return saved;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateById(SysJob entity) {
+        boolean ok = super.updateById(entity);
+        if (ok && entity != null && entity.getJobId() != null) {
+            jobSchedulerManager.refreshJob(this.selectById(entity.getJobId()));
+        }
+        return ok;
     }
 
     /**
-     * 获取quartz调度器的计划任务列表
-     *
-     * @param job 调度信息
-     * @return
+     * 获取计划任务列表
      */
     @Override
     public List<SysJob> selectJobList(SysJob job) {
         return this.selectEntitys(job);
     }
 
-
-    /**
-     * 暂停任务
-     *
-     * @param job 调度信息
-     * @return
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SysJob pauseJob(SysJob job) throws SchedulerException {
+    public SysJob pauseJob(SysJob job) throws JobSchedulerException {
         Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
         job.setStatus(ScheduleStauts.PAUSE);
         int rows = this.baseMapper.updateById(job);
         if (rows > 0) {
-            scheduler.pauseJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            jobSchedulerManager.pauseJob(jobId);
         }
         return job;
     }
 
-    /**
-     * 查询组任务
-     *
-     * @param group
-     * @return
-     */
     @Override
     public List<SysJob> selectJobsByGroup(String group) {
         if (StrUtil.isBlank(group)) {
@@ -119,12 +122,6 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         return this.selectEntitysByWapper(sysJobQueryWrapper);
     }
 
-    /**
-     * 暂定整个组的任务
-     *
-     * @param group
-     * @return
-     */
     @Override
     public List<SysJob> pauseGroup(String group) {
         List<SysJob> sysJobs = self.selectJobsByGroup(group);
@@ -132,51 +129,27 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         return sysJobs;
     }
 
-    @Resource
-    private SysJobService self;
-    /**
-     * 暂定多个任务
-     * @param sysJobs
-     */
     @Override
     public void pauseJobs(List<SysJob> sysJobs) {
         sysJobs.forEach(sysJob -> {
             try {
                 self.pauseJob(sysJob);
-            } catch (SchedulerException e) {
+            } catch (JobSchedulerException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    /**
-     * 恢复多个任务
-     *
-     * @param sysJobs
-     * @throws SchedulerException
-     */
     @Override
-    public void resumeJobs(List<SysJob> sysJobs) {
-        sysJobs.forEach(sysJob -> {
-            try {
-                this.resumeJob(sysJob);
-            } catch (SchedulerException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public void resumeJobs(List<SysJob> sysJobs) throws JobSchedulerException {
+        for (SysJob sysJob : sysJobs) {
+            this.resumeJob(sysJob);
+        }
     }
 
-
-
-    /**
-     * 恢复任务
-     *
-     * @param job 调度信息
-     * @return
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SysJob resumeJob(SysJob job) throws SchedulerException {
+    public SysJob resumeJob(SysJob job) throws JobSchedulerException {
         Long jobId = job.getJobId();
         if (ObjectUtil.isEmpty(jobId)) {
             throw new ServiceException("没有对应的任务ID");
@@ -185,12 +158,10 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         if (ObjectUtil.isEmpty(job)) {
             throw new ServiceException("没有对应的任务");
         }
-        String jobGroup = job.getJobGroup();
         job.setStatus(ScheduleStauts.NORMAL);
         int rows = this.baseMapper.updateById(job);
         if (rows > 0) {
-            scheduler.resetTriggerFromErrorState(ScheduleUtils.getTriggerKey(jobId, jobGroup));
-            scheduler.resumeJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            jobSchedulerManager.resumeJob(jobId);
         }
         return job;
     }
@@ -204,101 +175,60 @@ public class SysJobServiceImpl extends MasterDataServiceImpl<SysJob> implements 
         }
     }
 
-    /**
-     * 删除任务后，所对应的trigger也将被删除
-     *
-     * @param job 调度信息
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int deleteJob(SysJob job) throws SchedulerException {
+    public int deleteJob(SysJob job) throws JobSchedulerException {
         Long jobId = job.getJobId();
-        String jobGroup = job.getJobGroup();
         int rows = this.baseMapper.deleteById(jobId);
         if (rows > 0) {
-            scheduler.deleteJob(ScheduleUtils.getJobKey(jobId, jobGroup));
+            jobSchedulerManager.unregisterJob(jobId);
         }
         return rows;
     }
 
-
-    /**
-     * 任务调度状态修改
-     *
-     * @param job 调度信息
-     * @return
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SysJob changeStatus(SysJob job) throws SchedulerException {
-        int rows = 0;
+    public SysJob changeStatus(SysJob job) throws JobSchedulerException {
+        if (job.getStatus() == null) {
+            return job;
+        }
         switch (job.getStatus()) {
             case NORMAL:
                 return resumeJob(job);
             case PAUSE:
                 return pauseJob(job);
+            default:
+                return job;
         }
-        return job;
     }
 
-    /**
-     * 立即运行任务
-     *
-     * @param job 调度信息
-     * @return
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SysJob run(SysJob job) throws SchedulerException {
-        Long jobId = job.getJobId();
+    public SysJob run(SysJob job) throws JobSchedulerException {
         SysJob properties = this.baseMapper.selectById(job.getJobId());
-        String jobGroup = properties.getJobGroup();
-        // 参数
-        JobDataMap dataMap = new JobDataMap();
-        dataMap.put(ScheduleConstants.TASK_PROPERTIES, properties);
-        scheduler.triggerJob(ScheduleUtils.getJobKey(jobId, jobGroup), dataMap);
-//        Trigger.TriggerState triggerState = scheduler.getTriggerState(ScheduleUtils.getTriggerKey(jobId, jobGroup));
-        return this.resumeJob(job);
-//        job.setStatus(Trigger.TriggerState.NORMAL.equals(triggerState) ? ScheduleStauts.NORMAL : ScheduleStauts.PAUSE);
-//        return this.saveEntity(job);
-    }
-
-
-    /**
-     * 更新任务
-     *
-     * @param job      任务对象
-     * @param jobGroup 任务组名
-     */
-    public void updateSchedulerJob(SysJob job, String jobGroup) throws SchedulerException, TaskException {
-        Long jobId = job.getJobId();
-        // 判断是否存在
-        JobKey jobKey = ScheduleUtils.getJobKey(jobId, jobGroup);
-        if (scheduler.checkExists(jobKey)) {
-            // 防止创建时存在数据问题 先移除，然后在执行创建操作
-            scheduler.deleteJob(jobKey);
+        if (properties == null) {
+            throw new ServiceException("没有对应的任务");
         }
-        ScheduleUtils.createScheduleJob(scheduler, job);
+        jobSchedulerManager.runOnce(properties);
+        return this.resumeJob(job);
     }
 
     /**
-     * 校验cron表达式是否有效
-     *
-     * @param cronExpression 表达式
-     * @return 结果
+     * 更新调度（等价于原 Quartz 中删除并重建触发器）。
      */
+    public void updateSchedulerJob(SysJob job, String jobGroup) throws JobSchedulerException, TaskException {
+        jobSchedulerManager.refreshJob(job);
+    }
+
     @Override
     public boolean checkCronExpressionIsValid(String cronExpression) {
         return CronUtils.isValid(cronExpression);
     }
 
     @Override
-    public int insertJob(SysJob job) throws SchedulerException, TaskException {
+    public int insertJob(SysJob job) throws JobSchedulerException, TaskException {
         job.setStatus(ScheduleStauts.PAUSE);
-        int rows = this.saveEntity(job) == null ? 0 : 1;
-        if (rows > 0) {
-            ScheduleUtils.createScheduleJob(scheduler, job);
-        }
-        return rows;
+        SysJob saved = this.saveEntity(job);
+        return saved == null ? 0 : 1;
     }
 }

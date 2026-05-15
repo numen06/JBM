@@ -1,5 +1,10 @@
 server:
   port: 4444
+
+# ShedLock / 任务调度线程池（可与 Nacos 中 common 配置合并覆盖）
+shedlock:
+  default-lock-at-most-for: PT30M
+
 spring:
   application:
     name: ${artifactId}
@@ -46,6 +51,17 @@ management:
       exposure:
         include: '*'
 jbm:
+  job:
+    thread-pool-size: 20
+    # 是否启用库表周期同步（多节点建议 true；单测/本地可 false 避免固定延迟循环）
+    sync-enabled: true
+    sync-interval-ms: 60000
+    # 是否在启动时从库注册全部任务（单测建议 false）
+    load-on-startup: true
+    # 关闭线程池时最多等待秒数，避免进程退出挂起过久
+    shutdown-await-seconds: 10
+    lock-at-most-for: PT30M
+    lock-at-least-for: PT5S
   cluster:
     nacos-confs: common.properties,redis.properties,rabbitmq.properties,db.properties,mqtt.properties
     #    nacos-confs: common.properties,redis.properties,db.properties,mqtt.properties,sms.properties,mail.properties

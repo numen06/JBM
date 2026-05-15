@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface SysJobLogService extends IMasterDataService<SysJobLog> {
     /**
-     * 获取quartz调度器日志的计划任务
+     * 获取调度任务日志的计划任务
      *
      * @param jobLog 调度日志信息
      * @return 调度任务日志集合
