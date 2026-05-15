@@ -2,6 +2,8 @@ package test.boot;
 
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.thread.ThreadUtil;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import jbm.framework.boot.autoconfigure.base.prometheus.MetricsConfiguration;
 import jbm.framework.boot.autoconfigure.base.prometheus.MetricsSchedule;
 import jbm.framework.boot.autoconfigure.base.prometheus.event.MetricsEvent;
@@ -39,6 +41,11 @@ public class MetricsTest {
 
     @TestConfiguration
     public static class TestEventListenerConfig {
+
+        @Bean
+        public PrometheusMeterRegistry prometheusMeterRegistry() {
+            return new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        }
 
         @Bean
         public TestEventListener testEventListener() {
