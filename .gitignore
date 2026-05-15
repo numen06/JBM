@@ -44,3 +44,4 @@ mqtt_paho/
 h2/
 /jbm-framework/jbm-framework-autoconfigure/jbm-framework-autoconfigure-ip2region/data/
 /business-log
+*.log
