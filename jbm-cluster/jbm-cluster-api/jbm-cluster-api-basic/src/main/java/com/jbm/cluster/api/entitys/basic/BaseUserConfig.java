@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,7 +18,8 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("base_user_config")
 @ApiModel(value = "用户配置管理")
-public class BaseUserConfig extends MasterDataIdEntity {
+public class BaseUserConfig extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "用户ID")
     private Long userId;

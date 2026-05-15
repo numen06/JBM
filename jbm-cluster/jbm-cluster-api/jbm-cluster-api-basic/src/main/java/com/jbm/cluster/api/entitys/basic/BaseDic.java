@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +23,8 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_dic")
-public class BaseDic extends MasterDataTreeEntity {
+public class BaseDic extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "名称")
     private String name;

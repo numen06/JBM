@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.controller.IMasterDataTreeController;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.form.BaseRequsetBody;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Deprecated
 @Slf4j
-public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
+public abstract class MasterDataTreeCollection<Entity extends MasterDataEntity, Service extends IMasterDataTreeService<Entity>>
         extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity> {
 
     public MasterDataTreeCollection() {

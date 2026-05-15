@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.doc;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.converters.StringConverter;
@@ -24,6 +25,7 @@ import java.util.Date;
 @ApiModel("文档管理")
 @TableName
 public class BaseDoc extends MasterDataEntity {
+
 
     @Id
     @TableId(type = IdType.ASSIGN_UUID)

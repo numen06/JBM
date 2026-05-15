@@ -25,6 +25,7 @@ import javax.persistence.Id;
 @TableAlias("developer")
 @TableName("base_developer")
 public class BaseDeveloper extends MasterDataEntity {
+
     private static final long serialVersionUID = 1l;
     /**
      * 系统用户ID

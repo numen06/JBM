@@ -100,7 +100,7 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
         // 第三步：批量获取所有ProcessInstanceId
         List<String> processInstanceIds = new ArrayList<>();
         for (ProcessInstance pi : processInstances) {
-            processInstanceIds.add(pi.getId());
+            processInstanceIds.add(pi.getInstanceId());
         }
 
         // 第四步：批量查询NodeExecution，构建processInstanceId->NodeExecution列表的Map
@@ -116,7 +116,7 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
         List<RuleInstanceModel> ruleInstanceModels = new ArrayList<>();
         for (ProcessInstance processInstance : processInstances) {
             RuleInstanceModel model = new RuleInstanceModel();
-            model.setId(processInstance.getId());
+            model.setId(processInstance.getInstanceId());
             model.setStatus(processInstance.getStatus());
             model.setInputParams(processInstance.getInputParams());
             model.setOutputParams(processInstance.getOutputParams());
@@ -129,7 +129,7 @@ public class ProcessInstanceServiceImpl extends MasterDataServiceImpl<ProcessIns
             RuleDefinition ruleDefinition = ruleDefinitionMap.get(processInstance.getRuleDefinitionId());
 
             // 从Map中获取NodeExecution列表
-            List<NodeExecution> nodeExecutions = nodeExecutionMap.getOrDefault(processInstance.getId(),
+            List<NodeExecution> nodeExecutions = nodeExecutionMap.getOrDefault(processInstance.getInstanceId(),
                     new ArrayList<>());
 
             if (ruleDefinition != null) {

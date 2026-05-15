@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.jbm.cluster.api.constants.job.MisfirePolicy;
 import com.jbm.cluster.api.constants.job.ScheduleStauts;
@@ -25,6 +26,7 @@ import javax.persistence.*;
 @ApiModel("系统任务")
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"jobName", "jobGroup"}))
 public class SysJob extends MasterDataEntity {
+
 
     /**
      * 任务ID

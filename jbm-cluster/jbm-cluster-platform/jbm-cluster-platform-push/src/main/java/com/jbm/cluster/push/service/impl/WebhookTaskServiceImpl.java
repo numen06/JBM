@@ -19,7 +19,8 @@ import com.jbm.cluster.push.service.WebhookConfigSelectionStrategy;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.service.mybatis.MultiPlatformServiceImpl;
+import com.jbm.framework.masterdata.service.IMasterDataService;
+import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import jbm.framework.spring.config.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class WebhookTaskServiceImpl extends MultiPlatformServiceImpl<WebhookTask> implements WebhookTaskService {
+public class WebhookTaskServiceImpl extends MasterDataServiceImpl<WebhookTask> implements WebhookTaskService {
 
     @Autowired
     private WebhookEventConfigService webhookEventConfigService;

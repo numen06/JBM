@@ -90,7 +90,7 @@ public class ProcessExecutionEngine {
 
             // 根据输入参数创建流程实例
             ProcessInstance processInstance = new ProcessInstance();
-            processInstance.setId(request.getProcessInstanceId() != null ? request.getProcessInstanceId()
+            processInstance.setInstanceId(request.getProcessInstanceId() != null ? request.getProcessInstanceId()
                     : UUID.randomUUID().toString());
             processInstance.setRuleDefinitionId(null); // 直接执行流程不需要引用定义ID
             // 设置ruleName和ruleContent
@@ -186,7 +186,7 @@ public class ProcessExecutionEngine {
             String triggerData) {
         NodeData currentNode = findNodeById(flowData, currentNodeId);
         NodeExecution currentExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
-                processInstance.getId(), currentNodeId);
+                processInstance.getInstanceId(), currentNodeId);
 
         // 1. 恢复之前的输入参数作为基础上下文
         Map<String, Object> executionData = new HashMap<>();
@@ -321,7 +321,7 @@ public class ProcessExecutionEngine {
         // ... existing code ...
         // 先检查该节点是否已有执行记录，避免重复创建
         NodeExecution nodeExecution = nodeExecutionService.findByProcessInstanceIdAndNodeId(
-                processInstance.getId(), currentNode.getId());
+                processInstance.getInstanceId(), currentNode.getId());
         
         // 如果该节点已经有执行记录，说明是重复执行，直接返回而不是创建新记录
         if (nodeExecution != null) {
@@ -481,7 +481,7 @@ public class ProcessExecutionEngine {
     // 辅助方法
     private ProcessInstance createProcessInstance(RuleDefinition ruleDefinition, ExecuteProcessRequest request) {
         ProcessInstance instance = new ProcessInstance();
-        instance.setId(UUID.randomUUID().toString());
+        instance.setInstanceId(UUID.randomUUID().toString());
         instance.setRuleDefinitionId(ruleDefinition.getId());
         // 设置规则名称和内容
         instance.setRuleName(ruleDefinition.getRuleName());
@@ -496,8 +496,8 @@ public class ProcessExecutionEngine {
             NodeData node,
             Map<String, Object> inputData) {
         NodeExecution execution = new NodeExecution();
-        execution.setId(UUID.randomUUID().toString());
-        execution.setProcessInstanceId(processInstance.getId());
+        execution.setNodeExecutionId(UUID.randomUUID().toString());
+        execution.setProcessInstanceId(processInstance.getInstanceId());
         execution.setNodeId(node.getId());
         execution.setNodeType(node.getType());
         execution.setStatus(ProcessStatusEnum.RUNNING.getCode());
@@ -528,8 +528,8 @@ public class ProcessExecutionEngine {
             NodeData node,
             NodeExecutionResult result) {
         ProcessTrigger trigger = new ProcessTrigger();
-        trigger.setId(UUID.randomUUID().toString());
-        trigger.setProcessInstanceId(processInstance.getId());
+        trigger.setTriggerId(UUID.randomUUID().toString());
+        trigger.setProcessInstanceId(processInstance.getInstanceId());
         trigger.setNodeId(node.getId());
         trigger.setTriggerType(result.getTriggerType());
         trigger.setTriggerKey(result.getTriggerKey());
@@ -554,7 +554,7 @@ public class ProcessExecutionEngine {
             NodeExecutionResult result,
             boolean waiting) {
         ExecuteProcessResponse response = new ExecuteProcessResponse();
-        response.setProcessInstanceId(processInstance.getId());
+        response.setProcessInstanceId(processInstance.getInstanceId());
         response.setStatus(processInstance.getStatus());
         response.setCurrentNodeId(currentNode.getId());
         response.setWaitingForTrigger(waiting);
@@ -607,7 +607,7 @@ public class ProcessExecutionEngine {
     private void sendNodeExecutionMessage(ProcessInstance processInstance, NodeData nodeData, Map<String, Object> inputData, String status, String eventType, FlowData flowData) {
         try {
             NodeExecutionMessage message = new NodeExecutionMessage();
-            message.setProcessInstanceId(processInstance.getId());
+            message.setProcessInstanceId(processInstance.getInstanceId());
             message.setProcessInstanceName(processInstance.getRuleName());
             message.setNodeId(nodeData.getId());
             message.setNodeType(nodeData.getType());

@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.gateway;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,8 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("gateway_ip_limit_api")
-public class GatewayIpLimitApi extends MasterDataIdEntity {
+public class GatewayIpLimitApi extends MasterDataEntity {
+
 
     /**
      * 策略ID

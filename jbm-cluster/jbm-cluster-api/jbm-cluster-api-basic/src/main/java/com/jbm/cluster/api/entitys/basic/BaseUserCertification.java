@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -26,7 +27,8 @@ import java.util.Date;
 @ApiModel("用户实名认证")
 @TableName
 @Table(indexes = {@Index(name = "userIdIndex", columnList = "userId", unique = true)})
-public class BaseUserCertification extends MasterDataIdEntity {
+public class BaseUserCertification extends MasterDataEntity {
+
 
     /**
      * 系统用户Id

@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job.rule;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,7 +19,7 @@ import javax.persistence.Table;
 @Table
 @Entity
 @ApiModel("工作流实体")
-public class WorkflowDefinition extends MasterDataIdEntity implements Cloneable{
+public class WorkflowDefinition extends MasterDataEntity implements Cloneable{
     private static final long serialVersionUID = 1L;
     private static WorkflowDefinition workflowDefinition = new WorkflowDefinition();
 

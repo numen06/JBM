@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,7 +22,8 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_release_info")
-public class BaseReleaseInfo extends MasterDataIdEntity {
+public class BaseReleaseInfo extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "发布日期")
     private Date releaseTime;

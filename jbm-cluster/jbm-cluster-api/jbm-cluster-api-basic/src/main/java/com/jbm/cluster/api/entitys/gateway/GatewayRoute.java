@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.gateway;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -27,6 +28,7 @@ import javax.persistence.Id;
 @ApiModel("网关动态路由")
 @TableName("gateway_route")
 public class GatewayRoute extends MasterDataEntity {
+
     private static final long serialVersionUID = -2952097064941740301L;
 
     /**

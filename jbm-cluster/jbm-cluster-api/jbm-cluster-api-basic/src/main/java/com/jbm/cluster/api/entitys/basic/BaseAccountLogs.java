@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -20,7 +21,8 @@ import java.util.Date;
 @NoArgsConstructor
 @ApiModel("登录日志")
 @EqualsAndHashCode(callSuper = true)
-public class BaseAccountLogs extends MasterDataIdEntity {
+public class BaseAccountLogs extends MasterDataEntity {
+
     @ApiModelProperty(value = "登录时间")
     private Date loginTime;
     @ApiModelProperty(value = "登录IP")

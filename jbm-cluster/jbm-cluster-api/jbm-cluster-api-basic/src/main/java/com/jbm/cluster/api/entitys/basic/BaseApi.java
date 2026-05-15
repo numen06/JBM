@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -27,6 +28,7 @@ import javax.persistence.Id;
 @TableName("base_api")
 @ApiModel("API接口")
 public class BaseApi extends MasterDataEntity {
+
     /**
      * 资源ID
      */

@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
-import com.jbm.framework.masterdata.service.IMultiPlatformTreeService;
+import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * @Author: wesley.zhang
  * @Create: 2020-03-24 03:28:09
  */
-public interface BaseOrgService extends IMultiPlatformTreeService<BaseOrg> {
+public interface BaseOrgService extends IMasterDataTreeService<BaseOrg> {
 
     /***
      * 获取顶层公司

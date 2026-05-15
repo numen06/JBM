@@ -4,8 +4,6 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
 import lombok.SneakyThrows;
 
 public class GenerateControllerCode extends BaseGenerateCodeImpl {
@@ -30,13 +28,19 @@ public class GenerateControllerCode extends BaseGenerateCodeImpl {
             return "businessController";
         }
         Class<?> entityClass = generateSource.getEntityClass();
-        if (MultiPlatformTreeEntity.class.isAssignableFrom(entityClass)) {
-            return "controllerMultiPlatformTree";
-        }
-        if (MasterDataTreeEntity.class.isAssignableFrom(entityClass)) {
+        if (hasTreeFields(entityClass)) {
             return "controllerTree";
         }
         return "controller";
+    }
+
+    private boolean hasTreeFields(Class<?> entityClass) {
+        try {
+            entityClass.getDeclaredField("parentId");
+            return true;
+        } catch (NoSuchFieldException e) {
+            return false;
+        }
     }
 
     @SneakyThrows

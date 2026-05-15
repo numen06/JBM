@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import com.jbm.cluster.api.bo.PushMessage;
 import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.framework.masterdata.code.annotation.BussinessGroup;
-import com.jbm.framework.masterdata.usage.entity.MasterDataCodeEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -30,7 +31,8 @@ import java.util.Map;
 @TableName(autoResultMap = true)
 @ApiModel("推送消息内容")
 @BussinessGroup(businessClass = PushMessage.class)
-public class PushMessageBody extends MasterDataCodeEntity {
+public class PushMessageBody extends MasterDataEntity {
+
 
     @ApiModelProperty("发送者ID")
     private Long sendUserId;

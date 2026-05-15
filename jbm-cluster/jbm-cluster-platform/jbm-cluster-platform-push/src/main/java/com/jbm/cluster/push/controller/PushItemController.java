@@ -2,7 +2,7 @@ package com.jbm.cluster.push.controller;
 
 import com.jbm.cluster.api.entitys.message.PushItem;
 import com.jbm.cluster.push.service.PushItemService;
-import com.jbm.framework.mvc.web.MultiPlatformCollection;
+import com.jbm.framework.mvc.web.MasterDataTreeCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "PushItem开放接口")
 @RestController
 @RequestMapping("/pushItem")
-public class PushItemController extends MultiPlatformCollection<PushItem, PushItemService> {
+public class PushItemController extends MasterDataTreeCollection<PushItem, PushItemService> {
 }

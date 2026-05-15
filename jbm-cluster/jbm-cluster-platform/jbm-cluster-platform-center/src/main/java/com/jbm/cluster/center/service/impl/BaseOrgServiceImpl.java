@@ -8,8 +8,7 @@ import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformIdEntity;
-import com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl;
+import com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ import java.util.List;
  * @Create: 2020-03-24 03:28:09
  */
 @Service
-public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> implements BaseOrgService {
+public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> implements BaseOrgService {
 
     @Override
     public List<BaseOrg> selectEntitys(BaseOrg baseOrg) {
@@ -108,7 +107,7 @@ public class BaseOrgServiceImpl extends MultiPlatformTreeServiceImpl<BaseOrg> im
     public BaseOrg getBaseOrg(BaseOrg baseOrg) {
         List<BaseOrg> baseOrgList = this.lambdaQuery()
                 .eq(ObjectUtil.isNotNull(baseOrg.getOrgCode()), BaseOrg::getOrgCode, baseOrg.getOrgCode())
-                .eq(ObjectUtil.isNotNull(baseOrg.getId()), MultiPlatformIdEntity::getId, baseOrg.getId())
+                .eq(ObjectUtil.isNotNull(baseOrg.getId()), BaseOrg::getId, baseOrg.getId())
                 .eq(ObjectUtil.isNotNull(baseOrg.getOrgName()), BaseOrg::getOrgName, baseOrg.getOrgName())
                 .list();
         //默认返回第一条、会存在参数未传的情况

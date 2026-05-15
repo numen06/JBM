@@ -4,7 +4,8 @@ package com.jbm.cluster.api.entitys.message;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,7 +22,8 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName
 @ApiModel("Web反向推送配置")
-public class WebhookEventConfig extends MultiPlatformEntity {
+public class WebhookEventConfig extends MasterDataEntity {
+
     @Id
     @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "事件ID")

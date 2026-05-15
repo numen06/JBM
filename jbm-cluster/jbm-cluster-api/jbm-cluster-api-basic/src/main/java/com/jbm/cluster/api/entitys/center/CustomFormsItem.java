@@ -3,7 +3,8 @@ package com.jbm.cluster.api.entitys.center;
 
 import com.jbm.cluster.api.constants.center.ComponentType;
 import com.jbm.cluster.api.constants.center.FieldType;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +24,8 @@ import javax.validation.constraints.NotEmpty;
 @Entity
 @Table
 @ApiModel("自定义表单字段")
-public class CustomFormsItem extends MasterDataIdEntity {
+public class CustomFormsItem extends MasterDataEntity {
+
     @ApiModelProperty("所属表单id")
     @NotEmpty(message = "所属表单id不能为空")
     private Long formId;

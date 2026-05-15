@@ -8,7 +8,7 @@
 /lib/
 /dist/
 /data/
-/logs/
+logs/
 settings.gradle
 
 #java files ignore

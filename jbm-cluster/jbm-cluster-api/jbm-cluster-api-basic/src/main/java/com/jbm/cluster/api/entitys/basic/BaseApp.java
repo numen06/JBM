@@ -2,6 +2,7 @@ package com.jbm.cluster.api.entitys.basic;
 
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -26,6 +27,7 @@ import javax.persistence.*;
 @ApiModel("应用管理")
 @Table(name = "base_app", indexes = {@Index(name = "apiKeyIndex", columnList = "apiKey", unique = true)})
 public class BaseApp extends MasterDataEntity {
+
     @Id
     @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "应用ID")

@@ -3,7 +3,8 @@ package com.jbm.cluster.api.entitys.message;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +24,18 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName
 @ApiModel("Web反向推送")
-public class WebhookTask extends MultiPlatformEntity {
+public class WebhookTask extends MasterDataEntity {
+    @TableField(exist = false)
+    private Long id;
+    @TableField(exist = false)
+    private String code;
+    @TableField(exist = false)
+    private Long parentId;
+    @TableField(exist = false)
+    private Integer level;
+    @TableField(exist = false)
+    private String leafPath;
+
     @Id
     @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "任务ID")

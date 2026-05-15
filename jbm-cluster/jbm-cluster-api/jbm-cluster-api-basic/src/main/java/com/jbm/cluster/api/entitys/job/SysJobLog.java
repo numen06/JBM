@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
@@ -26,6 +27,7 @@ import java.util.Date;
 @NoArgsConstructor
 @ApiModel("系统任务日志")
 public class SysJobLog extends MasterDataEntity {
+
 
     /**
      * ID

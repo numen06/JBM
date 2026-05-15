@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job.rule;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,7 +19,8 @@ import javax.persistence.Table;
 @Table
 @Entity
 @ApiModel("drools规则")
-public class RuleDefinition extends MasterDataIdEntity {
+public class RuleDefinition extends MasterDataEntity {
+
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("规则编号")

@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.center;
 
 import com.jbm.cluster.api.constants.center.FormOrTable;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +23,8 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table
 @ApiModel("自定义表单")
-public class CustomForms extends MasterDataIdEntity {
+public class CustomForms extends MasterDataEntity {
+
     @ApiModelProperty("名称")
     @NotEmpty(message = "名称不能为空")
     private String name;

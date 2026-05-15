@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.message;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MultiPlatformTreeEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,7 +22,8 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("push_item")
 @ApiModel("配送设置管理")
-public class PushItem extends MultiPlatformTreeEntity {
+public class PushItem extends MasterDataEntity {
+
 
     @ApiModelProperty("推送项名称")
     private String name;

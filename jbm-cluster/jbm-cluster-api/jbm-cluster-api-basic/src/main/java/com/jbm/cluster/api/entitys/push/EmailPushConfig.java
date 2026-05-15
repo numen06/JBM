@@ -2,7 +2,8 @@ package com.jbm.cluster.api.entitys.push;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +20,8 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName
 @ApiModel("消息推送项")
-public class EmailPushConfig extends MasterDataIdEntity {
+public class EmailPushConfig extends MasterDataEntity {
+
 
     private String host;
     private String username;

@@ -3,7 +3,7 @@ package com.jbm.framework.masterdata.code.generate;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
-import com.jbm.framework.masterdata.usage.entity.*;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.util.StringUtils;
 import lombok.SneakyThrows;
 
@@ -16,25 +16,11 @@ public class GenerateServiceImplCode extends BaseGenerateCodeImpl {
         Class<?> superclass = generateSource.getSuperclass();
         while (true) {
             if (superclass.equals(MasterDataEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
-            }
-            if (superclass.equals(MasterDataIdEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
-            }
-            if (superclass.equals(MasterDataCodeEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
-            }
-            if (superclass.equals(MasterDataTreeEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl";
-            }
-            if (superclass.equals(MultiPlatformEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MultiPlatformServiceImpl";
-            }
-            if (superclass.equals(MultiPlatformIdEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MultiPlatformServiceImpl";
-            }
-            if (superclass.equals(MultiPlatformTreeEntity.class)) {
-                extClass = "com.jbm.framework.service.mybatis.MultiPlatformTreeServiceImpl";
+                if (hasTreeFields(generateSource.getEntityClass())) {
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl";
+                } else {
+                    extClass = "com.jbm.framework.service.mybatis.MasterDataServiceImpl";
+                }
             }
             if (StrUtil.isNotBlank(extClass)) {
                 break;
@@ -52,6 +38,14 @@ public class GenerateServiceImplCode extends BaseGenerateCodeImpl {
         return extClass;
     }
 
+    private boolean hasTreeFields(Class<?> entityClass) {
+        try {
+            entityClass.getDeclaredField("parentId");
+            return true;
+        } catch (NoSuchFieldException e) {
+            return false;
+        }
+    }
 
     @Override
     public CodeType getCodeType() {

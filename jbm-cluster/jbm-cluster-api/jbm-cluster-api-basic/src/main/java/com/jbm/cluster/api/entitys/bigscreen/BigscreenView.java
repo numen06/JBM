@@ -2,7 +2,8 @@ package com.jbm.cluster.api.entitys.bigscreen;
 
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,7 +19,8 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @ApiModel("大屏管理")
 @TableName("bigscreen_view")
-public class BigscreenView extends MasterDataIdEntity {
+public class BigscreenView extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "大屏名称")
     private String viewName;

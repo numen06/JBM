@@ -4,7 +4,8 @@ package com.jbm.cluster.api.entitys.basic;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,7 +25,8 @@ import javax.persistence.*;
 @NoArgsConstructor
 @ApiModel("应用配置管理")
 @Table(indexes = {@Index(name = "appKeyIndex", columnList = "appKey,orgId", unique = true)})
-public class BaseAppConfig extends MasterDataIdEntity {
+public class BaseAppConfig extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "应用ID")
     private Long appId;

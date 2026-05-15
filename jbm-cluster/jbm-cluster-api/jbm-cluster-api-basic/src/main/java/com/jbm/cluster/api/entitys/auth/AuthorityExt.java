@@ -1,5 +1,6 @@
 package com.jbm.cluster.api.entitys.auth;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -20,6 +21,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @MappedSuperclass
 public abstract class AuthorityExt extends MasterDataEntity {
+
 
     /**
      * 权限ID

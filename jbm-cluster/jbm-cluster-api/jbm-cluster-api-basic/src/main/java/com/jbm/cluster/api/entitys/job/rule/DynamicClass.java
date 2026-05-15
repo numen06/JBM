@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job.rule;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,7 +19,8 @@ import javax.validation.constraints.NotNull;
 @Table
 @Entity
 @ApiModel("动态模版类")
-public class DynamicClass extends MasterDataIdEntity {
+public class DynamicClass extends MasterDataEntity {
+
     private static final long serialVersionUID = 1L;
     @NotNull
     @ApiModelProperty("类名")

@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -28,6 +29,7 @@ import javax.persistence.Id;
 @TableName("base_menu")
 @ApiModel(value = "系统菜单")
 public class BaseMenu extends MasterDataEntity {
+
     private static final long serialVersionUID = -4414780909980518788L;
     /**
      * 菜单Id

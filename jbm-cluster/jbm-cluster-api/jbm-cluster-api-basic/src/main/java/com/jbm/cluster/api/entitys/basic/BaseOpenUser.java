@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -29,6 +30,7 @@ import javax.persistence.Table;
 @Table(indexes = {@Index(name = "appIdUserIndex", columnList = "userId,appId", unique = true),
         @Index(name = "appKeyUserIndex", columnList = "userId,appKey", unique = true)})
 public class BaseOpenUser extends MasterDataEntity {
+
 
     @Id
     @TableId(type = IdType.INPUT)

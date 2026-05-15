@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
-import com.jbm.framework.masterdata.usage.bean.BaseEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public interface IBaseSqlService<Entity extends BaseEntity> extends IService<Entity> {
+public interface IBaseSqlService<Entity extends MasterDataEntity> extends IService<Entity> {
 
     public Class<Entity> getEntityClass();
 

@@ -1,7 +1,7 @@
 package com.jbm.cluster.push.service;
 
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
-import com.jbm.framework.masterdata.service.IMultiPlatformService;
+import com.jbm.framework.masterdata.service.IMasterDataService;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * @Author: auto generate by jbm
  * @Create: 2022-08-30 16:36:49
  */
-public interface WebhookEventConfigService extends IMultiPlatformService<WebhookEventConfig> {
+public interface WebhookEventConfigService extends IMasterDataService<WebhookEventConfig> {
 
 
     WebhookEventConfig selectByEventId(String eventId);

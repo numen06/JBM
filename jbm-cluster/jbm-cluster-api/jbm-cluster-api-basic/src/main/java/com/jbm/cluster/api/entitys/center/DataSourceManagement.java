@@ -2,7 +2,8 @@ package com.jbm.cluster.api.entitys.center;
 
 
 import com.jbm.cluster.api.constants.center.DataSourceType;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -21,7 +22,8 @@ import javax.validation.constraints.NotNull;
 @ApiModel("数据源管理")
 @Entity
 @Table
-public class DataSourceManagement extends MasterDataIdEntity {
+public class DataSourceManagement extends MasterDataEntity {
+
     @ApiModelProperty("数据源编码")
     @NotBlank(message = "数据源编码不能为空")
     private String dataSourceCode;

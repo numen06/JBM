@@ -5,7 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.framework.exceptions.DataServiceException;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.utils.EntityUtils;
 import com.jbm.util.CollectionUtils;
 
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataTreeEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
+public abstract class MasterDataTreeServiceImpl<Entity extends MasterDataEntity> extends MasterDataServiceImpl<Entity> implements IMasterDataTreeService<Entity> {
 
 
     @Override

@@ -1,5 +1,8 @@
 package com.jbm.cluster.api.entitys.job.rule;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -18,8 +21,23 @@ import java.time.LocalDateTime;
 @Entity
 @ApiModel("流程触发器")
 public class ProcessTrigger extends MasterDataEntity {
+    @TableField(exist = false)
+    private Long id;
+    @TableField(exist = false)
+    private String code;
+    @TableField(exist = false)
+    private Long appId;
+    @TableField(exist = false)
+    private Long parentId;
+    @TableField(exist = false)
+    private Integer level;
+    @TableField(exist = false)
+    private String leafPath;
+
     @Id
-    private String id;
+    @TableId(value = "id", type = IdType.ASSIGN_UUID)
+    @Column(name = "id")
+    private String triggerId;
 
     @Column(name = "process_instance_id")
     private String processInstanceId;

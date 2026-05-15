@@ -3,7 +3,7 @@ package com.jbm.cluster.push.controller;
 import com.jbm.cluster.api.entitys.message.WebhookEventConfig;
 import com.jbm.cluster.push.service.WebhookEventConfigService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MultiPlatformCollection;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "Web反向推送配置开放接口")
 @RestController
 @RequestMapping("/webhookEventConfig")
-public class WebhookEventConfigController extends MultiPlatformCollection<WebhookEventConfig, WebhookEventConfigService> {
+public class WebhookEventConfigController extends MasterDataCollection<WebhookEventConfig, WebhookEventConfigService> {
 
     @ApiOperation(value = "保存配置")
     @PostMapping("/saveConfig")

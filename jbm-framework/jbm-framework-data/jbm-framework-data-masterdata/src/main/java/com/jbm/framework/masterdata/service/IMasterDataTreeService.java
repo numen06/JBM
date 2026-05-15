@@ -1,7 +1,7 @@
 package com.jbm.framework.masterdata.service;
 
 import com.jbm.framework.exceptions.DataServiceException;
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
  * @param <Entity>
  * @author wesley
  */
-public interface IMasterDataTreeService<Entity extends MasterDataTreeEntity> extends IMasterDataService<Entity> {
+public interface IMasterDataTreeService<Entity extends MasterDataEntity> extends IMasterDataService<Entity> {
 
     List<Entity> selectRootListById() throws DataServiceException;
 

@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -24,6 +25,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @TableName("base_account")
 public class BaseAccount extends MasterDataEntity {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

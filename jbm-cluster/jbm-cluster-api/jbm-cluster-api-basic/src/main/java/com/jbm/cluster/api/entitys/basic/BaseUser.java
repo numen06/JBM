@@ -31,6 +31,7 @@ import java.util.Date;
 @TableName("base_user")
 @ApiModel("系统用户")
 public class BaseUser extends MasterDataEntity {
+
     private static final long serialVersionUID = -735161640894047414L;
     /**
      * 系统用户ID

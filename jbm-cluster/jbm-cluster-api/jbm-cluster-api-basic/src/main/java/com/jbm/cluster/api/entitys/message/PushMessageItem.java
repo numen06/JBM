@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.message;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.cluster.api.bo.PushMessage;
@@ -36,6 +37,7 @@ import javax.persistence.Id;
 @ApiModel("消息推送项")
 @BussinessGroup(businessClass = PushMessage.class)
 public class PushMessageItem extends MasterDataEntity {
+
     @Id
     @TableId(type = IdType.ASSIGN_UUID)
     @ApiModelProperty(value = "推送消息ID")

@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.center.service.BaseOrgService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MultiPlatformCollection;
+import com.jbm.framework.mvc.web.MasterDataTreeCollection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ import java.util.List;
 @Api(tags = "组织结构管理")
 @RestController
 @RequestMapping("/baseOrg")
-public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgService> {
+public class BaseOrgController extends MasterDataTreeCollection<BaseOrg, BaseOrgService> {
 
     @ApiOperation(value = "获取顶层公司", notes = "获取顶层公司")
     @PostMapping("/findTopCompany")

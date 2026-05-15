@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.jbm.cluster.api.constants.AreaType;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +24,8 @@ import javax.persistence.UniqueConstraint;
 @ApiModel("行政区域")
 @EqualsAndHashCode(callSuper = true)
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"areaCode"}))
-public class BaseArea extends MasterDataIdEntity {
+public class BaseArea extends MasterDataEntity {
+
 
     @ApiModelProperty(value = "区域编码")
     private String areaCode;

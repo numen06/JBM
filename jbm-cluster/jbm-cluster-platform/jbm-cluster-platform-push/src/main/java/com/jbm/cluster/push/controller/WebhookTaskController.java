@@ -8,7 +8,7 @@ import com.jbm.cluster.push.form.WebhookTaskForm;
 import com.jbm.cluster.push.result.WebhookTaskResult;
 import com.jbm.cluster.push.service.WebhookTaskService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MultiPlatformCollection;
+import com.jbm.framework.mvc.web.MasterDataCollection;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "Web反向推送开放接口")
 @RestController
 @RequestMapping("/webhookTask")
-public class WebhookTaskController extends MultiPlatformCollection<WebhookTask, WebhookTaskService> {
+public class WebhookTaskController extends MasterDataCollection<WebhookTask, WebhookTaskService> {
 
     @ApiOperation("监听测试-1")
     @BusinessEventListener(eventClass = TestBusinessEvent.class)

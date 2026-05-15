@@ -1,6 +1,6 @@
 package com.jbm.framework.masterdata.controller;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataTreeEntity;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 
@@ -12,7 +12,7 @@ import java.util.List;
  * @param <Entity>
  * @author wesley
  */
-public interface IMasterDataTreeController<Entity extends MasterDataTreeEntity> extends IMasterDataController<Entity> {
+public interface IMasterDataTreeController<Entity extends MasterDataEntity> extends IMasterDataController<Entity> {
     /**
      * @param masterDataRequsetBody
      * @return

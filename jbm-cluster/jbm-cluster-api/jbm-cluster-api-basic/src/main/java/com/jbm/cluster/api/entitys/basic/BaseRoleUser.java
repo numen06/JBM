@@ -1,7 +1,8 @@
 package com.jbm.cluster.api.entitys.basic;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,8 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableName("base_role_user")
-public class BaseRoleUser extends MasterDataIdEntity {
+public class BaseRoleUser extends MasterDataEntity {
+
     private static final long serialVersionUID = -667816444278087761L;
     /**
      * 系统用户ID

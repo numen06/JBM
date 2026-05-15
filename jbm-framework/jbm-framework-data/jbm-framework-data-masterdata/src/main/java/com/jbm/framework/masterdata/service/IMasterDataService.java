@@ -261,4 +261,24 @@ public interface IMasterDataService<Entity extends MasterDataEntity> extends IBa
     DataPaging<Entity> selectEntitys(CriteriaQueryWrapper<Entity> wrapper);
 
     DataPaging<Entity> selectEntitys(PageParams pageParams, QueryWrapper queryWrapper);
+
+    String CODE_COLUMN = "code";
+
+    DataPaging<Entity> findListPage(PageRequestBody pageRequestBody);
+
+    boolean deleteByCode(String code) throws DataServiceException;
+
+    Entity selectByCode(String code) throws DataServiceException;
+
+    boolean updateBatchByCode(Collection<Entity> entityList);
+
+    boolean saveOrUpdateBatchByCode(Collection<Entity> entityList);
+
+    int deleteByCodes(Collection<String> codes) throws DataServiceException;
+
+    boolean updateByCode(Entity entity);
+
+    List<Entity> selectByCodes(Collection<String> codes) throws DataServiceException;
+
+    Map<String, Entity> selectEntityMapByCodes(Collection<String> codes) throws DataServiceException;
 }

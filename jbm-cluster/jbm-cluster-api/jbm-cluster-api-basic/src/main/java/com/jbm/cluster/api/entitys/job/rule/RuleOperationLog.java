@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.entitys.job.rule;
 
-import com.jbm.framework.masterdata.usage.entity.MasterDataIdEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,7 +18,8 @@ import java.util.Date;
 @Table
 @Entity
 @ApiModel("规则操作日志")
-public class RuleOperationLog extends MasterDataIdEntity {
+public class RuleOperationLog extends MasterDataEntity {
+
 
     @ApiModelProperty("规则id")
     private Long ruleId;
