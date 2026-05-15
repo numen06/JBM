@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="false">
-    <springProperty scop="context" name="spring.application.name" source="spring.application.name" defaultValue="logs"/>
+    <springProperty scope="context" name="spring.application.name" source="spring.application.name" defaultValue="logs"/>
     <property name="log.path" value="logs/${spring.application.name}"/>
     <property name="console.log.pattern"
               value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %green([%thread]) %highlight(%-5level) %boldMagenta(%logger{36}%n) - %msg%n"/>
@@ -99,18 +99,7 @@
         <appender-ref ref="file_error"/>
     </appender>
 
-    <!-- 业务日志自动采集（MDC） -->
-    <appender name="businessLog" class="com.jbm.cluster.common.basic.module.log.BusinessLogMdcAppender">
-        <idleTimeoutMs>600000</idleTimeoutMs>
-        <includeThrowable>true</includeThrowable>
-    </appender>
-
-    <appender name="async_businessLog" class="ch.qos.logback.classic.AsyncAppender">
-        <neverBlock>true</neverBlock>
-        <queueSize>1024</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <appender-ref ref="businessLog"/>
-    </appender>
+    <!-- 业务日志 MDC：不在此声明集群类 Appender（无 cluster 依赖时会启动失败）。有 JbmBusinessLogTemplate 时由 BusinessLogAppenderConfiguration 运行时挂载。 -->
 
     <!-- 系统模块日志级别控制  -->
     <logger name="com.jbm" level="info"/>
@@ -128,6 +117,5 @@
         <appender-ref ref="async_info"/>
         <appender-ref ref="async_error"/>
         <appender-ref ref="file_console"/>
-        <appender-ref ref="async_businessLog"/>
     </root>
 </configuration>

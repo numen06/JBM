@@ -15,7 +15,9 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 /**
- * 运行时动态向 Logback 注入 {@link BusinessLogMdcAppender}，无需改动 logback 配置。
+ * 运行时向 Logback ROOT 挂载 {@link BusinessLogMdcAppender}（及异步包装）。
+ * <p>框架 {@code jbm-framework-autoconfigure-logger} 的 {@code logback-spring.xml} 不再静态声明该类，
+ * 避免无 {@code jbm-cluster-common-basic} 依赖的应用在解析 logback 阶段失败；有 {@link JbmBusinessLogTemplate} 时由本组件完成挂载。</p>
  */
 @Slf4j
 @Component
