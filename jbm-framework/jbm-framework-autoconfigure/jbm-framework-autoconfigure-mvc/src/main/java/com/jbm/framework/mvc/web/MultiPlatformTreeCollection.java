@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
+/**
+ * @deprecated 随 {@link MasterDataCollection} 一并废弃；新代码请使用 DTO + 显式端点。
+ */
+@Deprecated
 @Slf4j
 public abstract class MultiPlatformTreeCollection<Entity extends MultiPlatformTreeEntity, Service extends IMultiPlatformTreeService<Entity>>
         extends MasterDataCollection<Entity, Service> implements IMultiPlatformTreeController<Entity> {

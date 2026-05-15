@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -16,7 +15,6 @@ import java.util.Date;
  *
  * @author wesley
  */
-@MappedSuperclass
 @Data
 @TableName
 public abstract class MasterDataEntity implements Serializable {

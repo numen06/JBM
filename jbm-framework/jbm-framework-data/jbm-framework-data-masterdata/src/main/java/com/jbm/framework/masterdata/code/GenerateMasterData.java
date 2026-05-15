@@ -44,6 +44,15 @@ import java.util.function.Consumer;
 
 
 /**
+ * Masterdata 代码生成入口。
+ * <p>
+ * Liquibase 全量导出：在已有库上可使用官方 CLI 或 liquibase-maven-plugin 执行 {@code generateChangeLog}，
+ * 将 {@code changeLogFile} 指向 {@code src/main/resources/db/changelog/V0__initial_schema.xml}（或 YAML），
+ * 与 {@code spring.liquibase.change-log} 主文件通过 {@code include} 衔接。
+ * 若曾用 JPA/Hibernate 仅做一次性建表对齐，导出完成后应关闭 JPA 的 {@code ddl-auto}，以 Liquibase 为唯一结构真源。
+ * 运行时依赖方面，{@code liquibase-core} 由 {@code jbm-framework-autoconfigure-mybatis} 与 MyBatis-Plus 同轨引入，业务模块无需重复声明。
+ * </p>
+ *
  * @author: create by wesley
  * @date:2019/4/18
  */
@@ -125,8 +134,8 @@ public class GenerateMasterData {
 //            ClassPathResource resourceLoader = new ClassPathResource("/com/jbm/framework/masterdata/code/btl");
 //            Configuration cfg = Configuration.defaultConfiguration();
 //            groupTemplate = new GroupTemplate(resourceLoader, cfg);
-            generateCodeList.add(new GenerateMapperXmlCode());
             generateCodeList.add(new GenerateMapperCode());
+            generateCodeList.add(new GenerateMapperXmlCode());
             generateCodeList.add(new GenerateServiceCode());
             generateCodeList.add(new GenerateServiceImplCode());
             generateCodeList.add(new GenerateBusinessCode());

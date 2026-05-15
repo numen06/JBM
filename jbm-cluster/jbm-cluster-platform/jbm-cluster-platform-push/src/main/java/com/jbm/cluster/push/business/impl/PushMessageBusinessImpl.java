@@ -1,6 +1,6 @@
 package com.jbm.cluster.push.business.impl;
 
-import com.jbm.framework.masterdata.business.PlatformBusinessImpl;
+import com.jbm.framework.masterdata.business.BaseBusiness;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.jbm.cluster.push.business.PushMessageBusiness;
@@ -13,7 +13,7 @@ import com.jbm.cluster.push.service.PushMessageBodyService;
  * @Create: 2022-08-01 17:40:30
  */
 @Service
-public class PushMessageBusinessImpl extends PlatformBusinessImpl implements PushMessageBusiness {
+public class PushMessageBusinessImpl extends BaseBusiness implements PushMessageBusiness {
 
     @Autowired
     private PushMessageItemService pushMessageItemService;

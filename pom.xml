@@ -19,6 +19,7 @@
         <module>jbm-framework-dependencies</module>
         <module>jbm-framework</module>
         <module>jbm-util</module>
+        <module>jbm-examples</module>
         <module>jbm-cluster</module>
     </modules>
     <scm>

@@ -1,0 +1,10 @@
+# 根配置：默认启用 H2 联调 profile（完整配置见 application-h2.yml）
+spring:
+  application:
+    name: jbm-examples-mysql
+  profiles:
+    active: h2
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true

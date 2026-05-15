@@ -25,6 +25,7 @@
 
 ### 使用说明文档
 
+- [Masterdata ORM 体系（JPA + Liquibase + MyBatis-Plus）与子项目迁移指引](docs/masterdata-orm-stack-and-migration.md)
 - JBM7随着使用越来越庞大和复杂正在不断完善文档
 - [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)，详细说明特性功能
   - JBM7在Docker中部署

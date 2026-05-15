@@ -1,44 +1,42 @@
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>jbm-framework-micro-mysql</artifactId>
-    <parent>
-        <groupId>com.jbm</groupId>
-        <artifactId>jbm-framework-micro</artifactId>
-        <version>7.3.0-SNAPSHOT</version>
-    </parent>
-    <properties>
-        <resteasy.version>3.0.7.Final</resteasy.version>
-    </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
-        </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.jbm</groupId>-->
-<!--            <artifactId>jbm-framework-autoconfigure-druid</artifactId>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-</project>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>jbm-framework-micro-mysql</artifactId>
+    <parent>
+        <groupId>com.jbm</groupId>
+        <artifactId>jbm-framework-micro</artifactId>
+        <version>7.3.0-SNAPSHOT</version>
+    </parent>
+    <packaging>jar</packaging>
+    <name>jbm-framework-micro-mysql</name>
+    <description>MySQL 微服务侧依赖聚合（Web + MVC + MyBatis-Plus/Liquibase 等），无演示代码；联调与集成测试见 jbm-examples-mysql。</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-mybatis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>3.6.1</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+</project>

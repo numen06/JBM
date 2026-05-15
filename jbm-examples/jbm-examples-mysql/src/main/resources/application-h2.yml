@@ -1,0 +1,26 @@
+# H2 联调：Controller → Service → MyBatis-Plus → 同一数据源（内存库）
+# 结构版本化：Liquibase（由 jbm-framework-autoconfigure-mybatis 传递）；已移除 Flyway 与 JPA 业务参与。
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  # 与可选依赖 dynamic-datasource 共存：本 profile 使用单数据源，排除动态数据源自动配置
+  autoconfigure:
+    exclude:
+      - com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:micro_mysql;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  liquibase:
+    enabled: true
+    change-log: classpath:db/examples-mysql/db.changelog-master.yaml
+
+logging:
+  level:
+    root: INFO
+    com.jbm.micro.mysql: DEBUG

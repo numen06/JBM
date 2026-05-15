@@ -3,34 +3,22 @@ package com.jbm.framework.masterdata.usage.bean;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-
 /**
  * @author wesley
  */
-@MappedSuperclass
 public class MasterDataTreeEntity extends MasterDataEntity {
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
-    /**
-     * 上级指向
-     */
-    @Column
+
+    @TableField("parent_code")
     private String parentCode;
 
-    @Column
+    @TableField("parent_id")
     private Long parentId;
 
-    //	@Transient
     @TableField(exist = false)
     private Boolean leaf;
-    /**
-     * 层级
-     */
-    @Column
+
+    @TableField("level")
     private Integer level;
 
     public String getParentCode() {
@@ -64,6 +52,5 @@ public class MasterDataTreeEntity extends MasterDataEntity {
     public void setLeaf(Boolean leaf) {
         this.leaf = leaf;
     }
-
 
 }

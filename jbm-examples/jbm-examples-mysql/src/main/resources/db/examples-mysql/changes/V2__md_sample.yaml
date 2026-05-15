@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: micro-mysql-md-sample-1
+      author: jbm
+      changes:
+        - createTable:
+            tableName: md_sample
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+              - column:
+                  name: form_json
+                  type: VARCHAR(4000)

@@ -7,11 +7,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
 /**
  * @program: JBM7
  * @author: wesley.zhang
@@ -19,13 +14,10 @@ import javax.persistence.MappedSuperclass;
  **/
 @Data
 @TableName
-@MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
 public abstract class MasterDataIdEntity extends MasterDataEntity {
 
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty("主键ID")
     private Long id;

@@ -25,7 +25,7 @@ import java.util.List;
 
 @Slf4j
 public abstract class MultiPlatformCollection<Entity extends MultiPlatformEntity, Service extends IMasterDataService<Entity>>
-        extends BaseCollection implements IMultiPlatformController<Entity> {
+        extends BaseController implements IMultiPlatformController<Entity> {
     @Autowired
     protected Service service;
     @Autowired

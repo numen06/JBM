@@ -1,5 +1,7 @@
 # JBM数据库版本控制
 
+> **变更说明**：框架已移除 **Flyway**；结构版本化请统一使用 **Liquibase**，说明见仓库 `docs/masterdata-orm-stack-and-migration.md`。下文保留的历史描述中凡涉及 Flyway 的，请以 Liquibase 为准。
+
 ## 目录说明
 
 本目录用于存放数据库版本升级脚本，JBM 框架会在应用启动时自动检测并执行这些脚本，实现数据库结构的版本化管理和自动升级。
@@ -190,7 +192,7 @@ JBM 框架在应用启动时会自动执行以下流程：
 
 ### 版本历史表
 
-JBM 框架会在数据库中自动创建版本历史表（`flyway_schema_history`）来记录脚本执行历史，包含以下信息：
+JBM 使用 **Liquibase**。框架会在数据库中自动创建版本历史表（如 `DATABASECHANGELOG`、`DATABASECHANGELOGLOCK`）来记录脚本执行历史，包含以下信息：
 - 执行顺序、版本号、描述信息
 - 脚本文件名、校验和
 - 执行时间、执行耗时、执行状态
@@ -212,7 +214,7 @@ A: 框架会在版本历史表中记录失败的脚本。修复脚本后，需�
 
 ### Q3: 如何查看脚本执行历史？
 
-A: 查询数据库中的 `flyway_schema_history` 表，或查看应用启动日志中的版本控制相关信息。
+A: 查询数据库中的 Liquibase 表 `DATABASECHANGELOG`，或查看应用启动日志中的 Liquibase 输出。
 
 ### Q4: 可以在脚本中使用存储过程吗？
 
@@ -224,4 +226,4 @@ A: 在配置文件中设置 `jbm.sql.auto-execute.enabled=false` 即可禁用。
 
 ## 相关文档
 
-- [FlywayConfiguration.java](../java/jbm/framework/boot/autoconfigure/mybatis/FlywayConfiguration.java) - JBM 数据库版本控制配置类源码
+- 仓库根目录：`docs/masterdata-orm-stack-and-migration.md`（Liquibase + MyBatis-Plus 与迁移指引）

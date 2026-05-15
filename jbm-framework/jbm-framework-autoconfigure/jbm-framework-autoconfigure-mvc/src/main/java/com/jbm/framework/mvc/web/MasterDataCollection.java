@@ -24,9 +24,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
+/**
+ * <strong>已废弃，计划删除。</strong>禁止在<strong>新建</strong> Controller 中继承本类；新代码必须使用<strong>显式 DTO</strong>与<strong>独立 REST 端点</strong>，不得从通用 {@code BaseRequsetBody} 反序列化实体。
+ * <p>存量继承类请逐步迁移。本类中的 {@link #validatorMasterData} / {@link #validatorMasterDataList} 等从请求体直接还原实体的做法一并废弃。</p>
+ *
+ * @deprecated 自 7.3.0 起废弃，将在后续版本移除；请改用 DTO + 显式 Controller。
+ */
+@Deprecated
 @Slf4j
 public abstract class MasterDataCollection<Entity extends MasterDataEntity, Service extends IMasterDataService<Entity>>
-        extends BaseCollection implements IMasterDataController<Entity> {
+        extends BaseController implements IMasterDataController<Entity> {
     @Autowired
     protected Service service;
     @Autowired
@@ -44,6 +51,10 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
 
     }
 
+    /**
+     * @deprecated 禁止继续使用：请使用 DTO 在 Controller 层接收参数，勿从 {@link BaseRequsetBody} 还原实体。
+     */
+    @Deprecated
     protected Entity validatorMasterData(BaseRequsetBody baseRequsetBody, Boolean valNull) throws RuntimeException {
         Entity entity = baseRequsetBody.tryGet(service.currentEntityClass());
         if (valNull) {
@@ -54,6 +65,10 @@ public abstract class MasterDataCollection<Entity extends MasterDataEntity, Serv
         return entity;
     }
 
+    /**
+     * @deprecated 禁止继续使用：请使用 DTO 列表在 Controller 层接收参数。
+     */
+    @Deprecated
     protected List<Entity> validatorMasterDataList(BaseRequsetBody baseRequsetBody, Boolean valNull) throws RuntimeException {
         List<Entity> entitys = baseRequsetBody.tryGetList(service.currentEntityClass());
         if (valNull) {

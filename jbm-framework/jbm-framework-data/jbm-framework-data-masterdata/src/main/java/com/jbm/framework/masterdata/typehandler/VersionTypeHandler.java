@@ -1,6 +1,5 @@
 package com.jbm.framework.masterdata.typehandler;
 
-import com.alibaba.fastjson.JSON;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -8,7 +7,6 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 
-import javax.persistence.AttributeConverter;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,21 +20,7 @@ import java.sql.SQLException;
 @MappedJdbcTypes(value = JdbcType.VARCHAR, includeNullJdbcType = true)
 @MappedTypes({Version.class})
 @Slf4j
-public class VersionTypeHandler extends BaseTypeHandler<Version> implements AttributeConverter<Object, String> {
-
-    public VersionTypeHandler() {
-        super();
-    }
-
-    @Override
-    public String convertToDatabaseColumn(Object o) {
-        return JSON.toJSONString(o);
-    }
-
-    @Override
-    public Object convertToEntityAttribute(String s) {
-        return JSON.parseObject(s);
-    }
+public class VersionTypeHandler extends BaseTypeHandler<Version> {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Version parameter, JdbcType jdbcType) throws SQLException {

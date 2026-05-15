@@ -5,11 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.MappedSuperclass;
-
 @Data
 @TableName
-@MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
 public class MultiPlatformEntity extends MasterDataEntity {
 

@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
+/**
+ * @deprecated 随 {@link MasterDataCollection} 一并废弃；新代码请使用 DTO + 显式端点。
+ */
+@Deprecated
 @Slf4j
 public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEntity, Service extends IMasterDataTreeService<Entity>>
         extends MasterDataCollection<Entity, Service> implements IMasterDataTreeController<Entity> {
@@ -24,6 +28,7 @@ public abstract class MasterDataTreeCollection<Entity extends MasterDataTreeEnti
     }
 
     @Override
+    @Deprecated
     protected Entity validatorMasterData(BaseRequsetBody pageRequestBody, Boolean valNull) throws RuntimeException {
         Entity entity = pageRequestBody.tryGet(service.currentEntityClass());
         if (valNull) {

@@ -3,5 +3,4 @@ jbm.framework.boot.autoconfigure.mybatis.event.ApplicationEnvironmentDefaultEven
 jbm.framework.boot.autoconfigure.mybatis.event.DynamicDataSourceHikariPropertyBridgeListener
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 jbm.framework.boot.autoconfigure.mybatis.MybatisPlusConfig,\
-jbm.framework.boot.autoconfigure.mybatis.FlywayConfiguration,\
 jbm.framework.boot.autoconfigure.mybatis.DynamicDataSourceHikariDefaultConfiguration

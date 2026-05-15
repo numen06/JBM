@@ -3,7 +3,7 @@ package com.jbm.framework.masterdata.code.generate;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jbm.framework.masterdata.business.IPlatformBusiness;
+import com.jbm.framework.masterdata.business.BusinessMarker;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 
@@ -23,7 +23,7 @@ public class GenerateBusinessCode extends BaseGenerateCodeImpl {
     }
 
     public String getSuperClass(GenerateSource generateSource) {
-        Class extClass = IPlatformBusiness.class;
+        Class extClass = BusinessMarker.class;
         generateSource.getData().put("extClass", extClass.getName());
         generateSource.getData().put("extClassName", ClassUtil.getClassName(extClass, true));
         return extClass.getName();

@@ -1,21 +1,16 @@
 package com.jbm.framework.masterdata.usage.bean;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import com.baomidou.mybatisplus.annotation.TableField;
 
 /**
  * 封装ID和CODE两大唯一键的高级实体
  *
  * @author wesley
  */
-@MappedSuperclass
 public class AdvEntity extends BaseEntity implements CodePrimaryKey<Long, String> {
-    /**
-     *
-     */
     private static final long serialVersionUID = 4915439801688748572L;
 
-    @Column
+    @TableField("code")
     private String code;
 
     public AdvEntity() {

@@ -6,6 +6,7 @@ import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.service.IMasterDataTreeService;
 import com.jbm.framework.masterdata.service.IMultiPlatformService;
+import com.jbm.framework.masterdata.service.IMultiPlatformTreeService;
 import com.jbm.framework.masterdata.usage.entity.*;
 import lombok.SneakyThrows;
 
@@ -35,7 +36,7 @@ public class GenerateServiceCode extends BaseGenerateCodeImpl {
                 extClass = IMultiPlatformService.class.getName();
             }
             if (superclass.equals(MultiPlatformTreeEntity.class)) {
-                extClass = IMultiPlatformService.class.getName();
+                extClass = IMultiPlatformTreeService.class.getName();
             }
             if (StrUtil.isNotBlank(extClass)) {
                 break;

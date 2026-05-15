@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: micro-mysql-md-tenant-demo-remark-1
+      author: jbm
+      changes:
+        - addColumn:
+            tableName: md_tenant_demo
+            columns:
+              - column:
+                  name: remark
+                  type: VARCHAR(128)

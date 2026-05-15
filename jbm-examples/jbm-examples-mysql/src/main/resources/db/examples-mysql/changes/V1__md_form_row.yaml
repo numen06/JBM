@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: micro-mysql-md-form-row-1
+      author: jbm
+      changes:
+        - createTable:
+            tableName: md_form_row
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: payload
+                  type: CLOB

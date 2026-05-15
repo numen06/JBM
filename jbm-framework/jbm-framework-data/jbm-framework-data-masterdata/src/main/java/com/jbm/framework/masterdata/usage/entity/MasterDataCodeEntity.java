@@ -4,15 +4,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.MappedSuperclass;
-
 /**
  * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-20 23:55
- **/
+ */
 @Data
-@MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
 public class MasterDataCodeEntity extends MasterDataIdEntity {
 

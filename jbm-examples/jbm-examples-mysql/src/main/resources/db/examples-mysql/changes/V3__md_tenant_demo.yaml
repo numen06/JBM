@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: micro-mysql-md-tenant-demo-1
+      author: jbm
+      changes:
+        - createTable:
+            tableName: md_tenant_demo
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true

@@ -7,19 +7,13 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.MappedSuperclass;
-
-/***
- * 多租户平台基础对象
+/**
+ * 多租户平台基础对象（树形）
  */
 @Data
 @TableName
-@MappedSuperclass
 @EqualsAndHashCode(callSuper = true)
 public class MultiPlatformTreeEntity extends MultiPlatformIdEntity {
-
-    @ApiModelProperty("应用ID")
-    private Long appId;
 
     /**
      * 父ID
@@ -34,7 +28,6 @@ public class MultiPlatformTreeEntity extends MultiPlatformIdEntity {
     private Integer level;
 
 
-    //	@Transient
     @TableField(exist = false)
     @ApiModelProperty("树状结构是否叶子节点")
     private Boolean leaf;

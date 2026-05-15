@@ -19,8 +19,8 @@
             <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.baomidou</groupId>-->
@@ -49,11 +49,6 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-spring</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-data-masterdata</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>
