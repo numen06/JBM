@@ -22,9 +22,9 @@ import java.util.Date;
 public abstract class MasterDataEntity implements Serializable {
 
     /**
-     * 主键ID
+     * 通用主数据 id 列（非 MyBatis-Plus 主键；各子类在业务主键字段上使用 {@link TableId}）。
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableField("id")
     @ApiModelProperty("主键ID")
     private Long id;
 

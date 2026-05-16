@@ -35,9 +35,7 @@ public class SaPermissionImpl implements StpInterface {
      */
     @Override
     public List<String> getRoleList(Object loginId, String loginType) {
-        JbmLoginUser loginUser = LoginHelper.getLoginUser();
-//        UserType userType = UserType.getUserType(loginUser.getUserType());
-//        if (userType == UserType.SYS_USER) {
+        JbmLoginUser loginUser = LoginHelper.getLoginUser(loginId);
         return Lists.newArrayList(loginUser.getRoles());
 //        } else if (userType == UserType.APP_USER) {
         // 其他端 自行根据业务编写

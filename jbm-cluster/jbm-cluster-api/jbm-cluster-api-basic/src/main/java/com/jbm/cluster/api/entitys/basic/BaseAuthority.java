@@ -33,6 +33,10 @@ public class BaseAuthority extends MasterDataEntity {
      */
     private String authority;
     /**
+     * 资源类型：menu / action / api
+     */
+    private String resourceType;
+    /**
      * 菜单资源ID
      */
     private Long menuId;

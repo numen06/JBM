@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -22,6 +24,9 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @TableName("base_role_user")
 public class BaseRoleUser extends MasterDataEntity {
+
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
 
     private static final long serialVersionUID = -667816444278087761L;
     /**

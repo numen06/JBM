@@ -1,5 +1,6 @@
 -- 菜单接口返回空时的自检脚本（对应 /current/user/menu 后端逻辑）
 -- 在目标库执行；将占位符替换为实际登录 user_id、会话中的 app_id（与 JbmLoginUser.appId 一致，非 URL 参数）
+-- H2 本地：http://localhost:7777/h2-console ，种子超管 user_id = 1（JbmConstants.ROOT_USER_ID），user_name = admin
 
 -- 1) 用户是否有角色
 SELECT * FROM base_role_user WHERE user_id = ?;

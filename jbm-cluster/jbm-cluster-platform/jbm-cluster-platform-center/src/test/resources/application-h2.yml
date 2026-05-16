@@ -1,0 +1,34 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        enabled: false
+      discovery:
+        enabled: false
+    discovery:
+      enabled: false
+    config:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:jbm_center_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  liquibase:
+    enabled: true
+    change-log: classpath:db/cluster-rbac/db.changelog-master.yaml
+  cache:
+    type: simple
+jbm:
+  cluster:
+    token-type: redis
+    data-init:
+      enabled: true
+    area-init:
+      enabled: false
+    permit-all:
+      - /**

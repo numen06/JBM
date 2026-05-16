@@ -1,5 +1,7 @@
 package com.jbm.cluster.api.entitys.basic;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
@@ -25,6 +27,8 @@ import javax.persistence.Entity;
 @TableName("base_dic")
 public class BaseDic extends MasterDataEntity {
 
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
 
     @ApiModelProperty(value = "名称")
     private String name;

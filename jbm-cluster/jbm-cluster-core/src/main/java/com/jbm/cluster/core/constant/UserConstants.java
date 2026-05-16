@@ -113,7 +113,7 @@ public class UserConstants {
     public static final int PASSWORD_MAX_LENGTH = 20;
 
     /**
-     * 管理员ID
+     * 管理员 ID（与 {@link JbmConstants#ROOT_USER_ID} 一致）
      */
-    public static final Long ADMIN_ID = 0L;
+    public static final Long ADMIN_ID = JbmConstants.ROOT_USER_ID;
 }

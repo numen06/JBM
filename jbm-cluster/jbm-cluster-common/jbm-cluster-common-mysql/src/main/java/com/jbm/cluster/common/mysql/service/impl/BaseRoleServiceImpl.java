@@ -23,7 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -343,5 +346,28 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         return baseRoleUserMapper.selectRoleUserIdList(userId);
     }
 
+    @Override
+    public Set<Long> expandRoleIdsWithAncestors(Collection<Long> roleIds) {
+        Set<Long> expanded = new LinkedHashSet<>();
+        if (roleIds == null) {
+            return expanded;
+        }
+        for (Long roleId : roleIds) {
+            collectAncestorRoleIds(roleId, expanded, new HashSet<>());
+        }
+        return expanded;
+    }
+
+    private void collectAncestorRoleIds(Long roleId, Set<Long> out, Set<Long> visiting) {
+        if (roleId == null || !visiting.add(roleId)) {
+            return;
+        }
+        out.add(roleId);
+        BaseRole role = baseRoleMapper.selectById(roleId);
+        if (role != null && role.getParentId() != null) {
+            collectAncestorRoleIds(role.getParentId(), out, visiting);
+        }
+        visiting.remove(roleId);
+    }
 
 }

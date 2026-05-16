@@ -133,9 +133,39 @@ public class JbmConstants {
     public static final String RESOURCE_PREFIX = "/profile";
 
     /**
-     * 默认超级管理员账号
+     * 默认超级管理员用户 ID（与种子数据、{@link com.jbm.cluster.core.constant.UserConstants#ADMIN_ID} 一致）
      */
-    public final static String ROOT = "admin";
+    public static final Long ROOT_USER_ID = 1L;
+
+    /**
+     * 默认超级管理员登录名
+     */
+    public static final String ROOT_USER_NAME = "admin";
+
+    /**
+     * 默认超级管理员账号（登录名别名，兼容历史代码）
+     */
+    public final static String ROOT = ROOT_USER_NAME;
+
+    /**
+     * H2 / 开发环境默认超管密码（生产环境请首次登录后修改）
+     */
+    public static final String ROOT_DEFAULT_PASSWORD = "admin123";
+
+    /**
+     * 种子超级管理员角色 ID
+     */
+    public static final Long ROOT_ROLE_ID = 1L;
+
+    /**
+     * H2 集成测试用开发者应用 apiKey（须在 base_app 中存在）
+     */
+    public static final String SEED_DEV_APP_API_KEY = "jbmSeedDevAppKey00000001";
+
+    /**
+     * H2 集成测试用开发者应用明文密钥（入库前 BCrypt；OAuth 校验走 {@code OAuthClientSecretVerifier}）
+     */
+    public static final String SEED_DEV_APP_SECRET = "jbmSeedDevSecret0000000001";
 
     /**
      * 短信验证码前缀

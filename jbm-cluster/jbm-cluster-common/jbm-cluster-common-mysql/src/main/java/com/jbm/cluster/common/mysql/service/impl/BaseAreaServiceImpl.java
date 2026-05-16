@@ -13,6 +13,7 @@ import com.jbm.cluster.common.mysql.mapper.BaseAreaMapper;
 import com.jbm.cluster.common.mysql.service.BaseAreaService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -36,6 +37,9 @@ import java.util.Map;
 public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> implements BaseAreaService, ApplicationListener<ApplicationReadyEvent> {
 
     private final static String CACHE_KEY = "chinaAreaList";
+
+    @Value("${jbm.cluster.area-init.enabled:true}")
+    private boolean areaInitEnabled;
 
     @Resource
     private BaseAreaMapper baseAreaMapper;
@@ -95,6 +99,9 @@ public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> impleme
      */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
+        if (!areaInitEnabled) {
+            return;
+        }
         //存在之后不初始化
         if (this.count() > 0) {
             return;

@@ -21,6 +21,7 @@ import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -171,6 +172,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
             BaseMenu menu = baseMenuMapper.selectById(resourceId);
             if (ObjectUtil.isNotEmpty(menu)) {
                 authority = JbmSecurityConstants.AUTHORITY_PREFIX_MENU + menu.getMenuCode();
+                baseAuthority.setResourceType(ResourceType.menu.name());
                 //如果数据不相等则新建
                 if (!authority.equals(baseAuthority.getAuthority())) {
                     //菜单保持authID和MenuId一致
@@ -189,12 +191,14 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         if (ResourceType.action.equals(resourceType)) {
             BaseAction operation = baseActionMapper.selectById(resourceId);
             authority = JbmSecurityConstants.AUTHORITY_PREFIX_ACTION + operation.getActionCode();
+            baseAuthority.setResourceType(ResourceType.action.name());
             baseAuthority.setActionId(resourceId);
             baseAuthority.setStatus(operation.getStatus());
         }
         if (ResourceType.api.equals(resourceType)) {
             BaseApi api = baseApiService.getApi(resourceId);
             authority = JbmSecurityConstants.AUTHORITY_PREFIX_API + api.getApiCode();
+            baseAuthority.setResourceType(ResourceType.api.name());
             baseAuthority.setApiId(resourceId);
             baseAuthority.setStatus(api.getStatus());
         }
@@ -328,6 +332,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @param authorityIds 权限集合
      * @return
      */
+    @CacheEvict(value = "userAuthorities", allEntries = true)
     @Override
     public void addAuthorityRole(Long roleId, Date expireTime, String... authorityIds) {
         if (roleId == null) {
@@ -359,6 +364,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @param authorityIds 权限集合
      * @return
      */
+    @CacheEvict(value = "userAuthorities", allEntries = true)
     @Override
     public void addAuthorityUser(Long userId, Date expireTime, String... authorityIds) {
         if (userId == null) {
@@ -540,32 +546,28 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
      * @param root   超级管理员
      * @return
      */
+    @Cacheable(value = "userAuthorities", key = "#userId + ':' + #root")
     @Override
     public List<OpenAuthority> findAuthorityByUser(Long userId, Boolean root) {
         if (root) {
-            // 超级管理员返回所有
             return findAuthorityByType("1");
         }
         List<OpenAuthority> authorities = Lists.newArrayList();
-        List<BaseRole> rolesList = baseRoleService.getUserRoles(userId);
-        if (rolesList != null) {
-            for (BaseRole role : rolesList) {
-                // 加入角色已授权
-                List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(role.getRoleId());
-                if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
-                    authorities.addAll(roleGrantedAuthority);
-                }
+        List<Long> roleIds = baseRoleService.getUserRoleIds(userId);
+        Set<Long> expandedRoleIds = baseRoleService.expandRoleIdsWithAncestors(roleIds);
+        for (Long roleId : expandedRoleIds) {
+            List<OpenAuthority> roleGrantedAuthority = findAuthorityByRole(roleId);
+            if (roleGrantedAuthority != null && !roleGrantedAuthority.isEmpty()) {
+                authorities.addAll(roleGrantedAuthority);
             }
         }
-        // 加入用户特殊授权
         List<OpenAuthority> userGrantedAuthority = baseAuthorityUserMapper.selectAuthorityByUser(userId);
-        if (userGrantedAuthority != null && userGrantedAuthority.size() > 0) {
+        if (userGrantedAuthority != null && !userGrantedAuthority.isEmpty()) {
             authorities.addAll(userGrantedAuthority);
         }
-        // 权限去重
-        HashSet h = new HashSet(authorities);
+        HashSet<OpenAuthority> distinct = new HashSet<>(authorities);
         authorities.clear();
-        authorities.addAll(h);
+        authorities.addAll(distinct);
         return authorities;
     }
 
@@ -585,14 +587,11 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         // 用户权限列表
         List<AuthorityMenu> authorities = Lists.newArrayList();
-        List<BaseRole> rolesList = baseRoleService.getUserRoles(userId);
-        if (rolesList != null) {
-            for (BaseRole role : rolesList) {
-                // 加入角色已授权
-                List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(role.getRoleId(), appId);
-                if (roleGrantedAuthority != null && roleGrantedAuthority.size() > 0) {
-                    authorities.addAll(roleGrantedAuthority);
-                }
+        Set<Long> expandedRoleIds = baseRoleService.expandRoleIdsWithAncestors(baseRoleService.getUserRoleIds(userId));
+        for (Long roleId : expandedRoleIds) {
+            List<AuthorityMenu> roleGrantedAuthority = baseAuthorityRoleMapper.selectAuthorityMenuByRole(roleId, appId);
+            if (roleGrantedAuthority != null && !roleGrantedAuthority.isEmpty()) {
+                authorities.addAll(roleGrantedAuthority);
             }
         }
         // 加入用户特殊授权

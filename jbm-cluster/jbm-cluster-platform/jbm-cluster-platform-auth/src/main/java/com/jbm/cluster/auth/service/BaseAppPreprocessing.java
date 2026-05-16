@@ -30,13 +30,6 @@ public class BaseAppPreprocessing {
 
     @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey", unless = "#result == null")
     public BaseApp getAppByKey(String appKey) {
-        if (StrUtil.contains(appKey, "-")) {
-            BaseApp app = new BaseApp();
-            app.setAppId(0L);
-            app.setApiKey(appKey);
-            app.setSecretKey(appKey);
-            return app;
-        }
         BaseApp baseApp = baseAppServiceClient.getAppByKey(appKey).getResult();
         if (ObjectUtil.isEmpty(baseApp)) {
             throw new NullPointerException("应用不存在");

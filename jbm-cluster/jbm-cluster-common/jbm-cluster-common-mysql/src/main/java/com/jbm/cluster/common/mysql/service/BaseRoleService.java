@@ -145,4 +145,9 @@ public interface BaseRoleService extends IMasterDataService<BaseRole> {
      * @return
      */
     List<Long> getUserRoleIds(Long userId);
+
+    /**
+     * 展开角色 ID（含所有祖先角色，用于权限继承）
+     */
+    java.util.Set<Long> expandRoleIdsWithAncestors(java.util.Collection<Long> roleIds);
 }

@@ -15,6 +15,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.jbm.cluster.api.constants.OAuthClientSecretVerifier;
 import com.jbm.cluster.common.satoken.config.TokenConfig;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +60,25 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
 
     @Override
+    public SaClientModel checkClientSecret(String clientId, String clientSecret) {
+        try {
+            Map<String, OAuthClientSecretVerifier> verifiers =
+                    SpringUtil.getBeansOfType(OAuthClientSecretVerifier.class);
+            for (OAuthClientSecretVerifier verifier : verifiers.values()) {
+                if (verifier.verify(clientId, clientSecret)) {
+                    SaClientModel model = getClientModel(clientId);
+                    if (ObjectUtil.isNotEmpty(model)) {
+                        return model;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("OAuthClientSecretVerifier 不可用，回退默认校验: {}", e.getMessage());
+        }
+        return super.checkClientSecret(clientId, clientSecret);
+    }
+
+    @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
         try {
             return clientTokenModelLoadingCache.get(clientId);
@@ -69,8 +92,9 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
     public SaClientModel getClientModel(String clientId) {
         try {
             Map<String, ClientModelSource> clientModelSourceMap = SpringUtil.getBeansOfType(ClientModelSource.class);
-            for (Map.Entry<String, ClientModelSource> entry : clientModelSourceMap.entrySet()) {
-                ClientModelSource v = entry.getValue();
+            List<ClientModelSource> sources = new ArrayList<>(clientModelSourceMap.values());
+            sources.sort(Comparator.comparingInt(ClientModelSource::getOrder));
+            for (ClientModelSource v : sources) {
                 SaClientModel saClientModel = v.getClientModel(clientId);
                 if (ObjectUtil.isNotEmpty(saClientModel)) {
                     return saClientModel;

@@ -1,0 +1,19 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        enabled: false
+      discovery:
+        enabled: false
+  datasource:
+    url: jdbc:h2:mem:jbm_auth;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  liquibase:
+    enabled: true
+    change-log: classpath:db/cluster-rbac/db.changelog-master.yaml
+jbm:
+  cluster:
+    data-init:
+      enabled: true

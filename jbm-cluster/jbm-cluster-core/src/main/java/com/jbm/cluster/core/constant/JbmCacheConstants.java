@@ -54,4 +54,14 @@ public class JbmCacheConstants {
 
     public final static String APP_CACHE_NAMESPACE = "apps";
 
+    /**
+     * 用户权限标识缓存（与 Session 解耦，便于授权变更后失效）
+     */
+    public static final String USER_AUTHORITY_KEY = "jbm:user:authority:";
+
+    /**
+     * 用户权限缓存默认 TTL（秒），与 sa-token.timeout 对齐时可由配置覆盖
+     */
+    public static final long USER_AUTHORITY_EXPIRE_SECONDS = 86400L;
+
 }

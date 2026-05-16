@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/cluster-rbac/changes/V1__rbac_tables.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V2__rbac_seed_reference.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V4__rbac_alter_resource_type.sql

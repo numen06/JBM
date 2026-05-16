@@ -170,9 +170,8 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 //        Long appId = String.valueOf(System.currentTimeMillis());
         String apiKey = RandomValueUtils.randomAlphanumeric(24);
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
-//        app.setAppId(appId);
         app.setApiKey(apiKey);
-        app.setSecretKey(secretKey);
+        app.setSecretKey(SecurityUtils.encryptPassword(secretKey));
         app.setCreateTime(new Date());
         app.setUpdateTime(app.getCreateTime());
         if (app.getIsPersist() == null) {

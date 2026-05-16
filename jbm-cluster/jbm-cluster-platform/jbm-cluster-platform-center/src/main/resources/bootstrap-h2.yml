@@ -1,0 +1,26 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        enabled: false
+      discovery:
+        enabled: false
+  datasource:
+    url: jdbc:h2:mem:jbm_center;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  liquibase:
+    enabled: true
+    change-log: classpath:db/cluster-rbac/db.changelog-master.yaml
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  cache:
+    type: simple
+jbm:
+  cluster:
+    data-init:
+      enabled: true
+    token-type: jwt

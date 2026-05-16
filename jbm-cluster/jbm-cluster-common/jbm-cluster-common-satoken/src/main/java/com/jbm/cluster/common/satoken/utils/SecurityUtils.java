@@ -99,7 +99,7 @@ public class SecurityUtils {
      * @return 结果
      */
     public static boolean isAdmin(Long userId) {
-        return userId != null && 1L == userId;
+        return com.jbm.cluster.core.constant.JbmConstants.ROOT_USER_ID.equals(userId);
     }
 
     public static PasswordEncoder getPasswordEncoder() {

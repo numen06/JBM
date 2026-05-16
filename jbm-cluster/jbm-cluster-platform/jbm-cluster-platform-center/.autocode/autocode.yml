@@ -1,0 +1,556 @@
+# 自动生成代码记录（扫描包时建立的实体与生成文件对应关系）
+!!com.jbm.framework.masterdata.code.model.AutocodeYaml
+generatedAt: '2026-05-16 16:14:45'
+items:
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityApp
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAuthorityAppMapper.java
+    timestamp: '2026-05-16 14:59:47.366'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAuthorityAppMapper.xml
+    timestamp: '2026-05-16 14:59:47.367'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAuthorityAppService.java
+    timestamp: '2026-05-16 14:59:47.368'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.370'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.370'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.370'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityAppController.java
+    timestamp: '2026-05-16 11:43:04.508'
+- entity: com.jbm.cluster.api.entitys.basic.BaseApi
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseApiMapper.java
+    timestamp: '2026-05-16 14:59:47.338'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseApiMapper.xml
+    timestamp: '2026-05-16 14:59:47.338'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseApiService.java
+    timestamp: '2026-05-16 14:59:47.341'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.342'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.342'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.342'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseApiController.java
+    timestamp: '2026-05-16 11:43:04.506'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityAction
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAuthorityActionMapper.java
+    timestamp: '2026-05-16 14:59:47.378'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAuthorityActionMapper.xml
+    timestamp: '2026-05-16 14:59:47.379'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAuthorityActionService.java
+    timestamp: '2026-05-16 14:59:47.380'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.381'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.381'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.381'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityActionController.java
+    timestamp: '2026-05-16 11:43:04.507'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAction
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseActionMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseActionMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseActionService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseActionServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseActionServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseActionServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseActionController.java
+    timestamp: '2026-05-16 11:43:04.505'
+- entity: com.jbm.cluster.api.entitys.basic.BaseOrg
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseOrgMapper.java
+    timestamp: '2026-05-16 14:59:47.357'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseOrgMapper.xml
+    timestamp: '2026-05-16 14:59:47.359'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseOrgService.java
+    timestamp: '2026-05-16 14:59:47.359'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.360'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.360'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.360'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseOrgController.java
+    timestamp: '2026-05-16 11:43:04.510'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUserCertification
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseUserCertificationMapper.java
+    timestamp: '2026-05-16 14:59:47.302'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserCertificationMapper.xml
+    timestamp: '2026-05-16 14:59:47.304'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseUserCertificationService.java
+    timestamp: '2026-05-16 14:59:47.305'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.306'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.306'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.306'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserCertificationController.java
+    timestamp: '2026-05-16 11:43:04.511'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthority
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAuthorityMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAuthorityMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAuthorityService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityController.java
+    timestamp: '2026-05-16 11:43:04.508'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityRole
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAuthorityRoleMapper.java
+    timestamp: '2026-05-16 14:59:47.297'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAuthorityRoleMapper.xml
+    timestamp: '2026-05-16 14:59:47.298'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAuthorityRoleService.java
+    timestamp: '2026-05-16 14:59:47.299'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.300'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.300'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.300'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityRoleController.java
+    timestamp: '2026-05-16 11:43:04.508'
+- entity: com.jbm.cluster.api.entitys.basic.BaseMenu
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseMenuMapper.java
+    timestamp: '2026-05-16 14:59:47.313'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseMenuMapper.xml
+    timestamp: '2026-05-16 14:59:47.314'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseMenuService.java
+    timestamp: '2026-05-16 14:59:47.315'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.316'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.316'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.316'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseMenuController.java
+    timestamp: '2026-05-16 11:43:04.509'
+- entity: com.jbm.cluster.api.entitys.basic.BaseDic
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseDicMapper.java
+    timestamp: '2026-05-16 14:59:47.383'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseDicMapper.xml
+    timestamp: '2026-05-16 14:59:47.383'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseDicService.java
+    timestamp: '2026-05-16 14:59:47.384'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.386'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.386'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.386'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseDicController.java
+    timestamp: '2026-05-16 11:43:04.509'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUserConfig
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseUserConfigMapper.java
+    timestamp: '2026-05-16 14:59:47.332'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserConfigMapper.xml
+    timestamp: '2026-05-16 14:59:47.333'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseUserConfigService.java
+    timestamp: '2026-05-16 14:59:47.336'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.337'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.337'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.337'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserConfigController.java
+    timestamp: '2026-05-16 11:43:04.512'
+- entity: com.jbm.cluster.api.entitys.basic.BaseDeveloper
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseDeveloperMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseDeveloperMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseDeveloperService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseDeveloperController.java
+    timestamp: '2026-05-16 11:43:04.509'
+- entity: com.jbm.cluster.api.entitys.basic.BaseReleaseInfo
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseReleaseInfoMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseReleaseInfoMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseReleaseInfoService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseReleaseInfoController.java
+    timestamp: '2026-05-16 11:43:04.510'
+- entity: com.jbm.cluster.api.entitys.basic.BaseRole
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseRoleMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseRoleMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseRoleService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseRoleController.java
+    timestamp: '2026-05-16 11:43:04.511'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityUser
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAuthorityUserMapper.java
+    timestamp: '2026-05-16 14:59:47.344'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAuthorityUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.345'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAuthorityUserService.java
+    timestamp: '2026-05-16 14:59:47.346'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.348'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.348'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.348'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityUserController.java
+    timestamp: '2026-05-16 11:43:04.509'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUser
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseUserMapper.java
+    timestamp: '2026-05-16 14:59:47.350'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.351'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.351'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.351'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.351'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.351'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserController.java
+    timestamp: '2026-05-16 11:43:04.512'
+- entity: com.jbm.cluster.api.entitys.basic.Feedback
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/FeedbackMapper.java
+    timestamp: '2026-05-16 14:59:47.290'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/FeedbackMapper.xml
+    timestamp: '2026-05-16 14:59:47.291'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/FeedbackService.java
+    timestamp: '2026-05-16 14:59:47.292'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.293'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.293'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.293'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/FeedbackController.java
+    timestamp: '2026-05-16 11:43:04.513'
+- entity: com.jbm.cluster.api.entitys.basic.BaseOpenUser
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseOpenUserMapper.java
+    timestamp: '2026-05-16 14:59:47.387'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseOpenUserMapper.xml
+    timestamp: '2026-05-16 14:59:47.388'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseOpenUserService.java
+    timestamp: '2026-05-16 14:59:47.389'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.390'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.390'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.390'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseOpenUserController.java
+    timestamp: '2026-05-16 11:43:04.510'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAccount
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAccountMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAccountMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAccountService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAccountController.java
+    timestamp: '2026-05-16 11:43:04.505'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAccountLogs
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAccountLogsMapper.java
+    timestamp: '2026-05-16 14:59:47.361'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAccountLogsMapper.xml
+    timestamp: '2026-05-16 14:59:47.363'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAccountLogsService.java
+    timestamp: '2026-05-16 14:59:47.364'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.364'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.364'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.364'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAccountLogsController.java
+    timestamp: '2026-05-16 11:43:04.505'
+- entity: com.jbm.cluster.api.entitys.basic.BaseRoleUser
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseRoleUserMapper.java
+    timestamp: alreadyExisted
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseRoleUserMapper.xml
+    timestamp: alreadyExisted
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseRoleUserService.java
+    timestamp: alreadyExisted
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: alreadyExisted
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseRoleUserController.java
+    timestamp: '2026-05-16 11:43:04.511'
+- entity: com.jbm.cluster.api.entitys.basic.BaseApp
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAppMapper.java
+    timestamp: '2026-05-16 14:59:47.371'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAppMapper.xml
+    timestamp: '2026-05-16 14:59:47.372'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAppService.java
+    timestamp: '2026-05-16 14:59:47.373'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.376'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.376'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.376'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAppController.java
+    timestamp: '2026-05-16 11:43:04.506'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAppConfig
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAppConfigMapper.java
+    timestamp: '2026-05-16 14:59:47.308'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAppConfigMapper.xml
+    timestamp: '2026-05-16 14:59:47.309'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAppConfigService.java
+    timestamp: '2026-05-16 14:59:47.310'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.312'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.312'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.312'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAppConfigController.java
+    timestamp: '2026-05-16 11:43:04.506'
+- entity: com.jbm.cluster.api.entitys.basic.BaseArea
+  generated:
+  - codeType: mapper
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/mapper/BaseAreaMapper.java
+    timestamp: '2026-05-16 14:59:47.218'
+  - codeType: mapperXml
+    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseAreaMapper.xml
+    timestamp: '2026-05-16 14:59:47.236'
+  - codeType: service
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseAreaService.java
+    timestamp: '2026-05-16 14:59:47.238'
+  - codeType: serviceImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.247'
+  - codeType: business
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.247'
+  - codeType: businessImpl
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-05-16 14:59:47.247'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAreaController.java
+    timestamp: '2026-05-16 11:43:04.507'

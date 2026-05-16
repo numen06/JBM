@@ -9,6 +9,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import com.jbm.cluster.common.satoken.config.TokenConfig;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class TokenDiagnoseController {
 
     @Autowired
     private RedisService redisService;
+
+    @Autowired(required = false)
+    private TokenConfig tokenConfig;
 
     /**
      * 获取 Sa-Token 配置快照
@@ -54,11 +58,14 @@ public class TokenDiagnoseController {
         map.put("sa-token.id-token-timeout(秒)", cfg.getIdTokenTimeout());
         map.put("sa-token.id-token-timeout(天)", cfg.getIdTokenTimeout() / 86400.0);
 
-        // OAuth2 配置 (通过运行时环境读取，避免依赖额外 Bean)
         Map<String, Object> oauth2Map = new LinkedHashMap<>();
-        oauth2Map.put("access-token-timeout(秒)", System.getProperty("sa-token.oauth2.access-token-timeout"));
-        oauth2Map.put("client-token-timeout(秒)", System.getProperty("sa-token.oauth2.client-token-timeout"));
-        map.put("OAuth2配置(运行时)", oauth2Map);
+        if (tokenConfig != null) {
+            oauth2Map.put("access-token-timeout(秒)", tokenConfig.getOauth2AccessTokenTimeout());
+            oauth2Map.put("client-token-timeout(秒)", tokenConfig.getOauth2ClientTokenTimeout());
+            oauth2Map.put("client-token-cache-hours", tokenConfig.getClientTokenCacheHours());
+            oauth2Map.put("config-unified", tokenConfig.isConfigUnified());
+        }
+        map.put("OAuth2配置", oauth2Map);
 
         return ResultBody.ok(map);
     }

@@ -9,6 +9,10 @@ import java.util.UUID;
 
 public class NodeClientModelSource implements ClientModelSource {
 
+    @Override
+    public int getOrder() {
+        return 100;
+    }
 
     /**
      * 根据 clientId 获取客户端模型
@@ -18,8 +22,8 @@ public class NodeClientModelSource implements ClientModelSource {
      */
     @Override
     public SaClientModel getClientModel(String clientId) {
-        // 如果 clientId 包含了应用名称
-        if (StrUtil.contains(clientId, SpringUtil.getApplicationName())) {
+        // 仅本微服务节点 clientId（服务间调用），开发者 apiKey 走 JbmPlatformClientModelSource
+        if (StrUtil.equals(clientId, SpringUtil.getApplicationName())) {
             // 返回一个新的 SaClientModel 对象
             return new SaClientModel()
                     // 设置 clientId

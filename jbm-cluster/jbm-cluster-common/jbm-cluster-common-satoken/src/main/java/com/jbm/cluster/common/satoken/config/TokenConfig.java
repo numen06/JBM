@@ -58,9 +58,9 @@ public class TokenConfig {
     
     /**
      * Client Token 缓存过期时间（小时）
-     * 默认：24小时，与OAuth2 client token保持一致
      */
-    private int clientTokenCacheHours = 24;
+    @Value("${sa-token.oauth2.client-token-cache-hours:24}")
+    private int clientTokenCacheHours;
 
     // ==================== Getter 方法 ====================
 

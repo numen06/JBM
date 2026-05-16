@@ -1,0 +1,3 @@
+--liquibase formatted sql
+--changeset jbm:rbac-v2-seed-marker splitStatements:true
+-- 业务种子数据由 SystemDataInitializer 在应用启动时写入（含 BCrypt 密码），避免 SQL 硬编码密文。

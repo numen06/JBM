@@ -95,20 +95,18 @@ public class JbmLoginUser implements Serializable {
     private String ipaddr;
 
     /**
-     * 权限列表
+     * 权限标识集合（菜单、按钮、API 等，如 MENU_xxx、ACTION_xxx）
      */
-    private Set<String> permissions;
+    private Set<String> authorities;
 
-    /**
-     * 菜单权限
-     */
-    private Set<String> menuPermission;
+    /** 兼容旧字段名 menuPermission */
+    public Set<String> getMenuPermission() {
+        return authorities;
+    }
 
-
-    /**
-     * 角色权限
-     */
-    private Set<String> rolePermission;
+    public void setMenuPermission(Set<String> menuPermission) {
+        this.authorities = menuPermission;
+    }
 
     /**
      * 角色列表
