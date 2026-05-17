@@ -239,6 +239,8 @@ jbm-util
 8. SecurityUtils 获取当前登录用户信息
 ```
 
+> RBAC 数据模型与多应用菜单隔离详见 [应用-菜单-权限关系梳理](rbac-app-menu-authority.md)。
+
 ### 3.4 关键模块功能对照
 
 | 模块 | 核心职责 | 关键类/接口 |
