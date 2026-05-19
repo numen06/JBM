@@ -54,6 +54,7 @@
         <module>jbm-framework-autoconfigure-drools</module>
         <module>jbm-framework-autoconfigure-openobserve</module>
         <module>jbm-framework-autoconfigure-emqx</module>
+        <module>jbm-framework-autoconfigure-extendfield</module>
     </modules>
     <dependencies>
         <dependency>

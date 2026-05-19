@@ -30,7 +30,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @TableAlias("user")
-@TableName("base_user")
+@TableName(value = "base_user", autoResultMap = true)
 @ApiModel("系统用户")
 @IgnoreGeneate({CodeType.service, CodeType.serviceImpl})
 public class BaseUser extends MasterDataEntity {

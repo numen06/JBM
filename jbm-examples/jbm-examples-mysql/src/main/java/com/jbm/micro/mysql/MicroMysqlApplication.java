@@ -1,5 +1,7 @@
 package com.jbm.micro.mysql;
 
+import jbm.framework.boot.autoconfigure.extendfield.annotation.EnableExtendField;
+import jbm.framework.boot.autoconfigure.extendfield.FieldDefinitionSource;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @MapperScan("com.jbm.micro.mysql.mapper")
+@EnableExtendField(source = FieldDefinitionSource.LOCAL)
 public class MicroMysqlApplication {
 
     public static void main(String[] args) {

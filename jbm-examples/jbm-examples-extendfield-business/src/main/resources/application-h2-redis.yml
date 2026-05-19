@@ -1,0 +1,30 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:extendfield_business;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  liquibase:
+    enabled: true
+    change-log: classpath:db/extendfield-business/db.changelog-master.yaml
+  redis:
+    host: ${REDIS_HOST:10.100.10.62}
+    port: ${REDIS_PORT:6379}
+    timeout: 5000ms
+
+jbm:
+  extend-field:
+    enabled: true
+    source: REDIS
+    auto-flatten: true
+    sync-local-to-redis-on-startup: false
+
+logging:
+  level:
+    com.jbm.examples.extendfield.business: INFO
+    jbm.framework.boot.autoconfigure.extendfield: INFO

@@ -1,15 +1,15 @@
 package com.jbm.framework.masterdata.usage.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
 
 
 /**
@@ -78,5 +78,20 @@ public abstract class MasterDataEntity implements Serializable {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     @ApiModelProperty("更新时间")
     private Date updateTime;
+
+    /**
+     * 扩展字段（MySQL JSON 列），由 {@link JacksonTypeHandler} 映射。
+     * 子类需在 {@link TableName} 上设置 {@code autoResultMap = true}。
+     */
+    @TableField(value = "extend_data", typeHandler = JacksonTypeHandler.class)
+    @ApiModelProperty("扩展字段")
+    private Map<String, Object> extendData;
+
+    /**
+     * 扩展字段查询条件（非持久化），供 MyBatis 动态 SQL 与 AOP 使用。
+     */
+    @TableField(exist = false)
+    @ApiModelProperty(value = "扩展字段查询条件", hidden = true)
+    private Map<String, Object> extendQuery;
 
 }

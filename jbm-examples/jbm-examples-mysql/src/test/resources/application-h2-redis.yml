@@ -1,0 +1,48 @@
+# H2 业务库 + 远程 Redis 字段定义（10.100.10.62:6379）
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:micro_mysql_redis;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: false
+  liquibase:
+    enabled: true
+    change-log: classpath:db/examples-mysql/db.changelog-master.yaml
+  redis:
+    host: 10.100.10.62
+    port: 6379
+    timeout: 5000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 4
+
+jbm:
+  extend-field:
+    enabled: true
+    auto-flatten: true
+    source: REDIS
+    sync-local-to-redis-on-startup: true
+    definitions:
+      extend_demo_form:
+        fields:
+          - fieldName: contactPhone
+            fieldType: string
+            fieldLabel: 联系电话
+          - fieldName: region
+            fieldType: string
+            fieldLabel: 区域
+
+logging:
+  level:
+    root: INFO
+    com.jbm.micro.mysql: DEBUG
+    jbm.framework.boot.autoconfigure.extendfield: DEBUG

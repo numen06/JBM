@@ -7,3 +7,7 @@ databaseChangeLog:
       file: classpath:db/examples-mysql/changes/V3__md_tenant_demo.yaml
   - include:
       file: classpath:db/examples-mysql/changes/V4__md_tenant_demo_remark.yaml
+  - include:
+      file: classpath:db/examples-mysql/changes/V5__md_extend_demo.yaml
+  - include:
+      file: classpath:db/examples-mysql/changes/V6__md_extend_form_definition.yaml

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: extendfield-designer-form-definition-1
+      author: jbm
+      changes:
+        - createTable:
+            tableName: md_extend_form_definition
+            remarks: 动态表单定义（真源在库，发布后写入 Redis）
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: form_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: form_name
+                  type: VARCHAR(128)
+              - column:
+                  name: fields_json
+                  type: CLOB
+              - column:
+                  name: version
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: update_time
+                  type: TIMESTAMP

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: jbm-examples-extendfield-business
+  profiles:
+    active: h2-redis
+
+server:
+  port: 18082
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true

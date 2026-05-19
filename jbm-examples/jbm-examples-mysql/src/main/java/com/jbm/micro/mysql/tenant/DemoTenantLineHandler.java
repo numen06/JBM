@@ -43,6 +43,8 @@ public class DemoTenantLineHandler implements TenantLineHandler {
         String t = tableName.toLowerCase(Locale.ROOT);
         return "md_sample".equals(t)
                 || "md_form_row".equals(t)
+                || "md_extend_demo".equals(t)
+                || "md_extend_form_definition".equals(t)
                 || "databasechangelog".equals(t)
                 || "databasechangeloglock".equals(t);
     }

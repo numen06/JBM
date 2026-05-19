@@ -16,5 +16,7 @@
 
     <modules>
         <module>jbm-examples-mysql</module>
+        <module>jbm-examples-extendfield-designer</module>
+        <module>jbm-examples-extendfield-business</module>
     </modules>
 </project>

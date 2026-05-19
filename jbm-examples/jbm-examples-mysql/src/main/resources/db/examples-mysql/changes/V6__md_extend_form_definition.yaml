@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: micro-mysql-md-extend-form-definition-1
+      author: jbm
+      changes:
+        - createTable:
+            tableName: md_extend_form_definition
+            remarks: 动态表单定义（真源在库，发布后写入 Redis 供业务服务读取）
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: form_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: form_name
+                  type: VARCHAR(128)
+              - column:
+                  name: fields_json
+                  type: CLOB
+                  remarks: FieldDefinition 数组 JSON
+              - column:
+                  name: version
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: update_time
+                  type: TIMESTAMP

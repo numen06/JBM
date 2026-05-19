@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbm.framework.masterdata.mapper.CommonMapper">
+
+    <!-- 扩展字段精确查询（表别名 s） -->
+    <sql id="extendDataQuery">
+        <if test="extendQuery != null and !extendQuery.isEmpty()">
+            <foreach collection="extendQuery" index="key" item="val">
+                <if test="val != null and val != '' and key.matches('^[a-zA-Z0-9_]+$')">
+                    AND s.extend_data->>'$.${key}' = #{val}
+                </if>
+            </foreach>
+        </if>
+    </sql>
+
+    <!-- 扩展字段精确查询（无表别名） -->
+    <sql id="extendDataQueryNoAlias">
+        <if test="extendQuery != null and !extendQuery.isEmpty()">
+            <foreach collection="extendQuery" index="key" item="val">
+                <if test="val != null and val != '' and key.matches('^[a-zA-Z0-9_]+$')">
+                    AND extend_data->>'$.${key}' = #{val}
+                </if>
+            </foreach>
+        </if>
+    </sql>
+
+    <!-- 扩展字段模糊查询（无表别名） -->
+    <sql id="extendDataLikeQuery">
+        <if test="extendQuery != null and !extendQuery.isEmpty()">
+            <foreach collection="extendQuery" index="key" item="val">
+                <if test="val != null and val != '' and key.matches('^[a-zA-Z0-9_]+$')">
+                    AND extend_data->>'$.${key}' LIKE CONCAT('%', #{val}, '%')
+                </if>
+            </foreach>
+        </if>
+    </sql>
+
+</mapper>

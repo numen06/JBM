@@ -7,6 +7,11 @@ spring:
   autoconfigure:
     exclude:
       - com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - jbm.framework.boot.autoconfigure.redis.RedisAutoConfiguration
+      - com.baomidou.lock.spring.boot.autoconfigure.LockAutoConfiguration
+      - com.baomidou.lock.spring.boot.autoconfigure.RedisTemplateLockAutoConfiguration
   datasource:
     url: jdbc:h2:mem:micro_mysql;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     driver-class-name: org.h2.Driver
@@ -19,6 +24,22 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/examples-mysql/db.changelog-master.yaml
+
+jbm:
+  extend-field:
+    enabled: true
+    auto-flatten: true
+    source: LOCAL
+    sync-local-to-redis-on-startup: false
+    definitions:
+      extend_demo_form:
+        fields:
+          - fieldName: contactPhone
+            fieldType: string
+            fieldLabel: 联系电话
+          - fieldName: region
+            fieldType: string
+            fieldLabel: 区域
 
 logging:
   level:
