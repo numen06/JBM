@@ -4,7 +4,8 @@
 > **Profile**：`h2`（内存库 + Liquibase）  
 > **字段定义来源**：`LOCAL`（`application-h2.yml`，无 Redis）  
 > **自动化**：`MicroMysqlExtendFieldFullFlowIT#fullExtendFieldFlow_localMode`  
-> **运行**：`mvn test -pl jbm-examples/jbm-examples-mysql "-Dtest=MicroMysqlExtendFieldFullFlowIT"`
+> **运行**：`mvn test -pl jbm-examples/jbm-examples-mysql -Pbuild-examples "-Dtest=MicroMysqlExtendFieldFullFlowIT"`  
+> **说明**：根目录 `mvn deploy` 默认跳过 `jbm-examples` 的编译与上传；本地跑示例/测试需加 `-Pbuild-examples`。
 
 ---
 

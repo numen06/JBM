@@ -1,7 +1,9 @@
 package jbm.framework.boot.autoconfigure.extendfield.service;
 
 import com.alibaba.fastjson.JSON;
+import jbm.framework.boot.autoconfigure.extendfield.ExtendFieldProperties;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
+import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldScope;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,12 +27,16 @@ public class FieldDefinitionAdminService implements FieldDefinitionWriter {
     @Resource
     private RedisService redisService;
 
+    @Resource
+    private ExtendFieldProperties properties;
+
     public void saveFieldDefinitions(String formCode, List<FieldDefinition> definitions) {
         if (formCode == null || formCode.isEmpty()) {
             return;
         }
-        String formKey = RedisFieldDefinitionService.KEY_PREFIX_FORM + formCode;
-        String namesKey = RedisFieldDefinitionService.KEY_PREFIX_NAMES + formCode;
+        String scoped = ExtendFieldScope.scopedFormCode(properties, formCode);
+        String formKey = RedisFieldDefinitionService.KEY_PREFIX_FORM + scoped;
+        String namesKey = RedisFieldDefinitionService.KEY_PREFIX_NAMES + scoped;
 
         redisService.deleteObject(formKey);
         redisService.deleteObject(namesKey);
@@ -51,6 +57,6 @@ public class FieldDefinitionAdminService implements FieldDefinitionWriter {
         }
         redisService.setCacheMap(formKey, fieldMap);
         redisService.setCacheSet(namesKey, names);
-        log.info("Saved {} extend field definitions for formCode={}", names.size(), formCode);
+        log.info("Saved {} extend field definitions for scope={}", names.size(), scoped);
     }
 }

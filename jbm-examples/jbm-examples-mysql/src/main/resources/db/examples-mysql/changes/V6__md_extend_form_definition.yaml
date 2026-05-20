@@ -5,7 +5,7 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: md_extend_form_definition
-            remarks: 动态表单定义（真源在库，发布后写入 Redis 供业务服务读取）
+            remarks: 动态表单定义（按租户隔离，发布后写入 Redis）
             columns:
               - column:
                   name: id
@@ -15,11 +15,15 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
                   name: form_code
                   type: VARCHAR(64)
                   constraints:
                     nullable: false
-                    unique: true
               - column:
                   name: form_name
                   type: VARCHAR(128)
@@ -34,3 +38,7 @@ databaseChangeLog:
               - column:
                   name: update_time
                   type: TIMESTAMP
+        - addUniqueConstraint:
+            tableName: md_extend_form_definition
+            columnNames: tenant_id, form_code
+            constraintName: uk_tenant_form_code

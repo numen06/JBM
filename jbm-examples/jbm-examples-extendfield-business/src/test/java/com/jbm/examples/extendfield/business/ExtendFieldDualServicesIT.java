@@ -5,7 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.jbm.examples.extendfield.designer.ExtendFieldDesignerApplication;
 import com.jbm.framework.metadata.bean.ResultBody;
 import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionService;
+import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldTenantContext;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
+import com.jbm.examples.extendfield.business.web.filter.DemoTenantIdHeaderFilter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
@@ -50,6 +52,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class ExtendFieldDualServicesIT {
 
     private static final String FORM_CODE = "dual_sales_form";
+    private static final String TENANT_ID = "1001";
 
     private static ConfigurableApplicationContext designerContext;
     private static int designerPort;
@@ -104,13 +107,14 @@ class ExtendFieldDualServicesIT {
         ResponseEntity<ResultBody> save = designerClient.exchange(
                 designerBaseUrl() + "/api/designer/forms/" + FORM_CODE,
                 HttpMethod.POST,
-                jsonEntity(body),
+                jsonEntity(body, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, save.getStatusCode());
         assertTrue(save.getBody().getSuccess());
 
         assertNotNull(fieldDefinitionService);
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("contactPhone"));
+        withTenant(TENANT_ID, () ->
+                assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("contactPhone")));
 
         Map<String, Object> order = new HashMap<>();
         order.put("formCode", FORM_CODE);
@@ -122,7 +126,7 @@ class ExtendFieldDualServicesIT {
         ResponseEntity<ResultBody> created = businessClient.exchange(
                 "/api/business/orders",
                 HttpMethod.POST,
-                jsonEntity(order),
+                jsonEntity(order, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, created.getStatusCode());
         JSONObject row = JSON.parseObject(JSON.toJSONString(created.getBody().getResult()));
@@ -143,10 +147,11 @@ class ExtendFieldDualServicesIT {
         ResponseEntity<ResultBody> put = designerClient.exchange(
                 designerBaseUrl() + "/api/designer/forms/" + FORM_CODE,
                 HttpMethod.PUT,
-                jsonEntity(body),
+                jsonEntity(body, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, put.getStatusCode());
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel"));
+        withTenant(TENANT_ID, () ->
+                assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel")));
 
         Map<String, Object> order = new HashMap<>();
         order.put("formCode", FORM_CODE);
@@ -159,7 +164,7 @@ class ExtendFieldDualServicesIT {
         ResponseEntity<ResultBody> created = businessClient.exchange(
                 "/api/business/orders",
                 HttpMethod.POST,
-                jsonEntity(order),
+                jsonEntity(order, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, created.getStatusCode());
         assertEquals("金卡", JSON.parseObject(JSON.toJSONString(created.getBody().getResult())).getString("vipLevel"));
@@ -169,16 +174,18 @@ class ExtendFieldDualServicesIT {
     @Order(3)
     void redisCleared_designerRepublish_businessStillWorks() {
         assertNotNull(redisService);
-        redisService.deleteObject("extend_field:form:" + FORM_CODE);
-        redisService.deleteObject("extend_field:names:" + FORM_CODE);
+        String scope = TENANT_ID + ":" + FORM_CODE;
+        redisService.deleteObject("extend_field:form:" + scope);
+        redisService.deleteObject("extend_field:names:" + scope);
 
         ResponseEntity<ResultBody> publish = designerClient.exchange(
                 designerBaseUrl() + "/api/designer/forms/" + FORM_CODE + "/publish",
                 HttpMethod.POST,
-                jsonEntity(new HashMap<>()),
+                jsonEntity(new HashMap<>(), TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, publish.getStatusCode());
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel"));
+        withTenant(TENANT_ID, () ->
+                assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel")));
 
         Map<String, Object> order = new HashMap<>();
         order.put("formCode", FORM_CODE);
@@ -191,10 +198,19 @@ class ExtendFieldDualServicesIT {
         ResponseEntity<ResultBody> created = businessClient.exchange(
                 "/api/business/orders",
                 HttpMethod.POST,
-                jsonEntity(order),
+                jsonEntity(order, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, created.getStatusCode());
         assertEquals("银卡", JSON.parseObject(JSON.toJSONString(created.getBody().getResult())).getString("vipLevel"));
+    }
+
+    private static void withTenant(String tenantId, Runnable assertion) {
+        ExtendFieldTenantContext.setTenantId(tenantId);
+        try {
+            assertion.run();
+        } finally {
+            ExtendFieldTenantContext.clear();
+        }
     }
 
     private static Map<String, String> def(String name, String type, String label) {
@@ -214,9 +230,10 @@ class ExtendFieldDualServicesIT {
         }
     }
 
-    private static <T> HttpEntity<T> jsonEntity(T body) {
+    private static <T> HttpEntity<T> jsonEntity(T body, String tenantId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(DemoTenantIdHeaderFilter.HEADER_NAME, tenantId);
         return new HttpEntity<>(body, headers);
     }
 }

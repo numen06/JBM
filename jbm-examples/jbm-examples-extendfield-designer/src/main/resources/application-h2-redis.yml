@@ -23,6 +23,11 @@ jbm:
     source: LOCAL
     auto-flatten: false
     sync-local-to-redis-on-startup: false
+    tenant:
+      enabled: true
+      header: X-Demo-Tenant-Id
+      default-tenant-id: "0"
+      use-default-when-missing: true
 
 logging:
   level:

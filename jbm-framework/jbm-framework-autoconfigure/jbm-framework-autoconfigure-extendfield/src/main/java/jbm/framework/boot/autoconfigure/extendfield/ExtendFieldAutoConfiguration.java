@@ -4,6 +4,7 @@ import jbm.framework.boot.autoconfigure.extendfield.advice.ExtendFieldRequestBod
 import jbm.framework.boot.autoconfigure.extendfield.advice.ResultExtendAop;
 import jbm.framework.boot.autoconfigure.extendfield.service.LocalFieldDefinitionFallbackService;
 import jbm.framework.boot.autoconfigure.extendfield.service.LocalFieldDefinitionService;
+import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldTenantFilter;
 import jbm.framework.boot.autoconfigure.extendfield.web.ExtendFieldDefinitionController;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Import;
         ExtendFieldRequestBodyAdvice.class,
         ResultExtendAop.class,
         ExtendFieldDefinitionController.class,
+        ExtendFieldTenantFilter.class,
         ExtendFieldRedisImportSelector.class
 })
 public class ExtendFieldAutoConfiguration {

@@ -1,7 +1,9 @@
 package jbm.framework.boot.autoconfigure.extendfield.service;
 
 import com.alibaba.fastjson.JSON;
+import jbm.framework.boot.autoconfigure.extendfield.ExtendFieldProperties;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
+import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldScope;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -32,12 +34,16 @@ public class RedisFieldDefinitionService implements FieldDefinitionService {
     @Resource
     private RedisService redisService;
 
+    @Resource
+    private ExtendFieldProperties properties;
+
     @Override
     public Set<String> getExtendFieldNames(String formCode) {
         if (formCode == null || formCode.isEmpty()) {
             return Collections.emptySet();
         }
-        String namesKey = KEY_PREFIX_NAMES + formCode;
+        String scoped = ExtendFieldScope.scopedFormCode(properties, formCode);
+        String namesKey = KEY_PREFIX_NAMES + scoped;
         Set<Object> raw = redisService.getCacheSet(namesKey);
         if (raw != null && !raw.isEmpty()) {
             Set<String> names = new HashSet<>();
@@ -68,7 +74,8 @@ public class RedisFieldDefinitionService implements FieldDefinitionService {
     }
 
     Map<String, FieldDefinition> getFieldDefinitionMap(String formCode) {
-        String formKey = KEY_PREFIX_FORM + formCode;
+        String scoped = ExtendFieldScope.scopedFormCode(properties, formCode);
+        String formKey = KEY_PREFIX_FORM + scoped;
         Map<String, Object> rawMap = redisService.getCacheMap(formKey);
         if (rawMap == null || rawMap.isEmpty()) {
             return Collections.emptyMap();

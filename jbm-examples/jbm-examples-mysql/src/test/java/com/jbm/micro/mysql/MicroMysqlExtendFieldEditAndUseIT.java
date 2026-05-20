@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.micro.mysql.web.FormDesignerController;
+import com.jbm.micro.mysql.web.filter.DemoTenantIdHeaderFilter;
+import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldTenantContext;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
 import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionService;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class MicroMysqlExtendFieldEditAndUseIT {
 
     private static final String FORM_CODE = "dynamic_sales_form";
+    private static final String TENANT_ID = "1001";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -66,13 +69,15 @@ class MicroMysqlExtendFieldEditAndUseIT {
         ResponseEntity<ResultBody> save = restTemplate.exchange(
                 "/api/h2/form-designer/forms/" + FORM_CODE,
                 HttpMethod.POST,
-                jsonEntity(body),
+                jsonEntity(body, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, save.getStatusCode());
         assertTrue(save.getBody().getSuccess());
 
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("contactPhone"));
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("region"));
+        withTenant(TENANT_ID, () -> {
+            assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("contactPhone"));
+            assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("region"));
+        });
     }
 
     @Test
@@ -90,7 +95,7 @@ class MicroMysqlExtendFieldEditAndUseIT {
         ResponseEntity<ResultBody> post = restTemplate.exchange(
                 "/api/h2/mp/extend-demos",
                 HttpMethod.POST,
-                jsonEntity(create),
+                jsonEntity(create, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, post.getStatusCode());
         JSONObject row = JSON.parseObject(JSON.toJSONString(post.getBody().getResult()));
@@ -113,10 +118,11 @@ class MicroMysqlExtendFieldEditAndUseIT {
         ResponseEntity<ResultBody> put = restTemplate.exchange(
                 "/api/h2/form-designer/forms/" + FORM_CODE,
                 HttpMethod.PUT,
-                jsonEntity(body),
+                jsonEntity(body, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, put.getStatusCode());
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel"));
+        withTenant(TENANT_ID, () ->
+                assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel")));
     }
 
     @Test
@@ -135,7 +141,7 @@ class MicroMysqlExtendFieldEditAndUseIT {
         ResponseEntity<ResultBody> post = restTemplate.exchange(
                 "/api/h2/mp/extend-demos",
                 HttpMethod.POST,
-                jsonEntity(create),
+                jsonEntity(create, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, post.getStatusCode());
         JSONObject row = JSON.parseObject(JSON.toJSONString(post.getBody().getResult()));
@@ -148,16 +154,18 @@ class MicroMysqlExtendFieldEditAndUseIT {
         assumeRedisUp();
         assertNotNull(redisService);
 
-        redisService.deleteObject("extend_field:form:" + FORM_CODE);
-        redisService.deleteObject("extend_field:names:" + FORM_CODE);
+        String scope = TENANT_ID + ":" + FORM_CODE;
+        redisService.deleteObject("extend_field:form:" + scope);
+        redisService.deleteObject("extend_field:names:" + scope);
 
         ResponseEntity<ResultBody> publish = restTemplate.exchange(
                 "/api/h2/form-designer/forms/" + FORM_CODE + "/publish",
                 HttpMethod.POST,
-                jsonEntity(new HashMap<>()),
+                jsonEntity(new HashMap<>(), TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, publish.getStatusCode());
-        assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel"));
+        withTenant(TENANT_ID, () ->
+                assertTrue(fieldDefinitionService.getExtendFieldNames(FORM_CODE).contains("vipLevel")));
 
         Map<String, Object> create = new HashMap<>();
         create.put("formCode", FORM_CODE);
@@ -170,7 +178,7 @@ class MicroMysqlExtendFieldEditAndUseIT {
         ResponseEntity<ResultBody> post = restTemplate.exchange(
                 "/api/h2/mp/extend-demos",
                 HttpMethod.POST,
-                jsonEntity(create),
+                jsonEntity(create, TENANT_ID),
                 ResultBody.class);
         assertEquals(HttpStatus.OK, post.getStatusCode());
         assertEquals("银卡", JSON.parseObject(JSON.toJSONString(post.getBody().getResult())).getString("vipLevel"));
@@ -197,9 +205,19 @@ class MicroMysqlExtendFieldEditAndUseIT {
         }
     }
 
-    private static <T> HttpEntity<T> jsonEntity(T body) {
+    private static void withTenant(String tenantId, Runnable assertion) {
+        ExtendFieldTenantContext.setTenantId(tenantId);
+        try {
+            assertion.run();
+        } finally {
+            ExtendFieldTenantContext.clear();
+        }
+    }
+
+    private static <T> HttpEntity<T> jsonEntity(T body, String tenantId) {
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(DemoTenantIdHeaderFilter.HEADER_NAME, tenantId);
         return new HttpEntity<>(body, headers);
     }
 }

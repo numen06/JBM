@@ -1,6 +1,6 @@
 # jbm-examples-mysql 集成测试报告
 
-> 测试命令：`mvn test -pl jbm-examples/jbm-examples-mysql`
+> 测试命令：`mvn test -pl jbm-examples/jbm-examples-mysql -Pbuild-examples`（CI/deploy 默认跳过 examples 编译，本地需显式开启 profile）
 > 最近一次结果：**BUILD SUCCESS** · `Tests run: 14, Failures: 0, Errors: 0`
 > 测试执行时间：2026-05-15（最近一次完整通过：`agent-tools/7a282e5f-012d-4104-bc40-35ccd7c723d7.txt`）
 
@@ -82,11 +82,11 @@
 
 ```powershell
 # 单独跑 demo 模块（含 *IT）
-mvn test -pl jbm-examples/jbm-examples-mysql
+mvn test -pl jbm-examples/jbm-examples-mysql -Pbuild-examples
 
 # 带反应堆编译（首次或框架有变更时）
-mvn test -pl jbm-examples/jbm-examples-mysql -am "-Dsurefire.failIfNoSpecifiedTests=false"
+mvn test -pl jbm-examples/jbm-examples-mysql -am -Pbuild-examples "-Dsurefire.failIfNoSpecifiedTests=false"
 
 # 指定测试类
-mvn test -pl jbm-examples/jbm-examples-mysql "-Dtest=MicroMysqlDemoFullStackIT,MicroMysqlAdvancedFeaturesIT"
+mvn test -pl jbm-examples/jbm-examples-mysql -Pbuild-examples "-Dtest=MicroMysqlDemoFullStackIT,MicroMysqlAdvancedFeaturesIT"
 ```

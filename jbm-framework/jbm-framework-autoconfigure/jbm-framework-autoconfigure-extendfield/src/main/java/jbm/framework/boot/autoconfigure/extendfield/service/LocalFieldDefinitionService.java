@@ -39,7 +39,12 @@ public class LocalFieldDefinitionService implements FieldDefinitionService {
 
     @Override
     public List<FieldDefinition> getFieldDefinitions(String formCode) {
-        ExtendFieldProperties.FormDefinition form = properties.getDefinitions().get(formCode);
+        String scoped = jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldScope
+                .scopedFormCode(properties, formCode);
+        ExtendFieldProperties.FormDefinition form = properties.getDefinitions().get(scoped);
+        if (form == null && !scoped.equals(formCode)) {
+            form = properties.getDefinitions().get(formCode);
+        }
         if (form == null || form.getFields() == null) {
             return Collections.emptyList();
         }

@@ -30,7 +30,12 @@ jbm:
     enabled: true
     auto-flatten: true
     source: REDIS
-    sync-local-to-redis-on-startup: true
+    sync-local-to-redis-on-startup: false
+    tenant:
+      enabled: true
+      header: X-Demo-Tenant-Id
+      default-tenant-id: "0"
+      use-default-when-missing: true
     definitions:
       extend_demo_form:
         fields:

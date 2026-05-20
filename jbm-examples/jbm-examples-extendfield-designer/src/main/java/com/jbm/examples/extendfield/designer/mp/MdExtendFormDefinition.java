@@ -21,6 +21,9 @@ public class MdExtendFormDefinition implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    @TableField("tenant_id")
+    private Long tenantId;
+
     @TableField("form_code")
     private String formCode;
 

@@ -35,6 +35,9 @@ databaseChangeLog:
                   name: update_time
                   type: TIMESTAMP
               - column:
+                  name: tenant_id
+                  type: BIGINT
+              - column:
                   name: order_no
                   type: VARCHAR(64)
               - column:

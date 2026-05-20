@@ -1,4 +1,4 @@
-package com.jbm.examples.extendfield.business.tenant;
+package com.jbm.examples.extendfield.designer.tenant;
 
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import net.sf.jsqlparser.expression.Expression;
@@ -37,7 +37,8 @@ public class DemoTenantLineHandler implements TenantLineHandler {
             return true;
         }
         String t = tableName.toLowerCase(Locale.ROOT);
-        return "databasechangelog".equals(t)
+        return "md_extend_form_definition".equals(t)
+                || "databasechangelog".equals(t)
                 || "databasechangeloglock".equals(t);
     }
 }

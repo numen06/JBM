@@ -19,4 +19,37 @@
         <module>jbm-examples-extendfield-designer</module>
         <module>jbm-examples-extendfield-business</module>
     </modules>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <maven.main.skip>true</maven.main.skip>
+        <maven.test.skip>true</maven.test.skip>
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- maven deploy 忽略发布（示例模块不入远程仓库） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven-deploy-plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>build-examples</id>
+            <properties>
+                <maven.main.skip>false</maven.main.skip>
+                <maven.test.skip>false</maven.test.skip>
+                <spring-boot.repackage.skip>false</spring-boot.repackage.skip>
+            </properties>
+        </profile>
+    </profiles>
 </project>
