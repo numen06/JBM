@@ -1,7 +1,6 @@
 package com.jbm.framework.masterdata.code;
 
 import cn.hutool.core.annotation.AnnotationUtil;
-import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.MapUtil;
@@ -119,7 +118,13 @@ public class GenerateMasterData {
      */
     private final Map<String, List<GeneratedRecord>> generatedRecordsByEntity = new LinkedHashMap<>();
 
+    /**
+     * 当次扫描是否实际写入了至少一个生成文件（已存在跳过的文件不计入）
+     */
+    private boolean anyNewlyGenerated = false;
+
     private final static String MASTERCARD_TEMP_PATH = "com/jbm/framework/masterdata/code/btl/";
+    private static final String TIMESTAMP_ALREADY_EXISTED = "alreadyExisted";
     private static final String AUTOCODE_DIR = ".autocode";
     private static final String AUTOCODE_FILENAME = "autocode.yml";
     private static final String POM_XML = "pom.xml";
@@ -216,16 +221,12 @@ public class GenerateMasterData {
                     File targetFile = generateSource.getTargetFile();
                     if (targetFile != null) {
                         String path = targetFile.getAbsolutePath();
-                        String timestamp = "alreadyExisted";
-                        if (targetFile.exists()) {
-                            timestamp = DateUtil.format(DateUtil.date(targetFile.lastModified()), DatePattern.NORM_DATETIME_MS_PATTERN);
-                        }
                         String entityName = generateSource.getEntityClass().getName();
                         GeneratedRecord record = GeneratedRecord.of(
                                 entityName,
                                 iGenerateCode.getCodeType(),
                                 path,
-                                timestamp
+                                TIMESTAMP_ALREADY_EXISTED
                         );
                         generatedRecordsByEntity.computeIfAbsent(entityName, k -> new ArrayList<>()).add(record);
                     }
@@ -236,6 +237,7 @@ public class GenerateMasterData {
                     generateSource.getData().putAll(generateSource.getData());
                 }
                 template.render(generateSource.getData(), file);
+                anyNewlyGenerated = true;
                 String entityName = generateSource.getEntityClass().getName();
                 GeneratedRecord record = GeneratedRecord.of(
                         entityName,
@@ -253,7 +255,8 @@ public class GenerateMasterData {
 
     /**
      * 将当次扫描已收集的生成记录写入与 pom.xml 平级目录下的 autocode.yml。
-     * 无记录时也写入（items 为空），便于确认流程已执行；不抛异常，仅打 log；写完后清空列表。
+     * 若本次无新增生成且实体与路径映射未变，则跳过写入，避免每次启动改动 autocode.yml。
+     * 不抛异常，仅打 log；写完后清空列表。
      */
     public void writeRecordFile() {
         try {
@@ -261,8 +264,9 @@ public class GenerateMasterData {
             File autocodeDir = new File(projectRoot, AUTOCODE_DIR);
             File recordFile = new File(autocodeDir, AUTOCODE_FILENAME);
             Set<String> currentEntityNames = generatedRecordsByEntity.keySet();
+            Map<String, List<GeneratedRecord>> previousRecords = recordFile.isFile()
+                    ? parseAutocodeYaml(recordFile) : new LinkedHashMap<>();
             if (recordFile.isFile()) {
-                Map<String, List<GeneratedRecord>> previousRecords = parseAutocodeYaml(recordFile);
                 for (String entity : previousRecords.keySet()) {
                     if (!currentEntityNames.contains(entity)) {
                         for (GeneratedRecord r : previousRecords.get(entity)) {
@@ -276,6 +280,12 @@ public class GenerateMasterData {
                     }
                 }
             }
+            mergePreviousTimestamps(projectRoot, previousRecords);
+            if (!anyNewlyGenerated && recordFile.isFile()
+                    && recordsContentEqual(projectRoot, previousRecords, generatedRecordsByEntity)) {
+                log.debug("无新增生成且记录未变，跳过写入 autocode.yml");
+                return;
+            }
             String yaml = buildAutocodeYaml(projectRoot);
             FileUtil.mkdir(recordFile.getParentFile());
             Files.write(recordFile.toPath(), yaml.getBytes(StandardCharsets.UTF_8));
@@ -284,7 +294,69 @@ public class GenerateMasterData {
             log.warn("写入 autocode.yml 失败: {}", e.getMessage());
         } finally {
             generatedRecordsByEntity.clear();
+            anyNewlyGenerated = false;
         }
+    }
+
+    /**
+     * 对已存在、未重新生成的条目，沿用 autocode.yml 中的 timestamp，避免无意义刷新。
+     */
+    private void mergePreviousTimestamps(File projectRoot,
+                                         Map<String, List<GeneratedRecord>> previousRecords) {
+        if (previousRecords.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, List<GeneratedRecord>> entry : generatedRecordsByEntity.entrySet()) {
+            List<GeneratedRecord> prevList = previousRecords.get(entry.getKey());
+            if (prevList == null) {
+                continue;
+            }
+            for (GeneratedRecord current : entry.getValue()) {
+                if (!TIMESTAMP_ALREADY_EXISTED.equals(current.getTimestamp())) {
+                    continue;
+                }
+                for (GeneratedRecord prev : prevList) {
+                    if (StrUtil.equals(prev.getCodeType(), current.getCodeType())
+                            && StrUtil.equals(
+                            toRelativePath(projectRoot, prev.getPath()),
+                            toRelativePath(projectRoot, current.getPath()))) {
+                        current.setTimestamp(prev.getTimestamp());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 比较两次扫描的 entity→(codeType→path) 是否一致（忽略 timestamp、generatedAt）。
+     */
+    private boolean recordsContentEqual(File projectRoot,
+                                        Map<String, List<GeneratedRecord>> previous,
+                                        Map<String, List<GeneratedRecord>> current) {
+        if (!previous.keySet().equals(current.keySet())) {
+            return false;
+        }
+        for (String entity : previous.keySet()) {
+            if (!indexByCodeType(projectRoot, previous.get(entity))
+                    .equals(indexByCodeType(projectRoot, current.get(entity)))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Map<String, String> indexByCodeType(File projectRoot, List<GeneratedRecord> records) {
+        Map<String, String> indexed = new LinkedHashMap<>();
+        if (records == null) {
+            return indexed;
+        }
+        for (GeneratedRecord r : records) {
+            if (r.getCodeType() != null && StrUtil.isNotBlank(r.getPath())) {
+                indexed.put(r.getCodeType(), toRelativePath(projectRoot, r.getPath()));
+            }
+        }
+        return indexed;
     }
 
     /**
