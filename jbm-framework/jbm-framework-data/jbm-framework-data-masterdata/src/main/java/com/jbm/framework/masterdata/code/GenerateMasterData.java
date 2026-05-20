@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -128,6 +131,8 @@ public class GenerateMasterData {
     private static final String AUTOCODE_DIR = ".autocode";
     private static final String AUTOCODE_FILENAME = "autocode.yml";
     private static final String POM_XML = "pom.xml";
+    private static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("<artifactId>([^<]+)</artifactId>");
+    private static final int MAX_MODULE_SEARCH_DEPTH = 5;
 
     public GenerateMasterData() {
         try {
@@ -184,6 +189,7 @@ public class GenerateMasterData {
                 generateSource.setServicePackage(StrUtil.trimToNull(servicePackage));
                 generateSource.setControllerPackage(StrUtil.trimToNull(controllerPackage));
                 generateSource.setBusinessPackage(StrUtil.trimToNull(businessPackage));
+                generateSource.setCodeGenApplicationClass(StrUtil.trimToNull(codeGenApplicationClass));
                 generateSourceList.add(generateSource);
             }
         });
@@ -422,6 +428,91 @@ public class GenerateMasterData {
             dir = dir.getParentFile();
         }
         return new File(System.getProperty("user.dir"));
+    }
+
+    /**
+     * Resolve output module root: prefer @EnableCodeAutoGeneate application module + artifactId.
+     */
+    public static Path resolveModuleRootPath(URL entityClasspathRoot, GenerateSource generateSource, String modulePath)
+            throws Exception {
+        if (StrUtil.isBlank(modulePath)) {
+            return Paths.get(entityClasspathRoot.toURI()).getParent().getParent().normalize();
+        }
+        Path fromApp = resolveModuleFromApplicationClass(generateSource.getCodeGenApplicationClass(), modulePath);
+        if (fromApp != null) {
+            return fromApp;
+        }
+        return Paths.get(entityClasspathRoot.toURI()).getParent().getParent().getParent()
+                .resolve(modulePath).normalize();
+    }
+
+    private static Path resolveModuleFromApplicationClass(String applicationClass, String modulePath) {
+        if (StrUtil.isBlank(applicationClass)) {
+            return null;
+        }
+        try {
+            File appRoot = findProjectRootFromClass(applicationClass);
+            if (appRoot == null) {
+                return null;
+            }
+            if (modulePath.contains("/") || modulePath.contains("\\") || modulePath.startsWith(".")) {
+                return appRoot.toPath().resolve(modulePath).normalize();
+            }
+            Path byArtifact = findMavenModuleByArtifactId(appRoot.toPath(), modulePath);
+            if (byArtifact != null) {
+                return byArtifact;
+            }
+            log.debug("artifactId {} not found in reactor, fallback to entity classpath", modulePath);
+        } catch (Exception e) {
+            log.debug("resolve module from application class failed: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    static Path findMavenModuleByArtifactId(Path applicationModuleRoot, String artifactId) {
+        File cursor = applicationModuleRoot.toFile();
+        for (int i = 0; i < 6 && cursor != null; i++) {
+            Path found = searchModuleDir(cursor.toPath(), artifactId, 0);
+            if (found != null) {
+                return found;
+            }
+            cursor = cursor.getParentFile();
+        }
+        return null;
+    }
+
+    private static Path searchModuleDir(Path dir, String artifactId, int depth) {
+        if (depth > MAX_MODULE_SEARCH_DEPTH) {
+            return null;
+        }
+        File pom = dir.resolve(POM_XML).toFile();
+        if (pom.isFile() && artifactId.equals(readArtifactId(pom))) {
+            return dir.normalize();
+        }
+        File[] children = dir.toFile().listFiles();
+        if (children == null) {
+            return null;
+        }
+        for (File child : children) {
+            if (!child.isDirectory() || child.getName().startsWith(".") || "target".equals(child.getName())) {
+                continue;
+            }
+            Path found = searchModuleDir(child.toPath(), artifactId, depth + 1);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    static String readArtifactId(File pomFile) {
+        String content = FileUtil.readUtf8String(pomFile);
+        Matcher matcher = ARTIFACT_ID_PATTERN.matcher(content);
+        String last = null;
+        while (matcher.find()) {
+            last = matcher.group(1).trim();
+        }
+        return last;
     }
 
     /**

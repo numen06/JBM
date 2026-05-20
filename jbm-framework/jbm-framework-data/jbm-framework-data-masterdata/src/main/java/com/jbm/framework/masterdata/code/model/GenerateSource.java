@@ -136,6 +136,11 @@ public class GenerateSource {
     private ApiModel apiModel;
 
     /**
+     * 标注了 @EnableCodeAutoGeneate 的启动类全限定名，用于跨模块输出路径解析。
+     */
+    private String codeGenApplicationClass;
+
+    /**
      * 按代码类型解析输出模块路径。未配置时返回 null 表示使用当前应用模块。
      */
     public String getOutputModuleFor(CodeType codeType) {

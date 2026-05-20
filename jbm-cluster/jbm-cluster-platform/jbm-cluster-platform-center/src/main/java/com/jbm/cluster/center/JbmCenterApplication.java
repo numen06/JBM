@@ -33,9 +33,22 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableCodeAutoGeneate(
         entityPackageClasses = {BaseDic.class},
         targetPackage = "com.jbm.cluster.common.mysql",
-        mapper = @EnableCodeAutoGeneate.MapperConfig(module = "jbm-cluster-common-mysql"),
-        service = @EnableCodeAutoGeneate.ServiceConfig(module = "jbm-cluster-common-mysql"),
-        controller = @EnableCodeAutoGeneate.ControllerConfig(module = "jbm-cluster-platform-center", packageBase = "com.jbm.cluster.center")
+        mapper = @EnableCodeAutoGeneate.MapperConfig(
+                module = "jbm-cluster-common-mysql",
+                packageBase = "com.jbm.cluster.common.mysql"
+        ),
+        service = @EnableCodeAutoGeneate.ServiceConfig(
+                module = "jbm-cluster-common-mysql",
+                packageBase = "com.jbm.cluster.common.mysql"
+        ),
+        business = @EnableCodeAutoGeneate.BusinessConfig(
+                module = "jbm-cluster-common-mysql",
+                packageBase = "com.jbm.cluster.common.mysql"
+        ),
+        controller = @EnableCodeAutoGeneate.ControllerConfig(
+                module = "jbm-cluster-platform-center",
+                packageBase = "com.jbm.cluster.center"
+        )
 )
 public class JbmCenterApplication {
 

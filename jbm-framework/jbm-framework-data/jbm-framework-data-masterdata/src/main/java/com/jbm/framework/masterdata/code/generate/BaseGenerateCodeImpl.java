@@ -8,13 +8,13 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.masterdata.code.GenerateMasterData;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,12 +53,9 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
         return file;
     }
 
-    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws URISyntaxException {
+    public Path getModuleRootPath(URL url, GenerateSource generateSource) throws Exception {
         String modulePath = generateSource.getOutputModuleFor(this.getCodeType());
-        if (StrUtil.isNotBlank(modulePath)) {
-            return Paths.get(url.toURI()).getParent().getParent().getParent().resolve(modulePath);
-        }
-        return Paths.get(url.toURI()).getParent().getParent();
+        return GenerateMasterData.resolveModuleRootPath(url, generateSource, modulePath);
     }
 
     @SneakyThrows
