@@ -6,17 +6,14 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.common.mysql.service.BaseUserDataService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
-/**
- * 平台用户业务服务：编排账号、角色、权限等，仅通过下层 {@link BaseUserDataService} 与其它 Service 访问数据。
- */
-public interface BaseUserService extends BaseUserDataService {
+public interface BaseUserBusiness extends BaseUserService {
 
     List<BaseUser> selectEntitys(BaseUserForm baseUserForm);
 

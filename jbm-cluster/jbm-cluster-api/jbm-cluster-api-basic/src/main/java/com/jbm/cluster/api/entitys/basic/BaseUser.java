@@ -32,6 +32,7 @@ import java.util.Date;
 @TableAlias("user")
 @TableName(value = "base_user", autoResultMap = true)
 @ApiModel("系统用户")
+/** 已手工扩展 {@code BaseUserService} / {@code BaseUserBusiness}，禁止生成器覆盖 Service 壳。 */
 @IgnoreGeneate({CodeType.service, CodeType.serviceImpl})
 public class BaseUser extends MasterDataEntity {
 

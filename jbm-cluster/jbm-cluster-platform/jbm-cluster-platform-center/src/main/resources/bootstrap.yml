@@ -10,7 +10,7 @@ spring:
     # 由 jbm-cluster-common-mysql 提供；勿用 Spring Boot 默认的 db/changelog/
     change-log: classpath:db/cluster-rbac/db.changelog-master.yaml
   application:
-    name: ${artifactId}
+    name: ${artifactId}-jbm7
   cloud:
     #手动配置Bus id,
     bus:

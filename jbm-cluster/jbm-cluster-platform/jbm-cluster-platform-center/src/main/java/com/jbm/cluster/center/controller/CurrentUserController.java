@@ -8,7 +8,7 @@ import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -33,7 +33,7 @@ import java.util.List;
 public class CurrentUserController {
 
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
 
@@ -46,7 +46,7 @@ public class CurrentUserController {
     @ApiOperation(value = "修改当前登录用户密码", notes = "修改当前登录用户密码")
     @GetMapping("/user/rest/password")
     public ResultBody restPassword(@RequestParam(value = "password") String password) {
-        baseUserService.updatePassword(SecurityUtils.getLoginUser().getUserId(), password);
+        baseUserBusiness.updatePassword(SecurityUtils.getLoginUser().getUserId(), password);
         return ResultBody.ok();
     }
 
@@ -60,7 +60,7 @@ public class CurrentUserController {
         } catch (Exception e) {
             throw new ServiceException(e);
         }
-        baseUserService.updatePassword(userId, baseUserForm.getCurrentPassword());
+        baseUserBusiness.updatePassword(userId, baseUserForm.getCurrentPassword());
         return ResultBody.ok();
     }
 
@@ -68,7 +68,7 @@ public class CurrentUserController {
     @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
     @GetMapping("/user/account")
     public ResultBody<UserAccount> userAccount() {
-        UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
+        UserAccount userAccount = baseUserBusiness.getUserAccount(LoginHelper.getUserId());
         return ResultBody.callback(() -> userAccount);
     }
 
@@ -104,7 +104,7 @@ public class CurrentUserController {
         if (StrUtil.isNotBlank(realName)) {
             user.setRealName(realName);
         }
-        baseUserService.updateUser(user);
+        baseUserBusiness.updateUser(user);
 //        if (StrUtil.isNotBlank(nickName))
 //            openUserDetails.setNickName(nickName);
 //        if (StrUtil.isNotBlank(avatar))

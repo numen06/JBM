@@ -14,7 +14,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -46,9 +46,9 @@ import java.util.regex.Pattern;
 @Api(tags = "系统用户管理")
 @RestController
 @RequestMapping("/user")
-public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserService> implements IBaseUserServiceClient {
+public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserBusiness> implements IBaseUserServiceClient {
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
     @Autowired
     private BaseRoleService baseRoleService;
 
@@ -105,7 +105,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @PostMapping("/login")
     @Override
     public ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username) {
-        UserAccount account = baseUserService.login(username);
+        UserAccount account = baseUserBusiness.login(username);
         return ResultBody.callback(() -> account);
     }
 
@@ -141,7 +141,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Override
     public ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
                                                    @RequestParam(value = "loginType") String loginType) {
-        UserAccount account = baseUserService.login(username, loginType);
+        UserAccount account = baseUserBusiness.login(username, loginType);
         return ResultBody.callback(() -> account);
     }
 
@@ -154,7 +154,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("")
     public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseUserService.findListPage(PageRequestBody.from(map)));
+        return ResultBody.callback(() -> baseUserBusiness.findListPage(PageRequestBody.from(map)));
     }
 
     /**
@@ -165,7 +165,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
     @PostMapping("/all")
     public ResultBody<List<BaseUser>> getUserAllList() {
-        return ResultBody.callback(() -> baseUserService.findAllList());
+        return ResultBody.callback(() -> baseUserBusiness.findAllList());
     }
 
     /**
@@ -193,7 +193,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             user.setUserName(userName);
             user.setPassword(password);
             user.setNickName(nickName);
-            baseUserService.register(user, registerIp);
+            baseUserBusiness.register(user, registerIp);
             return ResultBody.ok().msg("注册账号成功");
         } catch (ValidateException e) {
             return ResultBody.failed().msg(e.getMessage());
@@ -248,7 +248,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         user.setUserDesc(userDesc);
         user.setAvatar(avatar);
         user.setStatus(status);
-        baseUserService.addUser(user);
+        baseUserBusiness.addUser(user);
         return ResultBody.ok();
     }
 
@@ -270,7 +270,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
 //        user.setUserDesc(userDesc);
 //        user.setAvatar(avatar);
 //        user.setStatus(status);
-        baseUserService.updateUser(user);
+        baseUserBusiness.updateUser(user);
         return ResultBody.ok();
     }
 
@@ -288,7 +288,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "password") String password
     ) {
-        baseUserService.updatePassword(userId, password);
+        baseUserBusiness.updatePassword(userId, password);
         return ResultBody.ok().msg("修改密码成功");
     }
 
@@ -301,7 +301,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "激活用户Email帐号", notes = "用户ID必传")
     @PostMapping("/activationEmailAccount")
     public ResultBody activationEmailAccount(@RequestBody BaseUser baseUser) {
-        baseUserService.activationEmailAccount(baseUser);
+        baseUserBusiness.activationEmailAccount(baseUser);
         return ResultBody.ok().msg("激活用户Email帐号成功");
     }
 
@@ -314,7 +314,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "激活用户手机帐号", notes = "用户ID必传")
     @PostMapping("/activationMobileAccount")
     public ResultBody activationMobileAccount(@RequestBody BaseUser baseUser) {
-        baseUserService.activationMobileAccount(baseUser);
+        baseUserBusiness.activationMobileAccount(baseUser);
         return ResultBody.ok().msg("激活用户手机帐号成功");
     }
 
@@ -357,14 +357,14 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/roles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.callback(() -> baseUserService.getUserRoles(userId));
+        return ResultBody.callback(() -> baseUserBusiness.getUserRoles(userId));
     }
 
 
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/userRoles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestBody BaseUser baseUser) {
-        return ResultBody.callback(() -> baseUserService.getUserRoles(baseUser.getUserId()));
+        return ResultBody.callback(() -> baseUserBusiness.getUserRoles(baseUser.getUserId()));
     }
 
 
@@ -391,7 +391,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         user.setUserName(account);
         user.setPassword(password);
         user.setAvatar(avatar);
-        baseUserService.addUserThirdParty(user, accountType);
+        baseUserBusiness.addUserThirdParty(user, accountType);
         return ResultBody.ok();
     }
 
@@ -400,7 +400,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Override
     public ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm) {
         try {
-            UserAccount userAccount = baseUserService.loginAndRegisterMobileUser(thirdPartyUserForm);
+            UserAccount userAccount = baseUserBusiness.loginAndRegisterMobileUser(thirdPartyUserForm);
             return ResultBody.callback(() -> userAccount);
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -418,7 +418,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         baseAccount.setAccount(account);
         baseAccount.setPassword(password);
         baseAccount.setAccountType(accountType);
-        baseUserService.bindUserThirdPartyByPhone(phone, baseAccount);
+        baseUserBusiness.bindUserThirdPartyByPhone(phone, baseAccount);
         return ResultBody.ok();
     }
 
@@ -428,7 +428,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     public ResultBody<List<BaseUser>> retrievalUsers(@RequestBody PageForm pageForm) {
         try {
             List<BaseUser> list = Lists.newArrayList();
-            list = baseUserService.retrievalUsers(pageForm.getKeyword());
+            list = baseUserBusiness.retrievalUsers(pageForm.getKeyword());
             return ResultBody.success(list, "模糊搜索用户成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -440,7 +440,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Override
     public ResultBody<BaseUser> getUserByPhone(String phone) {
         try {
-            BaseUser user = baseUserService.getUserByPhone(phone);
+            BaseUser user = baseUserBusiness.getUserByPhone(phone);
             return ResultBody.success(user, "查找用户成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -454,7 +454,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             UserInfoStatistics userInfoStatistics = new UserInfoStatistics();
             List<String> list = StpUtil.searchTokenValue("", -1, 0, true);
             userInfoStatistics.setOnlineUser(new Long(list.size()));
-            userInfoStatistics.setUsersTotal(baseUserService.count(new BaseUser()));
+            userInfoStatistics.setUsersTotal(baseUserBusiness.count(new BaseUser()));
             return userInfoStatistics;
         });
     }
@@ -464,7 +464,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @GetMapping("/getUsersByIds")
     public ResultBody<List<BaseUser>> getUsersByIds( @RequestBody IdsForm ids) {
         return ResultBody.callback(() -> {
-            return baseUserService.getUsersByIds(ids.getIds());
+            return baseUserBusiness.getUsersByIds(ids.getIds());
         });
     }
 
@@ -476,7 +476,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
             BaseUser baseUser = new BaseUser();
             baseUser.setUserId(userId);
             baseUser.setStatus(status);
-            baseUserService.updateUser(baseUser);
+            baseUserBusiness.updateUser(baseUser);
             return baseUser;
         });
     }

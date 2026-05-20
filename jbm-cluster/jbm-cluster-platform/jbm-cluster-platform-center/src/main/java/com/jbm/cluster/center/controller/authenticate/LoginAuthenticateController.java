@@ -1,7 +1,7 @@
 package com.jbm.cluster.center.controller.authenticate;
 
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class LoginAuthenticateController {
 
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
 
     @PostMapping(value = {"/authenticate/{loginType}/login"})
     public ResultBody<JbmLoginUser> login(String username, String password, @PathVariable("loginType") String loginType) {

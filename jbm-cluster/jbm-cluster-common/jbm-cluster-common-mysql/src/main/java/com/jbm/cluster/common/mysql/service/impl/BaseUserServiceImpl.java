@@ -1,22 +1,21 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.common.mysql.mapper.BaseUserMapper;
-import com.jbm.cluster.common.mysql.service.BaseUserDataService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
-import cn.hutool.core.util.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * 用户数据访问实现：仅操作 {@link BaseUserMapper}，不依赖登录上下文。
- */
-public class BaseUserDataServiceImpl extends MasterDataServiceImpl<BaseUser> implements BaseUserDataService {
+@Service
+public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> implements BaseUserService {
 
     @Autowired
     protected BaseUserMapper baseUserMapper;

@@ -356,16 +356,16 @@ items:
     path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
     timestamp: '2026-05-20 12:32:23.185'
   - codeType: service
-    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/BaseUserService.java
     timestamp: '2026-05-20 12:32:23.185'
   - codeType: serviceImpl
-    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    path: ../jbm-cluster-common-mysql/src/main/java/com/jbm/cluster/common/mysql/service/impl/BaseUserServiceImpl.java
     timestamp: '2026-05-20 12:32:23.185'
   - codeType: business
-    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    path: src/main/java/com/jbm/cluster/center/business/BaseUserBusiness.java
     timestamp: '2026-05-20 12:32:23.185'
   - codeType: businessImpl
-    path: ../jbm-cluster-common-mysql/src/main/resources/mapper/BaseUserMapper.xml
+    path: src/main/java/com/jbm/cluster/center/business/impl/BaseUserBusinessImpl.java
     timestamp: '2026-05-20 12:32:23.185'
   - codeType: controller
     path: src/main/java/com/jbm/cluster/center/controller/BaseUserController.java

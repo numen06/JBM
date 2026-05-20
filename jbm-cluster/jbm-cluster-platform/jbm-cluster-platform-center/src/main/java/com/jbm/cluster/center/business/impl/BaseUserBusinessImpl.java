@@ -22,12 +22,12 @@ import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseOrgService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
-import com.jbm.cluster.common.mysql.service.impl.BaseUserDataServiceImpl;
+import com.jbm.cluster.common.mysql.service.impl.BaseUserServiceImpl;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
@@ -50,15 +50,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 平台用户业务实现：不注入 Mapper，仅通过 {@link BaseUserDataServiceImpl} 与其它 Service 访问数据。
- *
- * @author wesley.zhang
+ * 平台用户业务实现：不注入 Mapper，经 {@link BaseUserServiceImpl} 与其它 Service 访问数据。
  */
 @Slf4j
 @Service
 @Primary
 @Transactional(rollbackFor = Exception.class)
-public class BaseUserServiceImpl extends BaseUserDataServiceImpl implements BaseUserService {
+public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUserBusiness {
 
     @Autowired
     private BaseRoleService roleService;

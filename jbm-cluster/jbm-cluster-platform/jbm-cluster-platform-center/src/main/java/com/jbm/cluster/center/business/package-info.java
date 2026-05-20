@@ -1,7 +1,12 @@
 /**
- * 平台侧业务编排扩展包。
+ * 平台侧业务编排（Masterdata 代码生成约定）。
  * <p>
- * 数据访问与通用 CRUD 已下沉至 {@code jbm-cluster-common-mysql}（{@code com.jbm.cluster.common.mysql}）。
- * 若需将部分流程从公共 Service 中进一步拆分至平台专属逻辑，可在此增加 *Business / *BusinessImpl。
+ * 分层与命名：
+ * <ul>
+ *   <li>{@code jbm-cluster-common-mysql}：{@code XxxMapper} / {@code XxxService} / {@code XxxServiceImpl}（ORM + 主数据 CRUD）</li>
+ *   <li>{@code center.business}：{@code XxxBusiness} / {@code XxxBusinessImpl}（平台编排，继承对应 ServiceImpl，{@code @Primary}）</li>
+ *   <li>{@code center.controller}：{@code MasterDataCollection<Entity, XxxBusiness>} 或 Feign 入口</li>
+ * </ul>
+ * 通用 CRUD 勿放在本包；复杂实体在实体类上用 {@code @IgnoreGeneate} 保护已扩展的 Service。
  */
 package com.jbm.cluster.center.business;

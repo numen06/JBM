@@ -8,10 +8,7 @@ import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
-/**
- * 用户数据访问服务（仅 Mapper / 持久化），不包含登录态等业务编排。
- */
-public interface BaseUserDataService extends IMasterDataService<BaseUser> {
+public interface BaseUserService extends IMasterDataService<BaseUser> {
 
     List<BaseUser> selectUserRows(BaseUserForm baseUserForm);
 

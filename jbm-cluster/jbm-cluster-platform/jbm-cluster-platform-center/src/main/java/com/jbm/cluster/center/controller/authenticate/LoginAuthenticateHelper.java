@@ -6,7 +6,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 public class LoginAuthenticateHelper {
 
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
 
     public JbmLoginUser loginByAccount(String account, AccountType accountType) throws AccountException {
-        UserAccount userAccount = baseUserService.login(account, accountType.toString());
+        UserAccount userAccount = baseUserBusiness.login(account, accountType.toString());
         if (account == null) {
             throw new AccountException("没有找到该账号");
         }
@@ -31,7 +31,7 @@ public class LoginAuthenticateHelper {
     public JbmLoginUser userAccountToLoginUser(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());
         jbmLoginUser.setMobile(baseUser.getMobile());

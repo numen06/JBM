@@ -118,6 +118,7 @@ mvn -pl jbm-examples/jbm-examples-mysql -am test
 ## 6. 代码生成器与文档
 
 - Liquibase **导出命令** 的补充说明见 **`GenerateMasterData`** 类注释。
+- **实体基类老体系 → `MasterDataEntity` 单基类**：见 **[Masterdata-ORM基类继承迁移说明.md](Masterdata-ORM基类继承迁移说明.md)**（继承对照、`exist=false` 规则、Service/Controller 清单）。
 - 可与 **`优化.md`**、**Masterdata 模块架构升级计划**（`.cursor/plans/`）对照；**以本文与当前 `pom` 为准**执行迁移。
 
 如有单个子项目的 `pom` / 配置与本文冲突，以子项目 README 或该域负责人更新为准，并建议回链本文。

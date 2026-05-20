@@ -9,7 +9,7 @@ import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class UsernameAuthenticate implements ILoginAuthenticate {
 
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
 
     @Autowired
     private BaseAccountService baseAccountService;
@@ -41,14 +41,14 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
     @Override
     public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
         return ResultBody.callback(() -> {
-            UserAccount account = baseUserService.login(username, LoginType.PASSWORD.toString().equals(loginType) ? null : loginType.toLowerCase());
+            UserAccount account = baseUserBusiness.login(username, LoginType.PASSWORD.toString().equals(loginType) ? null : loginType.toLowerCase());
             if (account == null) {
                 //小程序自动注册
                 if (LoginType.MINIAPP.toString().equals(loginType)) {
                     String key = password + "-PHONE";
                     if (stringRedisTemplate.hasKey(key)) {
                         String phone = stringRedisTemplate.opsForValue().get(key);
-                        account = baseUserService.registerAccountByPhone(phone, username, password, loginType.toLowerCase());
+                        account = baseUserBusiness.registerAccountByPhone(phone, username, password, loginType.toLowerCase());
                     }
                 } else {
                     throw new ServiceException("没有找到此用户");
@@ -75,7 +75,7 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
     public JbmLoginUser findUserByAccount(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());
         jbmLoginUser.setMobile(baseUser.getMobile());

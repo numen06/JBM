@@ -15,7 +15,7 @@ import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class ThirdPartyAuthenticate implements ILoginAuthenticate {
 
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
 
     @Autowired
     private BaseAccountService baseAccountService;
@@ -66,7 +66,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
                     throw ServiceException.of("没有找到第三方登录授权信息");
                 }
             }
-            userAccount = baseUserService.login(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider());
+            userAccount = baseUserBusiness.login(thirdPartyUser.getSubjectId(), thirdPartyUser.getProvider());
             if (userAccount == null) {
                 log.info("[第三方认证]: 没有用户信息:{}", thirdPartyUser.getSubjectId());
                 throw ServiceException.of("没有找到授权");
@@ -81,7 +81,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
     public JbmLoginUser findUserByAccount(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
         log.info("[第三方认证]: 获取用户信息:{}", baseUser);
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());

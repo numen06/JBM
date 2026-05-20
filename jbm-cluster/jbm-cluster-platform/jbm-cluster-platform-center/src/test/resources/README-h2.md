@@ -1,7 +1,7 @@
 # Center H2 本地验证
 
 ```bash
-# 父 POM 默认跳过单测，需显式开启（见 docs/maven-build-conventions.md）
+# 父 POM 默认跳过单测，需显式开启（见 docs/Maven构建与测试规范.md）
 
 # RBAC 初始化 + 超管菜单权限
 mvn test -DskipTests=false -Dskip=false -pl jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -Dtest=CenterRbacH2IT

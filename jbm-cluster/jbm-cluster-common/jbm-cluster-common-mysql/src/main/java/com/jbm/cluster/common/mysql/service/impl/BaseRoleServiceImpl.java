@@ -10,7 +10,7 @@ import com.jbm.cluster.api.form.BaseRoleForm;
 import com.jbm.cluster.common.mysql.mapper.BaseRoleMapper;
 import com.jbm.cluster.common.mysql.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
-import com.jbm.cluster.common.mysql.service.BaseUserDataService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -42,7 +42,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
     @Autowired
     private BaseRoleUserMapper baseRoleUserMapper;
     @Autowired
-    private BaseUserDataService baseUserService;
+    private BaseUserService baseUserService;
 
     /**
      * 分页查询

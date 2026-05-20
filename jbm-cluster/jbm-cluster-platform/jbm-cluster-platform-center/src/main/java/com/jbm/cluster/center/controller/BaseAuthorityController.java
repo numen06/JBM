@@ -11,7 +11,7 @@ import com.jbm.cluster.api.form.BaseAuthorityUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
-import com.jbm.cluster.center.business.BaseUserService;
+import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
@@ -42,7 +42,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     @Autowired
     private BaseAuthorityService baseAuthorityService;
     @Autowired
-    private BaseUserService baseUserService;
+    private BaseUserBusiness baseUserBusiness;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
@@ -160,7 +160,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     })
     @PostMapping("/byUser")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
-        BaseUser user = baseUserService.getUserById(baseAuthorityUserForm.getUserId());
+        BaseUser user = baseUserBusiness.getUserById(baseAuthorityUserForm.getUserId());
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), JbmConstants.ROOT.equals(user.getUserName()));
         return ResultBody.callback(() -> result);
     }
@@ -179,7 +179,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
     public ResultBody<List<OpenAuthority>> findAuthorityUser(
             @RequestParam(value = "userId") Long userId
     ) {
-        BaseUser user = baseUserService.getUserById(userId);
+        BaseUser user = baseUserBusiness.getUserById(userId);
         List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(user.getUserName()));
         return ResultBody.callback(() -> result);
     }

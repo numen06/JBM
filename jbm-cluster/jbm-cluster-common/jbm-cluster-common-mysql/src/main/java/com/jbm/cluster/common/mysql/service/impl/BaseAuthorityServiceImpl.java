@@ -64,7 +64,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     @Autowired
     private BaseRoleService baseRoleService;
     @Autowired
-    private BaseUserDataService baseUserService;
+    private BaseUserService baseUserService;
     @Autowired
     private BaseAppService baseAppService;
 //    @Autowired

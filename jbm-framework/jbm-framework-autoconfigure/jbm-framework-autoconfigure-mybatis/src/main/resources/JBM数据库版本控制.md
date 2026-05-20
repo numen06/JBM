@@ -1,6 +1,6 @@
 # JBM数据库版本控制
 
-> **变更说明**：框架已移除 **Flyway**；结构版本化请统一使用 **Liquibase**，说明见仓库 `docs/masterdata-orm-stack-and-migration.md`。下文保留的历史描述中凡涉及 Flyway 的，请以 Liquibase 为准。
+> **变更说明**：框架已移除 **Flyway**；结构版本化请统一使用 **Liquibase**，说明见仓库 `docs/Masterdata-ORM-7.3体系.md`。下文保留的历史描述中凡涉及 Flyway 的，请以 Liquibase 为准。
 
 ## 目录说明
 
@@ -226,4 +226,4 @@ A: 在配置文件中设置 `jbm.sql.auto-execute.enabled=false` 即可禁用。
 
 ## 相关文档
 
-- 仓库根目录：`docs/masterdata-orm-stack-and-migration.md`（Liquibase + MyBatis-Plus 与迁移指引）
+- 仓库根目录：`docs/Masterdata-ORM-7.3体系.md`（Liquibase + MyBatis-Plus 与迁移指引）

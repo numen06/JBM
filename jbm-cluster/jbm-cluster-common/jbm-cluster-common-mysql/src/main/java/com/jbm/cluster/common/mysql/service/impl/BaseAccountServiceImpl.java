@@ -14,7 +14,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.common.mysql.mapper.BaseAccountLogsMapper;
 import com.jbm.cluster.common.mysql.mapper.BaseAccountMapper;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
-import com.jbm.cluster.common.mysql.service.BaseUserDataService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -43,7 +43,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     @Autowired
     private BaseAccountLogsMapper baseAccountLogsMapper;
     @Autowired
-    private BaseUserDataService baseUserService;
+    private BaseUserService baseUserService;
 
     /**
      * 根据主键获取账号信息
