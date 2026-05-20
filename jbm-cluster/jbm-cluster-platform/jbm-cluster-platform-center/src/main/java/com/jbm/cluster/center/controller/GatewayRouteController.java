@@ -1,214 +1,65 @@
 package com.jbm.cluster.center.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
-import com.jbm.cluster.common.mysql.service.GatewayRouteService;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.center.business.GatewayRouteBusiness;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 网关智能路由
- *
- * @author: wesley.zhang
- * @date: 2019/3/12 15:12
- * @description:
  */
 @Api(tags = "网关智能路由")
 @RestController
+@RequestMapping("/gateway/routes")
 public class GatewayRouteController {
 
     @Autowired
-    private GatewayRouteService gatewayRouteService;
-    @Autowired
-    private JbmClusterTemplate jbmClusterTemplate;
+    private GatewayRouteBusiness gatewayRouteBusiness;
 
-    /**
-     * 获取分页路由列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取所有微服务", notes = "获取所有微服务")
-    @GetMapping("/gateway/getMicroServices")
-    public ResultBody<List<String>> getMicroServices() {
-        return ResultBody.callback(() -> gatewayRouteService.getMicroServices());
+    @ApiOperation(value = "微服务列表")
+    @GetMapping("/micro-services")
+    public ResultBody<List<String>> listMicroServices() {
+        return ResultBody.callback(() -> gatewayRouteBusiness.getMicroServices());
     }
 
-    /**
-     * 获取分页路由列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
-    @GetMapping("/gateway/route")
-    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@ModelAttribute GatewayRoutePageForm gatewayRoutePageForm) {
-        return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
+    @ApiOperation(value = "路由列表")
+    @GetMapping
+    public ResultBody<DataPaging<GatewayRoute>> listRoutes(@ModelAttribute GatewayRoutePageForm form) {
+        return ResultBody.callback(() -> gatewayRouteBusiness.findListPage(form));
     }
 
-
-    /**
-     * 获取分页路由列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
-    @PostMapping("/gateway/routePage")
-    public ResultBody<DataPaging<GatewayRoute>> getRouteListPagePost(@RequestBody(required = false) GatewayRoutePageForm gatewayRoutePageForm) {
-        return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
+    @ApiOperation(value = "路由详情")
+    @GetMapping("/{routeId}")
+    public ResultBody<GatewayRoute> getRoute(@PathVariable Long routeId) {
+        return ResultBody.callback(() -> gatewayRouteBusiness.getRoute(routeId));
     }
 
-
-    /**
-     * 获取路由
-     *
-     * @param routeId
-     * @return
-     */
-    @ApiOperation(value = "获取路由", notes = "获取路由")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "路由ID", paramType = "path"),
-    })
-    @GetMapping("/gateway/route/{routeId}/info")
-    public ResultBody<GatewayRoute> getRoute(@PathVariable("routeId") Long routeId) {
-        return ResultBody.callback(() -> gatewayRouteService.getRoute(routeId));
-    }
-
-    /**
-     * 添加路由
-     *
-     * @param path        路径表达式
-     * @param routeName   描述
-     * @param serviceId   服务名方转发
-     * @param url         地址转发
-     * @param stripPrefix 忽略前缀
-     * @param retryable   支持重试
-     * @param status      是否启用
-     * @return
-     */
-    @ApiOperation(value = "添加路由", notes = "添加路由")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = true, value = "路径表达式", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeName", required = true, value = "路由标识", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "url", required = false, value = "地址转发", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
-    })
-    @PostMapping("/gateway/route/add")
-    public ResultBody<Long> addRoute(
-            @RequestParam(value = "routeName", required = true, defaultValue = "") String routeName,
-            @RequestParam(value = "routeDesc", required = true, defaultValue = "") String routeDesc,
-            @RequestParam(value = "path") String path,
-            @RequestParam(value = "serviceId", required = false) String serviceId,
-            @RequestParam(value = "url", required = false) String url,
-            @RequestParam(value = "stripPrefix", required = false, defaultValue = "1") Integer stripPrefix,
-            @RequestParam(value = "retryable", required = false, defaultValue = "0") Integer retryable,
-            @RequestParam(value = "status", defaultValue = "1") Integer status
-    ) {
-        GatewayRoute route = new GatewayRoute();
-        route.setPath(path);
-        route.setServiceId(serviceId);
-        route.setUrl(url);
-        route.setRetryable(retryable);
-        route.setStripPrefix(stripPrefix);
-        route.setStatus(status);
-        route.setRouteName(routeName);
-        route.setRouteDesc(routeDesc);
-        if (route.getUrl() != null && StringUtils.isNotEmpty(route.getUrl())) {
-            route.setServiceId(null);
-        }
-        gatewayRouteService.addRoute(route);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "创建路由")
+    @PostMapping
+    public ResultBody<Void> createRoute(@RequestBody GatewayRoute route) {
+        gatewayRouteBusiness.addRouteWithGatewayRefresh(route);
         return ResultBody.ok();
     }
 
-    /**
-     * 编辑路由
-     *
-     * @param routeId     路由ID
-     * @param path        路径表达式
-     * @param serviceId   服务名方转发
-     * @param url         地址转发
-     * @param stripPrefix 忽略前缀
-     * @param retryable   支持重试
-     * @param status      是否启用
-     * @param routeName   描述
-     * @return
-     */
-    @ApiOperation(value = "编辑路由", notes = "编辑路由")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "路由Id", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeName", required = true, value = "路由标识", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = true, value = "路径表达式", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "url", required = false, value = "地址转发", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
-    })
-    @PostMapping("/gateway/route/update")
-    public ResultBody updateRoute(
-            @RequestParam("routeId") Long routeId,
-            @RequestParam(value = "routeName", defaultValue = "") String routeName,
-            @RequestParam(value = "routeDesc", defaultValue = "") String routeDesc,
-            @RequestParam(value = "path") String path,
-            @RequestParam(value = "serviceId", required = false) String serviceId,
-            @RequestParam(value = "url", required = false) String url,
-            @RequestParam(value = "stripPrefix", required = false, defaultValue = "1") Integer stripPrefix,
-            @RequestParam(value = "retryable", required = false, defaultValue = "0") Integer retryable,
-            @RequestParam(value = "status", defaultValue = "1") Integer status
-    ) {
-        GatewayRoute route = new GatewayRoute();
+    @ApiOperation(value = "更新路由")
+    @PutMapping("/{routeId}")
+    public ResultBody<Void> updateRoute(@PathVariable Long routeId, @RequestBody GatewayRoute route) {
         route.setRouteId(routeId);
-        route.setPath(path);
-        route.setServiceId(serviceId);
-        route.setUrl(url);
-        route.setRetryable(retryable);
-        route.setStripPrefix(stripPrefix);
-        route.setStatus(status);
-        route.setRouteName(routeName);
-        route.setRouteDesc(routeDesc);
-        if (route.getUrl() != null && StringUtils.isNotEmpty(route.getUrl())) {
-            route.setServiceId(null);
-        }
-        gatewayRouteService.updateRoute(route);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
+        gatewayRouteBusiness.updateRouteWithGatewayRefresh(route);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 移除路由
-     *
-     * @param routeId
-     * @return
-     */
-    @ApiOperation(value = "移除路由", notes = "移除路由")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "routeId", paramType = "form"),
-    })
-    @PostMapping("/gateway/route/remove")
-    public ResultBody removeRoute(
-            @RequestParam("routeId") Long routeId
-    ) {
-        gatewayRouteService.removeRoute(routeId);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "删除路由")
+    @DeleteMapping("/{routeId}")
+    public ResultBody<Void> deleteRoute(@PathVariable Long routeId) {
+        gatewayRouteBusiness.removeRouteWithGatewayRefresh(routeId);
         return ResultBody.ok();
     }
 }

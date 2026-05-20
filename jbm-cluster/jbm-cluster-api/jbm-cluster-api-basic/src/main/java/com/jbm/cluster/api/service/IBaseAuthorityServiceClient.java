@@ -8,24 +8,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
 
 /**
- * 权限控制API接口
- *
- * @author wesley.zhang
+ * 权限控制 API
  */
 public interface IBaseAuthorityServiceClient {
-    /**
-     * 获取所有访问权限列表
-     *
-     * @return
-     */
-    @GetMapping("/access")
+
+    @GetMapping("/resources")
     ResultBody<List<AuthorityResource>> findAuthorityResource();
 
-    /**
-     * 获取菜单权限列表
-     *
-     * @return
-     */
-    @GetMapping("/menu")
+    @GetMapping("/menus")
     ResultBody<List<AuthorityMenu>> findAuthorityMenu();
 }

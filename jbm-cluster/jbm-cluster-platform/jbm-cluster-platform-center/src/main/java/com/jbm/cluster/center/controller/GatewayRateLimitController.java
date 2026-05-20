@@ -2,15 +2,12 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
-import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.api.form.GatewayRateLimitForm;
+import com.jbm.cluster.center.business.GatewayRateLimitBusiness;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,179 +16,62 @@ import java.util.List;
 
 /**
  * 网关流量控制
- *
- * @author: wesley.zhang
- * @date: 2019/3/12 15:12
- * @description:
  */
 @Api(tags = "网关流量控制")
 @RestController
+@RequestMapping("/gateway/limit/rate")
 public class GatewayRateLimitController {
 
     @Autowired
-    private GatewayRateLimitService gatewayRateLimitService;
-    @Autowired
-    private JbmClusterTemplate jbmClusterTemplate;
+    private GatewayRateLimitBusiness gatewayRateLimitBusiness;
 
-    /**
-     * 获取分页接口列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
-    @GetMapping("/gateway/limit/rate")
-    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@ModelAttribute GatewayRateLimitForm form) {
-        return ResultBody.callback(() -> gatewayRateLimitService.findListPage(form != null ? form : new GatewayRateLimitForm()));
+    @ApiOperation(value = "策略列表")
+    @GetMapping
+    public ResultBody<DataPaging<GatewayRateLimit>> listPolicies(@ModelAttribute GatewayRateLimitForm form) {
+        return ResultBody.callback(() -> gatewayRateLimitBusiness.findListPage(
+                form != null ? form : new GatewayRateLimitForm()));
     }
 
-    /**
-     * 查询策略已绑定API列表
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "查询策略已绑定API列表", notes = "获取分页接口列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", paramType = "form"),
-    })
-    @GetMapping("/gateway/limit/rate/api/list")
-    public ResultBody<List<GatewayRateLimitApi>> getRateLimitApiList(
-            @RequestParam("policyId") Long policyId
-    ) {
-        return ResultBody.callback(() -> gatewayRateLimitService.findRateLimitApiList(policyId));
+    @ApiOperation(value = "策略详情")
+    @GetMapping("/{policyId}")
+    public ResultBody<GatewayRateLimit> getPolicy(@PathVariable Long policyId) {
+        return ResultBody.callback(() -> gatewayRateLimitBusiness.getRateLimitPolicy(policyId));
     }
 
-    /**
-     * 绑定API
-     *
-     * @param policyId 策略ID
-     * @param apiIds   API接口ID.多个以,隔开.选填
-     * @return
-     */
-    @ApiOperation(value = "绑定API", notes = "一个API只能绑定一个策略")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
-    })
-    @PostMapping("/gateway/limit/rate/api/add")
-    public ResultBody addRateLimitApis(
-            @RequestParam("policyId") Long policyId,
-            @RequestParam(value = "apiIds", required = false) String apiIds
-    ) {
-        gatewayRateLimitService.addRateLimitApis(policyId, StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "策略绑定的 API")
+    @GetMapping("/{policyId}/apis")
+    public ResultBody<List<GatewayRateLimitApi>> listPolicyApis(@PathVariable Long policyId) {
+        return ResultBody.callback(() -> gatewayRateLimitBusiness.findRateLimitApiList(policyId));
+    }
+
+    @ApiOperation(value = "创建策略")
+    @PostMapping
+    public ResultBody<Long> createPolicy(@RequestBody GatewayRateLimitForm form) {
+        return ResultBody.callback(() -> gatewayRateLimitBusiness.addRateLimitWithGatewayRefresh(form));
+    }
+
+    @ApiOperation(value = "更新策略")
+    @PutMapping("/{policyId}")
+    public ResultBody<Void> updatePolicy(@PathVariable Long policyId, @RequestBody GatewayRateLimitForm form) {
+        form.setPolicyId(policyId);
+        gatewayRateLimitBusiness.updateRateLimitWithGatewayRefresh(form);
         return ResultBody.ok();
     }
 
-    /**
-     * 获取流量控制
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "获取流量控制", notes = "获取流量控制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "策略ID", paramType = "path"),
-    })
-    @GetMapping("/gateway/limit/rate/{policyId}/info")
-    public ResultBody<GatewayRateLimit> getRateLimit(@PathVariable("policyId") Long policyId) {
-        return ResultBody.callback(() -> gatewayRateLimitService.getRateLimitPolicy(policyId));
-    }
-
-    /**
-     * 添加流量控制
-     *
-     * @param policyName   策略名称
-     * @param limitQuota   限制数
-     * @param intervalUnit 单位时间
-     * @param policyType   限流规则类型
-     * @return
-     */
-    @ApiOperation(value = "添加流量控制", notes = "添加流量控制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "limitQuota", required = true, value = "限制数", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
-    })
-    @PostMapping("/gateway/limit/rate/add")
-    public ResultBody<Long> addRateLimit(
-            @RequestParam(value = "policyName") String policyName,
-            @RequestParam(value = "policyType") String policyType,
-            @RequestParam(value = "limitQuota") Long limitQuota,
-            @RequestParam(value = "intervalUnit") String intervalUnit
-
-    ) {
-        return ResultBody.callback(() -> {
-            GatewayRateLimit rateLimit = new GatewayRateLimit();
-            rateLimit.setPolicyName(policyName);
-            rateLimit.setLimitQuota(limitQuota);
-            rateLimit.setIntervalUnit(intervalUnit);
-            rateLimit.setPolicyType(policyType);
-            Long policyId = null;
-            GatewayRateLimit result = gatewayRateLimitService.addRateLimitPolicy(rateLimit);
-            if (result != null) {
-                policyId = result.getPolicyId();
-            }
-            return policyId;
-        });
-    }
-
-    /**
-     * 编辑流量控制
-     *
-     * @param policyId     流量控制ID
-     * @param policyName   策略名称
-     * @param limitQuota   限制数
-     * @param intervalUnit 单位时间
-     * @param policyType   限流规则类型
-     * @return
-     */
-    @ApiOperation(value = "编辑流量控制", notes = "编辑流量控制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "接口Id", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "limitQuota", required = true, value = "限制数", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
-    })
-    @PostMapping("/gateway/limit/rate/update")
-    public ResultBody updateRateLimit(
-            @RequestParam("policyId") Long policyId,
-            @RequestParam(value = "policyName") String policyName,
-            @RequestParam(value = "policyType") String policyType,
-            @RequestParam(value = "limitQuota") Long limitQuota,
-            @RequestParam(value = "intervalUnit") String intervalUnit
-    ) {
-        GatewayRateLimit rateLimit = new GatewayRateLimit();
-        rateLimit.setPolicyId(policyId);
-        rateLimit.setPolicyName(policyName);
-        rateLimit.setLimitQuota(limitQuota);
-        rateLimit.setIntervalUnit(intervalUnit);
-        rateLimit.setPolicyType(policyType);
-        gatewayRateLimitService.updateRateLimitPolicy(rateLimit);
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "删除策略")
+    @DeleteMapping("/{policyId}")
+    public ResultBody<Void> deletePolicy(@PathVariable Long policyId) {
+        gatewayRateLimitBusiness.removeRateLimitWithGatewayRefresh(policyId);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 移除流量控制
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "移除流量控制", notes = "移除流量控制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "policyId", paramType = "form"),
-    })
-    @PostMapping("/gateway/limit/rate/remove")
-    public ResultBody removeRateLimit(
-            @RequestParam("policyId") Long policyId
-    ) {
-        gatewayRateLimitService.removeRateLimitPolicy(policyId);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "绑定 API")
+    @PutMapping("/{policyId}/apis")
+    public ResultBody<Void> putPolicyApis(
+            @PathVariable Long policyId,
+            @RequestParam(value = "apiIds", required = false) String apiIds) {
+        gatewayRateLimitBusiness.addRateLimitApisWithGatewayRefresh(policyId,
+                StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
         return ResultBody.ok();
     }
 }

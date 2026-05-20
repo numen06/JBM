@@ -1,16 +1,12 @@
 package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
-import com.jbm.cluster.api.entitys.basic.BaseRole;
-import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
-import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
 import com.jbm.cluster.api.form.BaseDeveloperForm;
+import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,172 +14,71 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 系统用户信息
- *
- * @author wesley.zhang
+ * 系统开发者管理
  */
 @Api(tags = "系统开发者管理")
 @RestController
-public class BaseDeveloperController implements IBaseDeveloperServiceClient {
+@RequestMapping("/developer")
+public class BaseDeveloperController {
+
     @Autowired
     private BaseDeveloperService baseDeveloperService;
 
-
-    /**
-     * 获取登录账号信息
-     *
-     * @param username 登录名
-     * @return
-     */
-    @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "username", required = true, value = "登录名", paramType = "path"),
-    })
-    @PostMapping("/developer/login")
-    @Override
-    public ResultBody<UserAccount> developerLogin(@RequestParam(value = "username") String username) {
-        UserAccount account = baseDeveloperService.login(username);
-        return ResultBody.callback(() -> account);
+    @ApiOperation(value = "开发者登录")
+    @PostMapping("/sessions")
+    public ResultBody<UserAccount> createSession(@RequestParam String username) {
+        return ResultBody.callback(() -> baseDeveloperService.login(username));
     }
 
-    /**
-     * 系统分页用户列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
-    @PostMapping("/developer")
-    public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestBody(required = false) BaseDeveloperForm form) {
-        return ResultBody.callback(() -> baseDeveloperService.findListPage(form != null ? form : new BaseDeveloperForm()));
+    @ApiOperation(value = "开发者分页列表")
+    @GetMapping
+    public ResultBody<DataPaging<BaseDeveloper>> listDevelopers(@ModelAttribute BaseDeveloperForm form) {
+        return ResultBody.callback(() -> baseDeveloperService.findListPage(
+                form != null ? form : new BaseDeveloperForm()));
     }
 
-    /**
-     * 获取所有用户列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
-    @GetMapping("/developer/all")
-    public ResultBody<List<BaseDeveloper>> getUserAllList() {
+    @ApiOperation(value = "全部开发者")
+    @GetMapping("/all")
+    public ResultBody<List<BaseDeveloper>> listAllDevelopers() {
         return ResultBody.callback(() -> baseDeveloperService.findAllList());
     }
 
-    /**
-     * 添加系统用户
-     *
-     * @param userName
-     * @param password
-     * @param nickName
-     * @param status
-     * @param userType
-     * @param email
-     * @param mobile
-     * @param userDesc
-     * @param avatar
-     * @return
-     */
-    @ApiOperation(value = "添加系统用户", notes = "添加系统用户")
-    @PostMapping("/developer/add")
-    public ResultBody<Long> addUser(
-            @RequestParam(value = "userName") String userName,
-            @RequestParam(value = "password") String password,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "status") Integer status,
-            @RequestParam(value = "userType") String userType,
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "mobile", required = false) String mobile,
-            @RequestParam(value = "userDesc", required = false) String userDesc,
-            @RequestParam(value = "avatar", required = false) String avatar
-    ) {
-        BaseDeveloper developer = new BaseDeveloper();
-        developer.setUserName(userName);
-        developer.setPassword(password);
-        developer.setNickName(nickName);
-        developer.setUserType(userType);
-        developer.setEmail(email);
-        developer.setMobile(mobile);
-        developer.setUserDesc(userDesc);
-        developer.setAvatar(avatar);
-        developer.setStatus(status);
-        baseDeveloperService.addUser(developer);
+    @ApiOperation(value = "开发者详情")
+    @GetMapping("/{userId}")
+    public ResultBody<BaseDeveloper> getDeveloper(@PathVariable Long userId) {
+        return ResultBody.callback(() -> baseDeveloperService.selectById(userId));
+    }
+
+    @ApiOperation(value = "创建开发者")
+    @PostMapping
+    public ResultBody<Void> createDeveloper(@RequestBody BaseDeveloperForm form) {
+        baseDeveloperService.addUser(form);
         return ResultBody.ok();
     }
 
-    /**
-     * 更新系统用户
-     *
-     * @param userId
-     * @param nickName
-     * @param status
-     * @param userType
-     * @param email
-     * @param mobile
-     * @param userDesc
-     * @param avatar
-     * @return
-     */
-    @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
-    @PostMapping("/developer/update")
-    public ResultBody updateUser(
-            @RequestParam(value = "userId") Long userId,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "status") Integer status,
-            @RequestParam(value = "userType") String userType,
-            @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "mobile", required = false) String mobile,
-            @RequestParam(value = "userDesc", required = false) String userDesc,
-            @RequestParam(value = "avatar", required = false) String avatar
-    ) {
-        BaseDeveloper developer = new BaseDeveloper();
-        developer.setUserId(userId);
-        developer.setNickName(nickName);
-        developer.setUserType(userType);
-        developer.setEmail(email);
-        developer.setMobile(mobile);
-        developer.setUserDesc(userDesc);
-        developer.setAvatar(avatar);
-        developer.setStatus(status);
-        baseDeveloperService.updateUser(developer);
+    @ApiOperation(value = "更新开发者")
+    @PutMapping("/{userId}")
+    public ResultBody<Void> updateDeveloper(@PathVariable Long userId, @RequestBody BaseDeveloperForm form) {
+        form.setUserId(userId);
+        baseDeveloperService.updateUser(form);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 修改用户密码
-     *
-     * @param userId
-     * @param password
-     * @return
-     */
-    @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
-    @PostMapping("/developer/update/password")
-    public ResultBody updatePassword(
-            @RequestParam(value = "userId") Long userId,
-            @RequestParam(value = "password") String password
-    ) {
-        baseDeveloperService.updatePassword(userId, password);
+    @ApiOperation(value = "更新密码")
+    @PutMapping("/{userId}/password")
+    public ResultBody<Void> updatePassword(@PathVariable Long userId, @RequestBody BaseDeveloperForm form) {
+        baseDeveloperService.updatePassword(userId, form.getPassword());
         return ResultBody.ok();
     }
 
-
-    /**
-     * 注册第三方系统登录账号
-     *
-     * @param account
-     * @param password
-     * @param accountType
-     * @return
-     */
-    @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
-    @PostMapping("/developer/add/thirdParty")
-    @Override
-    public ResultBody addDeveloperThirdParty(
-            @RequestParam(value = "account") String account,
-            @RequestParam(value = "password") String password,
-            @RequestParam(value = "accountType") String accountType,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "avatar") String avatar
-    ) {
+    @ApiOperation(value = "第三方开发者账号")
+    @PostMapping("/third-party-accounts")
+    public ResultBody<Void> createThirdPartyAccount(
+            @RequestParam String account,
+            @RequestParam String password,
+            @RequestParam String accountType,
+            @RequestParam String nickName,
+            @RequestParam String avatar) {
         BaseDeveloper developer = new BaseDeveloper();
         developer.setNickName(nickName);
         developer.setUserName(account);
@@ -192,5 +87,4 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
         baseDeveloperService.addUserThirdParty(developer, accountType);
         return ResultBody.ok();
     }
-
 }

@@ -2,286 +2,78 @@ package com.jbm.cluster.center.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.api.service.IBaseAppServiceClient;
-import com.jbm.cluster.common.mysql.service.BaseAppService;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.api.form.BaseAppForm;
+import com.jbm.cluster.center.business.BaseAppBusiness;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 系统用户信息
- *
- * @author wesley.zhang
+ * 系统应用管理
  */
 @Api(tags = "系统应用管理")
 @RestController
 @RequestMapping("/app")
-public class BaseAppController extends BaseController implements IBaseAppServiceClient {
+public class BaseAppController extends BaseController {
+
     @Autowired
-    private BaseAppService baseAppService;
-    @Autowired
-    private JbmClusterTemplate jbmClusterTemplate;
+    private BaseAppBusiness baseAppBusiness;
 
-    /**
-     * 获取分页应用列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
-    @GetMapping("/")
-    public ResultBody<DataPaging<BaseApp>> getAppListPage(@ModelAttribute BaseAppForm form) {
-        return ResultBody.callback(() -> baseAppService.findListPage(form != null ? form : new BaseAppForm()));
+    @ApiOperation(value = "按 apiKey 查询应用")
+    @GetMapping(params = "apiKey")
+    public ResultBody<BaseApp> getAppByApiKey(@RequestParam String apiKey) {
+        return ResultBody.callback(() -> baseAppBusiness.getAppInfoByKey(apiKey));
     }
 
-    /**
-     * 获取应用详情
-     *
-     * @param appId
-     * @return
-     */
-    @ApiOperation(value = "获取应用详情")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
-    })
-    @GetMapping("/{appId}/info")
-    @Override
-    public ResultBody<BaseApp> getApp(
-            @PathVariable("appId") Long appId
-    ) {
-        BaseApp appInfo = baseAppService.getAppInfo(appId);
-        return ResultBody.callback(() -> appInfo);
+    @ApiOperation(value = "应用列表（分页）")
+    @GetMapping
+    public ResultBody<DataPaging<BaseApp>> listApps(@ModelAttribute BaseAppForm form) {
+        return ResultBody.callback(() -> baseAppBusiness.findListPage(form != null ? form : new BaseAppForm()));
     }
 
-    @ApiOperation(value = "通过appKey获取应用详情")
-    @GetMapping("/getAppByKey")
-    @Override
-    public ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey) {
-        BaseApp appInfo = baseAppService.getAppInfoByKey(appKey);
-        return ResultBody.callback(() -> appInfo);
+    @ApiOperation(value = "应用详情")
+    @GetMapping("/{appId}")
+    public ResultBody<BaseApp> getApp(@PathVariable Long appId) {
+        return ResultBody.callback(() -> baseAppBusiness.getAppInfo(appId));
     }
 
-//    /**
-//     * 获取应用开发配置信息
-//     *
-//     * @param clientId
-//     * @return
-//     */
-//    @ApiOperation(value = "获取应用开发配置信息", notes = "获取应用开发配置信息")
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(dataTypeClass = String.class, name = "clientId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
-//    })
-//    @GetMapping("/client/{clientId}/info")
-//    @Override
-//    public ResultBody<OpenClientDetails> getAppClientInfo(
-//            @PathVariable("clientId") String clientId
-//    ) {
-//        OpenClientDetails clientInfo = baseAppService.getAppClientInfo(clientId);
-//        return ResultBody.callback(() -> clientInfo);
-//    }
-
-    /**
-     * 添加应用信息
-     *
-     * @param appName   应用名称
-     * @param appNameEn 应用英文名称
-     * @param appOs     手机应用操作系统:ios-苹果 android-安卓
-     * @param appType   应用类型:server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用
-     * @param appIcon   应用图标
-     * @param appDesc   应用说明
-     * @param status    状态
-     * @param website   官网地址
-     * @return
-     */
-    @ApiOperation(value = "添加应用信息", notes = "添加应用信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appName", value = "应用名称", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appNameEn", value = "应用英文名称", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appType", value = "应用类型(server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用)", allowableValues = "server,app,pc,wap", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appIcon", value = "应用图标", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appOs", value = "手机应用操作系统", allowableValues = "android,ios", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appDesc", value = "应用说明", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "website", value = "官网地址", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "developerId", value = "开发者", required = false, paramType = "form")
-    })
-    @PostMapping("/add")
-    public ResultBody<String> addApp(
-            @RequestParam(value = "appName") String appName,
-            @RequestParam(value = "appNameEn") String appNameEn,
-            @RequestParam(value = "appType") String appType,
-            @RequestParam(value = "appIcon", required = false) String appIcon,
-            @RequestParam(value = "appOs", required = false) String appOs,
-            @RequestParam(value = "appDesc", required = false) String appDesc,
-            @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "website", required = false) String website,
-            @RequestParam(value = "developerId", required = false) Long developerId
-    ) {
+    @ApiOperation(value = "创建应用")
+    @PostMapping
+    public ResultBody<String> createApp(@RequestBody BaseAppForm form) {
         return ResultBody.callback(() -> {
-            BaseApp app = new BaseApp();
-            app.setAppName(appName);
-            app.setAppNameEn(appNameEn);
-            app.setAppType(appType);
-            app.setAppOs(appOs);
-            app.setAppIcon(appIcon);
-            app.setAppDesc(appDesc);
-            app.setStatus(status);
-            app.setWebsite(website);
-            app.setDeveloperId(developerId);
-            BaseApp result = baseAppService.addAppInfo(app);
-            Long appId = null;
-            if (result != null) {
-                appId = result.getAppId();
-            }
-            return StrUtil.toString(appId);
+            BaseApp result = baseAppBusiness.addAppWithGatewayRefresh(form);
+            return StrUtil.toString(result != null ? result.getAppId() : null);
         });
     }
 
-    /**
-     * 编辑应用信息
-     *
-     * @param appId
-     * @param appName     应用名称
-     * @param appNameEn   应用英文名称
-     * @param appOs       手机应用操作系统:ios-苹果 android-安卓
-     * @param appType     应用类型:server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用
-     * @param appIcon     应用图标
-     * @param appDesc     应用说明
-     * @param status      状态
-     * @param website     官网地址
-     * @param developerId 开发者
-     * @return
-     * @
-     */
-    @ApiOperation(value = "编辑应用信息", notes = "编辑应用信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appName", value = "应用名称", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appNameEn", value = "应用英文名称", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appType", value = "应用类型(server-应用服务 app-手机应用 pc-PC网页应用 wap-手机网页应用)", allowableValues = "server,app,pc,wap", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appIcon", value = "应用图标", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appOs", value = "手机应用操作系统", allowableValues = "android,ios", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appDesc", value = "应用说明", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "website", value = "官网地址", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "developerId", value = "开发者", required = false, paramType = "form")
-    })
-    @PostMapping("/update")
-    public ResultBody updateApp(
-            @RequestParam("appId") Long appId,
-            @RequestParam(value = "appName") String appName,
-            @RequestParam(value = "appNameEn") String appNameEn,
-            @RequestParam(value = "appType") String appType,
-            @RequestParam(value = "appIcon", required = false) String appIcon,
-            @RequestParam(value = "appOs", required = false) String appOs,
-            @RequestParam(value = "appDesc", required = false) String appDesc,
-            @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "website", required = false) String website,
-            @RequestParam(value = "developerId", required = false) Long developerId
-    ) {
-        BaseApp app = new BaseApp();
-        app.setAppId(appId);
-        app.setAppName(appName);
-        app.setAppNameEn(appNameEn);
-        app.setAppType(appType);
-        app.setAppOs(appOs);
-        app.setAppIcon(appIcon);
-        app.setAppDesc(appDesc);
-        app.setStatus(status);
-        app.setWebsite(website);
-        app.setDeveloperId(developerId);
-        baseAppService.updateInfo(app);
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "更新应用")
+    @PutMapping("/{appId}")
+    public ResultBody<Void> updateApp(@PathVariable Long appId, @RequestBody BaseAppForm form) {
+        baseAppBusiness.updateAppWithGatewayRefresh(appId, form);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 完善应用开发信息
-     *
-     * @param appId                应用名称
-     * @param grantTypes           授权类型(多个使用,号隔开)
-     * @param redirectUrls         第三方应用授权回调地址(多个使用,号隔开)
-     * @param scopes               用户授权范围(多个使用,号隔开)
-     * @param autoApproveScopes    用户自动授权范围(多个使用,号隔开)
-     * @param accessTokenValidity  令牌有效期(秒)
-     * @param refreshTokenValidity 刷新令牌有效期(秒)
-     * @return
-     */
-    @ApiOperation(value = "完善应用开发信息", notes = "完善应用开发信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "grantTypes", value = "授权类型(多个使用,号隔开)", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "redirectUrls", value = "第三方应用授权回调地址", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "scopes", value = "用户授权范围(多个使用,号隔开)", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "autoApproveScopes", value = "用户自动授权范围(多个使用,号隔开)", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "accessTokenValidity", value = "令牌有效期(秒)", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "refreshTokenValidity", value = "刷新令牌有效期(秒)", required = true, paramType = "form")
-    })
-    @PostMapping("/client/update")
-    public ResultBody<String> updateAppClientInfo(
-            @RequestParam("appId") Long appId,
-            @RequestParam(value = "grantTypes") String grantTypes,
-            @RequestParam(value = "redirectUrls") String redirectUrls,
-            @RequestParam(value = "scopes") String scopes,
-            @RequestParam(value = "accessTokenValidity", required = true) Integer accessTokenValidity,
-            @RequestParam(value = "refreshTokenValidity", required = true) Integer refreshTokenValidity,
-            @RequestParam(value = "autoApproveScopes", required = false) String autoApproveScopes
-    ) {
-        BaseApp app = baseAppService.getAppInfo(appId);
-//        OpenClientDetails client = new OpenClientDetails(app.getApiKey(), "", scopes, grantTypes, "", redirectUrls);
-//        client.setAccessTokenValiditySeconds(accessTokenValidity);
-//        client.setRefreshTokenValiditySeconds(refreshTokenValidity);
-//        client.setAutoApproveScopes(autoApproveScopes != null ? Arrays.asList(autoApproveScopes.split(",")) : null);
-//        Map info = BeanUtil.beanToMap(app);
-//        client.setAdditionalInformation(info);
-        baseAppService.updateInfo(app);
-//        baseAppService.updateAppClientInfo(client);
+    @ApiOperation(value = "更新应用客户端配置")
+    @PutMapping("/{appId}/client")
+    public ResultBody<Void> updateAppClient(@PathVariable Long appId, @RequestBody BaseAppForm form) {
+        baseAppBusiness.updateAppWithGatewayRefresh(appId, form);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 重置应用秘钥
-     *
-     * @param appId 应用Id
-     * @return
-     */
-    @ApiOperation(value = "重置应用秘钥", notes = "重置应用秘钥")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", required = true, paramType = "form"),
-    })
-    @PostMapping("/reset")
-    public ResultBody<String> resetAppSecret(
-            @RequestParam("appId") Long appId
-    ) {
-        String result = baseAppService.restSecret(appId);
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "重置应用密钥")
+    @PutMapping("/{appId}/secret")
+    public ResultBody<String> resetAppSecret(@PathVariable Long appId) {
+        return ResultBody.callback(() -> baseAppBusiness.resetSecretWithGatewayRefresh(appId));
     }
 
-    /**
-     * 删除应用信息
-     *
-     * @param appId
-     * @return
-     */
-    @ApiOperation(value = "删除应用信息", notes = "删除应用信息")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", required = true, paramType = "form"),
-    })
-    @PostMapping("/remove")
-    public ResultBody removeApp(
-            @RequestParam("appId") Long appId
-    ) {
-        baseAppService.removeApp(appId);
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "删除应用")
+    @DeleteMapping("/{appId}")
+    public ResultBody<Void> deleteApp(@PathVariable Long appId) {
+        baseAppBusiness.removeAppWithGatewayRefresh(appId);
         return ResultBody.ok();
     }
 }

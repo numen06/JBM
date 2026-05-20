@@ -2,15 +2,12 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
-import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.api.form.GatewayIpLimitForm;
+import com.jbm.cluster.center.business.GatewayIpLimitBusiness;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,171 +15,63 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 网关IP访问控制
- *
- * @author: wesley.zhang
- * @date: 2019/3/12 15:12
- * @description:
+ * 网关 IP 访问控制
  */
 @Api(tags = "网关IP访问控制")
 @RestController
+@RequestMapping("/gateway/limit/ip")
 public class GatewayIpLimitController {
 
     @Autowired
-    private GatewayIpLimitService gatewayIpLimitService;
-    @Autowired
-    private JbmClusterTemplate jbmClusterTemplate;
+    private GatewayIpLimitBusiness gatewayIpLimitBusiness;
 
-    /**
-     * 获取分页接口列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
-    @GetMapping("/gateway/limit/ip")
-    public ResultBody<DataPaging<GatewayIpLimit>> getIpLimitListPage(@ModelAttribute GatewayIpLimitForm form) {
-        return ResultBody.callback(() -> gatewayIpLimitService.findListPage(form != null ? form : new GatewayIpLimitForm()));
+    @ApiOperation(value = "策略列表")
+    @GetMapping
+    public ResultBody<DataPaging<GatewayIpLimit>> listPolicies(@ModelAttribute GatewayIpLimitForm form) {
+        return ResultBody.callback(() -> gatewayIpLimitBusiness.findListPage(
+                form != null ? form : new GatewayIpLimitForm()));
     }
 
-    /**
-     * 查询策略已绑定API列表
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "查询策略已绑定API列表", notes = "获取分页接口列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", paramType = "form"),
-    })
-    @GetMapping("/gateway/limit/ip/api/list")
-    public ResultBody<List<GatewayIpLimitApi>> getIpLimitApiList(
-            @RequestParam("policyId") Long policyId
-    ) {
-        return ResultBody.callback(() -> gatewayIpLimitService.findIpLimitApiList(policyId));
+    @ApiOperation(value = "策略详情")
+    @GetMapping("/{policyId}")
+    public ResultBody<GatewayIpLimit> getPolicy(@PathVariable Long policyId) {
+        return ResultBody.callback(() -> gatewayIpLimitBusiness.getIpLimitPolicy(policyId));
     }
 
-    /**
-     * 绑定API
-     *
-     * @param policyId 策略ID
-     * @param apiIds   API接口ID.多个以,隔开.选填
-     * @return
-     */
-    @ApiOperation(value = "绑定API", notes = "一个API只能绑定一个策略")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
-    })
-    @PostMapping("/gateway/limit/ip/api/add")
-    public ResultBody addIpLimitApis(
-            @RequestParam("policyId") Long policyId,
-            @RequestParam(value = "apiIds", required = false) String apiIds
-    ) {
-        gatewayIpLimitService.addIpLimitApis(policyId, StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "策略绑定的 API")
+    @GetMapping("/{policyId}/apis")
+    public ResultBody<List<GatewayIpLimitApi>> listPolicyApis(@PathVariable Long policyId) {
+        return ResultBody.callback(() -> gatewayIpLimitBusiness.findIpLimitApiList(policyId));
+    }
+
+    @ApiOperation(value = "创建策略")
+    @PostMapping
+    public ResultBody<Long> createPolicy(@RequestBody GatewayIpLimitForm form) {
+        return ResultBody.callback(() -> gatewayIpLimitBusiness.addIpLimitWithGatewayRefresh(form));
+    }
+
+    @ApiOperation(value = "更新策略")
+    @PutMapping("/{policyId}")
+    public ResultBody<Void> updatePolicy(@PathVariable Long policyId, @RequestBody GatewayIpLimitForm form) {
+        form.setPolicyId(policyId);
+        gatewayIpLimitBusiness.updateIpLimitWithGatewayRefresh(form);
         return ResultBody.ok();
     }
 
-    /**
-     * 获取IP限制
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "获取IP限制", notes = "获取IP限制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "策略ID", paramType = "path"),
-    })
-    @GetMapping("/gateway/limit/ip/{policyId}/info")
-    public ResultBody<GatewayIpLimit> getIpLimit(@PathVariable("policyId") Long policyId) {
-        return ResultBody.callback(() -> gatewayIpLimitService.getIpLimitPolicy(policyId));
-    }
-
-    /**
-     * 添加IP限制
-     *
-     * @param policyName 策略名称
-     * @param policyType 策略类型:0-拒绝/黑名单 1-允许/白名单
-     * @param ipAddress  ip地址/IP段:多个用隔开;最多10个
-     * @return
-     */
-    @ApiOperation(value = "添加IP限制", notes = "添加IP限制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
-    })
-    @PostMapping("/gateway/limit/ip/add")
-    public ResultBody<Long> addIpLimit(
-            @RequestParam(value = "policyName") String policyName,
-            @RequestParam(value = "policyType") Integer policyType,
-            @RequestParam(value = "ipAddress") String ipAddress
-    ) {
-        return ResultBody.callback(() -> {
-            GatewayIpLimit ipLimit = new GatewayIpLimit();
-            ipLimit.setPolicyName(policyName);
-            ipLimit.setPolicyType(policyType);
-            ipLimit.setIpAddress(ipAddress);
-            Long policyId = null;
-            GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
-            if (result != null) {
-                policyId = result.getPolicyId();
-            }
-            return policyId;
-        });
-    }
-
-    /**
-     * 编辑IP限制
-     *
-     * @param policyId   IP限制ID
-     * @param policyName 策略名称
-     * @param policyType 策略类型:0-拒绝/黑名单 1-允许/白名单
-     * @param ipAddress  ip地址/IP段:多个用隔开;最多10个
-     * @return
-     */
-    @ApiOperation(value = "编辑IP限制", notes = "编辑IP限制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "接口Id", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
-    })
-    @PostMapping("/gateway/limit/ip/update")
-    public ResultBody updateIpLimit(
-            @RequestParam("policyId") Long policyId,
-            @RequestParam(value = "policyName") String policyName,
-            @RequestParam(value = "policyType") Integer policyType,
-            @RequestParam(value = "ipAddress") String ipAddress
-    ) {
-        GatewayIpLimit ipLimit = new GatewayIpLimit();
-        ipLimit.setPolicyId(policyId);
-        ipLimit.setPolicyName(policyName);
-        ipLimit.setPolicyType(policyType);
-        ipLimit.setIpAddress(ipAddress);
-        gatewayIpLimitService.updateIpLimitPolicy(ipLimit);
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "删除策略")
+    @DeleteMapping("/{policyId}")
+    public ResultBody<Void> deletePolicy(@PathVariable Long policyId) {
+        gatewayIpLimitBusiness.removeIpLimitWithGatewayRefresh(policyId);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 移除IP限制
-     *
-     * @param policyId
-     * @return
-     */
-    @ApiOperation(value = "移除IP限制", notes = "移除IP限制")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "policyId", paramType = "form"),
-    })
-    @PostMapping("/gateway/limit/ip/remove")
-    public ResultBody removeIpLimit(
-            @RequestParam("policyId") Long policyId
-    ) {
-        gatewayIpLimitService.removeIpLimitPolicy(policyId);
-        // 刷新网关
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "绑定 API")
+    @PutMapping("/{policyId}/apis")
+    public ResultBody<Void> putPolicyApis(
+            @PathVariable Long policyId,
+            @RequestParam(value = "apiIds", required = false) String apiIds) {
+        gatewayIpLimitBusiness.addIpLimitApisWithGatewayRefresh(policyId,
+                StringUtils.isNotBlank(apiIds) ? apiIds.split(",") : new String[]{});
         return ResultBody.ok();
     }
 }

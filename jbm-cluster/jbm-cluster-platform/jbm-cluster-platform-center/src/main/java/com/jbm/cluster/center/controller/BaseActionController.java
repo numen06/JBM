@@ -1,182 +1,68 @@
 package com.jbm.cluster.center.controller;
 
-import com.jbm.cluster.api.entitys.auth.AuthorityAction;
 import com.jbm.cluster.api.entitys.basic.BaseAction;
-import com.jbm.cluster.common.mysql.service.BaseActionService;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.api.form.BaseActionForm;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-
 /**
- * @author wesley.zhang
+ * 系统功能按钮管理
  */
 @Api(tags = "系统功能按钮管理")
 @RestController
 @RequestMapping("/action")
 public class BaseActionController extends BaseController {
+
     @Autowired
     private BaseActionService baseActionService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
-    /**
-     * 获取分页功能按钮列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
-    @GetMapping("/")
-    public ResultBody<DataPaging<BaseAction>> findActionListPage(@ModelAttribute BaseActionForm form) {
-        return ResultBody.callback(() -> baseActionService.findListPage(form));
+    @ApiOperation(value = "操作分页列表")
+    @GetMapping
+    public ResultBody<DataPaging<BaseAction>> listActions(@ModelAttribute BaseActionForm form) {
+        return ResultBody.callback(() -> baseActionService.findListPage(form != null ? form : new BaseActionForm()));
     }
 
-
-    /**
-     * 获取分页功能按钮列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
-    @PostMapping("/findListPage")
-    public ResultBody<DataPaging<BaseAction>> findActionListPagePost(@RequestBody(required = false) BaseActionForm form) {
-        return ResultBody.callback(() -> baseActionService.findListPage(form));
-    }
-
-
-    /**
-     * 获取功能按钮详情
-     *
-     * @param actionId
-     * @return
-     */
-    @ApiOperation(value = "获取功能按钮详情", notes = "获取功能按钮详情")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
-    })
-    @GetMapping("/{actionId}/info")
-    public ResultBody<BaseAction> getAction(@PathVariable("actionId") Long actionId) {
+    @ApiOperation(value = "操作详情")
+    @GetMapping("/{actionId}")
+    public ResultBody<BaseAction> getAction(@PathVariable Long actionId) {
         return ResultBody.callback(() -> baseActionService.getAction(actionId));
     }
 
-    /**
-     * 添加功能按钮
-     *
-     * @param actionCode 功能按钮编码
-     * @param actionName 功能按钮名称
-     * @param menuId     上级菜单
-     * @param status     是否启用
-     * @param priority   优先级越小越靠前
-     * @param actionDesc 描述
-     * @return
-     */
-    @ApiOperation(value = "添加功能按钮", notes = "添加功能按钮")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "上级菜单", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionDesc", required = false, value = "描述", paramType = "form"),
-    })
-    @PostMapping("/add")
-    public ResultBody<Long> addAction(
-            @RequestParam(value = "actionCode") String actionCode,
-            @RequestParam(value = "actionName") String actionName,
-            @RequestParam(value = "menuId") Long menuId,
-            @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
-            @RequestParam(value = "actionDesc", required = false, defaultValue = "") String actionDesc
-    ) {
+    @ApiOperation(value = "创建操作")
+    @PostMapping
+    public ResultBody<Long> createAction(@RequestBody BaseActionForm form) {
         return ResultBody.callback(() -> {
-            BaseAction action = new BaseAction();
-            action.setActionCode(actionCode);
-            action.setActionName(actionName);
-            action.setMenuId(menuId);
-            action.setStatus(status);
-            action.setPriority(priority);
-            action.setActionDesc(actionDesc);
-            Long actionId = null;
-            BaseAction result = baseActionService.addAction(action);
+            BaseAction result = baseActionService.addAction(form);
             if (result != null) {
-                actionId = result.getActionId();
                 jbmClusterTemplate.refreshGateway();
+                return result.getActionId();
             }
-            return actionId;
+            return null;
         });
     }
 
-    /**
-     * 编辑功能按钮
-     *
-     * @param actionId   功能按钮ID
-     * @param actionCode 功能按钮编码
-     * @param actionName 功能按钮名称
-     * @param menuId     上级菜单
-     * @param status     是否启用
-     * @param priority   优先级越小越靠前
-     * @param actionDesc 描述
-     * @return
-     */
-    @ApiOperation(value = "编辑功能按钮", notes = "添加功能按钮")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "上级菜单", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionDesc", required = false, value = "描述", paramType = "form"),
-    })
-    @PostMapping("/update")
-    public ResultBody updateAction(
-            @RequestParam("actionId") Long actionId,
-            @RequestParam(value = "actionCode") String actionCode,
-            @RequestParam(value = "actionName") String actionName,
-            @RequestParam(value = "menuId") Long menuId,
-            @RequestParam(value = "status", defaultValue = "1") Integer status,
-            @RequestParam(value = "priority", required = false, defaultValue = "0") Integer priority,
-            @RequestParam(value = "actionDesc", required = false, defaultValue = "") String actionDesc
-    ) {
-        BaseAction action = new BaseAction();
-        action.setActionId(actionId);
-        action.setActionCode(actionCode);
-        action.setActionName(actionName);
-        action.setMenuId(menuId);
-        action.setStatus(status);
-        action.setPriority(priority);
-        action.setActionDesc(actionDesc);
-        baseActionService.updateAction(action);
-        // 刷新网关
+    @ApiOperation(value = "更新操作")
+    @PutMapping("/{actionId}")
+    public ResultBody<Void> updateAction(@PathVariable Long actionId, @RequestBody BaseActionForm form) {
+        form.setActionId(actionId);
+        baseActionService.updateAction(form);
         jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }
 
-
-    /**
-     * 移除功能按钮
-     *
-     * @param actionId
-     * @return
-     */
-    @ApiOperation(value = "移除功能按钮", notes = "移除功能按钮")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
-    })
-    @PostMapping("/remove")
-    public ResultBody removeAction(
-            @RequestParam("actionId") Long actionId
-    ) {
+    @ApiOperation(value = "删除操作")
+    @DeleteMapping("/{actionId}")
+    public ResultBody<Void> deleteAction(@PathVariable Long actionId) {
         baseActionService.removeAction(actionId);
-        // 刷新网关
         jbmClusterTemplate.refreshGateway();
         return ResultBody.ok();
     }

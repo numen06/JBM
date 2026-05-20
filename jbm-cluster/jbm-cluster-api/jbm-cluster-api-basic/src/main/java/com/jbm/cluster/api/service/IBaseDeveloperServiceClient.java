@@ -10,32 +10,14 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 public interface IBaseDeveloperServiceClient {
 
-    /**
-     * 开发者登录
-     *
-     * @param username
-     * @return
-     */
-    @PostMapping("/developer/login")
-    ResultBody<UserAccount> developerLogin(@RequestParam(value = "username") String username);
+    @PostMapping("/developer/sessions")
+    ResultBody<UserAccount> developerLogin(@RequestParam("username") String username);
 
-
-    /**
-     * 注册第三方系统登录账号
-     *
-     * @param account
-     * @param password
-     * @param accountType
-     * @return
-     */
-    @PostMapping("/developer/register/thirdParty")
-    ResultBody addDeveloperThirdParty(
-            @RequestParam(value = "account") String account,
-            @RequestParam(value = "password") String password,
-            @RequestParam(value = "accountType") String accountType,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "avatar") String avatar
-    );
-
-
+    @PostMapping("/developer/third-party-accounts")
+    ResultBody<Void> addDeveloperThirdParty(
+            @RequestParam("account") String account,
+            @RequestParam("password") String password,
+            @RequestParam("accountType") String accountType,
+            @RequestParam("nickName") String nickName,
+            @RequestParam("avatar") String avatar);
 }

@@ -7,7 +7,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.center.business.BaseAuthorityBusiness;
 import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
@@ -23,9 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * @author: wesley.zhang
- * @date: 2019/5/24 13:31
- * @description:
+ * 当前登录用户
  */
 @Api(tags = "当前登陆用户")
 @RestController
@@ -35,98 +33,60 @@ public class CurrentUserController {
     @Autowired
     private BaseUserBusiness baseUserBusiness;
     @Autowired
-    private BaseAuthorityService baseAuthorityService;
+    private BaseAuthorityBusiness baseAuthorityBusiness;
 
-    /**
-     * 修改当前登录用户密码
-     *
-     * @return
-     */
     @SaCheckLogin
-    @ApiOperation(value = "修改当前登录用户密码", notes = "修改当前登录用户密码")
-    @GetMapping("/user/rest/password")
-    public ResultBody restPassword(@RequestParam(value = "password") String password) {
-        baseUserBusiness.updatePassword(SecurityUtils.getLoginUser().getUserId(), password);
+    @ApiOperation(value = "当前用户")
+    @GetMapping("/user")
+    public ResultBody<UserAccount> getCurrentUser() {
+        return ResultBody.callback(() -> baseUserBusiness.getUserAccount(LoginHelper.getUserId()));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "当前用户菜单")
+    @GetMapping("/user/menus")
+    public ResultBody<List<AuthorityMenu>> listCurrentUserMenus() {
+        JbmLoginUser loginUser = SecurityUtils.getLoginUser();
+        boolean fullMenu = LoginHelper.isAdmin() || JbmConstants.ROOT.equals(loginUser.getUsername());
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityMenuByUser(
+                loginUser.getUserId(), loginUser.getAppId(), fullMenu));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "更新当前用户")
+    @PutMapping("/user")
+    public ResultBody<Void> updateCurrentUser(@RequestBody BaseUserForm form) {
+        JbmLoginUser loginUser = SecurityUtils.getLoginUser();
+        BaseUser user = new BaseUser();
+        user.setUserId(loginUser.getUserId());
+        if (StrUtil.isNotBlank(form.getNickName())) {
+            user.setNickName(form.getNickName());
+        }
+        if (StrUtil.isNotBlank(form.getUserDesc())) {
+            user.setUserDesc(form.getUserDesc());
+        }
+        if (StrUtil.isNotBlank(form.getAvatar())) {
+            user.setAvatar(form.getAvatar());
+        }
+        if (StrUtil.isNotBlank(form.getRealName())) {
+            user.setRealName(form.getRealName());
+        }
+        baseUserBusiness.updateUser(user);
         return ResultBody.ok();
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "修改当前用户密码2", notes = "修改用户密码")
-    @PostMapping("/user/update/password")
-    public ResultBody updatePassword(@RequestBody BaseUserForm baseUserForm) {
+    @ApiOperation(value = "更新当前用户密码")
+    @PutMapping("/user/password")
+    public ResultBody<Void> updateCurrentUserPassword(@RequestBody BaseUserForm form) {
         Long userId = SecurityUtils.getLoginUser().getUserId();
         try {
-            PasswordUtils.validatorPassword(baseUserForm.getOriginPassword(), baseUserForm.getCurrentPassword(), baseUserForm.getConfirmPassword());
+            PasswordUtils.validatorPassword(
+                    form.getOriginPassword(), form.getCurrentPassword(), form.getConfirmPassword());
         } catch (Exception e) {
             throw new ServiceException(e);
         }
-        baseUserBusiness.updatePassword(userId, baseUserForm.getCurrentPassword());
+        baseUserBusiness.updatePassword(userId, form.getCurrentPassword());
         return ResultBody.ok();
-    }
-
-    @SaCheckLogin
-    @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
-    @GetMapping("/user/account")
-    public ResultBody<UserAccount> userAccount() {
-        UserAccount userAccount = baseUserBusiness.getUserAccount(LoginHelper.getUserId());
-        return ResultBody.callback(() -> userAccount);
-    }
-
-    /**
-     * 修改当前登录用户基本信息
-     *
-     * @param nickName
-     * @param userDesc
-     * @param avatar
-     * @return
-     */
-    @SaCheckLogin
-    @ApiOperation(value = "修改当前登录用户基本信息", notes = "修改当前登录用户基本信息")
-    @PostMapping("/user/update")
-    public ResultBody updateUserInfo(
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "userDesc", required = false) String userDesc,
-            @RequestParam(value = "avatar", required = false) String avatar,
-            @RequestParam(value = "realName", required = false) String realName
-    ) {
-        JbmLoginUser openUserDetails = SecurityUtils.getLoginUser();
-        BaseUser user = new BaseUser();
-        user.setUserId(openUserDetails.getUserId());
-        if (StrUtil.isNotBlank(nickName)) {
-            user.setNickName(nickName);
-        }
-        if (StrUtil.isNotBlank(userDesc)) {
-            user.setUserDesc(userDesc);
-        }
-        if (StrUtil.isNotBlank(avatar)) {
-            user.setAvatar(avatar);
-        }
-        if (StrUtil.isNotBlank(realName)) {
-            user.setRealName(realName);
-        }
-        baseUserBusiness.updateUser(user);
-//        if (StrUtil.isNotBlank(nickName))
-//            openUserDetails.setNickName(nickName);
-//        if (StrUtil.isNotBlank(avatar))
-//            openUserDetails.setAvatar(avatar);
-//        if (StrUtil.isNotBlank(realName))
-//            openUserDetails.setRealName(realName);
-//        SecurityUtils.updateLoginUser(redisTokenStore, openUserDetails);
-        return ResultBody.ok();
-    }
-
-    /**
-     * 获取登陆用户已分配权限
-     *
-     * @return
-     */
-    @SaCheckLogin
-    @ApiOperation(value = "获取当前登录用户已分配菜单权限", notes = "获取当前登录用户已分配菜单权限")
-    @GetMapping("/user/menu")
-    public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        JbmLoginUser loginUser = SecurityUtils.getLoginUser();
-        boolean fullMenu = LoginHelper.isAdmin() || JbmConstants.ROOT.equals(loginUser.getUsername());
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(loginUser.getUserId(), loginUser.getAppId(), fullMenu);
-        return ResultBody.callback(() -> result);
     }
 }

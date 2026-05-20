@@ -5,12 +5,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.framework.metadata.bean.ResultBody;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,81 +14,47 @@ import java.util.List;
  */
 public interface IBaseUserServiceClient {
 
+    @GetMapping("/{userId}")
+    ResultBody<BaseUser> getUser(@PathVariable("userId") Long userId);
 
-    /**
-     * 查询实体
-     *
-     * @return
-     */
-    @GetMapping("/getUserInfoById")
-    ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId);
+    @PostMapping("/sessions")
+    ResultBody<UserAccount> userLogin(
+            @RequestParam("username") String username,
+            @RequestParam(value = "loginType", required = false) String loginType);
 
-    /**
-     * 系统用户登录
-     *
-     * @param username
-     * @return
-     */
-    @PostMapping("/login")
-    ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username);
+    @PostMapping("/registrations")
+    ResultBody<?> register(
+            @RequestParam(value = "registerIp", required = false) String registerIp,
+            @RequestParam("userName") String userName,
+            @RequestParam(value = "nickName", required = false) String nickName,
+            @RequestParam(value = "accountType", required = false) String accountType,
+            @RequestParam("password") String password,
+            @RequestParam("confirmPassword") String confirmPassword);
 
+    @PutMapping("/{userId}")
+    ResultBody<Void> updateUser(@PathVariable("userId") Long userId, @RequestBody BaseUser user);
 
-    @PostMapping("/loginByType")
-    ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
-                                            @RequestParam(value = "loginType") String loginType);
+    @PostMapping("/third-party-accounts")
+    ResultBody<Void> addUserThirdParty(
+            @RequestParam("account") String account,
+            @RequestParam("password") String password,
+            @RequestParam("accountType") String accountType,
+            @RequestParam("nickName") String nickName,
+            @RequestParam("avatar") String avatar);
 
-
-    @ApiOperation(value = "注册账号", notes = "添加系统用户")
-    @PostMapping("/register")
-    ResultBody register(@RequestParam(value = "registerIp", required = false) String registerIp,
-                        @RequestParam(value = "userName") String userName,
-                        @RequestParam(value = "nickName", required = false) String nickName,
-                        @RequestParam(value = "accountType", required = false) String accountType,
-                        @RequestParam(value = "password") String password,
-                        @RequestParam(value = "confirmPassword") String confirmPassword
-    );
-
-    @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
-    @PostMapping(value = "/update", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    ResultBody updateUser(BaseUser user);
-
-    /**
-     * 注册第三方系统登录账号
-     *
-     * @param account
-     * @param password
-     * @param accountType
-     * @return
-     */
-    @PostMapping("/register/thirdParty")
-    ResultBody addUserThirdParty(
-            @RequestParam(value = "account") String account,
-            @RequestParam(value = "password") String password,
-            @RequestParam(value = "accountType") String accountType,
-            @RequestParam(value = "nickName") String nickName,
-            @RequestParam(value = "avatar") String avatar
-    );
-
-
-    @ApiOperation(value = "注册并登录第三方系统登录账号", notes = "仅限系统内部调用")
-    @PostMapping("/loginAndRegisterMobileUser")
+    @PostMapping("/sessions/mobile")
     ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm);
 
-    @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
-    @PostMapping("/add/bindUserThirdPartyByPhone")
-    ResultBody bindUserThirdPartyByPhone(
-            @RequestParam(value = "account") String account,
-            @RequestParam(value = "password") String password,
-            @RequestParam(value = "accountType") String accountType,
-            @RequestParam(value = "phone") String phone
-    );
+    @PostMapping("/third-party-account-bindings")
+    ResultBody<Void> bindUserThirdPartyByPhone(
+            @RequestParam("account") String account,
+            @RequestParam("password") String password,
+            @RequestParam("accountType") String accountType,
+            @RequestParam("phone") String phone);
 
-    @ApiOperation(value = "模糊搜索用户")
-    @PostMapping("/getUserByPhone")
-    ResultBody<BaseUser> getUserByPhone(@RequestParam(value = "phone") String phone);
+    @GetMapping(params = "phone")
+    ResultBody<BaseUser> getUserByPhone(@RequestParam("phone") String phone);
 
-
-    @ApiOperation(value = "获取用户帐号信息")
-    @GetMapping("/getUserAccounts")
-    ResultBody<List<BaseAccount>> getUserAccounts(@RequestParam(value = "userId") Long userId);
+    @GetMapping("/{userId}/accounts")
+    ResultBody<List<BaseAccount>> getUserAccounts(@PathVariable("userId") Long userId);
 }

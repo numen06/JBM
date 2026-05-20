@@ -4,340 +4,125 @@ import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
-import com.jbm.cluster.api.entitys.basic.BaseAuthorityApp;
-import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
 import com.jbm.cluster.api.form.BaseAuthorityUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
-import com.jbm.cluster.api.service.IBaseAuthorityServiceClient;
-import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.center.business.BaseAuthorityBusiness;
 import com.jbm.cluster.center.business.BaseUserBusiness;
-import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.util.StringUtils;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author: wesley.zhang
- * @date: 2018/11/26 18:20
- * @description:
+ * 系统权限管理
  */
 @Api(tags = "系统权限管理")
 @RequestMapping("/authority")
 @RestController
-public class BaseAuthorityController implements IBaseAuthorityServiceClient {
+public class BaseAuthorityController {
 
     @Autowired
-    private BaseAuthorityService baseAuthorityService;
+    private BaseAuthorityBusiness baseAuthorityBusiness;
     @Autowired
     private BaseUserBusiness baseUserBusiness;
-    @Autowired
-    private JbmClusterTemplate jbmClusterTemplate;
 
-    /**
-     * 获取所有访问权限列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取所有访问权限列表", notes = "获取所有访问权限列表")
-    @GetMapping("/access")
-    @Override
-    public ResultBody<List<AuthorityResource>> findAuthorityResource() {
-        List<AuthorityResource> result = baseAuthorityService.findAuthorityResource();
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "访问权限资源")
+    @GetMapping("/resources")
+    public ResultBody<List<AuthorityResource>> listResources() {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityResource());
     }
 
-    /**
-     * 获取权限列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取接口权限列表", notes = "获取接口权限列表")
-    @GetMapping("/api")
-    public ResultBody<List<AuthorityApi>> findAuthorityApi(
-            @RequestParam(value = "serviceId", required = false) String serviceId
-    ) {
-        List<AuthorityApi> result = baseAuthorityService.findAuthorityApi(serviceId);
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "接口权限")
+    @GetMapping("/apis")
+    public ResultBody<List<AuthorityApi>> listApis(
+            @RequestParam(value = "serviceId", required = false) String serviceId) {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityApi(serviceId));
     }
 
-
-    /**
-     * 获取菜单权限列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
-    @GetMapping("/menu")
-    @Override
-    public ResultBody<List<AuthorityMenu>> findAuthorityMenu() {
-        List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1);
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "菜单权限")
+    @GetMapping("/menus")
+    public ResultBody<List<AuthorityMenu>> listMenus() {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityMenu(1));
     }
 
-    /**
-     * 获取菜单权限树结构列表
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
-    @GetMapping("/menu/treeList")
-    public ResultBody<List<Map<String, Object>>> findAuthorityMenuTreeList(@RequestParam(value = "appId", required = false) Long appId) {
+    @ApiOperation(value = "菜单权限树")
+    @GetMapping("/menus/tree")
+    public ResultBody<List<Map<String, Object>>> listMenuTree(
+            @RequestParam(value = "appId", required = false) Long appId) {
         return ResultBody.callback(() -> {
-            List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenu(1, appId);
+            List<AuthorityMenu> result = baseAuthorityBusiness.findAuthorityMenu(1, appId);
             return ServiceUtils.listToTreeList(result, AuthorityMenu::getMenuId, AuthorityMenu::getParentId);
         }).msg("查询列表成功");
     }
 
-    /**
-     * 获取功能权限列表
-     *
-     * @param actionId
-     * @return
-     */
-    @ApiOperation(value = "获取功能权限列表", notes = "获取功能权限列表")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
-    })
-    @GetMapping("/action")
-    public ResultBody<List<BaseAuthorityAction>> findAuthorityAction(
-            @RequestParam(value = "actionId") Long actionId
-    ) {
-        List<BaseAuthorityAction> list = baseAuthorityService.findAuthorityAction(actionId);
-        return ResultBody.callback(() -> list);
+    @ApiOperation(value = "功能权限")
+    @GetMapping("/actions/{actionId}")
+    public ResultBody<List<BaseAuthorityAction>> listActionAuthorities(@PathVariable Long actionId) {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityAction(actionId));
     }
 
-
-    /**
-     * 获取角色已分配权限
-     *
-     * @param roleId 角色ID
-     * @return
-     */
-    @ApiOperation(value = "获取角色已分配权限", notes = "获取角色已分配权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
-    })
-    @GetMapping("/role")
-    public ResultBody<List<OpenAuthority>> findAuthorityRole(Long roleId) {
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(roleId);
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "角色权限")
+    @GetMapping("/roles/{roleId}")
+    public ResultBody<List<OpenAuthority>> getRoleAuthorities(@PathVariable Long roleId) {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityByRole(roleId));
     }
 
-    /**
-     * 获取角色已分配权限
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取角色已分配权限JSON方式", notes = "获取角色已分配权限")
-    @PostMapping("/byRole")
-    public ResultBody<List<OpenAuthority>> findAuthorityRoles(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByRole(baseAuthorityRoleForm.getRoleId());
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "用户权限")
+    @GetMapping("/users/{userId}")
+    public ResultBody<List<OpenAuthority>> getUserAuthorities(@PathVariable Long userId) {
+        com.jbm.cluster.api.entitys.basic.BaseUser user = baseUserBusiness.getUserById(userId);
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityByUserId(
+                userId, JbmConstants.ROOT.equals(user.getUserName())));
     }
 
-
-    /**
-     * 获取用户已分配权限
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取用户已分配权限JSON", notes = "获取用户已分配权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
-    })
-    @PostMapping("/byUser")
-    public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
-        BaseUser user = baseUserBusiness.getUserById(baseAuthorityUserForm.getUserId());
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(user.getUserId(), JbmConstants.ROOT.equals(user.getUserName()));
-        return ResultBody.callback(() -> result);
+    @ApiOperation(value = "应用权限")
+    @GetMapping("/apps/{appId}")
+    public ResultBody<List<OpenAuthority>> getAppAuthorities(@PathVariable Long appId) {
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityByApp(appId));
     }
 
-    /**
-     * 获取用户已分配权限
-     *
-     * @param userId 用户ID
-     * @return
-     */
-    @ApiOperation(value = "获取用户已分配权限", notes = "获取用户已分配权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
-    })
-    @GetMapping("/user")
-    public ResultBody<List<OpenAuthority>> findAuthorityUser(
-            @RequestParam(value = "userId") Long userId
-    ) {
-        BaseUser user = baseUserBusiness.getUserById(userId);
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(user.getUserName()));
-        return ResultBody.callback(() -> result);
-    }
-
-
-    /**
-     * 获取应用已分配接口权限
-     *
-     * @param appId 角色ID
-     * @return
-     */
-    @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
-    })
-    @GetMapping("/app")
-    public ResultBody<List<OpenAuthority>> findAuthorityApp(
-            @RequestParam(value = "appId") Long appId
-    ) {
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(appId);
-        return ResultBody.callback(() -> result);
-    }
-
-    /**
-     * 获取应用已分配接口权限
-     *
-     * @return
-     */
-    @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
-    })
-    @PostMapping("/byApp")
-    public ResultBody<List<OpenAuthority>> findAuthorityApp(@RequestBody(required = false) BaseAuthorityApp baseAuthorityApp) {
-        List<OpenAuthority> result = baseAuthorityService.findAuthorityByApp(baseAuthorityApp.getAppId());
-        return ResultBody.callback(() -> result);
-    }
-
-    /**
-     * 分配角色权限
-     *
-     * @param roleId       角色ID
-     * @param expireTime   授权过期时间
-     * @param authorityIds 权限ID.多个以,隔开
-     * @return
-     */
-    @ApiOperation(value = "分配角色权限", notes = "分配角色权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
-    })
-    @PostMapping("/role/grant")
-    public ResultBody grantAuthorityRole(
-            @RequestParam(value = "roleId") Long roleId,
-            @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
-            @RequestParam(value = "authorityIds", required = false) String authorityIds
-    ) {
-        baseAuthorityService.addAuthorityRole(roleId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "设置角色权限")
+    @PutMapping("/roles/{roleId}")
+    public ResultBody<Void> putRoleAuthorities(
+            @PathVariable Long roleId,
+            @RequestBody BaseAuthorityRoleForm form) {
+        form.setRoleId(roleId);
+        baseAuthorityBusiness.grantAuthorityRole(form);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 分配角色权限
-     *
-     * @return
-     */
-    @ApiOperation(value = "分配角色权限JSON提交方式", notes = "分配角色权限")
-    @PostMapping("/grant/role")
-    public ResultBody grantAuthorityRole(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
-        baseAuthorityService.addAuthorityRole(baseAuthorityRoleForm.getRoleId(), baseAuthorityRoleForm.getExpireTime(), baseAuthorityRoleForm.getAuthorityIds());
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "设置用户权限")
+    @PutMapping("/users/{userId}")
+    public ResultBody<Void> putUserAuthorities(
+            @PathVariable Long userId,
+            @RequestBody BaseAuthorityUserForm form) {
+        form.setUserId(userId);
+        baseAuthorityBusiness.grantAuthorityUser(form);
         return ResultBody.ok();
     }
 
-
-    /**
-     * 分配用户权限
-     *
-     * @param userId       用户ID
-     * @param expireTime   授权过期时间
-     * @param authorityIds 权限ID.多个以,隔开
-     * @return
-     */
-    @ApiOperation(value = "分配用户权限", notes = "分配用户权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
-    })
-    @PostMapping("/user/grant")
-    public ResultBody grantAuthorityUser(
-            @RequestParam(value = "userId") Long userId,
-            @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
-            @RequestParam(value = "authorityIds", required = false) String authorityIds
-    ) {
-        baseAuthorityService.addAuthorityUser(userId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "设置应用权限")
+    @PutMapping("/apps/{appId}")
+    public ResultBody<Void> putAppAuthorities(
+            @PathVariable Long appId,
+            @RequestBody BaseAuthorityRoleForm form) {
+        baseAuthorityBusiness.grantAuthorityApp(appId, form.getExpireTime(), form.getAuthorityIds());
         return ResultBody.ok();
     }
 
-    @ApiOperation(value = "分配用户权限JSON提交方式", notes = "分配用户权限")
-    @PostMapping("/grant/user")
-    public ResultBody grantAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
-        baseAuthorityService.addAuthorityUser(baseAuthorityUserForm.getUserId(), baseAuthorityUserForm.getExpireTime(), baseAuthorityUserForm.getAuthorityIds());
-        jbmClusterTemplate.refreshGateway();
+    @ApiOperation(value = "设置功能权限")
+    @PutMapping("/actions/{actionId}")
+    public ResultBody<Void> putActionAuthorities(
+            @PathVariable Long actionId,
+            @RequestBody BaseAuthorityRoleForm form) {
+        baseAuthorityBusiness.grantAuthorityAction(actionId, form.getAuthorityIds());
         return ResultBody.ok();
     }
-
-
-    /**
-     * 分配应用权限
-     *
-     * @param appId        应用Id
-     * @param expireTime   授权过期时间
-     * @param authorityIds 权限ID.多个以,隔开
-     * @return
-     */
-    @ApiOperation(value = "分配应用权限", notes = "分配应用权限")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
-    })
-    @PostMapping("/app/grant")
-    public ResultBody grantAuthorityApp(
-            @RequestParam(value = "appId") Long appId,
-            @RequestParam(value = "expireTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date expireTime,
-            @RequestParam(value = "authorityIds", required = false) String authorityIds
-    ) {
-        baseAuthorityService.addAuthorityApp(appId, expireTime, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
-        return ResultBody.ok();
-    }
-
-    /**
-     * 功能按钮绑定API
-     *
-     * @param actionId
-     * @param authorityIds
-     * @return
-     */
-    @ApiOperation(value = "功能按钮授权", notes = "功能按钮授权")
-    @ApiImplicitParams({
-            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
-            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", required = false, value = "全新ID:多个用,号隔开", paramType = "form"),
-    })
-    @PostMapping("/action/grant")
-    public ResultBody grantAuthorityAction(
-            @RequestParam(value = "actionId") Long actionId,
-            @RequestParam(value = "authorityIds", required = false) String authorityIds
-    ) {
-        baseAuthorityService.addAuthorityAction(actionId, StringUtils.isNotBlank(authorityIds) ? authorityIds.split(",") : new String[]{});
-        jbmClusterTemplate.refreshGateway();
-        return ResultBody.ok();
-    }
-
-
 }
