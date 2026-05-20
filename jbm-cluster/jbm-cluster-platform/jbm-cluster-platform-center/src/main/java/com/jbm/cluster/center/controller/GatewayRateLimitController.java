@@ -53,7 +53,7 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "查询策略已绑定API列表", notes = "获取分页接口列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/rate/api/list")
     public ResultBody<List<GatewayRateLimitApi>> getRateLimitApiList(
@@ -71,8 +71,8 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "绑定API", notes = "一个API只能绑定一个策略")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/gateway/limit/rate/api/add")
     public ResultBody addRateLimitApis(
@@ -92,7 +92,7 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "获取流量控制", notes = "获取流量控制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "策略ID", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "策略ID", paramType = "path"),
     })
     @GetMapping("/gateway/limit/rate/{policyId}/info")
     public ResultBody<GatewayRateLimit> getRateLimit(@PathVariable("policyId") Long policyId) {
@@ -110,10 +110,10 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "添加流量控制", notes = "添加流量控制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
-            @ApiImplicitParam(name = "limitQuota", required = true, value = "限制数", paramType = "form"),
-            @ApiImplicitParam(name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "limitQuota", required = true, value = "限制数", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
     })
     @PostMapping("/gateway/limit/rate/add")
     public ResultBody<Long> addRateLimit(
@@ -150,11 +150,11 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "编辑流量控制", notes = "编辑流量控制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "接口Id", paramType = "form"),
-            @ApiImplicitParam(name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
-            @ApiImplicitParam(name = "limitQuota", required = true, value = "限制数", paramType = "form"),
-            @ApiImplicitParam(name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "接口Id", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "限流规则类型:url,origin,user", allowableValues = "url,origin,user", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "limitQuota", required = true, value = "限制数", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "intervalUnit", required = true, value = "单位时间:seconds-秒,minutes-分钟,hours-小时,days-天", allowableValues = "seconds,minutes,hours,days", paramType = "form"),
     })
     @PostMapping("/gateway/limit/rate/update")
     public ResultBody updateRateLimit(
@@ -184,7 +184,7 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "移除流量控制", notes = "移除流量控制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "policyId", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "policyId", paramType = "form"),
     })
     @PostMapping("/gateway/limit/rate/remove")
     public ResultBody removeRateLimit(

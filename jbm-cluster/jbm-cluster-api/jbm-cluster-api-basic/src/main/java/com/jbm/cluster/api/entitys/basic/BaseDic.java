@@ -24,7 +24,7 @@ import javax.persistence.Entity;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@TableName("base_dic")
+@TableName(value = "base_dic", autoResultMap = true)
 public class BaseDic extends MasterDataEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

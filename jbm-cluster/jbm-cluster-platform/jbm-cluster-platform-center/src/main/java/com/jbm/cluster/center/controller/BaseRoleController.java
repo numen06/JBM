@@ -57,7 +57,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "获取角色详情", notes = "获取角色详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
     })
     @PostMapping("/{roleId}/info")
     public ResultBody<BaseRole> getRole(@PathVariable(value = "roleId") Long roleId) {
@@ -72,10 +72,10 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "添加角色", notes = "添加角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "roleName", value = "角色显示名称", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleName", value = "角色显示名称", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/add")
     public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody pageRequestBody) {
@@ -101,11 +101,11 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "编辑角色", notes = "编辑角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "roleName", value = "角色显示名称", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleName", value = "角色显示名称", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleDesc", value = "描述", defaultValue = "", required = false, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/update")
     public ResultBody updateRole(
@@ -134,7 +134,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "删除角色", notes = "删除角色")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/remove")
     public ResultBody removeRole(@RequestBody(required = false) PageRequestBody pageRequestBody

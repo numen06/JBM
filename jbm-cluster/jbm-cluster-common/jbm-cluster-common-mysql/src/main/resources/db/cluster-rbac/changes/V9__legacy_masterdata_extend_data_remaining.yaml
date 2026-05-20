@@ -1,0 +1,289 @@
+databaseChangeLog:
+  - changeSet:
+      id: legacy-base_dic-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_dic
+        - not:
+            columnExists:
+              tableName: base_dic
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_dic
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_org-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_org
+        - not:
+            columnExists:
+              tableName: base_org
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_org
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_area-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_area
+        - not:
+            columnExists:
+              tableName: base_area
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_area
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-feedback-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: feedback
+        - not:
+            columnExists:
+              tableName: feedback
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: feedback
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_account_logs-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account_logs
+        - not:
+            columnExists:
+              tableName: base_account_logs
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_account_logs
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_open_user-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_open_user
+        - not:
+            columnExists:
+              tableName: base_open_user
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_open_user
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_user_config-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user_config
+        - not:
+            columnExists:
+              tableName: base_user_config
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_user_config
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_user_certification-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user_certification
+        - not:
+            columnExists:
+              tableName: base_user_certification
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_user_certification
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_app_config-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app_config
+        - not:
+            columnExists:
+              tableName: base_app_config
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_app_config
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_release_info-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_release_info
+        - not:
+            columnExists:
+              tableName: base_release_info
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_release_info
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-data_source_management-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: data_source_management
+        - not:
+            columnExists:
+              tableName: data_source_management
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: data_source_management
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-gateway_route-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gateway_route
+        - not:
+            columnExists:
+              tableName: gateway_route
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: gateway_route
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-gateway_rate_limit-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gateway_rate_limit
+        - not:
+            columnExists:
+              tableName: gateway_rate_limit
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: gateway_rate_limit
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-gateway_ip_limit-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gateway_ip_limit
+        - not:
+            columnExists:
+              tableName: gateway_ip_limit
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: gateway_ip_limit
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-gateway_rate_limit_api-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gateway_rate_limit_api
+        - not:
+            columnExists:
+              tableName: gateway_rate_limit_api
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: gateway_rate_limit_api
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-gateway_ip_limit_api-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gateway_ip_limit_api
+        - not:
+            columnExists:
+              tableName: gateway_ip_limit_api
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: gateway_ip_limit_api
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT

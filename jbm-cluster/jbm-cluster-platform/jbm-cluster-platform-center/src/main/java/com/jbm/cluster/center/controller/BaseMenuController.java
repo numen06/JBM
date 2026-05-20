@@ -186,7 +186,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "获取菜单下所有操作", notes = "获取菜单下所有操作")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "menuId", value = "menuId", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", value = "menuId", paramType = "form"),
     })
     @GetMapping("/action")
     public ResultBody<List<BaseAction>> getMenuAction(Long menuId) {
@@ -201,7 +201,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "获取菜单资源详情", notes = "获取菜单资源详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "menuId", required = true, value = "menuId"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "menuId"),
     })
     @GetMapping("/{menuId}/info")
     public ResultBody<BaseMenu> getMenu(@PathVariable("menuId") Long menuId) {
@@ -225,17 +225,17 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "添加菜单资源", notes = "添加菜单资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "menuCode", required = true, value = "菜单编码", paramType = "form"),
-            @ApiImplicitParam(name = "menuName", required = true, value = "菜单名称", paramType = "form"),
-            @ApiImplicitParam(name = "icon", required = false, value = "图标", paramType = "form"),
-            @ApiImplicitParam(name = "scheme", required = false, value = "请求协议", allowableValues = "/,http://,https://", paramType = "form"),
-            @ApiImplicitParam(name = "path", required = false, value = "请求路径", paramType = "form"),
-            @ApiImplicitParam(name = "target", required = false, value = "请求路径", allowableValues = "_self,_blank", paramType = "form"),
-            @ApiImplicitParam(name = "parentId", required = false, defaultValue = "0", value = "父节点ID", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(name = "menuDesc", required = false, value = "描述", paramType = "form"),
-            @ApiImplicitParam(name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuCode", required = true, value = "菜单编码", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuName", required = true, value = "菜单名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "icon", required = false, value = "图标", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "scheme", required = false, value = "请求协议", allowableValues = "/,http://,https://", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = false, value = "请求路径", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "target", required = false, value = "请求路径", allowableValues = "_self,_blank", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "parentId", required = false, defaultValue = "0", value = "父节点ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
 
     })
     @PostMapping("/add")
@@ -292,18 +292,18 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "编辑菜单资源", notes = "编辑菜单资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "menuId", required = true, value = "菜单ID", paramType = "form"),
-            @ApiImplicitParam(name = "menuCode", required = true, value = "菜单编码", paramType = "form"),
-            @ApiImplicitParam(name = "menuName", required = true, value = "菜单名称", paramType = "form"),
-            @ApiImplicitParam(name = "icon", required = false, value = "图标", paramType = "form"),
-            @ApiImplicitParam(name = "scheme", required = false, value = "请求协议", allowableValues = "/,http://,https://", paramType = "form"),
-            @ApiImplicitParam(name = "path", required = false, value = "请求路径", paramType = "form"),
-            @ApiImplicitParam(name = "target", required = false, value = "请求路径", allowableValues = "_self,_blank", paramType = "form"),
-            @ApiImplicitParam(name = "parentId", required = false, defaultValue = "0", value = "父节点ID", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(name = "menuDesc", required = false, value = "描述", paramType = "form"),
-            @ApiImplicitParam(name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "菜单ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuCode", required = true, value = "菜单编码", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuName", required = true, value = "菜单名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "icon", required = false, value = "图标", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "scheme", required = false, value = "请求协议", allowableValues = "/,http://,https://", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = false, value = "请求路径", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "target", required = false, value = "请求路径", allowableValues = "_self,_blank", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "parentId", required = false, defaultValue = "0", value = "父节点ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "hidden", required = false, defaultValue = "1", value = "是否显示", paramType = "form"),
     })
     @PostMapping("/update")
     public ResultBody updateMenu(
@@ -369,7 +369,7 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "移除菜单资源JSON", notes = "移除菜单资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "menuId", required = true, value = "menuId", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "menuId", paramType = "form"),
     })
     @PostMapping("/remove")
     public ResultBody<Boolean> removeMenu(

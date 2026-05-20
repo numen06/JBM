@@ -41,7 +41,7 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
      */
     @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "username", required = true, value = "登录名", paramType = "path"),
     })
     @PostMapping("/developer/login")
     @Override

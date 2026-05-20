@@ -79,7 +79,7 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取路由", notes = "获取路由")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "routeId", required = true, value = "路由ID", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "路由ID", paramType = "path"),
     })
     @GetMapping("/gateway/route/{routeId}/info")
     public ResultBody<GatewayRoute> getRoute(@PathVariable("routeId") Long routeId) {
@@ -100,14 +100,14 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "添加路由", notes = "添加路由")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "path", required = true, value = "路径表达式", paramType = "form"),
-            @ApiImplicitParam(name = "routeName", required = true, value = "路由标识", paramType = "form"),
-            @ApiImplicitParam(name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
-            @ApiImplicitParam(name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
-            @ApiImplicitParam(name = "url", required = false, value = "地址转发", paramType = "form"),
-            @ApiImplicitParam(name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
-            @ApiImplicitParam(name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = true, value = "路径表达式", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeName", required = true, value = "路由标识", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "url", required = false, value = "地址转发", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/gateway/route/add")
     public ResultBody<Long> addRoute(
@@ -153,15 +153,15 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "编辑路由", notes = "编辑路由")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "routeId", required = true, value = "路由Id", paramType = "form"),
-            @ApiImplicitParam(name = "routeName", required = true, value = "路由标识", paramType = "form"),
-            @ApiImplicitParam(name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
-            @ApiImplicitParam(name = "path", required = true, value = "路径表达式", paramType = "form"),
-            @ApiImplicitParam(name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
-            @ApiImplicitParam(name = "url", required = false, value = "地址转发", paramType = "form"),
-            @ApiImplicitParam(name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
-            @ApiImplicitParam(name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "路由Id", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeName", required = true, value = "路由标识", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeDesc", required = true, value = "路由名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "path", required = true, value = "路径表达式", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "serviceId", required = false, value = "服务名方转发", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "url", required = false, value = "地址转发", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "stripPrefix", required = false, allowableValues = "0,1", defaultValue = "1", value = "忽略前缀", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "retryable", required = false, allowableValues = "0,1", defaultValue = "0", value = "支持重试", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = false, allowableValues = "0,1", defaultValue = "1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/gateway/route/update")
     public ResultBody updateRoute(
@@ -203,7 +203,7 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "移除路由", notes = "移除路由")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "routeId", required = true, value = "routeId", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "routeId", required = true, value = "routeId", paramType = "form"),
     })
     @PostMapping("/gateway/route/remove")
     public ResultBody removeRoute(

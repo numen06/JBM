@@ -100,7 +100,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "username", required = true, value = "登录名", paramType = "path"),
     })
     @PostMapping("/login")
     @Override
@@ -134,8 +134,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      */
     @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "path"),
-            @ApiImplicitParam(name = "loginType", required = false, value = "登录类型：mobile,password", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "username", required = true, value = "登录名", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "loginType", required = false, value = "登录类型：mobile,password", paramType = "path"),
     })
     @PostMapping("/loginByType")
     @Override

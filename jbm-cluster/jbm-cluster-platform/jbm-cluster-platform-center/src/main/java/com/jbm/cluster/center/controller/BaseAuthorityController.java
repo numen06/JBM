@@ -109,7 +109,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取功能权限列表", notes = "获取功能权限列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
     })
     @GetMapping("/action")
     public ResultBody<List<BaseAuthorityAction>> findAuthorityAction(
@@ -128,7 +128,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取角色已分配权限", notes = "获取角色已分配权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @GetMapping("/role")
     public ResultBody<List<OpenAuthority>> findAuthorityRole(Long roleId) {
@@ -156,7 +156,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取用户已分配权限JSON", notes = "获取用户已分配权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/byUser")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
@@ -173,7 +173,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取用户已分配权限", notes = "获取用户已分配权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
     })
     @GetMapping("/user")
     public ResultBody<List<OpenAuthority>> findAuthorityUser(
@@ -193,7 +193,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
     })
     @GetMapping("/app")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(
@@ -210,7 +210,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/byApp")
     public ResultBody<List<OpenAuthority>> findAuthorityApp(@RequestBody(required = false) BaseAuthorityApp baseAuthorityApp) {
@@ -228,9 +228,9 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "分配角色权限", notes = "分配角色权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/role/grant")
     public ResultBody grantAuthorityRole(
@@ -268,9 +268,9 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "分配用户权限", notes = "分配用户权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/user/grant")
     public ResultBody grantAuthorityUser(
@@ -302,9 +302,9 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "分配应用权限", notes = "分配应用权限")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
-            @ApiImplicitParam(name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "expireTime", value = "过期时间.选填", defaultValue = "", required = false, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", value = "权限ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/app/grant")
     public ResultBody grantAuthorityApp(
@@ -326,8 +326,8 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      */
     @ApiOperation(value = "功能按钮授权", notes = "功能按钮授权")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
-            @ApiImplicitParam(name = "authorityIds", required = false, value = "全新ID:多个用,号隔开", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "authorityIds", required = false, value = "全新ID:多个用,号隔开", paramType = "form"),
     })
     @PostMapping("/action/grant")
     public ResultBody grantAuthorityAction(

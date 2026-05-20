@@ -79,7 +79,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
     @OperatorLog
     @ApiOperation(value = "获取接口资源", notes = "获取接口资源")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "apiId", required = true, value = "ApiId", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "apiId", required = true, value = "ApiId", paramType = "path"),
     })
     @GetMapping("/{apiId}/info")
     public ResultBody<BaseApi> getApi(@PathVariable("apiId") Long apiId) {
@@ -197,8 +197,8 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      */
     @ApiOperation(value = "批量修改状态", notes = "批量修改状态")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, value = "接口状态:0-禁用 1-启用", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, value = "接口状态:0-禁用 1-启用", paramType = "form")
     })
     @PostMapping("/batch/update/status")
     public ResultBody batchUpdateStatus(
@@ -223,8 +223,8 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      */
     @ApiOperation(value = "批量修改身份认证", notes = "批量修改身份认证")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
-            @ApiImplicitParam(name = "auth", required = true, value = "是否身份认证:0-否 1-是", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "auth", required = true, value = "是否身份认证:0-否 1-是", paramType = "form")
     })
     @PostMapping("/batch/update/auth")
     public ResultBody batchUpdateAuth(

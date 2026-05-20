@@ -61,7 +61,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取功能按钮详情", notes = "获取功能按钮详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮Id", paramType = "path"),
     })
     @GetMapping("/{actionId}/info")
     public ResultBody<BaseAction> getAction(@PathVariable("actionId") Long actionId) {
@@ -81,12 +81,12 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "添加功能按钮", notes = "添加功能按钮")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
-            @ApiImplicitParam(name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(name = "menuId", required = true, value = "上级菜单", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "上级菜单", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionDesc", required = false, value = "描述", paramType = "form"),
     })
     @PostMapping("/add")
     public ResultBody<Long> addAction(
@@ -129,13 +129,13 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "编辑功能按钮", notes = "添加功能按钮")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
-            @ApiImplicitParam(name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
-            @ApiImplicitParam(name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
-            @ApiImplicitParam(name = "menuId", required = true, value = "上级菜单", paramType = "form"),
-            @ApiImplicitParam(name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
-            @ApiImplicitParam(name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
-            @ApiImplicitParam(name = "actionDesc", required = false, value = "描述", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionCode", required = true, value = "功能按钮编码", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionName", required = true, value = "功能按钮名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "menuId", required = true, value = "上级菜单", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "priority", required = false, value = "优先级越小越靠前", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionDesc", required = false, value = "描述", paramType = "form"),
     })
     @PostMapping("/update")
     public ResultBody updateAction(
@@ -170,7 +170,7 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "移除功能按钮", notes = "移除功能按钮")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
     })
     @PostMapping("/remove")
     public ResultBody removeAction(

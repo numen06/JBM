@@ -53,7 +53,7 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "查询策略已绑定API列表", notes = "获取分页接口列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", paramType = "form"),
     })
     @GetMapping("/gateway/limit/ip/api/list")
     public ResultBody<List<GatewayIpLimitApi>> getIpLimitApiList(
@@ -71,8 +71,8 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "绑定API", notes = "一个API只能绑定一个策略")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
-            @ApiImplicitParam(name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", value = "策略ID", defaultValue = "", required = true, paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "apiIds", value = "API接口ID.多个以,隔开.选填", defaultValue = "", required = false, paramType = "form")
     })
     @PostMapping("/gateway/limit/ip/api/add")
     public ResultBody addIpLimitApis(
@@ -92,7 +92,7 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "获取IP限制", notes = "获取IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "策略ID", paramType = "path"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "策略ID", paramType = "path"),
     })
     @GetMapping("/gateway/limit/ip/{policyId}/info")
     public ResultBody<GatewayIpLimit> getIpLimit(@PathVariable("policyId") Long policyId) {
@@ -109,9 +109,9 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "添加IP限制", notes = "添加IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
-            @ApiImplicitParam(name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
     })
     @PostMapping("/gateway/limit/ip/add")
     public ResultBody<Long> addIpLimit(
@@ -144,10 +144,10 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "编辑IP限制", notes = "编辑IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "接口Id", paramType = "form"),
-            @ApiImplicitParam(name = "policyName", required = true, value = "策略名称", paramType = "form"),
-            @ApiImplicitParam(name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
-            @ApiImplicitParam(name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "接口Id", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyName", required = true, value = "策略名称", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyType", required = true, value = "策略类型:0-拒绝/黑名单 1-允许/白名单", allowableValues = "0,1", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "ipAddress", required = true, value = "ip地址/IP段:多个用隔开;最多10个", paramType = "form")
     })
     @PostMapping("/gateway/limit/ip/update")
     public ResultBody updateIpLimit(
@@ -175,7 +175,7 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "移除IP限制", notes = "移除IP限制")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "policyId", required = true, value = "policyId", paramType = "form"),
+            @ApiImplicitParam(dataTypeClass = String.class, name = "policyId", required = true, value = "policyId", paramType = "form"),
     })
     @PostMapping("/gateway/limit/ip/remove")
     public ResultBody removeIpLimit(
