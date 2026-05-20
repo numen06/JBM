@@ -13,7 +13,10 @@ import java.util.Map;
  * @program: JBM7
  * @author: wesley.zhang
  * @create: 2020-02-19 21:31
+ * @deprecated 自 7.3.0 起废弃。Controller 请使用显式 DTO（如 {@link com.jbm.framework.usage.form.PageSearchForm}、
+ * {@link com.jbm.framework.usage.form.EntityPageSearchForm} 或业务模块下的 *Form），勿再从通用请求体反序列化实体。
  **/
+@Deprecated
 @Data
 @ApiModel(value = "分页请求实体")
 public class PageRequestBody extends BaseRequsetBody {

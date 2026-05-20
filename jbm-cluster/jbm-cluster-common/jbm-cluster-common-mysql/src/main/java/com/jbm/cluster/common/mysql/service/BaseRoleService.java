@@ -3,7 +3,7 @@ package com.jbm.cluster.common.mysql.service;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseRoleForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 public interface BaseRoleService extends IMasterDataService<BaseRole> {
 
 
-    DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseRole> findListPage(BaseRoleForm form);
 
     /**
      * 查询列表

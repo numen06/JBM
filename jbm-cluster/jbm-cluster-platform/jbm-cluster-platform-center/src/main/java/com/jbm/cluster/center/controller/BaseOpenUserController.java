@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseOpenUser;
 import com.jbm.cluster.common.mysql.service.BaseOpenUserService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "开放用户信息开放接口")
 @RestController
 @RequestMapping("/baseOpenUser")
-public class BaseOpenUserController extends MasterDataCollection<BaseOpenUser, BaseOpenUserService> {
+public class BaseOpenUserController extends BaseController {
 }

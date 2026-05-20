@@ -2,7 +2,7 @@ package com.jbm.cluster.common.mysql.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 
-    DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseMenu> findListPage(BaseMenuForm form);
 
     List<BaseMenu> findPlatformList(BaseMenu baseMenu);
 

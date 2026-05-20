@@ -8,9 +8,11 @@ import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.common.mysql.mapper.GatewayIpLimitApiMapper;
 import com.jbm.cluster.common.mysql.mapper.GatewayIpLimitMapper;
 import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.GatewayIpLimitForm;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,14 +42,14 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLi
      * @return
      */
     @Override
-    public DataPaging<GatewayIpLimit> findListPage(PageRequestBody pageRequestBody) {
-        GatewayIpLimit query = pageRequestBody.tryGet(GatewayIpLimit.class);
+    public DataPaging<GatewayIpLimit> findListPage(GatewayIpLimitForm form) {
         QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayIpLimit::getPolicyName, query.getPolicyName())
-                .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayIpLimit::getPolicyType, query.getPolicyType());
+                .likeRight(ObjectUtils.isNotEmpty(form.getPolicyName()), GatewayIpLimit::getPolicyName, form.getPolicyName())
+                .eq(ObjectUtils.isNotEmpty(form.getPolicyType()), GatewayIpLimit::getPolicyType, form.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.form;
 
 import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,4 +25,8 @@ public class BaseRoleForm extends BaseRole {
     private Date beginTime;
     @ApiModelProperty("结束时间")
     private Date endTime;
+    @ApiModelProperty("分页参数")
+    private PageForm pageForm;
+    @ApiModelProperty("成员用户ID，逗号分隔")
+    private String userIds;
 }

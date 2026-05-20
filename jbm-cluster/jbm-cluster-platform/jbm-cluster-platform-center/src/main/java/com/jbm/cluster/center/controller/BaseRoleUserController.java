@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.cluster.common.mysql.service.BaseRoleUserService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/baseRoleUser")
-public class BaseRoleUserController extends MasterDataCollection<BaseRoleUser, BaseRoleUserService> {
+public class BaseRoleUserController extends BaseController {
 }

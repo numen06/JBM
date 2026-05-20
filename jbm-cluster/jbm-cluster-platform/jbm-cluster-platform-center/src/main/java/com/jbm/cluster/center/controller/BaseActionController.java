@@ -4,9 +4,9 @@ import com.jbm.cluster.api.entitys.auth.AuthorityAction;
 import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseActionForm;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -15,7 +15,6 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 
 /**
  * @author wesley.zhang
@@ -23,7 +22,7 @@ import java.util.Map;
 @Api(tags = "系统功能按钮管理")
 @RestController
 @RequestMapping("/action")
-public class BaseActionController extends MasterDataCollection<BaseAction, BaseActionService> {
+public class BaseActionController extends BaseController {
     @Autowired
     private BaseActionService baseActionService;
     @Autowired
@@ -36,8 +35,8 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @GetMapping("/")
-    public ResultBody<DataPaging<BaseAction>> findActionListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseActionService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseAction>> findActionListPage(@ModelAttribute BaseActionForm form) {
+        return ResultBody.callback(() -> baseActionService.findListPage(form));
     }
 
 
@@ -48,8 +47,8 @@ public class BaseActionController extends MasterDataCollection<BaseAction, BaseA
      */
     @ApiOperation(value = "获取分页功能按钮列表", notes = "获取分页功能按钮列表")
     @PostMapping("/findListPage")
-    public ResultBody<DataPaging<BaseAction>> findActionListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
-        return ResultBody.callback(() -> baseActionService.findListPage(pageRequestBody));
+    public ResultBody<DataPaging<BaseAction>> findActionListPagePost(@RequestBody(required = false) BaseActionForm form) {
+        return ResultBody.callback(() -> baseActionService.findListPage(form));
     }
 
 

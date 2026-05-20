@@ -3,7 +3,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.center.CustomFormsItem;
 import com.jbm.cluster.common.mysql.service.CustomFormsItemService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,5 +15,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "自定义表单字段开放接口")
 @RestController
 @RequestMapping("/customFormsItem")
-public class CustomFormsItemController extends MasterDataCollection<CustomFormsItem, CustomFormsItemService> {
+public class CustomFormsItemController extends BaseController {
 }

@@ -3,10 +3,10 @@ package com.jbm.cluster.center.controller;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
+import com.jbm.cluster.api.form.BaseRoleForm;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -23,7 +23,7 @@ import java.util.List;
 @Api(tags = "系统角色管理")
 @RestController
 @RequestMapping("/role")
-public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleService> {
+public class BaseRoleController extends BaseController {
     @Autowired
     private BaseRoleService baseRoleService;
 
@@ -34,8 +34,8 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @PostMapping("")
-    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
-        return ResultBody.callback(() -> baseRoleService.findListPage(pageRequestBody));
+    public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) BaseRoleForm form) {
+        return ResultBody.callback(() -> baseRoleService.findListPage(form));
     }
 
     /**
@@ -78,15 +78,10 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/add")
-    public ResultBody<Long> addRole(@RequestBody(required = false) PageRequestBody pageRequestBody) {
-//        BaseRole role = new BaseRole();
-//        role.setRoleCode(roleCode);
-//        role.setRoleName(roleName);
-//        role.setStatus(status);
-//        role.setRoleDesc(roleDesc);
+    public ResultBody<Long> addRole(@RequestBody(required = false) BaseRoleForm form) {
         return ResultBody.callback(() -> {
             Long roleId = null;
-            BaseRole result = baseRoleService.addRole(pageRequestBody.tryGet(BaseRole.class));
+            BaseRole result = baseRoleService.addRole(form);
             if (result != null) {
                 roleId = result.getRoleId();
             }
@@ -108,21 +103,8 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(dataTypeClass = String.class, name = "status", required = true, defaultValue = "1", allowableValues = "0,1", value = "是否启用", paramType = "form")
     })
     @PostMapping("/update")
-    public ResultBody updateRole(
-//            @RequestParam(value = "roleId") Long roleId,
-//            @RequestParam(value = "roleCode") String roleCode,
-//            @RequestParam(value = "roleName") String roleName,
-//            @RequestParam(value = "roleDesc", required = false) String roleDesc,
-//            @RequestParam(value = "status", defaultValue = "1", required = false) Integer status
-            @RequestBody(required = false) PageRequestBody pageRequestBody
-    ) {
-//        BaseRole role = new BaseRole();
-//        role.setRoleId(roleId);
-//        role.setRoleCode(roleCode);
-//        role.setRoleName(roleName);
-//        role.setStatus(status);
-//        role.setRoleDesc(roleDesc);
-        baseRoleService.updateRole(pageRequestBody.tryGet(BaseRole.class));
+    public ResultBody updateRole(@RequestBody(required = false) BaseRoleForm form) {
+        baseRoleService.updateRole(form);
         return ResultBody.ok();
     }
 
@@ -137,10 +119,8 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
             @ApiImplicitParam(dataTypeClass = String.class, name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
     })
     @PostMapping("/remove")
-    public ResultBody removeRole(@RequestBody(required = false) PageRequestBody pageRequestBody
-//            @RequestParam(value = "roleId") Long roleId
-    ) {
-        baseRoleService.removeRole(pageRequestBody.tryGet(BaseRole.class).getRoleId());
+    public ResultBody removeRole(@RequestBody(required = false) BaseRoleForm form) {
+        baseRoleService.removeRole(form.getRoleId());
         return ResultBody.ok();
     }
 
@@ -151,14 +131,9 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "角色添加成员", notes = "角色添加成员")
     @PostMapping("/users/add")
-    public ResultBody addUserRoles(
-//            @RequestParam(value = "roleId") Long roleId,
-//            @RequestParam(value = "userIds", required = false) String userIds
-            @RequestBody(required = false) PageRequestBody pageRequestBody
-    ) {
-        BaseRole role = pageRequestBody.tryGet(BaseRole.class);
-        String[] userIds = StrUtil.splitToArray(pageRequestBody.getString("userIds"), ',');
-        baseRoleService.saveRoleUsers(role.getRoleId(), userIds);
+    public ResultBody addUserRoles(@RequestBody(required = false) BaseRoleForm form) {
+        String[] userIds = StrUtil.splitToArray(form.getUserIds(), ',');
+        baseRoleService.saveRoleUsers(form.getRoleId(), userIds);
         return ResultBody.ok();
     }
 
@@ -169,12 +144,8 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      */
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
     @PostMapping("/users")
-    public ResultBody<List<BaseRoleUser>> getRoleUsers(
-//            @RequestParam(value = "roleId") Long roleId
-            @RequestBody(required = false) PageRequestBody pageRequestBody
-    ) {
-        BaseRole role = pageRequestBody.tryGet(BaseRole.class);
-        return ResultBody.callback(() -> baseRoleService.findRoleUsers(role.getRoleId()));
+    public ResultBody<List<BaseRoleUser>> getRoleUsers(@RequestBody(required = false) BaseRoleForm form) {
+        return ResultBody.callback(() -> baseRoleService.findRoleUsers(form.getRoleId()));
     }
 
 }

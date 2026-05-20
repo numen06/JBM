@@ -19,10 +19,8 @@ import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.form.IdsForm;
-import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
@@ -46,39 +44,39 @@ import java.util.regex.Pattern;
 @Api(tags = "系统用户管理")
 @RestController
 @RequestMapping("/user")
-public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserBusiness> implements IBaseUserServiceClient {
+public class BaseUserController extends BaseController implements IBaseUserServiceClient {
     @Autowired
     private BaseUserBusiness baseUserBusiness;
     @Autowired
     private BaseRoleService baseRoleService;
 
-    @Override
-    public ResultBody<List<BaseUser>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+    public ResultBody<List<BaseUser>> list(@RequestBody(required = false) BaseUserForm form) {
         try {
-            validator(masterDataRequsetBody);
-            BaseUserForm baseUserForm = masterDataRequsetBody.tryGet(BaseUserForm.class);
-            if (ObjectUtil.isNotEmpty(baseUserForm.getDateRange())) {
-                baseUserForm.setBeginTime(baseUserForm.getDateRange()[0]);
-                baseUserForm.setEndTime(baseUserForm.getDateRange()[1]);
+            if (form == null) {
+                form = new BaseUserForm();
             }
-            List<BaseUser> list = this.service.selectEntitys(baseUserForm);
+            if (ObjectUtil.isNotEmpty(form.getDateRange())) {
+                form.setBeginTime(form.getDateRange()[0]);
+                form.setEndTime(form.getDateRange()[1]);
+            }
+            List<BaseUser> list = baseUserBusiness.selectEntitys(form);
             return ResultBody.success(list, "查询列表成功");
         } catch (Exception e) {
             return ResultBody.error(e);
         }
     }
 
-    @Override
-    public ResultBody<DataPaging<BaseUser>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+    public ResultBody<DataPaging<BaseUser>> pageList(@RequestBody(required = false) BaseUserForm form) {
         try {
-            validator(pageRequestBody);
-            BaseUserForm baseUserForm = pageRequestBody.tryGet(BaseUserForm.class);
-            if (ObjectUtil.isNotEmpty(baseUserForm.getDateRange())) {
-                baseUserForm.setBeginTime(baseUserForm.getDateRange()[0]);
-                baseUserForm.setEndTime(baseUserForm.getDateRange()[1]);
+            if (form == null) {
+                form = new BaseUserForm();
             }
-            PageForm pageForm = pageRequestBody.getPageForm();
-            DataPaging<BaseUser> dataPaging = this.service.selectEntitys(baseUserForm, pageForm);
+            if (ObjectUtil.isNotEmpty(form.getDateRange())) {
+                form.setBeginTime(form.getDateRange()[0]);
+                form.setEndTime(form.getDateRange()[1]);
+            }
+            PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+            DataPaging<BaseUser> dataPaging = baseUserBusiness.selectEntitys(form, pageForm);
             return ResultBody.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -89,7 +87,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserB
     @GetMapping("/getUserInfoById")
     @Override
     public ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.callback(() -> this.service.selectById(userId));
+        return ResultBody.callback(() -> baseUserBusiness.selectById(userId));
     }
 
     /**
@@ -112,15 +110,14 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserB
     @ApiOperation(value = "保存用户信息")
     @PostMapping("/save")
     @OperatorLog
-    @Override
-    public ResultBody<BaseUser> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+    public ResultBody<BaseUser> save(@RequestBody(required = false) BaseUserForm form) {
         return ResultBody.callback("保存用户信息成功", () -> {
-            validator(masterDataRequsetBody);
-            BaseUser entity = validatorMasterData(masterDataRequsetBody, true);
-            entity = service.saveEntity(entity);
-            BaseUserForm baseUserForm = masterDataRequsetBody.toJavaObject(BaseUserForm.class);
-            if (ObjectUtil.isNotEmpty(baseUserForm.getRoleIds())) {
-                baseRoleService.saveUserRoles(entity.getUserId(), baseUserForm.getRoleIds());
+            if (form == null) {
+                throw new ServiceException("参数错误");
+            }
+            BaseUser entity = baseUserBusiness.saveEntity(form);
+            if (ObjectUtil.isNotEmpty(form.getRoleIds())) {
+                baseRoleService.saveUserRoles(entity.getUserId(), form.getRoleIds());
             }
             return entity;
         });
@@ -153,8 +150,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserB
      */
     @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("")
-    public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseUserBusiness.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseUser>> getUserList(@ModelAttribute BaseUserForm form) {
+        return ResultBody.callback(() -> baseUserBusiness.findListPage(form != null ? form : new BaseUserForm()));
     }
 
     /**
@@ -207,7 +204,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserB
     @ApiOperation(value = "注销账号", notes = "申请注销账号")
     @PostMapping("/close")
     public ResultBody<Boolean> close(@RequestBody BaseUser baseUser) {
-        return ResultBody.callback(() -> this.service.close(baseUser));
+        return ResultBody.callback(() -> baseUserBusiness.close(baseUser));
     }
 
     /**

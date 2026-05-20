@@ -5,7 +5,6 @@ import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
@@ -52,9 +51,7 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @GetMapping("/gateway/route")
-    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestParam(required = false) Map map) {
-        GatewayRoutePageForm gatewayRoutePageForm = new GatewayRoutePageForm();
-        gatewayRoutePageForm.setPageForm(PageRequestBody.from(map).getPageForm());
+    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@ModelAttribute GatewayRoutePageForm gatewayRoutePageForm) {
         return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
     }
 
@@ -66,7 +63,7 @@ public class GatewayRouteController {
      */
     @ApiOperation(value = "获取分页路由列表", notes = "获取分页路由列表")
     @PostMapping("/gateway/routePage")
-    public ResultBody<DataPaging<GatewayRoute>> getRouteListPage(@RequestBody(required = false) GatewayRoutePageForm gatewayRoutePageForm) {
+    public ResultBody<DataPaging<GatewayRoute>> getRouteListPagePost(@RequestBody(required = false) GatewayRoutePageForm gatewayRoutePageForm) {
         return ResultBody.callback(() -> gatewayRouteService.findListPage(gatewayRoutePageForm));
     }
 

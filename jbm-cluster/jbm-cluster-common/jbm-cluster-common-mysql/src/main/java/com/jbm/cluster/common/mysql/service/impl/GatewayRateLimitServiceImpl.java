@@ -8,9 +8,11 @@ import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.common.mysql.mapper.GatewayRateLimitApiMapper;
 import com.jbm.cluster.common.mysql.mapper.GatewayRateLimitMapper;
 import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.GatewayRateLimitForm;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,14 +41,14 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      * @return
      */
     @Override
-    public DataPaging<GatewayRateLimit> findListPage(PageRequestBody pageRequestBody) {
-        GatewayRateLimit query = pageRequestBody.tryGet(GatewayRateLimit.class);
+    public DataPaging<GatewayRateLimit> findListPage(GatewayRateLimitForm form) {
         QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getPolicyName()), GatewayRateLimit::getPolicyName, query.getPolicyName())
-                .eq(ObjectUtils.isNotEmpty(query.getPolicyType()), GatewayRateLimit::getPolicyType, query.getPolicyType());
+                .likeRight(ObjectUtils.isNotEmpty(form.getPolicyName()), GatewayRateLimit::getPolicyName, form.getPolicyName())
+                .eq(ObjectUtils.isNotEmpty(form.getPolicyType()), GatewayRateLimit::getPolicyType, form.getPolicyType());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

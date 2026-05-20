@@ -6,7 +6,7 @@ import com.jbm.cluster.api.form.center.CustomFormsForm;
 import com.jbm.cluster.api.result.CustomFormsResult;
 import com.jbm.cluster.common.mysql.service.CustomFormsService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import javax.validation.Valid;
 @Api(tags = "自定义表单开放接口")
 @RestController
 @RequestMapping("/customForms")
-public class CustomFormsController extends MasterDataCollection<CustomForms, CustomFormsService> {
+public class CustomFormsController extends BaseController {
 
     @Autowired
     private CustomFormsService customFormsService;

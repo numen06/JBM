@@ -4,7 +4,7 @@ import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.GatewayIpLimitForm;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 网关IP访问控制
@@ -41,8 +40,8 @@ public class GatewayIpLimitController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/ip")
-    public ResultBody<DataPaging<GatewayIpLimit>> getIpLimitListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> gatewayIpLimitService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<GatewayIpLimit>> getIpLimitListPage(@ModelAttribute GatewayIpLimitForm form) {
+        return ResultBody.callback(() -> gatewayIpLimitService.findListPage(form != null ? form : new GatewayIpLimitForm()));
     }
 
     /**

@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/baseAccount")
-public class BaseAccountController extends MasterDataCollection<BaseAccount, BaseAccountService> {
+public class BaseAccountController extends BaseController {
 }

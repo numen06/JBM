@@ -2,7 +2,7 @@ package com.jbm.cluster.common.mysql.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseActionForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      */
     BaseAction getAction(Long actionId);
 
-    DataPaging<BaseAction> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseAction> findListPage(BaseActionForm form);
 
     /**
      * 查询菜单下所有操作

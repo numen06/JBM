@@ -4,7 +4,7 @@ import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
 import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.GatewayRateLimitForm;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 网关流量控制
@@ -41,8 +40,8 @@ public class GatewayRateLimitController {
      */
     @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
     @GetMapping("/gateway/limit/rate")
-    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> gatewayRateLimitService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<GatewayRateLimit>> getRateLimitListPage(@ModelAttribute GatewayRateLimitForm form) {
+        return ResultBody.callback(() -> gatewayRateLimitService.findListPage(form != null ? form : new GatewayRateLimitForm()));
     }
 
     /**

@@ -15,7 +15,9 @@ import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseMenuForm;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
@@ -59,13 +61,13 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseMenu> findListPage(PageRequestBody pageRequestBody) {
-        BaseMenu query = pageRequestBody.tryGet(BaseMenu.class);
+    public DataPaging<BaseMenu> findListPage(BaseMenuForm form) {
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getMenuCode()), BaseMenu::getMenuCode, query.getMenuCode())
-                .likeRight(ObjectUtils.isNotEmpty(query.getMenuName()), BaseMenu::getMenuName, query.getMenuName());
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+                .likeRight(ObjectUtils.isNotEmpty(form.getMenuCode()), BaseMenu::getMenuCode, form.getMenuCode())
+                .likeRight(ObjectUtils.isNotEmpty(form.getMenuName()), BaseMenu::getMenuName, form.getMenuName());
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

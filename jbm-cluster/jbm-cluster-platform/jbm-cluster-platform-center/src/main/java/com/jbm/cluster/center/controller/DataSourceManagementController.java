@@ -6,7 +6,7 @@ import com.jbm.cluster.api.entitys.center.DataSourceManagement;
 import com.jbm.cluster.api.form.center.DataSourceManagementForm;
 import com.jbm.cluster.common.mysql.service.DataSourceManagementService;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import javax.validation.Valid;
 @Api(tags = "数据源管理开放接口")
 @RestController
 @RequestMapping("/dataSourceManagement")
-public class DataSourceManagementController extends MasterDataCollection<DataSourceManagement, DataSourceManagementService> {
+public class DataSourceManagementController extends BaseController {
 
     @Autowired
     private DataSourceManagementService dataSourceManagementService;

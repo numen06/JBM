@@ -5,9 +5,9 @@ import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseAppForm;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -15,8 +15,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 系统用户信息
@@ -26,7 +24,7 @@ import java.util.Map;
 @Api(tags = "系统应用管理")
 @RestController
 @RequestMapping("/app")
-public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppService> implements IBaseAppServiceClient {
+public class BaseAppController extends BaseController implements IBaseAppServiceClient {
     @Autowired
     private BaseAppService baseAppService;
     @Autowired
@@ -39,8 +37,8 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      */
     @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
     @GetMapping("/")
-    public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseAppService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseApp>> getAppListPage(@ModelAttribute BaseAppForm form) {
+        return ResultBody.callback(() -> baseAppService.findListPage(form != null ? form : new BaseAppForm()));
     }
 
     /**

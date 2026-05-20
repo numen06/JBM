@@ -7,9 +7,10 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,13 +23,17 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "应用配置管理接口")
 @RestController
 @RequestMapping("/baseAppConfig")
-public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig, BaseAppConfigService> {
+public class BaseAppConfigController extends BaseController {
+
+    @Autowired
+    private BaseAppConfigService baseAppConfigService;
+
     @PermitAll
     @ApiOperation("获取应用配置")
     @GetMapping("/getAppConfigByKey")
     public ResultBody<String> getAppConfigByKey(@RequestParam(required = true) String appKey) {
         return ResultBody.callback(() -> {
-            BaseAppConfig baseAppConfig = service.getAppConfigByKey(appKey, null);
+            BaseAppConfig baseAppConfig = baseAppConfigService.getAppConfigByKey(appKey, null);
             if (ObjectUtil.isEmpty(baseAppConfig)) {
                 return null;
             }
@@ -37,7 +42,7 @@ public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig,
                 if (LoginHelper.isAdmin()) {
                     return baseAppConfig.getConfigContent();
                 }
-                baseAppConfig = service.getAppConfigByKey(appKey, LoginHelper.getLoginUser().getCompanyId());
+                baseAppConfig = baseAppConfigService.getAppConfigByKey(appKey, LoginHelper.getLoginUser().getCompanyId());
             }
             return baseAppConfig.getConfigContent();
         });

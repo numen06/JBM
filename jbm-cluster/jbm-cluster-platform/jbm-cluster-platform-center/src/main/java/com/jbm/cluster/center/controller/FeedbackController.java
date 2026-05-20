@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.Feedback;
 import com.jbm.cluster.common.mysql.service.FeedbackService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "反馈管理开放接口")
 @RestController
 @RequestMapping("/feedback")
-public class FeedbackController extends MasterDataCollection<Feedback, FeedbackService> {
+public class FeedbackController extends BaseController {
 }

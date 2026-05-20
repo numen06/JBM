@@ -14,7 +14,6 @@ import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -51,17 +50,13 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
      * @return
      */
     @Override
-    public DataPaging<BaseRole> findListPage(PageRequestBody pageRequestBody) {
-//        BaseRole query = pageRequestBody.tryGet(BaseRole.class);
-//        QueryWrapper<BaseRole> queryWrapper = new QueryWrapper();
-//        queryWrapper.lambda()
-//                .likeRight(ObjectUtils.isNotEmpty(query.getRoleCode()), BaseRole::getRoleCode, query.getRoleCode())
-//                .likeRight(ObjectUtils.isNotEmpty(query.getRoleName()), BaseRole::getRoleName, query.getRoleName());
-//        queryWrapper.orderByDesc("create_time");
-//        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
-        PageForm pageForm = pageRequestBody.getPageForm();
+    public DataPaging<BaseRole> findListPage(BaseRoleForm roleForm) {
+        PageForm pageForm = roleForm.getPageForm();
+        if (pageForm == null) {
+            pageForm = new PageForm();
+            roleForm.setPageForm(pageForm);
+        }
         pageForm.setSortRule("base_role.create_time");
-        BaseRoleForm roleForm = pageRequestBody.tryGet(BaseRoleForm.class);
         roleForm.setUserId(ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin() ? null : LoginHelper.getUserId());
         // 根据时间过滤
         if (ObjectUtil.isNotEmpty(roleForm.getDateRange())) {

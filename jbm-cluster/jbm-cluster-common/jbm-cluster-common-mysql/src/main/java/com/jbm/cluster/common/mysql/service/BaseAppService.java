@@ -2,7 +2,7 @@ package com.jbm.cluster.common.mysql.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseAppForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 /**
@@ -18,7 +18,7 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseApp> findListPage(BaseAppForm form);
 
     /**
      * 获取app信息

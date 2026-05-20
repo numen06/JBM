@@ -11,7 +11,9 @@ import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseDeveloperForm;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
@@ -123,16 +125,16 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
      * @return
      */
     @Override
-    public DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody) {
-        BaseDeveloper query = pageRequestBody.tryGet(BaseDeveloper.class);
+    public DataPaging<BaseDeveloper> findListPage(BaseDeveloperForm form) {
         QueryWrapper<BaseDeveloper> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseDeveloper::getUserId, query.getUserId())
-                .eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseDeveloper::getUserType, query.getUserType())
-                .eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseDeveloper::getUserName, query.getUserName())
-                .eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseDeveloper::getMobile, query.getMobile());
+                .eq(ObjectUtils.isNotEmpty(form.getUserId()), BaseDeveloper::getUserId, form.getUserId())
+                .eq(ObjectUtils.isNotEmpty(form.getUserType()), BaseDeveloper::getUserType, form.getUserType())
+                .eq(ObjectUtils.isNotEmpty(form.getUserName()), BaseDeveloper::getUserName, form.getUserName())
+                .eq(ObjectUtils.isNotEmpty(form.getMobile()), BaseDeveloper::getMobile, form.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

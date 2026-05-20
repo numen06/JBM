@@ -3,7 +3,7 @@ package com.jbm.cluster.common.mysql.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseApiForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
      * @param pageRequestBody
      * @return
      */
-    DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseApi> findListPage(BaseApiForm form);
 
     /**
      * 查询列表

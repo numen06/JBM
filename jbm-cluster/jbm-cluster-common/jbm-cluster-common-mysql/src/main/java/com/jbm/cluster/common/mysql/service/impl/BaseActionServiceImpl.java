@@ -10,9 +10,11 @@ import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseActionForm;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,15 +46,15 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
      * @return
      */
     @Override
-    public DataPaging<BaseAction> findListPage(PageRequestBody pageRequestBody) {
-        BaseAction query = pageRequestBody.tryGet(BaseAction.class);
+    public DataPaging<BaseAction> findListPage(BaseActionForm form) {
         QueryWrapper<BaseAction> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(query.getActionCode()), BaseAction::getActionCode, query.getActionCode())
-                .likeRight(ObjectUtils.isNotEmpty(query.getActionName()), BaseAction::getActionName, query.getActionName())
-                .eq(ObjectUtils.isNotEmpty(query.getMenuId()), BaseAction::getMenuId, query.getMenuId());
+                .likeRight(ObjectUtils.isNotEmpty(form.getActionCode()), BaseAction::getActionCode, form.getActionCode())
+                .likeRight(ObjectUtils.isNotEmpty(form.getActionName()), BaseAction::getActionName, form.getActionName())
+                .eq(ObjectUtils.isNotEmpty(form.getMenuId()), BaseAction::getMenuId, form.getMenuId());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

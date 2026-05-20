@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityApp;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityAppService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/baseAuthorityApp")
-public class BaseAuthorityAppController extends MasterDataCollection<BaseAuthorityApp, BaseAuthorityAppService> {
+public class BaseAuthorityAppController extends BaseController {
 }

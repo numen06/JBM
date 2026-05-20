@@ -3,6 +3,8 @@ package com.jbm.cluster.center.integration;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseRoleForm;
+import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.center.controller.BaseAppController;
 import com.jbm.cluster.center.controller.BaseAuthorityController;
 import com.jbm.cluster.center.controller.BaseDeveloperController;
@@ -11,8 +13,6 @@ import com.jbm.cluster.center.controller.BaseRoleController;
 import com.jbm.cluster.center.controller.BaseUserController;
 import com.jbm.cluster.center.integration.support.CenterH2ApiTestSupport;
 import com.jbm.cluster.core.constant.JbmConstants;
-import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import org.junit.jupiter.api.DisplayName;
@@ -69,9 +69,9 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @DisplayName("角色：新增-查询-改-授权-删")
     void role_crudAndGrant() {
         String code = "it_role_" + System.nanoTime();
-        PageRequestBody addBody = JSON.parseObject(
+        BaseRoleForm addBody = JSON.parseObject(
                 "{\"roleCode\":\"" + code + "\",\"roleName\":\"集成测试角色\",\"status\":1,\"roleDesc\":\"h2-it\"}",
-                PageRequestBody.class);
+                BaseRoleForm.class);
 
         ResultBody<Long> added = baseRoleController.addRole(addBody);
         assertSuccess(added);
@@ -82,10 +82,10 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
         assertSuccess(info);
         assertThat(info.getResult().getRoleCode()).isEqualTo(code);
 
-        PageRequestBody updateBody = JSON.parseObject(
+        BaseRoleForm updateBody = JSON.parseObject(
                 "{\"roleId\":" + roleId + ",\"roleCode\":\"" + code
                         + "\",\"roleName\":\"集成测试角色-已改\",\"status\":1}",
-                PageRequestBody.class);
+                BaseRoleForm.class);
         ResultBody<?> updated = baseRoleController.updateRole(updateBody);
         assertSuccess(updated);
 
@@ -103,7 +103,7 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
         assertSuccess(roleAuth);
         assertThat(roleAuth.getResult()).isNotEmpty();
 
-        PageRequestBody removeBody = JSON.parseObject("{\"roleId\":" + roleId + "}", PageRequestBody.class);
+        BaseRoleForm removeBody = JSON.parseObject("{\"roleId\":" + roleId + "}", BaseRoleForm.class);
         ResultBody<?> removed = baseRoleController.removeRole(removeBody);
         assertSuccess(removed);
     }
@@ -152,12 +152,12 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @Test
     @DisplayName("用户：列表与分页")
     void user_listAndPage() {
-        ResultBody<List<BaseUser>> list = baseUserController.list(new MasterDataRequsetBody());
+        ResultBody<List<BaseUser>> list = baseUserController.list(new BaseUserForm());
         assertSuccess(list);
         assertThat(list.getResult()).isNotEmpty();
 
-        PageRequestBody pageBody = JSON.parseObject(
-                "{\"pageForm\":{\"pageNo\":1,\"pageSize\":10}}", PageRequestBody.class);
+        BaseUserForm pageBody = JSON.parseObject(
+                "{\"pageForm\":{\"pageNo\":1,\"pageSize\":10}}", BaseUserForm.class);
         ResultBody<DataPaging<BaseUser>> page = baseUserController.pageList(pageBody);
         assertSuccess(page);
         assertThat(page.getResult().getContents()).isNotEmpty();

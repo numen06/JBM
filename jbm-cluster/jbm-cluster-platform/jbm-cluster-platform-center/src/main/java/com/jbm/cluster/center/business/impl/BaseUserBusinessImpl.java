@@ -32,7 +32,7 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
@@ -343,20 +343,22 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
      * @return
      */
     @Override
-    public DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody) {
-        BaseUser query = pageRequestBody.tryGet(BaseUser.class);
+    public DataPaging<BaseUser> findListPage(BaseUserForm form) {
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
-            // 用户不存在部门的情况下，仅查询自己的数据
-            query.setUserId(LoginHelper.getUserId());
+            form.setUserId(LoginHelper.getUserId());
         }
-        // 仅查询用户所属组织的数据
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
         queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
-        queryWrapper.lambda().eq(ObjectUtils.isNotEmpty(query.getUserId()), BaseUser::getUserId, query.getUserId()).eq(ObjectUtils.isNotEmpty(query.getUserType()), BaseUser::getUserType, query.getUserType()).eq(ObjectUtils.isNotEmpty(query.getUserName()), BaseUser::getUserName, query.getUserName()).eq(ObjectUtils.isNotEmpty(query.getMobile()), BaseUser::getMobile, query.getMobile());
+        queryWrapper.lambda()
+                .eq(ObjectUtils.isNotEmpty(form.getUserId()), BaseUser::getUserId, form.getUserId())
+                .eq(ObjectUtils.isNotEmpty(form.getUserType()), BaseUser::getUserType, form.getUserType())
+                .eq(ObjectUtils.isNotEmpty(form.getUserName()), BaseUser::getUserName, form.getUserName())
+                .eq(ObjectUtils.isNotEmpty(form.getMobile()), BaseUser::getMobile, form.getMobile());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

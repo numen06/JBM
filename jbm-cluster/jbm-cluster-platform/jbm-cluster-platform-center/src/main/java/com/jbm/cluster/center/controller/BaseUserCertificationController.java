@@ -13,7 +13,7 @@ import com.jbm.cluster.common.mysql.service.BaseUserCertificationService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.form.JsonRequestBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,7 +33,10 @@ import java.util.HashMap;
 @Api(tags = "用户实名认证开放接口")
 @RestController
 @RequestMapping("/baseUserCertification")
-public class BaseUserCertificationController extends MasterDataCollection<BaseUserCertification, BaseUserCertificationService> {
+public class BaseUserCertificationController extends BaseController {
+
+    @Autowired
+    private BaseUserCertificationService baseUserCertificationService;
 
     @Autowired(required = false)
     private AipFace aipFace;
@@ -70,13 +73,13 @@ public class BaseUserCertificationController extends MasterDataCollection<BaseUs
                 throw new ServiceException("人脸可信度差请重新上传");
             }
             JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
-            BaseUserCertification baseUserCertification = service.findByUserId(jbmLoginUser.getUserId());
+            BaseUserCertification baseUserCertification = baseUserCertificationService.findByUserId(jbmLoginUser.getUserId());
             if (ObjectUtil.isEmpty(baseUserCertification)) {
                 baseUserCertification = new BaseUserCertification();
             }
             baseUserCertification.setUserId(jbmLoginUser.getUserId());
             baseUserCertification.setFaceImage(faceImage);
-            service.saveEntity(baseUserCertification);
+            baseUserCertificationService.saveEntity(baseUserCertification);
             return baiduResult.getResult();
         });
     }
@@ -86,7 +89,7 @@ public class BaseUserCertificationController extends MasterDataCollection<BaseUs
     public ResultBody<BaseUserCertification> currentUserCert() {
         return ResultBody.callback(() -> {
             JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
-            BaseUserCertification baseUserCertification = service.findByUserId(jbmLoginUser.getUserId());
+            BaseUserCertification baseUserCertification = baseUserCertificationService.findByUserId(jbmLoginUser.getUserId());
             return baseUserCertification;
         });
     }

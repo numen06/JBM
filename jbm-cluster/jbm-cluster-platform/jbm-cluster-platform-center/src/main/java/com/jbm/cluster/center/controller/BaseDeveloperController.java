@@ -5,7 +5,7 @@ import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseDeveloperServiceClient;
 import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseDeveloperForm;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
@@ -13,13 +13,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 系统用户信息
@@ -57,8 +53,8 @@ public class BaseDeveloperController implements IBaseDeveloperServiceClient {
      */
     @ApiOperation(value = "系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("/developer")
-    public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseDeveloperService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseDeveloper>> getUserList(@RequestBody(required = false) BaseDeveloperForm form) {
+        return ResultBody.callback(() -> baseDeveloperService.findListPage(form != null ? form : new BaseDeveloperForm()));
     }
 
     /**

@@ -7,7 +7,6 @@ import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
@@ -37,7 +36,7 @@ public interface BaseUserBusiness extends BaseUserService {
 
     void updatePassword(Long userId, String password);
 
-    DataPaging<BaseUser> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseUser> findListPage(BaseUserForm form);
 
     UserAccount getUserAccount(Long userId);
 

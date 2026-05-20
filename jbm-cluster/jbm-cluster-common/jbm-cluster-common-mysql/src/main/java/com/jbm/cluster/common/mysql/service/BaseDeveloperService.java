@@ -3,7 +3,7 @@ package com.jbm.cluster.common.mysql.service;
 import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.framework.masterdata.service.IMasterDataService;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseDeveloperForm;
 import com.jbm.framework.usage.paging.DataPaging;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
     void updatePassword(Long userId, String password);
 
 
-    DataPaging<BaseDeveloper> findListPage(PageRequestBody pageRequestBody);
+    DataPaging<BaseDeveloper> findListPage(BaseDeveloperForm form);
 
     /**
      * 查询列表

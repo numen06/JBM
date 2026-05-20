@@ -9,7 +9,7 @@ import com.jbm.cluster.common.mysql.service.impl.BaseAppServiceImpl;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -26,7 +26,7 @@ import java.util.List;
 @Api(tags = "系统接口资源管理")
 @RestController
 @RequestMapping("/api")
-public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiService> implements IBaseApiServiceClient {
+public class BaseApiController extends BaseController implements IBaseApiServiceClient {
     @Autowired
     private BaseApiService apiService;
     @Autowired
@@ -44,7 +44,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
 //    @ApiOperation(value = "获取分页接口列表", notes = "获取分页接口列表")
 //    @GetMapping(value = "/api")
 //    public ResultBody<IPage<BaseApi>> getApiList(@RequestParam(required = false) Map map) {
-//        return ResultBody.callback(() -> apiService.findListPage(PageRequestBody.from(map)));
+//        return ResultBody.callback(() -> apiService.findListPage(cn.hutool.core.bean.BeanUtil.toBean(map, com.jbm.cluster.api.form.BaseApiForm.class)));
 //    }
 
 

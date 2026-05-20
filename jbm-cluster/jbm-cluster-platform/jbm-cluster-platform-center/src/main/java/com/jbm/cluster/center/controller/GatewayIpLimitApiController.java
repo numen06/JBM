@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.common.mysql.service.GatewayIpLimitApiService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/gatewayIpLimitApi")
-public class GatewayIpLimitApiController extends MasterDataCollection<GatewayIpLimitApi, GatewayIpLimitApiService> {
+public class GatewayIpLimitApiController extends BaseController {
 }

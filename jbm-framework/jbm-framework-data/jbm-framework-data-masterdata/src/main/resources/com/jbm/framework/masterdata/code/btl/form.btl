@@ -1,0 +1,17 @@
+package ${formPackage};
+
+import ${entityClassName};
+import com.jbm.framework.masterdata.usage.form.IMasterDataForm;
+import com.jbm.framework.usage.paging.PageForm;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@ApiModel("${entityClassSimpleName}Form")
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ${entityClassSimpleName}Form extends ${entityClassSimpleName} implements IMasterDataForm {
+    @ApiModelProperty("pageForm")
+    private PageForm pageForm;
+}

@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseUserConfig;
 import com.jbm.cluster.common.mysql.service.BaseUserConfigService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "用户配置管理")
 @RestController
 @RequestMapping("/baseUserConfig")
-public class BaseUserConfigController extends MasterDataCollection<BaseUserConfig, BaseUserConfigService> {
+public class BaseUserConfigController extends BaseController {
 }

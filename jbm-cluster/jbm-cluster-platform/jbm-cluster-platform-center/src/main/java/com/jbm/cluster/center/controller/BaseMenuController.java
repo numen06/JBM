@@ -11,9 +11,9 @@ import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.framework.metadata.bean.ResultBody;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -32,15 +32,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 /**
  * @author wesley.zhang
  */
 @Api(tags = "系统菜单资源管理")
 @RestController
 @RequestMapping("/menu")
-public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuService> {
+public class BaseMenuController extends BaseController {
     @Autowired
     private BaseMenuService baseResourceMenuService;
 
@@ -57,8 +55,8 @@ public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuS
      */
     @ApiOperation(value = "获取分页菜单资源列表", notes = "获取分页菜单资源列表")
     @GetMapping("/")
-    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@RequestParam(required = false) Map map) {
-        return ResultBody.callback(() -> baseResourceMenuService.findListPage(PageRequestBody.from(map)));
+    public ResultBody<DataPaging<BaseMenu>> getMenuListPage(@ModelAttribute BaseMenuForm form) {
+        return ResultBody.callback(() -> baseResourceMenuService.findListPage(form != null ? form : new BaseMenuForm()));
     }
 
     /**

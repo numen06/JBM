@@ -13,7 +13,9 @@ import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseApiForm;
+import com.jbm.framework.masterdata.usage.PageParams;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
@@ -57,18 +59,18 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      * @return
      */
     @Override
-    public DataPaging<BaseApi> findListPage(PageRequestBody pageRequestBody) {
-        BaseApi query = pageRequestBody.tryGet(BaseApi.class);
+    public DataPaging<BaseApi> findListPage(BaseApiForm form) {
         QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
         queryWrapper.lambda()
-                .like(ObjectUtils.isNotEmpty(query.getPath()), BaseApi::getPath, query.getPath())
-                .like(ObjectUtils.isNotEmpty(query.getApiName()), BaseApi::getApiName, query.getApiName())
-                .like(ObjectUtils.isNotEmpty(query.getApiCode()), BaseApi::getApiCode, query.getApiCode())
-                .eq(ObjectUtils.isNotEmpty(query.getServiceId()), BaseApi::getServiceId, query.getServiceId())
-                .eq(ObjectUtils.isNotEmpty(query.getStatus()), BaseApi::getStatus, query.getStatus())
-                .eq(ObjectUtils.isNotEmpty(query.getIsAuth()), BaseApi::getIsAuth, query.getIsAuth());
+                .like(ObjectUtils.isNotEmpty(form.getPath()), BaseApi::getPath, form.getPath())
+                .like(ObjectUtils.isNotEmpty(form.getApiName()), BaseApi::getApiName, form.getApiName())
+                .like(ObjectUtils.isNotEmpty(form.getApiCode()), BaseApi::getApiCode, form.getApiCode())
+                .eq(ObjectUtils.isNotEmpty(form.getServiceId()), BaseApi::getServiceId, form.getServiceId())
+                .eq(ObjectUtils.isNotEmpty(form.getStatus()), BaseApi::getStatus, form.getStatus())
+                .eq(ObjectUtils.isNotEmpty(form.getIsAuth()), BaseApi::getIsAuth, form.getIsAuth());
         queryWrapper.orderByDesc("create_time");
-        return this.selectEntitys(pageRequestBody.getPageParams(), queryWrapper);
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**

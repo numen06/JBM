@@ -16,9 +16,11 @@ import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.CriteriaQueryWrapper;
-import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.cluster.api.form.BaseAppForm;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.RandomValueUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,15 +77,15 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
      * @return
      */
     @Override
-    public DataPaging<BaseApp> findListPage(PageRequestBody pageRequestBody) {
-        BaseApp query = pageRequestBody.tryGet(BaseApp.class);
-        CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(pageRequestBody.getPageParams());
+    public DataPaging<BaseApp> findListPage(BaseAppForm form) {
+        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(PageParams.from(pageForm));
         cq.lambda()
-                .eq(ObjectUtils.isNotEmpty(query.getDeveloperId()), BaseApp::getDeveloperId, query.getDeveloperId())
-                .eq(ObjectUtils.isNotEmpty(query.getAppType()), BaseApp::getAppType, query.getAppType())
-                .eq(ObjectUtils.isNotEmpty(pageRequestBody.get("aid")), BaseApp::getAppId, pageRequestBody.get("aid"))
-                .likeRight(ObjectUtils.isNotEmpty(query.getAppName()), BaseApp::getAppName, query.getAppName())
-                .likeRight(ObjectUtils.isNotEmpty(query.getAppNameEn()), BaseApp::getAppNameEn, query.getAppNameEn());
+                .eq(ObjectUtils.isNotEmpty(form.getDeveloperId()), BaseApp::getDeveloperId, form.getDeveloperId())
+                .eq(ObjectUtils.isNotEmpty(form.getAppType()), BaseApp::getAppType, form.getAppType())
+                .eq(ObjectUtils.isNotEmpty(form.getAid()), BaseApp::getAppId, form.getAid())
+                .likeRight(ObjectUtils.isNotEmpty(form.getAppName()), BaseApp::getAppName, form.getAppName())
+                .likeRight(ObjectUtils.isNotEmpty(form.getAppNameEn()), BaseApp::getAppNameEn, form.getAppNameEn());
         cq.select("app.*,developer.user_name");
         //关联BaseDeveloper表
         cq.createAlias(BaseDeveloper.class);
