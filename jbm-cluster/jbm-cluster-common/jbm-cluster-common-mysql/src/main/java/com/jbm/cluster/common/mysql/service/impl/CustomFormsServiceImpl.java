@@ -2,12 +2,15 @@ package com.jbm.cluster.common.mysql.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.center.CustomForms;
 import com.jbm.cluster.api.entitys.center.CustomFormsItem;
 import com.jbm.cluster.api.form.center.CustomFormsForm;
 import com.jbm.cluster.api.result.CustomFormsResult;
+import com.jbm.cluster.common.mysql.extendfield.CustomFormsItemToFieldDefinitionConverter;
 import com.jbm.cluster.common.mysql.service.CustomFormsItemService;
 import com.jbm.cluster.common.mysql.service.CustomFormsService;
+import com.jbm.cluster.common.mysql.service.ExtendFormDefinitionService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,15 +25,25 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
     @Autowired
     private CustomFormsItemService customFormsItemService;
 
+    @Autowired(required = false)
+    private ExtendFormDefinitionService extendFormDefinitionService;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CustomForms saveData(CustomFormsForm form) {
-        //保存主表
         CustomForms customForms = this.saveEntity(form);
-        //保存子表
-        if(CollUtil.isNotEmpty(form.getCustomFormsItemList())){
+        if (CollUtil.isNotEmpty(form.getCustomFormsItemList())) {
             form.getCustomFormsItemList().forEach(item -> item.setFormId(customForms.getId()));
             customFormsItemService.saveEntitys(form.getCustomFormsItemList());
+        }
+        if (extendFormDefinitionService != null
+                && !Boolean.FALSE.equals(form.getAutoPublishExtendField())
+                && StrUtil.isNotBlank(customForms.getCode())) {
+            extendFormDefinitionService.publishFromCustomForms(
+                    customForms.getId(),
+                    customForms.getCode(),
+                    customForms.getName(),
+                    CustomFormsItemToFieldDefinitionConverter.convert(form.getCustomFormsItemList()));
         }
         return customForms;
     }

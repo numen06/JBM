@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doNothing;
                 "spring.cloud.nacos.discovery.enabled=false",
                 "spring.autoconfigure.exclude=com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration,com.alibaba.cloud.nacos.NacosConfigAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,jbm.framework.boot.autoconfigure.redis.RedisAutoConfiguration",
                 "jbm.cluster.api-register=false",
+                "jbm.cluster.data-init.enabled=false",
                 "management.endpoints.enabled-by-default=false"
         }
 )

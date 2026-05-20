@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -65,34 +64,31 @@ public class ApiResourceScanHandler {
 //                return;
 //            }
             List<String> codes = Lists.newArrayList();
-            jbmApiResource.getJbmApiList().parallelStream().forEach(new Consumer<JbmApi>() {
-                @Override
-                public void accept(JbmApi jbmApi) {
-                    try {
-                        BaseApi api = new BaseApi();
-                        //复制Bean
-                        BeanUtil.copyProperties(jbmApi, api);
-                        if(BooleanUtil.isFalse(jbmApi.getAccessLog())){
-                            log.info("{}接口不记录访问日志",jbmApi.getApiName());
-                        }
-                        api.setAccessLog(jbmApi.getAccessLog());
-                        api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
-                        api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
-                        codes.add(api.getApiCode());
-                        BaseApi save = baseApiService.getApi(api.getApiCode());
-                        if (save == null) {
-                            api.setIsOpen(0);
-                            api.setIsPersist(true);
-                            baseApiService.addApi(api);
-                        } else {
-                            api.setApiId(save.getApiId());
-                            baseApiService.updateApi(api);
-                        }
-                    } catch (Exception e) {
-                        log.error("添加资源error", e);
+            // 勿用 parallelStream，避免占用 ForkJoinPool.commonPool 导致 Tomcat 停止时线程泄漏告警
+            for (JbmApi jbmApi : CollUtil.emptyIfNull(jbmApiResource.getJbmApiList())) {
+                try {
+                    BaseApi api = new BaseApi();
+                    BeanUtil.copyProperties(jbmApi, api);
+                    if (BooleanUtil.isFalse(jbmApi.getAccessLog())) {
+                        log.info("{}接口不记录访问日志", jbmApi.getApiName());
                     }
+                    api.setAccessLog(jbmApi.getAccessLog());
+                    api.setPath(CollUtil.getFirst(jbmApi.getPaths()));
+                    api.setContentType(StrUtil.join(",", jbmApi.getContentTypes()));
+                    codes.add(api.getApiCode());
+                    BaseApi save = baseApiService.getApi(api.getApiCode());
+                    if (save == null) {
+                        api.setIsOpen(0);
+                        api.setIsPersist(true);
+                        baseApiService.addApi(api);
+                    } else {
+                        api.setApiId(save.getApiId());
+                        baseApiService.updateApi(api);
+                    }
+                } catch (Exception e) {
+                    log.error("添加资源error", e);
                 }
-            });
+            }
             if (CollUtil.isNotEmpty(jbmApiResource.getJbmApiList())) {
                 // 清理无效权限数据
                 baseAuthorityService.clearInvalidApi(jbmApiResource.getServiceId(), codes);

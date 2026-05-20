@@ -22,4 +22,7 @@ public class CustomFormsForm extends CustomForms {
     private PageForm pageForm;
     @ApiModelProperty("表单字段明细")
     private List<CustomFormsItem> customFormsItemList;
+
+    @ApiModelProperty("保存后是否发布扩展字段到 Redis（需 form code 非空）")
+    private Boolean autoPublishExtendField = true;
 }

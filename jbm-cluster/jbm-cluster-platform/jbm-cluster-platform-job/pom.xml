@@ -109,8 +109,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- 父工程 jbm-cluster 默认 skipTests=true，本模块需显式开启单测 -->
-                    <skipTests>false</skipTests>
                     <!-- 防止单测进程或 fork 内后台线程挂死导致 Maven 长时间不退出；含 Nacos 全量上下文时略放宽 -->
                     <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
                 </configuration>

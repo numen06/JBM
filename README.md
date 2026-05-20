@@ -25,6 +25,7 @@
 
 ### 使用说明文档
 
+- [Maven 构建与测试规范](docs/maven-build-conventions.md)（默认跳过单测；需要时在命令行 `-DskipTests=false -Dskip=false`）
 - [Masterdata ORM 体系（JPA + Liquibase + MyBatis-Plus）与子项目迁移指引](docs/masterdata-orm-7.3.md)
 - JBM7随着使用越来越庞大和复杂正在不断完善文档
 - [☆语雀使用说明文档](https://www.yuque.com/numen06/ksfcpy)，详细说明特性功能

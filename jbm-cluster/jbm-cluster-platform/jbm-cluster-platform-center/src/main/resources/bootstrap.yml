@@ -1,7 +1,14 @@
 server:
   port: 7777
   max-http-header-size: 204800
+  shutdown: graceful
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  liquibase:
+    enabled: true
+    # 由 jbm-cluster-common-mysql 提供；勿用 Spring Boot 默认的 db/changelog/
+    change-log: classpath:db/cluster-rbac/db.changelog-master.yaml
   application:
     name: ${artifactId}
   cloud:

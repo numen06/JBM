@@ -6,7 +6,7 @@ import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
 
 /**
  * @Author: auto generate by jbm
- * @Create: 2026-05-16 14:59:47
+ * @Create: 2026-05-20 12:32:22
  */
 @MapperRepository
 public interface BaseAppConfigMapper extends SuperMapper<BaseAppConfig> {

@@ -269,7 +269,7 @@ JBM在 `jbm-framework-core` 中重新定义了Spring的 `ApplicationEvent`（路
 
 ### 4.3 `MasterDataEntity` 的字段设计意图
 
-`MasterDataEntity` 除了常规的 `id`、`createTime`、`updateTime` 外，还内置了 `code`（业务编码）、`appId`（多租户/多应用隔离）、`parentId`/`level`/`leafPath`（树状结构支持）。这是为了**一个基类同时支持扁平数据和树形数据**的场景，避免每个实体单独处理树形逻辑。`leafPath` 存储从根到当前节点的路径（如 `1/5/12`），用于快速查询子树。
+`MasterDataEntity` 除了常规的 `id`、`createTime`、`updateTime` 外，还内置了 `code`（业务编码）、`appId`（多租户/多应用隔离）、`parentId`/`level`/`leafPath`（树状结构支持）。这是为了**一个基类同时支持扁平数据和树形数据**的场景，避免每个实体单独处理树形逻辑。`leafPath` 存储从根到当前节点的路径（如 `1/5/12`），用于快速查询子树。`extendData` / `extendQuery` 用于动态字段（`extend_data` JSON 列 + Redis 字段定义），使用方式见 [动态字段使用方案](动态字段使用方案.md)。
 
 ### 4.4 Auth 服务排除 `DataSourceAutoConfiguration`
 

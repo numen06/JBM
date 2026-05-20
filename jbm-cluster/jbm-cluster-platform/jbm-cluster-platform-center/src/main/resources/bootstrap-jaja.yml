@@ -2,12 +2,16 @@ spring:
   cloud:
     nacos:
       config:
-        namespace: jbm
+        namespace: jbm7
         #        group: ${config.group}
         refreshable-dataids: common.properties
         server-addr: 10.100.10.62:8848
         shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
       discovery:
-        namespace: jbm
+        namespace: jbm7
         #        group: ${config.group}
         server-addr: 10.100.10.62:8848
+jbm:
+  cluster:
+    data-init:
+      enabled: false

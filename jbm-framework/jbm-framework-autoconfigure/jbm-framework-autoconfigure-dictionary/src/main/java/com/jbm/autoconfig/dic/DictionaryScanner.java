@@ -72,8 +72,7 @@ public class DictionaryScanner implements SmartInitializingSingleton {
         log.info("JBM开始扫描字典，扫描包数量: {}", packageNames.size());
         long startTime = System.currentTimeMillis();
 
-        // 并行扫描所有包
-        packageNames.parallelStream().forEach(pack -> {
+        for (String pack : packageNames) {
             try {
                 Set<Class<?>> classes = ClassUtil.scanPackage(pack, o -> EnumUtil.isEnum((Class<?>) o));
                 for (Class<?> emClass : classes) {
@@ -85,7 +84,7 @@ public class DictionaryScanner implements SmartInitializingSingleton {
             } catch (Exception e) {
                 log.error("扫描包 [{}] 时发生错误", pack, e);
             }
-        });
+        }
 
         long endTime = System.currentTimeMillis();
         int totalTypes = jbmDicMapCache.size();

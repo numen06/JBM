@@ -1,11 +1,13 @@
 # Center H2 本地验证
 
 ```bash
+# 父 POM 默认跳过单测，需显式开启（见 docs/maven-build-conventions.md）
+
 # RBAC 初始化 + 超管菜单权限
-mvn test -pl jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -Dtest=CenterRbacH2IT
+mvn test -DskipTests=false -Dskip=false -pl jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -Dtest=CenterRbacH2IT
 
 # API Key BCrypt 校验（common-mysql 模块）
-mvn test -pl jbm-cluster/jbm-cluster-common/jbm-cluster-common-mysql -am -Dtest=OAuthClientSecretVerifierH2IT
+mvn test -DskipTests=false -Dskip=false -pl jbm-cluster/jbm-cluster-common/jbm-cluster-common-mysql -am -Dtest=OAuthClientSecretVerifierH2IT
 
 # 本地启动（profile h2，不依赖 Nacos/MySQL）
 mvn -pl jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am spring-boot:run -Dspring-boot.run.profiles=h2

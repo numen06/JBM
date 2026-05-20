@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: cluster-extend-form-definition-1
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: extend_form_definition
+      changes:
+        - createTable:
+            tableName: extend_form_definition
+            remarks: 扩展字段表单定义（按租户隔离，发布后写入 Redis）
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: form_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: form_name
+                  type: VARCHAR(128)
+              - column:
+                  name: fields_json
+                  type: LONGTEXT
+              - column:
+                  name: version
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: custom_form_id
+                  type: BIGINT
+              - column:
+                  name: update_time
+                  type: TIMESTAMP
+        - addUniqueConstraint:
+            tableName: extend_form_definition
+            columnNames: tenant_id, form_code
+            constraintName: uk_extend_form_tenant_code

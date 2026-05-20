@@ -38,6 +38,11 @@ public class ExtendFieldProperties {
     private boolean syncLocalToRedisOnStartup = true;
 
     /**
+     * 是否注册框架自带 {@code /api/extend-field/definitions} 控制器（Center 等平台可关闭以避免路径重复）。
+     */
+    private boolean builtinDefinitionControllerEnabled = true;
+
+    /**
      * 本地表单字段定义（formCode -> 字段列表），用于启动加载或 LOCAL 模式。
      * 启用多租户时 key 可为 {@code tenantId:formCode}。
      */

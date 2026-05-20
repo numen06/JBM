@@ -29,6 +29,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-extendfield</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.github.tokenjan</groupId>
             <artifactId>pinyin4j</artifactId>
         </dependency>
@@ -48,14 +58,6 @@
         <!-- 打包名称 -->
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- 父工程默认 skipTests=true，本模块 H2 集成测试需显式开启 -->
-                    <skipTests>false</skipTests>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

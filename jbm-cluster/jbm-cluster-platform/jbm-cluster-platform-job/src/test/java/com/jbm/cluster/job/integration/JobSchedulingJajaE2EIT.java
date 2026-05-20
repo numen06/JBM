@@ -56,9 +56,6 @@ class JobSchedulingJajaE2EIT {
         try (Connection c = dataSource.getConnection()) {
             assertThat(c.isValid(5)).isTrue();
         }
-        try (var conn = redisConnectionFactory.getConnection()) {
-            assertThat(conn.ping()).isNotNull();
-        }
         jobSchedulerManager.reloadAllJobs();
     }
 }

@@ -5,6 +5,8 @@ import com.jbm.cluster.api.constants.OrgType;
 import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.common.mysql.mapper.BaseMenuMapper;
 import com.jbm.framework.masterdata.code.annotation.EnableCodeAutoGeneate;
+import jbm.framework.boot.autoconfigure.extendfield.FieldDefinitionSource;
+import jbm.framework.boot.autoconfigure.extendfield.annotation.EnableExtendField;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +24,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableCaching
 @EnableFeignClients
 @EnableDiscoveryClient
+@EnableExtendField(source = FieldDefinitionSource.REDIS)
 @SpringBootApplication(scanBasePackages = {"com.jbm.cluster.center", "com.jbm.cluster.common.mysql"})
 //@EnableDubbo(scanBasePackages = "com.jbm.cluster.api")
 @EntityScan(basePackages = {"com.jbm.cluster.api.entitys"})

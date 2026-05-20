@@ -1,3 +1,5 @@
 --liquibase formatted sql
 --changeset jbm:rbac-v2-seed-marker splitStatements:true
+--validCheckSum 8:3017259cf00b9cc10d75d48c69222b91
+--validCheckSum 8:4cb661024467fba08b5a4aa173fbaef2
 -- 业务种子数据由 SystemDataInitializer 在应用启动时写入（含 BCrypt 密码），避免 SQL 硬编码密文。

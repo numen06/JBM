@@ -100,14 +100,12 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         try {
             // 获取url与类和方法的对应信息
             Map<RequestMappingInfo, HandlerMethod> handlerMethods = requestMappingHandlerMapping.getHandlerMethods();
-            handlerMethods.entrySet().parallelStream().forEach(handlerMethodEntry -> {
-                // 判断方法是否有@PermitAll注解
+            for (Map.Entry<RequestMappingInfo, HandlerMethod> handlerMethodEntry : handlerMethods.entrySet()) {
                 if (handlerMethodEntry.getValue().getMethodAnnotation(PermitAll.class) != null) {
                     String url = StrUtil.join(StrUtil.COMMA, handlerMethodEntry.getKey().getPatternsCondition().getPatterns());
-                    // 将url添加到结果集合中
                     strSet.add(url);
                 }
-            });
+            }
         } catch (Exception e) {
             // 异常处理
             log.error("获取接口信息失败", e);

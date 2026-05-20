@@ -1,0 +1,1765 @@
+databaseChangeLog:
+  - changeSet:
+      id: legacy-base_user-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_user-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_user-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_user-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_user-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_user-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_user-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_user
+        - not:
+            columnExists:
+              tableName: base_user
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_user
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_account-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_account-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_account-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_account-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_account-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_account-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_account-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_account
+        - not:
+            columnExists:
+              tableName: base_account
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_account
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_role-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_role-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_role-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_role-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role
+        - not:
+            columnExists:
+              tableName: base_role
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_role
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_role_user-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role_user-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_role_user-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role_user-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_role_user-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_role_user-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_role_user-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_role_user
+        - not:
+            columnExists:
+              tableName: base_role_user
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_role_user
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_menu-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_menu-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_menu-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_menu-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_menu-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_menu-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_menu-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_menu
+        - not:
+            columnExists:
+              tableName: base_menu
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_menu
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_action-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_action-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_action-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_action-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_action-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_action-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_action-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_action
+        - not:
+            columnExists:
+              tableName: base_action
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_action
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_api-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_api-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_api-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_api-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_api-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_api-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_api-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_api
+        - not:
+            columnExists:
+              tableName: base_api
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_api
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_authority-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_authority-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_authority-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_authority-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_authority_role-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_role-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_authority_role-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_role-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_role-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_authority_role-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_authority_role-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_role
+        - not:
+            columnExists:
+              tableName: base_authority_role
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority_role
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_authority_user-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_user-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_authority_user-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_user-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_user-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_authority_user-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_authority_user-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_user
+        - not:
+            columnExists:
+              tableName: base_authority_user
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority_user
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_authority_app-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_app-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_authority_app-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_app-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_app-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_authority_app-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_authority_app-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_app
+        - not:
+            columnExists:
+              tableName: base_authority_app
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority_app
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_authority_action-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_action-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_authority_action-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_action-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_authority_action-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_authority_action-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_authority_action-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_authority_action
+        - not:
+            columnExists:
+              tableName: base_authority_action
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority_action
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_developer-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_developer-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_developer-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_developer-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_developer-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_developer-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_developer-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_developer
+        - not:
+            columnExists:
+              tableName: base_developer
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_developer
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: legacy-base_app-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: id
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_app-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: legacy-base_app-app_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_app-parent_id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: legacy-base_app-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: legacy-base_app-leaf_path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: legacy-base_app-extend_data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: base_app
+        - not:
+            columnExists:
+              tableName: base_app
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_app
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT

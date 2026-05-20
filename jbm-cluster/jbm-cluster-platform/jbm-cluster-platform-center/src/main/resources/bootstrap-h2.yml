@@ -24,3 +24,14 @@ jbm:
     data-init:
       enabled: true
     token-type: jwt
+  extend-field:
+    enabled: true
+    source: REDIS
+    auto-flatten: true
+    sync-local-to-redis-on-startup: false
+    builtin-definition-controller-enabled: false
+    tenant:
+      enabled: true
+      header: tenantId
+      default-tenant-id: "0"
+      use-default-when-missing: true

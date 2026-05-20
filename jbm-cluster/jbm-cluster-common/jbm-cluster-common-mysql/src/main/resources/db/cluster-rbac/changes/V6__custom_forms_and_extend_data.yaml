@@ -1,0 +1,126 @@
+databaseChangeLog:
+  - changeSet:
+      id: cluster-custom-forms-1
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: custom_forms
+      changes:
+        - createTable:
+            tableName: custom_forms
+            remarks: 自定义表单主表
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+              - column:
+                  name: name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: menu_ids
+                  type: VARCHAR(512)
+              - column:
+                  name: form_or_table
+                  type: VARCHAR(32)
+              - column:
+                  name: data_source
+                  type: VARCHAR(256)
+              - column:
+                  name: app_id
+                  type: BIGINT
+              - column:
+                  name: parent_id
+                  type: BIGINT
+              - column:
+                  name: level
+                  type: INT
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+              - column:
+                  name: create_time
+                  type: TIMESTAMP
+              - column:
+                  name: update_time
+                  type: TIMESTAMP
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+        - createTable:
+            tableName: custom_forms_item
+            remarks: 自定义表单字段明细
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: form_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: field_name
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: label_name
+                  type: VARCHAR(128)
+              - column:
+                  name: field_type
+                  type: VARCHAR(32)
+              - column:
+                  name: component_type
+                  type: VARCHAR(32)
+              - column:
+                  name: is_required
+                  type: BOOLEAN
+              - column:
+                  name: is_filter
+                  type: BOOLEAN
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+              - column:
+                  name: app_id
+                  type: BIGINT
+              - column:
+                  name: create_time
+                  type: TIMESTAMP
+              - column:
+                  name: update_time
+                  type: TIMESTAMP
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: cluster-extend-data-base-authority
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: base_authority
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: base_authority
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT

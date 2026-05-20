@@ -6,6 +6,7 @@ import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionServi
 import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionWriter;
 import jbm.framework.boot.autoconfigure.extendfield.service.LocalFieldDefinitionService;
 import lombok.Data;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/extend-field")
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+@ConditionalOnProperty(prefix = "jbm.extend-field", name = "builtin-definition-controller-enabled", havingValue = "true", matchIfMissing = true)
 public class ExtendFieldDefinitionController {
 
     @Autowired(required = false)

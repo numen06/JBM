@@ -262,15 +262,18 @@ CREATE TABLE IF NOT EXISTS base_app (
     website           VARCHAR(256),
     status            INT          DEFAULT 1,
     is_persist        INT          DEFAULT 0,
-    public_key        CLOB,
-    private_key       CLOB,
+    public_key        LONGTEXT,
+    private_key       LONGTEXT,
     create_time       TIMESTAMP,
     update_time       TIMESTAMP
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS api_key_index ON base_app (api_key);
 
 CREATE TABLE IF NOT EXISTS jbm_system_init_marker (
     marker_key        VARCHAR(64)  NOT NULL PRIMARY KEY,
     initialized_at    TIMESTAMP    NOT NULL
 );
+
+--changeset jbm:rbac-v1-api-key-index
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'base_app' AND index_name = 'api_key_index'
+CREATE UNIQUE INDEX api_key_index ON base_app (api_key);
