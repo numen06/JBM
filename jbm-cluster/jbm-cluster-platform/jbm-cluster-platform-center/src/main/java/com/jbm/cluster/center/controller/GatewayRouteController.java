@@ -3,6 +3,7 @@ package com.jbm.cluster.center.controller;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.center.business.GatewayRouteBusiness;
+import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
@@ -22,23 +23,25 @@ public class GatewayRouteController {
 
     @Autowired
     private GatewayRouteBusiness gatewayRouteBusiness;
+    @Autowired
+    private GatewayRouteService gatewayRouteService;
 
     @ApiOperation(value = "微服务列表")
     @GetMapping("/micro-services")
     public ResultBody<List<String>> listMicroServices() {
-        return ResultBody.callback(() -> gatewayRouteBusiness.getMicroServices());
+        return ResultBody.callback(() -> gatewayRouteService.getMicroServices());
     }
 
     @ApiOperation(value = "路由列表")
     @GetMapping
     public ResultBody<DataPaging<GatewayRoute>> listRoutes(@ModelAttribute GatewayRoutePageForm form) {
-        return ResultBody.callback(() -> gatewayRouteBusiness.findListPage(form));
+        return ResultBody.callback(() -> gatewayRouteService.findListPage(form));
     }
 
     @ApiOperation(value = "路由详情")
     @GetMapping("/{routeId}")
     public ResultBody<GatewayRoute> getRoute(@PathVariable Long routeId) {
-        return ResultBody.callback(() -> gatewayRouteBusiness.getRoute(routeId));
+        return ResultBody.callback(() -> gatewayRouteService.getRoute(routeId));
     }
 
     @ApiOperation(value = "创建路由")

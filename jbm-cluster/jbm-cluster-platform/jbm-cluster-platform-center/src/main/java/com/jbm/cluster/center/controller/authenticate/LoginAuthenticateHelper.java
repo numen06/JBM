@@ -7,6 +7,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.business.BaseUserBusiness;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,8 @@ public class LoginAuthenticateHelper {
 
     @Autowired
     private BaseUserBusiness baseUserBusiness;
+    @Autowired
+    private BaseUserService baseUserService;
 
     public JbmLoginUser loginByAccount(String account, AccountType accountType) throws AccountException {
         UserAccount userAccount = baseUserBusiness.login(account, accountType.toString());
@@ -31,7 +34,7 @@ public class LoginAuthenticateHelper {
     public JbmLoginUser userAccountToLoginUser(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());
         jbmLoginUser.setMobile(baseUser.getMobile());

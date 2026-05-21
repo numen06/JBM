@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
 public class DataSourceManagementServiceImpl extends MasterDataServiceImpl<DataSourceManagement> implements DataSourceManagementService {
     @Override
     public DataSourceManagement saveData(DataSourceManagementForm form) {
-        return this.saveEntity(form);
+        return super.saveEntity(form);
     }
 }

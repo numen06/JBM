@@ -6,35 +6,36 @@ import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.center.business.GatewayRouteBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.cluster.common.mysql.service.impl.GatewayRouteServiceImpl;
+import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
-public class GatewayRouteBusinessImpl extends GatewayRouteServiceImpl implements GatewayRouteBusiness {
+public class GatewayRouteBusinessImpl implements GatewayRouteBusiness {
 
+    @Autowired
+    private GatewayRouteService gatewayRouteService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
     @Override
     public void addRouteWithGatewayRefresh(GatewayRoute route) {
         normalizeRoute(route);
-        addRoute(route);
+        gatewayRouteService.addRoute(route);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void updateRouteWithGatewayRefresh(GatewayRoute route) {
         normalizeRoute(route);
-        updateRoute(route);
+        gatewayRouteService.updateRoute(route);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void removeRouteWithGatewayRefresh(Long routeId) {
-        removeRoute(routeId);
+        gatewayRouteService.removeRoute(routeId);
         jbmClusterTemplate.refreshGateway();
     }
 

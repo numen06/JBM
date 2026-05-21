@@ -5,22 +5,23 @@ import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.api.form.GatewayRateLimitForm;
 import com.jbm.cluster.center.business.GatewayRateLimitBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.cluster.common.mysql.service.impl.GatewayRateLimitServiceImpl;
+import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
-public class GatewayRateLimitBusinessImpl extends GatewayRateLimitServiceImpl implements GatewayRateLimitBusiness {
+public class GatewayRateLimitBusinessImpl implements GatewayRateLimitBusiness {
 
+    @Autowired
+    private GatewayRateLimitService gatewayRateLimitService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
     @Override
     public Long addRateLimitWithGatewayRefresh(GatewayRateLimitForm form) {
         GatewayRateLimit rateLimit = BeanUtil.toBean(form, GatewayRateLimit.class);
-        GatewayRateLimit result = addRateLimitPolicy(rateLimit);
+        GatewayRateLimit result = gatewayRateLimitService.addRateLimitPolicy(rateLimit);
         jbmClusterTemplate.refreshGateway();
         return result != null ? result.getPolicyId() : null;
     }
@@ -28,19 +29,19 @@ public class GatewayRateLimitBusinessImpl extends GatewayRateLimitServiceImpl im
     @Override
     public void updateRateLimitWithGatewayRefresh(GatewayRateLimitForm form) {
         GatewayRateLimit rateLimit = BeanUtil.toBean(form, GatewayRateLimit.class);
-        updateRateLimitPolicy(rateLimit);
+        gatewayRateLimitService.updateRateLimitPolicy(rateLimit);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void removeRateLimitWithGatewayRefresh(Long policyId) {
-        removeRateLimitPolicy(policyId);
+        gatewayRateLimitService.removeRateLimitPolicy(policyId);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void addRateLimitApisWithGatewayRefresh(Long policyId, String[] apiIds) {
-        addRateLimitApis(policyId, apiIds);
+        gatewayRateLimitService.addRateLimitApis(policyId, apiIds);
         jbmClusterTemplate.refreshGateway();
     }
 }

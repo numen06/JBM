@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.form.BaseAppForm;
 import com.jbm.cluster.center.business.BaseAppBusiness;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.BaseController;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -22,23 +23,25 @@ public class BaseAppController extends BaseController {
 
     @Autowired
     private BaseAppBusiness baseAppBusiness;
+    @Autowired
+    private BaseAppService baseAppService;
 
     @ApiOperation(value = "按 apiKey 查询应用")
     @GetMapping(params = "apiKey")
     public ResultBody<BaseApp> getAppByApiKey(@RequestParam String apiKey) {
-        return ResultBody.callback(() -> baseAppBusiness.getAppInfoByKey(apiKey));
+        return ResultBody.callback(() -> baseAppService.getAppInfoByKey(apiKey));
     }
 
     @ApiOperation(value = "应用列表（分页）")
     @GetMapping
     public ResultBody<DataPaging<BaseApp>> listApps(@ModelAttribute BaseAppForm form) {
-        return ResultBody.callback(() -> baseAppBusiness.findListPage(form != null ? form : new BaseAppForm()));
+        return ResultBody.callback(() -> baseAppService.findListPage(form != null ? form : new BaseAppForm()));
     }
 
     @ApiOperation(value = "应用详情")
     @GetMapping("/{appId}")
     public ResultBody<BaseApp> getApp(@PathVariable Long appId) {
-        return ResultBody.callback(() -> baseAppBusiness.getAppInfo(appId));
+        return ResultBody.callback(() -> baseAppService.getAppInfo(appId));
     }
 
     @ApiOperation(value = "创建应用")

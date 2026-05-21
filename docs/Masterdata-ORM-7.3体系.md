@@ -1,6 +1,6 @@
 # Masterdata 相关 ORM 体系说明与子项目迁移指引
 
-本文描述当前框架内 **Liquibase（结构版本化）+ MyBatis-Plus（日常数据访问）** 的分工与依赖落点；**JPA 不参与业务**，仅可在独立工具/一次性初始化场景使用（见 `jbm-framework-autoconfigure-jpa`）；**Flyway 已从框架移除**。**可运行联调与集成测试**集中在 **`jbm-examples/jbm-examples-mysql`**（与 `jbm-util` 同级，由 **`jbm-examples`** 聚合）；业务模块若需同款依赖组合可引用 **`com.jbm:jbm-framework-micro-mysql`**（**仅 POM 聚合传递依赖，不含演示代码**）。
+本文描述当前框架内 **Liquibase（结构版本化）+ MyBatis-Plus（日常数据访问）** 的分工与依赖落点；**应用分层与事务**见 **[CBSM-standard.md](./CBSM-standard.md)**；**JPA 不参与业务**，仅可在独立工具/一次性初始化场景使用（见 `jbm-framework-autoconfigure-jpa`）；**Flyway 已从框架移除**。**可运行联调与集成测试**集中在 **`jbm-examples/jbm-examples-mysql`**（与 `jbm-util` 同级，由 **`jbm-examples`** 聚合）；业务模块若需同款依赖组合可引用 **`com.jbm:jbm-framework-micro-mysql`**（**仅 POM 聚合传递依赖，不含演示代码**）。
 
 ---
 

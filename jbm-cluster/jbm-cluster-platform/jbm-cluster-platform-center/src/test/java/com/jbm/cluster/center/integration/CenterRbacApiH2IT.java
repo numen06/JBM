@@ -3,6 +3,8 @@ package com.jbm.cluster.center.integration;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
+import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.cluster.api.form.BaseRoleForm;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.center.controller.BaseAppController;
@@ -44,21 +46,21 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @Test
     @DisplayName("种子数据：超管与权限/菜单查询")
     void seedData_adminAndAuthorityQueries() {
-        ResultBody<BaseUser> user = baseUserController.getUserInfoById(JbmConstants.ROOT_USER_ID);
+        ResultBody<BaseUser> user = baseUserController.getUser(JbmConstants.ROOT_USER_ID);
         assertSuccess(user);
         assertThat(user.getResult().getUserName()).isEqualTo(JbmConstants.ROOT_USER_NAME);
 
         ResultBody<List<com.jbm.cluster.api.model.auth.OpenAuthority>> authorities =
-                baseAuthorityController.findAuthorityUser(JbmConstants.ROOT_USER_ID);
+                baseAuthorityController.getUserAuthorities(JbmConstants.ROOT_USER_ID);
         assertSuccess(authorities);
         assertThat(authorities.getResult()).isNotEmpty();
 
         ResultBody<List<com.jbm.cluster.api.entitys.auth.AuthorityMenu>> menus =
-                baseAuthorityController.findAuthorityMenu();
+                baseAuthorityController.listMenus();
         assertSuccess(menus);
         assertThat(menus.getResult()).isNotEmpty();
 
-        ResultBody<List<BaseRole>> roleAll = baseRoleController.getRoleAllList();
+        ResultBody<List<BaseRole>> roleAll = baseRoleController.listAllRoles();
         assertSuccess(roleAll);
         assertThat(roleAll.getResult()).isNotEmpty();
         assertThat(roleAll.getResult().stream()
@@ -73,7 +75,7 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
                 "{\"roleCode\":\"" + code + "\",\"roleName\":\"集成测试角色\",\"status\":1,\"roleDesc\":\"h2-it\"}",
                 BaseRoleForm.class);
 
-        ResultBody<Long> added = baseRoleController.addRole(addBody);
+        ResultBody<Long> added = baseRoleController.createRole(addBody);
         assertSuccess(added);
         Long roleId = added.getResult();
         assertThat(roleId).isNotNull();
@@ -86,25 +88,25 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
                 "{\"roleId\":" + roleId + ",\"roleCode\":\"" + code
                         + "\",\"roleName\":\"集成测试角色-已改\",\"status\":1}",
                 BaseRoleForm.class);
-        ResultBody<?> updated = baseRoleController.updateRole(updateBody);
+        ResultBody<?> updated = baseRoleController.updateRole(roleId, updateBody);
         assertSuccess(updated);
 
         ResultBody<List<com.jbm.cluster.api.model.auth.OpenAuthority>> adminAuth =
-                baseAuthorityController.findAuthorityUser(JbmConstants.ROOT_USER_ID);
+                baseAuthorityController.getUserAuthorities(JbmConstants.ROOT_USER_ID);
         assertSuccess(adminAuth);
         String authorityId = adminAuth.getResult().get(0).getAuthorityId();
 
-        ResultBody<?> grant = baseAuthorityController.grantAuthorityRole(
-                roleId, null, authorityId);
+        BaseAuthorityRoleForm grantForm = new BaseAuthorityRoleForm();
+        grantForm.setAuthorityIds(new String[]{authorityId});
+        ResultBody<?> grant = baseAuthorityController.putRoleAuthorities(roleId, grantForm);
         assertSuccess(grant);
 
         ResultBody<List<com.jbm.cluster.api.model.auth.OpenAuthority>> roleAuth =
-                baseAuthorityController.findAuthorityRole(roleId);
+                baseAuthorityController.getRoleAuthorities(roleId);
         assertSuccess(roleAuth);
         assertThat(roleAuth.getResult()).isNotEmpty();
 
-        BaseRoleForm removeBody = JSON.parseObject("{\"roleId\":" + roleId + "}", BaseRoleForm.class);
-        ResultBody<?> removed = baseRoleController.removeRole(removeBody);
+        ResultBody<?> removed = baseRoleController.deleteRole(roleId);
         assertSuccess(removed);
     }
 
@@ -112,8 +114,10 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @DisplayName("菜单与按钮：新增-查-改-删")
     void menuAndAction_crud() {
         String menuCode = "it_menu_" + System.nanoTime();
-        ResultBody<Long> menuAdded = baseMenuController.addMenu(
-                menuCode, "集成测试菜单", null, "/", "", "_self", 1, 0L, 0, "", 1);
+        BaseMenuForm addBody = JSON.parseObject(
+                "{\"menuCode\":\"" + menuCode + "\",\"menuName\":\"集成测试菜单\",\"status\":1,\"menuType\":1,\"parentId\":0}",
+                BaseMenuForm.class);
+        ResultBody<Long> menuAdded = baseMenuController.createMenu(addBody);
         assertSuccess(menuAdded);
         Long menuId = menuAdded.getResult();
         assertThat(menuId).isNotNull();
@@ -123,11 +127,14 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
         assertSuccess(menuInfo);
         assertThat(menuInfo.getResult().getMenuCode()).isEqualTo(menuCode);
 
-        ResultBody<?> menuUpdated = baseMenuController.updateMenu(
-                menuId, menuCode, "集成测试菜单-已改", null, "/", "", "_self", 1, 0L, 0, "", 1);
+        BaseMenuForm updateBody = JSON.parseObject(
+                "{\"menuId\":" + menuId + ",\"menuCode\":\"" + menuCode
+                        + "\",\"menuName\":\"集成测试菜单-已改\",\"status\":1,\"menuType\":1,\"parentId\":0}",
+                BaseMenuForm.class);
+        ResultBody<Void> menuUpdated = baseMenuController.updateMenu(menuId, updateBody);
         assertSuccess(menuUpdated);
 
-        ResultBody<Boolean> menuRemoved = baseMenuController.removeMenu(menuId);
+        ResultBody<Void> menuRemoved = baseMenuController.deleteMenu(menuId);
         assertSuccess(menuRemoved);
     }
 
@@ -135,16 +142,16 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @DisplayName("应用与开发者：查询")
     void appAndDeveloper_queries() {
         ResultBody<com.jbm.cluster.api.entitys.basic.BaseApp> appByKey =
-                baseAppController.getAppByKey(JbmConstants.SEED_DEV_APP_API_KEY);
+                baseAppController.getAppByApiKey(JbmConstants.SEED_DEV_APP_API_KEY);
         assertSuccess(appByKey);
         assertThat(appByKey.getResult().getApiKey()).isEqualTo(JbmConstants.SEED_DEV_APP_API_KEY);
 
         ResultBody<List<com.jbm.cluster.api.entitys.basic.BaseDeveloper>> devAll =
-                baseDeveloperController.getUserAllList();
+                baseDeveloperController.listAllDevelopers();
         assertSuccess(devAll);
 
         ResultBody<List<com.jbm.cluster.api.entitys.basic.BaseMenu>> menuAll =
-                baseMenuController.getMenuAllList(null);
+                baseMenuController.listAllMenus(null);
         assertSuccess(menuAll);
         assertThat(menuAll.getResult()).isNotEmpty();
     }
@@ -152,16 +159,16 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     @Test
     @DisplayName("用户：列表与分页")
     void user_listAndPage() {
-        ResultBody<List<BaseUser>> list = baseUserController.list(new BaseUserForm());
+        ResultBody<?> list = baseUserController.listUsers(new BaseUserForm());
         assertSuccess(list);
-        assertThat(list.getResult()).isNotEmpty();
+        assertThat(((DataPaging<?>) list.getResult()).getContents()).isNotEmpty();
 
         BaseUserForm pageBody = JSON.parseObject(
                 "{\"pageForm\":{\"pageNo\":1,\"pageSize\":10}}", BaseUserForm.class);
-        ResultBody<DataPaging<BaseUser>> page = baseUserController.pageList(pageBody);
+        ResultBody<?> page = baseUserController.listUsers(pageBody);
         assertSuccess(page);
-        assertThat(page.getResult().getContents()).isNotEmpty();
-        assertThat(page.getResult().getTotal()).isGreaterThan(0);
+        assertThat(((DataPaging<?>) page.getResult()).getContents()).isNotEmpty();
+        assertThat(((DataPaging<?>) page.getResult()).getTotal()).isGreaterThan(0);
     }
 
     private static void assertSuccess(ResultBody<?> body) {

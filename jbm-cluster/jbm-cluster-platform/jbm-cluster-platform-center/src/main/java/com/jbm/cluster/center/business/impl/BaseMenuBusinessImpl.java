@@ -7,7 +7,7 @@ import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.cluster.center.business.BaseMenuBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.cluster.common.mysql.service.impl.BaseMenuServiceImpl;
+import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.framework.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,16 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
-public class BaseMenuBusinessImpl extends BaseMenuServiceImpl implements BaseMenuBusiness {
+public class BaseMenuBusinessImpl implements BaseMenuBusiness {
 
+    @Autowired
+    private BaseMenuService baseMenuService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
     @Override
     public BaseMenu addMenuWithGatewayRefresh(BaseMenuForm form) {
         BaseMenu menu = BeanUtil.toBean(form, BaseMenu.class);
-        BaseMenu result = addMenu(menu);
+        BaseMenu result = baseMenuService.addMenu(menu);
         jbmClusterTemplate.refreshGateway();
         return result;
     }
@@ -36,13 +37,13 @@ public class BaseMenuBusinessImpl extends BaseMenuServiceImpl implements BaseMen
     @Override
     public void updateMenuWithGatewayRefresh(BaseMenuForm form) {
         BaseMenu menu = BeanUtil.toBean(form, BaseMenu.class);
-        updateMenu(menu);
+        baseMenuService.updateMenu(menu);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void removeMenuWithGatewayRefresh(Long menuId) {
-        removeMenu(menuId);
+        baseMenuService.removeMenu(menuId);
         jbmClusterTemplate.refreshGateway();
     }
 
@@ -52,9 +53,9 @@ public class BaseMenuBusinessImpl extends BaseMenuServiceImpl implements BaseMen
         baseMenu.setAppId(appId);
         List<BaseMenu> list;
         if (ObjectUtil.isEmpty(appId)) {
-            list = findPlatformList(baseMenu);
+            list = baseMenuService.findPlatformList(baseMenu);
         } else {
-            list = findAllList(baseMenu);
+            list = baseMenuService.findAllList(baseMenu);
         }
         List<BaseMenu> exportList = new ArrayList<>();
         for (BaseMenu menu : list) {
@@ -93,7 +94,7 @@ public class BaseMenuBusinessImpl extends BaseMenuServiceImpl implements BaseMen
             if (menus == null || menus.isEmpty()) {
                 throw new ServiceException("import file format error");
             }
-            int successCount = importMenus(menus);
+            int successCount = baseMenuService.importMenus(menus);
             jbmClusterTemplate.refreshGateway();
             return successCount;
         } catch (ServiceException e) {

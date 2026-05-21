@@ -2,9 +2,8 @@ package com.jbm.cluster.center.business;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.form.BaseAppForm;
-import com.jbm.cluster.common.mysql.service.BaseAppService;
 
-public interface BaseAppBusiness extends BaseAppService {
+public interface BaseAppBusiness {
 
     BaseApp addAppWithGatewayRefresh(BaseAppForm form);
 

@@ -4,6 +4,7 @@ import cn.hutool.core.annotation.AnnotationUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.template.Template;
 import cn.hutool.extra.template.TemplateConfig;
@@ -40,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,6 +136,13 @@ public class GenerateMasterData {
     private static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("<artifactId>([^<]+)</artifactId>");
     private static final int MAX_MODULE_SEARCH_DEPTH = 5;
 
+    /** 模块根路径解析缓存：entity|appClass|modulePath|classpathRoot */
+    private static final Map<String, Path> MODULE_ROOT_PATH_CACHE = new ConcurrentHashMap<>();
+    /** pom.xml artifactId 读取缓存 */
+    private static final Map<String, String> ARTIFACT_ID_CACHE = new ConcurrentHashMap<>();
+    /** 实体类 classpath 根 URL 缓存 */
+    private static final Map<Class<?>, URL> ENTITY_CLASSPATH_ROOT_CACHE = new ConcurrentHashMap<>();
+
     public GenerateMasterData() {
         try {
             //构建模板引擎
@@ -198,6 +207,7 @@ public class GenerateMasterData {
 
     public GenerateSource generate(GenerateSource generateSource) throws Exception {
         for (IGenerateCode iGenerateCode : this.generateCodeList) {
+            resetTransientSourceState(generateSource);
             if (!isModuleEnabled(iGenerateCode.getCodeType())) {
                 log.debug("跳过[{}]生成: 模块已禁用", iGenerateCode.getCodeType().name());
                 continue;
@@ -224,7 +234,7 @@ public class GenerateMasterData {
                 } catch (Exception e) {
                     log.debug("跳过[{}]生成:[{}],原因:{}", iGenerateCode.getCodeType().name(), generateSource.getEntityClass(), e.getMessage());
                     // 即使跳过生成（如文件已存在），也记录对应的生成信息，便于 autocode.yml 保留完整 entity→文件 对应关系
-                    File targetFile = generateSource.getTargetFile();
+                    File targetFile = resolveSkippedTargetFile(iGenerateCode, generateSource);
                     if (targetFile != null) {
                         String path = targetFile.getAbsolutePath();
                         String entityName = generateSource.getEntityClass().getName();
@@ -431,9 +441,69 @@ public class GenerateMasterData {
     }
 
     /**
-     * Resolve output module root: prefer @EnableCodeAutoGeneate application module + artifactId.
+     * 缓存实体类 classpath 根（/），避免每个 CodeType 重复扫描。
+     */
+    public static URL getEntityClasspathRoot(Class<?> entityClass) {
+        if (entityClass == null) {
+            return null;
+        }
+        return ENTITY_CLASSPATH_ROOT_CACHE.computeIfAbsent(entityClass,
+                c -> ClassUtil.getResourceUrl("/", c));
+    }
+
+    /**
+     * 清除单次扫描外的静态缓存（测试或热重载时可调用）。
+     */
+    public static void clearPathResolutionCaches() {
+        MODULE_ROOT_PATH_CACHE.clear();
+        ARTIFACT_ID_CACHE.clear();
+        ENTITY_CLASSPATH_ROOT_CACHE.clear();
+    }
+
+    static void resetTransientSourceState(GenerateSource generateSource) {
+        if (generateSource == null) {
+            return;
+        }
+        generateSource.setTargetDir(null);
+        generateSource.setTargetFile(null);
+    }
+
+    /**
+     * pre() 跳过时，用当前生成器独立计算目标路径，不读取上一次迭代残留的 targetFile。
+     */
+    private File resolveSkippedTargetFile(IGenerateCode iGenerateCode, GenerateSource generateSource) {
+        resetTransientSourceState(generateSource);
+        try {
+            return iGenerateCode.getWriteFile(generateSource);
+        } catch (Exception e) {
+            log.debug("无法为 [{}] 计算跳过记录路径: {}", iGenerateCode.getCodeType().name(), e.getMessage());
+            return null;
+        }
+    }
+
+    private static String moduleRootCacheKey(URL entityClasspathRoot, GenerateSource generateSource, String modulePath) {
+        String entity = generateSource.getEntityClass() != null ? generateSource.getEntityClass().getName() : "";
+        String app = StrUtil.nullToEmpty(generateSource.getCodeGenApplicationClass());
+        String root = entityClasspathRoot != null ? entityClasspathRoot.toExternalForm() : "";
+        return entity + "|" + app + "|" + StrUtil.nullToEmpty(modulePath) + "|" + root;
+    }
+
+    /**
+     * Resolve output module root: prefer reactor root from @EnableCodeAutoGeneate application + artifactId.
      */
     public static Path resolveModuleRootPath(URL entityClasspathRoot, GenerateSource generateSource, String modulePath)
+            throws Exception {
+        String cacheKey = moduleRootCacheKey(entityClasspathRoot, generateSource, modulePath);
+        Path cached = MODULE_ROOT_PATH_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        Path resolved = resolveModuleRootPathUncached(entityClasspathRoot, generateSource, modulePath);
+        MODULE_ROOT_PATH_CACHE.put(cacheKey, resolved);
+        return resolved;
+    }
+
+    private static Path resolveModuleRootPathUncached(URL entityClasspathRoot, GenerateSource generateSource, String modulePath)
             throws Exception {
         if (StrUtil.isBlank(modulePath)) {
             return Paths.get(entityClasspathRoot.toURI()).getParent().getParent().normalize();
@@ -442,8 +512,76 @@ public class GenerateMasterData {
         if (fromApp != null) {
             return fromApp;
         }
+        Path fallbackFromApp = resolveFallbackFromAppRoot(generateSource.getCodeGenApplicationClass(), modulePath);
+        if (fallbackFromApp != null) {
+            return fallbackFromApp;
+        }
+        Path fromReactor = resolveModuleFromReactorByArtifact(generateSource.getCodeGenApplicationClass(), modulePath);
+        if (fromReactor != null) {
+            return fromReactor;
+        }
         return Paths.get(entityClasspathRoot.toURI()).getParent().getParent().getParent()
                 .resolve(modulePath).normalize();
+    }
+
+    /**
+     * 从启动类向上找到 Maven 聚合根（含 &lt;modules&gt; 的 pom），再按 artifactId 定位子模块。
+     */
+    private static Path resolveModuleFromReactorByArtifact(String applicationClass, String modulePath) {
+        if (StrUtil.isBlank(applicationClass) || StrUtil.isBlank(modulePath)) {
+            return null;
+        }
+        try {
+            File appRoot = findProjectRootFromClass(applicationClass);
+            if (appRoot == null) {
+                return null;
+            }
+            Path reactorRoot = findReactorRoot(appRoot.toPath());
+            if (modulePath.contains("/") || modulePath.contains("\\") || modulePath.startsWith(".")) {
+                Path resolved = reactorRoot.resolve(modulePath).normalize();
+                return Files.isDirectory(resolved) ? resolved : null;
+            }
+            return findMavenModuleByArtifactId(reactorRoot, modulePath);
+        } catch (Exception e) {
+            log.debug("从聚合根解析模块失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 向上查找含 &lt;modules&gt; 的 pom 所在目录，作为多模块工程顶层。
+     */
+    static Path findReactorRoot(Path start) {
+        Path cursor = start != null ? start.normalize() : null;
+        Path best = cursor;
+        while (cursor != null) {
+            File pom = cursor.resolve(POM_XML).toFile();
+            if (pom.isFile()) {
+                best = cursor;
+                String content = FileUtil.readUtf8String(pom);
+                if (content.contains("<modules>")) {
+                    return cursor;
+                }
+            }
+            Path parent = cursor.getParent();
+            if (parent == null) {
+                break;
+            }
+            cursor = parent;
+        }
+        return best;
+    }
+
+    private static Path resolveFallbackFromAppRoot(String applicationClass, String modulePath) {
+        if (StrUtil.isBlank(applicationClass)) return null;
+        try {
+            File appRoot = findProjectRootFromClass(applicationClass);
+            if (appRoot != null) {
+                return appRoot.toPath().resolve(modulePath).normalize();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private static Path resolveModuleFromApplicationClass(String applicationClass, String modulePath) {
@@ -455,10 +593,16 @@ public class GenerateMasterData {
             if (appRoot == null) {
                 return null;
             }
+            Path reactorRoot = findReactorRoot(appRoot.toPath());
             if (modulePath.contains("/") || modulePath.contains("\\") || modulePath.startsWith(".")) {
-                return appRoot.toPath().resolve(modulePath).normalize();
+                Path resolved = reactorRoot.resolve(modulePath).normalize();
+                return Files.isDirectory(resolved) ? resolved : appRoot.toPath().resolve(modulePath).normalize();
             }
-            Path byArtifact = findMavenModuleByArtifactId(appRoot.toPath(), modulePath);
+            Path byArtifact = findMavenModuleByArtifactId(reactorRoot, modulePath);
+            if (byArtifact != null) {
+                return byArtifact;
+            }
+            byArtifact = findMavenModuleByArtifactId(appRoot.toPath(), modulePath);
             if (byArtifact != null) {
                 return byArtifact;
             }
@@ -506,11 +650,19 @@ public class GenerateMasterData {
     }
 
     static String readArtifactId(File pomFile) {
+        String pathKey = pomFile.getAbsolutePath();
+        String cached = ARTIFACT_ID_CACHE.get(pathKey);
+        if (cached != null) {
+            return cached;
+        }
         String content = FileUtil.readUtf8String(pomFile);
         Matcher matcher = ARTIFACT_ID_PATTERN.matcher(content);
         String last = null;
         while (matcher.find()) {
             last = matcher.group(1).trim();
+        }
+        if (last != null) {
+            ARTIFACT_ID_CACHE.put(pathKey, last);
         }
         return last;
     }

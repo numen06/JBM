@@ -35,7 +35,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDeveloper> implements BaseDeveloperService {
 
     private final String ACCOUNT_DOMAIN = JbmConstants.ACCOUNT_DOMAIN_PORTAL;

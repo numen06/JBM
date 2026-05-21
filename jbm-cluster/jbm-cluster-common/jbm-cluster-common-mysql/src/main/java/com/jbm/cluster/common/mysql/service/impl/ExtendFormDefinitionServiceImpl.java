@@ -12,8 +12,6 @@ import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionWrite
 import jbm.framework.boot.autoconfigure.extendfield.tenant.ExtendFieldTenantResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +31,6 @@ public class ExtendFormDefinitionServiceImpl implements ExtendFormDefinitionServ
     private ExtendFieldProperties extendFieldProperties;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public ExtendFormDefinition saveAndPublish(String formCode, SaveExtendFormRequest request) {
         Long tenantId = requireTenantId();
         ExtendFormDefinition row = extendFormDefinitionMapper.selectOne(new QueryWrapper<ExtendFormDefinition>()
@@ -84,7 +81,6 @@ public class ExtendFormDefinitionServiceImpl implements ExtendFormDefinitionServ
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void publishFromCustomForms(Long customFormId, String formCode, String formName, List<FieldDefinition> fields) {
         SaveExtendFormRequest req = new SaveExtendFormRequest();
         req.setFormName(formName);

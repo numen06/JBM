@@ -16,6 +16,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.center.business.BaseUserBusiness;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
 
     @Autowired
     private BaseUserBusiness baseUserBusiness;
-
+    @Autowired
+    private BaseUserService baseUserService;
     @Autowired
     private BaseAccountService baseAccountService;
 
@@ -81,7 +83,7 @@ public class ThirdPartyAuthenticate implements ILoginAuthenticate {
     public JbmLoginUser findUserByAccount(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
         log.info("[第三方认证]: 获取用户信息:{}", baseUser);
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());

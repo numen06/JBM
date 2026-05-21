@@ -26,7 +26,6 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLimit> implements GatewayIpLimitService {
 
     @Autowired

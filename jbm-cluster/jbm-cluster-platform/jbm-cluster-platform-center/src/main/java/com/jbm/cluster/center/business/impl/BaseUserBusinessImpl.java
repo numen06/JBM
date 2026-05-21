@@ -23,11 +23,12 @@ import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.business.BaseUserBusiness;
+import com.jbm.framework.masterdata.business.BaseBusiness;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseOrgService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
-import com.jbm.cluster.common.mysql.service.impl.BaseUserServiceImpl;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
@@ -40,9 +41,7 @@ import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -50,14 +49,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 平台用户业务实现：不注入 Mapper，经 {@link BaseUserServiceImpl} 与其它 Service 访问数据。
+ * 平台用户业务实现：经 {@link BaseUserService} 与其它 Service 访问数据。
  */
 @Slf4j
 @Service
-@Primary
-@Transactional(rollbackFor = Exception.class)
-public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUserBusiness {
+public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusiness {
 
+    @Autowired
+    private BaseUserService baseUserService;
     @Autowired
     private BaseRoleService roleService;
     @Autowired
@@ -77,16 +76,19 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
             BaseOrg rootOrg = orgService.findTopCompany(baseOrg);
             // 企业下账户数量
             Integer numberOfAccounts = ObjectUtil.defaultIfNull(rootOrg.getNumberOfAccounts(), Integer.MAX_VALUE);
-            long existAccount = this.count(new QueryWrapper<BaseUser>().lambda().eq(BaseUser::getCompanyId, rootOrg.getId()).eq(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_NORMAL));
+            BaseUser countProbe = new BaseUser();
+            countProbe.setCompanyId(rootOrg.getId());
+            countProbe.setStatus(JbmConstants.ACCOUNT_STATUS_NORMAL);
+            long existAccount = baseUserService.count(countProbe);
             if (NumberUtil.compare(numberOfAccounts, existAccount) != 1) {
                 throw new ServiceException("企业下用户数已达上限");
             }
             baseUser.setCompanyId(rootOrg.getId());
         }
         if (ObjectUtil.isEmpty(baseUser.getUserId())) {
-            this.addUser(baseUser);
+            doAddUser(baseUser);
         } else {
-            this.updateUser(baseUser);
+            doUpdateUser(baseUser);
         }
         return baseUser;
     }
@@ -95,36 +97,36 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
     public List<BaseUser> selectEntitys(BaseUserForm baseUserForm) {
         // 超级管理员账号查询所有数据
         if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
-            return super.selectEntitys(baseUserForm);
+            return baseUserService.selectEntitys(baseUserForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             // 用户不存在部门的情况下，仅查询自己的数据
             baseUserForm.setUserId(LoginHelper.getUserId());
-            return super.selectEntitys(baseUserForm);
+            return baseUserService.selectEntitys(baseUserForm);
         }
         // 仅查询用户所属组织的数据
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
         baseUserForm.setCompanyId(parentOrg.getId());
-        return this.selectUserRows(baseUserForm);
+        return baseUserService.selectUserRows(baseUserForm);
     }
 
     @Override
     public DataPaging<BaseUser> selectEntitys(BaseUserForm baseUserForm, PageForm pageForm) {
         // 超级管理员账号查询所有数据
         if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
-            return super.selectEntitys(baseUserForm, pageForm);
+            return baseUserService.selectEntitys(baseUserForm, pageForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             // 用户不存在部门的情况下，仅查询自己的数据
             baseUserForm.setUserId(LoginHelper.getUserId());
-            return super.selectEntitys(baseUserForm, pageForm);
+            return baseUserService.selectEntitys(baseUserForm, pageForm);
         }
         // 仅查询用户所属组织的数据
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
         baseUserForm.setCompanyId(parentOrg.getId());
-        return this.selectUserRows(baseUserForm, pageForm);
+        return baseUserService.selectUserRows(baseUserForm, pageForm);
     }
 
     @Override
@@ -135,7 +137,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
         // 注册用户为普通管理员
         baseUser.setUserType(JbmConstants.USER_TYPE_NORMAL);
         // 保存系统用户信息
-        this.insertEntity(baseUser);
+        baseUserService.insertEntity(baseUser);
         // 默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, registerIp);
         if (Validator.isEmail(baseUser.getEmail())) {
@@ -151,7 +153,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
     @Override
     public Boolean close(BaseUser baseUser) {
         DateTime currentDateTime = new DateTime();
-        BaseUser user = this.selectById(baseUser.getUserId());
+        BaseUser user = baseUserService.selectById(baseUser.getUserId());
         Assert.notNull(user, () -> new ServiceException("用户不存在"));
         if (LoginHelper.isAdmin(user.getUserId())) {
             throw new ServiceException("管理员不允许注销");
@@ -163,7 +165,9 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 //        smsNotification.setSignName("甲佳智能");
 //        smsNotification.setTemplateCode("SMS_236340338");
 //        this.applicationContext.getBean(JbmClusterNotification.class).sendSmsNotification(smsNotification);
-            return this.lambdaUpdate().set(BaseUser::getStatus, JbmConstants.ACCOUNT_STATUS_DISABLE).set(BaseUser::getCloseTime, currentDateTime).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+            user.setStatus(JbmConstants.ACCOUNT_STATUS_DISABLE);
+            user.setCloseTime(currentDateTime);
+            return baseUserService.updateById(user);
         } else {
             DateTime closeTime = currentDateTime.offsetNew(DateField.DAY_OF_YEAR, 7);
 //        SmsNotification smsNotification = new SmsNotification();
@@ -172,7 +176,8 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 //        smsNotification.setSignName("甲佳智能");
 //        smsNotification.setTemplateCode("SMS_236340338");
 //        this.applicationContext.getBean(JbmClusterNotification.class).sendSmsNotification(smsNotification);
-            return this.lambdaUpdate().set(BaseUser::getCloseTime, closeTime).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+            user.setCloseTime(closeTime);
+            return baseUserService.updateById(user);
         }
     }
 
@@ -184,14 +189,18 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
      */
     @Override
     public void addUser(BaseUser baseUser) {
-        this.validationExist(baseUser);
+        doAddUser(baseUser);
+    }
+
+    private void doAddUser(BaseUser baseUser) {
+        validationExist(baseUser);
 //        baseUser.setCreateTime(new Date());
 //        baseUser.setUpdateTime(baseUser.getCreateTime());
         if (ObjectUtil.isEmpty(baseUser.getStatus())) {
             baseUser.setStatus(1);
         }
         //保存系统用户信息
-        this.insertEntity(baseUser);
+        baseUserService.insertEntity(baseUser);
         //默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
 //        if (Validator.isEmail(baseUser.getEmail())) {
@@ -205,24 +214,24 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
     }
 
     private void validationExist(BaseUser baseUser) {
-        BaseUser user = getUserByUsername(baseUser.getUserName());
+        BaseUser user = baseUserService.getUserByUsername(baseUser.getUserName());
         if (ObjectUtil.isNotEmpty(user)) {
             // 用户注销完成后再次创建时，删除原有用户信息
             if (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
-                this.lambdaUpdate().eq(BaseUser::getUserId, user.getUserId()).remove();
+                baseUserService.deleteById(user.getUserId());
             } else {
                 throw new ServiceException("用户名:" + baseUser.getUserName() + "已存在!");
             }
         }
         if (Validator.isMobile(baseUser.getUserName())) {
             BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_MOBILE, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(baseUserService.selectById(account.getUserId()))) {
                 throw new ServiceException("手机号:" + baseUser.getUserName() + "已存在对应用户!");
             }
         }
         if (Validator.isEmail(baseUser.getUserName())) {
             BaseAccount account = this.baseAccountService.getAccount(baseUser.getUserName(), JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_DOMAIN_ADMIN);
-            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(this.selectById(account.getUserId()))) {
+            if (ObjectUtil.isNotEmpty(account) && ObjectUtil.isNotEmpty(baseUserService.selectById(account.getUserId()))) {
                 throw new ServiceException("邮箱:" + baseUser.getUserName() + "已存在对应用户!");
             }
         }
@@ -231,7 +240,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 
     @Override
     public void activationEmailAccount(BaseUser baseUser) {
-        BaseUser dbUser = this.getUserById(baseUser.getUserId());
+        BaseUser dbUser = baseUserService.getUserById(baseUser.getUserId());
         if (ObjectUtil.isEmpty(dbUser)) {
             throw new ServiceException("用户不存在!");
         }
@@ -249,7 +258,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 
     @Override
     public void activationMobileAccount(BaseUser baseUser) {
-        BaseUser dbUser = this.getUserById(baseUser.getUserId());
+        BaseUser dbUser = baseUserService.getUserById(baseUser.getUserId());
         if (ObjectUtil.isEmpty(dbUser)) {
             throw new ServiceException("用户不存在!");
         }
@@ -274,13 +283,21 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
      */
     @Override
     public void updateUser(BaseUser baseUser) {
+        doUpdateUser(baseUser);
+    }
+
+    private void doUpdateUser(BaseUser baseUser) {
         if (baseUser == null || baseUser.getUserId() == null) {
             return;
         }
-        this.updateById(baseUser);
+        baseUserService.updateById(baseUser);
         if (baseUser.getStatus() != null) {
             if (NumberUtil.equals(baseUser.getStatus().intValue(), JbmConstants.ACCOUNT_STATUS_NORMAL)) {
-                this.lambdaUpdate().set(BaseUser::getCloseTime, null).eq(BaseUser::getUserId, baseUser.getUserId()).update();
+                BaseUser clearClose = baseUserService.selectById(baseUser.getUserId());
+                if (clearClose != null) {
+                    clearClose.setCloseTime(null);
+                    baseUserService.updateById(clearClose);
+                }
             }
             baseAccountService.updateStatusByUserId(baseUser.getUserId(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, baseUser.getStatus());
         }
@@ -301,7 +318,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 //            //保存系统用户信息
 //            this.saveEntity(baseUser);
             if (ObjectUtil.isEmpty(baseUser.getUserId())) {
-                this.insertEntity(baseUser);
+                baseUserService.insertEntity(baseUser);
             }
             // 注册账号信息
             baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), accountType, JbmConstants.ACCOUNT_STATUS_NORMAL, JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
@@ -314,7 +331,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
         if (baseAccountService.isExist(baseAccount)) {
             return;
         }
-        BaseUser baseUser = this.getUserByPhone(phone);
+        BaseUser baseUser = baseUserService.getUserByPhone(phone);
         if (ObjectUtil.isEmpty(baseUser)) {
             throw new ServiceException("没有此手机注册用户");
         }
@@ -358,7 +375,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
                 .eq(ObjectUtils.isNotEmpty(form.getMobile()), BaseUser::getMobile, form.getMobile());
         queryWrapper.orderByDesc("create_time");
         PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
-        return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
+        return baseUserService.selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**
@@ -385,7 +402,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
         }
 
         //查询系统用户资料
-        BaseUser baseUser = getUserById(userId);
+        BaseUser baseUser = baseUserService.getUserById(userId);
 
         if (NumberUtil.equals(baseUser.getStatus().intValue(), JbmConstants.ACCOUNT_STATUS_DISABLE)) {
 //            throw new ServiceException("用户已停用，请联系管理员");
@@ -415,7 +432,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 
     @Override
     public UserAccount login(String account) {
-        return this.login(account, null);
+        return doLogin(account, null);
     }
 
     /**
@@ -426,6 +443,10 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
      */
     @Override
     public UserAccount login(String account, String loginType) {
+        return doLogin(account, loginType);
+    }
+
+    private UserAccount doLogin(String account, String loginType) {
         if (StringUtils.isBlank(account)) {
             return null;
         }
@@ -470,7 +491,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
 //            }
 
             // 查询系统用户资料
-            BaseUser baseUser = getUserById(baseAccount.getUserId());
+            BaseUser baseUser = baseUserService.getUserById(baseAccount.getUserId());
             if (ObjectUtil.isEmpty(baseUser) || ObjectUtil.isNotEmpty(baseUser.getCloseTime()) && baseUser.getCloseTime().before(DateUtil.endOfDay(DateTime.now()))) {
                 return null;
             }
@@ -496,7 +517,7 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
         queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
         queryWrapper.lambda().like(BaseUser::getRealName, keyword).or().like(BaseUser::getMobile, keyword).last("limit 10");
-        return this.selectEntitys(queryWrapper);
+        return baseUserService.selectEntitys(queryWrapper);
     }
 
     @Override
@@ -506,13 +527,13 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
         thirdPartyUserForm.setAccountType(accountType);
         thirdPartyUserForm.setAccount(username);
         thirdPartyUserForm.setPassword(password);
-        return this.loginAndRegisterMobileUser(thirdPartyUserForm);
+        return loginAndRegisterMobileUser(thirdPartyUserForm);
     }
 
     @Override
     public UserAccount loginAndRegisterMobileUser(ThirdPartyUserForm thirdPartyUserForm) {
         try {
-            UserAccount userAccount = this.login(thirdPartyUserForm.getAccount(), "mobile");
+            UserAccount userAccount = doLogin(thirdPartyUserForm.getAccount(), "mobile");
             if (ObjectUtil.isNotEmpty(userAccount)) {
                 return userAccount;
             }
@@ -520,9 +541,9 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
             if (StrUtil.isBlank(thirdPartyUserForm.getPhone())) {
                 throw new ServiceException("手机为空");
             }
-            BaseUser user = this.getUserByPhone(thirdPartyUserForm.getPhone());
+            BaseUser user = baseUserService.getUserByPhone(thirdPartyUserForm.getPhone());
             if (ObjectUtil.isEmpty(user) || (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now())))) {
-                user = this.getUserByUsername(thirdPartyUserForm.getPhone());
+                user = baseUserService.getUserByUsername(thirdPartyUserForm.getPhone());
                 if (ObjectUtil.isEmpty(user) || (ObjectUtil.isNotEmpty(user.getCloseTime()) && user.getCloseTime().before(DateUtil.endOfDay(DateTime.now())))) {
                     user = new BaseUser();
                     user.setNickName(thirdPartyUserForm.getNickName());
@@ -532,22 +553,22 @@ public class BaseUserBusinessImpl extends BaseUserServiceImpl implements BaseUse
                     user.setMobile(thirdPartyUserForm.getPhone());
                 }
                 user.setMobile(thirdPartyUserForm.getPhone());
-                this.saveEntity(user);
+                saveEntity(user);
             }
             if (ObjectUtil.isEmpty(user.getPassword())) {
                 user.setPassword(thirdPartyUserForm.getPassword());
             }
             //如果手机号不为空自动激活手机号登录
             if (StrUtil.isNotBlank(user.getMobile())) {
-                this.activationMobileAccount(user);
+                activationMobileAccount(user);
             }
             //如果是第三方来源增加第三方账号
             if (StrUtil.isNotBlank(thirdPartyUserForm.getAccountType())) {
                 user.setUserName(thirdPartyUserForm.getAccount());
-                this.addUserThirdParty(user, thirdPartyUserForm.getAccountType());
+                addUserThirdParty(user, thirdPartyUserForm.getAccountType());
             }
             //最后再登录一次
-            UserAccount finalAccount = this.login(user.getUserName(), thirdPartyUserForm.getAccountType());
+            UserAccount finalAccount = doLogin(user.getUserName(), thirdPartyUserForm.getAccountType());
             if (ObjectUtil.isEmpty(finalAccount)) {
                 throw new ServiceException("无法完成手机号登录，请确认已绑定手机号或使用账号密码登录");
             }

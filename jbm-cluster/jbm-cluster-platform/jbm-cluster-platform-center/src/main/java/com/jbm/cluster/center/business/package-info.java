@@ -1,12 +1,11 @@
 /**
  * 平台侧业务编排（Masterdata 代码生成约定）。
  * <p>
- * 分层与命名：
+ * 完整规范：<b>docs/CBSM-standard.md</b>（分层职责、方法名事务 AOP、{@code this} 拆解）。
  * <ul>
- *   <li>{@code jbm-cluster-common-mysql}：{@code XxxMapper} / {@code XxxService} / {@code XxxServiceImpl}（ORM + 主数据 CRUD）</li>
- *   <li>{@code center.business}：{@code XxxBusiness} / {@code XxxBusinessImpl}（平台编排，继承对应 ServiceImpl，{@code @Primary}）</li>
- *   <li>{@code center.controller}：{@code MasterDataCollection<Entity, XxxBusiness>} 或 Feign 入口</li>
+ *   <li>{@code jbm-cluster-common-mysql}：{@code XxxMapper} / {@code XxxService} / {@code XxxServiceImpl}</li>
+ *   <li>{@code center.business}：{@code XxxBusiness} / {@code XxxBusinessImpl}（组合 {@code XxxService}，禁止 {@code extends ServiceImpl}）</li>
+ *   <li>{@code center.controller}：查询走 Service，编排走 Business</li>
  * </ul>
- * 通用 CRUD 勿放在本包；复杂实体在实体类上用 {@code @IgnoreGeneate} 保护已扩展的 Service。
  */
 package com.jbm.cluster.center.business;

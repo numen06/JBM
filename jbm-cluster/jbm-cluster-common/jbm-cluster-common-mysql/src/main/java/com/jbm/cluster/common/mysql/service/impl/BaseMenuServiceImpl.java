@@ -23,8 +23,8 @@ import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +35,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> implements BaseMenuService {
     @Autowired
     private BaseMenuMapper baseMenuMapper;
@@ -50,6 +49,9 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
 
     @Autowired
     private BaseAppService baseAppService;
+    @Autowired
+    @Lazy
+    private BaseMenuService self;
 
     @Value("${spring.application.name}")
     private String DEFAULT_SERVICE_ID;
@@ -142,6 +144,10 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
 
     @Override
     public BaseMenu saveEntity(BaseMenu menu) {
+        return persistMenu(menu);
+    }
+
+    private BaseMenu persistMenu(BaseMenu menu) {
         //获取当前用户的APPID
 //        JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
 //        menu.setAppId(jbmLoginUser.getAppId());
@@ -196,7 +202,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Override
     public boolean deleteEntity(BaseMenu menu) {
         try {
-            this.removeMenu(menu.getMenuId());
+            self.removeMenu(menu.getMenuId());
             return true;
         } catch (Exception e) {
             return false;
@@ -211,7 +217,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      */
     @Override
     public BaseMenu addMenu(BaseMenu menu) {
-        return this.saveEntity(menu);
+        return persistMenu(menu);
     }
 
     /**
@@ -222,7 +228,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      */
     @Override
     public BaseMenu updateMenu(BaseMenu menu) {
-        return this.saveEntity(menu);
+        return persistMenu(menu);
     }
 
 
@@ -349,7 +355,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                     // 临时清空parentId，避免引用不存在的ID，后续会重新设置
                     importMenu.setParentId(null);
                     // 使用saveEntity方法，确保业务逻辑完整执行
-                    this.saveEntity(importMenu);
+                    persistMenu(importMenu);
                     finalMenuId = existingMenu.getMenuId();
                     updateCount++;
                     log.info("更新菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
@@ -359,7 +365,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                     // 临时清空parentId，避免引用不存在的ID，后续会重新设置
                     importMenu.setParentId(null);
                     // 使用saveEntity方法，确保业务逻辑完整执行
-                    this.saveEntity(importMenu);
+                    persistMenu(importMenu);
                     finalMenuId = importMenu.getMenuId();
                     insertCount++;
                     log.info("新增菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
@@ -398,7 +404,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                         BaseMenu menuToUpdate = getMenu(finalMenuId);
                         if (menuToUpdate != null && !newParentId.equals(menuToUpdate.getParentId())) {
                             menuToUpdate.setParentId(newParentId);
-                            this.saveEntity(menuToUpdate);
+                            persistMenu(menuToUpdate);
                             log.info("更新菜单parentId: {} [menuCode: {}] -> {} [menuCode: {}]", 
                                 finalMenuId, importMenu.getMenuCode(), newParentId, parentCode);
                         }

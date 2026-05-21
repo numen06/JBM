@@ -10,6 +10,7 @@ import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.center.business.BaseUserBusiness;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -31,7 +32,8 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
 
     @Autowired
     private BaseUserBusiness baseUserBusiness;
-
+    @Autowired
+    private BaseUserService baseUserService;
     @Autowired
     private BaseAccountService baseAccountService;
 
@@ -75,7 +77,7 @@ public class UsernameAuthenticate implements ILoginAuthenticate {
     public JbmLoginUser findUserByAccount(UserAccount account) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
         jbmLoginUser.setUserId(account.getUserId());
-        BaseUser baseUser = baseUserBusiness.getUserById(account.getUserId());
+        BaseUser baseUser = baseUserService.getUserById(account.getUserId());
         jbmLoginUser.setUsername(baseUser.getUserName());
         jbmLoginUser.setRealName(baseUser.getRealName());
         jbmLoginUser.setMobile(baseUser.getMobile());

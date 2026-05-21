@@ -8,6 +8,7 @@ import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.center.business.BaseMenuBusiness;
 import com.jbm.cluster.common.mysql.service.BaseActionService;
+import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.BaseController;
@@ -35,12 +36,14 @@ public class BaseMenuController extends BaseController {
     @Autowired
     private BaseMenuBusiness baseMenuBusiness;
     @Autowired
+    private BaseMenuService baseMenuService;
+    @Autowired
     private BaseActionService baseActionService;
 
     @ApiOperation(value = "菜单分页列表")
     @GetMapping
     public ResultBody<DataPaging<BaseMenu>> listMenus(@ModelAttribute BaseMenuForm form) {
-        return ResultBody.callback(() -> baseMenuBusiness.findListPage(form != null ? form : new BaseMenuForm()));
+        return ResultBody.callback(() -> baseMenuService.findListPage(form != null ? form : new BaseMenuForm()));
     }
 
     @ApiOperation(value = "菜单列表")
@@ -49,9 +52,9 @@ public class BaseMenuController extends BaseController {
         BaseMenu baseMenu = new BaseMenu();
         baseMenu.setAppId(appId);
         if (ObjectUtil.isEmpty(appId)) {
-            return ResultBody.callback(() -> baseMenuBusiness.findPlatformList(baseMenu));
+            return ResultBody.callback(() -> baseMenuService.findPlatformList(baseMenu));
         }
-        return ResultBody.callback(() -> baseMenuBusiness.findAllList(baseMenu));
+        return ResultBody.callback(() -> baseMenuService.findAllList(baseMenu));
     }
 
     @ApiOperation(value = "当前登录应用菜单")
@@ -60,7 +63,7 @@ public class BaseMenuController extends BaseController {
         JbmLoginUser jbmLoginUser = LoginHelper.getLoginUser();
         BaseMenu baseMenu = new BaseMenu();
         baseMenu.setAppId(jbmLoginUser.getAppId());
-        return ResultBody.callback(() -> baseMenuBusiness.findAllList(baseMenu));
+        return ResultBody.callback(() -> baseMenuService.findAllList(baseMenu));
     }
 
     @ApiOperation(value = "导出菜单")
@@ -85,7 +88,7 @@ public class BaseMenuController extends BaseController {
     @ApiOperation(value = "菜单详情")
     @GetMapping("/{menuId}")
     public ResultBody<BaseMenu> getMenu(@PathVariable Long menuId) {
-        return ResultBody.callback(() -> baseMenuBusiness.getMenu(menuId));
+        return ResultBody.callback(() -> baseMenuService.getMenu(menuId));
     }
 
     @ApiOperation(value = "菜单操作")

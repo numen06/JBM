@@ -7,8 +7,8 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.jbm.cluster.api.model.api.JbmApi;
 import com.jbm.cluster.common.basic.annotation.AccessLogIgnore;
 import com.jbm.util.StringUtils;
+import org.springframework.util.AntPathMatcher;
 import io.swagger.annotations.ApiOperation;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -29,12 +29,25 @@ import java.util.stream.Collectors;
  * @Description TODO
  */
 @Data
-@AllArgsConstructor
 public class ApiBuild {
 
-    private RequestMappingInfo requestMappingInfo;
-    private HandlerMethod handlerMethod;
-    private String serviceId;
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
+    private final RequestMappingInfo requestMappingInfo;
+    private final HandlerMethod handlerMethod;
+    private final String serviceId;
+    private final String[] permitAllPatterns;
+
+    public ApiBuild(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod, String serviceId) {
+        this(requestMappingInfo, handlerMethod, serviceId, new String[0]);
+    }
+
+    public ApiBuild(RequestMappingInfo requestMappingInfo, HandlerMethod handlerMethod, String serviceId, String[] permitAllPatterns) {
+        this.requestMappingInfo = requestMappingInfo;
+        this.handlerMethod = handlerMethod;
+        this.serviceId = serviceId;
+        this.permitAllPatterns = permitAllPatterns != null ? permitAllPatterns : new String[0];
+    }
 
 
     public JbmApi doBuild() {
@@ -63,9 +76,8 @@ public class ApiBuild {
         String md5 = DigestUtil.md5Hex(serviceId + url);
         String name = StrUtil.EMPTY;
         String desc = StrUtil.EMPTY;
-        // 是否需要安全认证 默认:1-是 0-否
-        Boolean isAuth = true;
-        // 匹配项目中.permitAll()配置
+        // 是否需要安全认证：@PermitAll 与 jbm.cluster.permit-all 白名单为 false
+        Boolean isAuth = !isPermitAll();
         ApiOperation apiOperation = handlerMethod.getMethodAnnotation(ApiOperation.class);
         if (ObjectUtil.isNotEmpty(apiOperation)) {
             name = apiOperation.value();
@@ -85,6 +97,27 @@ public class ApiBuild {
                 .contentTypes(requestMappingInfo.getProducesCondition().getProducibleMediaTypes().stream().map(MediaType::toString).collect(Collectors.toSet()))
                 .isAuth(isAuth);
         return api.build();
+    }
+
+    private static final String PERMIT_ALL_ANNOTATION = "com.jbm.cluster.common.security.annotation.PermitAll";
+
+    private boolean isPermitAll() {
+        if (handlerMethod.getMethod().getAnnotations().length > 0) {
+            for (java.lang.annotation.Annotation annotation : handlerMethod.getMethod().getAnnotations()) {
+                if (PERMIT_ALL_ANNOTATION.equals(annotation.annotationType().getName())) {
+                    return true;
+                }
+            }
+        }
+        Set<String> patterns = requestMappingInfo.getPatternsCondition().getPatterns();
+        for (String path : patterns) {
+            for (String permitPattern : permitAllPatterns) {
+                if (PATH_MATCHER.match(permitPattern, path)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 

@@ -61,7 +61,10 @@ public abstract class BaseGenerateCodeImpl implements IGenerateCode {
     @SneakyThrows
     @Override
     public Path getTargetDir(GenerateSource generateSource) {
-        URL url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
+        URL url = GenerateMasterData.getEntityClasspathRoot(generateSource.getEntityClass());
+        if (url == null) {
+            url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
+        }
         String codePackage = generateSource.getPackageFor(this.getCodeType());
         generateSource.getData().put("codePackage", codePackage);
         String packagePath = codePackage.replace(".", "/");

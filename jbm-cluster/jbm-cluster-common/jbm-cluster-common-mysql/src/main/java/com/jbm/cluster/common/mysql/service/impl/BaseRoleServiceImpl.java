@@ -34,7 +34,6 @@ import java.util.Set;
  * @author wesley.zhang
  */
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> implements BaseRoleService {
     @Autowired
     private BaseRoleMapper baseRoleMapper;
@@ -108,7 +107,7 @@ public class BaseRoleServiceImpl extends MasterDataServiceImpl<BaseRole> impleme
         if (role.getIsPersist() == null) {
             role.setIsPersist(JbmConstants.DISABLED);
         }
-        this.saveEntity(role);
+        super.saveEntity(role);
         return role;
     }
 

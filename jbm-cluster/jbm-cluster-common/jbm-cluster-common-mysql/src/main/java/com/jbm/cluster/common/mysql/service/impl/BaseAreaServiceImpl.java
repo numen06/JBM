@@ -13,8 +13,10 @@ import com.jbm.cluster.common.mysql.mapper.BaseAreaMapper;
 import com.jbm.cluster.common.mysql.service.BaseAreaService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationListener;
@@ -43,6 +45,9 @@ public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> impleme
 
     @Resource
     private BaseAreaMapper baseAreaMapper;
+    @Autowired
+    @Lazy
+    private BaseAreaService self;
 
     @Override
     @Cacheable(value = CACHE_KEY)
@@ -123,8 +128,9 @@ public class BaseAreaServiceImpl extends MasterDataServiceImpl<BaseArea> impleme
         } catch (Exception ex) {
             log.error("读取文件并注入区域错误");
         } finally {
-            if (MapUtil.isNotEmpty(baseAreaMap))
-                this.saveEntitys(baseAreaMap.values());
+            if (MapUtil.isNotEmpty(baseAreaMap)) {
+                self.saveEntitys(baseAreaMap.values());
+            }
         }
     }
 

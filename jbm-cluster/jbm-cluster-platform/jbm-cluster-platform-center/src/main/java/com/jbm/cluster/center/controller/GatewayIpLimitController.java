@@ -4,6 +4,7 @@ import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayIpLimitApi;
 import com.jbm.cluster.api.form.GatewayIpLimitForm;
 import com.jbm.cluster.center.business.GatewayIpLimitBusiness;
+import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.util.StringUtils;
@@ -24,24 +25,26 @@ public class GatewayIpLimitController {
 
     @Autowired
     private GatewayIpLimitBusiness gatewayIpLimitBusiness;
+    @Autowired
+    private GatewayIpLimitService gatewayIpLimitService;
 
     @ApiOperation(value = "策略列表")
     @GetMapping
     public ResultBody<DataPaging<GatewayIpLimit>> listPolicies(@ModelAttribute GatewayIpLimitForm form) {
-        return ResultBody.callback(() -> gatewayIpLimitBusiness.findListPage(
+        return ResultBody.callback(() -> gatewayIpLimitService.findListPage(
                 form != null ? form : new GatewayIpLimitForm()));
     }
 
     @ApiOperation(value = "策略详情")
     @GetMapping("/{policyId}")
     public ResultBody<GatewayIpLimit> getPolicy(@PathVariable Long policyId) {
-        return ResultBody.callback(() -> gatewayIpLimitBusiness.getIpLimitPolicy(policyId));
+        return ResultBody.callback(() -> gatewayIpLimitService.getIpLimitPolicy(policyId));
     }
 
     @ApiOperation(value = "策略绑定的 API")
     @GetMapping("/{policyId}/apis")
     public ResultBody<List<GatewayIpLimitApi>> listPolicyApis(@PathVariable Long policyId) {
-        return ResultBody.callback(() -> gatewayIpLimitBusiness.findIpLimitApiList(policyId));
+        return ResultBody.callback(() -> gatewayIpLimitService.findIpLimitApiList(policyId));
     }
 
     @ApiOperation(value = "创建策略")

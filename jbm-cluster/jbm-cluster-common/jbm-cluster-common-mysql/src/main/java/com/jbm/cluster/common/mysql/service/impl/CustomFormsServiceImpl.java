@@ -14,7 +14,6 @@ import com.jbm.cluster.common.mysql.service.ExtendFormDefinitionService;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @Author: auto generate by jbm
@@ -29,9 +28,8 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
     private ExtendFormDefinitionService extendFormDefinitionService;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public CustomForms saveData(CustomFormsForm form) {
-        CustomForms customForms = this.saveEntity(form);
+        CustomForms customForms = super.saveEntity(form);
         if (CollUtil.isNotEmpty(form.getCustomFormsItemList())) {
             form.getCustomFormsItemList().forEach(item -> item.setFormId(customForms.getId()));
             customFormsItemService.saveEntitys(form.getCustomFormsItemList());

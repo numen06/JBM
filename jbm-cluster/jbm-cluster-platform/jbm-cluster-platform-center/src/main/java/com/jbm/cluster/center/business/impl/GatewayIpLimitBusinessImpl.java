@@ -5,22 +5,23 @@ import com.jbm.cluster.api.entitys.gateway.GatewayIpLimit;
 import com.jbm.cluster.api.form.GatewayIpLimitForm;
 import com.jbm.cluster.center.business.GatewayIpLimitBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
-import com.jbm.cluster.common.mysql.service.impl.GatewayIpLimitServiceImpl;
+import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
-public class GatewayIpLimitBusinessImpl extends GatewayIpLimitServiceImpl implements GatewayIpLimitBusiness {
+public class GatewayIpLimitBusinessImpl implements GatewayIpLimitBusiness {
 
+    @Autowired
+    private GatewayIpLimitService gatewayIpLimitService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
     @Override
     public Long addIpLimitWithGatewayRefresh(GatewayIpLimitForm form) {
         GatewayIpLimit ipLimit = BeanUtil.toBean(form, GatewayIpLimit.class);
-        GatewayIpLimit result = addIpLimitPolicy(ipLimit);
+        GatewayIpLimit result = gatewayIpLimitService.addIpLimitPolicy(ipLimit);
         jbmClusterTemplate.refreshGateway();
         return result != null ? result.getPolicyId() : null;
     }
@@ -28,19 +29,19 @@ public class GatewayIpLimitBusinessImpl extends GatewayIpLimitServiceImpl implem
     @Override
     public void updateIpLimitWithGatewayRefresh(GatewayIpLimitForm form) {
         GatewayIpLimit ipLimit = BeanUtil.toBean(form, GatewayIpLimit.class);
-        updateIpLimitPolicy(ipLimit);
+        gatewayIpLimitService.updateIpLimitPolicy(ipLimit);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void removeIpLimitWithGatewayRefresh(Long policyId) {
-        removeIpLimitPolicy(policyId);
+        gatewayIpLimitService.removeIpLimitPolicy(policyId);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void addIpLimitApisWithGatewayRefresh(Long policyId, String[] apiIds) {
-        addIpLimitApis(policyId, apiIds);
+        gatewayIpLimitService.addIpLimitApis(policyId, apiIds);
         jbmClusterTemplate.refreshGateway();
     }
 }

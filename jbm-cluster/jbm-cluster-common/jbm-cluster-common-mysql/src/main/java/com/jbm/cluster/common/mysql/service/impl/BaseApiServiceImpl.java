@@ -20,8 +20,8 @@ import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -32,7 +32,6 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implements BaseApiService {
     @Autowired
     private BaseApiMapper baseApiMapper;
@@ -40,13 +39,19 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     private BaseAuthorityService baseAuthorityService;
     @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
+    @Resource
+    @Lazy
+    private BaseApiService self;
 
     @Override
     public BaseApi saveEntity(BaseApi baseApi) {
-        if (ObjectUtil.isEmpty(baseApi)) {
-            this.addApi(baseApi);
+        if (baseApi == null) {
+            throw new ServiceException("接口不能为空");
+        }
+        if (ObjectUtil.isEmpty(baseApi.getApiId())) {
+            doAddApi(baseApi);
         } else {
-            this.updateApi(baseApi);
+            doUpdateApi(baseApi);
         }
         jbmClusterTemplate.refreshGateway();
         return baseApi;
@@ -120,6 +125,10 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      */
     @Override
     public void addApi(BaseApi api) {
+        doAddApi(api);
+    }
+
+    private void doAddApi(BaseApi api) {
         //默认记入日志
         api.setAccessLog(ObjectUtil.defaultIfNull(api.getAccessLog(), true));
         if (isExist(api.getApiCode())) {
@@ -146,12 +155,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         // 同步权限表里的信息
         baseAuthorityService.saveOrUpdateAuthority(api.getApiId(), ResourceType.api);
     }
-
-    /**
-     * 自我注入
-     */
-    @Resource
-    private BaseApiService self;
 
     @Override
     public Integer batchUpdateOpen(List<String> ids, Boolean open) {
@@ -185,6 +188,10 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
      */
     @Override
     public void updateApi(BaseApi api) {
+        doUpdateApi(api);
+    }
+
+    private void doUpdateApi(BaseApi api) {
         BaseApi saved = getApi(api.getApiId());
         saved.setAccessLog(ObjectUtil.defaultIfNull(saved.getAccessLog(), true));
         if (saved == null) {

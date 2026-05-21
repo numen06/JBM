@@ -2,6 +2,7 @@ package com.jbm.framework.masterdata.code.generate;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.framework.masterdata.code.GenerateMasterData;
 import com.jbm.framework.masterdata.code.constants.CodeType;
 import com.jbm.framework.masterdata.code.model.GenerateSource;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
@@ -25,7 +26,10 @@ public class GenerateMapperXmlCode extends BaseGenerateCodeImpl {
     @SneakyThrows
     @Override
     public Path getTargetDir(GenerateSource generateSource) {
-        URL url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
+        URL url = GenerateMasterData.getEntityClasspathRoot(generateSource.getEntityClass());
+        if (url == null) {
+            url = ClassUtil.getResourceUrl("/", generateSource.getEntityClass());
+        }
         String dirName = resolveMapperXmlDirName(generateSource);
         return this.getModuleRootPath(url, generateSource).resolve("src").resolve("main").resolve("resources").resolve(dirName);
     }

@@ -24,12 +24,12 @@ import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.RandomValueUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPair;
 import java.util.Date;
@@ -42,7 +42,6 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implements BaseAppService {
 
     /**
@@ -59,15 +58,16 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     private BaseAppMapper baseAppMapper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
+    @Autowired
+    @Lazy
+    private BaseAppService self;
 
     @Override
     public BaseApp saveEntity(BaseApp entity) {
         if (ObjectUtil.isEmpty(entity.getAppId())) {
-            return this.addAppInfo(entity);
-        } else {
-            return this.updateInfo(entity);
+            return doAddAppInfo(entity);
         }
-//        return super.saveEntity(entity);
+        return doUpdateInfo(entity);
     }
 
     /**
@@ -123,7 +123,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
             RSA rsa = SecureUtil.rsa(keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded());
             baseApp.setPrivateKey(rsa.getPrivateKeyBase64());
             baseApp.setPublicKey(rsa.getPublicKeyBase64());
-            this.saveEntity(baseApp);
+            self.saveEntity(baseApp);
         }
         return baseApp;
     }
@@ -169,6 +169,10 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     @CachePut(value = "apps", key = "#app.appId")
     @Override
     public BaseApp addAppInfo(BaseApp app) {
+        return doAddAppInfo(app);
+    }
+
+    private BaseApp doAddAppInfo(BaseApp app) {
 //        Long appId = String.valueOf(System.currentTimeMillis());
         String apiKey = RandomValueUtils.randomAlphanumeric(24);
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
@@ -205,6 +209,10 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
     })
     @Override
     public BaseApp updateInfo(BaseApp app) {
+        return doUpdateInfo(app);
+    }
+
+    private BaseApp doUpdateInfo(BaseApp app) {
         app.setUpdateTime(new Date());
         baseAppMapper.updateById(app);
         // 修改客户端附加信息

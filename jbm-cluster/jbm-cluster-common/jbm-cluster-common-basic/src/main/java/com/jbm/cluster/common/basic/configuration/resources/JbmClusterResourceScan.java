@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public abstract class JbmClusterResourceScan<T extends JbmClusterResource> implements ApplicationListener<ApplicationReadyEvent> {
 
     @Autowired
-    private JbmClusterProperties jbmClusterProperties;
+    protected JbmClusterProperties jbmClusterProperties;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired

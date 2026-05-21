@@ -6,7 +6,6 @@ import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.model.IpLimitApi;
 import com.jbm.cluster.api.model.RateLimitApi;
 import com.jbm.cluster.api.service.feign.IGatewayServiceClient;
-import com.jbm.cluster.center.business.GatewayRouteBusiness;
 import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
 import com.jbm.cluster.common.mysql.service.GatewayRouteService;
@@ -39,14 +38,6 @@ public class GatewayController implements IGatewayServiceClient {
     private GatewayRateLimitService gatewayRateLimitService;
     @Autowired
     private GatewayRouteService gatewayRouteService;
-    @Autowired
-    private GatewayRouteBusiness gatewayRouteBusiness;
-
-    @ApiOperation(value = "获取所有微服务", notes = "兼容原路径")
-    @GetMapping("/routes/micro-services")
-    public ResultBody<List<String>> getMicroServices() {
-        return ResultBody.callback(() -> gatewayRouteBusiness.getMicroServices());
-    }
 
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
     @GetMapping("/service/list")

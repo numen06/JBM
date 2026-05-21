@@ -15,6 +15,7 @@ import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -43,6 +44,8 @@ public class BaseUserController extends BaseController {
     @Autowired
     private BaseUserBusiness baseUserBusiness;
     @Autowired
+    private BaseUserService baseUserService;
+    @Autowired
     private BaseRoleService baseRoleService;
     @Autowired
     private BaseAccountService baseAccountService;
@@ -53,7 +56,7 @@ public class BaseUserController extends BaseController {
         final BaseUserForm query = form != null ? form : new BaseUserForm();
         applyDateRange(query);
         if (StrUtil.isNotBlank(query.getMobile())) {
-            return ResultBody.callback(() -> baseUserBusiness.getUserByPhone(query.getMobile()));
+            return ResultBody.callback(() -> baseUserService.getUserByPhone(query.getMobile()));
         }
         if (query.getPageForm() != null
                 && (query.getPageForm().getCurrPage() != null || query.getPageForm().getPageSize() != null)) {
@@ -75,7 +78,7 @@ public class BaseUserController extends BaseController {
     @ApiOperation(value = "按手机号查询用户")
     @GetMapping(params = "phone")
     public ResultBody<BaseUser> getUserByPhone(@RequestParam String phone) {
-        return ResultBody.callback(() -> baseUserBusiness.getUserByPhone(phone));
+        return ResultBody.callback(() -> baseUserService.getUserByPhone(phone));
     }
 
     @ApiOperation(value = "按 ID 批量查询用户")
@@ -86,13 +89,13 @@ public class BaseUserController extends BaseController {
                 .filter(StrUtil::isNotBlank)
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
-        return ResultBody.callback(() -> baseUserBusiness.getUsersByIds(idList));
+        return ResultBody.callback(() -> baseUserService.getUsersByIds(idList));
     }
 
     @ApiOperation(value = "全部用户")
     @GetMapping("/all")
     public ResultBody<List<BaseUser>> listAllUsers() {
-        return ResultBody.callback(() -> baseUserBusiness.findAllList());
+        return ResultBody.callback(() -> baseUserService.findAllList());
     }
 
     @ApiOperation(value = "用户统计")
@@ -102,7 +105,7 @@ public class BaseUserController extends BaseController {
             UserInfoStatistics stats = new UserInfoStatistics();
             List<String> online = StpUtil.searchTokenValue("", -1, 0, true);
             stats.setOnlineUser((long) online.size());
-            stats.setUsersTotal(baseUserBusiness.count(new BaseUser()));
+            stats.setUsersTotal(baseUserService.count(new BaseUser()));
             return stats;
         });
     }
@@ -110,7 +113,7 @@ public class BaseUserController extends BaseController {
     @ApiOperation(value = "用户详情")
     @GetMapping("/{userId}")
     public ResultBody<BaseUser> getUser(@PathVariable Long userId) {
-        return ResultBody.callback(() -> baseUserBusiness.selectById(userId));
+        return ResultBody.callback(() -> baseUserService.selectById(userId));
     }
 
     @ApiOperation(value = "用户账号列表")

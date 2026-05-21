@@ -3,12 +3,11 @@ package com.jbm.cluster.center.business;
 import com.jbm.cluster.api.form.BaseAuthorityRoleForm;
 import com.jbm.cluster.api.form.BaseAuthorityUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
-import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 
 import java.util.Date;
 import java.util.List;
 
-public interface BaseAuthorityBusiness extends BaseAuthorityService {
+public interface BaseAuthorityBusiness {
 
     void grantAuthorityRole(Long roleId, Date expireTime, String[] authorityIds);
 

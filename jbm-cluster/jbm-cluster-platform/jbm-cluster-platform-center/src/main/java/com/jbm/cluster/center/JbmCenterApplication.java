@@ -30,26 +30,26 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EntityScan(basePackages = {"com.jbm.cluster.api.entitys"})
 @MapperScan(basePackageClasses = BaseMenuMapper.class)
 @EnableJbmDictionary(basePackageClasses = OrgType.class)
-@EnableCodeAutoGeneate(
-        entityPackageClasses = {BaseDic.class},
-        targetPackage = "com.jbm.cluster.common.mysql",
-        mapper = @EnableCodeAutoGeneate.MapperConfig(
-                module = "jbm-cluster-common-mysql",
-                packageBase = "com.jbm.cluster.common.mysql"
-        ),
-        service = @EnableCodeAutoGeneate.ServiceConfig(
-                module = "jbm-cluster-common-mysql",
-                packageBase = "com.jbm.cluster.common.mysql"
-        ),
-        business = @EnableCodeAutoGeneate.BusinessConfig(
-                module = "jbm-cluster-common-mysql",
-                packageBase = "com.jbm.cluster.common.mysql"
-        ),
-        controller = @EnableCodeAutoGeneate.ControllerConfig(
-                module = "jbm-cluster-platform-center",
-                packageBase = "com.jbm.cluster.center"
-        )
-)
+//@EnableCodeAutoGeneate(
+//        entityPackageClasses = {BaseDic.class},
+//        targetPackage = "com.jbm.cluster.common.mysql",
+//        mapper = @EnableCodeAutoGeneate.MapperConfig(
+//                module = "jbm-cluster-common-mysql",
+//                packageBase = "com.jbm.cluster.common.mysql"
+//        ),
+//        service = @EnableCodeAutoGeneate.ServiceConfig(
+//                module = "jbm-cluster-common-mysql",
+//                packageBase = "com.jbm.cluster.common.mysql"
+//        ),
+//        business = @EnableCodeAutoGeneate.BusinessConfig(
+//                module = "jbm-cluster-platform-center",
+//                packageBase = "com.jbm.cluster.center"
+//        ),
+//        controller = @EnableCodeAutoGeneate.ControllerConfig(
+//                module = "jbm-cluster-platform-center",
+//                packageBase = "com.jbm.cluster.center"
+//        )
+//)
 public class JbmCenterApplication {
 
     public static void main(String[] args) {

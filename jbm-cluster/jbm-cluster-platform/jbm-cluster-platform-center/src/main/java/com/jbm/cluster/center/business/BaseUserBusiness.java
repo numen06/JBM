@@ -6,13 +6,14 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 
 import java.util.List;
 
-public interface BaseUserBusiness extends BaseUserService {
+public interface BaseUserBusiness {
+
+    BaseUser saveEntity(BaseUser baseUser);
 
     List<BaseUser> selectEntitys(BaseUserForm baseUserForm);
 

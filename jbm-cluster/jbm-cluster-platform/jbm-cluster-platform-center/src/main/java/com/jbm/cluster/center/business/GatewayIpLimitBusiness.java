@@ -1,9 +1,8 @@
 package com.jbm.cluster.center.business;
 
 import com.jbm.cluster.api.form.GatewayIpLimitForm;
-import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 
-public interface GatewayIpLimitBusiness extends GatewayIpLimitService {
+public interface GatewayIpLimitBusiness {
 
     Long addIpLimitWithGatewayRefresh(GatewayIpLimitForm form);
 

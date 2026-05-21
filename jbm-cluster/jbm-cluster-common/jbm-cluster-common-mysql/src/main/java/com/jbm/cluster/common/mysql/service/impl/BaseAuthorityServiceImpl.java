@@ -20,12 +20,12 @@ import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -37,7 +37,6 @@ import java.util.*;
  * @author wesley.zhang
  */
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthority> implements BaseAuthorityService {
 
     @Autowired
@@ -67,6 +66,9 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     private BaseUserService baseUserService;
     @Autowired
     private BaseAppService baseAppService;
+    @Autowired
+    @Lazy
+    private BaseAuthorityService self;
 //    @Autowired
 //    private RedisTokenStore redisTokenStore;
 
@@ -150,7 +152,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
 
     @EventListener
     public void pushNewAuthority(NewMenuEvent newMenuEvent) {
-        this.saveOrUpdateAuthority(newMenuEvent.getBaseMenu().getMenuId(), ResourceType.menu);
+        self.saveOrUpdateAuthority(newMenuEvent.getBaseMenu().getMenuId(), ResourceType.menu);
     }
 
 
