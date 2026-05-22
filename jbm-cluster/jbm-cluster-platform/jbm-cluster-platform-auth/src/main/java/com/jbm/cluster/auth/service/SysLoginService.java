@@ -43,7 +43,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -65,6 +64,8 @@ public class SysLoginService {
     private LoginDatabaseHook loginDatabaseHook;
     @Autowired
     private UserService userService;
+    @Autowired
+    private LoginPasswordSecurityService loginPasswordSecurityService;
 
     public JbmLoginUser conventJbmLoginUser(BaseUser baseUser) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
@@ -82,7 +83,11 @@ public class SysLoginService {
                                 || LoginType.WECHAT.equals(loginProcessModel.getLoginType())) {
                             return loginProcessModel.getOriginalPassword();
                         }
-                        return decryptPassword(loginProcessModel.getClientId(), loginProcessModel.getOriginalPassword());
+                        String clientId = loginProcessModel.getClientId();
+                        String original = loginProcessModel.getOriginalPassword();
+                        loginPasswordSecurityService.assertLoginPasswordEncrypted(
+                                clientId, original, WebUtils.getHttpServletRequest());
+                        return decryptPassword(clientId, original);
                     }
 
                     @Override
@@ -136,7 +141,7 @@ public class SysLoginService {
     }
 
     public String decryptPassword(String clientId, String key) {
-        if (Objects.equals(clientId, "demo")) {
+        if (loginPasswordSecurityService.allowsPlaintextLogin(clientId)) {
             return key;
         }
         try {
@@ -203,6 +208,8 @@ public class SysLoginService {
         if (StrUtil.isNotBlank(originalPassword)) {
             SaRequest req = SaHolder.getRequest();
             String clientId = req.getParamNotNull(SaOAuth2Consts.Param.client_id);
+            HttpServletRequest httpRequest = WebUtils.getHttpServletRequest();
+            loginPasswordSecurityService.assertLoginPasswordEncrypted(clientId, originalPassword, httpRequest);
             sysUser.setPassword(decryptPassword(clientId, originalPassword));
         }
         HttpServletRequest request = WebUtils.getHttpServletRequest();

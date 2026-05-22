@@ -155,6 +155,15 @@ public class LoginHelper {
     }
 
     /**
+     * 仅写入请求级缓存（跨节点 OAuth/JWT 透传且 Redis 无 session 时使用）。
+     */
+    public static void setLoginUserCache(JbmLoginUser loginUser) {
+        if (loginUser != null) {
+            LOGIN_CACHE.set(loginUser);
+        }
+    }
+
+    /**
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser(Object loginId) {

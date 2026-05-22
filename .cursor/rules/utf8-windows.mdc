@@ -13,12 +13,21 @@ When working on Windows or PowerShell:
 
 - Never write project files using PowerShell redirection operators `>` or `>>`.
 - Never use `Out-File`, `Set-Content`, `Add-Content`, or `Export-Csv` without an explicit UTF-8 encoding.
+- Do not use Windows PowerShell 5.1 terminal commands to create or overwrite source files when editor/patch editing is available.
 - Prefer editor/patch-based file edits over shell-based file generation.
-- If shell-based writing is necessary, use explicit UTF-8 encoding.
+- If shell-based writing is necessary, use explicit UTF-8 encoding and verify the written file is not UTF-16.
 - If a file already exists, preserve its encoding unless the project explicitly requires converting it to UTF-8.
 - If generated text contains garbled characters, stop and inspect the file encoding before rewriting it.
 
-Use these PowerShell patterns:
+Preferred PowerShell write pattern for generated text:
+
+```powershell
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+[System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
+[System.IO.File]::AppendAllText($path, $content, $utf8NoBom)
+```
+
+Acceptable PowerShell patterns:
 
 ```powershell
 Set-Content -Path .\file.txt -Value $content -Encoding utf8
@@ -36,6 +45,15 @@ Avoid these patterns:
 Set-Content file.txt "content"
 Add-Content file.txt "content"
 Export-Csv file.csv
+```
+
+After generating or overwriting files, check for UTF-16 BOMs when the file may contain non-ASCII text:
+
+```powershell
+$bytes = [System.IO.File]::ReadAllBytes($path)
+if ($bytes.Length -ge 2 -and (($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) -or ($bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF))) {
+  throw "File was written as UTF-16, rewrite it as UTF-8: $path"
+}
 ```
 
 Before running scripts that may read or write non-ASCII text in PowerShell, normalize the session:

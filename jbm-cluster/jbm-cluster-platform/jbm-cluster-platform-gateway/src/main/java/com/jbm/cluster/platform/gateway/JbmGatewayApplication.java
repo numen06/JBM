@@ -5,15 +5,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.bus.jackson.RemoteApplicationEventScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.web.reactive.config.EnableWebFlux;
-
 /**
  * 网关启动程序
  *
  * @author wesley.zhang
  */
-@EnableWebFlux
-@EnableFeignClients(basePackages = "com.jbm.cluster")
+@EnableFeignClients(basePackages = "com.jbm.cluster.api.service.feign.client")
 @EnableClusterEventBus(basePackages = "com.jbm.cluster")
 @RemoteApplicationEventScan(basePackages = "com.jbm.cluster")
 @SpringBootApplication

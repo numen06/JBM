@@ -1,6 +1,8 @@
 package com.jbm.cluster.common.satoken.core;
 
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
+import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import com.jbm.cluster.common.satoken.oauth.AccessTokenExpiryAligner;
 import com.jbm.framework.exceptions.auth.NotLoginException;
 
@@ -22,8 +24,11 @@ public class StpLogicJwtForCustom extends StpLogicJwtForSimple {
         if (tokenValue == null) {
             throw NotLoginException.newInstance(loginType, NotLoginException.NOT_TOKEN);
         }
-        // 查找此token对应loginId, 如果找不到则抛出：无效token
+        // 查找此 token 对应 loginId；JWT 解析失败时回退 OAuth2 AccessToken（Gateway 透传场景）
         String loginId = getLoginIdNotHandle(tokenValue);
+        if (loginId == null || NotLoginException.INVALID_TOKEN.equals(loginId)) {
+            loginId = resolveLoginIdFromOAuth2AccessToken(tokenValue);
+        }
         if (loginId == null) {
             throw NotLoginException.newInstance(loginType, NotLoginException.INVALID_TOKEN);
         }
@@ -48,5 +53,18 @@ public class StpLogicJwtForCustom extends StpLogicJwtForSimple {
         }
         // 至此，返回loginId
         return loginId;
+    }
+
+    private static String resolveLoginIdFromOAuth2AccessToken(String tokenValue) {
+        try {
+            AccessTokenModel model = SaOAuth2Util.checkAccessToken(tokenValue);
+            if (model == null || model.loginId == null) {
+                Object loginId = SaOAuth2Util.getLoginIdByAccessToken(tokenValue);
+                return loginId == null ? null : String.valueOf(loginId);
+            }
+            return String.valueOf(model.loginId);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

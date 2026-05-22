@@ -33,22 +33,6 @@
               }
             },
             {
-              "name": "resolve userId",
-              "method": "GET",
-              "path": "/user",
-              "auth": "none",
-              "bodyType": "query",
-              "body": "userName={testUserName}",
-              "expect": "success",
-              "extract": {
-                "userId": "result.0.userId"
-              },
-              "assert": [
-                "sizeGte:result:1",
-                "eq:result.0.userName:{testUserName}"
-              ]
-            },
-            {
               "name": "oauth password",
               "service": "auth",
               "auth": "none",
@@ -77,7 +61,10 @@
               "assert": [
                 "notNull:result.userId",
                 "isList:result.roles"
-              ]
+              ],
+              "extract": {
+                "userId": "result.userId"
+              }
             }
           ]
         }

@@ -30,6 +30,7 @@ public enum ErrorCode {
     UNSUPPORTED_RESPONSE_TYPE(2009, "unsupported_response_type"),
     UNAUTHORIZED(2012, "unauthorized"),
     SIGNATURE_DENIED(2013, "signature_denied"),
+    PASSWORD_PLAINTEXT_DENIED(2014, "password_plaintext_denied"),
 
     ACCESS_DENIED(4030, "access_denied"),
     ACCESS_DENIED_BLACK_LIMITED(4031, "access_denied_black_limited"),

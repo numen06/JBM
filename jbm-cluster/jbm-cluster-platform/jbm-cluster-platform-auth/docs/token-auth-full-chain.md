@@ -1,5 +1,8 @@
 # JBM Token 认证全链路文档
 
+> **访问路径与双通道（用户 / 内部服务）** 的现行说明见：[认证与访问体系](../../../docs/architecture/auth-access-system.md)。  
+> 下文侧重登录、Redis、续签与诊断；**第五章「下游服务认证」以新文档为准**（`SaOAuthFilterAuthStrategy` 已更新）。
+
 ## 一、技术架构概览
 
 ### 1.1 技术选型
@@ -312,57 +315,17 @@ public void doLogin(String loginType, Object loginId, String tokenValue, SaLogin
 
 ## 五、请求认证链路
 
-### 5.1 Gateway 层认证
+> **已迁移**：Gateway `ForwardAuthFilter`、下游 `SaOAuthFilterAuthStrategy`（用户 Bearer 优先、OAuth2/JWT 回退、禁止 Bearer 无效时仅用 Id-Token）、Feign 透传规则，见 [auth-access-system.md](../../../docs/architecture/auth-access-system.md)。
 
-**SaAuthFilter** (`jbm-cluster-platform-gateway`):
+### 5.1 Gateway 层（摘要）
 
-```
-请求进入 Gateway
-    │
-    ├─ 匹配白名单 (/*/login/**, /*/oauth/**, /actuator/** 等)
-    │   └── 直接放行
-    │
-    └─ SaReactorFilter.setAuth()
-        │
-        └── StpUtil.checkLogin()   ← ⚠️ 当前已被注释掉!
-            │
-            └── 不执行登录校验，所有请求直接透传到下游
-```
+- `SaAuthFilter`：**不**对用户执行 `StpUtil.checkLogin()`，仅白名单 + 路由。
+- `ForwardAuthFilter`：**保留** `Authorization`，**追加** `Satoken-Id-Token`、`X-Internal-Service`、`X-Internal-Instance`。
 
-> **重要**: Gateway 的 `StpUtil.checkLogin()` 被注释掉了 (SaAuthFilter.java 第51行)，
-> 当前 Gateway 不做强制登录校验，仅做路由转发。认证完全依赖下游服务。
+### 5.2 下游 Servlet（摘要）
 
-### 5.2 下游服务认证 (Servlet 服务)
-
-**JbmSecurityConfiguration** 注册的 `SaServletSuperFilter`:
-
-```
-请求进入下游服务
-    │
-    ├─ 匹配白名单 (permitAll 注解、actuator、v2/api-docs 等)
-    │   └── 直接放行
-    │
-    └─ SaOAuthFilterAuthStrategy.run()   ← 核心认证逻辑
-        │
-        ├─ Step 1: 本地 IP (127.x.x.x / ::1) → 直接放行
-        │
-        ├─ Step 2: StpUtil.getTokenValue() 获取 token
-        │   └─ token 为空 → 抛出 "无效Token"
-        │
-        ├─ Step 3: StpUtil.getTokenInfo() 检查 Sa-Token 状态
-        │   ├─ isLogin=true && tokenTimeout>0 → 放行 ✓
-        │   ├─ isLogin=true && tokenTimeout<=0 → 抛出 "Token已失效"
-        │   └─ isLogin=false:
-        │       ├─ 有 Satoken-Id-Token header → SaIdUtil.checkCurrentRequestToken() → 放行 ✓
-        │       └─ 无 Id-Token → 继续 Step 4
-        │
-        └─ Step 4: OAuth2 校验
-            ├─ SaOAuth2Util.getAccessToken(tokenValue) 找到
-            │   └─ SaOAuth2Util.checkAccessToken() → 放行 ✓
-            ├─ SaOAuth2Util.getClientToken(tokenValue) 找到 (ClientToken)
-            │   └─ 放行 ✓
-            └─ 都找不到 → 抛出 "无效的访问客户端"
-```
+- `SaServletSuperFilter` + `SaOAuthFilterAuthStrategy`：用户 Token → OAuth2 AccessToken → JWT `loginId`；无用户 Token 时 Id-Token 互信。
+- 业务节点需 **`sa-token-oauth2`**（`jbm-cluster-node-basic`）与 Auth **同一 Redis**。
 
 ### 5.3 SaTokenInfo.tokenTimeout 的计算
 
@@ -409,23 +372,13 @@ public Object getLoginId() {
 
 ## 六、服务间调用 (Feign)
 
-### 6.1 请求拦截器
+> 现行 Header 注入与 Id-Token 规则见 [auth-access-system.md §5](../../../docs/architecture/auth-access-system.md#5-内部服务访问体系)。
 
-**AppPreRequestInterceptor** (`jbm-cluster-common-fegin`):
+### 6.1 请求拦截器（摘要）
 
-```
-Feign 调用发起
-    │
-    ├─ 当前请求有 Authorization header
-    │   └── 直接透传用户的 token
-    │
-    └─ 当前请求无 Authorization header (服务间调用)
-        ├── 生成 ClientToken: saOAuth2Template.generateClientToken(serviceName, "*")
-        ├── 生成 Id-Token: SaIdUtil.getToken()
-        └── 设置 header:
-            ├── Authorization: Bearer {clientToken}
-            └── Satoken-Id-Token: {idToken}
-```
+**FeignRequestInterceptor**：透传用户 `Authorization`、`user_id`、`username`、`X-Context-*`。  
+**AppPreRequestInterceptor**：无用户 `Authorization` 时注入 `Satoken-Id-Token` + `X-Internal-*`。  
+**JbmFeignRequest**（`feign://`）：追加 Id-Token 与内部身份 Header。
 
 ### 6.2 ClientToken 生成
 
@@ -565,3 +518,45 @@ Gateway 的 `SaAuthFilter` 中 `StpUtil.checkLogin()` 被注释，Gateway 不校
 | `/token/diagnose/config` | GET | 查看当前生效的 Sa-Token 配置 |
 | `/token/diagnose/check?tokenValue=xxx` | GET | 检查指定 token 的双层 TTL 状态 |
 | `/token/diagnose/scan?prefix=satoken:&limit=100` | GET | 扫描 Redis 中所有 token key |
+
+---
+
+## 十一、RSA 安全传输体系
+
+### 11.1 策略分级
+
+| 能力 | 可关闭 | 说明 |
+|------|--------|------|
+| 登录密码 RSA 加密 | **否** | Auth 强制；明文返回 `PASSWORD_PLAINTEXT_DENIED(2014)` |
+| Gateway API 签名 | **是** | `jbm.api.check-sign`，RSA-SHA256 + `X-App-Id` / `X-Timestamp` / `X-Signature` |
+| 非登录敏感字段加密 | **是（二期）** | `jbm.api.check-sensitive-encrypt` |
+
+密钥复用 `BaseApp`：`apiKey`（client_id）、`publicKey`（前端加密 / Gateway 验签）、`privateKey`（Auth 解密，不下发）。
+
+### 11.2 登录加密流程
+
+1. 前端：`GET /oauth2/publicKey?app_id={client_id}` 获取公钥  
+2. RSA 加密 `password`，请求头带 `X-Password-Encrypted: true`  
+3. Auth：`LoginPasswordSecurityService` 校验密文 → `SysLoginService.decryptPassword`  
+
+仅 **dev profile** 且 `jbm.api.login-plaintext-dev-only=true` 时，`demo` 客户端可明文（本地调试）。
+
+### 11.3 API 签名（`check-sign=true` 时）
+
+签名字符串（换行分隔）：
+
+```
+METHOD + PATH + SORTED_QUERY + BASE64(MD5(body)) + Timestamp + AppId
+```
+
+登录相关路径在 `sign-ignores` 内可免签名，但密码仍须加密。
+
+### 11.4 相关类
+
+| 类 | 模块 |
+|----|------|
+| `ApiSecurityConstants` / `ApiSecurityUtils` | `jbm-cluster-core` |
+| `OpenSignatureException` | `jbm-framework-core` |
+| `ApiSignatureFilter` | `jbm-cluster-platform-gateway` |
+| `LoginPasswordSecurityService` | `jbm-cluster-platform-auth` |
+| `OAuth2ServerController.getPublicKey` | `jbm-cluster-platform-auth` |

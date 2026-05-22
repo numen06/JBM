@@ -14,3 +14,7 @@ python scripts/run_user_perm_rest_tests.py --base-url http://127.0.0.1:7777 --au
 ## 前置
 
 Gateway(7777)、Center、Auth(5555)，账号 admin/admin123，OAuth client demo/demo123。
+
+## 认证体系说明
+
+用户 Bearer + Gateway Id-Token + 内部 Feign 互信见：[认证与访问体系](../../architecture/auth-access-system.md)。

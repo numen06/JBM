@@ -8,12 +8,11 @@ import com.jbm.cluster.platform.gateway.handler.WebExceptionResolve;
 import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
 import com.jbm.cluster.platform.gateway.locator.DynamicRouteDefinitionLocator;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
+import com.jbm.cluster.platform.gateway.resolver.I18nLocaleResolver;
 import com.jbm.cluster.platform.gateway.service.RouteDataSource;
 import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
@@ -24,14 +23,14 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+import org.springframework.web.server.i18n.LocaleContextResolver;
+
+import java.util.Collections;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
 
-import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 网关限流配置
@@ -41,16 +40,11 @@ import java.util.List;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties({JdbcDataSourceProperties.class})
-public class GatewayConfig {
+public class GatewayConfig implements WebFluxConfigurer {
 
-    @Autowired
-    private ServerCodecConfigurer serverCodecConfigurer;
-
-    @PostConstruct
-    public void init() {
-        ServerCodecConfigurer.ServerDefaultCodecs serverDefaultCodecs = serverCodecConfigurer.defaultCodecs();
-        // 设置限制 100MB
-        serverDefaultCodecs.maxInMemorySize(100 * 1024 * 1024);
+    @Override
+    public void configureHttpMessageCodecs(org.springframework.http.codec.ServerCodecConfigurer configurer) {
+        configurer.defaultCodecs().maxInMemorySize(100 * 1024 * 1024);
     }
 
     /**
@@ -124,13 +118,21 @@ public class GatewayConfig {
 
     @Bean
     @Primary
-    public I18nConfig i18nConfig() {
-        return new I18nConfig();
+    public LocaleContextResolver localeContextResolver() {
+        return new I18nLocaleResolver();
     }
 
     @Bean(name = "databaseMessageSource")
     public DatabaseMessageSource databaseMessageSource(JdbcDataSourceProperties jdbcDataSourceProperties) {
         return new DatabaseMessageSource(jdbcDataSourceProperties);
+    }
+
+    /** FeignAutoConfiguration 依赖，勿注册 Servlet 版 HttpMessageConverters */
+    @Bean
+    public FastJsonHttpMessageConverter fastJsonHttpMessageConverter() {
+        FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
+        return converter;
     }
 
     /**
@@ -158,28 +160,4 @@ public class GatewayConfig {
         return new CorsWebFilter(source);
     }
 
-    @Bean
-    public HttpMessageConverters fastJsonHttpMessageConverters() {
-        List<MediaType> supportedMediaTypes = new ArrayList<>();
-        supportedMediaTypes.add(MediaType.APPLICATION_JSON);
-        supportedMediaTypes.add(MediaType.APPLICATION_JSON_UTF8);
-        supportedMediaTypes.add(MediaType.APPLICATION_ATOM_XML);
-        supportedMediaTypes.add(MediaType.APPLICATION_FORM_URLENCODED);
-        supportedMediaTypes.add(MediaType.APPLICATION_OCTET_STREAM);
-        supportedMediaTypes.add(MediaType.APPLICATION_PDF);
-        supportedMediaTypes.add(MediaType.APPLICATION_RSS_XML);
-        supportedMediaTypes.add(MediaType.APPLICATION_XHTML_XML);
-        supportedMediaTypes.add(MediaType.APPLICATION_XML);
-        supportedMediaTypes.add(MediaType.IMAGE_GIF);
-        supportedMediaTypes.add(MediaType.IMAGE_JPEG);
-        supportedMediaTypes.add(MediaType.IMAGE_PNG);
-        supportedMediaTypes.add(MediaType.TEXT_EVENT_STREAM);
-        supportedMediaTypes.add(MediaType.TEXT_HTML);
-        supportedMediaTypes.add(MediaType.TEXT_MARKDOWN);
-        supportedMediaTypes.add(MediaType.TEXT_PLAIN);
-        supportedMediaTypes.add(MediaType.TEXT_XML);
-        FastJsonHttpMessageConverter fastConverter = new FastJsonHttpMessageConverter();
-        fastConverter.setSupportedMediaTypes(supportedMediaTypes);
-        return new HttpMessageConverters(fastConverter);
-    }
 }

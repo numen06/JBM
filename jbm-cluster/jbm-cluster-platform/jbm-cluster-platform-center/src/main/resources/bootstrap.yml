@@ -47,6 +47,9 @@ jbm:
   cluster:
     token-type: redis
     permit-all:
+      - /user/registrations
+      - /user/sessions
+      - /user/sessions/**
       #      - /authority/access
       #      - /authority/app
       #      - /app/*/info

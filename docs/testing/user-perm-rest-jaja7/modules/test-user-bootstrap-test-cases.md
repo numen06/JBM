@@ -9,7 +9,6 @@
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
 | register | register | POST | /user/registrations | 接口 success=true |
-| resolve userId | resolve userId | GET | /user | sizeGte:result:1; eq:result.0.userName:{testUserName} |
 | oauth password | oauth password | POST | /oauth2/token | notEmpty:result.access_token |
 | userinfo | userinfo | GET | /oauth2/userinfo | notNull:result.userId; isList:result.roles |
 

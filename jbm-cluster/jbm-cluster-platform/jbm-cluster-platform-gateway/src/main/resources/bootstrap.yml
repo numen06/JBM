@@ -18,7 +18,14 @@ spring:
   codec:
     max-in-memory-size: 104857600
   main:
+    web-application-type: reactive
     allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - com.jbm.cluster.common.basic.configuration.TenantConfiguration
+      - com.jbm.cluster.common.basic.configuration.LoginAssemblyConfiguration
+      - com.jbm.cluster.common.basic.configuration.ForwardedHeaderConfig
+      - com.jbm.cluster.common.basic.configuration.JbmBasicConfiguration
   mvc:
     favicon:
       enabled: false
@@ -88,8 +95,12 @@ management:
 jbm:
   # 开放api
   api:
-    # 参数签名验证
+    # 登录密码：Auth 层强制 RSA 加密（无总开关）；仅 dev+demo 可配置明文
+    login-plaintext-dev-only: false
+    # 参数签名验证（可开关）
     check-sign: false
+    check-sensitive-encrypt: false
+    sign-expire-ms: 300000
     # 访问权限控制
     access-control: true
     # swagger调试,生产环境设为false
@@ -99,6 +110,8 @@ jbm:
       - /*/login/**
       - /*/logout/**
       - /*/oauth/**
+      - /**/user/registrations
+      - /user/registrations
       - /actuator/health
       - /actuator/info
     # 忽略权限鉴定
@@ -110,6 +123,8 @@ jbm:
     sign-ignores:
       - /**/login/**
       - /**/logout/**
+      - /oauth2/publicKey
+      - /**/oauth2/publicKey
 
 
 # Sa-Token配置

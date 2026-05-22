@@ -1,0 +1,23 @@
+server:
+  port: 7777
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: jaja7-center-local
+          uri: http://127.0.0.1:8888
+          predicates:
+            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/trust/**
+        - id: jaja7-auth-local
+          uri: http://127.0.0.1:5555
+          predicates:
+            - Path=/oauth2/**
+    nacos:
+      config:
+        namespace: jbm7
+        refreshable-dataids: common.properties
+        server-addr: 10.100.10.62:8848
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
+      discovery:
+        namespace: jbm7
+        server-addr: 10.100.10.62:8848

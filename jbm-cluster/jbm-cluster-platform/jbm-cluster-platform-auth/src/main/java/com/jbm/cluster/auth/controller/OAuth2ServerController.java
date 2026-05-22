@@ -23,7 +23,10 @@ import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.ConfirmService;
+import com.jbm.cluster.auth.service.LoginPasswordSecurityService;
 import com.jbm.cluster.auth.service.LoginLifecyclePublisher;
 import com.jbm.cluster.auth.service.LoginPostProcessor;
 import com.jbm.cluster.auth.service.SysLoginService;
@@ -39,7 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import jbm.framework.web.WebUtils;
 import java.io.IOException;
 import java.util.Map;
 
@@ -62,6 +67,10 @@ public class OAuth2ServerController {
     private LoginPostProcessor loginPostProcessor;
     @Autowired
     private LoginLifecyclePublisher loginLifecyclePublisher;
+    @Autowired
+    private BaseAppPreprocessing baseAppPreprocessing;
+    @Autowired
+    private LoginPasswordSecurityService loginPasswordSecurityService;
 
     public Object oauth2() {
         log.debug("OAuth2 请求: {}", SaHolder.getRequest().getUrl());
@@ -124,12 +133,22 @@ public class OAuth2ServerController {
         return result;
     }
 
+    @ApiOperation(value = "获取 RSA 公钥（登录加密）", notes = "按 client_id 返回 BaseApp.publicKey")
+    @GetMapping("/publicKey")
+    public ResultBody<String> getPublicKey(@RequestParam("app_id") String appId) {
+        BaseApp app = baseAppPreprocessing.getAppByKey(appId);
+        return ResultBody.ok(app.getPublicKey());
+    }
+
     @ApiOperation(value = "登录", notes = "")
     @PostMapping("/doLogin")
     public ResultBody<?> doLogin(AuthorizeForm authorizeForm) {
         try {
             String password = authorizeForm.getPassword();
             if (StrUtil.isNotBlank(password) && StrUtil.isNotBlank(authorizeForm.getClient_id())) {
+                HttpServletRequest httpRequest = WebUtils.getHttpServletRequest();
+                loginPasswordSecurityService.assertLoginPasswordEncrypted(
+                        authorizeForm.getClient_id(), password, httpRequest);
                 password = sysLoginService.decryptPassword(authorizeForm.getClient_id(), password);
             }
             ResultBody<JbmLoginUser> loginResult = sysLoginService.login(

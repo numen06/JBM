@@ -45,6 +45,8 @@ swagger2:
   description: 平台用户认证服务器
   title: 平台用户认证服务器
 jbm:
+  api:
+    login-plaintext-dev-only: false
   #  client:
   #    oauth2:
   #      admin:

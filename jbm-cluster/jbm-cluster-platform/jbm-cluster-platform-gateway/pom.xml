@@ -17,20 +17,34 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
+        <!-- 仅满足 common-basic 中 WebMvcConfigurer 等类的加载，不引入嵌入式 Tomcat -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-fegin</artifactId>
+            <artifactId>jbm-cluster-common-basic</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.jbm</groupId>
-                    <artifactId>jbm-cluster-common-basic</artifactId>
+                    <artifactId>jbm-framework-autoconfigure-mvc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.jbm</groupId>
+                    <artifactId>jbm-framework-autoconfigure-swagger</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-fegin</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- SpringCloud Alibaba Nacos -->
         <dependency>
@@ -80,10 +94,6 @@
                     <groupId>cn.dev33</groupId>
                     <artifactId>sa-token-spring-boot-starter</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.jbm</groupId>
-                    <artifactId>jbm-cluster-common-basic</artifactId>
-                </exclusion>
             </exclusions>
             <version>${project.version}</version>
         </dependency>
@@ -109,8 +119,23 @@
         <!--        </dependency>-->
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-api-basic</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jbm</groupId>
+                    <artifactId>jbm-framework-autoconfigure-extendfield</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

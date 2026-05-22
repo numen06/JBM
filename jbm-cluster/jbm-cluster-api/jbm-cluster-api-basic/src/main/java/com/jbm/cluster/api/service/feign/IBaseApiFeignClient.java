@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface IBaseApiFeignClient {
     @GetMapping(params = "serviceId")
-    List<BaseApi> getApiAllList(@RequestParam(required = false) String serviceId);
+    List<BaseApi> getApiAllList(@RequestParam(value = "serviceId", required = false) String serviceId);
     @GetMapping(params = {"serviceId", "path"})
-    BaseApi findApiByPath(@RequestParam String serviceId, @RequestParam String path);
+    BaseApi findApiByPath(@RequestParam("serviceId") String serviceId, @RequestParam("path") String path);
     @GetMapping("/{apiId}")
     BaseApi getApi(@PathVariable("apiId") Long apiId);
 }
