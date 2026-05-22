@@ -50,4 +50,19 @@ public class JbmSecurityConstants {
     public final static String AUTHORITY_PREFIX_ACTION = "ACTION_";
 
     public final static String LOGIN_AUTHENTICATE_KEY = "LoginAuthenticate:";
+
+    /** 内部调用：调用方服务名 */
+    public static final String INTERNAL_SERVICE = "X-Internal-Service";
+
+    /** 内部调用：调用方实例 service:port */
+    public static final String INTERNAL_INSTANCE = "X-Internal-Instance";
+
+    /** SecurityContextHolder 中记录的调用方服务名 */
+    public static final String FROM_SERVICE = "fromService";
+
+    /** SecurityContextHolder 中记录的调用方实例 */
+    public static final String FROM_INSTANCE = "fromInstance";
+
+    /** 自定义上下文透传 Header 前缀 */
+    public static final String CONTEXT_HEADER_PREFIX = "X-Context-";
 }

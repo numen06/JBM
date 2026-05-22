@@ -7,7 +7,7 @@ import cn.hutool.json.JSONObject;
 import com.jbm.cluster.api.entitys.job.rule.RuleDefinition;
 import com.jbm.cluster.api.entitys.message.drools.DroolsFeignTemplate;
 import com.jbm.cluster.api.form.job.DroolsParseAndExecuteForm;
-import com.jbm.cluster.api.service.feign.drools.DroolsRuleServiceClient;
+import com.jbm.cluster.api.service.IDroolsRuleServiceClient;
 import com.jbm.cluster.job.business.impl.LoadDynamicClassService;
 import com.jbm.cluster.job.business.impl.RuleEngineService;
 import com.jbm.cluster.job.business.impl.RuleReloadService;
@@ -37,7 +37,7 @@ import java.util.Map;
 @Api(tags = "drools规则开放接口")
 @RestController
 @RequestMapping("/droolsRule")
-public class RuleDefinitionController extends MasterDataCollection<RuleDefinition, RuleDefinitionService> implements DroolsRuleServiceClient {
+public class RuleDefinitionController extends MasterDataCollection<RuleDefinition, RuleDefinitionService> implements IDroolsRuleServiceClient {
     @Autowired
     private RuleDefinitionService ruleDefinitionService;
     @Autowired

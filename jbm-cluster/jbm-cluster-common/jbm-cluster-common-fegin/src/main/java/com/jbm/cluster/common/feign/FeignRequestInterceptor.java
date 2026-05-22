@@ -2,6 +2,7 @@ package com.jbm.cluster.common.feign;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.common.basic.context.SecurityContextHolder;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import feign.RequestInterceptor;
@@ -51,6 +52,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             // 配置客户端IP
             requestTemplate.header(IpUtils.X_FORWARDED_FOR, IpUtils.getRequestIp(ServletUtils.getRequest()));
         }
+        propagateContextFromHolder(requestTemplate);
         //以上标准内容注入完成之后，搜索自定义配置
         Map<String, PreRequestInterceptor> preRequestInterceptorMap = applicationContext.getBeansOfType(PreRequestInterceptor.class);
         preRequestInterceptorMap.forEach(new BiConsumer<String, PreRequestInterceptor>() {
@@ -63,8 +65,20 @@ public class FeignRequestInterceptor implements RequestInterceptor {
                 }
             }
         });
+    }
 
-
+    private void propagateContextFromHolder(RequestTemplate requestTemplate) {
+        SecurityContextHolder.getLocalMap().forEach((key, value) -> {
+            if (StrUtil.isEmpty(key) || value == null) {
+                return;
+            }
+            if (JbmSecurityConstants.DETAILS_USER_ID.equals(key)
+                    || JbmSecurityConstants.DETAILS_USERNAME.equals(key)
+                    || JbmSecurityConstants.AUTHORIZATION_HEADER.equals(key)) {
+                return;
+            }
+            requestTemplate.header(JbmSecurityConstants.CONTEXT_HEADER_PREFIX + key, StrUtil.toString(value));
+        });
     }
 
 }

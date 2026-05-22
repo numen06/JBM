@@ -2,7 +2,9 @@ package com.jbm.cluster.common.feign;
 
 import com.jbm.cluster.common.feign.request.JbmFeignRequest;
 import feign.RequestInterceptor;
+import feign.codec.ErrorDecoder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +30,16 @@ public class FeignAutoConfiguration {
         return new FeignUnknownRuntimeExceptionFilter();
     }
 
+    @Bean
+    public ErrorDecoder feignClientErrorDecoder() {
+        return new FeignClientErrorDecoder();
+    }
+
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public HeaderContextFilter headerContextFilter() {
+        return new HeaderContextFilter();
+    }
 
     @Configuration
     @ConditionalOnClass(name = "com.jbm.cluster.common.basic.module.request.JbmBaseRequest")

@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.jbm.framework.metadata.bean.ResultBody;
 import feign.FeignException;
+import jbm.framework.boot.autoconfigure.feign.RemoteServiceException;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,6 +13,18 @@ import javax.servlet.http.HttpServletRequest;
 public class FeignUnknownRuntimeExceptionFilter implements UnknownRuntimeExceptionFilter {
     @Override
     public void apply(ResultBody resultBody, RuntimeException runtimeException, HttpServletRequest request) {
+        if (runtimeException instanceof RemoteServiceException) {
+            RemoteServiceException remote = (RemoteServiceException) runtimeException;
+            resultBody.msg(remote.getMessage());
+            resultBody.exception(null);
+            return;
+        }
+        if (runtimeException.getCause() instanceof RemoteServiceException) {
+            RemoteServiceException remote = (RemoteServiceException) runtimeException.getCause();
+            resultBody.msg(remote.getMessage());
+            resultBody.exception(null);
+            return;
+        }
         if (runtimeException instanceof FeignException) {
             FeignException feignException = (FeignException) runtimeException;
             ResultBody feginResultBody = JSON.parseObject(StrUtil.str(feignException.responseBody().get(), CharsetUtil.UTF_8), ResultBody.class);

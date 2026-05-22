@@ -26,7 +26,7 @@ import javax.persistence.Id;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @ApiModel("网关动态路由")
-@TableName("gateway_route")
+@TableName(value = "gateway_route", autoResultMap = true)
 public class GatewayRoute extends MasterDataEntity {
 
     private static final long serialVersionUID = -2952097064941740301L;

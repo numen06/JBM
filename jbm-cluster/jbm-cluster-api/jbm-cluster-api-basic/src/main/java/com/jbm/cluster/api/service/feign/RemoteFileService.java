@@ -2,7 +2,6 @@ package com.jbm.cluster.api.service.feign;
 
 import com.jbm.cluster.api.factory.RemoteFileFallbackFactory;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
-import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,5 +22,5 @@ public interface RemoteFileService {
      * @return 结果
      */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResultBody<String> upload(@RequestPart(value = "file") MultipartFile file);
+    String upload(@RequestPart(value = "file") MultipartFile file);
 }

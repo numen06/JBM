@@ -32,6 +32,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -718,9 +719,9 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
             form.setExpireDays(event.getExpireDays());
             form.setSource(event.getSource());
             form.setTraceId(event.getLogId());
-            ResultBody<?> response = businessLogClient.createLog(form);
-            if (!isSuccess(response)) {
-                log.warn("Feign 创建业务日志失败: logId={}, resp={}", event.getLogId(), response);
+            Map<String, String> created = businessLogClient.createLog(form);
+            if (created == null || created.isEmpty()) {
+                log.warn("Feign 创建业务日志失败: logId={}", event.getLogId());
                 return false;
             }
             return true;
@@ -736,12 +737,11 @@ public class JbmBusinessLogTemplate  implements ApplicationListener<ApplicationR
             form.setLogId(StrUtil.blankToDefault(event.getLogId(), event.getBusinessId()));
             form.setContent(event.getContent());
             form.setAutoTimestamp(false);
-            ResultBody<Boolean> response = businessLogClient.appendLog(form);
-            boolean success = isSuccess(response) && Boolean.TRUE.equals(response.getResult());
-            if (!success) {
-                log.warn("Feign 追加业务日志失败: logId={}, resp={}", event.getLogId(), response);
+            Boolean appended = businessLogClient.appendLog(form);
+            if (!Boolean.TRUE.equals(appended)) {
+                log.warn("Feign 追加业务日志失败: logId={}, result={}", event.getLogId(), appended);
             }
-            return success;
+            return Boolean.TRUE.equals(appended);
         } catch (Exception e) {
             log.error("Feign 追加业务日志异常: logId={}", event.getLogId(), e);
             return false;

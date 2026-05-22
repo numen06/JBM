@@ -89,6 +89,15 @@ public class WebExceptionResolve {
         } else if (className.contains("InvalidTokenException")) {
             httpStatus = HttpStatus.UNAUTHORIZED.value();
             code = ErrorCode.INVALID_TOKEN;
+        } else if (className.contains("SaOAuth2Exception")) {
+            httpStatus = HttpStatus.UNAUTHORIZED.value();
+            code = ErrorCode.UNAUTHORIZED;
+        } else if (className.contains("NotLoginException")) {
+            httpStatus = HttpStatus.UNAUTHORIZED.value();
+            code = ErrorCode.UNAUTHORIZED;
+        } else if (className.contains("SaTokenException")) {
+            httpStatus = HttpStatus.UNAUTHORIZED.value();
+            code = ErrorCode.UNAUTHORIZED;
         } else if (className.contains("InvalidRequestException")) {
             httpStatus = HttpStatus.BAD_REQUEST.value();
             code = ErrorCode.INVALID_REQUEST;

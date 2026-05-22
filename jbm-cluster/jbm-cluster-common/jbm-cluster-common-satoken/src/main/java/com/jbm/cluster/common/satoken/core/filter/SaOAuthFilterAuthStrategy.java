@@ -3,7 +3,6 @@ package com.jbm.cluster.common.satoken.core.filter;
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.filter.SaFilterAuthStrategy;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
@@ -14,7 +13,9 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.common.basic.context.SecurityContextHolder;
 import com.jbm.cluster.common.basic.utils.IpUtils;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 import org.slf4j.Logger;
@@ -48,14 +49,12 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             }
 
             // [互信诊断] 打印接收到的关键 header
-            log.debug("[互信诊断] SaOAuthFilter 收到请求: clientIp={}, requestURI={}, Authorization={}, Satoken-Id-Token={}",
+            log.debug("[互信诊断] SaOAuthFilter 收到请求: clientIp={}, requestURI={}, Authorization={}, internal={}",
                     clientIp, httpServletRequest.getRequestURI(),
                     httpServletRequest.getHeader("Authorization") != null
                             ? httpServletRequest.getHeader("Authorization").substring(0, Math.min(50, httpServletRequest.getHeader("Authorization").length())) + "..."
                             : "null",
-                    httpServletRequest.getHeader(SaIdUtil.ID_TOKEN) != null
-                            ? httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).substring(0, Math.min(50, httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).length())) + "..."
-                            : "null");
+                    httpServletRequest.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
 
             final String tokenValue = StpUtil.getTokenValue();
             log.debug("[互信诊断] StpUtil.getTokenValue()={}", tokenValue != null ? tokenValue.substring(0, Math.min(30, tokenValue.length())) + "..." : "null");
@@ -72,15 +71,8 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                     }
                     log.debug("[互信诊断] 认证通过路径: StpUtil用户Token有效");
                     return;
-                } else {
-                    SaRequest req = SaHolder.getRequest();
-                    if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
-                        SaIdUtil.checkCurrentRequestToken();
-                        log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
-                        return;
-                    }
-                    log.debug("[互信诊断] StpUtil未登录且无Satoken-Id-Token header，继续走OAuth2校验");
                 }
+                log.debug("[互信诊断] StpUtil未登录，继续走OAuth2 ClientToken/AccessToken校验");
             }
             SaRequest req = SaHolder.getRequest();
             String clientId = null;
@@ -94,7 +86,9 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 log.debug("[互信诊断] AccessToken未找到, 查找ClientToken结果: {}", clientTokenModel != null ? "找到, clientId=" + clientTokenModel.clientId : "未找到");
                 if (ObjectUtil.isNotEmpty(clientTokenModel)) {
                     clientId = clientTokenModel.clientId;
-                    log.info("Client Token Info:{}", JSON.toJSONString(clientTokenModel));
+                    log.debug("[互信诊断] 认证通过路径: ClientToken(Redis)有效, clientId={}", clientId);
+                    recordInternalCaller(httpServletRequest);
+                    return;
                 }
             }
             if (ObjectUtil.isEmpty(clientId)) {
@@ -123,6 +117,17 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     /**
      * 判断是否为本地回环地址（支持 127.x.x.x 和 ::1）
      */
+    private static void recordInternalCaller(HttpServletRequest request) {
+        String fromService = request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE);
+        if (StrUtil.isNotBlank(fromService)) {
+            SecurityContextHolder.set(JbmSecurityConstants.FROM_SERVICE, fromService);
+            SecurityContextHolder.set(JbmSecurityConstants.FROM_INSTANCE,
+                    request.getHeader(JbmSecurityConstants.INTERNAL_INSTANCE));
+            log.debug("[互信] 内部调用 from={}:{}", fromService,
+                    request.getHeader(JbmSecurityConstants.INTERNAL_INSTANCE));
+        }
+    }
+
     private static boolean isLocalIp(String ip) {
         if (ObjectUtil.isEmpty(ip)) {
             return false;

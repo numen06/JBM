@@ -62,6 +62,12 @@ public class TokenConfig {
     @Value("${sa-token.oauth2.client-token-cache-hours:24}")
     private int clientTokenCacheHours;
 
+    /**
+     * ClientToken 本地缓存提前刷新（小时），在过期前 refresh，重新 generateClientToken 写 Redis
+     */
+    @Value("${sa-token.oauth2.client-token-refresh-ahead-hours:20}")
+    private int clientTokenRefreshAheadHours;
+
     // ==================== Getter 方法 ====================
 
     public int getOauth2AccessTokenTimeout() {
@@ -86,6 +92,10 @@ public class TokenConfig {
 
     public int getClientTokenCacheHours() {
         return clientTokenCacheHours;
+    }
+
+    public int getClientTokenRefreshAheadHours() {
+        return clientTokenRefreshAheadHours;
     }
 
     // ==================== 配置验证方法 ====================

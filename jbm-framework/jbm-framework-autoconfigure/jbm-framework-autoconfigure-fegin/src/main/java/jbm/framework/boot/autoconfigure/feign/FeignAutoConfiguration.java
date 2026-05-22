@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
 import org.springframework.cloud.openfeign.support.SpringDecoder;
+import feign.codec.Decoder;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -40,8 +41,8 @@ public class FeignAutoConfiguration {
     }
 
     @Bean
-    public ResponseEntityDecoder feignDecoder(ObjectFactory<HttpMessageConverters> messageConverters) {
-        return new ResponseEntityDecoder(new SpringDecoder(messageConverters));
+    public Decoder feignDecoder(ObjectFactory<HttpMessageConverters> messageConverters) {
+        return new UnwrapResultBodyDecoder(new ResponseEntityDecoder(new SpringDecoder(messageConverters)));
     }
 
     @Bean

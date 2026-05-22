@@ -32,7 +32,7 @@ public class TokenFilter implements AccessLogFilter {
             .build(new CacheLoader<String, BaseApp>() {
                 @Override
                 public @Nullable BaseApp load(@NonNull String appkey) throws Exception {
-                    return baseAppServiceClient.getAppByKey(appkey).getResult();
+                    return baseAppServiceClient.getAppByKey(appkey);
                 }
             });
 

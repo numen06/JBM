@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import feign.FeignException;
+import jbm.framework.boot.autoconfigure.feign.RemoteServiceException;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +39,7 @@ public class ApiFilter implements AccessLogFilter {
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
                     String serviceId = StrUtil.subBefore(path, "/", false);
                     String realPath = StrUtil.removePrefix(path, serviceId);
-                    return baseApiServiceClient.findApiByPath(serviceId, realPath).getResult();
+                    return baseApiServiceClient.findApiByPath(serviceId, realPath);
                 }
             });
 
@@ -77,15 +78,29 @@ public class ApiFilter implements AccessLogFilter {
                     && e.getMessage().contains("blocking")) {
                 log.warn("[ApiFilter]获取API元数据跳过(线程模型): {}", e.getMessage());
             } else {
-                FeignException fe = findFeignException(e);
-                if (fe != null && fe.status() >= 400 && fe.status() < 500) {
-                    // 中心返回 4xx（如无效 Token）：访问类问题，不打 stack
-                    log.warn("[ApiFilter]获取API元数据失败 HTTP {}: {}", fe.status(), fe.getMessage());
+                RemoteServiceException remote = findRemoteServiceException(e);
+                if (remote != null) {
+                    log.warn("[ApiFilter]获取API元数据失败(远程服务异常): {}", remote.getMessage());
                 } else {
-                    log.error("获取API信息异常", e);
+                    FeignException fe = findFeignException(e);
+                    if (fe != null && fe.status() >= 400 && fe.status() < 500) {
+                        log.warn("[ApiFilter]获取API元数据失败 HTTP {}: {}", fe.status(), fe.getMessage());
+                    } else {
+                        log.error("获取API信息异常", e);
+                    }
                 }
             }
         }
+    }
+
+    private static RemoteServiceException findRemoteServiceException(Throwable t) {
+        while (t != null) {
+            if (t instanceof RemoteServiceException) {
+                return (RemoteServiceException) t;
+            }
+            t = t.getCause();
+        }
+        return null;
     }
 
     private static FeignException findFeignException(Throwable t) {

@@ -2,8 +2,10 @@ package com.jbm.cluster.auth.controller;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.config.SaTokenConfig;
+import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
+import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -34,6 +36,26 @@ public class TokenDiagnoseController {
 
     @Autowired(required = false)
     private TokenConfig tokenConfig;
+
+    @Autowired(required = false)
+    private SaOAuth2Template saOAuth2Template;
+
+    /**
+     * 为互信/Feign 测试签发 ClientToken（与节点内 generateClientToken 一致，写入 Redis）。
+     */
+    @ApiOperation("签发 ClientToken（诊断/互信测试）")
+    @PostMapping("/client-token")
+    public ResultBody<?> issueClientToken(@RequestParam(required = false) String clientId) {
+        if (saOAuth2Template == null) {
+            return ResultBody.failed().msg("SaOAuth2Template 未就绪");
+        }
+        String cid = StrUtil.blankToDefault(clientId, "jbm-cluster-platform-center-jbm7");
+        ClientTokenModel model = saOAuth2Template.generateClientToken(cid, "*");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("client_id", model.clientId);
+        data.put("client_token", model.clientToken);
+        return ResultBody.ok(data);
+    }
 
     /**
      * 获取 Sa-Token 配置快照

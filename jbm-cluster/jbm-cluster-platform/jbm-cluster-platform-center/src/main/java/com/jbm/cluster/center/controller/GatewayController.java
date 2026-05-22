@@ -42,17 +42,19 @@ public class GatewayController implements IGatewayServiceClient {
     @ApiOperation(value = "获取服务列表", notes = "获取服务列表")
     @GetMapping("/service/list")
     public ResultBody getServiceList() {
-        List<Map> services = Lists.newArrayList();
-        List<GatewayRoute> routes = gatewayRouteService.findRouteList();
-        if (routes != null && routes.size() > 0) {
-            routes.forEach(route -> {
-                Map service = Maps.newHashMap();
-                service.put("serviceId", route.getRouteName());
-                service.put("serviceName", route.getRouteDesc());
-                services.add(service);
-            });
-        }
-        return ResultBody.ok(services);
+        return ResultBody.callback(() -> {
+            List<Map> services = Lists.newArrayList();
+            List<GatewayRoute> routes = gatewayRouteService.findRouteList();
+            if (routes != null && routes.size() > 0) {
+                routes.forEach(route -> {
+                    Map service = Maps.newHashMap();
+                    service.put("serviceId", route.getRouteName());
+                    service.put("serviceName", route.getRouteDesc());
+                    services.add(service);
+                });
+            }
+            return services;
+        });
     }
 
     /**
@@ -100,6 +102,6 @@ public class GatewayController implements IGatewayServiceClient {
     @GetMapping("/api/route")
     @Override
     public ResultBody<List<GatewayRoute>> getApiRouteList() {
-        return ResultBody.ok(gatewayRouteService.findRouteList());
+        return ResultBody.callback(() -> gatewayRouteService.findRouteList());
     }
 }

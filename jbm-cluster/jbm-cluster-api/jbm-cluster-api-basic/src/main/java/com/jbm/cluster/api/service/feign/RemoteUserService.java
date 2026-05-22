@@ -5,7 +5,6 @@ import com.jbm.cluster.api.factory.RemoteUserFallbackFactory;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
-import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,7 @@ public interface RemoteUserService {
      * @return 结果
      */
     @GetMapping("/user/info/{username}")
-    public ResultBody<JbmLoginUser> getUserInfo(@PathVariable("username") String username, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
+    JbmLoginUser getUserInfo(@PathVariable("username") String username, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
 
     /**
      * 注册用户信息
@@ -35,5 +34,5 @@ public interface RemoteUserService {
      * @return 结果
      */
     @PostMapping("/user/register")
-    public ResultBody<Boolean> registerUserInfo(@RequestBody BaseUser baseUser, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
+    Boolean registerUserInfo(@RequestBody BaseUser baseUser, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
 }

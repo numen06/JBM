@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.feign;
 
 import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.hutool.core.util.ObjectUtil;
@@ -16,11 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- *
- * 请求追加Token
- * @Created wesley.zhang
- * @Date 2022/5/19 19:13
- * @Description TODO
+ * 无用户 Token 时为内部 Feign 调用注入 OAuth2 ClientToken（Redis）及调用方身份 Header。
  */
 public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
@@ -32,16 +27,23 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
         if (ObjectUtil.isNotEmpty(httpServletRequest)) {
             Map<String, String> headers = ServletUtils.getHeaders(httpServletRequest);
             String authentication = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
-            if (StrUtil.isEmpty(authentication)) {
-                ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-                requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
-                requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
+            if (StrUtil.isNotEmpty(authentication)) {
+                return;
             }
-        } else {
-            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-            requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
-            requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
         }
+        applyInternalClientToken(requestTemplate);
     }
 
+    private void applyInternalClientToken(RequestTemplate requestTemplate) {
+        ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+        String prefix = StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer");
+        requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, prefix + " " + clientTokenModel.clientToken);
+        appendInternalIdentity(requestTemplate);
+    }
+
+    static void appendInternalIdentity(RequestTemplate requestTemplate) {
+        requestTemplate.header(JbmSecurityConstants.INTERNAL_SERVICE, SpringUtil.getApplicationName());
+        requestTemplate.header(JbmSecurityConstants.INTERNAL_INSTANCE,
+                SpringUtil.getApplicationName() + ":" + SpringUtil.getProperty("server.port", "0"));
+    }
 }

@@ -4,7 +4,6 @@ import com.jbm.cluster.api.entitys.log.BusinessLog;
 import com.jbm.cluster.api.form.log.AppendBusinessLogForm;
 import com.jbm.cluster.api.form.log.BusinessLogForm;
 import com.jbm.cluster.api.form.log.CreateBusinessLogForm;
-import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +39,7 @@ public interface BusinessLogClient {
      * @return 返回包含 logId 的 Map
      */
     @PostMapping("/create")
-    ResultBody<Map<String, String>> createLog(@RequestBody CreateBusinessLogForm form);
+    Map<String, String> createLog(@RequestBody CreateBusinessLogForm form);
 
     /**
      * 追加日志内容（表单方式，推荐）
@@ -49,15 +48,15 @@ public interface BusinessLogClient {
      * @return 是否成功
      */
     @PostMapping("/append")
-    ResultBody<Boolean> appendLog(@RequestBody AppendBusinessLogForm form);
+    Boolean appendLog(@RequestBody AppendBusinessLogForm form);
 
     /**
      * 追加日志内容（简化方式）
      * 仅传递 logId 和 content
      */
     @PostMapping("/append/{logId}")
-    ResultBody<Boolean> appendLogSimple(@PathVariable("logId") String logId,
-                                        @RequestBody String content);
+    Boolean appendLogSimple(@PathVariable("logId") String logId,
+                            @RequestBody String content);
     
     /**
      * 查询业务日志（完整内容）
@@ -67,8 +66,8 @@ public interface BusinessLogClient {
      * @return 完整日志内容
      */
     @GetMapping("/getFullContent/{logId}")
-    ResultBody<String> getLogFullContent(@PathVariable("logId") String logId,
-                                        @RequestParam(value = "formatted", required = false, defaultValue = "false") Boolean formatted);
+    String getLogFullContent(@PathVariable("logId") String logId,
+                             @RequestParam(value = "formatted", required = false, defaultValue = "false") Boolean formatted);
 
     /**
      * 分页查询业务日志
@@ -77,6 +76,6 @@ public interface BusinessLogClient {
      * @return 分页结果
      */
     @PostMapping("/query")
-    ResultBody<DataPaging<BusinessLog>> queryLogs(@RequestBody BusinessLogForm form);
+    DataPaging<BusinessLog> queryLogs(@RequestBody BusinessLogForm form);
 }
 

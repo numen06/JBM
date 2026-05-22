@@ -3,8 +3,6 @@ package com.jbm.cluster.platform.gateway.locator;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.model.IpLimitApi;
-import com.jbm.cluster.api.service.feign.client.BaseApiServiceClient;
-import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.api.service.feign.client.BaseAuthorityServiceClient;
 import com.jbm.cluster.api.service.feign.client.GatewayServiceClient;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +22,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 public class DynamicResourceLocator extends DynamicResourceService {
 
-
-    @Autowired
-    private BaseApiServiceClient baseApiServiceClient;
-
-    @Autowired
-    private BaseAppServiceClient baseAppServiceClient;
     /**
      * 权限资源
      */
@@ -45,15 +37,10 @@ public class DynamicResourceLocator extends DynamicResourceService {
      */
     private List<IpLimitApi> ipWhites;
 
-//    /**
-//     * 权限列表
-//     */
-//    private Map<String, Collection<ConfigAttribute>> configAttributes = new ConcurrentHashMap<>();
     /**
      * 缓存
      */
     private Map<String, Object> cache = new ConcurrentHashMap<>();
-
 
     @Autowired
     private BaseAuthorityServiceClient baseAuthorityServiceClient;
@@ -68,7 +55,6 @@ public class DynamicResourceLocator extends DynamicResourceService {
         ipWhites = new CopyOnWriteArrayList<>();
     }
 
-
     public DynamicResourceLocator(RouteDefinitionLocator routeDefinitionLocator) {
         this();
         this.routeDefinitionLocator = routeDefinitionLocator;
@@ -78,7 +64,6 @@ public class DynamicResourceLocator extends DynamicResourceService {
      * 清空缓存并刷新
      */
     public void refresh() {
-//        this.configAttributes.clear();
         this.cache.clear();
         this.authorityResources = loadAuthorityResources();
         this.ipBlacks = loadIpBlackList();
@@ -87,8 +72,6 @@ public class DynamicResourceLocator extends DynamicResourceService {
 
     /**
      * 获取路由后的地址
-     *
-     * @return
      */
     protected String getFullPath(String serviceId, String path) {
         final String[] fullPath = {path.startsWith("/") ? path : "/" + path};
@@ -111,11 +94,8 @@ public class DynamicResourceLocator extends DynamicResourceService {
      */
     public List<AuthorityResource> loadAuthorityResources() {
         List<AuthorityResource> resources = Lists.newArrayList();
-//        Collection<ConfigAttribute> array;
-//        ConfigAttribute cfg;
         try {
-            // 查询所有接口
-            resources = baseAuthorityServiceClient.findAuthorityResource().getResult();
+            resources = baseAuthorityServiceClient.findAuthorityResource();
             if (resources != null) {
                 for (AuthorityResource item : resources) {
                     String path = item.getPath();
@@ -124,15 +104,6 @@ public class DynamicResourceLocator extends DynamicResourceService {
                     }
                     String fullPath = getFullPath(item.getServiceId(), path);
                     item.setPath(fullPath);
-//                    array = configAttributes.get(fullPath);
-//                    if (array == null) {
-//                        array = new ArrayList<>();
-//                    }
-//                    if (!array.contains(item.getAuthority())) {
-//                        cfg = new SecurityConfig(item.getAuthority());
-//                        array.add(cfg);
-//                    }
-//                    configAttributes.put(fullPath, array);
                 }
                 log.info("=============加载动态权限:{}==============", resources.size());
             }
@@ -148,7 +119,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
     public List<IpLimitApi> loadIpBlackList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiBlackList().getResult();
+            list = gatewayServiceClient.getApiBlackList();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));
@@ -167,7 +138,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
     public List<IpLimitApi> loadIpWhiteList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiWhiteList().getResult();
+            list = gatewayServiceClient.getApiWhiteList();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));
@@ -179,22 +150,4 @@ public class DynamicResourceLocator extends DynamicResourceService {
         }
         return list;
     }
-
-//    public List<BaseApi> loadOperateList() {
-//        List<BaseApi> list = Lists.newArrayList();
-//        try {
-//            list = baseApiServiceClient.findApiByPath(gatewayLogs.getServiceId(), realPath).getResult();
-//            if (list != null) {
-//                for (IpLimitApi item : list) {
-//                    item.setPath(getFullPath(item.getServiceId(), item.getPath()));
-//                }
-//                log.info("=============加载IP白名单:{}==============", list.size());
-//            }
-//        } catch (Exception e) {
-//            log.error("加载IP白名单错误:{}", e);
-//        }
-//        return list;
-//    }
-
-
 }

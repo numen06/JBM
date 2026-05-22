@@ -16,6 +16,21 @@
             <artifactId>jbm-cluster-common-basic</artifactId>
             <version>7.3.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-core</artifactId>
+            <version>7.3.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-fegin</artifactId>
+            <version>7.3.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- SpringCloud Openfeign -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

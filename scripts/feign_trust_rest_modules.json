@@ -1,0 +1,25 @@
+{
+  "profile": "jaja7",
+  "base_url": "http://127.0.0.1:7777",
+  "auth_base_url": "http://127.0.0.1:7777",
+  "client_token_path": "/internal/trust/client-token",
+  "client_id": "jbm-cluster-platform-center-jbm7",
+  "tenant_header": "tenantId",
+  "tenant_id": "0",
+  "health_path": "/actuator/health",
+  "internal_service": "jbm-cluster-platform-center-jbm7",
+  "internal_instance": "center:test",
+  "simulate_remote_ip": "10.0.0.99",
+  "modules": [
+    {
+      "id": "trust",
+      "title": "Feign trust",
+      "scenarios": [
+        {"id": "TC-TRUST-01", "title": "client token ok", "steps": [{"name": "routes", "method": "GET", "path": "/gateway/api/route", "auth": "client_only", "internal_headers": true, "expect": "success", "assert": ["isTrue:success"]}]},
+        {"id": "TC-TRUST-02", "title": "no token", "steps": [{"name": "no auth", "method": "GET", "path": "/gateway/api/route", "auth": "none", "expect": "fail"}]},
+        {"id": "TC-TRUST-03", "title": "bad token", "steps": [{"name": "bad", "method": "GET", "path": "/gateway/api/route", "auth": "client_invalid", "internal_headers": true, "expect": "fail"}]},
+        {"id": "TC-TRUST-04", "title": "id token only", "steps": [{"name": "id only", "method": "GET", "path": "/gateway/api/route", "auth": "id_token_only", "expect": "fail"}]}
+      ]
+    }
+  ]
+}

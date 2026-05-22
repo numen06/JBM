@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.satoken.oauth;
 
 
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
@@ -53,7 +52,8 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
     public JbmNodeOAuth2TemplateImpl() {
         // 延迟初始化，避免循环依赖
         this.clientTokenModelLoadingCache = Caffeine.newBuilder()
-                .expireAfterWrite(24, TimeUnit.HOURS) // 默认24小时
+                .expireAfterWrite(24, TimeUnit.HOURS)
+                .refreshAfterWrite(20, TimeUnit.HOURS)
                 .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
                 );
     }
@@ -206,9 +206,10 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public String randomClientToken(String clientId, String scope) {
-        final String idToken = SaIdUtil.getToken();
-        log.debug("[互信诊断] randomClientToken 生成: clientId={}, idToken={} (长度:{})", clientId, idToken, idToken != null ? idToken.length() : 0);
-        return idToken;
+        String token = super.randomClientToken(clientId, scope);
+        log.debug("[互信诊断] randomClientToken 生成 ClientToken(Redis): clientId={}, len={}",
+                clientId, token != null ? token.length() : 0);
+        return token;
     }
 
     /**
@@ -239,8 +240,12 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
             
             // 重新创建cache，使用配置的时间
             if (this.tokenConfig != null) {
+                int refreshHours = Math.min(
+                        tokenConfig.getClientTokenRefreshAheadHours(),
+                        Math.max(1, tokenConfig.getClientTokenCacheHours() - 1));
                 this.clientTokenModelLoadingCache = Caffeine.newBuilder()
                         .expireAfterWrite(tokenConfig.getClientTokenCacheHours(), TimeUnit.HOURS)
+                        .refreshAfterWrite(refreshHours, TimeUnit.HOURS)
                         .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
                         );
                 log.info("初始化ClientToken缓存完成，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());

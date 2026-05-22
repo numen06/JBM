@@ -39,8 +39,10 @@ public class WeixinNoficationExchanger extends BaseNotificationExchanger<WeixinN
     @Override
     public WeixinNotification build(PushMessageBody pushMessageBody, PushMessageItem pushMessageItem) {
         WeixinNotification weixinNotification = new WeixinNotification();
-        baseUserServiceClient.getUserAccounts(pushMessageItem.getSendUserId()).action(baseAccounts -> {
-            baseAccounts.forEach(baseAccount -> {
+        List<com.jbm.cluster.api.entitys.basic.BaseAccount> accounts =
+                baseUserServiceClient.getUserAccounts(pushMessageItem.getSendUserId());
+        if (accounts != null) {
+            accounts.forEach(baseAccount -> {
                 if (PushWay.wechat.toString().equalsIgnoreCase(baseAccount.getAccountType())) {
                     weixinNotification.setToUser(baseAccount.getAccount());
                     weixinNotification.setTemplateId(pushMessageBody.getTemplateCode());
@@ -51,7 +53,7 @@ public class WeixinNoficationExchanger extends BaseNotificationExchanger<WeixinN
                     weixinNotification.setData(list);
                 }
             });
-        });
+        }
         return weixinNotification;
     }
 
