@@ -23,6 +23,7 @@ public final class OAuth2ResponseHelper {
         if (StrUtil.isNotBlank(currentToken)) {
             token.accessToken = currentToken;
         }
+        AccessTokenExpiryAligner.alignAccessTokenModel(token);
     }
 
     @SuppressWarnings("unchecked")

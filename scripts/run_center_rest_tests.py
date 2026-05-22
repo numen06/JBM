@@ -13,8 +13,10 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from jbm_rest_profile import REST_PROFILE, apply_rest_profile, docs_dir, spring_boot_profile_arg
+
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs/testing/center-rest-jaja7"
+SUITE_DOCS_SLUG = "center-rest"
 CONFIG = ROOT / "scripts/center_rest_modules.json"
 CENTER_MODULE = "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center"
 
@@ -222,7 +224,7 @@ def wait_health(base_url, health_path, tenant_header="tenantId", tenant_id="0", 
 def start_center(profile):
     cmd = (
         f"mvn -pl {CENTER_MODULE} -am spring-boot:run "
-        f"-Dspring-boot.run.profiles={profile} -DskipTests=true"
+        f"-Dspring-boot.run.profiles={spring_boot_profile_arg(profile)} -DskipTests=true"
     )
     print("[start]", cmd, flush=True)
     return subprocess.Popen(cmd, cwd=str(ROOT), shell=True)
@@ -388,18 +390,17 @@ def write_report(mod, results, path, run_time, service_ok):
 
 def main():
     ap = argparse.ArgumentParser(description="Center 业务场景 REST 测试")
-    ap.add_argument("--profile", default="jaja7")
+    ap.add_argument("--profile", default=REST_PROFILE, help=f"Spring profile (fixed {REST_PROFILE})")
     ap.add_argument("--base-url", default="")
     ap.add_argument("--start", action="store_true")
     ap.add_argument("--wait", type=int, default=180)
     ap.add_argument("--token", default="")
     args = ap.parse_args()
     cfg = load_config()
+    profile = apply_rest_profile(cfg, args.profile)
+    docs = docs_dir(ROOT, SUITE_DOCS_SLUG, profile)
     if args.base_url:
         cfg["base_url"] = args.base_url
-    cfg["profile"] = args.profile
-    DOCS.mkdir(parents=True, exist_ok=True)
-    (DOCS / "modules").mkdir(exist_ok=True)
     run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ts = str(int(time.time() * 1000))
     ctx = {
@@ -414,13 +415,13 @@ def main():
     th, tid = cfg.get("tenant_header", "tenantId"), cfg.get("tenant_id", "0")
     service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=8)
     if not service_ok and args.start:
-        start_center(args.profile)
+        start_center(profile)
         service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=args.wait)
 
     summary = []
     all_ok = service_ok
     for mod in cfg["modules"]:
-        write_cases(mod, DOCS / "modules" / f"{mod['id']}-test-cases.md")
+        write_cases(mod, docs / "modules" / f"{mod['id']}-test-cases.md")
         results = []
         for sc, step in iter_steps(mod):
             if not service_ok:
@@ -438,7 +439,7 @@ def main():
             else:
                 results.append(run_step(step, cfg, ctx, sc.get("id", "")))
         ok, passed, total = write_report(
-            mod, results, DOCS / "modules" / f"{mod['id']}-test-report.md", run_time, service_ok
+            mod, results, docs / "modules" / f"{mod['id']}-test-report.md", run_time, service_ok
         )
         all_ok = all_ok and ok
         summary.append((mod["id"], mod["title"], total, passed, ok))
@@ -472,7 +473,7 @@ def main():
         "带 Token: `python scripts/run_center_rest_tests.py --token <Authorization>`",
         "",
     ]
-    (DOCS / "summary-test-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (docs / "summary-test-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("[doc] summary-test-report.md")
     return 0 if all_ok else 1
 

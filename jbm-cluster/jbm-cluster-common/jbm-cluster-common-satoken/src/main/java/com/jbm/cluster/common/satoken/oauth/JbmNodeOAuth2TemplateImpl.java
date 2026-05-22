@@ -15,6 +15,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.constants.OAuthClientSecretVerifier;
+import cn.dev33.satoken.oauth2.model.RequestAuthModel;
 import com.jbm.cluster.common.satoken.config.TokenConfig;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -140,6 +141,26 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
      * 生成accessToken
      */
     @Override
+    public AccessTokenModel generateAccessToken(String code) {
+        AccessTokenModel accessTokenModel = super.generateAccessToken(code);
+        OAuth2ResponseHelper.unifyAccessToken(accessTokenModel);
+        return accessTokenModel;
+    }
+
+    @Override
+    public AccessTokenModel generateAccessToken(RequestAuthModel ra, boolean isCreateRt) {
+        AccessTokenModel accessTokenModel = super.generateAccessToken(ra, isCreateRt);
+        OAuth2ResponseHelper.unifyAccessToken(accessTokenModel);
+        return accessTokenModel;
+    }
+
+    @Override
+    public void saveAccessToken(AccessTokenModel at) {
+        AccessTokenExpiryAligner.alignAccessTokenModel(at);
+        super.saveAccessToken(at);
+    }
+
+    @Override
     public String randomAccessToken(String clientId, Object loginId, String scope) {
         String token = null;
         try {
@@ -194,9 +215,11 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
         String newToken = StpUtil.getTokenValue();
         log.info("已生成新token，loginId={}, 新accessToken={}", loginId, newToken);
         
-        // 确保新的 accessToken 就是 Sa-Token 的 token
+        // 确保新的 accessToken 就是 Sa-Token 的 token，并同步 OAuth2 层 TTL
         accessTokenModel.accessToken = newToken;
         OAuth2ResponseHelper.unifyAccessToken(accessTokenModel);
+        saveAccessToken(accessTokenModel);
+        saveAccessTokenIndex(accessTokenModel);
 
         log.info("刷新Token成功：loginId={}, 新accessToken={}, 过期时间={}", 
                 loginId, newToken, StpUtil.getTokenInfo().getTokenActivityTimeout());

@@ -1,6 +1,5 @@
 package com.jbm.cluster.platform.gateway.logfilter;
 
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.benmanes.caffeine.cache.CacheLoader;
@@ -49,7 +48,7 @@ public class TokenFilter implements AccessLogFilter {
             gatewayLogInfo.setRequestRealName(jbmLoginUser.getRealName());
             try {
                 if (StrUtil.isBlank(jbmLoginUser.getClientId())) {
-                    jbmLoginUser.setClientId(SaOAuth2Util.getAccessToken(jbmLoginUser.getToken()).clientId);
+                    return;
                 }
                 gatewayLogInfo.setAppKey(jbmLoginUser.getClientId());
                 BaseApp app = appLoadingCache.get(jbmLoginUser.getClientId());

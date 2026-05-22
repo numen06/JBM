@@ -1,16 +1,16 @@
 # 角色 - 业务测试报告
 
-- 时间: 2026-05-22 12:31:27
+- 时间: 2026-05-22 18:21:01
 - 服务可用: 是
 - 结果: **PASS**
 - 步骤通过: 7/7
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-ROLE-01 | 创建角色 | POST | 200 | PASS | 0.010 | notNull:result |  |
-| TC-ROLE-01 | 查询详情校验编码 | GET | 200 | PASS | 0.112 | eq:result.roleCode:{roleCode}; eq:result.roleName:REST角色 |  |
-| TC-ROLE-01 | 修改角色名称 | PUT | 200 | PASS | 0.015 | - |  |
-| TC-ROLE-01 | 再次查询校验修改 | GET | 200 | PASS | 0.037 | eq:result.roleName:REST角色-已改 |  |
-| TC-ROLE-01 | 删除角色 | DELETE | 200 | PASS | 0.092 | - |  |
-| TC-ROLE-01 | 删除后详情应为空 | GET | 200 | PASS | 0.005 | isNull:result |  |
-| TC-ROLE-02 | GET /role/all | GET | 200 | PASS | 0.037 | isList:result |  |
+| TC-ROLE-01 | 创建角色 | POST | 200 | PASS | 0.066 | notNull:result |  |
+| TC-ROLE-01 | 查询详情校验编码 | GET | 200 | PASS | 0.044 | eq:result.roleCode:{roleCode}; eq:result.roleName:REST角色 |  |
+| TC-ROLE-01 | 修改角色名称 | PUT | 200 | PASS | 0.071 | - |  |
+| TC-ROLE-01 | 再次查询校验修改 | GET | 200 | PASS | 0.003 | eq:result.roleName:REST角色-已改 |  |
+| TC-ROLE-01 | 删除角色 | DELETE | 200 | PASS | 0.101 | - |  |
+| TC-ROLE-01 | 删除后详情应为空 | GET | 200 | PASS | 0.040 | isNull:result |  |
+| TC-ROLE-02 | GET /role/all | GET | 200 | PASS | 0.062 | isList:result |  |

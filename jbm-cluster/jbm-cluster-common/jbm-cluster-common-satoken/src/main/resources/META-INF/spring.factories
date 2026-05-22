@@ -1,5 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.jbm.cluster.common.satoken.config.SaTokenConfiguration,\
+com.jbm.cluster.common.satoken.config.SaOAuth2AutoConfiguration,\
 com.jbm.cluster.common.satoken.config.SaTokenFilterConfiguration
 org.springframework.boot.env.EnvironmentPostProcessor=\
 com.jbm.cluster.common.satoken.env.SaTokenEnvProcessor

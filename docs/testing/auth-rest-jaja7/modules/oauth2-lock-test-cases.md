@@ -2,6 +2,14 @@
 
 说明：每场景含前置条件、步骤与**业务断言**（非仅 HTTP 200）。
 
+## TC-AUTH-07-prep 注册锁定测试专用用户
+
+**前置条件**：无同名 uauthlock_{usuffix}
+
+| 步骤 | 操作 | 方法 | 路径 | 业务断言 |
+|------|------|------|------|----------|
+| register lock user | register lock user | POST | /user/registrations | 接口 success=true |
+
 ## TC-AUTH-07 lock after 5 fails
 
 **前置条件**：

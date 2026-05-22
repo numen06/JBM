@@ -73,6 +73,7 @@ public class LoginHelper {
             loginId = SaOAuth2Util.getLoginIdByAccessToken(tokenValue);
         } catch (Exception ignored) {
         }
+        revokeOAuth2AccessTokenIfPresent(tokenValue);
         if (loginId != null) {
             StpUtil.logout(loginId);
         } else {
@@ -93,9 +94,20 @@ public class LoginHelper {
             loginUser = getLoginUser(loginId);
         } catch (Exception ignored) {
         }
+        revokeOAuth2AccessTokenIfPresent(tokenValue);
         StpUtil.logout(loginId);
         clearCache();
         publishEvent(new LogoutEvent(LoginHelper.class, loginId, loginUser, tokenValue));
+    }
+
+    private static void revokeOAuth2AccessTokenIfPresent(String tokenValue) {
+        if (StrUtil.isBlank(tokenValue)) {
+            return;
+        }
+        try {
+            SaOAuth2Util.revokeAccessToken(tokenValue);
+        } catch (Exception ignored) {
+        }
     }
 
     /**

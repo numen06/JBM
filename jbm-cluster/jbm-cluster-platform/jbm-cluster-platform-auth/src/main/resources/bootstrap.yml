@@ -54,6 +54,8 @@ jbm:
     #    token-type: redis
     permit-all:
       - /oauth2/**
+      - /internal/trust/**
+      - /token/diagnose/**
       - /captcha/**
       - /qrcode/**
       - /login

@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.satoken.core;
 
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
+import com.jbm.cluster.common.satoken.oauth.AccessTokenExpiryAligner;
 import com.jbm.framework.exceptions.auth.NotLoginException;
 
 /**
@@ -43,6 +44,7 @@ public class StpLogicJwtForCustom extends StpLogicJwtForSimple {
         // 如果配置了自动续签, 则: 更新[最后操作时间]
         if (getConfig().getAutoRenew()) {
             updateLastActivityToNow(tokenValue);
+            AccessTokenExpiryAligner.tryResyncOAuth2AccessToken(tokenValue);
         }
         // 至此，返回loginId
         return loginId;

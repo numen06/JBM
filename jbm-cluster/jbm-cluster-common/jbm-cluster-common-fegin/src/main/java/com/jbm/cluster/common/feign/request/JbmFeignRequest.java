@@ -1,8 +1,6 @@
 package com.jbm.cluster.common.feign.request;
 
-import cn.dev33.satoken.SaManager;
-import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
-import cn.dev33.satoken.oauth2.model.ClientTokenModel;
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
@@ -11,7 +9,6 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.common.basic.module.request.JbmBaseRequest;
 import com.jbm.cluster.common.feign.AppPreRequestInterceptor;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
-import feign.Request;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
@@ -36,11 +33,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
     @Override
     public Builder buildRequest(Builder httpRequest) {
-        SaOAuth2Template saOAuth2Template = SpringUtil.getBean(SaOAuth2Template.class);
-        ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-        final String authorization = StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer")
-                + " " + clientTokenModel.clientToken;
-        httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
+        httpRequest.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
         httpRequest.header(JbmSecurityConstants.INTERNAL_SERVICE, SpringUtil.getApplicationName());
         httpRequest.header(JbmSecurityConstants.INTERNAL_INSTANCE,
                 SpringUtil.getApplicationName() + ":" + SpringUtil.getProperty("server.port", "0"));

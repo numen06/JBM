@@ -1,16 +1,14 @@
 # OAuth2 core - 业务测试报告
 
-- 时间: 2026-05-22 11:56:35
+- 时间: 2026-05-22 18:20:55
 - 服务可用: 是
-- 结果: **FAIL**
-- 步骤通过: 3/7
+- 结果: **PASS**
+- 步骤通过: 5/5
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-AUTH-02 | password token | POST | 500 | FAIL | 0.167 | notEmpty:result.access_token | 没有找到此用户 |
-| TC-AUTH-05 | userinfo | GET | 500 | FAIL | 0.026 | notNull:result.userId; notEmpty:result.roles; notEmpty:result.menuPermission | 登录已过期，请重新登录 |
-| TC-AUTH-04 | refresh | POST | 500 | FAIL | 0.033 | - | 无效refresh_token: {refreshToken} |
-| TC-AUTH-12 | renewal | POST | 200 | FAIL | 0.006 | - | 续签失败：无效access_token：{accessToken} |
-| TC-AUTH-13 | diagnose | GET | 500 | PASS | 0.027 | - | 接口异常! |
-| TC-AUTH-06 | logout | DELETE | 200 | PASS | 0.009 | - | 接口异常! |
-| TC-AUTH-06 | userinfo after logout | GET | 500 | PASS | 0.003 | - | HTTP Error 500:  |
+| TC-AUTH-02 | password token | POST | 200 | PASS | 0.503 | notEmpty:result.access_token |  |
+| TC-AUTH-05 | userinfo | GET | 200 | PASS | 0.116 | notNull:result.userId; isList:result.roles; isList:result.menuPermission |  |
+| TC-AUTH-04 | refresh | POST | 500 | PASS | 0.104 | - | 无效client_secret: demo123 |
+| TC-AUTH-12 | renewal | POST | 200 | PASS | 0.114 | - |  |
+| TC-AUTH-13 | diagnose | GET | 200 | PASS | 0.099 | contains:result.诊断结论:双层Token均有效; ttlMaxDelta:result.1_Sa-Token层.token_TTL(秒):result.2_OAuth2层.access_token_TTL(秒):120 |  |

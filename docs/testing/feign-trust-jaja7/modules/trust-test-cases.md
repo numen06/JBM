@@ -26,11 +26,27 @@
 |------|------|------|------|----------|
 | bad | bad | GET | /gateway/api/route | 接口 success=true |
 
-## TC-TRUST-04 id token only
+## TC-TRUST-04 id token only invalid
 
 **前置条件**：-
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| id only | id only | GET | /gateway/api/route | 接口 success=true |
+| id only fake | id only fake | GET | /gateway/api/route | 接口 success=true |
+
+## TC-TRUST-05 user token current user
+
+**前置条件**：-
+
+| 步骤 | 操作 | 方法 | 路径 | 业务断言 |
+|------|------|------|------|----------|
+| current user | current user | GET | /current/user | isTrue:success; notNull:result.userId |
+
+## TC-TRUST-06 valid id token internal
+
+**前置条件**：-
+
+| 步骤 | 操作 | 方法 | 路径 | 业务断言 |
+|------|------|------|------|----------|
+| routes id-token | routes id-token | GET | /gateway/api/route | isTrue:success |
 

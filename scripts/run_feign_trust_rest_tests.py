@@ -13,14 +13,19 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from jbm_rest_profile import REST_PROFILE, apply_rest_profile, docs_dir, spring_boot_profile_arg
+
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs/testing/feign-trust-jaja7"
+SUITE_DOCS_SLUG = "feign-trust"
 CONFIG = ROOT / "scripts/feign_trust_rest_modules.json"
 CENTER_MODULE = "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center"
 
 _NO_PROXY_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
-CTX_TOKENS = ("userId", "roleId", "formCode", "customFormId", "roleCode", "testUserName")
+CTX_TOKENS = (
+    "userId", "roleId", "formCode", "customFormId", "roleCode",
+    "testUserName", "testPassword", "accessToken", "oauth_client_id", "oauth_client_secret",
+)
 
 
 def load_config():
@@ -198,6 +203,24 @@ def check_assertions(rules, ctx, jb):
             v = jb.get(rest) if rest == "success" and jb else json_path(jb, rest)
             if v is not None:
                 failures.append(f"{rule} 实际={v!r}")
+        elif op == "notContains":
+            path, expected = rest.rsplit(":", 1)
+            actual = json_path(jb, path) if path != "message" else (jb or {}).get("message", "")
+            expected = expand(expected, ctx)
+            if expected in str(actual or ""):
+                failures.append(f"{rule} 不应包含 {expected!r}")
+        elif op == "ttlMaxDelta":
+            parts = rest.split(":")
+            if len(parts) >= 3:
+                path_a, path_b, max_delta = parts[0], parts[1], parts[2]
+                va = json_path(jb, path_a)
+                vb = json_path(jb, path_b)
+                try:
+                    da = abs(float(va) - float(vb))
+                    if da > float(max_delta):
+                        failures.append(f"{rule} 差值={da} 秒 (a={va}, b={vb})")
+                except (TypeError, ValueError):
+                    failures.append(f"{rule} TTL 非数字 a={va!r} b={vb!r}")
     if failures:
         return False, "; ".join(failures[:3])
     return True, ""
@@ -205,26 +228,63 @@ def check_assertions(rules, ctx, jb):
 
 
 
-def fetch_client_token(cfg, override=""):
-    import urllib.parse
+def fetch_internal_id_token(cfg, override=""):
     if override:
-        return override if str(override).startswith("Bearer ") else "Bearer " + str(override)
-    base = (cfg.get("auth_base_url") or cfg["base_url"]).rstrip("/")
-    path = cfg.get("client_token_path", "/token/diagnose/client-token")
-    cid = cfg.get("client_id", "jbm-cluster-platform-center-jbm7")
-    url = base + path + ("&" if "?" in path else "?") + urllib.parse.urlencode({"clientId": cid})
+        return str(override)
+    path = cfg.get("id_token_path") or cfg.get("client_token_path", "/internal/trust/id-token")
     headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
-    status, raw, _, err = http_request("POST", url, headers)
+    bases = []
+    for b in (cfg.get("auth_base_url"), cfg.get("center_base_url"), cfg.get("base_url")):
+        if b and b.rstrip("/") not in bases:
+            bases.append(b.rstrip("/"))
+    last_err = ""
+    for base in bases:
+        url = base + path
+        status, raw, _, err = http_request("POST", url, headers)
+        jb = parse_result_body(raw)
+        if status in (200, 201) and jb and jb.get("success"):
+            result = jb.get("result") or {}
+            if isinstance(result, dict):
+                tok = result.get("id_token") or result.get("client_token") or ""
+                if tok:
+                    return str(tok)
+            if result:
+                return str(result)
+        last_err = f"{base} -> {status} {err or (jb or {}).get('message', '')}"
+    print("[warn] Id-Token failed:", last_err)
+    return ""
+
+
+def fetch_client_token(cfg, override=""):
+    """兼容旧名：互信测试改为 Id-Token。"""
+    return fetch_internal_id_token(cfg, override)
+
+
+def fetch_password_access_token(cfg):
+    base = (cfg.get("auth_base_url") or cfg["base_url"]).rstrip("/")
+    url = base + "/oauth2/token"
+    body = (
+        "grant_type=password&client_id={client_id}&client_secret={client_secret}"
+        "&username={username}&password={password}&scope=all"
+    )
+    ctx = {
+        "client_id": cfg.get("oauth_client_id", "demo"),
+        "client_secret": cfg.get("oauth_client_secret", "demo123"),
+        "username": cfg.get("username", "admin"),
+        "password": cfg.get("password", "admin123"),
+    }
+    body = expand(body, ctx)
+    headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
+    status, raw, _, err = http_request("POST", url, headers, body, "form")
     jb = parse_result_body(raw)
     if status not in (200, 201) or not jb or not jb.get("success"):
-        print("[warn] ClientToken failed:", status, err, (jb or {}).get("message"))
+        print("[warn] password token failed:", status, err, (jb or {}).get("message"))
         return ""
     result = jb.get("result") or {}
-    token = result.get("client_token") if isinstance(result, dict) else result
-    if not token:
-        return ""
-    s = str(token)
-    return s if s.startswith("Bearer ") else "Bearer " + s
+    if isinstance(result, dict):
+        tok = result.get("access_token") or ""
+        return tok if str(tok).startswith("Bearer ") else ("Bearer " + tok if tok else "")
+    return ""
 
 
 def trust_simulation_headers(cfg):
@@ -239,9 +299,9 @@ def build_feign_headers(step, cfg, ctx):
     headers.update(trust_simulation_headers(cfg))
     auth = step.get("auth", "none")
     if auth == "client_only":
-        ct = ctx.get("client_token") or ""
-        if ct:
-            headers["Authorization"] = ct
+        id_token = ctx.get("id_token") or ctx.get("client_token") or ""
+        if id_token:
+            headers["Satoken-Id-Token"] = id_token
         if step.get("internal_headers"):
             headers["X-Internal-Service"] = cfg.get("internal_service", "jbm-cluster-platform-center-jbm7")
             headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
@@ -252,6 +312,13 @@ def build_feign_headers(step, cfg, ctx):
             headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
     elif auth == "id_token_only":
         headers["Satoken-Id-Token"] = "feign-trust-test-id-token-only"
+    elif auth == "id_token_valid":
+        id_token = ctx.get("id_token") or ctx.get("client_token") or ""
+        if id_token:
+            headers["Satoken-Id-Token"] = id_token
+        if step.get("internal_headers"):
+            headers["X-Internal-Service"] = cfg.get("internal_service", "jbm-cluster-platform-center-jbm7")
+            headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
     elif auth == "user":
         token = ctx.get("token") or os.environ.get("CENTER_TOKEN", "")
         if token:
@@ -277,10 +344,16 @@ def wait_health(base_url, health_path, tenant_header="tenantId", tenant_id="0", 
 def _start_center_unused(profile):
     cmd = (
         f"mvn -pl {CENTER_MODULE} -am spring-boot:run "
-        f"-Dspring-boot.run.profiles={profile} -DskipTests=true"
+        f"-Dspring-boot.run.profiles={spring_boot_profile_arg(profile)} -DskipTests=true"
     )
     print("[start]", cmd, flush=True)
     return subprocess.Popen(cmd, cwd=str(ROOT), shell=True)
+
+
+def resolve_base(cfg, step):
+    if (step.get("service") or "gateway").lower() == "auth":
+        return (cfg.get("auth_base_url") or cfg["base_url"]).rstrip("/")
+    return cfg["base_url"].rstrip("/")
 
 
 def _missing_ctx(path, ctx):
@@ -314,18 +387,18 @@ def run_step(step, cfg, ctx, scenario_id):
             "assertions": "",
         }
 
-    base = cfg["base_url"].rstrip("/")
+    base = resolve_base(cfg, step)
     url = expand(path, ctx)
     if not url.startswith("http"):
         url = base + url
-    if step.get("auth"):
+    auth_mode = step.get("auth") or "none"
+    if auth_mode != "none":
         headers = build_feign_headers(step, cfg, ctx)
     else:
         headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
-        headers.update(trust_simulation_headers(cfg))
         token = ctx.get("token") or os.environ.get("CENTER_TOKEN", "")
-        if token:
-            headers["Authorization"] = token if str(token).startswith("Bearer ") else token
+        if token and step.get("use_env_token"):
+            headers["Authorization"] = token if str(token).startswith("Bearer ") else f"Bearer {token}" 
     body_s = expand(body, ctx) if body else ""
     path_fc = None
     if "/extend-field/forms/" in url and method == "POST":
@@ -366,6 +439,9 @@ def run_step(step, cfg, ctx, scenario_id):
             msg = (jb or {}).get("message") or raw[:300]
         if ok:
             apply_extract(extract, ctx, jb, path_fc)
+            tok = ctx.get("accessToken") or ""
+            if tok and not ctx.get("token"):
+                ctx["token"] = tok if str(tok).startswith("Bearer ") else f"Bearer {tok}"
             if asserts:
                 aok, amsg = check_assertions(asserts, ctx, jb)
                 if not aok:
@@ -447,7 +523,7 @@ def write_report(mod, results, path, run_time, service_ok):
 
 def main():
     ap = argparse.ArgumentParser(description="Feign 互信 REST 测试")
-    ap.add_argument("--profile", default="jaja7")
+    ap.add_argument("--profile", default=REST_PROFILE, help=f"Spring profile (fixed {REST_PROFILE})")
     ap.add_argument("--base-url", default="")
     ap.add_argument("--start", action="store_true")
     ap.add_argument("--wait", type=int, default=8)
@@ -455,33 +531,33 @@ def main():
     ap.add_argument("--client-token", default="")
     args = ap.parse_args()
     cfg = load_config()
+    profile = apply_rest_profile(cfg, args.profile)
+    docs = docs_dir(ROOT, SUITE_DOCS_SLUG, profile)
     if args.base_url:
         cfg["base_url"] = args.base_url
-    cfg["profile"] = args.profile
-    DOCS.mkdir(parents=True, exist_ok=True)
-    (DOCS / "modules").mkdir(exist_ok=True)
     run_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ts = str(int(time.time() * 1000))
     ctx = {
         "ts": ts,
         "usuffix": ts[-9:],
-        "username": cfg.get("username", "admin"),
-        "password": cfg.get("password", "admin123"),
+        "oauth_client_id": cfg.get("oauth_client_id", "demo"),
+        "oauth_client_secret": cfg.get("oauth_client_secret", "demo123"),
     }
     if args.token:
         ctx["token"] = args.token
-    ctx["client_token"] = fetch_client_token(cfg, args.client_token)
+    ctx["id_token"] = fetch_internal_id_token(cfg, args.client_token)
+    ctx["client_token"] = ctx["id_token"]
 
     th, tid = cfg.get("tenant_header", "tenantId"), cfg.get("tenant_id", "0")
     service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=args.wait)
     if False and args.start:
-        start_center(args.profile)
+        start_center(profile)
         service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=args.wait)
 
     summary = []
     all_ok = service_ok
     for mod in cfg["modules"]:
-        write_cases(mod, DOCS / "modules" / f"{mod['id']}-test-cases.md")
+        write_cases(mod, docs / "modules" / f"{mod['id']}-test-cases.md")
         results = []
         for sc, step in iter_steps(mod):
             if not service_ok:
@@ -499,7 +575,7 @@ def main():
             else:
                 results.append(run_step(step, cfg, ctx, sc.get("id", "")))
         ok, passed, total = write_report(
-            mod, results, DOCS / "modules" / f"{mod['id']}-test-report.md", run_time, service_ok
+            mod, results, docs / "modules" / f"{mod['id']}-test-report.md", run_time, service_ok
         )
         all_ok = all_ok and ok
         summary.append((mod["id"], mod["title"], total, passed, ok))
@@ -533,7 +609,7 @@ def main():
         "带 Token: `python scripts/run_feign_trust_rest_tests.py --token <Authorization>`",
         "",
     ]
-    (DOCS / "summary-test-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (docs / "summary-test-report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("[doc] summary-test-report.md")
     return 0 if all_ok else 1
 

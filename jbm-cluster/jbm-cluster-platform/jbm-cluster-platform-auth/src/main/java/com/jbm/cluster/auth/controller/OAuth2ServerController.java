@@ -29,6 +29,7 @@ import com.jbm.cluster.auth.service.LoginPostProcessor;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.ThirdPartyAuthService;
 import com.jbm.cluster.common.satoken.oauth.OAuth2ResponseHelper;
+import com.jbm.cluster.common.satoken.oauth.AccessTokenExpiryAligner;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -211,6 +212,7 @@ public class OAuth2ServerController {
             if (StpUtil.isLogin()) {
                 // 已登录，直接续期当前 token
                 StpUtil.updateLastActivityToNow();
+                AccessTokenExpiryAligner.tryResyncOAuth2AccessToken(StpUtil.getTokenValue());
                 log.info("续签成功：当前token={}, 过期时间={}", 
                         StpUtil.getTokenValue(), StpUtil.getTokenInfo().getTokenActivityTimeout());
             } else {
@@ -226,6 +228,7 @@ public class OAuth2ServerController {
                             if (StrUtil.isNotBlank(tokenValue)) {
                                 // 使用 token 值来续期
                                 StpUtil.updateLastActivityToNow();
+                                AccessTokenExpiryAligner.tryResyncOAuth2AccessToken(tokenValue);
                                 log.info("续签成功：通过access_token续期，loginId={}, token={}, 过期时间={}", 
                                         loginId, tokenValue, StpUtil.getTokenInfo().getTokenActivityTimeout());
                             } else {

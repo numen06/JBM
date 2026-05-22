@@ -1,0 +1,553 @@
+{
+  "profile": "jaja7",
+  "base_url": "http://127.0.0.1:7777",
+  "auth_base_url": "http://127.0.0.1:5555",
+  "username": "",
+  "password": "",
+  "client_id": "demo",
+  "client_secret": "demo123",
+  "tenant_header": "tenantId",
+  "tenant_id": "0",
+  "health_path": "/actuator/health",
+  "modules": [
+    {
+      "id": "test-user-bootstrap",
+      "title": "专用测试用户准备",
+      "scenarios": [
+        {
+          "id": "TC-UP-00",
+          "title": "注册新用户并 OAuth 登录",
+          "precondition": "无同名用户 uperm_{usuffix}；Gateway+Auth 可用",
+          "steps": [
+            {
+              "name": "register",
+              "method": "POST",
+              "path": "/user/registrations",
+              "auth": "none",
+              "bodyType": "query",
+              "body": "userName=uperm_{usuffix}&password=Test@perm_{usuffix}&confirmPassword=Test@perm_{usuffix}&nickName=UPERM_{usuffix}",
+              "expect": "success",
+              "extract": {
+                "testUserName": "literal.uperm_{usuffix}",
+                "testPassword": "literal.Test@perm_{usuffix}"
+              }
+            },
+            {
+              "name": "resolve userId",
+              "method": "GET",
+              "path": "/user",
+              "auth": "none",
+              "bodyType": "query",
+              "body": "userName={testUserName}",
+              "expect": "success",
+              "extract": {
+                "userId": "result.0.userId"
+              },
+              "assert": [
+                "sizeGte:result:1",
+                "eq:result.0.userName:{testUserName}"
+              ]
+            },
+            {
+              "name": "oauth password",
+              "service": "auth",
+              "auth": "none",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "bodyType": "form",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={testUserName}&password={testPassword}&scope=all",
+              "expect": "success",
+              "extract": {
+                "accessToken": "result.access_token",
+                "refreshToken": "result.refresh_token"
+              },
+              "assert": [
+                "notEmpty:result.access_token"
+              ]
+            },
+            {
+              "name": "userinfo",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/oauth2/userinfo",
+              "bodyType": "query",
+              "body": "access_token={accessToken}",
+              "expect": "success",
+              "assert": [
+                "notNull:result.userId",
+                "isList:result.roles"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "user-routine",
+      "title": "用户常规操作",
+      "scenarios": [
+        {
+          "id": "TC-UP-01",
+          "title": "当前用户资料",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "current user",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "success",
+              "assert": [
+                "notNull:result.userId"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-02",
+          "title": "当前用户菜单",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "current menus",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/current/user/menus",
+              "expect": "optional",
+              "assert": [
+                "isList:result"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-03",
+          "title": "Center 会话登录",
+          "precondition": "TC-UP-00 已创建用户",
+          "steps": [
+            {
+              "name": "POST sessions",
+              "auth": "none",
+              "method": "POST",
+              "path": "/user/sessions",
+              "bodyType": "query",
+              "body": "username={testUserName}",
+              "expect": "success",
+              "assert": [
+                "notNull:result.userId"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-04",
+          "title": "按用户名查询用户",
+          "precondition": "已登录",
+          "steps": [
+            {
+              "name": "list by userName",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/user",
+              "bodyType": "query",
+              "body": "userName={testUserName}",
+              "expect": "optional",
+              "assert": [
+                "sizeGte:result:1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-05",
+          "title": "用户统计（需登录态）",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "statistics",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/user/statistics",
+              "expect": "success",
+              "assert": [
+                "notNull:result.usersTotal",
+                "gte:result.usersTotal:0"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-06",
+          "title": "更新当前用户昵称（可回滚）",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "patch nick",
+              "auth": "bearer",
+              "method": "PUT",
+              "path": "/current/user",
+              "bodyType": "json",
+              "body": "{\"nickName\":\"REST_perm_{ts}\"}",
+              "expect": "success",
+              "assert": []
+            },
+            {
+              "name": "verify nick",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "success",
+              "assert": [
+                "contains:result.nickName:REST_perm_"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perm-login",
+      "title": "登录守卫",
+      "scenarios": [
+        {
+          "id": "TC-UP-10",
+          "title": "未带 Token 访问当前用户应拒绝",
+          "precondition": "-",
+          "steps": [
+            {
+              "name": "no token current user",
+              "auth": "none",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "fail",
+              "assert": [
+                "isFalse:success"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-11",
+          "title": "无效 Token 访问当前用户应拒绝",
+          "precondition": "-",
+          "steps": [
+            {
+              "name": "bad token",
+              "auth": "invalid",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "fail"
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-12",
+          "title": "未登录访问当前菜单应拒绝",
+          "precondition": "-",
+          "steps": [
+            {
+              "name": "no token menus",
+              "auth": "none",
+              "method": "GET",
+              "path": "/current/user/menus",
+              "expect": "fail"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perm-data",
+      "title": "权限数据（菜单/资源）",
+      "scenarios": [
+        {
+          "id": "TC-UP-15",
+          "title": "管理员可查权限资源与菜单树",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "authority resources",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/authority/resources",
+              "expect": "success",
+              "assert": [
+                "isList:result"
+              ]
+            },
+            {
+              "name": "authority menu tree",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/authority/menus/tree",
+              "expect": "success",
+              "assert": [
+                "isList:result"
+              ]
+            },
+            {
+              "name": "user authorities",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/authority/users/{userId}",
+              "expect": "success",
+              "assert": [
+                "isList:result"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-16",
+          "title": "OAuth userinfo 含角色与菜单权限码",
+          "precondition": "TC-UP-00 已登录",
+          "steps": [
+            {
+              "name": "userinfo permissions",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/oauth2/userinfo",
+              "bodyType": "query",
+              "body": "access_token={accessToken}",
+              "expect": "success",
+              "assert": [
+                "sizeGte:result.menuPermission:0",
+                "sizeGte:result.roles:0"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perm-action",
+      "title": "方法级权限 SaCheckPermission",
+      "scenarios": [
+        {
+          "id": "TC-UP-20",
+          "title": "在线用户列表（管理员）",
+          "precondition": "TC-UP-00；admin 用于在线监控踢人场景可选",
+          "steps": [
+            {
+              "name": "online pageList",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "POST",
+              "path": "/online/pageList",
+              "bodyType": "json",
+              "body": "{\"pageForm\":{\"currPage\":1,\"pageSize\":10}}",
+              "expect": "success",
+              "assert": [
+                "notNull:result.total",
+                "isList:result.contents"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-21",
+          "title": "踢人接口需登录且带权限码",
+          "precondition": "TC-UP-00；admin 用于在线监控踢人场景可选",
+          "steps": [
+            {
+              "name": "kickout no auth",
+              "service": "auth",
+              "auth": "none",
+              "method": "DELETE",
+              "path": "/online/kickout/not-a-real-token",
+              "expect": "fail"
+            },
+            {
+              "name": "kickout with admin",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "DELETE",
+              "path": "/online/kickout/{accessToken}",
+              "expect": "optional"
+            }
+          ]
+        },
+        {
+          "id": "TC-UP-22",
+          "title": "注销在线会话接口权限",
+          "precondition": "TC-UP-00；admin 用于在线监控踢人场景可选",
+          "steps": [
+            {
+              "name": "logout online no auth",
+              "service": "auth",
+              "auth": "none",
+              "method": "DELETE",
+              "path": "/online/logout/fake-token-id",
+              "expect": "fail"
+            },
+            {
+              "name": "logout online admin",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "DELETE",
+              "path": "/online/logout/{accessToken}",
+              "expect": "optional"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perm-gateway",
+      "title": "经网关透传用户 Token",
+      "scenarios": [
+        {
+          "id": "TC-UP-30",
+          "title": "Gateway 下当前用户与 Auth userinfo 一致",
+          "precondition": "TC-UP-00",
+          "steps": [
+            {
+              "name": "gateway current user",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "success",
+              "extract": {
+                "gwUserId": "result.userId"
+              },
+              "assert": [
+                "eq:result.userId:{userId}"
+              ]
+            },
+            {
+              "name": "auth userinfo same user",
+              "service": "auth",
+              "auth": "bearer",
+              "method": "GET",
+              "path": "/oauth2/userinfo",
+              "bodyType": "query",
+              "body": "access_token={accessToken}",
+              "expect": "success",
+              "assert": [
+                "eq:result.userId:{gwUserId}"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multi-user-gateway",
+      "title": "双用户经网关全链路",
+      "scenarios": [
+        {
+          "id": "TC-UP-MU-01",
+          "title": "用户A/B注册、登录并经Gateway访问权限接口",
+          "precondition": "Gateway+Auth+Center 可用",
+          "steps": [
+            {
+              "name": "register user A",
+              "method": "POST",
+              "path": "/user/registrations",
+              "auth": "none",
+              "bodyType": "query",
+              "body": "userName=upermA_{usuffix}&password=Test@permA_{usuffix}&confirmPassword=Test@permA_{usuffix}&nickName=UPERM_A",
+              "expect": "success",
+              "extract": {
+                "testUserNameA": "literal.upermA_{usuffix}",
+                "testPasswordA": "literal.Test@permA_{usuffix}"
+              }
+            },
+            {
+              "name": "register user B",
+              "method": "POST",
+              "path": "/user/registrations",
+              "auth": "none",
+              "bodyType": "query",
+              "body": "userName=upermB_{usuffix}&password=Test@permB_{usuffix}&confirmPassword=Test@permB_{usuffix}&nickName=UPERM_B",
+              "expect": "success",
+              "extract": {
+                "testUserNameB": "literal.upermB_{usuffix}",
+                "testPasswordB": "literal.Test@permB_{usuffix}"
+              }
+            },
+            {
+              "name": "oauth user A",
+              "service": "auth",
+              "auth": "none",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "bodyType": "form",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={testUserNameA}&password={testPasswordA}&scope=all",
+              "expect": "success",
+              "extract": {
+                "accessTokenA": "result.access_token"
+              }
+            },
+            {
+              "name": "gateway current user A",
+              "auth": "bearerA",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "success",
+              "extract": {
+                "userIdA": "result.userId"
+              },
+              "assert": [
+                "notNull:result.userId"
+              ]
+            },
+            {
+              "name": "gateway authority resources A",
+              "auth": "bearerA",
+              "method": "GET",
+              "path": "/authority/resources",
+              "expect": "success",
+              "assert": [
+                "isList:result"
+              ]
+            },
+            {
+              "name": "oauth user B",
+              "service": "auth",
+              "auth": "none",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "bodyType": "form",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={testUserNameB}&password={testPasswordB}&scope=all",
+              "expect": "success",
+              "extract": {
+                "accessTokenB": "result.access_token"
+              }
+            },
+            {
+              "name": "gateway current user B",
+              "auth": "bearerB",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "success",
+              "extract": {
+                "userIdB": "result.userId"
+              },
+              "assert": [
+                "notNull:result.userId",
+                "neq:result.userId:{userIdA}"
+              ]
+            },
+            {
+              "name": "gateway auth userinfo B via auth route",
+              "service": "auth",
+              "auth": "bearerB",
+              "method": "GET",
+              "path": "/oauth2/userinfo",
+              "bodyType": "query",
+              "body": "access_token={accessTokenB}",
+              "expect": "success",
+              "assert": [
+                "notNull:result.userId"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "test_password": "Test@perm_{usuffix}"
+}

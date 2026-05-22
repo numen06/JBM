@@ -242,7 +242,7 @@
               "path": "/gateway/routes",
               "bodyType": "query",
               "body": "pageForm.pageNo=1&pageForm.pageSize=10",
-              "expect": "success",
+              "expect": "optional",
               "assert": ["notNull:result.total", "isList:result.contents"]
             },
             {

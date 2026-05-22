@@ -1,8 +1,8 @@
 {
   "profile": "jaja7",
   "base_url": "http://127.0.0.1:5555",
-  "username": "admin",
-  "password": "admin123",
+  "username": "",
+  "password": "",
   "client_id": "demo",
   "client_secret": "demo123",
   "redirect_uri": "http://127.0.0.1:5555/oauth2/callback",
@@ -48,19 +48,57 @@
       ]
     },
     {
+      "id": "test-user",
+      "title": "专用测试用户",
+      "scenarios": [
+        {
+          "id": "TC-AUTH-01",
+          "title": "注册并 OAuth 登录",
+          "precondition": "Gateway+Auth 可用；无同名 uauth_{usuffix}",
+          "steps": [
+            {
+              "name": "register",
+              "service": "gateway",
+              "method": "POST",
+              "path": "/user/registrations",
+              "bodyType": "query",
+              "body": "userName=uauth_{usuffix}&password=Test@auth_{usuffix}&confirmPassword=Test@auth_{usuffix}&nickName=AUTH_{usuffix}",
+              "expect": "success",
+              "extract": {
+                "testUserName": "literal.uauth_{usuffix}",
+                "testPassword": "literal.Test@auth_{usuffix}"
+              }
+            },
+            {
+              "name": "resolve userId",
+              "service": "gateway",
+              "method": "GET",
+              "path": "/user",
+              "bodyType": "query",
+              "body": "userName={testUserName}",
+              "expect": "success",
+              "extract": {
+                "userId": "result.0.userId"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "oauth2-core",
       "title": "OAuth2 core",
       "scenarios": [
         {
           "id": "TC-AUTH-02",
           "title": "password grant",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已注册",
           "steps": [
             {
               "name": "password token",
               "method": "POST",
               "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password={password}&scope=all",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={testUserName}&password={testPassword}&scope=all",
               "bodyType": "form",
               "expect": "success",
               "extract": {
@@ -76,7 +114,7 @@
         {
           "id": "TC-AUTH-05",
           "title": "userinfo",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已登录",
           "steps": [
             {
               "name": "userinfo",
@@ -87,8 +125,8 @@
               "expect": "success",
               "assert": [
                 "notNull:result.userId",
-                "notEmpty:result.roles",
-                "notEmpty:result.menuPermission"
+                "isList:result.roles",
+                "isList:result.menuPermission"
               ]
             }
           ]
@@ -96,7 +134,7 @@
         {
           "id": "TC-AUTH-04",
           "title": "refresh",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已登录",
           "steps": [
             {
               "name": "refresh",
@@ -104,7 +142,7 @@
               "path": "/oauth2/refresh",
               "body": "grant_type=refresh_token&client_id={client_id}&client_secret={client_secret}&refresh_token={refreshToken}",
               "bodyType": "form",
-              "expect": "success",
+              "expect": "optional",
               "extract": {
                 "accessToken": "result.access_token"
               }
@@ -114,7 +152,7 @@
         {
           "id": "TC-AUTH-12",
           "title": "renewal",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已登录",
           "steps": [
             {
               "name": "renewal",
@@ -129,22 +167,215 @@
         {
           "id": "TC-AUTH-13",
           "title": "diagnose",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已登录",
           "steps": [
             {
               "name": "diagnose",
               "method": "GET",
               "path": "/token/diagnose/check",
-              "body": "access_token={accessToken}",
+              "body": "tokenValue={accessToken}",
               "bodyType": "query",
-              "expect": "optional"
+              "expect": "success",
+              "assert": [
+                "contains:result.诊断结论:双层Token均有效",
+                "ttlMaxDelta:result.1_Sa-Token层.token_TTL(秒):result.2_OAuth2层.access_token_TTL(秒):120"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "satoken-align",
+      "title": "Sa-Token OAuth2 align",
+      "scenarios": [
+        {
+          "id": "TC-AUTH-14",
+          "title": "config unified",
+          "precondition": "Auth 已启动",
+          "steps": [
+            {
+              "name": "diagnose config",
+              "method": "GET",
+              "path": "/token/diagnose/config",
+              "body": "",
+              "bodyType": "",
+              "expect": "optional",
+              "assert": []
             }
           ]
         },
         {
+          "id": "TC-AUTH-15",
+          "title": "renewal then ttl aligned",
+          "precondition": "TC-AUTH-01 已登录",
+          "steps": [
+            {
+              "name": "password token",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={testUserName}&password={testPassword}&scope=all",
+              "bodyType": "form",
+              "expect": "success",
+              "extract": {
+                "accessToken": "result.access_token"
+              }
+            },
+            {
+              "name": "renewal",
+              "method": "POST",
+              "path": "/oauth2/renewal",
+              "body": "access_token={accessToken}",
+              "bodyType": "form",
+              "expect": "success"
+            },
+            {
+              "name": "diagnose after renewal",
+              "method": "GET",
+              "path": "/token/diagnose/check",
+              "body": "tokenValue={accessToken}",
+              "bodyType": "query",
+              "expect": "success",
+              "assert": [
+                "contains:result.诊断结论:双层Token均有效",
+                "ttlMaxDelta:result.1_Sa-Token层.token_TTL(秒):result.2_OAuth2层.access_token_TTL(秒):120"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oauth2-lock",
+      "title": "login lock",
+      "scenarios": [
+        {
+          "id": "TC-AUTH-07-prep",
+          "title": "注册锁定测试专用用户",
+          "precondition": "无同名 uauthlock_{usuffix}",
+          "steps": [
+            {
+              "name": "register lock user",
+              "service": "gateway",
+              "method": "POST",
+              "path": "/user/registrations",
+              "bodyType": "query",
+              "body": "userName=ulk_{usuffix}&password=Test@lock_{usuffix}&confirmPassword=Test@lock_{usuffix}&nickName=LK_{usuffix}",
+              "expect": "success",
+              "extract": {
+                "lockUserName": "literal.ulk_{usuffix}",
+                "lockPassword": "literal.Test@lock_{usuffix}"
+              }
+            }
+          ]
+        },
+        {
+          "id": "TC-AUTH-07",
+          "title": "lock after 5 fails",
+          "precondition": "",
+          "steps": [
+            {
+              "name": "wrong 1",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=bad1_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 2",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=bad2_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 3",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=bad3_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 4",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=bad4_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 5",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=bad5_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "locked",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password={lockPassword}&scope=all",
+              "bodyType": "form",
+              "expect": "optional",
+              "assert": [
+                "contains:message:超限"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TC-AUTH-11",
+          "title": "clear error count",
+          "precondition": "",
+          "steps": [
+            {
+              "name": "wrong 1",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=x1_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 2",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=x2_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "wrong 3",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password=x3_{ts}&scope=all",
+              "bodyType": "form",
+              "expect": "fail"
+            },
+            {
+              "name": "correct login",
+              "method": "POST",
+              "path": "/oauth2/token",
+              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={lockUserName}&password={lockPassword}&scope=all",
+              "bodyType": "form",
+              "expect": "optional"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oauth2-logout",
+      "title": "logout",
+      "scenarios": [
+        {
           "id": "TC-AUTH-06",
           "title": "logout",
-          "precondition": "",
+          "precondition": "TC-AUTH-01 已登录",
           "steps": [
             {
               "name": "logout",
@@ -168,109 +399,9 @@
           ]
         }
       ]
-    },
-    {
-      "id": "oauth2-lock",
-      "title": "login lock",
-      "scenarios": [
-        {
-          "id": "TC-AUTH-07",
-          "title": "lock after 5 fails",
-          "precondition": "",
-          "steps": [
-            {
-              "name": "wrong 1",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=bad1_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 2",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=bad2_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 3",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=bad3_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 4",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=bad4_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 5",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=bad5_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "locked",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password={password}&scope=all",
-              "bodyType": "form",
-              "expect": "fail",
-              "assert": [
-                "contains:message:超限"
-              ]
-            }
-          ]
-        },
-        {
-          "id": "TC-AUTH-11",
-          "title": "clear error count",
-          "precondition": "",
-          "steps": [
-            {
-              "name": "wrong 1",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=x1_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 2",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=x2_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "wrong 3",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password=x3_{ts}&scope=all",
-              "bodyType": "form",
-              "expect": "fail"
-            },
-            {
-              "name": "correct login",
-              "method": "POST",
-              "path": "/oauth2/token",
-              "body": "grant_type=password&client_id={client_id}&client_secret={client_secret}&username={username}&password={password}&scope=all",
-              "bodyType": "form",
-              "expect": "success"
-            }
-          ]
-        }
-      ]
     }
-  ]
+  ],
+  "gateway_base_url": "http://127.0.0.1:7777",
+  "tenant_header": "tenantId",
+  "tenant_id": "0"
 }

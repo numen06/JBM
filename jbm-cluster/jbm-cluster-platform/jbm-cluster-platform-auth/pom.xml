@@ -41,11 +41,22 @@
             <artifactId>core</artifactId>
             <version>3.5.0</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>com.jbm</groupId>-->
-        <!--            <artifactId>jbm-cluster-common-basic</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
+        <!-- OAuth2 签发：common-satoken 中 sa-token-oauth2 为 optional，Auth 显式引入 -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-oauth2</artifactId>
+            <version>${satoken.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-api-basic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
+            <artifactId>jbm-cluster-common-basic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.jbm</groupId>-->
         <!--            <artifactId>jbm-cluster-common-security</artifactId>-->

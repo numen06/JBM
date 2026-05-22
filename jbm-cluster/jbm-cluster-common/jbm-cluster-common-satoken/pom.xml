@@ -47,11 +47,12 @@
             <artifactId>sa-token-spring-boot-starter</artifactId>
             <version>${satoken.version}</version>
         </dependency>
-        <!-- Sa-Token-OAuth2.0 模块 -->
+        <!-- Sa-Token-OAuth2.0 模块（optional：仅 Auth 等显式依赖方传递引入） -->
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-oauth2</artifactId>
             <version>${satoken.version}</version>
+            <optional>true</optional>
         </dependency>
 
     </dependencies>

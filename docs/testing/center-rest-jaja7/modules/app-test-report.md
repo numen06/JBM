@@ -1,10 +1,10 @@
 # 应用 - 业务测试报告
 
-- 时间: 2026-05-22 12:31:27
+- 时间: 2026-05-22 18:21:01
 - 服务可用: 是
 - 结果: **PASS**
 - 步骤通过: 1/1
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-APP-01 | 应用分页 | GET | 200 | PASS | 0.041 | notNull:result.total; isList:result.contents |  |
+| TC-APP-01 | 应用分页 | GET | 200 | PASS | 0.069 | notNull:result.total; isList:result.contents |  |

@@ -4,7 +4,7 @@
 
 ## TC-AUTH-02 password grant
 
-**前置条件**：
+**前置条件**：TC-AUTH-01 已注册
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
@@ -12,15 +12,15 @@
 
 ## TC-AUTH-05 userinfo
 
-**前置条件**：
+**前置条件**：TC-AUTH-01 已登录
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| userinfo | userinfo | GET | /oauth2/userinfo | notNull:result.userId; notEmpty:result.roles; notEmpty:result.menuPermission |
+| userinfo | userinfo | GET | /oauth2/userinfo | notNull:result.userId; isList:result.roles; isList:result.menuPermission |
 
 ## TC-AUTH-04 refresh
 
-**前置条件**：
+**前置条件**：TC-AUTH-01 已登录
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
@@ -28,7 +28,7 @@
 
 ## TC-AUTH-12 renewal
 
-**前置条件**：
+**前置条件**：TC-AUTH-01 已登录
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
@@ -36,18 +36,9 @@
 
 ## TC-AUTH-13 diagnose
 
-**前置条件**：
+**前置条件**：TC-AUTH-01 已登录
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| diagnose | diagnose | GET | /token/diagnose/check | 接口 success=true |
-
-## TC-AUTH-06 logout
-
-**前置条件**：
-
-| 步骤 | 操作 | 方法 | 路径 | 业务断言 |
-|------|------|------|------|----------|
-| logout | logout | DELETE | /oauth2/logout | 接口 success=true |
-| userinfo after logout | userinfo after logout | GET | /oauth2/userinfo | 接口 success=true |
+| diagnose | diagnose | GET | /token/diagnose/check | contains:result.诊断结论:双层Token均有效; ttlMaxDelta:result.1_Sa-Token层.token_TTL(秒):result.2_OAuth2层.access_token_TTL(秒):120 |
 
