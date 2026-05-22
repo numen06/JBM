@@ -1,10 +1,10 @@
 package com.jbm.cluster.auth.service;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -15,34 +15,27 @@ import javax.annotation.PostConstruct;
 import java.util.Objects;
 
 /**
- * APP信息调用预处理
- *
- * @Created wesley.zhang
- * @Date 2022/6/17 11:43
- * @Description TODO
+ * APP 信息本地查询（OAuth2 Client / RSA 密钥）
  */
 @Slf4j
 @Service
 public class BaseAppPreprocessing {
 
     @Autowired
-    private BaseAppServiceClient baseAppServiceClient;
-
-    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey", unless = "#result == null")
-    public BaseApp getAppByKey(String appKey) {
-        BaseApp baseApp = baseAppServiceClient.getAppByKey(appKey).getResult();
-        if (ObjectUtil.isEmpty(baseApp)) {
-            throw new NullPointerException("应用不存在");
-        }
-        return baseApp;
-    }
+    private BaseAppService baseAppService;
 
     @Autowired
     private CacheManager cacheManager;
 
-    /**
-     * 清理缓存
-     */
+    @Cacheable(value = JbmCacheConstants.APP_CACHE_NAMESPACE, key = "#appKey", unless = "#result == null")
+    public BaseApp getAppByKey(String appKey) {
+        BaseApp baseApp = baseAppService.getAppInfoByKey(appKey);
+        if (ObjectUtil.isEmpty(baseApp)) {
+            throw new ServiceException("应用不存在: " + appKey);
+        }
+        return baseApp;
+    }
+
     @PostConstruct
     public void clearCache() {
         if (cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE) != null) {
@@ -50,6 +43,4 @@ public class BaseAppPreprocessing {
             Objects.requireNonNull(cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE)).clear();
         }
     }
-
-
 }

@@ -19,15 +19,16 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
-import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
-import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.ConfirmService;
+import com.jbm.cluster.auth.service.LoginLifecyclePublisher;
+import com.jbm.cluster.auth.service.LoginPostProcessor;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.ThirdPartyAuthService;
+import com.jbm.cluster.common.satoken.oauth.OAuth2ResponseHelper;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -57,11 +58,12 @@ public class OAuth2ServerController {
     @Autowired
     private ConfirmService confirmService;
     @Autowired
-    private BaseAppPreprocessing baseAppPreprocessing;
+    private LoginPostProcessor loginPostProcessor;
+    @Autowired
+    private LoginLifecyclePublisher loginLifecyclePublisher;
 
-    // 处理所有OAuth相关请求
     public Object oauth2() {
-        System.out.println("------- 进入请求: " + SaHolder.getRequest().getUrl());
+        log.debug("OAuth2 请求: {}", SaHolder.getRequest().getUrl());
         Object result = SaOAuth2Handle.serverRequest();
         if (SaOAuth2Consts.NOT_HANDLE.equals(result)) {
             return ResultBody.failed().httpStatus(400).code(400).msg("输入参数错误,没有找到匹配的授权模式");
@@ -77,16 +79,7 @@ public class OAuth2ServerController {
                 req = SaHolder.getRequest();
                 if (req.isPath(SaOAuth2Consts.Api.token)) {
                     if (saResult.getData() instanceof Map) {
-                        Map<String, Object> data = (Map<String, Object>) saResult.getData();
-                        data.put("token_type", SaManager.getConfig().getTokenPrefix());
-                        // 确保 access_token 是 Sa-Token 的 token
-                        if (data.containsKey("access_token") && StpUtil.isLogin()) {
-                            String currentToken = StpUtil.getTokenValue();
-                            if (StrUtil.isNotBlank(currentToken)) {
-                                data.put("access_token", currentToken);
-                                log.debug("统一 access_token 为 Sa-Token token: {}", currentToken);
-                            }
-                        }
+                        OAuth2ResponseHelper.unifyAccessTokenInResult((Map<String, Object>) saResult.getData());
                     }
                 }
                 return ResultBody.ok().data(saResult.getData());
@@ -134,29 +127,33 @@ public class OAuth2ServerController {
     @PostMapping("/doLogin")
     public ResultBody<?> doLogin(AuthorizeForm authorizeForm) {
         try {
-            // 先进行用户登录
+            String password = authorizeForm.getPassword();
+            if (StrUtil.isNotBlank(password) && StrUtil.isNotBlank(authorizeForm.getClient_id())) {
+                password = sysLoginService.decryptPassword(authorizeForm.getClient_id(), password);
+            }
             ResultBody<JbmLoginUser> loginResult = sysLoginService.login(
                     authorizeForm.getUsername(),
-                    authorizeForm.getPassword(),
+                    password,
                     LoginType.PASSWORD
             );
 
             if (!loginResult.getSuccess()) {
+                loginLifecyclePublisher.publishLoginFailure(
+                        authorizeForm.getUsername(),
+                        LoginType.PASSWORD.name(),
+                        authorizeForm.getClient_id(),
+                        StrUtil.emptyToDefault(loginResult.getMessage(), "登录验证失败"));
                 return ResultBody.<String>failed().msg(loginResult.getMessage());
             }
 
-            // 获取登录用户并设置必要信息
             JbmLoginUser jbmLoginUser = loginResult.getResult();
-            // 设置 AppId (通过 clientId 获取)
-            BaseApp baseApp = baseAppPreprocessing.getAppByKey(authorizeForm.getClient_id());
-            jbmLoginUser.setAppId(baseApp.getAppId());
-            jbmLoginUser.setClientId(authorizeForm.getClient_id());
-            // 设置设备类型
+            loginPostProcessor.enrichLoginUser(jbmLoginUser, authorizeForm.getClient_id());
             if (StrUtil.isBlank(jbmLoginUser.getDevice())) {
                 jbmLoginUser.setDevice(RequestDeviceType.PC.getDevice());
             }
 
-            LoginHelper.login(jbmLoginUser);
+            LoginHelper.login(jbmLoginUser, LoginType.PASSWORD.name(), authorizeForm.getClient_id(),
+                    LoginLifecyclePublisher.currentIp(), LoginLifecyclePublisher.currentUserAgent());
 
             // 登录成功后，直接生成授权码
             RequestAuthModel ra = new RequestAuthModel();
@@ -266,7 +263,7 @@ public class OAuth2ServerController {
             String accessToken = SaHolder.getRequest().getParam("access_token");
             if (StrUtil.isNotBlank(accessToken)) {
                 Object loginId = SaOAuth2Util.getLoginIdByAccessToken(accessToken);
-                System.out.println("-------- 此Access-Token对应的账号id: " + loginId);
+                log.debug("Access-Token 对应 loginId: {}", loginId);
                 jbmLoginUser = LoginHelper.getLoginUser(accessToken);
             }
         }
@@ -320,14 +317,7 @@ public class OAuth2ServerController {
         }
         // 构建 Access-Token
         AccessTokenModel token = SaOAuth2Util.generateAccessToken(code);
-        // 确保 access_token 是 Sa-Token 的 token
-        if (token != null && StpUtil.isLogin()) {
-            String currentToken = StpUtil.getTokenValue();
-            if (StrUtil.isNotBlank(currentToken)) {
-                token.accessToken = currentToken;
-                log.debug("统一 access_token 为 Sa-Token token: {}", currentToken);
-            }
-        }
+        OAuth2ResponseHelper.unifyAccessToken(token);
         // 返回
         return ResultBody.ok(token);
     }
@@ -389,18 +379,9 @@ public class OAuth2ServerController {
             //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
             if (StrUtil.isEmpty(myUser.getClientId())) {
-                log.info("[第三方回调] 映射用户没有clientId,设置clientId");
-                if (StrUtil.isEmpty(targetClientId)) {
-                    myUser.setClientId("g6LLZlu9nv0bRz73eHaxrMJQ");
-                } else {
-                    myUser.setClientId(targetClientId);
-                }
+                myUser.setClientId(StrUtil.isNotBlank(targetClientId) ? targetClientId : "demo");
             }
-
-            // 设置 AppId (通过 clientId 获取)
-            BaseApp baseApp = baseAppPreprocessing.getAppByKey(myUser.getClientId());
-            myUser.setAppId(baseApp.getAppId());
-            // 设置设备类型
+            loginPostProcessor.enrichLoginUser(myUser, myUser.getClientId());
             if (StrUtil.isBlank(myUser.getDevice())) {
                 myUser.setDevice(RequestDeviceType.PC.getDevice());
             }
@@ -416,15 +397,12 @@ public class OAuth2ServerController {
             requestAuthModel.setLoginId(myUser.getLoginId());
             requestAuthModel.setClientId(myUser.getClientId());
             requestAuthModel.setScope("all");
-            LoginHelper.login(myUser);
+            LoginHelper.login(myUser, LoginType.THIRD_PARTY.name(), myUser.getClientId(),
+                    LoginLifecyclePublisher.currentIp(), LoginLifecyclePublisher.currentUserAgent());
             String currentToken = StpUtil.getTokenValue();
             log.info("[第三方回调] 登录状态:{}，当前用户token:{}", StpUtil.isLogin(), currentToken);
             AccessTokenModel accessTokenResult = SaOAuth2Util.generateAccessToken(requestAuthModel, true);
-            // 确保 access_token 是 Sa-Token 的 token
-            if (accessTokenResult != null && StrUtil.isNotBlank(currentToken)) {
-                accessTokenResult.accessToken = currentToken;
-                log.info("[第三方回调] 统一 access_token 为 Sa-Token token: {}", currentToken);
-            }
+            OAuth2ResponseHelper.unifyAccessToken(accessTokenResult);
             log.info("[第三方回调] Token: {}", myUser.getToken());
             log.info("[第三方回调] Step 3: 用户登录成功");
             // 5. 获取AccessToken

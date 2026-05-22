@@ -2,6 +2,7 @@ package com.jbm.cluster.auth.service;
 
 
 import cn.dev33.satoken.oauth2.model.SaClientModel;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.satoken.oauth.ClientModelSource;
 import cn.hutool.core.util.ObjectUtil;
@@ -40,11 +41,13 @@ public class JbmPlatformClientModelSource implements ClientModelSource {
         if (ObjectUtil.isEmpty(baseApp)) {
             return null;
         }
+        String allowUrl = StrUtil.isNotBlank(baseApp.getWebsite()) ? baseApp.getWebsite() : "*";
         return new SaClientModel()
                 .setClientId(baseApp.getApiKey())
                 .setClientSecret(baseApp.getSecretKey())
-                .setAllowUrl("*")
-                .setContractScope("*")
+                .setAllowUrl(allowUrl)
+                // Sa-Token OAuth2 scope 校验要求命中签约范围；此处与既有测试用例保持一致
+                .setContractScope("all")
                 .setIsAutoMode(true);
     }
 

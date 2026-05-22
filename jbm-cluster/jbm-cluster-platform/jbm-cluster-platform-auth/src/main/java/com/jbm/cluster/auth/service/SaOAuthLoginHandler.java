@@ -35,18 +35,40 @@ public abstract class SaOAuthLoginHandler implements BiFunction<String, String, 
         loginProcessModel.setUsername(username);
         loginProcessModel.setOriginalPassword(password);
         loginProcessModel.setDecryptPassword(password);
-        this.preLogin(this.request, loginProcessModel);
-        this.preCheck(loginProcessModel);
-        this.doCheck(loginProcessModel);
-        //生成登录CODE
-        RequestAuthModel ra = new RequestAuthModel();
-        ra.clientId = loginProcessModel.getClientId();
-        ra.responseType = "code";
-        ra.redirectUri = request.getUrl();
-        ra.state = request.getParam(SaOAuth2Consts.Param.state);
-        ra.scope = request.getParam(SaOAuth2Consts.Param.scope, "");
-        ra.loginId = StpUtil.getLoginId();
-        return ResultBody.ok(SaOAuth2Util.generateCode(ra));
+        try {
+            this.preLogin(this.request, loginProcessModel);
+            this.preCheck(loginProcessModel);
+            ResultBody<?> checkResult = this.doCheck(loginProcessModel);
+            if (checkResult == null || !checkResult.getSuccess()) {
+                String reason = checkResult != null ? checkResult.getMessage() : "登录验证失败";
+                this.onAuthFailure(loginProcessModel, reason);
+                return checkResult != null ? checkResult : ResultBody.failed().msg(reason);
+            }
+            this.postAuth(loginProcessModel);
+            RequestAuthModel ra = new RequestAuthModel();
+            ra.clientId = loginProcessModel.getClientId();
+            ra.responseType = "code";
+            ra.redirectUri = request.getUrl();
+            ra.state = request.getParam(SaOAuth2Consts.Param.state);
+            ra.scope = request.getParam(SaOAuth2Consts.Param.scope, "");
+            ra.loginId = StpUtil.getLoginId();
+            return ResultBody.ok(SaOAuth2Util.generateCode(ra));
+        } catch (Exception e) {
+            this.onAuthFailure(loginProcessModel, e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * 登录成功后钩子（生成授权码前）
+     */
+    protected void postAuth(LoginProcessModel loginProcessModel) {
+    }
+
+    /**
+     * 登录失败钩子
+     */
+    protected void onAuthFailure(LoginProcessModel loginProcessModel, String reason) {
     }
 
     /**
@@ -71,9 +93,10 @@ public abstract class SaOAuthLoginHandler implements BiFunction<String, String, 
                 loginType = LoginType.PASSWORD;
             }
         }
-        if (loginType.equals(LoginType.PASSWORD)) {
-            String pwd = doDecryptPassword(loginProcessModel);
-            loginProcessModel.setDecryptPassword(pwd);
+        if (LoginType.PASSWORD.equals(loginType)) {
+            loginProcessModel.setDecryptPassword(doDecryptPassword(loginProcessModel));
+        } else {
+            loginProcessModel.setDecryptPassword(loginProcessModel.getOriginalPassword());
         }
         loginProcessModel.setLoginType(loginType);
         UserAgent userAgent = UserAgentUtil.parse(ServletUtils.getRequest().getHeader("User-Agent"));

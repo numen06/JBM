@@ -196,7 +196,8 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
         
         // 确保新的 accessToken 就是 Sa-Token 的 token
         accessTokenModel.accessToken = newToken;
-        
+        OAuth2ResponseHelper.unifyAccessToken(accessTokenModel);
+
         log.info("刷新Token成功：loginId={}, 新accessToken={}, 过期时间={}", 
                 loginId, newToken, StpUtil.getTokenInfo().getTokenActivityTimeout());
         

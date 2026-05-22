@@ -1,0 +1,26 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: jbm7
+        refreshable-dataids: common.properties
+        server-addr: 10.100.10.62:8848
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
+      discovery:
+        namespace: jbm7
+        server-addr: 10.100.10.62:8848
+jbm:
+  cluster:
+    data-init:
+      enabled: false
+  extend-field:
+    enabled: true
+    source: REDIS
+    auto-flatten: true
+    sync-local-to-redis-on-startup: false
+    builtin-definition-controller-enabled: false
+    tenant:
+      enabled: true
+      header: tenantId
+      default-tenant-id: "0"
+      use-default-when-missing: true

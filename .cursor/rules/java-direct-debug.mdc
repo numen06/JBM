@@ -1,0 +1,77 @@
+---
+description: Java direct run/debug rules to avoid repeated Maven compilation
+globs:
+  - "**/*.java"
+  - "**/pom.xml"
+  - ".vscode/**/*.json"
+alwaysApply: true
+---
+
+# Java Direct Debug Rules
+
+This is a large multi-module Maven project. During local development and debugging, prefer Cursor/VS Code Java language-server incremental compilation and direct Java launch. Do not repeatedly run Maven compile/package just because Java source files changed.
+
+## Default Debug Workflow
+
+- For normal edits under `src/main/java` or `src/test/java`, run or debug the target `main` class directly with the Java debugger (`type: java`), using the IDE/JDT-managed classpath.
+- Prefer the editor Run/Debug CodeLens on the Spring Boot application class, or create/update `.vscode/launch.json` with a Java launch configuration.
+- Do not run `mvn compile`, `mvn package`, `mvn test`, or `spring-boot:run` before every debug attempt.
+- Let the Java language server perform incremental compilation. If the editor reports compile errors, fix the specific files first instead of triggering a Maven rebuild.
+- If a debug session can continue with hot code replace, use hot reload/restart of the Java debug session rather than rebuilding the Maven module.
+- After a local debug run, smoke test, or temporary Spring Boot startup is finished, stop the Java process promptly.
+- Do not leave background Java, Maven, Spring Boot, or test processes running after verification unless the user explicitly asks to keep the service alive.
+
+## When Maven Is Allowed
+
+Run Maven only when one of these is true:
+
+- `pom.xml`, parent POM, dependency versions, Maven profiles, annotation processors, or generated-source configuration changed.
+- A dependency/module is missing from the IDE classpath and Java language-server import/sync did not fix it.
+- You need a packaging artifact, CI-equivalent verification, or a deliberate test run.
+- You are validating cross-module dependency changes before committing.
+
+When Maven is needed, scope it to the smallest module:
+
+```bash
+mvn -pl <module-path> -am compile -DskipTests
+```
+
+Avoid root-level Maven builds during debug unless the change truly spans the whole reactor.
+
+## Spring Boot Applications
+
+For application debugging, launch the application class directly instead of `mvn spring-boot:run`. Common application classes in this repo include:
+
+- `com.jbm.cluster.center.JbmCenterApplication`
+- `com.jbm.cluster.auth.JbmAuthApplication`
+- `com.jbm.cluster.job.JbmJobApplication`
+- `com.jbm.cluster.bigscreen.JbmBigscreenApplication`
+- `com.jbm.cluster.weixin.miniapp.JbmWxApplication`
+- `com.jbm.micro.mysql.MicroMysqlApplication`
+- `com.jbm.examples.extendfield.business.ExtendFieldBusinessApplication`
+- `com.jbm.examples.extendfield.designer.ExtendFieldDesignerApplication`
+
+Example `.vscode/launch.json` entry:
+
+```json
+{
+  "type": "java",
+  "name": "Debug JbmCenterApplication",
+  "request": "launch",
+  "mainClass": "com.jbm.cluster.center.JbmCenterApplication",
+  "projectName": "jbm-cluster-platform-center",
+  "args": "--spring.profiles.active=h2"
+}
+```
+
+Create similar entries for the module currently being debugged. Keep launch configs focused on direct Java debugging; do not wrap Maven commands in launch tasks for the normal edit-debug loop.
+
+## Agent Behavior
+
+- Before suggesting or running Maven, explain why direct Java debug is insufficient for this specific change.
+- If the user asks to debug after code changes, first try a Java launch/debug configuration or the existing IDE Java debugger.
+- If only a small Java file changed, do not propose a Maven build as the next step.
+- For verification, prefer focused tests or compile checks only when the risk justifies it; do not use full reactor builds as a default smoke test.
+- If starting a Java service or test process from the terminal, track the process and shut it down after the check completes.
+- Before starting a new service, check whether an old Java process is already occupying the intended port; reuse it only if it is known to be the current expected process, otherwise stop the stale process first.
+- When reporting completion, mention whether any Java/Spring/Maven process was left running. The default should be none left running.

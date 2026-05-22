@@ -5,8 +5,12 @@ import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.api.constants.RequestDeviceType;
+import com.jbm.cluster.api.event.auth.LoginSuccessEvent;
+import com.jbm.cluster.api.event.auth.LogoutEvent;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import org.springframework.context.ApplicationEvent;
 import com.jbm.cluster.core.constant.UserConstants;
 import com.jbm.framework.exceptions.UtilException;
 import lombok.AccessLevel;
@@ -45,21 +49,53 @@ public class LoginHelper {
      * @param loginUser 登录用户信息
      */
     public static void login(JbmLoginUser loginUser) {
+        login(loginUser, null, null, null, null);
+    }
+
+    public static void login(JbmLoginUser loginUser, String loginType, String clientId) {
+        login(loginUser, loginType, clientId, null, null);
+    }
+
+    public static void login(JbmLoginUser loginUser, String loginType, String clientId, String ip, String userAgent) {
         String device = ObjectUtil.isNull(loginUser.getDevice()) ? RequestDeviceType.PC.getDevice() : loginUser.getDevice();
-        loginByDevice(loginUser, device);
+        loginByDevice(loginUser, device, loginType, clientId, ip, userAgent);
     }
 
     /**
      * 获取当前OAuthToken,登出
      */
     public static void loginout() {
-        StpUtil.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
+        Object loginId = null;
+        String tokenValue = null;
+        JbmLoginUser loginUser = softGetLoginUser();
+        try {
+            tokenValue = StpUtil.getTokenValue();
+            loginId = SaOAuth2Util.getLoginIdByAccessToken(tokenValue);
+        } catch (Exception ignored) {
+        }
+        if (loginId != null) {
+            StpUtil.logout(loginId);
+        } else {
+            try {
+                StpUtil.logout();
+            } catch (Exception ignored) {
+            }
+        }
         clearCache();
+        publishEvent(new LogoutEvent(LoginHelper.class, loginId, loginUser, tokenValue));
     }
 
     public static void loginout(Object loginId) {
+        JbmLoginUser loginUser = null;
+        String tokenValue = null;
+        try {
+            tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+            loginUser = getLoginUser(loginId);
+        } catch (Exception ignored) {
+        }
         StpUtil.logout(loginId);
         clearCache();
+        publishEvent(new LogoutEvent(LoginHelper.class, loginId, loginUser, tokenValue));
     }
 
     /**
@@ -69,13 +105,23 @@ public class LoginHelper {
      * @param loginUser 登录用户信息
      */
     public static void loginByDevice(JbmLoginUser loginUser, String device) {
-//        if (StrUtil.isNotEmpty(loginUser.getUserType())) {
-//            StpUtil.setStpLogic(SaManager.getStpLogic(loginUser.getUserType()));
-//        }
+        loginByDevice(loginUser, device, null, null, null, null);
+    }
+
+    public static void loginByDevice(JbmLoginUser loginUser, String device, String loginType, String clientId,
+                                     String ip, String userAgent) {
         LOGIN_CACHE.set(loginUser);
         StpUtil.login(loginUser.getLoginId(), device);
         loginUser.setToken(StpUtil.getTokenValue());
         setLoginUser(loginUser);
+        publishEvent(new LoginSuccessEvent(LoginHelper.class, loginUser, loginType, clientId, device, ip, userAgent));
+    }
+
+    private static void publishEvent(ApplicationEvent event) {
+        try {
+            SpringUtil.publishEvent(event);
+        } catch (Exception ignored) {
+        }
     }
 
     /**

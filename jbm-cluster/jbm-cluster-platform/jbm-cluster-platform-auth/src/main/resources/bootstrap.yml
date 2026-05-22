@@ -6,6 +6,11 @@ server:
       cookie:
         name: OAUTH2SESSION
 spring:
+  liquibase:
+    enabled: false
+  task:
+    scheduling:
+      enabled: false
   main:
     allow-bean-definition-overriding: false
   application:

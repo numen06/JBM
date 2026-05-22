@@ -7,6 +7,7 @@ import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
+import com.jbm.framework.exceptions.ServiceException;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClientBuilder;
@@ -15,24 +16,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-
 /**
- * @Created wesley.zhang
- * @Date 2022/5/19 16:00
- * @Description TODO
+ * 登录认证路由：优先本地 ILoginAuthenticate，可选 Redis 指定远程服务。
  */
 @Service
 public class DynamicLoginFeignClient {
 
-    private FeignClientBuilder feignClientBuilder;
+    private final FeignClientBuilder feignClientBuilder;
 
     @Autowired
     private RedisService redisService;
     @Autowired
-    private LoginAuthenticateFallback loginAuthenticateFallback;
-    @Autowired
     private ApplicationContext applicationContext;
-
 
     public DynamicLoginFeignClient(@Autowired ApplicationContext appContext) {
         this.feignClientBuilder = new FeignClientBuilder(appContext);
@@ -40,15 +35,14 @@ public class DynamicLoginFeignClient {
 
     private String findLoginServiceName(LoginType loginType) {
         try {
-            String seviceName = redisService.getCacheObject(JbmSecurityConstants.LOGIN_AUTHENTICATE_KEY + loginType.toString());
-            if (StrUtil.isEmpty(seviceName)) {
-                return JbmClusterConstants.AUTH_SERVER;
+            String serviceName = redisService.getCacheObject(JbmSecurityConstants.LOGIN_AUTHENTICATE_KEY + loginType.toString());
+            if (StrUtil.isEmpty(serviceName)) {
+                return null;
             }
-            return seviceName;
+            return serviceName;
         } catch (NullPointerException e) {
-            return JbmClusterConstants.AUTH_SERVER;
+            return null;
         }
-
     }
 
     public ILoginAuthenticate findLoalLoginAuthenticate(LoginType loginType) {
@@ -64,16 +58,15 @@ public class DynamicLoginFeignClient {
         return null;
     }
 
-
     public ILoginAuthenticate getFeginLoginAuthenticate(LoginType loginType) {
-        ILoginAuthenticate authenticate = this.findLoalLoginAuthenticate(loginType);
+        ILoginAuthenticate authenticate = findLoalLoginAuthenticate(loginType);
         if (ObjectUtil.isNotEmpty(authenticate)) {
             return authenticate;
         }
-        return this.getFeginLoginAuthenticate(this.findLoginServiceName(loginType));
-    }
-
-    public ILoginAuthenticate getFeginLoginAuthenticate(String seviceName) {
-        return this.feignClientBuilder.forType(ILoginAuthenticate.class, seviceName).build();
+        String serviceName = findLoginServiceName(loginType);
+        if (StrUtil.isNotBlank(serviceName) && !JbmClusterConstants.AUTH_SERVER.equals(serviceName)) {
+            return feignClientBuilder.forType(ILoginAuthenticate.class, serviceName).build();
+        }
+        throw new ServiceException("不支持的登录类型: " + loginType);
     }
 }

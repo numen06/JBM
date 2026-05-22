@@ -1,0 +1,54 @@
+---
+description: Windows PowerShell UTF-8 file and terminal encoding rules
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# UTF-8 Encoding Rules on Windows
+
+This project uses UTF-8 for all source files, scripts, docs, configs, and generated text files.
+
+When working on Windows or PowerShell:
+
+- Never write project files using PowerShell redirection operators `>` or `>>`.
+- Never use `Out-File`, `Set-Content`, `Add-Content`, or `Export-Csv` without an explicit UTF-8 encoding.
+- Prefer editor/patch-based file edits over shell-based file generation.
+- If shell-based writing is necessary, use explicit UTF-8 encoding.
+- If a file already exists, preserve its encoding unless the project explicitly requires converting it to UTF-8.
+- If generated text contains garbled characters, stop and inspect the file encoding before rewriting it.
+
+Use these PowerShell patterns:
+
+```powershell
+Set-Content -Path .\file.txt -Value $content -Encoding utf8
+Add-Content -Path .\file.txt -Value $content -Encoding utf8
+$content | Out-File -FilePath .\file.txt -Encoding utf8
+Export-Csv -Path .\data.csv -Encoding utf8 -NoTypeInformation
+```
+
+Avoid these patterns:
+
+```powershell
+"content" > file.txt
+"content" >> file.txt
+"content" | Out-File file.txt
+Set-Content file.txt "content"
+Add-Content file.txt "content"
+Export-Csv file.csv
+```
+
+Before running scripts that may read or write non-ASCII text in PowerShell, normalize the session:
+
+```powershell
+chcp 65001 | Out-Null
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+$PSDefaultParameterValues['Set-Content:Encoding'] = 'utf8'
+$PSDefaultParameterValues['Add-Content:Encoding'] = 'utf8'
+$PSDefaultParameterValues['Export-Csv:Encoding'] = 'utf8'
+```
+
+If you are about to create or overwrite a file from a terminal command, first explain why editor/patch editing is not enough, then use an explicit UTF-8 write method.
