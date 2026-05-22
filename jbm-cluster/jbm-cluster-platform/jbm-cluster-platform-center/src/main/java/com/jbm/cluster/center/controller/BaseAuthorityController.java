@@ -81,8 +81,8 @@ public class BaseAuthorityController {
     @GetMapping("/users/{userId}")
     public ResultBody<List<OpenAuthority>> getUserAuthorities(@PathVariable Long userId) {
         com.jbm.cluster.api.entitys.basic.BaseUser user = baseUserService.getUserById(userId);
-        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityByUserId(
-                userId, JbmConstants.ROOT.equals(user.getUserName())));
+        boolean root = user != null && JbmConstants.ROOT.equals(user.getUserName());
+        return ResultBody.callback(() -> baseAuthorityBusiness.findAuthorityByUserId(userId, root));
     }
 
     @ApiOperation(value = "应用权限")

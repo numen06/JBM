@@ -273,7 +273,10 @@ CREATE TABLE IF NOT EXISTS jbm_system_init_marker (
     initialized_at    TIMESTAMP    NOT NULL
 );
 
---changeset jbm:rbac-v1-api-key-index
+--changeset jbm:rbac-v1-api-key-index dbms:mysql
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'base_app' AND index_name = 'api_key_index'
+CREATE UNIQUE INDEX api_key_index ON base_app (api_key);
+
+--changeset jbm:rbac-v1-api-key-index-h2 dbms:h2
 CREATE UNIQUE INDEX api_key_index ON base_app (api_key);

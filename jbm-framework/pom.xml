@@ -66,8 +66,8 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
-                    <skipTests>true</skipTests>
+                    <skip>${skip}</skip>
+                    <skipTests>${skipTests}</skipTests>
                     <testFailureIgnore>true</testFailureIgnore>
                     <argLine>-Dfile.encoding=UTF-8</argLine>
                 </configuration>

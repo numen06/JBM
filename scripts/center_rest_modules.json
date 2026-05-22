@@ -1,0 +1,416 @@
+{
+  "profile": "jaja7",
+  "base_url": "http://127.0.0.1:7777",
+  "username": "admin",
+  "tenant_header": "tenantId",
+  "tenant_id": "0",
+  "health_path": "/actuator/health",
+  "modules": [
+    {
+      "id": "session",
+      "title": "登录会话",
+      "scenarios": [
+        {
+          "id": "TC-SES-01",
+          "title": "建立用户会话（冒烟）",
+          "precondition": "Center 已启动；测试账号可登录或仅校验接口可达",
+          "steps": [
+            {
+              "name": "POST 会话",
+              "method": "POST",
+              "path": "/user/sessions",
+              "bodyType": "query",
+              "body": "username={username}",
+              "expect": "success",
+              "assert": ["isTrue:success"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "user",
+      "title": "用户",
+      "scenarios": [
+        {
+          "id": "TC-USER-01",
+          "title": "用户：注册-按用户名查询-详情-角色",
+          "precondition": "无同名用户 u_{usuffix}；tenantId=0",
+          "steps": [
+            {
+              "name": "注册",
+              "method": "POST",
+              "path": "/user/registrations",
+              "bodyType": "query",
+              "body": "userName=u_{usuffix}&password=admin123&confirmPassword=admin123&nickName=REST_User",
+              "expect": "success",
+              "extract": { "testUserName": "literal.u_{usuffix}" }
+            },
+            {
+              "name": "按 userName 查询",
+              "method": "GET",
+              "path": "/user",
+              "bodyType": "query",
+              "body": "userName={testUserName}",
+              "expect": "success",
+              "extract": { "userId": "result.0.userId" },
+              "assert": [
+                "sizeGte:result:1",
+                "eq:result.0.userName:{testUserName}"
+              ]
+            },
+            {
+              "name": "用户详情",
+              "method": "GET",
+              "path": "/user/{userId}",
+              "expect": "success",
+              "assert": [
+                "eq:result.userName:{testUserName}",
+                "notNull:result.userId"
+              ]
+            },
+            {
+              "name": "用户角色列表",
+              "method": "GET",
+              "path": "/user/{userId}/roles",
+              "expect": "success",
+              "assert": ["isList:result"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "role",
+      "title": "角色",
+      "scenarios": [
+        {
+          "id": "TC-ROLE-01",
+          "title": "角色：创建-查询-修改-删除闭环",
+          "precondition": "tenantId=0；可写角色表",
+          "steps": [
+            {
+              "name": "创建角色",
+              "method": "POST",
+              "path": "/role",
+              "bodyType": "json",
+              "body": "{\"roleCode\":\"cen_role_{ts}\",\"roleName\":\"REST角色\",\"status\":1,\"roleDesc\":\"biz-test\"}",
+              "expect": "success",
+              "extract": { "roleId": "result", "roleCode": "literal.cen_role_{ts}" },
+              "assert": ["notNull:result"]
+            },
+            {
+              "name": "查询详情校验编码",
+              "method": "GET",
+              "path": "/role/{roleId}",
+              "expect": "success",
+              "assert": [
+                "eq:result.roleCode:{roleCode}",
+                "eq:result.roleName:REST角色"
+              ]
+            },
+            {
+              "name": "修改角色名称",
+              "method": "PUT",
+              "path": "/role/{roleId}",
+              "bodyType": "json",
+              "body": "{\"roleId\":{roleId},\"roleCode\":\"{roleCode}\",\"roleName\":\"REST角色-已改\",\"status\":1}",
+              "expect": "success"
+            },
+            {
+              "name": "再次查询校验修改",
+              "method": "GET",
+              "path": "/role/{roleId}",
+              "expect": "success",
+              "assert": ["eq:result.roleName:REST角色-已改"]
+            },
+            {
+              "name": "删除角色",
+              "method": "DELETE",
+              "path": "/role/{roleId}",
+              "expect": "success"
+            },
+            {
+              "name": "删除后详情应为空",
+              "method": "GET",
+              "path": "/role/{roleId}",
+              "expect": "success",
+              "assert": ["isNull:result"]
+            }
+          ]
+        },
+        {
+          "id": "TC-ROLE-02",
+          "title": "角色：全量列表结构（允许空库）",
+          "precondition": "jaja7 可无种子数据",
+          "steps": [
+            {
+              "name": "GET /role/all",
+              "method": "GET",
+              "path": "/role/all",
+              "expect": "success",
+              "assert": ["isList:result"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menu",
+      "title": "菜单",
+      "scenarios": [
+        {
+          "id": "TC-MENU-01",
+          "title": "菜单：全量列表结构（允许空库）",
+          "precondition": "权限菜单可未同步",
+          "steps": [
+            {
+              "name": "GET /menu/all",
+              "method": "GET",
+              "path": "/menu/all",
+              "expect": "success",
+              "assert": ["isList:result"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "authority",
+      "title": "权限",
+      "scenarios": [
+        {
+          "id": "TC-AUTH-01",
+          "title": "权限：新用户权限列表与菜单树",
+          "precondition": "依赖 TC-USER-01 已写入 userId",
+          "steps": [
+            {
+              "name": "用户权限（允许空列表）",
+              "method": "GET",
+              "path": "/authority/users/{userId}",
+              "expect": "success",
+              "assert": ["isList:result"]
+            },
+            {
+              "name": "菜单权限树",
+              "method": "GET",
+              "path": "/authority/menus/tree",
+              "expect": "success",
+              "assert": ["isList:result"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "app",
+      "title": "应用",
+      "scenarios": [
+        {
+          "id": "TC-APP-01",
+          "title": "应用：分页查询结构正确",
+          "precondition": "tenantId=0",
+          "steps": [
+            {
+              "name": "应用分页",
+              "method": "GET",
+              "path": "/app",
+              "bodyType": "query",
+              "body": "pageForm.pageNo=1&pageForm.pageSize=10",
+              "expect": "success",
+              "assert": [
+                "notNull:result.total",
+                "isList:result.contents"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gateway",
+      "title": "网关配置",
+      "scenarios": [
+        {
+          "id": "TC-GW-01",
+          "title": "网关：路由/限流分页可读",
+          "precondition": "网关配置表可访问",
+          "steps": [
+            {
+              "name": "路由分页",
+              "method": "GET",
+              "path": "/gateway/routes",
+              "bodyType": "query",
+              "body": "pageForm.pageNo=1&pageForm.pageSize=10",
+              "expect": "success",
+              "assert": ["notNull:result.total", "isList:result.contents"]
+            },
+            {
+              "name": "IP 限流分页",
+              "method": "GET",
+              "path": "/gateway/limit/ip",
+              "bodyType": "query",
+              "body": "pageForm.pageNo=1&pageForm.pageSize=10",
+              "expect": "success",
+              "assert": ["notNull:result.total"]
+            },
+            {
+              "name": "速率限流分页",
+              "method": "GET",
+              "path": "/gateway/limit/rate",
+              "bodyType": "query",
+              "body": "pageForm.pageNo=1&pageForm.pageSize=10",
+              "expect": "success",
+              "assert": ["notNull:result.total"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "extend-form",
+      "title": "扩展表单",
+      "scenarios": [
+        {
+          "id": "TC-EXT-01",
+          "title": "扩展表单：保存发布-Redis-库表一致",
+          "precondition": "Redis 可用；extend_field 已配置",
+          "steps": [
+            {
+              "name": "保存并发布",
+              "method": "POST",
+              "path": "/extend-field/forms/cen_form_{ts}",
+              "bodyType": "json",
+              "body": "{\"formName\":\"CEN表单\",\"fields\":[{\"fieldName\":\"note\",\"fieldLabel\":\"备注\",\"fieldType\":\"string\"}],\"autoPublish\":true}",
+              "expect": "success",
+              "extract": { "formCode": "literal.cen_form_{ts}" },
+              "assert": [
+                "eq:result.formCode:{formCode}",
+                "sizeGte:result.fields:1",
+                "eq:result.fields.0.fieldName:note"
+              ]
+            },
+            {
+              "name": "Redis 字段定义",
+              "method": "GET",
+              "path": "/extend-field/forms/{formCode}/definitions",
+              "expect": "success",
+              "assert": [
+                "sizeGte:result:1",
+                "eq:result.0.fieldName:note"
+              ]
+            },
+            {
+              "name": "库表定义",
+              "method": "GET",
+              "path": "/extend-field/forms/{formCode}",
+              "expect": "success",
+              "assert": [
+                "eq:result.formCode:{formCode}",
+                "eq:result.formName:CEN表单"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "custom-forms",
+      "title": "自定义表单",
+      "scenarios": [
+        {
+          "id": "TC-CF-01",
+          "title": "自定义表单：保存后详情一致",
+          "precondition": "custom_forms 表可写",
+          "steps": [
+            {
+              "name": "保存表单",
+              "method": "POST",
+              "path": "/customForms/saveData",
+              "bodyType": "json",
+              "body": "{\"name\":\"REST自定义表单\",\"formOrTable\":\"form\"}",
+              "expect": "success",
+              "extract": { "customFormId": "result.id", "formDisplayName": "literal.REST自定义表单" },
+              "assert": ["notNull:result.id"]
+            },
+            {
+              "name": "查询详情",
+              "method": "POST",
+              "path": "/customForms/getDetail",
+              "bodyType": "json",
+              "body": "{\"id\":{customFormId}}",
+              "expect": "success",
+              "assert": [
+                "eq:result.name:{formDisplayName}",
+                "eq:result.formOrTable:form"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "current",
+      "title": "当前用户",
+      "scenarios": [
+        {
+          "id": "TC-CUR-01",
+          "title": "当前用户：需登录 Token",
+          "precondition": "已设置 Authorization 或 CENTER_TOKEN",
+          "steps": [
+            {
+              "name": "GET /current/user",
+              "method": "GET",
+              "path": "/current/user",
+              "expect": "optional",
+              "assert": ["notNull:result.userId"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "misc",
+      "title": "其它",
+      "scenarios": [
+        {
+          "id": "TC-MISC-01",
+          "title": "字典与 API 分页",
+          "precondition": "tenantId=0",
+          "steps": [
+            {
+              "name": "字典 Map",
+              "method": "GET",
+              "path": "/baseDic/getDicMap",
+              "expect": "success",
+              "assert": ["notEmpty:result"]
+            },
+            {
+              "name": "API 列表",
+              "method": "GET",
+              "path": "/api",
+              "expect": "success",
+              "assert": ["isList:result"]
+            }
+          ]
+        },
+        {
+          "id": "TC-MISC-02",
+          "title": "组织根节点（无种子时可选）",
+          "precondition": "base_org 可能为空",
+          "steps": [
+            {
+              "name": "POST /baseOrg/root",
+              "method": "POST",
+              "path": "/baseOrg/root",
+              "bodyType": "json",
+              "body": "{}",
+              "expect": "optional",
+              "assert": ["isList:result"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

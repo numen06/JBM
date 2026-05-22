@@ -11,6 +11,8 @@ import com.jbm.cluster.common.mysql.extendfield.CustomFormsItemToFieldDefinition
 import com.jbm.cluster.common.mysql.service.CustomFormsItemService;
 import com.jbm.cluster.common.mysql.service.CustomFormsService;
 import com.jbm.cluster.common.mysql.service.ExtendFormDefinitionService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,18 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> implements CustomFormsService {
+
+    /** 兼容未执行 V6/V10 迁移、缺少 MasterData 通用列的旧库 */
+    private static final String[] LEGACY_FORM_COLUMNS = {
+            "id", "name", "menu_ids", "form_or_table", "data_source", "create_time", "update_time"
+    };
+
+    private static final String[] LEGACY_ITEM_COLUMNS = {
+            "id", "form_id", "field_name", "label_name", "field_type", "component_type",
+            "format", "decimal_type", "decimal_value", "choice_type", "choice_value", "date_type",
+            "is_required", "is_show", "is_filter", "field_belong", "value_key", "label_key",
+            "children_key", "create_time", "update_time"
+    };
     @Autowired
     private CustomFormsItemService customFormsItemService;
 
@@ -48,11 +62,20 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
 
     @Override
     public CustomFormsResult getDetail(CustomFormsForm form) {
-        CustomForms customForms = this.selectEntity(form);
+        if (form == null || form.getId() == null) {
+            throw new ServiceException("表单ID不能为空");
+        }
+        CustomForms customForms = getOne(new QueryWrapper<CustomForms>()
+                .select(LEGACY_FORM_COLUMNS)
+                .eq("id", form.getId()));
+        if (customForms == null) {
+            throw new ServiceException("自定义表单不存在");
+        }
         CustomFormsResult customFormsResult = BeanUtil.copyProperties(customForms, CustomFormsResult.class);
-        CustomFormsItem customFormsItem = new CustomFormsItem();
-        customFormsItem.setFormId(customForms.getId());
-        customFormsResult.setCustomFormsItemList(customFormsItemService.selectEntitys(customFormsItem));
+        customFormsResult.setCustomFormsItemList(customFormsItemService.list(
+                new QueryWrapper<CustomFormsItem>()
+                        .select(LEGACY_ITEM_COLUMNS)
+                        .eq("form_id", customForms.getId())));
         return customFormsResult;
     }
 

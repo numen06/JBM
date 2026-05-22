@@ -28,6 +28,10 @@
         <url>https://github.com/numen06/JBM.git</url>
         <tag>7.3.0-SNAPSHOT</tag>
     </scm>
+    <properties>
+        <skipTests>true</skipTests>
+        <skip>true</skip>
+    </properties>
     <distributionManagement>
         <repository>
             <id>jbm-releases</id>
@@ -52,8 +56,8 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
-                    <skipTests>true</skipTests>
+                    <skip>${skip}</skip>
+                    <skipTests>${skipTests}</skipTests>
                     <testFailureIgnore>true</testFailureIgnore>
                     <argLine>-Dfile.encoding=UTF-8</argLine>
                 </configuration>

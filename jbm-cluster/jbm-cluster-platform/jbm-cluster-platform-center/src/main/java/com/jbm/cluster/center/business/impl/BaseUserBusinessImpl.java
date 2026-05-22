@@ -508,15 +508,26 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
     @Override
     public List<BaseUser> retrievalUsers(String keyword) {
         QueryWrapper<BaseUser> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .and(w -> w.like(BaseUser::getUserName, keyword)
+                        .or().like(BaseUser::getRealName, keyword)
+                        .or().like(BaseUser::getMobile, keyword))
+                .last("limit 10");
+        if (!cn.dev33.satoken.stp.StpUtil.isLogin()) {
+            return baseUserService.selectEntitys(queryWrapper);
+        }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
-            // 用户不存在部门的情况下，仅查询自己的数据
-            queryWrapper.lambda().eq(BaseUser::getUserId, LoginHelper.getUserId());
+            Long uid = LoginHelper.getUserId();
+            if (uid != null) {
+                queryWrapper.lambda().eq(BaseUser::getUserId, uid);
+            }
+            return baseUserService.selectEntitys(queryWrapper);
         }
-        // 仅查询用户所属组织的数据
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
-        queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
-        queryWrapper.lambda().like(BaseUser::getRealName, keyword).or().like(BaseUser::getMobile, keyword).last("limit 10");
+        if (parentOrg != null && parentOrg.getId() != null) {
+            queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
+        }
         return baseUserService.selectEntitys(queryWrapper);
     }
 

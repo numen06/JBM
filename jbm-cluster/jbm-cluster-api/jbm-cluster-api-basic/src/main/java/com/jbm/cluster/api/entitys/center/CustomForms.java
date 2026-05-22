@@ -13,6 +13,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 /**
  * @author scolin
@@ -24,6 +25,20 @@ import javax.validation.constraints.NotNull;
 @Table
 @ApiModel("自定义表单")
 public class CustomForms extends MasterDataEntity {
+
+    /** 旧库表可能无下列 MasterData 列，查询时排除 */
+    @TableField(exist = false)
+    private String code;
+    @TableField(exist = false)
+    private Long appId;
+    @TableField(exist = false)
+    private Long parentId;
+    @TableField(exist = false)
+    private Integer level;
+    @TableField(exist = false)
+    private String leafPath;
+    @TableField(exist = false)
+    private Map<String, Object> extendData;
 
     @ApiModelProperty("名称")
     @NotEmpty(message = "名称不能为空")

@@ -44,6 +44,9 @@
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
         <maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version>
         <maven-surefire-plugin-version>2.22.2</maven-surefire-plugin-version>
+        <!-- 默认跳过单测；命令行 -DskipTests=false -Dskip=false 可开启（见 docs/Maven构建与测试规范.md） -->
+        <skipTests>true</skipTests>
+        <skip>true</skip>
         <maven-source-plugin-version>3.2.1</maven-source-plugin-version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
