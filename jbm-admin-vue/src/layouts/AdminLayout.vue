@@ -1,25 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
-import {
-  LayoutDashboard,
-  Users,
-  Shield,
-  Menu,
-  Building2,
-  KeyRound,
-  AppWindow,
-  BookOpen,
-  Route,
-  Gauge,
-  Globe,
-  ScrollText,
-  Code2,
-  LogOut,
-  PanelLeft,
-} from '@lucide/vue'
+import { LogOut, PanelLeft } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { useMenuStore } from '@/stores/menu'
 import Button from '@/components/ui/Button.vue'
 import { cn } from '@/lib/utils'
 
@@ -27,42 +12,17 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
+const menuStore = useMenuStore()
 
-const navGroups = [
-  {
-    label: '概览',
-    items: [{ name: 'dashboard', title: '仪表盘', icon: LayoutDashboard, to: '/dashboard' }],
-  },
-  {
-    label: '系统管理',
-    items: [
-      { name: 'users', title: '用户管理', icon: Users, to: '/system/users' },
-      { name: 'roles', title: '角色管理', icon: Shield, to: '/system/roles' },
-      { name: 'menus', title: '菜单管理', icon: Menu, to: '/system/menus' },
-      { name: 'orgs', title: '组织管理', icon: Building2, to: '/system/orgs' },
-      { name: 'authorities', title: '权限管理', icon: KeyRound, to: '/system/authorities' },
-      { name: 'apps', title: '应用管理', icon: AppWindow, to: '/system/apps' },
-      { name: 'dicts', title: '字典管理', icon: BookOpen, to: '/system/dicts' },
-    ],
-  },
-  {
-    label: '网关管理',
-    items: [
-      { name: 'gateway-routes', title: '路由管理', icon: Route, to: '/gateway/routes' },
-      { name: 'gateway-rate', title: '限流管理', icon: Gauge, to: '/gateway/rate-limit' },
-      { name: 'gateway-ip', title: 'IP 限制', icon: Globe, to: '/gateway/ip-limit' },
-    ],
-  },
-  {
-    label: '其他',
-    items: [
-      { name: 'account-logs', title: '审计日志', icon: ScrollText, to: '/log/account' },
-      { name: 'developer', title: '开发者', icon: Code2, to: '/developer' },
-    ],
-  },
-]
+const navGroups = computed(() => menuStore.navGroups)
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
+
+const roleHint = computed(() => {
+  const roles = auth.user?.roles
+  if (!roles?.length) return ''
+  return roles.map((r) => r.roleName || r.roleCode).join('、')
+})
 
 async function handleLogout() {
   await auth.logout()
@@ -89,6 +49,12 @@ async function handleLogout() {
         <span v-if="!app.sidebarCollapsed" class="font-semibold">JBM 管理后台</span>
       </div>
       <nav class="flex-1 overflow-y-auto p-2">
+        <p
+          v-if="menuStore.loadError && !app.sidebarCollapsed"
+          class="mb-2 px-2 text-xs text-destructive"
+        >
+          {{ menuStore.loadError }}
+        </p>
         <div v-for="group in navGroups" :key="group.label" class="mb-4">
           <p
             v-if="!app.sidebarCollapsed"
@@ -103,7 +69,7 @@ async function handleLogout() {
             :class="
               cn(
                 'mb-0.5 flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent',
-                route.name === item.name && 'bg-accent font-medium text-accent-foreground',
+                route.path === item.to && 'bg-accent font-medium text-accent-foreground',
               )
             "
             :title="item.title"
@@ -124,9 +90,10 @@ async function handleLogout() {
           <span class="text-sm font-medium">{{ pageTitle }}</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-sm text-muted-foreground">
-            {{ auth.user?.nickName || auth.user?.userName || '管理员' }}
-          </span>
+          <div class="text-right text-sm">
+            <p>{{ auth.user?.nickName || auth.user?.userName || '管理员' }}</p>
+            <p v-if="roleHint" class="text-xs text-muted-foreground">{{ roleHint }}</p>
+          </div>
           <Button variant="outline" size="sm" @click="handleLogout">
             <LogOut class="h-4 w-4" />
             退出

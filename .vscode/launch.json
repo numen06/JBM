@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "jaja7 Auth (5555)",
+      "request": "launch",
+      "mainClass": "com.jbm.cluster.auth.JbmAuthApplication",
+      "projectName": "jbm-cluster-platform-auth",
+      "vmArgs": "-Dspring.profiles.active=jaja7 -Dprofile.name=jaja7"
+    },
+    {
+      "type": "java",
+      "name": "jaja7 Center (8888)",
+      "request": "launch",
+      "mainClass": "com.jbm.cluster.center.JbmCenterApplication",
+      "projectName": "jbm-cluster-platform-center",
+      "vmArgs": "-Dspring.profiles.active=jaja7 -Dprofile.name=jaja7"
+    },
+    {
+      "type": "java",
+      "name": "jaja7 Gateway (7777)",
+      "request": "launch",
+      "mainClass": "com.jbm.cluster.platform.gateway.JbmGatewayApplication",
+      "projectName": "jbm-cluster-platform-gateway",
+      "vmArgs": "-Dspring.profiles.active=jaja7 -Dprofile.name=jaja7"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "jaja7: Auth + Center + Gateway",
+      "configurations": [
+        "jaja7 Auth (5555)",
+        "jaja7 Center (8888)",
+        "jaja7 Gateway (7777)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

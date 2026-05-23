@@ -1,4 +1,4 @@
-import { get, unwrap } from './request'
+import { get, put, unwrap } from './request'
 
 export interface AuthorityResource {
   resourceId?: string
@@ -15,7 +15,9 @@ export interface AuthorityApi {
 
 export interface AuthorityMenu {
   menuId?: number
+  menuCode?: string
   menuName?: string
+  path?: string
   parentId?: number
 }
 
@@ -36,9 +38,35 @@ export async function listAuthorityMenus() {
   return unwrap(res)
 }
 
+/** 权限目录：type=1 菜单+按钮，type=2 API */
+export async function listAuthorityCatalog(type = '1') {
+  const res = await get<OpenAuthority[]>('/authority/catalog', { params: { type } })
+  return unwrap(res)
+}
+
 export async function listMenuTree(appId?: number) {
   const res = await get<Record<string, unknown>[]>('/authority/menus/tree', {
     params: appId ? { appId } : {},
   })
+  return unwrap(res)
+}
+
+export interface OpenAuthority {
+  authorityId?: string
+  authority?: string
+}
+
+export async function getRoleAuthorities(roleId: number) {
+  const res = await get<OpenAuthority[]>(`/authority/roles/${roleId}`)
+  return unwrap(res)
+}
+
+export async function putRoleAuthorities(roleId: number, authorityIds: string[]) {
+  const res = await put<void>(`/authority/roles/${roleId}`, { authorityIds })
+  return unwrap(res)
+}
+
+export async function getUserAuthorities(userId: number) {
+  const res = await get<OpenAuthority[]>(`/authority/users/${userId}`)
   return unwrap(res)
 }

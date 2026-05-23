@@ -149,6 +149,11 @@ public class JbmLoginUser implements Serializable {
     private String thirdToken;
 
     /**
+     * 是否需要修改密码（首次登录或密码已重置为默认值）
+     */
+    private Boolean mustChangePassword;
+
+    /**
      * 获取登录id
      */
     public String getLoginId() {

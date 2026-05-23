@@ -247,6 +247,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         BaseAccount baseAccount = new BaseAccount();
 //        baseAccount.setUpdateTime(new Date());
         baseAccount.setPassword(SecurityUtils.encryptPassword(password));
+        baseAccount.setMustChangePassword(0);
         QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
         wrapper.lambda()
                 .in(BaseAccount::getAccountType, JbmConstants.ACCOUNT_TYPE_USERNAME, JbmConstants.ACCOUNT_TYPE_EMAIL, JbmConstants.ACCOUNT_TYPE_MOBILE)

@@ -13,6 +13,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>()
 
 <template>
   <input
+    v-bind="$attrs"
     :type="type ?? 'text'"
     :value="modelValue"
     :placeholder="placeholder"

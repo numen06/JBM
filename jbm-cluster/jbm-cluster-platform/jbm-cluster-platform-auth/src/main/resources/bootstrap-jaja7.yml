@@ -3,16 +3,24 @@ spring:
     nacos:
       config:
         namespace: jbm7
+        group: DEFAULT_GROUP
         refreshable-dataids: common.properties
         server-addr: 10.100.10.62:8848
         shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
       discovery:
         namespace: jbm7
+        group: DEFAULT_GROUP
         server-addr: 10.100.10.62:8848
 jbm:
+  api:
+    # jaja7 本地联调：jbm 基础应用客户端允许明文密码
+    login-plaintext-dev-only: true
   cluster:
     data-init:
       enabled: false
+      # 启动时恢复 admin 默认密码并标记须改密（本地联调用，生产勿开）
+      force-reset-default-password: true
+      root-password: admin
   extend-field:
     enabled: true
     source: REDIS

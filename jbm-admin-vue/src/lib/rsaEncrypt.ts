@@ -8,9 +8,15 @@ export function toPemPublicKey(base64Key: string): string {
   return `-----BEGIN PUBLIC KEY-----\n${lines.join('\n')}\n-----END PUBLIC KEY-----`
 }
 
+/** 优先 /oauth2/publicKey；旧版 Auth 无该接口时回退 /captcha/pkey */
 export async function fetchPublicKey(appId: string): Promise<string> {
-  const res = await get<string>('/oauth2/publicKey', { params: { app_id: appId } })
-  return unwrap(res)
+  try {
+    const res = await get<string>('/oauth2/publicKey', { params: { app_id: appId } })
+    return unwrap(res)
+  } catch {
+    const res = await get<string>('/captcha/pkey', { params: { appKey: appId } })
+    return unwrap(res)
+  }
 }
 
 export function encryptPassword(plainPassword: string, publicKeyBase64: string): string {

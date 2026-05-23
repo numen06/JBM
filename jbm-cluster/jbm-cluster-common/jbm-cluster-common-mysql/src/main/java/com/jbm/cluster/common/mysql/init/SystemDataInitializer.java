@@ -7,7 +7,6 @@ import com.jbm.cluster.common.mysql.mapper.*;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
-import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +39,7 @@ public class SystemDataInitializer implements ApplicationRunner {
     private static final long DEV_USER_ID = 10L;
     private static final long DEV_APP_ID = 1000L;
 
-    @Value("${jbm.cluster.data-init.root-password:admin123}")
+    @Value("${jbm.cluster.data-init.root-password:admin}")
     private String rootPassword;
 
     @Autowired
@@ -116,11 +115,12 @@ public class SystemDataInitializer implements ApplicationRunner {
                 JbmConstants.ROOT_USER_ID,
                 JbmConstants.ROOT_USER_NAME,
                 SecurityUtils.encryptPassword(rootPassword),
-                "password",
-                "default",
+                JbmConstants.ACCOUNT_TYPE_USERNAME,
+                JbmConstants.ACCOUNT_DOMAIN_ADMIN,
                 "127.0.0.1");
         account.setAccountId(JbmConstants.ROOT_USER_ID);
         account.setStatus(JbmConstants.ENABLED);
+        account.setMustChangePassword(JbmConstants.ENABLED);
         account.setCreateTime(now);
         account.setUpdateTime(now);
         baseAccountMapper.insert(account);
@@ -192,13 +192,15 @@ public class SystemDataInitializer implements ApplicationRunner {
 
         BaseApp app = new BaseApp();
         app.setAppId(DEV_APP_ID);
-        app.setApiKey(JbmConstants.SEED_DEV_APP_API_KEY);
-        app.setSecretKey(SecurityUtils.encryptPassword(JbmConstants.SEED_DEV_APP_SECRET));
-        app.setAppType("server");
-        app.setAppName("H2种子测试应用");
+        app.setApiKey(JbmConstants.JBM_APP_API_KEY);
+        app.setSecretKey(SecurityUtils.encryptPassword(JbmConstants.JBM_APP_SECRET));
+        app.setAppType("pc");
+        app.setAppName("JBM基础应用");
+        app.setAppNameEn("jbm-base-app");
         app.setDeveloperId(DEV_USER_ID);
+        app.setWebsite("*");
         app.setStatus(JbmConstants.ENABLED);
-        app.setIsPersist(0);
+        app.setIsPersist(JbmConstants.ENABLED);
         app.setCreateTime(now);
         app.setUpdateTime(now);
         baseAppMapper.insert(app);

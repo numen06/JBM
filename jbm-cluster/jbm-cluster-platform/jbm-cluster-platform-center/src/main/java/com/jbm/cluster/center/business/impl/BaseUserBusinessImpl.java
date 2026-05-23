@@ -29,6 +29,7 @@ import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseOrgService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
@@ -66,6 +67,14 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
     @Autowired
     private BaseAccountService baseAccountService;
 
+    /** 与 {@link com.jbm.cluster.center.controller.CurrentUserController} 一致：userId=1 或登录名为 admin */
+    private boolean canQueryAllUsers() {
+        JbmLoginUser login = LoginHelper.softGetLoginUser();
+        if (login == null) {
+            return true;
+        }
+        return LoginHelper.isAdmin() || JbmConstants.ROOT.equals(login.getUsername());
+    }
 
     @Override
     public BaseUser saveEntity(BaseUser baseUser) {
@@ -89,14 +98,42 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
             doAddUser(baseUser);
         } else {
             doUpdateUser(baseUser);
+            syncCredentialAccounts(baseUser);
         }
         return baseUser;
     }
 
+    /** 保存用户后同步手机/邮箱登录凭证（与 register 一致） */
+    private void syncCredentialAccounts(BaseUser baseUser) {
+        BaseUser db = baseUserService.getUserById(baseUser.getUserId());
+        if (db == null) {
+            return;
+        }
+        if (StrUtil.isNotBlank(baseUser.getEmail())) {
+            db.setEmail(baseUser.getEmail());
+        }
+        if (StrUtil.isNotBlank(baseUser.getMobile())) {
+            db.setMobile(baseUser.getMobile());
+        }
+        try {
+            if (Validator.isEmail(db.getEmail())) {
+                activationEmailAccount(db);
+            }
+        } catch (Exception ignored) {
+            // 已存在则跳过
+        }
+        try {
+            if (Validator.isMobile(db.getMobile())) {
+                activationMobileAccount(db);
+            }
+        } catch (Exception ignored) {
+            // 已存在则跳过
+        }
+    }
+
     @Override
     public List<BaseUser> selectEntitys(BaseUserForm baseUserForm) {
-        // 超级管理员账号查询所有数据
-        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+        if (canQueryAllUsers()) {
             return baseUserService.selectEntitys(baseUserForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
@@ -113,8 +150,7 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
 
     @Override
     public DataPaging<BaseUser> selectEntitys(BaseUserForm baseUserForm, PageForm pageForm) {
-        // 超级管理员账号查询所有数据
-        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+        if (canQueryAllUsers()) {
             return baseUserService.selectEntitys(baseUserForm, pageForm);
         }
         BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
@@ -203,14 +239,12 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         baseUserService.insertEntity(baseUser);
         //默认注册用户名账户
         baseAccountService.register(baseUser.getUserId(), baseUser.getUserName(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_USERNAME, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
-//        if (Validator.isEmail(baseUser.getEmail())) {
-//            //注册email账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
-//        }
-//        if (Validator.isMobile(baseUser.getMobile())) {
-//            //注册手机号账号登陆
-//            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
-//        }
+        if (Validator.isEmail(baseUser.getEmail())) {
+            baseAccountService.register(baseUser.getUserId(), baseUser.getEmail(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_EMAIL, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
+        }
+        if (Validator.isMobile(baseUser.getMobile())) {
+            baseAccountService.register(baseUser.getUserId(), baseUser.getMobile(), baseUser.getPassword(), JbmConstants.ACCOUNT_TYPE_MOBILE, baseUser.getStatus(), JbmConstants.ACCOUNT_DOMAIN_ADMIN, null);
+        }
     }
 
     private void validationExist(BaseUser baseUser) {
@@ -361,21 +395,8 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
      */
     @Override
     public DataPaging<BaseUser> findListPage(BaseUserForm form) {
-        QueryWrapper<BaseUser> queryWrapper = new QueryWrapper();
-        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
-        if (ObjectUtil.isEmpty(currentOrg)) {
-            form.setUserId(LoginHelper.getUserId());
-        }
-        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
-        queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
-        queryWrapper.lambda()
-                .eq(ObjectUtils.isNotEmpty(form.getUserId()), BaseUser::getUserId, form.getUserId())
-                .eq(ObjectUtils.isNotEmpty(form.getUserType()), BaseUser::getUserType, form.getUserType())
-                .eq(ObjectUtils.isNotEmpty(form.getUserName()), BaseUser::getUserName, form.getUserName())
-                .eq(ObjectUtils.isNotEmpty(form.getMobile()), BaseUser::getMobile, form.getMobile());
-        queryWrapper.orderByDesc("create_time");
         PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
-        return baseUserService.selectEntitys(PageParams.from(pageForm), queryWrapper);
+        return selectEntitys(form, pageForm);
     }
 
     /**

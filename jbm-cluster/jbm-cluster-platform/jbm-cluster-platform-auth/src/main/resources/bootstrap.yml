@@ -57,6 +57,7 @@ jbm:
     permit-all:
       - /oauth2/**
       - /internal/trust/**
+      - /internal/dev/**
       - /token/diagnose/**
       - /captcha/**
       - /qrcode/**

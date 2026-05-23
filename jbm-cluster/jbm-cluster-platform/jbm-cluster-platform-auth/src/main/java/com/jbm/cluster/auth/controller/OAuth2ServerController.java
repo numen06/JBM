@@ -34,6 +34,7 @@ import com.jbm.cluster.auth.service.ThirdPartyAuthService;
 import com.jbm.cluster.common.satoken.oauth.OAuth2ResponseHelper;
 import com.jbm.cluster.common.satoken.oauth.AccessTokenExpiryAligner;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -401,7 +402,7 @@ public class OAuth2ServerController {
             //通过oauth登录
             JbmLoginUser myUser = jbmLoginUserResultBody.getResult();
             if (StrUtil.isEmpty(myUser.getClientId())) {
-                myUser.setClientId(StrUtil.isNotBlank(targetClientId) ? targetClientId : "demo");
+                myUser.setClientId(StrUtil.isNotBlank(targetClientId) ? targetClientId : JbmConstants.JBM_APP_API_KEY);
             }
             loginPostProcessor.enrichLoginUser(myUser, myUser.getClientId());
             if (StrUtil.isBlank(myUser.getDevice())) {

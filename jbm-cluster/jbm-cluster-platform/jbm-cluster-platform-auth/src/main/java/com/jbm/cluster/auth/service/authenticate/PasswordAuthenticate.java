@@ -55,7 +55,11 @@ public class PasswordAuthenticate implements ILoginAuthenticate {
                 return toLoginUser(account);
             }
             if (SecurityUtils.getPasswordEncoder().matches(password, account.getPassword())) {
-                return toLoginUser(account);
+                JbmLoginUser loginUser = toLoginUser(account);
+                if (account.getMustChangePassword() != null && account.getMustChangePassword() == 1) {
+                    loginUser.setMustChangePassword(true);
+                }
+                return loginUser;
             }
             throw new ServiceException("密码错误");
         });

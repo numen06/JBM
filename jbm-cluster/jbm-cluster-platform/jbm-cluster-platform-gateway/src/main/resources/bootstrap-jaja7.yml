@@ -7,17 +7,25 @@ spring:
         - id: jaja7-center-local
           uri: http://127.0.0.1:8888
           predicates:
-            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/trust/**
+            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**
         - id: jaja7-auth-local
           uri: http://127.0.0.1:5555
           predicates:
-            - Path=/oauth2/**
+            - Path=/oauth2/**,/captcha/**,/qrcode/**,/internal/dev/**
     nacos:
       config:
+        # Nacos 命名空间固定 jbm7；勿用 profile 名 jaja7，避免与旧环境配置冲突
         namespace: jbm7
+        group: DEFAULT_GROUP
         refreshable-dataids: common.properties
         server-addr: 10.100.10.62:8848
         shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
       discovery:
         namespace: jbm7
+        group: DEFAULT_GROUP
         server-addr: 10.100.10.62:8848
+    sentinel:
+      datasource:
+        ds1:
+          nacos:
+            namespace: jbm7

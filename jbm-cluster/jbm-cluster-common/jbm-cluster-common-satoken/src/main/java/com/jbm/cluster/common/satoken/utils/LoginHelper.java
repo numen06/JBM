@@ -276,6 +276,10 @@ public class LoginHelper {
     }
 
     public static boolean isAdmin() {
+        JbmLoginUser login = softGetLoginUser();
+        if (login != null && com.jbm.cluster.core.constant.JbmConstants.ROOT.equals(login.getUsername())) {
+            return true;
+        }
         return isAdmin(getUserId());
     }
 

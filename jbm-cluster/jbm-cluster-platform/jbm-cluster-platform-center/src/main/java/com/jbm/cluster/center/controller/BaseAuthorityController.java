@@ -55,6 +55,13 @@ public class BaseAuthorityController {
         return ResultBody.callback(() -> baseAuthorityService.findAuthorityMenu(1));
     }
 
+    @ApiOperation(value = "权限目录（菜单+按钮，type=1；API 为 type=2）")
+    @GetMapping("/catalog")
+    public ResultBody<List<OpenAuthority>> listAuthorityCatalog(
+            @RequestParam(value = "type", required = false, defaultValue = "1") String type) {
+        return ResultBody.callback(() -> baseAuthorityService.findAuthorityByType(type));
+    }
+
     @ApiOperation(value = "菜单权限树")
     @GetMapping("/menus/tree")
     public ResultBody<List<Map<String, Object>>> listMenuTree(

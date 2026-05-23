@@ -24,6 +24,8 @@ export interface OAuth2TokenResult {
   expires_in?: number
   token_type?: string
   scope?: string
+  /** 首次登录或默认密码，须修改密码 */
+  must_change_password?: boolean
 }
 
 export interface BaseUser {
@@ -34,6 +36,8 @@ export interface BaseUser {
   email?: string
   status?: number
   createTime?: string
+  password?: string
+  userType?: string
 }
 
 export interface BaseRole {
@@ -50,6 +54,7 @@ export interface BaseMenu {
   menuName?: string
   parentId?: number
   path?: string
+  authorityId?: number
   icon?: string
   sort?: number
   status?: number
@@ -57,7 +62,26 @@ export interface BaseMenu {
   children?: BaseMenu[]
 }
 
+export interface BaseAction {
+  actionId?: number
+  actionCode?: string
+  actionName?: string
+  menuId?: number
+  priority?: number
+  status?: number
+}
+
+export interface BaseAccount {
+  accountId?: number
+  userId?: number
+  account?: string
+  accountType?: string
+  status?: number
+  domain?: string
+}
+
 export interface BaseOrg {
+  id?: number
   orgId?: number
   orgName?: string
   parentId?: number
@@ -75,9 +99,13 @@ export interface BaseApp {
 }
 
 export interface BaseDic {
+  id?: number
   dicId?: number
+  code?: string
   dicCode?: string
+  name?: string
   dicName?: string
+  remark?: string
   dicValue?: string
   parentId?: number
 }
@@ -101,6 +129,7 @@ export interface GatewayRoute {
 export interface GatewayRateLimit {
   policyId?: number
   policyName?: string
+  policyType?: string
   limitQuota?: number
   intervalUnit?: string
 }
@@ -108,6 +137,7 @@ export interface GatewayRateLimit {
 export interface GatewayIpLimit {
   policyId?: number
   policyName?: string
+  policyType?: number
   ipAddress?: string
 }
 
@@ -120,10 +150,12 @@ export interface BaseAccountLog {
 }
 
 export interface BaseDeveloper {
-  developerId?: number
-  developerName?: string
+  userId?: number
   userName?: string
+  nickName?: string
+  userType?: string
   status?: number
+  password?: string
 }
 
 export interface UserInfoStatistics {
@@ -136,4 +168,43 @@ export interface CurrentUser {
   userName?: string
   nickName?: string
   avatar?: string
+  roles?: BaseRole[]
+  authorities?: { authorityId?: string; authority?: string }[]
+}
+
+export interface OpenAuthority {
+  authorityId?: string
+  authority?: string
+}
+
+/** 扩展字段元数据（与后端 FieldDefinition 对齐） */
+export interface FieldDefinition {
+  fieldName: string
+  fieldType: string
+  fieldLabel: string
+  required?: boolean
+  sortable?: boolean
+  queryable?: boolean
+  defaultValue?: unknown
+  options?: Record<string, unknown>
+}
+
+/** 扩展字段表单定义（库表真源） */
+export interface ExtendFormDefinition {
+  id?: number
+  tenantId?: number
+  formCode: string
+  formName?: string
+  fields: FieldDefinition[]
+  version?: number
+  customFormId?: number
+  updateTime?: string
+}
+
+/** 保存扩展字段表单定义请求体 */
+export interface SaveExtendFormRequest {
+  formName?: string
+  fields: FieldDefinition[]
+  customFormId?: number
+  autoPublish?: boolean
 }

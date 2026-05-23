@@ -3,6 +3,7 @@ package com.jbm.cluster.auth.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.core.constant.JbmConstants;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
@@ -40,7 +41,7 @@ public class LoginController {
             redirectUri = pixel + "/oauth2/thirdparty/local/callback";
         }
         if (StrUtil.isEmpty(clientId)) {
-            clientId = "demo";
+            clientId = JbmConstants.JBM_APP_API_KEY;
         }
         // 将参数传递给模板
         model.put("response_type", responseType);

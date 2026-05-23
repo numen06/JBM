@@ -27,6 +27,11 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 public class BaseOrg extends MasterDataEntity {
 
+    /**
+     * base_org 表无通用 code 列，使用 org_code；屏蔽 MasterDataEntity.code 避免 MP 查询报错。
+     */
+    @TableField(exist = false)
+    private String code;
 
     @ApiModelProperty(value = "组织名称")
     private String orgName;

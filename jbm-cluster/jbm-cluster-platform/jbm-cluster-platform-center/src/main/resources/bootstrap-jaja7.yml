@@ -5,19 +5,21 @@ spring:
     nacos:
       config:
         namespace: jbm7
-        #        group: ${config.group}
+        group: DEFAULT_GROUP
         refreshable-dataids: common.properties
         server-addr: 10.100.10.62:8848
         shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,baidu.properties
       discovery:
         namespace: jbm7
-        #        group: ${config.group}
+        group: DEFAULT_GROUP
         server-addr: 10.100.10.62:8848
 jbm:
   cluster:
     # 迁移老库已有业务数据，禁止启动时重复灌种子数据
     data-init:
       enabled: false
+      force-reset-default-password: true
+      root-password: admin
   extend-field:
     enabled: true
     source: REDIS

@@ -4,13 +4,17 @@ JBM7 集群管理前端：Vue 3 + Vite + TypeScript + Tailwind CSS + shadcn 风�
 
 ## 前置条件
 
-本地需已启动（`spring.profiles.active=jaja7`）：
+须**同时**启动三个服务（`spring.profiles.active=jaja7`，Nacos 命名空间 **jbm7**）：
 
-| 服务 | 端口 |
-|------|------|
-| Gateway | 7777 |
-| Auth | 5555 |
-| Center | 8888 |
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| Gateway | 7777 | 对外统一入口，前端只连此端口 |
+| Auth | 5555 | OAuth2、验证码（经 Gateway 转发） |
+| Center | 8888 | 业务 API（经 Gateway 转发） |
+
+VS Code：运行 **「jaja7: Auth + Center + Gateway」** 复合启动（`.vscode/launch.json`）。
+
+Maven 打包/过滤资源：`mvn -Pjaja7 ...`（`jbm-cluster/pom.xml` 中 `config.namespace=jbm7`）。
 
 ## 开发
 
@@ -24,16 +28,14 @@ npm run dev
 
 ### 默认登录
 
-- OAuth2 密码模式：`POST /oauth2/token`
-- 默认客户端：`demo` / `demo123`（与 `scripts/user_perm_rest_modules.json` 一致）
-- 用户名/密码：使用环境中已有的管理员账号（如 `admin`）
+- OAuth2 密码模式：`POST /oauth2/token`（经 Gateway）
+- 图形验证码：`GET /captcha/vcode64`，登录表单传 `vcode`
+- 默认客户端：`demo` / `demo123`
+- 管理员示例：`admin` / `Admin@123`（以环境为准）
 
 ### API 代理
 
-`vite.config.ts` 中：
-
-- 经 Gateway（7777）：`/oauth2`、`/user`、`/current`、`/authority`、`/role`、`/menu` 等
-- 直连 Center（8888）：`/app`、`/gateway`、`/baseDic`、`/developer`、`/baseOrg` 等
+`vite.config.ts` 中**全部**前缀代理到 Gateway `http://127.0.0.1:7777`，不直连 Auth/Center。
 
 ## 功能模块
 
@@ -55,4 +57,3 @@ npm run build
 - Axios（`Authorization: Bearer` + `tenantId`）
 - Tailwind CSS v4
 - Lucide 图标（`@lucide/vue`）
-- Reka UI（依赖预留，UI 为 shadcn 风格自研组件）

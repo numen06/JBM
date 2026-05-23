@@ -203,6 +203,18 @@
                 <discovery.server-addr>10.100.10.98:8848</discovery.server-addr>
             </properties>
         </profile>
+        <!-- JBM7 本地联调：Spring profile=jaja7，Nacos 命名空间=jbm7（与旧 jbm/jaja 隔离） -->
+        <profile>
+            <id>jaja7</id>
+            <properties>
+                <docker.tag.version>latest</docker.tag.version>
+                <profile.name>jaja7</profile.name>
+                <config.server-addr>10.100.10.62:8848</config.server-addr>
+                <config.namespace>jbm7</config.namespace>
+                <config.group>DEFAULT_GROUP</config.group>
+                <discovery.server-addr>10.100.10.62:8848</discovery.server-addr>
+            </properties>
+        </profile>
         <!-- 测试 -->
         <profile>
             <id>test</id>

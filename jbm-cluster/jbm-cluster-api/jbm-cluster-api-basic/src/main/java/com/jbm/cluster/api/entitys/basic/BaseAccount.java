@@ -67,6 +67,11 @@ public class BaseAccount extends MasterDataEntity {
      */
     private String domain;
 
+    /**
+     * 是否需要修改密码: 0-否 1-首次登录强制修改
+     */
+    private Integer mustChangePassword;
+
     public BaseAccount(Long userId, String account, String password, String accountType, String domain, String registerIp) {
         this.userId = userId;
         this.account = account;

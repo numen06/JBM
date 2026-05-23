@@ -4,6 +4,8 @@ import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 
 import java.util.Map;
 
@@ -39,6 +41,26 @@ public final class OAuth2ResponseHelper {
         if (StrUtil.isNotBlank(currentToken)) {
             data.put("access_token", currentToken);
             data.put("token_type", SaManager.getConfig().getTokenPrefix());
+        }
+        attachMustChangePasswordFlag(data);
+    }
+
+    /**
+     * OAuth2 token 响应中附带首次登录须改密标记。
+     */
+    public static void attachMustChangePasswordFlag(Map<String, Object> data) {
+        if (data == null) {
+            return;
+        }
+        try {
+            if (!StpUtil.isLogin()) {
+                return;
+            }
+            JbmLoginUser loginUser = LoginHelper.getLoginUser();
+            if (loginUser != null && Boolean.TRUE.equals(loginUser.getMustChangePassword())) {
+                data.put("must_change_password", true);
+            }
+        } catch (Exception ignored) {
         }
     }
 

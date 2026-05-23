@@ -1,0 +1,275 @@
+package com.jbm.cluster.common.mysql.init;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.jbm.cluster.api.constants.ResourceType;
+import com.jbm.cluster.api.entitys.basic.*;
+import com.jbm.cluster.api.model.auth.OpenAuthority;
+import com.jbm.cluster.common.mysql.mapper.BaseActionMapper;
+import com.jbm.cluster.common.mysql.mapper.BaseMenuMapper;
+import com.jbm.cluster.common.mysql.mapper.BaseUserMapper;
+import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.common.mysql.service.BaseRoleService;
+import com.jbm.cluster.core.constant.JbmConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 首次启动补全<strong>标准菜单 + 标准按钮</strong>（与 Vue 路由、页内 ACTION_* 对齐），并仅授权给超管角色。
+ * <p>
+ * 之后由超级管理员在「菜单管理」「按钮管理」「角色管理」中增删改；本类不会覆盖已存在数据。
+ * 不创建业务用户/业务角色（见 {@link SystemDataInitializer} 仅初始化超管）。
+ */
+@Slf4j
+@Component
+@Order(Integer.MAX_VALUE - 90)
+@ConditionalOnProperty(name = "jbm.cluster.data-init.enabled", havingValue = "true", matchIfMissing = true)
+public class AdminVueRbacSeedInitializer implements ApplicationRunner {
+
+    private static final String MARKER_KEY = "admin_vue_rbac_v1";
+
+    private static final long MENU_PLATFORM = 100L;
+    private static final long MENU_SYSTEM = 101L;
+    private static final long MENU_GATEWAY = 120L;
+    private static final long MENU_OTHER = 130L;
+
+    private static final long MENU_DASHBOARD = 110L;
+    private static final long MENU_USERS = 102L;
+    private static final long MENU_ROLES = 103L;
+    private static final long MENU_MENUS = 106L;
+    private static final long MENU_ACTIONS = 112L;
+    private static final long MENU_ORGS = 107L;
+    private static final long MENU_AUTHORITY = 104L;
+    private static final long MENU_APPS = 108L;
+    private static final long MENU_DICTS = 109L;
+    private static final long MENU_EXTEND = 111L;
+    private static final long MENU_GW_ROUTE = 121L;
+    private static final long MENU_GW_RATE = 122L;
+    private static final long MENU_GW_IP = 123L;
+    private static final long MENU_LOGS = 131L;
+    private static final long MENU_DEVELOPER = 105L;
+
+    private static final long ACTION_USERS_VIEW = 2001L;
+    private static final long ACTION_USERS_ADD = 2002L;
+    private static final long ACTION_USERS_EDIT = 2003L;
+    private static final long ACTION_USERS_DELETE = 2004L;
+    private static final long ACTION_DICT_VIEW = 2101L;
+    private static final long ACTION_DICT_ADD = 2102L;
+    private static final long ACTION_DICT_EDIT = 2103L;
+    private static final long ACTION_DICT_DELETE = 2104L;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private BaseMenuMapper baseMenuMapper;
+    @Autowired
+    private BaseActionMapper baseActionMapper;
+    @Autowired
+    private BaseUserMapper baseUserMapper;
+    @Autowired
+    private BaseAuthorityService baseAuthorityService;
+    @Autowired
+    private BaseRoleService baseRoleService;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void run(ApplicationArguments args) {
+        if (isMarked()) {
+            return;
+        }
+        long menuCount = baseMenuMapper.selectCount(null);
+        if (menuCount >= 15) {
+            markDone();
+            return;
+        }
+        log.info("补全管理后台 Vue 菜单与按钮权限元数据（当前菜单数={}），不创建测试用户", menuCount);
+        seedMenusAndAuthorities();
+        seedButtonActions();
+        grantSuperAdminAllAuthorities();
+        linkAdminUsersToSuperRole();
+        markDone();
+        log.info("管理后台 Vue RBAC 元数据种子完成（仅超管可用，其余请管理端配置）");
+    }
+
+    private boolean isMarked() {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM jbm_system_init_marker WHERE marker_key = ?",
+                Integer.class, MARKER_KEY);
+        return count != null && count > 0;
+    }
+
+    private void markDone() {
+        jdbcTemplate.update(
+                "MERGE INTO jbm_system_init_marker (marker_key, initialized_at) KEY(marker_key) VALUES (?, CURRENT_TIMESTAMP)",
+                MARKER_KEY);
+    }
+
+    private void seedMenusAndAuthorities() {
+        upsertMenu(MENU_PLATFORM, null, "platform", "平台管理", "/", 0);
+        upsertMenu(MENU_DASHBOARD, MENU_PLATFORM, "dashboard", "仪表盘", "/dashboard", 0);
+
+        upsertMenu(MENU_SYSTEM, MENU_PLATFORM, "system", "系统管理", "/system", 1);
+        upsertMenu(MENU_USERS, MENU_SYSTEM, "users", "用户管理", "/system/users", 1);
+        upsertMenu(MENU_ROLES, MENU_SYSTEM, "roles", "角色管理", "/system/roles", 2);
+        upsertMenu(MENU_MENUS, MENU_SYSTEM, "menus", "菜单管理", "/system/menus", 3);
+        upsertMenu(MENU_ACTIONS, MENU_SYSTEM, "actions", "按钮管理", "/system/actions", 4);
+        upsertMenu(MENU_ORGS, MENU_SYSTEM, "orgs", "组织管理", "/system/orgs", 5);
+        upsertMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/system/authorities", 6);
+        upsertMenu(MENU_APPS, MENU_SYSTEM, "apps", "应用管理", "/system/apps", 7);
+        upsertMenu(MENU_DICTS, MENU_SYSTEM, "dicts", "字典管理", "/system/dicts", 8);
+        upsertMenu(MENU_EXTEND, MENU_SYSTEM, "extend_fields", "扩展字段", "/system/extend-fields", 9);
+        upsertMenu(MENU_DEVELOPER, MENU_SYSTEM, "developer_mgmt", "开发者管理", "/developer", 10);
+
+        upsertMenu(MENU_GATEWAY, MENU_PLATFORM, "gateway", "网关管理", "/gateway", 2);
+        upsertMenu(MENU_GW_ROUTE, MENU_GATEWAY, "gw_routes", "路由管理", "/gateway/routes", 1);
+        upsertMenu(MENU_GW_RATE, MENU_GATEWAY, "gw_rate", "限流管理", "/gateway/rate-limit", 2);
+        upsertMenu(MENU_GW_IP, MENU_GATEWAY, "gw_ip", "IP 限制", "/gateway/ip-limit", 3);
+
+        upsertMenu(MENU_OTHER, MENU_PLATFORM, "other", "其他", "/log", 3);
+        upsertMenu(MENU_LOGS, MENU_OTHER, "account_logs", "审计日志", "/log/account", 1);
+    }
+
+    private void seedButtonActions() {
+        seedAction(ACTION_USERS_VIEW, MENU_USERS, "users_view", "用户-查看", 1);
+        seedAction(ACTION_USERS_ADD, MENU_USERS, "users_add", "用户-新增", 2);
+        seedAction(ACTION_USERS_EDIT, MENU_USERS, "users_edit", "用户-编辑", 3);
+        seedAction(ACTION_USERS_DELETE, MENU_USERS, "users_delete", "用户-删除", 4);
+        seedAction(ACTION_DICT_VIEW, MENU_DICTS, "dict_view", "字典-查看", 1);
+        seedAction(ACTION_DICT_ADD, MENU_DICTS, "dict_add", "字典-新增", 2);
+        seedAction(ACTION_DICT_EDIT, MENU_DICTS, "dict_edit", "字典-编辑", 3);
+        seedAction(ACTION_DICT_DELETE, MENU_DICTS, "dict_delete", "字典-删除", 4);
+    }
+
+    /** 仅将菜单+按钮授权给超级管理员角色，供超管在界面中为其他角色分配 */
+    private void grantSuperAdminAllAuthorities() {
+        List<String> ids = new ArrayList<>();
+        ids.add(String.valueOf(MENU_DASHBOARD));
+        ids.add(String.valueOf(MENU_USERS));
+        ids.add(String.valueOf(MENU_ROLES));
+        ids.add(String.valueOf(MENU_MENUS));
+        ids.add(String.valueOf(MENU_ACTIONS));
+        ids.add(String.valueOf(MENU_ORGS));
+        ids.add(String.valueOf(MENU_AUTHORITY));
+        ids.add(String.valueOf(MENU_APPS));
+        ids.add(String.valueOf(MENU_DICTS));
+        ids.add(String.valueOf(MENU_EXTEND));
+        ids.add(String.valueOf(MENU_DEVELOPER));
+        ids.add(String.valueOf(MENU_GW_ROUTE));
+        ids.add(String.valueOf(MENU_GW_RATE));
+        ids.add(String.valueOf(MENU_GW_IP));
+        ids.add(String.valueOf(MENU_LOGS));
+        ids.add(authorityIdForAction(ACTION_USERS_VIEW));
+        ids.add(authorityIdForAction(ACTION_USERS_ADD));
+        ids.add(authorityIdForAction(ACTION_USERS_EDIT));
+        ids.add(authorityIdForAction(ACTION_USERS_DELETE));
+        ids.add(authorityIdForAction(ACTION_DICT_VIEW));
+        ids.add(authorityIdForAction(ACTION_DICT_ADD));
+        ids.add(authorityIdForAction(ACTION_DICT_EDIT));
+        ids.add(authorityIdForAction(ACTION_DICT_DELETE));
+
+        List<OpenAuthority> current = baseAuthorityService.findAuthorityByRole(JbmConstants.ROOT_ROLE_ID);
+        Set<String> merged = new LinkedHashSet<>(ids);
+        if (current != null) {
+            for (OpenAuthority o : current) {
+                if (o.getAuthorityId() != null) {
+                    merged.add(o.getAuthorityId());
+                }
+            }
+        }
+        baseAuthorityService.addAuthorityRole(
+                JbmConstants.ROOT_ROLE_ID,
+                null,
+                merged.toArray(new String[0]));
+    }
+
+    private void upsertMenu(Long menuId, Long parentId, String code, String name, String path, int priority) {
+        BaseMenu existing = baseMenuMapper.selectById(menuId);
+        Date now = new Date();
+        if (existing == null) {
+            BaseMenu menu = new BaseMenu();
+            menu.setMenuId(menuId);
+            menu.setParentId(parentId);
+            menu.setMenuCode(code);
+            menu.setMenuName(name);
+            menu.setPath(path);
+            menu.setScheme("/");
+            menu.setTarget("_self");
+            menu.setPriority(priority);
+            menu.setStatus(JbmConstants.ENABLED);
+            menu.setHidden(1);
+            menu.setIsPersist(true);
+            menu.setServiceId("jbm-cluster-platform-center");
+            menu.setCreateTime(now);
+            menu.setUpdateTime(now);
+            baseMenuMapper.insert(menu);
+        } else {
+            existing.setParentId(parentId);
+            existing.setMenuCode(code);
+            existing.setMenuName(name);
+            existing.setPath(path);
+            existing.setPriority(priority);
+            existing.setStatus(JbmConstants.ENABLED);
+            existing.setUpdateTime(now);
+            baseMenuMapper.updateById(existing);
+        }
+        baseAuthorityService.saveOrUpdateAuthority(menuId, ResourceType.menu);
+    }
+
+    private void seedAction(Long actionId, Long menuId, String code, String name, int priority) {
+        BaseAction existing = baseActionMapper.selectById(actionId);
+        Date now = new Date();
+        if (existing == null) {
+            BaseAction action = new BaseAction();
+            action.setActionId(actionId);
+            action.setMenuId(menuId);
+            action.setActionCode(code);
+            action.setActionName(name);
+            action.setPriority(priority);
+            action.setStatus(JbmConstants.ENABLED);
+            action.setIsPersist(JbmConstants.ENABLED);
+            action.setServiceId("jbm-cluster-platform-center");
+            action.setCreateTime(now);
+            action.setUpdateTime(now);
+            baseActionMapper.insert(action);
+        } else {
+            existing.setMenuId(menuId);
+            existing.setActionCode(code);
+            existing.setActionName(name);
+            existing.setPriority(priority);
+            existing.setStatus(JbmConstants.ENABLED);
+            existing.setUpdateTime(now);
+            baseActionMapper.updateById(existing);
+        }
+        baseAuthorityService.saveOrUpdateAuthority(actionId, ResourceType.action);
+    }
+
+    private String authorityIdForAction(Long actionId) {
+        BaseAuthority auth = baseAuthorityService.getAuthority(actionId, ResourceType.action);
+        if (auth == null || auth.getAuthorityId() == null) {
+            throw new IllegalStateException("按钮权限未生成: actionId=" + actionId);
+        }
+        return String.valueOf(auth.getAuthorityId());
+    }
+
+    /** 将登录名为 admin 的用户挂上超级管理员角色（兼容非 ROOT_USER_ID 的历史库） */
+    private void linkAdminUsersToSuperRole() {
+        QueryWrapper<BaseUser> q = new QueryWrapper<>();
+        q.lambda().eq(BaseUser::getUserName, JbmConstants.ROOT_USER_NAME);
+        List<BaseUser> admins = baseUserMapper.selectList(q);
+        for (BaseUser admin : admins) {
+            baseRoleService.saveUserRoles(admin.getUserId(), String.valueOf(JbmConstants.ROOT_ROLE_ID));
+        }
+    }
+}

@@ -3,13 +3,13 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
+/** jaja7 本地：所有 API 经 Gateway 7777（需同时启动 Gateway / Auth / Center） */
 const gateway = 'http://127.0.0.1:7777'
-const auth = 'http://127.0.0.1:5555'
-const center = 'http://127.0.0.1:8888'
 
-/** jaja7 Gateway 已路由的前缀 */
 const gatewayPrefixes = [
   '/oauth2',
+  '/captcha',
+  '/qrcode',
   '/user',
   '/current',
   '/authority',
@@ -19,10 +19,6 @@ const gatewayPrefixes = [
   '/online',
   '/statistics',
   '/internal',
-]
-
-/** 直连 Center（Gateway jaja7 未配置的路由） */
-const centerPrefixes = [
   '/app',
   '/gateway',
   '/baseDic',
@@ -37,6 +33,7 @@ const centerPrefixes = [
   '/baseAuthorityApp',
   '/gatewayRateLimitApi',
   '/gatewayIpLimitApi',
+  '/extend-field',
 ]
 
 function proxyMap(target: string, prefixes: string[]) {
@@ -54,11 +51,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      ...proxyMap(gateway, gatewayPrefixes),
-      ...proxyMap(center, centerPrefixes),
-      /** 验证码在 Auth，jaja7 Gateway 未路由 /captcha */
-      '/captcha': { target: auth, changeOrigin: true },
-    },
+    proxy: proxyMap(gateway, gatewayPrefixes),
   },
 })

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useMenuStore } from '@/stores/menu'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,6 +9,12 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/login/LoginPage.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/login/callback',
+      name: 'login-callback',
+      component: () => import('@/views/login/LoginOAuthCallback.vue'),
       meta: { public: true },
     },
     {
@@ -40,6 +47,12 @@ const router = createRouter({
           meta: { title: '菜单管理' },
         },
         {
+          path: 'system/actions',
+          name: 'actions',
+          component: () => import('@/views/system/ActionList.vue'),
+          meta: { title: '按钮管理' },
+        },
+        {
           path: 'system/orgs',
           name: 'orgs',
           component: () => import('@/views/system/OrgList.vue'),
@@ -62,6 +75,12 @@ const router = createRouter({
           name: 'dicts',
           component: () => import('@/views/system/DictList.vue'),
           meta: { title: '字典管理' },
+        },
+        {
+          path: 'system/extend-fields',
+          name: 'extend-fields',
+          component: () => import('@/views/system/ExtendFieldList.vue'),
+          meta: { title: '扩展字段管理' },
         },
         {
           path: 'gateway/routes',
@@ -101,13 +120,20 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (to.meta.public) {
-    if (auth.isLoggedIn && to.name === 'login') return { name: 'dashboard' }
+    if (auth.isLoggedIn && (to.name === 'login' || to.name === 'login-callback')) {
+      return { name: 'dashboard' }
+    }
     return true
   }
   if (!auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   if (!auth.user) await auth.fetchUser()
+  const menuStore = useMenuStore()
+  if (!menuStore.loaded) await menuStore.fetchMenus()
+  if (!menuStore.isRouteAllowed(to.path)) {
+    return { name: 'dashboard' }
+  }
   return true
 })
 

@@ -150,7 +150,7 @@ public class JbmConstants {
     /**
      * H2 / 开发环境默认超管密码（生产环境请首次登录后修改）
      */
-    public static final String ROOT_DEFAULT_PASSWORD = "admin123";
+    public static final String ROOT_DEFAULT_PASSWORD = "admin";
 
     /**
      * 种子超级管理员角色 ID
@@ -166,6 +166,16 @@ public class JbmConstants {
      * H2 集成测试用开发者应用明文密钥（入库前 BCrypt；OAuth 校验走 {@code OAuthClientSecretVerifier}）
      */
     public static final String SEED_DEV_APP_SECRET = "jbmSeedDevSecret0000000001";
+
+    /**
+     * JBM 基础应用 apiKey（即 SEED_DEV_APP_API_KEY 的语义别名，供明文登录白名单等场景引用）
+     */
+    public static final String JBM_APP_API_KEY = SEED_DEV_APP_API_KEY;
+
+    /**
+     * JBM 基础应用明文密钥
+     */
+    public static final String JBM_APP_SECRET = SEED_DEV_APP_SECRET;
 
     /**
      * 短信验证码前缀

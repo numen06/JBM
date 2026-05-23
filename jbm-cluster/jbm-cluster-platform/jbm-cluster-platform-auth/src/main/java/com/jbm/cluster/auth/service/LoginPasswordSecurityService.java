@@ -1,8 +1,9 @@
-package com.jbm.cluster.auth.service;
+﻿package com.jbm.cluster.auth.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.auth.config.ApiLoginSecurityProperties;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.security.ApiSecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 public class LoginPasswordSecurityService {
 
     private static final String DEMO_CLIENT = "demo";
+    private static final String JBM_CLIENT = JbmConstants.JBM_APP_API_KEY;
 
     @Autowired
     private ApiLoginSecurityProperties apiLoginSecurityProperties;
@@ -52,7 +54,7 @@ public class LoginPasswordSecurityService {
         if (!apiLoginSecurityProperties.isLoginPlaintextDevOnly()) {
             return false;
         }
-        if (!DEMO_CLIENT.equals(clientId)) {
+        if (!DEMO_CLIENT.equals(clientId) && !JBM_CLIENT.equals(clientId)) {
             return false;
         }
         return isDevProfile();
@@ -63,6 +65,7 @@ public class LoginPasswordSecurityService {
             return false;
         }
         String lower = activeProfiles.toLowerCase();
-        return lower.contains("dev") || lower.contains("local") || lower.contains("h2");
+        return lower.contains("dev") || lower.contains("local") || lower.contains("h2")
+                || lower.contains("jaja7");
     }
 }

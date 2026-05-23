@@ -18,12 +18,22 @@ export async function getDicMap() {
   return unwrap(res)
 }
 
+function toDicModel(data: Partial<BaseDic>) {
+  return {
+    id: data.id ?? data.dicId,
+    code: data.code ?? data.dicCode,
+    name: data.name ?? data.dicName,
+    remark: data.remark ?? data.dicValue,
+    parentId: data.parentId,
+  }
+}
+
 export async function saveDict(data: Partial<BaseDic>) {
-  const res = await post<BaseDic>('/baseDic/save', { model: data })
+  const res = await post<BaseDic>('/baseDic/save', { model: toDicModel(data) })
   return unwrap(res)
 }
 
 export async function deleteDict(data: Partial<BaseDic>) {
-  const res = await post<void>('/baseDic/delete', { model: data })
+  const res = await post<void>('/baseDic/delete', { model: toDicModel(data) })
   return unwrap(res)
 }

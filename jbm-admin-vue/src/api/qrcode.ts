@@ -1,0 +1,46 @@
+import { get, isOk, unwrap } from './request'
+import { normalizeTokenPayload } from './auth'
+import type { OAuth2TokenResult } from './types'
+
+export interface QrLoginSession {
+  image: string
+  code: string
+  state: string
+}
+
+/** GET /qrcode/login */
+export async function fetchLoginQr(params: {
+  clientId: string
+  redirectUri: string
+  width?: number
+  height?: number
+}): Promise<QrLoginSession> {
+  const res = await get<QrLoginSession>('/qrcode/login', {
+    params: {
+      client_id: params.clientId,
+      redirect_uri: params.redirectUri,
+      width: params.width ?? 200,
+      height: params.height ?? 200,
+    },
+  })
+  return unwrap(res)
+}
+
+/** GET /qrcode/check — 轮询；confirmState=2 时 result 为 token 字段 Map */
+export async function pollQrLogin(code: string): Promise<{
+  done: boolean
+  confirmState?: number
+  token?: OAuth2TokenResult
+  message?: string
+}> {
+  const body = await get<unknown>('/qrcode/check', { params: { code } })
+  if (isOk(body)) {
+    const data = body.result
+    if (data && typeof data === 'object') {
+      return { done: true, token: normalizeTokenPayload(data as Record<string, unknown>) }
+    }
+    return { done: false, confirmState: typeof data === 'number' ? data : undefined }
+  }
+  const state = typeof body.result === 'number' ? body.result : undefined
+  return { done: false, confirmState: state, message: body.message ?? '等待扫码' }
+}

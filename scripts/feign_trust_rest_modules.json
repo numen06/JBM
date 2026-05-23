@@ -12,8 +12,8 @@
   "simulate_remote_ip": "10.0.0.99",
   "username": "",
   "password": "",
-  "oauth_client_id": "demo",
-  "oauth_client_secret": "demo123",
+  "oauth_client_id": "jbmSeedDevAppKey00000001",
+  "oauth_client_secret": "jbmSeedDevSecret0000000001",
   "modules": [
     {
       "id": "test-user",
