@@ -16,12 +16,27 @@
 5. **用户管理** → 新建用户 → 填写手机/邮箱 → 勾选角色 → 保存（自动注册多凭证）。
 5. 退出后用新用户或手机/邮箱登录，对比侧栏与页内按钮。
 
-## 可选：脚本造数
+## 运维脚本（推荐）
+
+Java 用 VS Code 启动 **jaja7: Auth + Center + Gateway**；重复性检测与测试用 Python：
 
 ```bash
-python scripts/setup_test_users_via_admin.py --password Admin@123
+python scripts/jbm_cluster_ops.py status
+python scripts/jbm_cluster_ops.py wait --timeout 90
+python scripts/jbm_cluster_ops.py workflow --password Admin@123
+```
+
+`workflow` = 检测 → 等待 → 超管登录 → setup-rbac（两角色两用户）→ test-rbac（断言报告）。
+
+分步：
+
+```bash
+python scripts/jbm_cluster_ops.py setup-rbac
+python scripts/jbm_cluster_ops.py test-rbac
 python scripts/test_multi_credential_login.py
 ```
+
+报告输出：`docs/testing/auth-rest-jaja7/rbac-compare-test-report.md`
 
 ## 断言对照（脚本造数后）
 

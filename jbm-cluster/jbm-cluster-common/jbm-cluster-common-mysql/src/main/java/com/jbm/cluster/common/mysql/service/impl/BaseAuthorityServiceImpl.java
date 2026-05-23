@@ -192,6 +192,9 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         }
         if (ResourceType.action.equals(resourceType)) {
             BaseAction operation = baseActionMapper.selectById(resourceId);
+            if (operation == null) {
+                return null;
+            }
             authority = JbmSecurityConstants.AUTHORITY_PREFIX_ACTION + operation.getActionCode();
             baseAuthority.setResourceType(ResourceType.action.name());
             baseAuthority.setActionId(resourceId);

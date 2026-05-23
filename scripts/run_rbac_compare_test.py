@@ -153,11 +153,12 @@ def run_setup():
         encoding="utf-8",
         errors="replace",
     )
-    print(proc.stdout)
+    out = (proc.stdout or "") + (proc.stderr or "")
+    if out.strip():
+        sys.stdout.buffer.write(out.encode("utf-8", errors="replace"))
     if proc.returncode != 0:
-        print(proc.stderr, file=sys.stderr)
         raise RuntimeError("setup_test_users_via_admin 失败")
-    return proc.stdout
+    return out
 
 
 def main():
@@ -283,8 +284,9 @@ def main():
                 "/system/dicts" not in paths,
             )
 
-    # 角色授权是否写回
+    # 角色授权是否写回（造数后重新登录，避免 token 失效）
     try:
+        admin_tok = login(ADMIN)
         roles = unwrap(api("GET", "/role/all", admin_tok))
         codes = {r.get("roleCode") for r in roles or []}
         rep.add("造数", ADMIN, "角色 operator/editor", "存在", codes, {"operator", "editor"}.issubset(codes))

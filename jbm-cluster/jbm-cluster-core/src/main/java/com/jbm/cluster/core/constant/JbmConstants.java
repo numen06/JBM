@@ -158,6 +158,19 @@ public class JbmConstants {
     public static final Long ROOT_ROLE_ID = 1L;
 
     /**
+     * 是否超级管理员用户（登录名 admin、userType super 或种子 ROOT 用户 ID）
+     */
+    public static boolean isSuperUser(Long userId, String userName, String userType) {
+        if (ROOT_USER_ID.equals(userId)) {
+            return true;
+        }
+        if (userName != null && ROOT_USER_NAME.equalsIgnoreCase(userName)) {
+            return true;
+        }
+        return userType != null && "super".equalsIgnoreCase(userType);
+    }
+
+    /**
      * H2 集成测试用开发者应用 apiKey（须在 base_app 中存在）
      */
     public static final String SEED_DEV_APP_API_KEY = "jbmSeedDevAppKey00000001";

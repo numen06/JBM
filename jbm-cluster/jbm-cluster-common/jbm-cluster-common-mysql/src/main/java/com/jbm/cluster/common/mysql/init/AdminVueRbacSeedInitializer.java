@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.mysql.init;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.ResourceType;
 import com.jbm.cluster.api.entitys.basic.*;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
@@ -35,7 +36,7 @@ import java.util.Set;
 @Slf4j
 @Component
 @Order(Integer.MAX_VALUE - 90)
-@ConditionalOnProperty(name = "jbm.cluster.data-init.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "jbm.cluster.data-init.vue-rbac-metadata-enabled", havingValue = "true", matchIfMissing = true)
 public class AdminVueRbacSeedInitializer implements ApplicationRunner {
 
     private static final String MARKER_KEY = "admin_vue_rbac_v1";
@@ -86,21 +87,15 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void run(ApplicationArguments args) {
-        if (isMarked()) {
-            return;
-        }
         long menuCount = baseMenuMapper.selectCount(null);
-        if (menuCount >= 15) {
-            markDone();
-            return;
-        }
         log.info("补全管理后台 Vue 菜单与按钮权限元数据（当前菜单数={}），不创建测试用户", menuCount);
         seedMenusAndAuthorities();
         seedButtonActions();
         grantSuperAdminAllAuthorities();
-        linkAdminUsersToSuperRole();
-        markDone();
-        log.info("管理后台 Vue RBAC 元数据种子完成（仅超管可用，其余请管理端配置）");
+        if (!isMarked()) {
+            markDone();
+            log.info("管理后台 Vue RBAC 元数据种子完成（仅超管可用，其余请管理端配置）");
+        }
     }
 
     private boolean isMarked() {
@@ -112,7 +107,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
 
     private void markDone() {
         jdbcTemplate.update(
-                "MERGE INTO jbm_system_init_marker (marker_key, initialized_at) KEY(marker_key) VALUES (?, CURRENT_TIMESTAMP)",
+                "INSERT INTO jbm_system_init_marker (marker_key, initialized_at) VALUES (?, CURRENT_TIMESTAMP) "
+                        + "ON DUPLICATE KEY UPDATE initialized_at = CURRENT_TIMESTAMP",
                 MARKER_KEY);
     }
 
@@ -170,14 +166,14 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(String.valueOf(MENU_GW_RATE));
         ids.add(String.valueOf(MENU_GW_IP));
         ids.add(String.valueOf(MENU_LOGS));
-        ids.add(authorityIdForAction(ACTION_USERS_VIEW));
-        ids.add(authorityIdForAction(ACTION_USERS_ADD));
-        ids.add(authorityIdForAction(ACTION_USERS_EDIT));
-        ids.add(authorityIdForAction(ACTION_USERS_DELETE));
-        ids.add(authorityIdForAction(ACTION_DICT_VIEW));
-        ids.add(authorityIdForAction(ACTION_DICT_ADD));
-        ids.add(authorityIdForAction(ACTION_DICT_EDIT));
-        ids.add(authorityIdForAction(ACTION_DICT_DELETE));
+        ids.add(authorityIdForAction(ACTION_USERS_VIEW, "users_view"));
+        ids.add(authorityIdForAction(ACTION_USERS_ADD, "users_add"));
+        ids.add(authorityIdForAction(ACTION_USERS_EDIT, "users_edit"));
+        ids.add(authorityIdForAction(ACTION_USERS_DELETE, "users_delete"));
+        ids.add(authorityIdForAction(ACTION_DICT_VIEW, "dict_view"));
+        ids.add(authorityIdForAction(ACTION_DICT_ADD, "dict_add"));
+        ids.add(authorityIdForAction(ACTION_DICT_EDIT, "dict_edit"));
+        ids.add(authorityIdForAction(ACTION_DICT_DELETE, "dict_delete"));
 
         List<OpenAuthority> current = baseAuthorityService.findAuthorityByRole(JbmConstants.ROOT_ROLE_ID);
         Set<String> merged = new LinkedHashSet<>(ids);
@@ -229,6 +225,11 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
 
     private void seedAction(Long actionId, Long menuId, String code, String name, int priority) {
         BaseAction existing = baseActionMapper.selectById(actionId);
+        if (existing == null && StrUtil.isNotBlank(code)) {
+            QueryWrapper<BaseAction> byCode = new QueryWrapper<>();
+            byCode.lambda().eq(BaseAction::getActionCode, code);
+            existing = baseActionMapper.selectOne(byCode);
+        }
         Date now = new Date();
         if (existing == null) {
             BaseAction action = new BaseAction();
@@ -252,15 +253,32 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
             existing.setUpdateTime(now);
             baseActionMapper.updateById(existing);
         }
-        baseAuthorityService.saveOrUpdateAuthority(actionId, ResourceType.action);
+        long effectiveActionId = existing != null ? existing.getActionId() : actionId;
+        baseAuthorityService.saveOrUpdateAuthority(effectiveActionId, ResourceType.action);
     }
 
-    private String authorityIdForAction(Long actionId) {
+    private String authorityIdForAction(Long preferredActionId, String actionCode) {
+        long actionId = resolveActionId(preferredActionId, actionCode);
         BaseAuthority auth = baseAuthorityService.getAuthority(actionId, ResourceType.action);
         if (auth == null || auth.getAuthorityId() == null) {
-            throw new IllegalStateException("按钮权限未生成: actionId=" + actionId);
+            throw new IllegalStateException("按钮权限未生成: actionId=" + actionId + " code=" + actionCode);
         }
         return String.valueOf(auth.getAuthorityId());
+    }
+
+    private long resolveActionId(Long preferredActionId, String actionCode) {
+        if (baseActionMapper.selectById(preferredActionId) != null) {
+            return preferredActionId;
+        }
+        if (StrUtil.isNotBlank(actionCode)) {
+            QueryWrapper<BaseAction> byCode = new QueryWrapper<>();
+            byCode.lambda().eq(BaseAction::getActionCode, actionCode);
+            BaseAction found = baseActionMapper.selectOne(byCode);
+            if (found != null) {
+                return found.getActionId();
+            }
+        }
+        throw new IllegalStateException("标准按钮不存在: preferredId=" + preferredActionId + " code=" + actionCode);
     }
 
     /** 将登录名为 admin 的用户挂上超级管理员角色（兼容非 ROOT_USER_ID 的历史库） */

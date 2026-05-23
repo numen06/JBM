@@ -76,12 +76,13 @@ public class AuthUserBusiness {
             throw new ServiceException("用户已停用，请联系管理员");
         }
         List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId,
-                JbmConstants.ROOT.equals(baseUser.getUserName()));
+                JbmConstants.isSuperUser(baseUser.getUserId(), baseUser.getUserName(), baseUser.getUserType()));
         if (userGrantedAuthority != null && !userGrantedAuthority.isEmpty()) {
             authorities.addAll(userGrantedAuthority);
         }
         UserAccount userAccount = new UserAccount();
         BeanUtil.copyProperties(baseUser, userAccount);
+        userAccount.setUserName(baseUser.getUserName());
         userAccount.setAuthorities(authorities);
         userAccount.setRoles(rolesList);
         return userAccount;

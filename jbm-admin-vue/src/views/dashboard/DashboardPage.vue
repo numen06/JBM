@@ -85,9 +85,9 @@ onMounted(async () => {
           默认超管 <code class="rounded bg-muted px-1">admin</code>，client <code class="rounded bg-muted px-1">demo/demo123</code>。
         </p>
         <p>
-          需要一键造测试数据时（无需改代码、无需为 demo 用户反复重启）：
-          <code class="rounded bg-muted px-1">python scripts/setup_test_users_via_admin.py</code>
-          — 通过超管 API 创建 operator/editor 角色与 demo/viewer 用户（含手机/邮箱凭证）。
+          运维脚本（检测 / 等待 / 登录 / 造数 / RBAC 断言，避免反复手启 Java）：
+          <code class="rounded bg-muted px-1">python scripts/jbm_cluster_ops.py workflow</code>
+          或分步：<code class="rounded bg-muted px-1">status</code>、<code class="rounded bg-muted px-1">wait</code>、<code class="rounded bg-muted px-1">setup-rbac</code>、<code class="rounded bg-muted px-1">test-rbac</code>
         </p>
         <p>前端与脚本仅访问 Gateway：<code class="rounded bg-muted px-1">http://127.0.0.1:7777</code>（含 <code class="rounded bg-muted px-1">/oauth2</code>、<code class="rounded bg-muted px-1">/captcha</code>、Center API）。</p>
         <p class="flex items-center gap-1">

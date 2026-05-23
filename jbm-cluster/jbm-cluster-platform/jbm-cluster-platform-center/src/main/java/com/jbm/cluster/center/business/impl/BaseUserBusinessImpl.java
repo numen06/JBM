@@ -434,13 +434,15 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         }
 
         // 加入用户权限
-        List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId, JbmConstants.ROOT.equals(baseUser.getUserName()));
+        List<OpenAuthority> userGrantedAuthority = baseAuthorityService.findAuthorityByUser(userId,
+                JbmConstants.isSuperUser(baseUser.getUserId(), baseUser.getUserName(), baseUser.getUserType()));
         if (userGrantedAuthority != null && userGrantedAuthority.size() > 0) {
             authorities.addAll(userGrantedAuthority);
         }
         UserAccount userAccount = new UserAccount();
         //复制用户属性
         BeanUtil.copyProperties(baseUser, userAccount);
+        userAccount.setUserName(baseUser.getUserName());
 //        // 昵称
 //        userAccount.setNickName(baseUser.getNickName());
 //        // 头像

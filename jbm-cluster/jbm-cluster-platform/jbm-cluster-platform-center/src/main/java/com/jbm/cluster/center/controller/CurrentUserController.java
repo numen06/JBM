@@ -9,6 +9,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -34,6 +35,8 @@ public class CurrentUserController {
     private BaseUserBusiness baseUserBusiness;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
+    @Autowired
+    private BaseUserService baseUserService;
 
     @SaCheckLogin
     @ApiOperation(value = "当前用户")
@@ -47,7 +50,12 @@ public class CurrentUserController {
     @GetMapping("/user/menus")
     public ResultBody<List<AuthorityMenu>> listCurrentUserMenus() {
         JbmLoginUser loginUser = SecurityUtils.getLoginUser();
-        boolean fullMenu = LoginHelper.isAdmin() || JbmConstants.ROOT.equals(loginUser.getUsername());
+        boolean fullMenuFlag = LoginHelper.isAdmin();
+        if (!fullMenuFlag && loginUser != null && loginUser.getUserId() != null) {
+            BaseUser baseUser = baseUserService.getUserById(loginUser.getUserId());
+            fullMenuFlag = JbmConstants.isSuperUser(baseUser.getUserId(), baseUser.getUserName(), baseUser.getUserType());
+        }
+        final boolean fullMenu = fullMenuFlag;
         return ResultBody.callback(() -> baseAuthorityService.findAuthorityMenuByUser(
                 loginUser.getUserId(), loginUser.getAppId(), fullMenu));
     }

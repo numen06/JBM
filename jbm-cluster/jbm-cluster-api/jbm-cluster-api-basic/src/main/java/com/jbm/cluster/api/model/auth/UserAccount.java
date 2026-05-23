@@ -36,6 +36,11 @@ public class UserAccount extends BaseAccount implements Serializable {
      */
     private String avatar;
     /**
+     * 登录名（与 {@link com.jbm.cluster.api.entitys.basic.BaseUser#getUserName()} 一致）
+     */
+    private String userName;
+
+    /**
      * 真实名字
      */
     private String realName;

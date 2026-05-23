@@ -15,9 +15,11 @@ spring:
         server-addr: 10.100.10.62:8848
 jbm:
   cluster:
-    # 迁移老库已有业务数据，禁止启动时重复灌种子数据
+    # 迁移老库已有业务数据，禁止启动时重复灌用户/角色等业务种子
     data-init:
       enabled: false
+      # 仍补全 Vue 标准菜单+按钮元数据（幂等 upsert，不创建测试用户）
+      vue-rbac-metadata-enabled: true
       force-reset-default-password: true
       root-password: admin
   extend-field:
