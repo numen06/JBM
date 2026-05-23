@@ -161,13 +161,14 @@ def wait_services(
     *,
     gateway: bool = True,
     auth: bool = True,
+    center: bool = False,
     timeout: int = 120,
     interval: float = 2.0,
 ) -> dict[str, bool]:
     import time
 
     deadline = time.time() + timeout
-    result = {"gateway": False, "auth": False}
+    result = {"gateway": False, "auth": False, "center": False}
     headers = {"tenantId": DEFAULT_TENANT}
     while time.time() < deadline:
         if gateway:
@@ -177,7 +178,16 @@ def wait_services(
                     break
         if auth:
             result["auth"] = probe_url(DEFAULT_AUTH + "/actuator/health", headers)
-        if (not gateway or result["gateway"]) and (not auth or result["auth"]):
+        if center:
+            result["center"] = probe_url(DEFAULT_CENTER + "/actuator/health", headers)
+        ready = True
+        if gateway and not result["gateway"]:
+            ready = False
+        if auth and not result["auth"]:
+            ready = False
+        if center and not result["center"]:
+            ready = False
+        if ready:
             return result
         time.sleep(interval)
     return result

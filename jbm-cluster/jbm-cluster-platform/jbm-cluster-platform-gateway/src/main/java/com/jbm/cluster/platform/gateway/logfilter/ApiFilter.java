@@ -10,7 +10,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.bus.event.RemoteRefreshRouteEvent;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.api.service.feign.client.BaseApiServiceClient;
+import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ApiFilter implements AccessLogFilter {
     @Autowired
-    private BaseApiServiceClient baseApiServiceClient;
+    private CenterFeignClients centerFeignClients;
     LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
             //一小时没有读取释放
             .expireAfterAccess(15, TimeUnit.MINUTES)
@@ -39,7 +39,7 @@ public class ApiFilter implements AccessLogFilter {
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
                     String serviceId = StrUtil.subBefore(path, "/", false);
                     String realPath = StrUtil.removePrefix(path, serviceId);
-                    return baseApiServiceClient.findApiByPath(serviceId, realPath);
+                    return centerFeignClients.api().findApiByPath(serviceId, realPath);
                 }
             });
 
@@ -54,12 +54,16 @@ public class ApiFilter implements AccessLogFilter {
     @Override
     public void filter(GatewayLogInfo gatewayLogInfo, Map<String, String> headers) {
         //不存在服务ID直接退出
-        if (!ObjectUtil.isAllNotEmpty(gatewayLogInfo.getServiceId(), baseApiServiceClient)) {
+        if (!ObjectUtil.isAllNotEmpty(gatewayLogInfo.getServiceId(), centerFeignClients)) {
             return;
         }
         String realPath = gatewayLogInfo.getPath();
-        realPath = StrUtil.removePrefix(realPath, "/");
-        realPath = "/" + StrUtil.subAfter(realPath, "/", false);
+        if (StrUtil.isBlank(realPath)) {
+            return;
+        }
+        if (!realPath.startsWith("/")) {
+            realPath = "/" + realPath;
+        }
         try {
             BaseApi baseApi = appLoadingCache.get(gatewayLogInfo.getServiceId() + realPath);
             if (ObjectUtil.isEmpty(baseApi)) {

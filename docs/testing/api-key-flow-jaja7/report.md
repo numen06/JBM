@@ -1,6 +1,6 @@
 # API Key 全流程测试报告
 
-- 时间: 2026-05-23 14:45:45
+- 时间: 2026-05-23 20:12:47
 - Gateway: http://127.0.0.1:7777
 
 | 用例 | 步骤 | 结果 | 备注 |
@@ -13,4 +13,5 @@
 | TC6 | 创建个人 API Key | PASS |  |
 | TC7 | 创建应用 API Key | PASS |  |
 | TC8 | API Key 授权 | PASS |  |
-| TC9 | 第三方 client_token | FAIL | client_credentials: 输入参数错误,没有找到匹配的授权模式 |
+| TC9 | 第三方 client_token | PASS |  |
+| TC10 | 签名调用已授权 API | FAIL | signed API call failed HTTP 401: {"code":401,"httpStatus":401,"message":"服务认证失败，无法访问系统资源","success":false,"timestamp":17 |

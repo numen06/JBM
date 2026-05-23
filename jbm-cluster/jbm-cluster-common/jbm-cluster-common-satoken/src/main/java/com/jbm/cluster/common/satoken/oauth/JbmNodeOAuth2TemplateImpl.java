@@ -87,11 +87,14 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
     @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
         try {
-            return clientTokenModelLoadingCache.get(clientId);
+            String applicationName = SpringUtil.getApplicationName();
+            if (StrUtil.isNotBlank(applicationName) && applicationName.equals(clientId)) {
+                return clientTokenModelLoadingCache.get(clientId);
+            }
         } catch (Exception e) {
-            log.error("取应用程序TOKEN失败", e);
-            throw e;
+            log.debug("节点 ClientToken 缓存未命中，走标准 OAuth: {}", e.getMessage());
         }
+        return super.generateClientToken(clientId, scope);
     }
 
     @Override

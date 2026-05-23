@@ -132,15 +132,22 @@ def oauth_password(username, password):
 
 
 def oauth_client_credentials(client_id, client_secret):
+    """第三方 API Key 获取 Token（POST /oauth2/client_token + grant_type=client_credentials）。"""
     form = (
-        f"grant_type=client_credentials&client_id={urllib.parse.quote(client_id)}"
+        f"grant_type=client_credentials"
+        f"&client_id={urllib.parse.quote(client_id)}"
         f"&client_secret={urllib.parse.quote(client_secret)}&scope=all"
     )
-    st, raw, _ = http("POST", f"{AUTH}/oauth2/token", body=form, form=True)
-    body = assert_success("client_credentials", st, raw)
-    token = jpath(body, "result.access_token") or jpath(body, "access_token")
+    st, raw, _ = http("POST", f"{GW}/oauth2/client_token", body=form, form=True)
+    body = assert_success("client_token", st, raw)
+    result = jpath(body, "result") or body
+    token = None
+    if isinstance(result, dict):
+        token = result.get("client_token") or result.get("access_token")
     if not token:
-        raise StepError(f"client_credentials: no token {raw[:200]}")
+        token = jpath(body, "result.access_token") or jpath(body, "result.client_token")
+    if not token:
+        raise StepError(f"client_token: no token {raw[:200]}")
     return token
 
 
@@ -149,21 +156,26 @@ def bearer(token):
 
 
 def sort_query(qs: str) -> str:
+    """与 ApiSecurityUtils.sortQueryString 一致：按 & 分段后字典序拼接。"""
     if not qs:
         return ""
-    pairs = urllib.parse.parse_qsl(qs, keep_blank_values=True)
-    pairs.sort(key=lambda x: x[0])
-    return urllib.parse.urlencode(pairs)
+    parts = [p for p in qs.split("&") if p]
+    parts.sort()
+    return "&".join(parts)
 
 
 def build_sign_content(method, path, query, body, timestamp, app_id):
-    sb = [method.upper() if method else "", path or "", sort_query(query or "")]
+    """与 ApiSecurityUtils.buildSignContent 对齐（含空 body 时的额外换行）。"""
+    content = "\n".join([method.upper() if method else "", path or "", sort_query(query or "")])
     if body:
         raw = body.encode("utf-8") if isinstance(body, str) else body
-        sb.append(base64.b64encode(hashlib.md5(raw).digest()).decode("ascii"))
-    sb.append(str(timestamp))
-    sb.append(app_id or "")
-    return "\n".join(sb)
+        md5_hex = hashlib.md5(raw).hexdigest()
+        content += "\n" + base64.b64encode(md5_hex.encode("ascii")).decode("ascii")
+    else:
+        # Java: query 行后无条件 append('\n')，空 body 时多一行空行
+        content += "\n"
+    content += f"\n{timestamp}\n{app_id or ''}"
+    return content
 
 
 def rsa_sign(content: str, private_key_b64: str) -> str:
@@ -174,6 +186,91 @@ def rsa_sign(content: str, private_key_b64: str) -> str:
         private_key = serialization.load_pem_private_key(key_bytes, password=None, backend=default_backend())
     sig = private_key.sign(content.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256())
     return base64.b64encode(sig).decode("ascii")
+
+
+def authority_ids_for_paths(admin_token, paths: list[str]) -> list:
+    """base_api.apiCode -> base_authority.authority (API_{code}) -> authorityId"""
+    st, raw, _ = http(
+        "GET",
+        f"{GW}/api",
+        headers=bearer(admin_token),
+        query={"serviceId": "jbm-cluster-platform-center"},
+    )
+    apis = jpath(assert_success("center apis", st, raw), "result") or []
+    want = set(paths)
+    codes = {a.get("apiCode") for a in apis if a.get("path") in want and a.get("apiCode")}
+    if not codes:
+        return []
+    st2, raw2, _ = http("GET", f"{GW}/authority/catalog", headers=bearer(admin_token), query={"type": "2"})
+    catalog = jpath(assert_success("authority catalog", st2, raw2), "result") or []
+    ids = []
+    for row in catalog:
+        auth = row.get("authority") or ""
+        if auth.startswith("API_") and auth[4:] in codes:
+            aid = row.get("authorityId")
+            if aid:
+                ids.append(aid)
+    return ids
+
+
+# 全流程固定使用的可读/不可读 API（便于 TC10/TC12）
+TEST_GRANT_PATHS = ["/current/user/menu"]
+TEST_DENY_PATH = "/user/list"
+
+
+def internal_headers():
+    return {"X-Internal-Service": "jbm-cluster-platform-gateway"}
+
+
+def apikey_has_authority(key_id, api_id) -> bool:
+    st, raw, _ = http(
+        "GET",
+        f"{CENTER}/internal/gateway/apikey/{key_id}/check",
+        headers=internal_headers(),
+        query={"apiId": str(api_id)},
+    )
+    body = jb(raw)
+    return st == 200 and body and body.get("result") is True
+
+
+def is_read_api(api: dict) -> bool:
+    path = (api.get("path") or "").lower()
+    mn = (api.get("methodName") or "").lower()
+    bad = ("delete", "save", "add", "update", "grant", "export", "batch", "remove", "create", "mock", "close")
+    if any(b in path for b in bad):
+        return False
+    return not any(mn.startswith(b) for b in bad)
+
+
+def resolve_granted_paths(key_id, admin_token):
+    """Grant 后解析可签名调用的 Gateway 路径（优先可读 GET 类 API）。"""
+    st, raw, _ = http(
+        "GET",
+        f"{GW}/api",
+        headers=bearer(admin_token),
+        query={"serviceId": "jbm-cluster-platform-center"},
+    )
+    apis = jpath(assert_success("center apis", st, raw), "result") or []
+    granted: list[dict] = []
+    denied: list[str] = []
+    for api in apis:
+        path = api.get("path")
+        api_id = api.get("apiId")
+        if not path or not api_id:
+            continue
+        if apikey_has_authority(key_id, api_id):
+            granted.append(api)
+        elif is_read_api(api):
+            denied.append(path)
+    granted_path = None
+    for api in granted:
+        if is_read_api(api):
+            granted_path = api["path"]
+            break
+    if not granted_path and granted:
+        granted_path = granted[0]["path"]
+    denied_path = denied[0] if denied else None
+    return granted_path, denied_path
 
 
 def signed_get(url, api_key, private_key_b64, token):
@@ -254,10 +351,12 @@ def run_flow(suffix: str):
     # 管理员给开发者分配 API 权限（否则 grantable 为空）
     def tc3b_grant_dev_api():
         admin_token = ctx["adminToken"]
-        st, raw, _ = http("GET", f"{GW}/authority/catalog", headers=bearer(admin_token), query={"type": "2"})
-        body = assert_success("api catalog", st, raw)
-        apis = jpath(body, "result") or []
-        api_ids = [a.get("authorityId") for a in apis if a.get("authorityId")][:5]
+        api_ids = authority_ids_for_paths(admin_token, TEST_GRANT_PATHS + [TEST_DENY_PATH])
+        if not api_ids:
+            st, raw, _ = http("GET", f"{GW}/authority/catalog", headers=bearer(admin_token), query={"type": "2"})
+            body = assert_success("api catalog", st, raw)
+            apis = jpath(body, "result") or []
+            api_ids = [a.get("authorityId") for a in apis if a.get("authorityId")][:5]
         if not api_ids:
             log("WARN: 无 API 权限元数据，跳过用户 API 授权")
             return
@@ -325,29 +424,22 @@ def run_flow(suffix: str):
             raise StepError("grantable apis empty — 请先给开发者分配 API 权限")
         first_id = grantable[0].get("authorityId")
         ctx["grantedAuthorityIds"] = [first_id]
-        payload = json.dumps({"authorityIds": [first_id]})
+        grant_ids = authority_ids_for_paths(ctx["adminToken"], TEST_GRANT_PATHS)
+        if not grant_ids:
+            grant_ids = [g.get("authorityId") for g in grantable if g.get("authorityId")][:5]
+        if not grant_ids:
+            raise StepError("grantable apis empty — 请先给开发者分配 API 权限")
+        payload = json.dumps({"authorityIds": grant_ids})
         st2, raw2, _ = http(
             "PUT", f"{GW}/apikey/{ctx['appKeyId']}/authority",
             headers=bearer(token), body=payload,
         )
         assert_success("grant apikey authority", st2, raw2)
-        # 解析 authorityId -> path
-        st3, raw3, _ = http("GET", f"{GW}/authority/apis", headers=bearer(token))
-        body3 = assert_success("authority apis", st3, raw3)
-        apis = jpath(body3, "result") or []
-        granted_path = None
-        denied_path = None
-        for api in apis:
-            aid = str(api.get("authorityId") or "")
-            path = api.get("path")
-            if not path:
-                continue
-            if aid == str(first_id):
-                granted_path = path
-            elif denied_path is None and aid != str(first_id):
-                denied_path = path
-        ctx["grantedApiPath"] = granted_path or "/current/user"
-        ctx["deniedApiPath"] = denied_path or "/user"
+        granted_path, denied_path = resolve_granted_paths(ctx["appKeyId"], ctx["adminToken"])
+        if not granted_path:
+            raise StepError(f"授权后未找到可调用路径，期望含 {TEST_GRANT_PATHS}")
+        ctx["grantedApiPath"] = granted_path
+        ctx["deniedApiPath"] = denied_path or TEST_DENY_PATH
 
     # TC9 client_token
     def tc9():
@@ -387,7 +479,7 @@ def run_flow(suffix: str):
         st, raw, _ = signed_get(f"{GW}{path}", api_key, priv, token)
         if st in (200,) and jb(raw) and jb(raw).get("success") is True:
             raise StepError("expected unauthorized/forbidden but got success")
-        if st not in (401, 403, 455, 500):
+        if st not in (400, 401, 403, 455, 500):
             log(f"INFO TC12 HTTP {st} body={raw[:200]}")
 
     step("TC1", "用户注册", tc1)

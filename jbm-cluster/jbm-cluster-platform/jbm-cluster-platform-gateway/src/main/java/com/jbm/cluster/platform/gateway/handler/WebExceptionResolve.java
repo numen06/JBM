@@ -172,11 +172,11 @@ public class WebExceptionResolve {
         if (errorCode == null) {
             HttpStatus status = HttpStatus.valueOf(httpStatus);
             if (ObjectUtil.isNotEmpty(status)) {
-                errorMsg = messageSource.getMessage(status.name().toLowerCase(), ArrayUtil.newArray(0), LocaleContextHolder.getLocale());
+                errorMsg = resolveMessage(status.name().toLowerCase(), exception);
             }
             errorCode = ErrorCode.ERROR;
         } else {
-            errorMsg = messageSource.getMessage(errorCode.getMessage(), ArrayUtil.newArray(0), LocaleContextHolder.getLocale());
+            errorMsg = resolveMessage(errorCode.getMessage(), exception);
         }
         if (StrUtil.isBlank(errorMsg)) {
             errorMsg = "服务器发生错误,请联系管理员处理。";
@@ -200,6 +200,17 @@ public class WebExceptionResolve {
             return HttpStatus.valueOf(httpStatus).is4xxClientError();
         } catch (IllegalArgumentException e) {
             return false;
+        }
+    }
+
+    private String resolveMessage(String code, Throwable exception) {
+        try {
+            return messageSource.getMessage(code, ArrayUtil.newArray(0), LocaleContextHolder.getLocale());
+        } catch (Exception e) {
+            if (exception != null && StrUtil.isNotBlank(exception.getMessage())) {
+                return exception.getMessage();
+            }
+            return code;
         }
     }
 

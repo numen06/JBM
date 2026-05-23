@@ -1,0 +1,24 @@
+# jaja7 本地联调：Gateway HTTP 路由走 127.0.0.1，Feign 也直连本地实例（不依赖 Nacos 注册 center）
+jbm:
+  local:
+    center-url: http://127.0.0.1:8888
+
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          jbm-cluster-platform-center:
+            url: http://127.0.0.1:8888
+          jbm-cluster-platform-auth:
+            url: http://127.0.0.1:5555
+    discovery:
+      client:
+        simple:
+          instances:
+            jbm-cluster-platform-center:
+              - uri: http://127.0.0.1:8888
+                instance-id: jaja7-center-local
+            jbm-cluster-platform-auth:
+              - uri: http://127.0.0.1:5555
+                instance-id: jaja7-auth-local

@@ -9,7 +9,7 @@ import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.api.service.feign.client.BaseApiKeyServiceClient;
+import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
@@ -29,7 +29,7 @@ public class TokenFilter implements AccessLogFilter {
     @Autowired
     private BaseAppServiceClient baseAppServiceClient;
     @Autowired
-    private BaseApiKeyServiceClient baseApiKeyServiceClient;
+    private CenterFeignClients centerFeignClients;
 
     LoadingCache<String, BaseApp> appLoadingCache = Caffeine.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
@@ -45,7 +45,7 @@ public class TokenFilter implements AccessLogFilter {
             .build(new CacheLoader<String, BaseApiKey>() {
                 @Override
                 public @Nullable BaseApiKey load(@NonNull String apiKey) throws Exception {
-                    return baseApiKeyServiceClient.getByApiKey(apiKey);
+                    return centerFeignClients.apiKey().getByApiKey(apiKey);
                 }
             });
 

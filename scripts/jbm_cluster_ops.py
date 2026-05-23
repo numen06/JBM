@@ -11,21 +11,25 @@ JBM jaja7 集群日常运维脚本（减少反复手启 Java / 手测 Gateway）
   test-rbac       双用户双角色 RBAC 对比断言
   workflow        status → wait → login → setup-rbac → test-rbac
   test-apikey     wait → API Key 全流程 REST（TC1–TC12，注册/审批，不直插库）
+  cleanup         清理集群端口占用 + 残留 mvn/java 进程（推荐测试前执行）
+  stop            按端口结束进程（含进程树）
 
 推荐: 日常用 VS Code「jaja7: Auth + Center + Gateway」调试启动 Java；
       本脚本负责检测、造数、断言，避免为测试用户反复改种子或 mvn 重启。
 
 示例:
+  python scripts/jbm_cluster_ops.py cleanup
   python scripts/jbm_cluster_ops.py status
   python scripts/jbm_cluster_ops.py wait --timeout 60
   python scripts/jbm_cluster_ops.py workflow --password Admin@123
   python scripts/jbm_cluster_ops.py test-apikey
-  python scripts/jbm_cluster_ops.py start center --background
-  python scripts/jbm_cluster_ops.py stop center gateway auth
+  python scripts/jbm_cluster_ops.py start auth center gateway --background --clean
+  python scripts/jbm_cluster_ops.py stop auth center gateway
 """
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -34,6 +38,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
+LOGS = ROOT / "logs"
+PID_FILE = LOGS / "ops-cluster.pids.json"
+
+CLUSTER_JAVA_MARKERS = (
+    "jbm-cluster-platform-auth",
+    "jbm-cluster-platform-center",
+    "jbm-cluster-platform-gateway",
+    "JbmAuthApplication",
+    "JbmCenterApplication",
+    "JbmGatewayApplication",
+    "spring-boot:run",
+    "spring-boot.run.profiles=jaja7",
+)
+MVN_MARKERS = ("spring-boot:run", "jbm-cluster-platform-")
 
 # 将 scripts 目录加入 path
 if str(SCRIPTS) not in sys.path:
@@ -57,21 +75,21 @@ SERVICES = {
         "url": DEFAULT_AUTH,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-auth",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" -DskipTests=true',
+        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
     },
     "center": {
         "port": 8888,
         "url": DEFAULT_CENTER,
-        "health": "/role/all",
+        "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" -DskipTests=true',
+        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
     },
     "gateway": {
         "port": 7777,
         "url": DEFAULT_GATEWAY,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" -DskipTests=true',
+        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
     },
     "vue": {
         "port": 5173,
@@ -109,6 +127,224 @@ def _pids_on_port(port: int) -> list[int]:
     return list(dict.fromkeys(pids))
 
 
+def _kill_pid_tree(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if sys.platform == "win32":
+        proc = subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return proc.returncode == 0
+    subprocess.run(["kill", "-TERM", str(pid)], check=False)
+    return True
+
+
+def _cluster_ports(services: list[str] | None = None) -> list[int]:
+    names = services or list(SERVICES.keys())
+    return [SERVICES[n]["port"] for n in names if n in SERVICES]
+
+
+def _cim_processes(*names: str) -> list[dict]:
+    """Windows: 按进程名拉取 CommandLine（json 数组）。"""
+    if sys.platform == "win32":
+        filter_expr = " or ".join(f"Name='{n}'" for n in names)
+        ps = (
+            f"Get-CimInstance Win32_Process -Filter \"{filter_expr}\" | "
+            "Select-Object ProcessId, Name, CommandLine | ConvertTo-Json -Compress"
+        )
+        proc = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if proc.returncode != 0 or not proc.stdout.strip():
+            return []
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            return []
+        return data if isinstance(data, list) else [data]
+    proc = subprocess.run(
+        ["sh", "-c", "ps aux"],
+        capture_output=True,
+        text=True,
+    )
+    rows = []
+    for line in proc.stdout.splitlines()[1:]:
+        parts = line.split(None, 10)
+        if len(parts) < 11:
+            continue
+        pid_s, cmd = parts[1], parts[10]
+        if pid_s.isdigit():
+            rows.append({"ProcessId": int(pid_s), "Name": parts[10][:20], "CommandLine": cmd})
+    return rows
+
+
+def _find_cluster_java_pids() -> list[tuple[int, str]]:
+    """查找本仓库 spring-boot / JBM 应用 Java 进程。"""
+    hits: list[tuple[int, str]] = []
+    for row in _cim_processes("java.exe", "javaw.exe"):
+        pid = row.get("ProcessId")
+        cmd = row.get("CommandLine") or ""
+        if pid and any(m in cmd for m in CLUSTER_JAVA_MARKERS):
+            hits.append((int(pid), cmd[:160]))
+    return hits
+
+
+def _find_cluster_mvn_pids() -> list[tuple[int, str]]:
+    """查找残留的 mvn/cmd 包装进程（spring-boot:run 父 shell）。"""
+    hits: list[tuple[int, str]] = []
+    for row in _cim_processes("cmd.exe", "powershell.exe", "pwsh.exe"):
+        pid = row.get("ProcessId")
+        cmd = row.get("CommandLine") or ""
+        if pid and any(m in cmd for m in MVN_MARKERS):
+            hits.append((int(pid), cmd[:160]))
+    return hits
+
+
+def _stop_from_pid_file(seen: set[int], names: list[str] | None = None) -> list[str]:
+    """按 ops 记录的 shell PID 结束后台 start 进程。"""
+    lines: list[str] = []
+    if not PID_FILE.is_file():
+        return lines
+    try:
+        record = json.loads(PID_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return lines
+    for name, info in record.items():
+        if names is not None and name not in names:
+            continue
+        pid = int(info.get("shell_pid") or 0)
+        if pid <= 0 or pid in seen:
+            continue
+        seen.add(pid)
+        ok = _kill_pid_tree(pid)
+        lines.append(f"[stop] pidfile {name} shell_pid={pid} {'OK' if ok else 'FAIL'}")
+    return lines
+
+
+def _save_pid_record(name: str, shell_pid: int, port: int) -> None:
+    LOGS.mkdir(parents=True, exist_ok=True)
+    record: dict = {}
+    if PID_FILE.is_file():
+        try:
+            record = json.loads(PID_FILE.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            record = {}
+    record[name] = {"shell_pid": shell_pid, "port": port, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+    PID_FILE.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _clear_pid_record(names: list[str] | None = None) -> None:
+    if not PID_FILE.is_file():
+        return
+    if names is None:
+        PID_FILE.unlink(missing_ok=True)
+        return
+    try:
+        record = json.loads(PID_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        PID_FILE.unlink(missing_ok=True)
+        return
+    for n in names:
+        record.pop(n, None)
+    if record:
+        PID_FILE.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    else:
+        PID_FILE.unlink(missing_ok=True)
+
+
+def _kill_listeners_on_ports(ports: list[int], seen: set[int]) -> list[str]:
+    """按端口结束监听进程（含 IDE 直接启动的 Java，不限 commandLine 特征）。"""
+    lines: list[str] = []
+    for port in ports:
+        for pid in _pids_on_port(port):
+            if pid in seen:
+                continue
+            seen.add(pid)
+            ok = _kill_pid_tree(pid)
+            lines.append(f"[stop] port={port} pid={pid} {'OK' if ok else 'FAIL'}")
+    return lines
+
+
+def _stop_services(names: list[str], *, kill_java: bool = False) -> list[str]:
+    """停止指定服务，返回已清理项摘要。"""
+    lines: list[str] = []
+    seen_pids: set[int] = set()
+    lines.extend(_stop_from_pid_file(seen_pids, names))
+    ports = _cluster_ports(names)
+    lines.extend(_kill_listeners_on_ports(ports, seen_pids))
+    for name in names:
+        if name not in SERVICES:
+            continue
+        port = SERVICES[name]["port"]
+        pids = _pids_on_port(port)
+        if not pids:
+            lines.append(f"[stop] {name} port={port} (无监听)")
+            continue
+        for pid in pids:
+            if pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            ok = _kill_pid_tree(pid)
+            lines.append(f"[stop] {name} port={port} pid={pid} {'OK' if ok else 'FAIL'}")
+    if kill_java:
+        for pid, cmd in _find_cluster_java_pids():
+            if pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            ok = _kill_pid_tree(pid)
+            lines.append(f"[stop] java pid={pid} {'OK' if ok else 'FAIL'}  {cmd[:80]}")
+        for pid, cmd in _find_cluster_mvn_pids():
+            if pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            ok = _kill_pid_tree(pid)
+            lines.append(f"[stop] mvn-shell pid={pid} {'OK' if ok else 'FAIL'}  {cmd[:80]}")
+    _clear_pid_record(names if names != list(SERVICES.keys()) else None)
+    return lines
+
+
+def cmd_cleanup(args):
+    """清理集群端口 + 残留 spring-boot:run Java（测试前推荐）。"""
+    names = args.services or ["auth", "center", "gateway"]
+    print("清理 JBM 集群进程…")
+    lines = _stop_services(names, kill_java=True)
+    if not lines:
+        print("  未发现需清理的进程")
+    else:
+        for ln in lines:
+            print(f"  {ln}")
+    # 二次扫描：taskkill 后端口可能短暂仍占用
+    time.sleep(2.0)
+    extra = _stop_services(names, kill_java=True)
+    for ln in extra:
+        if "无监听" not in ln:
+            print(f"  {ln}")
+    remain_ports = []
+    for name in names:
+        port = SERVICES[name]["port"]
+        if _pids_on_port(port):
+            remain_ports.append(f"{name}:{port}")
+    remain_java = _find_cluster_java_pids()
+    if remain_ports:
+        print(f"WARN 端口仍占用: {', '.join(remain_ports)}", file=sys.stderr)
+        return 1
+    if remain_java and not args.force:
+        print(f"WARN 仍有 {len(remain_java)} 个集群 Java 进程", file=sys.stderr)
+        for pid, cmd in remain_java[:5]:
+            print(f"  pid={pid} {cmd[:100]}", file=sys.stderr)
+        return 1
+    print("cleanup 完成")
+    return 0
+
+
 def cmd_status(_args):
     print(f"profile: {REST_PROFILE}\n")
     all_ok = True
@@ -134,20 +370,36 @@ def cmd_status(_args):
 
 
 def cmd_wait(args):
-    print(f"等待 Gateway + Auth（最多 {args.timeout}s）…")
-    r = wait_services(timeout=args.timeout, interval=args.interval)
-    print(f"  gateway={r['gateway']} auth={r['auth']}")
+    need_center = getattr(args, "center", False)
+    label = "Gateway + Auth + Center" if need_center else "Gateway + Auth"
+    print(f"等待 {label}（最多 {args.timeout}s）…")
+    r = wait_services(
+        timeout=args.timeout,
+        interval=args.interval,
+        center=need_center,
+    )
+    parts = [f"gateway={r['gateway']}", f"auth={r['auth']}"]
+    if need_center:
+        parts.append(f"center={r['center']}")
+    print(f"  {' '.join(parts)}")
     if not r["gateway"]:
         print("  Gateway 未就绪，请启动 jbm-cluster-platform-gateway", file=sys.stderr)
     if not r["auth"]:
         print("  Auth 未就绪，请启动 jbm-cluster-platform-auth", file=sys.stderr)
-    return 0 if r["gateway"] and r["auth"] else 1
+    if need_center and not r["center"]:
+        print("  Center 未就绪，请启动 jbm-cluster-platform-center", file=sys.stderr)
+    ok = r["gateway"] and r["auth"]
+    if need_center:
+        ok = ok and r["center"]
+    return 0 if ok else 1
 
 
 def cmd_login(args):
     try:
         if getattr(args, "reset_seed", False):
-            info = reset_jaja7_seed()
+            from jbm_cluster_client import reset_jaja7_seed
+
+            info = reset_jaja7_seed(via_gateway=False)
             print(f"seed reset: clientId={info.get('clientId')} ok={info.get('jbmAppCredentialsReset')}")
         tok = login_password(args.user, args.password)
         print(f"OK login user={args.user!r} token_len={len(tok)}")
@@ -179,17 +431,32 @@ def cmd_test_rbac(args):
 
 def cmd_test_apikey(args):
     """等待集群就绪后执行 API Key 全流程 REST 测试（不启动 Java）。"""
-    w = argparse.Namespace(timeout=args.timeout, interval=2.0)
+    if getattr(args, "restart_first", False):
+        rc = cmd_restart(argparse.Namespace(timeout=max(args.timeout, 120)))
+        if rc != 0 and not args.force:
+            print("restart 未就绪，加 --force 跳过或手动排查", file=sys.stderr)
+            return 1
+    elif getattr(args, "cleanup_first", False):
+        c = cmd_cleanup(argparse.Namespace(services=["auth", "center", "gateway"], force=False))
+        if c != 0:
+            print("cleanup 未完全成功，使用 --force 继续或手动处理残留进程", file=sys.stderr)
+            if not args.force:
+                return 1
+    w = argparse.Namespace(timeout=args.timeout, interval=2.0, center=getattr(args, "wait_center", True))
     code = cmd_wait(w)
     if code != 0 and not args.force:
-        print("集群未就绪；请用 VS Code「jaja7: Auth + Center + Gateway」或 ops start", file=sys.stderr)
+        print("集群未就绪；请用 VS Code「jaja7: Auth + Center + Gateway」或 ops restart", file=sys.stderr)
         return 1
     import run_api_key_flow_tests as flow
 
     sys.argv = ["run_api_key_flow_tests.py"]
     if args.suffix:
         sys.argv += ["--suffix", args.suffix]
-    return flow.main()
+    rc = flow.main()
+    if rc == 0 and getattr(args, "cleanup_after", False):
+        print("\n测试完成，清理集群进程…")
+        cmd_cleanup(argparse.Namespace(services=["auth", "center", "gateway"], force=True))
+    return rc
 
 
 def cmd_workflow(args):
@@ -221,12 +488,17 @@ def cmd_workflow(args):
 
 def cmd_start(args):
     names = args.services or ["center"]
+    if getattr(args, "clean", False):
+        _stop_services(names, kill_java=False)
+        time.sleep(1.0)
     procs = []
-    for name in names:
+    for i, name in enumerate(names):
         cfg = SERVICES.get(name)
         if not cfg:
             print(f"未知服务: {name}", file=sys.stderr)
             return 1
+        if i > 0:
+            time.sleep(3.0)
         cwd = cfg["module_dir"]
         if not cwd.is_dir():
             print(f"目录不存在: {cwd}", file=sys.stderr)
@@ -244,29 +516,34 @@ def cmd_start(args):
                 stdout=lf,
                 stderr=subprocess.STDOUT,
             )
-        procs.append((name, p.pid))
+        procs.append((name, p.pid, cfg["port"]))
+        _save_pid_record(name, p.pid, cfg["port"])
         if not args.background:
             print("  使用 --background 避免阻塞；推荐 IDE 直接 Debug 启动")
     if args.background:
-        print("后台 PID:", ", ".join(f"{n}={pid}" for n, pid in procs))
+        print("后台 PID:", ", ".join(f"{n}=shell:{pid}/port:{port}" for n, pid, port in procs))
         print("下一步: python scripts/jbm_cluster_ops.py wait")
     return 0
 
 
 def cmd_stop(args):
     names = args.services or list(SERVICES.keys())
-    for name in names:
-        if name not in SERVICES:
-            continue
-        port = SERVICES[name]["port"]
-        pids = _pids_on_port(port)
-        for pid in pids:
-            print(f"[stop] {name} kill pid={pid} port={port}")
-            if sys.platform == "win32":
-                subprocess.run(["taskkill", "/PID", str(pid), "/F"], check=False)
-            else:
-                subprocess.run(["kill", str(pid)], check=False)
+    kill_java = getattr(args, "kill_java", False)
+    lines = _stop_services(names, kill_java=kill_java)
+    for ln in lines:
+        print(ln)
+    if not lines:
+        print("无进程需停止")
     return 0
+
+
+def cmd_restart(args):
+    names = ["auth", "center", "gateway"]
+    cmd_cleanup(argparse.Namespace(services=names, force=True))
+    time.sleep(1.5)
+    cmd_start(argparse.Namespace(services=names, background=True, clean=False))
+    w = argparse.Namespace(timeout=args.timeout, interval=2.0, center=True)
+    return cmd_wait(w)
 
 
 def main():
@@ -279,9 +556,10 @@ def main():
 
     sub.add_parser("status", help="端口与 HTTP 状态", parents=[parent])
 
-    p_wait = sub.add_parser("wait", help="等待 Gateway+Auth 就绪", parents=[parent])
+    p_wait = sub.add_parser("wait", help="等待 Gateway+Auth(+Center) 就绪", parents=[parent])
     p_wait.add_argument("--timeout", type=int, default=90)
     p_wait.add_argument("--interval", type=float, default=2.0)
+    p_wait.add_argument("--center", action="store_true", help="同时等待 Center 健康")
 
     p_login = sub.add_parser("login", help="OAuth 登录探测", parents=[parent])
     p_login.add_argument("-v", "--verbose", action="store_true")
@@ -297,14 +575,32 @@ def main():
     p_start = sub.add_parser("start", help="后台 mvn/npm 启动（可选，推荐 IDE）", parents=[parent])
     p_start.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
     p_start.add_argument("--background", action="store_true", default=True)
+    p_start.add_argument("--clean", action="store_true", help="启动前清理同端口占用")
 
-    p_stop = sub.add_parser("stop", help="按端口结束进程", parents=[parent])
+    p_stop = sub.add_parser("stop", help="按端口结束进程（含进程树）", parents=[parent])
     p_stop.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
+    p_stop.add_argument("--kill-java", action="store_true", help="额外结束匹配的 spring-boot Java")
+
+    p_cleanup = sub.add_parser("cleanup", help="清理端口 + 残留集群 Java（测试前推荐）", parents=[parent])
+    p_cleanup.add_argument("services", nargs="*", choices=["auth", "center", "gateway", "vue"])
+    p_cleanup.add_argument("--force", action="store_true", help="有残留也返回 0")
 
     p_apikey = sub.add_parser("test-apikey", help="API Key 全流程 REST（TC1–TC12）", parents=[parent])
     p_apikey.add_argument("--timeout", type=int, default=90)
     p_apikey.add_argument("--suffix", default="")
     p_apikey.add_argument("--force", action="store_true")
+    p_apikey.add_argument("--wait-center", action="store_true", default=True,
+                          help="等待 Center 就绪（默认开启，TC10 验签依赖 Center）")
+    p_apikey.add_argument("--no-wait-center", action="store_false", dest="wait_center")
+    p_apikey.add_argument("--cleanup-first", action="store_true", help="测试前先 cleanup（仅停服，不自动重启）")
+    p_apikey.add_argument("--cleanup-after", action="store_true", help="测试通过后 cleanup 释放进程")
+    p_apikey.add_argument(
+        "--restart-first",
+        action="store_true",
+        help="测试前 cleanup → start auth+center+gateway → wait（推荐，避免残留进程）",
+    )
+    p_re = sub.add_parser("restart", help="cleanup → start auth+center+gateway → wait", parents=[parent])
+    p_re.add_argument("--timeout", type=int, default=120)
 
     args = ap.parse_args()
     handlers = {
@@ -317,6 +613,8 @@ def main():
         "workflow": cmd_workflow,
         "start": cmd_start,
         "stop": cmd_stop,
+        "cleanup": cmd_cleanup,
+        "restart": cmd_restart,
     }
     return handlers[args.cmd](args)
 

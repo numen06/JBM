@@ -25,6 +25,13 @@ spring:
         namespace: jbm7
         group: DEFAULT_GROUP
         server-addr: 10.100.10.62:8848
+    openfeign:
+      client:
+        config:
+          jbm-cluster-platform-center:
+            url: http://127.0.0.1:8888
+          jbm-cluster-platform-auth:
+            url: http://127.0.0.1:5555
     sentinel:
       datasource:
         ds1:

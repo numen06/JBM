@@ -6,8 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.entitys.basic.BaseApiKey;
-import com.jbm.cluster.api.service.feign.client.BaseApiKeyServiceClient;
-import com.jbm.cluster.api.service.feign.client.BaseApiServiceClient;
+import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
 import com.jbm.cluster.core.constant.ApiKeyConstants;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
 import com.jbm.cluster.platform.gateway.config.properties.ApiSecurityProperties;
@@ -41,9 +40,7 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
     @Autowired
     private ApiClientConfigProvider apiClientConfigProvider;
     @Autowired
-    private BaseApiKeyServiceClient baseApiKeyServiceClient;
-    @Autowired
-    private BaseApiServiceClient baseApiServiceClient;
+    private CenterFeignClients centerFeignClients;
 
     private final LoadingCache<String, Boolean> authorityCache = Caffeine.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -53,7 +50,7 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
                 if (parts.length != 2) {
                     return false;
                 }
-                return Boolean.TRUE.equals(baseApiKeyServiceClient.checkAuthority(
+                return Boolean.TRUE.equals(centerFeignClients.apiKey().checkAuthority(
                         Long.parseLong(parts[0]), Long.parseLong(parts[1])));
             });
 
@@ -96,7 +93,7 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
         String realPath = normalizePath(path);
         BaseApi baseApi;
         try {
-            baseApi = baseApiServiceClient.findApiByPath(serviceId, realPath);
+            baseApi = centerFeignClients.api().findApiByPath(serviceId, realPath);
         } catch (Exception e) {
             log.debug("[DeveloperAuthFilter] findApiByPath failed: {}", e.getMessage());
             return chain.filter(exchange);
@@ -119,8 +116,10 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
     }
 
     private static String normalizePath(String requestPath) {
-        String realPath = StrUtil.removePrefix(requestPath, "/");
-        return "/" + StrUtil.subAfter(realPath, "/", false);
+        if (StrUtil.isBlank(requestPath)) {
+            return "/";
+        }
+        return requestPath.startsWith("/") ? requestPath : "/" + requestPath;
     }
 
     private static String resolveServiceId(Route route) {

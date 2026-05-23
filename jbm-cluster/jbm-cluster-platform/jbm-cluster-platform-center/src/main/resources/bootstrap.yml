@@ -50,6 +50,7 @@ jbm:
       - /user/registrations
       - /user/sessions
       - /user/sessions/**
+      - /internal/gateway/**
       #      - /authority/access
       #      - /authority/app
       #      - /app/*/info

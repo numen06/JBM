@@ -17,6 +17,11 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
     @Override
     public void apply(RequestTemplate requestTemplate, HttpServletRequest httpServletRequest) {
+        if (shouldUseInternalTrust(requestTemplate)) {
+            requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
+            applyInternalIdToken(requestTemplate);
+            return;
+        }
         if (ObjectUtil.isNotEmpty(httpServletRequest)) {
             Map<String, String> headers = ServletUtils.getHeaders(httpServletRequest);
             String authentication = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
@@ -25,6 +30,15 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
             }
         }
         applyInternalIdToken(requestTemplate);
+    }
+
+    /** Gateway 验签/授权查库：必须 Id-Token 内部互信，不能透传第三方 Bearer。 */
+    private static boolean shouldUseInternalTrust(RequestTemplate requestTemplate) {
+        String url = requestTemplate.url();
+        if (StrUtil.isBlank(url)) {
+            return false;
+        }
+        return url.contains("/apikey") || url.contains("/api?");
     }
 
     private void applyInternalIdToken(RequestTemplate requestTemplate) {
