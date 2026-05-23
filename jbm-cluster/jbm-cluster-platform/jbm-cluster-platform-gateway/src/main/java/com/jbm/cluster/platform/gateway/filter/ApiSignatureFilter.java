@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -47,6 +48,11 @@ public class ApiSignatureFilter implements GlobalFilter, Ordered {
         String timestamp = header(request, ApiSecurityConstants.TIMESTAMP);
         String signature = header(request, ApiSecurityConstants.SIGNATURE);
         if (StrUtil.hasBlank(appId, timestamp, signature)) {
+            String authorization = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            if (StrUtil.isNotBlank(authorization) && StrUtil.startWithIgnoreCase(authorization.trim(), "Bearer ")) {
+                // 管理端/开发者门户：password 登录后的 Bearer 会话，不要求网关签名
+                return chain.filter(exchange);
+            }
             return Mono.error(new OpenSignatureException("缺少签名参数"));
         }
         if (!ApiSecurityUtils.isTimestampValid(timestamp, apiSecurityProperties.getSignExpireMs())) {

@@ -3,7 +3,9 @@ package com.jbm.cluster.platform.gateway.security;
 import cn.hutool.core.util.StrUtil;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.api.service.feign.client.BaseApiKeyServiceClient;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +21,14 @@ public class ApiClientConfigProvider {
             .expireAfterWrite(1, TimeUnit.HOURS)
             .build(this::loadPublicKey);
 
+    private final LoadingCache<String, BaseApiKey> apiKeyCache = Caffeine.newBuilder()
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .build(this::loadApiKey);
+
     @Autowired
     private BaseAppServiceClient baseAppServiceClient;
+    @Autowired
+    private BaseApiKeyServiceClient baseApiKeyServiceClient;
 
     public String getPublicKey(String appId) {
         if (StrUtil.isBlank(appId)) {
@@ -34,11 +42,35 @@ public class ApiClientConfigProvider {
         }
     }
 
+    public BaseApiKey resolveApiKey(String apiKey) {
+        if (StrUtil.isBlank(apiKey)) {
+            return null;
+        }
+        try {
+            return apiKeyCache.get(apiKey.trim());
+        } catch (Exception e) {
+            log.debug("[ApiClientConfigProvider] load apiKey failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private String loadPublicKey(String appId) {
+        BaseApiKey apiKeyRow = loadApiKey(appId);
+        if (apiKeyRow != null && StrUtil.isNotBlank(apiKeyRow.getPublicKey())) {
+            return apiKeyRow.getPublicKey();
+        }
         BaseApp app = baseAppServiceClient.getAppByKey(appId);
         if (app == null || StrUtil.isBlank(app.getPublicKey())) {
             return null;
         }
         return app.getPublicKey();
+    }
+
+    private BaseApiKey loadApiKey(String apiKey) {
+        try {
+            return baseApiKeyServiceClient.getByApiKey(apiKey);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

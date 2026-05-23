@@ -24,7 +24,9 @@ import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
+import com.jbm.cluster.common.mysql.service.BaseApiKeyService;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.LoginPasswordSecurityService;
 import com.jbm.cluster.auth.service.LoginLifecyclePublisher;
@@ -70,6 +72,8 @@ public class OAuth2ServerController {
     private LoginLifecyclePublisher loginLifecyclePublisher;
     @Autowired
     private BaseAppPreprocessing baseAppPreprocessing;
+    @Autowired
+    private BaseApiKeyService baseApiKeyService;
     @Autowired
     private LoginPasswordSecurityService loginPasswordSecurityService;
 
@@ -134,11 +138,16 @@ public class OAuth2ServerController {
         return result;
     }
 
-    @ApiOperation(value = "获取 RSA 公钥（登录加密）", notes = "按 client_id 返回 BaseApp.publicKey")
+    @ApiOperation(value = "获取 RSA 公钥（登录加密）", notes = "按 client_id 返回 BaseApp 或 BaseApiKey 的 publicKey")
     @GetMapping("/publicKey")
     public ResultBody<String> getPublicKey(@RequestParam("app_id") String appId) {
-        BaseApp app = baseAppPreprocessing.getAppByKey(appId);
-        return ResultBody.ok(app.getPublicKey());
+        try {
+            BaseApp app = baseAppPreprocessing.getAppByKey(appId);
+            return ResultBody.ok(app.getPublicKey());
+        } catch (Exception ignored) {
+            BaseApiKey apiKey = baseApiKeyService.getByApiKey(appId);
+            return ResultBody.ok(apiKey.getPublicKey());
+        }
     }
 
     @ApiOperation(value = "登录", notes = "")

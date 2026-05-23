@@ -16,8 +16,8 @@ _NO_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 DEFAULT_GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:7777").rstrip("/")
 DEFAULT_AUTH = os.environ.get("JBM_AUTH", "http://127.0.0.1:5555").rstrip("/")
 DEFAULT_CENTER = os.environ.get("JBM_CENTER", "http://127.0.0.1:8888").rstrip("/")
-DEFAULT_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID", "demo")
-DEFAULT_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET", "demo123")
+DEFAULT_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID", "jbmSeedDevAppKey00000001")
+DEFAULT_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET", "jbmSeedDevSecret0000000001")
 DEFAULT_TENANT = os.environ.get("JBM_TENANT_ID", "0")
 
 
@@ -35,8 +35,12 @@ def http_request(
     data = None
     if body is not None:
         if form:
-            data = urllib.parse.urlencode(body).encode("utf-8")
+            data = urllib.parse.urlencode(body).encode("utf-8") if isinstance(body, dict) else body.encode("utf-8")
             h["Content-Type"] = "application/x-www-form-urlencoded"
+        elif isinstance(body, (bytes, bytearray)):
+            data = body
+        elif isinstance(body, str):
+            data = body.encode("utf-8")
         else:
             data = json.dumps(body).encode("utf-8")
             h["Content-Type"] = "application/json"
@@ -95,6 +99,7 @@ def login_password(username: str, password: str, *, gateway: str = "") -> str:
                 "password": password,
                 "scope": "all",
                 "loginType": "PASSWORD",
+                "vcode": os.environ.get("LOGIN_VCODE", "9999"),
             },
             form=True,
         )
@@ -116,6 +121,7 @@ def login_password(username: str, password: str, *, gateway: str = "") -> str:
             "password": password,
             "scope": "all",
             "loginType": "PASSWORD",
+            "vcode": os.environ.get("LOGIN_VCODE", "9999"),
         },
         form=True,
     )
@@ -125,6 +131,20 @@ def login_password(username: str, password: str, *, gateway: str = "") -> str:
     if isinstance(result, dict):
         return result.get("access_token") or ""
     raise RuntimeError("no access_token in response")
+
+
+def reset_jaja7_seed(*, via_gateway: bool = False) -> dict:
+    """恢复 admin 密码与 JBM 种子 OAuth 凭证（jaja7 开发环境）。"""
+    path = "/internal/dev/reset-jaja7-seed"
+    if via_gateway:
+        status, jb, raw = gateway_api("POST", path)
+    else:
+        status, raw = http_request("POST", DEFAULT_AUTH + path, {"tenantId": DEFAULT_TENANT})
+        jb = parse_json(raw)
+    if status >= 400 or not jb or jb.get("success") is False:
+        raise RuntimeError(f"seed reset failed HTTP {status}: {(jb or {}).get('message') or raw[:200]}")
+    result = unwrap(jb)
+    return result if isinstance(result, dict) else {}
 
 
 def probe_url(url: str, headers: Optional[dict] = None) -> bool:

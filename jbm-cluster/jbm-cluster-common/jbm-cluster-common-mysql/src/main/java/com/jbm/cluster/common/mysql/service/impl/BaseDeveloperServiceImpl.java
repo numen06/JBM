@@ -1,14 +1,22 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
+import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
+import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.common.mysql.mapper.BaseDeveloperMapper;
+import com.jbm.cluster.common.mysql.mapper.BaseRoleMapper;
+import com.jbm.cluster.common.mysql.mapper.BaseRoleUserMapper;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
+import com.jbm.cluster.common.mysql.service.BaseUserService;
+import com.jbm.cluster.core.constant.ApiKeyConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.cluster.api.form.BaseDeveloperForm;
@@ -42,6 +50,12 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
     private BaseDeveloperMapper baseDeveloperMapper;
     @Autowired
     private BaseAccountService baseAccountService;
+    @Autowired
+    private BaseUserService baseUserService;
+    @Autowired
+    private BaseRoleMapper baseRoleMapper;
+    @Autowired
+    private BaseRoleUserMapper baseRoleUserMapper;
 
     /**
      * 添加系统用户
@@ -233,5 +247,97 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
             return userAccount;
         }
         return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void applyForDeveloper(Long userId, String userType) {
+        if (userId == null) {
+            throw new ServiceException("未登录");
+        }
+        BaseDeveloper existing = getUserById(userId);
+        if (existing != null) {
+            if (existing.getStatus() != null && existing.getStatus() == ApiKeyConstants.DEVELOPER_STATUS_ACTIVE) {
+                throw new ServiceException("您已是开发者");
+            }
+            if (existing.getStatus() != null && existing.getStatus() == ApiKeyConstants.DEVELOPER_STATUS_PENDING) {
+                throw new ServiceException("申请已提交，请等待审批");
+            }
+        }
+        BaseUser user = baseUserService.getUserById(userId);
+        if (user == null) {
+            throw new ServiceException("用户不存在");
+        }
+        Date now = new Date();
+        BaseDeveloper developer = existing != null ? existing : new BaseDeveloper();
+        developer.setUserId(userId);
+        developer.setUserName(user.getUserName());
+        developer.setNickName(user.getNickName());
+        developer.setEmail(user.getEmail());
+        developer.setMobile(user.getMobile());
+        developer.setUserType(StrUtil.isBlank(userType) ? "dev" : userType);
+        developer.setStatus(ApiKeyConstants.DEVELOPER_STATUS_PENDING);
+        developer.setUpdateTime(now);
+        if (existing == null) {
+            developer.setCreateTime(now);
+            baseDeveloperMapper.insert(developer);
+        } else {
+            baseDeveloperMapper.updateById(developer);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void approveDeveloper(Long userId) {
+        BaseDeveloper developer = getUserById(userId);
+        if (developer == null) {
+            throw new ServiceException("开发者申请不存在");
+        }
+        if (developer.getStatus() != null && developer.getStatus() == ApiKeyConstants.DEVELOPER_STATUS_ACTIVE) {
+            return;
+        }
+        developer.setStatus(ApiKeyConstants.DEVELOPER_STATUS_ACTIVE);
+        developer.setUpdateTime(new Date());
+        baseDeveloperMapper.updateById(developer);
+        Long roleId = ensureDeveloperRoleId();
+        QueryWrapper<BaseRoleUser> q = new QueryWrapper<>();
+        q.lambda().eq(BaseRoleUser::getUserId, userId).eq(BaseRoleUser::getRoleId, roleId);
+        if (baseRoleUserMapper.selectCount(q) == 0) {
+            BaseRoleUser roleUser = new BaseRoleUser();
+            roleUser.setUserId(userId);
+            roleUser.setRoleId(roleId);
+            roleUser.setCreateTime(new Date());
+            roleUser.setUpdateTime(roleUser.getCreateTime());
+            baseRoleUserMapper.insert(roleUser);
+        }
+    }
+
+    @Override
+    public List<BaseDeveloper> findPendingList() {
+        QueryWrapper<BaseDeveloper> q = new QueryWrapper<>();
+        q.lambda().eq(BaseDeveloper::getStatus, ApiKeyConstants.DEVELOPER_STATUS_PENDING);
+        q.orderByDesc("create_time");
+        return baseDeveloperMapper.selectList(q);
+    }
+
+    private Long ensureDeveloperRoleId() {
+        QueryWrapper<BaseRole> q = new QueryWrapper<>();
+        q.lambda().eq(BaseRole::getRoleCode, JbmConstants.DEVELOPER_ROLE_CODE);
+        BaseRole role = baseRoleMapper.selectOne(q);
+        if (role != null) {
+            return role.getRoleId();
+        }
+        Date now = new Date();
+        role = new BaseRole();
+        role.setRoleId(JbmConstants.DEVELOPER_ROLE_ID);
+        role.setRoleCode(JbmConstants.DEVELOPER_ROLE_CODE);
+        role.setRoleName("开发者");
+        role.setRoleDesc("第三方 API 开发者角色");
+        role.setStatus(JbmConstants.ENABLED);
+        role.setIsPersist(JbmConstants.ENABLED);
+        role.setCreateTime(now);
+        role.setUpdateTime(now);
+        baseRoleMapper.insert(role);
+        return role.getRoleId();
     }
 }

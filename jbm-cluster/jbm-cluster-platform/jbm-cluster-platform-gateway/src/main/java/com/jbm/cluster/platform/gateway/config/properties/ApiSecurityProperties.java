@@ -21,4 +21,9 @@ public class ApiSecurityProperties {
     private List<String> signIgnores = new ArrayList<>();
 
     private List<String> permitAll = new ArrayList<>();
+
+    /** 是否校验 base_api_key 的接口授权范围 */
+    private boolean checkAuth = false;
+
+    private List<String> authIgnores = new ArrayList<>();
 }

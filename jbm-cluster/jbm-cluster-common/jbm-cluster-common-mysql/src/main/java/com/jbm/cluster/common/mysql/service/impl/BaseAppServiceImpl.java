@@ -2,6 +2,7 @@ package com.jbm.cluster.common.mysql.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.RSA;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -174,6 +175,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 
     private BaseApp doAddAppInfo(BaseApp app) {
 //        Long appId = String.valueOf(System.currentTimeMillis());
+        normalizeAppDefaults(app);
         String apiKey = RandomValueUtils.randomAlphanumeric(24);
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
         app.setApiKey(apiKey);
@@ -285,5 +287,21 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 //        System.out.println("secretKey=" + secretKey);
 //        System.out.println("encodeSecretKey=" + encoder.encode(secretKey));
 //    }
+
+    /** 兼容远程库 NOT NULL 且无默认值的 legacy 列 */
+    private static void normalizeAppDefaults(BaseApp app) {
+        app.setAppNameEn(StrUtil.blankToDefault(app.getAppNameEn(), StrUtil.blankToDefault(app.getAppName(), "")));
+        app.setAppIcon(StrUtil.blankToDefault(app.getAppIcon(), ""));
+        app.setAppIcons(StrUtil.blankToDefault(app.getAppIcons(), ""));
+        app.setAppOs(StrUtil.blankToDefault(app.getAppOs(), ""));
+        app.setAppDesc(StrUtil.blankToDefault(app.getAppDesc(), ""));
+        app.setWebsite(StrUtil.blankToDefault(app.getWebsite(), ""));
+        if (app.getStatus() == null) {
+            app.setStatus(1);
+        }
+        if (app.getDeveloperId() == null) {
+            app.setDeveloperId(0L);
+        }
+    }
 
 }

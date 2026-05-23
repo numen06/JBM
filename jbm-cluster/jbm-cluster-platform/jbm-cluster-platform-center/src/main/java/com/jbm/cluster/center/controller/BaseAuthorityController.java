@@ -10,7 +10,9 @@ import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.center.business.BaseAuthorityBusiness;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.masterdata.utils.ServiceUtils;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -18,8 +20,10 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 系统权限管理
@@ -47,6 +51,24 @@ public class BaseAuthorityController {
     public ResultBody<List<AuthorityApi>> listApis(
             @RequestParam(value = "serviceId", required = false) String serviceId) {
         return ResultBody.callback(() -> baseAuthorityService.findAuthorityApi(serviceId));
+    }
+
+    @ApiOperation(value = "当前用户可授权给 API Key 的接口权限")
+    @GetMapping("/apis/grantable")
+    public ResultBody<List<OpenAuthority>> listGrantableApis() {
+        Long userId = LoginHelper.getUserId();
+        com.jbm.cluster.api.entitys.basic.BaseUser user = baseUserService.getUserById(userId);
+        boolean root = user != null && JbmConstants.isSuperUser(user.getUserId(), user.getUserName(), user.getUserType());
+        return ResultBody.callback(() -> {
+            List<OpenAuthority> authorities = baseAuthorityService.findAuthorityByUser(userId, root);
+            if (authorities == null) {
+                return Collections.emptyList();
+            }
+            return authorities.stream()
+                    .filter(a -> a.getAuthority() != null
+                            && a.getAuthority().startsWith(JbmSecurityConstants.AUTHORITY_PREFIX_API))
+                    .collect(Collectors.toList());
+        });
     }
 
     @ApiOperation(value = "菜单权限")

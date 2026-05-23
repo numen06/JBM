@@ -5,11 +5,14 @@ import cn.hutool.core.util.StrUtil;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
+import com.jbm.cluster.api.service.feign.client.BaseApiKeyServiceClient;
 import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.ApiSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -25,8 +28,10 @@ import java.util.concurrent.TimeUnit;
 public class TokenFilter implements AccessLogFilter {
     @Autowired
     private BaseAppServiceClient baseAppServiceClient;
+    @Autowired
+    private BaseApiKeyServiceClient baseApiKeyServiceClient;
+
     LoadingCache<String, BaseApp> appLoadingCache = Caffeine.newBuilder()
-            //一小时没有读取释放
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build(new CacheLoader<String, BaseApp>() {
                 @Override
@@ -35,8 +40,27 @@ public class TokenFilter implements AccessLogFilter {
                 }
             });
 
+    LoadingCache<String, BaseApiKey> apiKeyLoadingCache = Caffeine.newBuilder()
+            .expireAfterAccess(15, TimeUnit.MINUTES)
+            .build(new CacheLoader<String, BaseApiKey>() {
+                @Override
+                public @Nullable BaseApiKey load(@NonNull String apiKey) throws Exception {
+                    return baseApiKeyServiceClient.getByApiKey(apiKey);
+                }
+            });
+
     @Override
     public void filter(GatewayLogInfo gatewayLogInfo, Map<String, String> headers) {
+        if (gatewayLogInfo.getKeyId() != null) {
+            return;
+        }
+        String appIdHeader = headers.get(ApiSecurityConstants.APP_ID);
+        if (StrUtil.isNotBlank(appIdHeader)) {
+            fillApiKeyLog(gatewayLogInfo, appIdHeader.trim());
+            if (gatewayLogInfo.getKeyId() != null) {
+                return;
+            }
+        }
         String authorization = headers.get(JbmTokenConstants.AUTHENTICATION);
         if (StrUtil.isEmpty(authorization)) {
             return;
@@ -51,14 +75,31 @@ public class TokenFilter implements AccessLogFilter {
                     return;
                 }
                 gatewayLogInfo.setAppKey(jbmLoginUser.getClientId());
+                if (fillApiKeyLog(gatewayLogInfo, jbmLoginUser.getClientId())) {
+                    return;
+                }
                 BaseApp app = appLoadingCache.get(jbmLoginUser.getClientId());
                 gatewayLogInfo.setAppId(app.getAppId());
                 gatewayLogInfo.setAppName(app.getAppName());
             } catch (Exception e) {
                 log.debug("[TokenFilter]获取应用信息失败: {}", e.getMessage());
             }
-            //gatewayLogs.setAuthentication(jbmLoginUser.getToken());
         }
     }
 
+    private boolean fillApiKeyLog(GatewayLogInfo gatewayLogInfo, String apiKey) {
+        try {
+            BaseApiKey row = apiKeyLoadingCache.get(apiKey);
+            if (row == null) {
+                return false;
+            }
+            gatewayLogInfo.setKeyId(row.getKeyId());
+            gatewayLogInfo.setAppKey(row.getApiKey());
+            gatewayLogInfo.setAppName(row.getKeyName());
+            return true;
+        } catch (Exception e) {
+            log.debug("[TokenFilter]获取 API Key 信息失败: {}", e.getMessage());
+            return false;
+        }
+    }
 }

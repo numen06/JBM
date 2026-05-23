@@ -66,15 +66,20 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
             Map<String, OAuthClientSecretVerifier> verifiers =
                     SpringUtil.getBeansOfType(OAuthClientSecretVerifier.class);
             for (OAuthClientSecretVerifier verifier : verifiers.values()) {
-                if (verifier.verify(clientId, clientSecret)) {
-                    SaClientModel model = getClientModel(clientId);
-                    if (ObjectUtil.isNotEmpty(model)) {
-                        return model;
+                try {
+                    if (verifier.verify(clientId, clientSecret)) {
+                        SaClientModel model = getClientModel(clientId);
+                        if (ObjectUtil.isNotEmpty(model)) {
+                            return model;
+                        }
                     }
+                } catch (Exception e) {
+                    log.warn("OAuthClientSecretVerifier {} 校验异常: {}",
+                            verifier.getClass().getSimpleName(), e.getMessage());
                 }
             }
         } catch (Exception e) {
-            log.debug("OAuthClientSecretVerifier 不可用，回退默认校验: {}", e.getMessage());
+            log.warn("OAuthClientSecretVerifier 不可用，回退默认校验: {}", e.getMessage());
         }
         return super.checkClientSecret(clientId, clientSecret);
     }

@@ -15,3 +15,7 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V9__legacy_masterdata_extend_data_remaining.yaml
   - include:
       file: classpath:db/cluster-rbac/changes/V10__add_must_change_password.yaml
+  - include:
+      file: classpath:db/cluster-rbac/changes/V11__api_key_tables.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V12__api_key_extend_data.yaml

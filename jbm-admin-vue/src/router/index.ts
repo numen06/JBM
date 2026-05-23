@@ -112,6 +112,12 @@ const router = createRouter({
           component: () => import('@/views/developer/DeveloperList.vue'),
           meta: { title: '开发者' },
         },
+        {
+          path: 'developer/api-keys',
+          name: 'api-keys',
+          component: () => import('@/views/developer/ApiKeyList.vue'),
+          meta: { title: 'API Key 管理' },
+        },
       ],
     },
   ],

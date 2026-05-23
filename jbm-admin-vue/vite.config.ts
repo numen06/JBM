@@ -51,6 +51,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // 同时监听 127.0.0.1 与 ::1，避免仅 IPv6 localhost 导致 127.0.0.1 无法访问
+    host: true,
     proxy: proxyMap(gateway, gatewayPrefixes),
   },
 })

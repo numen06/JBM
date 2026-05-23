@@ -1,4 +1,4 @@
-﻿package com.jbm.cluster.auth.service;
+package com.jbm.cluster.auth.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.auth.config.ApiLoginSecurityProperties;

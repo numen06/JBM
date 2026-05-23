@@ -4,6 +4,7 @@ import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.api.form.BaseDeveloperForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.common.mysql.service.BaseDeveloperService;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import io.swagger.annotations.Api;
@@ -68,6 +69,27 @@ public class BaseDeveloperController {
     @PutMapping("/{userId}/password")
     public ResultBody<Void> updatePassword(@PathVariable Long userId, @RequestBody BaseDeveloperForm form) {
         baseDeveloperService.updatePassword(userId, form.getPassword());
+        return ResultBody.ok();
+    }
+
+    @ApiOperation(value = "申请成为开发者")
+    @PostMapping("/apply")
+    public ResultBody<Void> apply(@RequestBody(required = false) BaseDeveloperForm form) {
+        String userType = form != null ? form.getUserType() : null;
+        baseDeveloperService.applyForDeveloper(LoginHelper.getUserId(), userType);
+        return ResultBody.ok();
+    }
+
+    @ApiOperation(value = "待审批开发者列表")
+    @GetMapping("/pending")
+    public ResultBody<List<BaseDeveloper>> listPending() {
+        return ResultBody.callback(() -> baseDeveloperService.findPendingList());
+    }
+
+    @ApiOperation(value = "审批通过")
+    @PutMapping("/{userId}/approve")
+    public ResultBody<Void> approve(@PathVariable Long userId) {
+        baseDeveloperService.approveDeveloper(userId);
         return ResultBody.ok();
     }
 

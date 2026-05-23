@@ -10,6 +10,7 @@ JBM jaja7 集群日常运维脚本（减少反复手启 Java / 手测 Gateway）
   setup-rbac      超管 API 创建 operator/demo、editor/viewer
   test-rbac       双用户双角色 RBAC 对比断言
   workflow        status → wait → login → setup-rbac → test-rbac
+  test-apikey     wait → API Key 全流程 REST（TC1–TC12，注册/审批，不直插库）
 
 推荐: 日常用 VS Code「jaja7: Auth + Center + Gateway」调试启动 Java；
       本脚本负责检测、造数、断言，避免为测试用户反复改种子或 mvn 重启。
@@ -18,6 +19,7 @@ JBM jaja7 集群日常运维脚本（减少反复手启 Java / 手测 Gateway）
   python scripts/jbm_cluster_ops.py status
   python scripts/jbm_cluster_ops.py wait --timeout 60
   python scripts/jbm_cluster_ops.py workflow --password Admin@123
+  python scripts/jbm_cluster_ops.py test-apikey
   python scripts/jbm_cluster_ops.py start center --background
   python scripts/jbm_cluster_ops.py stop center gateway auth
 """
@@ -144,6 +146,9 @@ def cmd_wait(args):
 
 def cmd_login(args):
     try:
+        if getattr(args, "reset_seed", False):
+            info = reset_jaja7_seed()
+            print(f"seed reset: clientId={info.get('clientId')} ok={info.get('jbmAppCredentialsReset')}")
         tok = login_password(args.user, args.password)
         print(f"OK login user={args.user!r} token_len={len(tok)}")
         if args.verbose:
@@ -170,6 +175,21 @@ def cmd_test_rbac(args):
 
     sys.argv = ["compare"]
     return compare.main()
+
+
+def cmd_test_apikey(args):
+    """等待集群就绪后执行 API Key 全流程 REST 测试（不启动 Java）。"""
+    w = argparse.Namespace(timeout=args.timeout, interval=2.0)
+    code = cmd_wait(w)
+    if code != 0 and not args.force:
+        print("集群未就绪；请用 VS Code「jaja7: Auth + Center + Gateway」或 ops start", file=sys.stderr)
+        return 1
+    import run_api_key_flow_tests as flow
+
+    sys.argv = ["run_api_key_flow_tests.py"]
+    if args.suffix:
+        sys.argv += ["--suffix", args.suffix]
+    return flow.main()
 
 
 def cmd_workflow(args):
@@ -281,6 +301,11 @@ def main():
     p_stop = sub.add_parser("stop", help="按端口结束进程", parents=[parent])
     p_stop.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
 
+    p_apikey = sub.add_parser("test-apikey", help="API Key 全流程 REST（TC1–TC12）", parents=[parent])
+    p_apikey.add_argument("--timeout", type=int, default=90)
+    p_apikey.add_argument("--suffix", default="")
+    p_apikey.add_argument("--force", action="store_true")
+
     args = ap.parse_args()
     handlers = {
         "status": cmd_status,
@@ -288,6 +313,7 @@ def main():
         "login": cmd_login,
         "setup-rbac": cmd_setup_rbac,
         "test-rbac": cmd_test_rbac,
+        "test-apikey": cmd_test_apikey,
         "workflow": cmd_workflow,
         "start": cmd_start,
         "stop": cmd_stop,

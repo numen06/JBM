@@ -157,6 +157,11 @@ public class JbmConstants {
      */
     public static final Long ROOT_ROLE_ID = 1L;
 
+    /** 开发者角色（审批通过后分配） */
+    public static final Long DEVELOPER_ROLE_ID = 2L;
+
+    public static final String DEVELOPER_ROLE_CODE = "developer";
+
     /**
      * 是否超级管理员用户（登录名 admin、userType super 或种子 ROOT 用户 ID）
      */

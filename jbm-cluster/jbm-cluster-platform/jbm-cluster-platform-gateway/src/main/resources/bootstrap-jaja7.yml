@@ -7,14 +7,15 @@ spring:
         - id: jaja7-center-local
           uri: http://127.0.0.1:8888
           predicates:
-            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**
+            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**
+          metadata:
+            serviceId: jbm-cluster-platform-center
         - id: jaja7-auth-local
           uri: http://127.0.0.1:5555
           predicates:
             - Path=/oauth2/**,/captcha/**,/qrcode/**,/internal/dev/**
     nacos:
       config:
-        # Nacos 命名空间固定 jbm7；勿用 profile 名 jaja7，避免与旧环境配置冲突
         namespace: jbm7
         group: DEFAULT_GROUP
         refreshable-dataids: common.properties
@@ -29,3 +30,26 @@ spring:
         ds1:
           nacos:
             namespace: jbm7
+
+jbm:
+  api:
+    check-sign: true
+    check-auth: true
+    sign-expire-ms: 300000
+    sign-ignores:
+      - /**/login/**
+      - /**/logout/**
+      - /oauth2/**
+      - /**/oauth2/**
+      - /captcha/**
+      - /user/registrations
+      - /**/user/registrations
+      - /internal/dev/**
+    auth-ignores:
+      - /oauth2/**
+      - /**/oauth2/**
+      - /captcha/**
+      - /user/registrations
+      - /**/user/registrations
+      - /internal/dev/**
+      - /actuator/**

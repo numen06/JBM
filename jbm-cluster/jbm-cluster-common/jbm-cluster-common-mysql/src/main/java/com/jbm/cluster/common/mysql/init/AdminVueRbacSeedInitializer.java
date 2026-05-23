@@ -61,6 +61,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_GW_IP = 123L;
     private static final long MENU_LOGS = 131L;
     private static final long MENU_DEVELOPER = 105L;
+    private static final long MENU_API_KEY = 113L;
 
     private static final long ACTION_USERS_VIEW = 2001L;
     private static final long ACTION_USERS_ADD = 2002L;
@@ -127,6 +128,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         upsertMenu(MENU_DICTS, MENU_SYSTEM, "dicts", "字典管理", "/system/dicts", 8);
         upsertMenu(MENU_EXTEND, MENU_SYSTEM, "extend_fields", "扩展字段", "/system/extend-fields", 9);
         upsertMenu(MENU_DEVELOPER, MENU_SYSTEM, "developer_mgmt", "开发者管理", "/developer", 10);
+        upsertMenu(MENU_API_KEY, MENU_SYSTEM, "api_key_mgmt", "API Key 管理", "/developer/api-keys", 11);
 
         upsertMenu(MENU_GATEWAY, MENU_PLATFORM, "gateway", "网关管理", "/gateway", 2);
         upsertMenu(MENU_GW_ROUTE, MENU_GATEWAY, "gw_routes", "路由管理", "/gateway/routes", 1);
@@ -162,6 +164,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(String.valueOf(MENU_DICTS));
         ids.add(String.valueOf(MENU_EXTEND));
         ids.add(String.valueOf(MENU_DEVELOPER));
+        ids.add(String.valueOf(MENU_API_KEY));
         ids.add(String.valueOf(MENU_GW_ROUTE));
         ids.add(String.valueOf(MENU_GW_RATE));
         ids.add(String.valueOf(MENU_GW_IP));

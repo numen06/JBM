@@ -147,6 +147,14 @@ public class StreamAccessLogService implements AccessLogService {
             gatewayLogs.setResponseTime(DateTime.now());
             gatewayLogs.setError(error);
             gatewayLogs.setResponseBody(responseBody);
+            Object apiKeyId = exchange.getAttribute("gateway.apiKeyId");
+            if (apiKeyId instanceof Long) {
+                gatewayLogs.setKeyId((Long) apiKeyId);
+            }
+            Object apiKeyName = exchange.getAttribute("gateway.apiKeyName");
+            if (apiKeyName != null) {
+                gatewayLogs.setAppName(String.valueOf(apiKeyName));
+            }
             //计算耗用时间秒
             Long userTime = DateUtil.between(gatewayLogs.getResponseTime(), gatewayLogs.getRequestTime(), DateUnit.SECOND);
             gatewayLogs.setUseTime(userTime);

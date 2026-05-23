@@ -156,6 +156,29 @@ export interface BaseDeveloper {
   userType?: string
   status?: number
   password?: string
+  createTime?: string
+}
+
+export interface BaseApiKey {
+  keyId?: number
+  developerId?: number
+  bizAppId?: number | null
+  apiKey?: string
+  secretKey?: string
+  keyName?: string
+  keyDesc?: string
+  clientName?: string
+  scopeModules?: string
+  expireTime?: string
+  status?: number
+  lastUsedTime?: string
+  createTime?: string
+}
+
+export interface OpenAuthority {
+  authorityId?: string
+  authority?: string
+  expireTime?: string
 }
 
 export interface UserInfoStatistics {
@@ -170,11 +193,6 @@ export interface CurrentUser {
   avatar?: string
   roles?: BaseRole[]
   authorities?: { authorityId?: string; authority?: string }[]
-}
-
-export interface OpenAuthority {
-  authorityId?: string
-  authority?: string
 }
 
 /** 扩展字段元数据（与后端 FieldDefinition 对齐） */

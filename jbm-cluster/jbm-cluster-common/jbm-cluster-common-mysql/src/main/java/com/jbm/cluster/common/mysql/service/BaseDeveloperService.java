@@ -86,4 +86,19 @@ public interface BaseDeveloperService extends IMasterDataService<BaseDeveloper> 
      * @return
      */
     UserAccount login(String account);
+
+    /**
+     * 当前登录用户申请成为开发者（待审批）
+     */
+    void applyForDeveloper(Long userId, String userType);
+
+    /**
+     * 管理员审批通过
+     */
+    void approveDeveloper(Long userId);
+
+    /**
+     * 待审批开发者列表
+     */
+    List<BaseDeveloper> findPendingList();
 }

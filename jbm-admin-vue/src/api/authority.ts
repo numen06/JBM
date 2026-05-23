@@ -44,6 +44,11 @@ export async function listAuthorityCatalog(type = '1') {
   return unwrap(res)
 }
 
+export async function listGrantableApis() {
+  const res = await get<OpenAuthority[]>('/authority/apis/grantable')
+  return unwrap(res)
+}
+
 export async function listMenuTree(appId?: number) {
   const res = await get<Record<string, unknown>[]>('/authority/menus/tree', {
     params: appId ? { appId } : {},

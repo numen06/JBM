@@ -73,6 +73,7 @@ public class SystemDataInitializer implements ApplicationRunner {
         log.info("开始初始化系统基础数据（ROOT、角色、菜单、开发者应用）");
         seedRootUser();
         seedSuperAdminRole();
+        seedDeveloperRole();
         seedPlatformMenus();
         seedDeveloperApp();
         markInitialized();
@@ -146,6 +147,20 @@ public class SystemDataInitializer implements ApplicationRunner {
         roleUser.setCreateTime(now);
         roleUser.setUpdateTime(now);
         baseRoleUserMapper.insert(roleUser);
+    }
+
+    private void seedDeveloperRole() {
+        Date now = new Date();
+        BaseRole role = new BaseRole();
+        role.setRoleId(JbmConstants.DEVELOPER_ROLE_ID);
+        role.setRoleCode(JbmConstants.DEVELOPER_ROLE_CODE);
+        role.setRoleName("开发者");
+        role.setRoleDesc("第三方 API 开发者角色");
+        role.setStatus(JbmConstants.ENABLED);
+        role.setIsPersist(JbmConstants.ENABLED);
+        role.setCreateTime(now);
+        role.setUpdateTime(now);
+        baseRoleMapper.insert(role);
     }
 
     private void seedPlatformMenus() {

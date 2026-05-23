@@ -54,6 +54,8 @@ public class JbmCacheConstants {
 
     public final static String APP_CACHE_NAMESPACE = "apps";
 
+    public final static String API_KEY_CACHE_NAMESPACE = "apiKeys";
+
     /**
      * 用户权限标识缓存（与 Session 解耦，便于授权变更后失效）
      */
