@@ -4,28 +4,28 @@ overview: 重新设计 JBM 平台的登录页和新增开源社区风格 Landing
 todos:
   - id: router-restructure
     content: 修改路由配置：/ 指向 Landing Page，新增 /register 和 /docs 公开路由
-    status: in_progress
+    status: completed
   - id: landing-page
     content: 创建 LandingPage.vue：导航栏 + Hero + 核心能力 + 技术栈 + 快速开始 + Footer
-    status: pending
+    status: completed
   - id: login-redesign
     content: 重新设计 LoginPage.vue：左右分栏布局，精简默认登录方式，添加注册链接
-    status: pending
+    status: completed
   - id: register-page
     content: 创建 RegisterPage.vue：注册表单 + 调用 POST /oauth2/register
-    status: pending
+    status: completed
   - id: api-register
     content: 在 auth.ts 中新增 register() API 函数
-    status: pending
+    status: completed
   - id: api-wiki-page
     content: 创建 ApiWikiPage.vue：快速开始 + OAuth2 指南 + API 参考 + SDK 示例
-    status: pending
+    status: completed
   - id: route-guard
     content: 调整路由守卫：已登录用户可访问 / 首页，未登录用户可访问公开页面
-    status: pending
+    status: completed
   - id: responsive-mobile
     content: 响应式适配与移动端优化
-    status: pending
+    status: completed
 isProject: false
 ---
 

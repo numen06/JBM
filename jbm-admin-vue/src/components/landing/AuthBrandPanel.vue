@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, BookOpen, Github, Shield, Zap } from '@lucide/vue'
+import { ArrowLeft, BookOpen, Code2, Shield, Zap } from '@lucide/vue'
 
 defineProps<{
   title?: string
@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
   <div
-    class="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary to-blue-700 p-8 text-primary-foreground lg:p-12"
+    class="relative flex min-h-screen flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary to-blue-700 p-8 text-primary-foreground lg:p-12"
   >
     <div class="absolute inset-0 opacity-10">
       <div class="absolute -right-20 -top-20 size-80 rounded-full bg-white/20 blur-3xl" />
@@ -74,7 +74,7 @@ defineProps<{
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1.5 rounded-md bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
         >
-          <Github class="size-3.5" />
+          <Code2 class="size-3.5" />
           GitHub
         </a>
       </div>

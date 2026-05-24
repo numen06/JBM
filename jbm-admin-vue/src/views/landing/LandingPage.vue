@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router'
 import {
   ArrowRight,
   BookOpen,
-  Github,
+  Code2,
   KeyRound,
   Layers,
   Network,
@@ -106,7 +106,7 @@ const steps = [
             </RouterLink>
             <a href="https://github.com" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="lg" class="gap-2">
-                <Github class="size-4" />
+                <Code2 class="size-4" />
                 GitHub
               </Button>
             </a>

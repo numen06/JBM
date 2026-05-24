@@ -27,10 +27,6 @@ import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
-import Card from '@/components/ui/Card.vue'
-import CardHeader from '@/components/ui/CardHeader.vue'
-import CardTitle from '@/components/ui/CardTitle.vue'
-import CardContent from '@/components/ui/CardContent.vue'
 import Dialog from '@/components/ui/Dialog.vue'
 import AuthBrandPanel from '@/components/landing/AuthBrandPanel.vue'
 
@@ -503,7 +499,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <motionless />
   <div class="flex min-h-screen flex-col lg:flex-row">
     <div class="hidden min-h-screen lg:block lg:w-[42%] xl:w-[45%]">
       <AuthBrandPanel title="欢迎回来" subtitle="登录 JBM 开源平台" />
@@ -521,7 +516,6 @@ onUnmounted(() => {
           <p class="mt-2 text-sm text-muted-foreground">{{ activeMeta.description }}</p>
         </div>
 
-        <motionless />
         <div
           v-if="showMoreModes"
           class="mb-4 mt-6 flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1"
@@ -711,7 +705,6 @@ onUnmounted(() => {
 
           <details v-if="!showMoreModes" class="rounded-md border px-3 py-2 text-sm">
             <summary class="cursor-pointer font-medium text-muted-foreground">更多登录方式</summary>
-            <motionless />
             <div class="mt-3 flex flex-wrap gap-2">
               <button
                 v-for="tab in moreLoginTabs"
@@ -859,8 +852,8 @@ onUnmounted(() => {
             {{ error }}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
 
     <Dialog
       :open="showChangePassword"
