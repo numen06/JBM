@@ -33,11 +33,19 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
     @Override
     public Builder buildRequest(Builder httpRequest) {
-        httpRequest.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
+        httpRequest.header(SaIdUtil.ID_TOKEN, idToken());
         httpRequest.header(JbmSecurityConstants.INTERNAL_SERVICE, SpringUtil.getApplicationName());
         httpRequest.header(JbmSecurityConstants.INTERNAL_INSTANCE,
                 SpringUtil.getApplicationName() + ":" + SpringUtil.getProperty("server.port", "0"));
         return httpRequest;
+    }
+
+    private static String idToken() {
+        String token = SaIdUtil.getToken();
+        if (StrUtil.isBlank(token)) {
+            token = SaIdUtil.refreshToken();
+        }
+        return token;
     }
 
     @Override

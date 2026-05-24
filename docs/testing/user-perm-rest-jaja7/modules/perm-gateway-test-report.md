@@ -1,11 +1,11 @@
 # 经网关透传用户 Token - 业务测试报告
 
-- 时间: 2026-05-24 21:20:04
+- 时间: 2026-05-24 21:32:41
 - 服务可用: 是
 - 结果: **PASS**
 - 步骤通过: 2/2
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-UP-30 | gateway current user | GET | 200 | PASS | 0.359 | eq:result.userId:{userId} |  |
-| TC-UP-30 | auth userinfo same user | GET | 200 | PASS | 0.205 | eq:result.userId:{gwUserId} |  |
+| TC-UP-30 | gateway current user | GET | 200 | PASS | 0.351 | eq:result.userId:{userId} |  |
+| TC-UP-30 | auth userinfo same user | GET | 200 | PASS | 0.212 | eq:result.userId:{gwUserId} |  |

@@ -42,8 +42,16 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
     }
 
     private void applyInternalIdToken(RequestTemplate requestTemplate) {
-        requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
+        requestTemplate.header(SaIdUtil.ID_TOKEN, idToken());
         appendInternalIdentity(requestTemplate);
+    }
+
+    private static String idToken() {
+        String token = SaIdUtil.getToken();
+        if (StrUtil.isBlank(token)) {
+            token = SaIdUtil.refreshToken();
+        }
+        return token;
     }
 
     static void appendInternalIdentity(RequestTemplate requestTemplate) {

@@ -214,7 +214,7 @@ def authority_ids_for_paths(admin_token, paths: list[str]) -> list:
 
 
 # 全流程固定使用的可读/不可读 API（便于 TC10/TC12）
-TEST_GRANT_PATHS = ["/current/user/menu"]
+TEST_GRANT_PATHS = ["/baseDic/getDicMap"]
 TEST_DENY_PATH = "/user/list"
 
 
@@ -273,14 +273,16 @@ def resolve_granted_paths(key_id, admin_token):
     return granted_path, denied_path
 
 
-def signed_get(url, api_key, private_key_b64, token):
+def signed_get(url, api_key, private_key_b64, token=None):
     parsed = urllib.parse.urlparse(url)
     path = parsed.path or "/"
     query = parsed.query
     ts = str(int(time.time() * 1000))
     content = build_sign_content("GET", path, query, "", ts, api_key)
     sig = rsa_sign(content, private_key_b64)
-    headers = bearer(token)
+    headers = {}
+    if token:
+        headers.update(bearer(token))
     headers.update({
         "X-App-Id": api_key,
         "X-Timestamp": ts,
@@ -424,6 +426,7 @@ def run_flow(suffix: str):
             raise StepError("grantable apis empty — 请先给开发者分配 API 权限")
         first_id = grantable[0].get("authorityId")
         ctx["grantedAuthorityIds"] = [first_id]
+        ctx["adminToken"] = oauth_password(ADMIN_USER, ADMIN_PASS)
         grant_ids = authority_ids_for_paths(ctx["adminToken"], TEST_GRANT_PATHS)
         if not grant_ids:
             grant_ids = [g.get("authorityId") for g in grantable if g.get("authorityId")][:5]
@@ -435,6 +438,7 @@ def run_flow(suffix: str):
             headers=bearer(token), body=payload,
         )
         assert_success("grant apikey authority", st2, raw2)
+        ctx["adminToken"] = oauth_password(ADMIN_USER, ADMIN_PASS)
         granted_path, denied_path = resolve_granted_paths(ctx["appKeyId"], ctx["adminToken"])
         if not granted_path:
             raise StepError(f"授权后未找到可调用路径，期望含 {TEST_GRANT_PATHS}")
@@ -461,7 +465,7 @@ def run_flow(suffix: str):
         if not path.startswith("/"):
             path = "/" + path
         target = f"{GW}{path}"
-        st, raw, _ = signed_get(target, api_key, priv, token)
+        st, raw, _ = signed_get(target, api_key, priv)
         if st not in (200,):
             raise StepError(f"signed API call failed HTTP {st}: {raw[:300]}")
         body = jb(raw)
@@ -476,7 +480,7 @@ def run_flow(suffix: str):
         path = ctx.get("deniedApiPath", "/user")
         if not path.startswith("/"):
             path = "/" + path
-        st, raw, _ = signed_get(f"{GW}{path}", api_key, priv, token)
+        st, raw, _ = signed_get(f"{GW}{path}", api_key, priv)
         if st in (200,) and jb(raw) and jb(raw).get("success") is True:
             raise StepError("expected unauthorized/forbidden but got success")
         if st not in (400, 401, 403, 455, 500):

@@ -1,6 +1,7 @@
 package com.jbm.cluster.platform.gateway.filter;
 
 import cn.dev33.satoken.id.SaIdUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
@@ -25,7 +26,7 @@ public class ForwardAuthFilter implements GlobalFilter {
         String originalPath = exchange.getRequest().getURI().getPath();
 
         ServerHttpRequest newRequest = exchange.getRequest().mutate()
-                .header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken())
+                .header(SaIdUtil.ID_TOKEN, idToken())
                 .header(JbmSecurityConstants.INTERNAL_SERVICE, SpringUtil.getApplicationName())
                 .header(JbmSecurityConstants.INTERNAL_INSTANCE,
                         SpringUtil.getApplicationName() + ":" + SpringUtil.getProperty("server.port", "0"))
@@ -35,5 +36,13 @@ public class ForwardAuthFilter implements GlobalFilter {
         ServerWebExchange newExchange = exchange.mutate().request(newRequest).build();
         newExchange.getAttributes().put(GatewayContext.REQUEST_TIME_HEAD, DateUtil.now());
         return chain.filter(newExchange);
+    }
+
+    private static String idToken() {
+        String token = SaIdUtil.getToken();
+        if (StrUtil.isBlank(token)) {
+            token = SaIdUtil.refreshToken();
+        }
+        return token;
     }
 }
