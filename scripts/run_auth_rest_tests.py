@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from jbm_rest_profile import REST_PROFILE, apply_rest_profile, docs_dir, spring_boot_profile_arg
+from jbm_cluster_client import login_password
 
 ROOT = Path(__file__).resolve().parents[1]
 SUITE_DOCS_SLUG = "auth-rest"
@@ -305,6 +306,11 @@ def run_step(step, cfg, ctx, scenario_id):
     token = ctx.get("token") or ctx.get("accessToken") or os.environ.get("AUTH_TOKEN", "")
     if token:
         headers["Authorization"] = token if str(token).startswith("Bearer ") else f"Bearer {token}"
+    if not headers.get("Authorization") and (step.get("service") or "auth").lower() == "gateway":
+        if path not in ("/user/registrations",) and not path.endswith("/user/registrations"):
+            gateway_token = ctx.get("gatewayToken") or ""
+            if gateway_token:
+                headers["Authorization"] = gateway_token if str(gateway_token).startswith("Bearer ") else f"Bearer {gateway_token}"
     body_s = expand(body, ctx) if body else ""
     path_fc = None
     if "/extend-field/forms/" in url and method == "POST":
@@ -449,6 +455,16 @@ def main():
     }
     if args.token:
         ctx["token"] = args.token
+    else:
+        try:
+            gateway_base = (cfg.get("gateway_base_url") or "http://127.0.0.1:7777").rstrip("/")
+            ctx["gatewayToken"] = login_password(
+                "admin",
+                os.environ.get("LOGIN_PASSWORD") or "Admin@123",
+                gateway=gateway_base,
+            )
+        except Exception as e:
+            print("[warn] admin login failed for auth gateway steps:", e)
 
     th, tid = cfg.get("tenant_header", "tenantId"), cfg.get("tenant_id", "0")
     service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=8)

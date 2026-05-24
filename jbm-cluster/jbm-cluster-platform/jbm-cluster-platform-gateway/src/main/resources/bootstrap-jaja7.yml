@@ -51,6 +51,10 @@ jbm:
       - /captcha/**
       - /user/registrations
       - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
       - /internal/dev/**
     auth-ignores:
       - /oauth2/**
@@ -58,5 +62,9 @@ jbm:
       - /captcha/**
       - /user/registrations
       - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
       - /internal/dev/**
       - /actuator/**

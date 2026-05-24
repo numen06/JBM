@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from jbm_rest_profile import REST_PROFILE, apply_rest_profile, docs_dir, spring_boot_profile_arg
+from jbm_cluster_client import login_password
 
 ROOT = Path(__file__).resolve().parents[1]
 SUITE_DOCS_SLUG = "center-rest"
@@ -411,6 +412,15 @@ def main():
     }
     if args.token:
         ctx["token"] = args.token
+    else:
+        try:
+            ctx["token"] = login_password(
+                cfg.get("username", "admin") or "admin",
+                os.environ.get("LOGIN_PASSWORD") or cfg.get("password") or "Admin@123",
+                gateway=cfg["base_url"],
+            )
+        except Exception as e:
+            print("[warn] admin login failed for center REST:", e)
 
     th, tid = cfg.get("tenant_header", "tenantId"), cfg.get("tenant_id", "0")
     service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=8)

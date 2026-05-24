@@ -55,6 +55,11 @@ ALTER TABLE base_org ADD COLUMN level INT;
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'base_org' AND column_name = 'group_id'
 ALTER TABLE base_org ADD COLUMN group_id VARCHAR(64);
 
+--changeset jbm:org-v13-alter-base-org-status dbms:mysql
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'base_org' AND column_name = 'status'
+ALTER TABLE base_org ADD COLUMN status INT DEFAULT 1;
+
 --changeset jbm:org-v13-seed-default-org splitStatements:true
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM base_org WHERE id = 1

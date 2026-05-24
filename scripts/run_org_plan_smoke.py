@@ -49,6 +49,8 @@ def main() -> int:
         nonlocal has_default
         for n in nodes or []:
             oid = n.get("id") or n.get("orgId")
+            if str(oid) == "1" or n.get("orgName") == "默认组织":
+                has_default = True
             if oid == 1 or n.get("orgName") == "默认组织":
                 has_default = True
             walk(n.get("children") or [])
@@ -58,6 +60,8 @@ def main() -> int:
         _, jb2, _ = gateway_api("POST", "/baseOrg/root", token, {})
         roots = unwrap(jb2) or []
         for r in roots:
+            if str(r.get("id") or r.get("orgId")) == "1":
+                has_default = True
             if (r.get("id") or r.get("orgId")) == 1:
                 has_default = True
     if not has_default:
