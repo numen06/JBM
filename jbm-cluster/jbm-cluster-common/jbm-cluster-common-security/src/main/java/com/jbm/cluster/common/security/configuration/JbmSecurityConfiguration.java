@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.router.SaRouter;
@@ -92,7 +93,13 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         return new SaServletSuperFilter()
                 .addInclude("/**")
                 .addExclude(ArrayUtil.toArray(whiteList, String.class))
-                .setAuth(obj -> new SaOAuthFilterAuthStrategy().run(obj));
+                .setAuth(obj -> {
+                    HttpServletRequest request = (HttpServletRequest) cn.dev33.satoken.context.SaHolder.getRequest().getSource();
+                    if (isGatewayTrustedRequest(request)) {
+                        return;
+                    }
+                    new SaOAuthFilterAuthStrategy().run(obj);
+                });
 //                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 
@@ -113,6 +120,15 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         }
         // 返回结果集合
         return strSet;
+    }
+
+    private static boolean isGatewayTrustedRequest(HttpServletRequest request) {
+        String idToken = request.getHeader(SaIdUtil.ID_TOKEN);
+        if (StrUtil.isNotBlank(idToken) && SaIdUtil.isValid(idToken)) {
+            return true;
+        }
+        return StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.GATEWAY_API_KEY_ID))
+                && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
     }
 
 

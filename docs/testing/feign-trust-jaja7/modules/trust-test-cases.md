@@ -8,7 +8,7 @@
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| routes | routes | GET | /gateway/api/route | isTrue:success |
+| routes | routes | GET | /role/all | isTrue:success |
 
 ## TC-TRUST-02 no token
 
@@ -16,7 +16,7 @@
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| no auth | no auth | GET | /gateway/api/route | 接口 success=true |
+| no auth | no auth | GET | /role/all | 接口 success=true |
 
 ## TC-TRUST-03 bad token
 
@@ -24,7 +24,7 @@
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| bad | bad | GET | /gateway/api/route | 接口 success=true |
+| bad | bad | GET | /role/all | 接口 success=true |
 
 ## TC-TRUST-04 id token only invalid
 
@@ -32,7 +32,7 @@
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| id only fake | id only fake | GET | /gateway/api/route | 接口 success=true |
+| id only fake | id only fake | GET | /role/all | 接口 success=true |
 
 ## TC-TRUST-05 user token current user
 
@@ -48,5 +48,5 @@
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| routes id-token | routes id-token | GET | /gateway/api/route | isTrue:success |
+| routes id-token | routes id-token | GET | /role/all | isTrue:success |
 

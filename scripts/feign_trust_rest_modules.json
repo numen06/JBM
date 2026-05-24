@@ -68,7 +68,7 @@
             {
               "name": "routes",
               "method": "GET",
-              "path": "/gateway/api/route",
+              "path": "/role/all",
               "auth": "client_only",
               "internal_headers": true,
               "expect": "success",
@@ -85,7 +85,7 @@
             {
               "name": "no auth",
               "method": "GET",
-              "path": "/gateway/api/route",
+              "path": "/role/all",
               "auth": "none",
               "expect": "fail"
             }
@@ -98,7 +98,7 @@
             {
               "name": "bad",
               "method": "GET",
-              "path": "/gateway/api/route",
+              "path": "/role/all",
               "auth": "client_invalid",
               "internal_headers": true,
               "expect": "fail"
@@ -112,7 +112,7 @@
             {
               "name": "id only fake",
               "method": "GET",
-              "path": "/gateway/api/route",
+              "path": "/role/all",
               "auth": "id_token_only",
               "expect": "fail"
             }
@@ -142,7 +142,7 @@
             {
               "name": "routes id-token",
               "method": "GET",
-              "path": "/gateway/api/route",
+              "path": "/role/all",
               "auth": "id_token_valid",
               "internal_headers": true,
               "expect": "success",

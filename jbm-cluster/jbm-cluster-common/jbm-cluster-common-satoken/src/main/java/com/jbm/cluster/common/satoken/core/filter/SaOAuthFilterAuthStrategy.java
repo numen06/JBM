@@ -77,15 +77,10 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         }
 
         String idToken = httpServletRequest.getHeader(SaIdUtil.ID_TOKEN);
-        if (StrUtil.isNotBlank(idToken)) {
-            try {
-                SaIdUtil.checkToken(idToken);
-                recordInternalCaller(httpServletRequest);
-                log.debug("[认证] 通过: Id-Token 内部互信");
-                return;
-            } catch (Exception e) {
-                log.debug("[认证] Id-Token 无效: {}", e.getMessage());
-            }
+        if (StrUtil.isNotBlank(idToken) && SaIdUtil.isValid(idToken)) {
+            recordInternalCaller(httpServletRequest);
+            log.debug("[认证] 通过: Id-Token 内部互信");
+            return;
         }
         throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
     }
@@ -239,6 +234,13 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     }
 
     private static HttpServletRequest getCurrentRequest() {
+        try {
+            Object source = cn.dev33.satoken.context.SaHolder.getRequest().getSource();
+            if (source instanceof HttpServletRequest) {
+                return (HttpServletRequest) source;
+            }
+        } catch (Exception ignored) {
+        }
         try {
             return (HttpServletRequest)
                     org.springframework.web.context.request.RequestContextHolder

@@ -235,7 +235,7 @@ def fetch_internal_id_token(cfg, override=""):
     path = cfg.get("id_token_path") or cfg.get("client_token_path", "/internal/trust/id-token")
     headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
     bases = []
-    for b in (cfg.get("auth_base_url"), cfg.get("center_base_url"), cfg.get("base_url")):
+    for b in (cfg.get("auth_base_url"), cfg.get("center_base_url")):
         if b and b.rstrip("/") not in bases:
             bases.append(b.rstrip("/"))
     last_err = ""
@@ -259,7 +259,7 @@ def fetch_internal_id_token(cfg, override=""):
 def fetch_id_token_header(cfg):
     path = cfg.get("id_token_path") or cfg.get("client_token_path", "/internal/trust/id-token")
     headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
-    for base in (cfg.get("auth_base_url"), cfg.get("center_base_url"), cfg.get("base_url")):
+    for base in (cfg.get("auth_base_url"), cfg.get("center_base_url")):
         if not base:
             continue
         url = base.rstrip("/") + path

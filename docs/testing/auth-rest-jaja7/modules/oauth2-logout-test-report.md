@@ -1,11 +1,11 @@
 # logout - 业务测试报告
 
-- 时间: 2026-05-24 22:02:27
+- 时间: 2026-05-25 00:11:22
 - 服务可用: 是
 - 结果: **PASS**
 - 步骤通过: 2/2
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-AUTH-06 | logout | DELETE | 200 | PASS | 0.239 | - |  |
-| TC-AUTH-06 | userinfo after logout | GET | 500 | PASS | 0.032 | - | HTTP Error 500:  |
+| TC-AUTH-06 | logout | DELETE | 200 | PASS | 0.227 | - |  |
+| TC-AUTH-06 | userinfo after logout | GET | 500 | PASS | 0.033 | - | HTTP Error 500:  |
