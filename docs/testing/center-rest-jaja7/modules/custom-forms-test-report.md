@@ -1,11 +1,11 @@
 # 自定义表单 - 业务测试报告
 
-- 时间: 2026-05-24 21:05:27
+- 时间: 2026-05-24 21:19:53
 - 服务可用: 是
-- 结果: **FAIL**
-- 步骤通过: 0/2（跳过 1）
+- 结果: **PASS**
+- 步骤通过: 2/2
 
 | 场景 | 步骤 | 方法 | HTTP | 结果 | 耗时(s) | 业务断言 | 备注 |
 |------|------|------|------|------|---------|----------|------|
-| TC-CF-01 | 保存表单 | POST | 404 | FAIL | 0.005 | notNull:result.id | 无效的访问地址 |
-| TC-CF-01 | 查询详情 | POST | 0 | SKIP | 0.000 |  | 缺少上下文 {customFormId} |
+| TC-CF-01 | 保存表单 | POST | 200 | PASS | 0.260 | notNull:result.id |  |
+| TC-CF-01 | 查询详情 | POST | 200 | PASS | 0.232 | eq:result.name:{formDisplayName}; eq:result.formOrTable:form |  |

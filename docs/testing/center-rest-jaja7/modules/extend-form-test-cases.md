@@ -10,5 +10,5 @@
 |------|------|------|------|----------|
 | 保存并发布 | 保存并发布 | POST | /extend-field/forms/cen_form_{ts} | eq:result.formCode:{formCode}; sizeGte:result.fields:1; eq:result.fields.0.fieldName:note |
 | Redis 字段定义 | Redis 字段定义 | GET | /extend-field/forms/{formCode}/definitions | sizeGte:result:1; eq:result.0.fieldName:note |
-| 库表定义 | 库表定义 | GET | /extend-field/forms/{formCode} | eq:result.formCode:{formCode}; eq:result.formName:CEN表单 |
+| 库表定义 | 库表定义 | GET | /extend-field/forms/{formCode} | eq:result.formCode:{formCode}; eq:result.formName:CEN_FORM |
 

@@ -94,7 +94,7 @@
               "method": "POST",
               "path": "/role",
               "bodyType": "json",
-              "body": "{\"roleCode\":\"cen_role_{ts}\",\"roleName\":\"REST角色\",\"status\":1,\"roleDesc\":\"biz-test\"}",
+              "body": "{\"roleCode\":\"cen_role_{ts}\",\"roleName\":\"REST_ROLE\",\"status\":1,\"roleDesc\":\"biz-test\"}",
               "expect": "success",
               "extract": { "roleId": "result", "roleCode": "literal.cen_role_{ts}" },
               "assert": ["notNull:result"]
@@ -106,7 +106,7 @@
               "expect": "success",
               "assert": [
                 "eq:result.roleCode:{roleCode}",
-                "eq:result.roleName:REST角色"
+                "eq:result.roleName:REST_ROLE"
               ]
             },
             {
@@ -114,7 +114,7 @@
               "method": "PUT",
               "path": "/role/{roleId}",
               "bodyType": "json",
-              "body": "{\"roleId\":{roleId},\"roleCode\":\"{roleCode}\",\"roleName\":\"REST角色-已改\",\"status\":1}",
+              "body": "{\"roleId\":{roleId},\"roleCode\":\"{roleCode}\",\"roleName\":\"REST_ROLE_UPDATED\",\"status\":1}",
               "expect": "success"
             },
             {
@@ -122,7 +122,7 @@
               "method": "GET",
               "path": "/role/{roleId}",
               "expect": "success",
-              "assert": ["eq:result.roleName:REST角色-已改"]
+              "assert": ["eq:result.roleName:REST_ROLE_UPDATED"]
             },
             {
               "name": "删除角色",
@@ -281,7 +281,7 @@
               "method": "POST",
               "path": "/extend-field/forms/cen_form_{ts}",
               "bodyType": "json",
-              "body": "{\"formName\":\"CEN表单\",\"fields\":[{\"fieldName\":\"note\",\"fieldLabel\":\"备注\",\"fieldType\":\"string\"}],\"autoPublish\":true}",
+              "body": "{\"formName\":\"CEN_FORM\",\"fields\":[{\"fieldName\":\"note\",\"fieldLabel\":\"note\",\"fieldType\":\"string\"}],\"autoPublish\":true}",
               "expect": "success",
               "extract": { "formCode": "literal.cen_form_{ts}" },
               "assert": [
@@ -307,7 +307,7 @@
               "expect": "success",
               "assert": [
                 "eq:result.formCode:{formCode}",
-                "eq:result.formName:CEN表单"
+                "eq:result.formName:CEN_FORM"
               ]
             }
           ]
@@ -328,9 +328,9 @@
               "method": "POST",
               "path": "/customForms/saveData",
               "bodyType": "json",
-              "body": "{\"name\":\"REST自定义表单\",\"formOrTable\":\"form\"}",
+              "body": "{\"name\":\"REST_CUSTOM_FORM\",\"formOrTable\":\"form\"}",
               "expect": "success",
-              "extract": { "customFormId": "result.id", "formDisplayName": "literal.REST自定义表单" },
+              "extract": { "customFormId": "result.id", "formDisplayName": "literal.REST_CUSTOM_FORM" },
               "assert": ["notNull:result.id"]
             },
             {

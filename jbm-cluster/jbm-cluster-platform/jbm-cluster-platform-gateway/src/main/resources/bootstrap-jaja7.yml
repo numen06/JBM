@@ -7,7 +7,7 @@ spring:
         - id: jaja7-center-local
           uri: http://127.0.0.1:8888
           predicates:
-            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**
+            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**,/customForms/**,/customFormsItem/**
           metadata:
             serviceId: jbm-cluster-platform-center
         - id: jaja7-auth-local

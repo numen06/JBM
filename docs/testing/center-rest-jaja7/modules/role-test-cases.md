@@ -9,9 +9,9 @@
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
 | 创建角色 | 创建角色 | POST | /role | notNull:result |
-| 查询详情校验编码 | 查询详情校验编码 | GET | /role/{roleId} | eq:result.roleCode:{roleCode}; eq:result.roleName:REST角色 |
+| 查询详情校验编码 | 查询详情校验编码 | GET | /role/{roleId} | eq:result.roleCode:{roleCode}; eq:result.roleName:REST_ROLE |
 | 修改角色名称 | 修改角色名称 | PUT | /role/{roleId} | 接口 success=true |
-| 再次查询校验修改 | 再次查询校验修改 | GET | /role/{roleId} | eq:result.roleName:REST角色-已改 |
+| 再次查询校验修改 | 再次查询校验修改 | GET | /role/{roleId} | eq:result.roleName:REST_ROLE_UPDATED |
 | 删除角色 | 删除角色 | DELETE | /role/{roleId} | 接口 success=true |
 | 删除后详情应为空 | 删除后详情应为空 | GET | /role/{roleId} | isNull:result |
 

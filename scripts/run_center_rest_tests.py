@@ -269,7 +269,7 @@ def run_step(step, cfg, ctx, scenario_id):
     headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
     token = ctx.get("token") or os.environ.get("CENTER_TOKEN", "")
     if token:
-        headers["Authorization"] = token if token.startswith("Bearer ") else token
+        headers["Authorization"] = token if token.startswith("Bearer ") else f"Bearer {token}"
     body_s = expand(body, ctx) if body else ""
     path_fc = None
     if "/extend-field/forms/" in url and method == "POST":
