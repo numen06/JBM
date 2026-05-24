@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SUITE_DOCS_SLUG = "feign-trust"
 CONFIG = ROOT / "scripts/feign_trust_rest_modules.json"
 CENTER_MODULE = "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center"
+ID_TOKEN_HEADER = "SA_ID_TOKEN"
 
 _NO_PROXY_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
@@ -255,6 +256,22 @@ def fetch_internal_id_token(cfg, override=""):
     return ""
 
 
+def fetch_id_token_header(cfg):
+    path = cfg.get("id_token_path") or cfg.get("client_token_path", "/internal/trust/id-token")
+    headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
+    for base in (cfg.get("auth_base_url"), cfg.get("center_base_url"), cfg.get("base_url")):
+        if not base:
+            continue
+        url = base.rstrip("/") + path
+        status, raw, _, _ = http_request("POST", url, headers)
+        jb = parse_result_body(raw)
+        if status in (200, 201) and jb and jb.get("success"):
+            result = jb.get("result") or {}
+            if isinstance(result, dict) and result.get("id_token_header"):
+                return str(result["id_token_header"])
+    return ID_TOKEN_HEADER
+
+
 def fetch_client_token(cfg, override=""):
     """兼容旧名：互信测试改为 Id-Token。"""
     return fetch_internal_id_token(cfg, override)
@@ -297,11 +314,12 @@ def trust_simulation_headers(cfg):
 def build_feign_headers(step, cfg, ctx):
     headers = {cfg.get("tenant_header", "tenantId"): cfg.get("tenant_id", "0")}
     headers.update(trust_simulation_headers(cfg))
+    id_header = ctx.get("id_token_header") or ID_TOKEN_HEADER
     auth = step.get("auth", "none")
     if auth == "client_only":
         id_token = ctx.get("id_token") or ctx.get("client_token") or ""
         if id_token:
-            headers["Satoken-Id-Token"] = id_token
+            headers[id_header] = id_token
         if step.get("internal_headers"):
             headers["X-Internal-Service"] = cfg.get("internal_service", "jbm-cluster-platform-center-jbm7")
             headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
@@ -311,11 +329,11 @@ def build_feign_headers(step, cfg, ctx):
             headers["X-Internal-Service"] = cfg.get("internal_service", "jbm-cluster-platform-center-jbm7")
             headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
     elif auth == "id_token_only":
-        headers["Satoken-Id-Token"] = "feign-trust-test-id-token-only"
+        headers[id_header] = "feign-trust-test-id-token-only"
     elif auth == "id_token_valid":
         id_token = ctx.get("id_token") or ctx.get("client_token") or ""
         if id_token:
-            headers["Satoken-Id-Token"] = id_token
+            headers[id_header] = id_token
         if step.get("internal_headers"):
             headers["X-Internal-Service"] = cfg.get("internal_service", "jbm-cluster-platform-center-jbm7")
             headers["X-Internal-Instance"] = cfg.get("internal_instance", "center:test")
@@ -412,12 +430,17 @@ def run_step(step, cfg, ctx, scenario_id):
     if status == 0:
         msg = err or "connection failed"
     elif expect == "optional":
-        ok = True
         if jb and jb.get("success") is True:
-            aok, amsg = check_assertions(asserts, ctx, jb)
-            if not aok:
-                ok, msg = False, amsg
+            ok = True
+            if asserts:
+                aok, amsg = check_assertions(asserts, ctx, jb)
+                if not aok:
+                    ok, msg = False, amsg
+        elif asserts:
+            ok = False
+            msg = (jb or {}).get("message") or "可选场景断言未满足"
         else:
+            ok = True
             msg = (jb or {}).get("message") or "可选场景未满足（如无 Token/无组织数据）"
     elif expect == "fail":
         if jb and jb.get("success") is False:
@@ -547,6 +570,7 @@ def main():
         ctx["token"] = args.token
     ctx["id_token"] = fetch_internal_id_token(cfg, args.client_token)
     ctx["client_token"] = ctx["id_token"]
+    ctx["id_token_header"] = fetch_id_token_header(cfg)
 
     th, tid = cfg.get("tenant_header", "tenantId"), cfg.get("tenant_id", "0")
     service_ok = wait_health(cfg["base_url"], cfg["health_path"], th, tid, timeout=args.wait)

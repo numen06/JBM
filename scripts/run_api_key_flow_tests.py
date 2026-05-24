@@ -465,7 +465,7 @@ def run_flow(suffix: str):
         if not path.startswith("/"):
             path = "/" + path
         target = f"{GW}{path}"
-        st, raw, _ = signed_get(target, api_key, priv)
+        st, raw, _ = signed_get(target, api_key, priv, token=token)
         if st not in (200,):
             raise StepError(f"signed API call failed HTTP {st}: {raw[:300]}")
         body = jb(raw)

@@ -71,7 +71,7 @@
               "path": "/gateway/api/route",
               "auth": "client_only",
               "internal_headers": true,
-              "expect": "optional",
+              "expect": "success",
               "assert": [
                 "isTrue:success"
               ]
@@ -145,7 +145,7 @@
               "path": "/gateway/api/route",
               "auth": "id_token_valid",
               "internal_headers": true,
-              "expect": "optional",
+              "expect": "success",
               "assert": [
                 "isTrue:success"
               ]

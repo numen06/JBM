@@ -1,7 +1,9 @@
 package com.jbm.cluster.platform.gateway.filter;
 
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.core.security.ApiSecurityUtils;
 import com.jbm.cluster.platform.gateway.config.properties.ApiSecurityProperties;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
@@ -51,6 +53,11 @@ public class ApiSignatureFilter implements GlobalFilter, Ordered {
             String authorization = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             if (StrUtil.isNotBlank(authorization) && StrUtil.startWithIgnoreCase(authorization.trim(), "Bearer ")) {
                 // 管理端/开发者门户：password 登录后的 Bearer 会话，不要求网关签名
+                return chain.filter(exchange);
+            }
+            String idToken = header(request, SaIdUtil.ID_TOKEN);
+            String internalService = header(request, JbmSecurityConstants.INTERNAL_SERVICE);
+            if (StrUtil.isNotBlank(idToken) && StrUtil.isNotBlank(internalService)) {
                 return chain.filter(exchange);
             }
             return Mono.error(new OpenSignatureException("缺少签名参数"));

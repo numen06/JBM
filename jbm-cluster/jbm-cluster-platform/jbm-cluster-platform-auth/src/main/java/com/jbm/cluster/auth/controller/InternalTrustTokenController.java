@@ -1,7 +1,9 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.dev33.satoken.id.SaIdUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.jbm.cluster.common.security.annotation.PermitAll;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,13 +19,22 @@ import java.util.Map;
 @RequestMapping("/internal/trust")
 public class InternalTrustTokenController {
 
+    @PermitAll
     @ApiOperation("issue Id-Token for feign trust test")
     @PostMapping("/id-token")
     public ResultBody<?> issueIdToken() {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("service", SpringUtil.getApplicationName());
-        data.put("id_token", SaIdUtil.getToken());
+        data.put("id_token", idToken());
         data.put("id_token_header", SaIdUtil.ID_TOKEN);
         return ResultBody.ok(data);
+    }
+
+    private static String idToken() {
+        String token = SaIdUtil.getToken();
+        if (StrUtil.isBlank(token)) {
+            token = SaIdUtil.refreshToken();
+        }
+        return token;
     }
 }

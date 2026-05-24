@@ -155,3 +155,35 @@ export async function resetJaja7Seed(): Promise<Record<string, unknown>> {
   const res = await post<Record<string, unknown>>('/internal/dev/reset-jaja7-seed')
   return unwrap(res)
 }
+
+export interface RegisterParams {
+  userName: string
+  password: string
+  confirmPassword?: string
+  nickName?: string
+  email?: string
+  mobile?: string
+  vcode: string
+  clientId?: string
+  clientSecret?: string
+}
+
+export async function register(params: RegisterParams): Promise<void> {
+  const clientId = params.clientId ?? DEFAULT_CLIENT_ID
+  const password = await encryptPasswordForClient(params.password, clientId)
+  const body = new URLSearchParams({
+    userName: params.userName.trim(),
+    password,
+    vcode: params.vcode.trim(),
+    client_id: clientId,
+    client_secret: params.clientSecret ?? DEFAULT_CLIENT_SECRET,
+  })
+  if (params.nickName?.trim()) body.set('nickName', params.nickName.trim())
+  if (params.email?.trim()) body.set('email', params.email.trim())
+  if (params.mobile?.trim()) body.set('mobile', params.mobile.trim())
+  const headers: Record<string, string> = {
+    [PASSWORD_ENCRYPTED_HEADER]: 'true',
+  }
+  const res = await postForm<void>('/oauth2/register', body, { headers })
+  unwrap(res)
+}

@@ -6,21 +6,38 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      name: 'landing',
+      component: () => import('@/views/landing/LandingPage.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/login/LoginPage.vue'),
-      meta: { public: true },
+      meta: { public: true, authRedirect: true },
     },
     {
       path: '/login/callback',
       name: 'login-callback',
       component: () => import('@/views/login/LoginOAuthCallback.vue'),
+      meta: { public: true, authRedirect: true },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('@/views/register/RegisterPage.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/docs',
+      name: 'docs',
+      component: () => import('@/views/docs/ApiWikiPage.vue'),
       meta: { public: true },
     },
     {
       path: '/',
       component: () => import('@/layouts/AdminLayout.vue'),
-      redirect: '/dashboard',
       children: [
         {
           path: 'dashboard',
@@ -126,7 +143,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (to.meta.public) {
-    if (auth.isLoggedIn && (to.name === 'login' || to.name === 'login-callback')) {
+    if (auth.isLoggedIn && to.meta.authRedirect) {
       return { name: 'dashboard' }
     }
     return true

@@ -70,19 +70,24 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
         }
 
-        try {
-            SaIdUtil.checkCurrentRequestToken();
+        if (isGatewayApiKeyCaller(httpServletRequest)) {
             recordInternalCaller(httpServletRequest);
-            log.debug("[认证] 通过: Id-Token 内部互信");
-        } catch (Exception e) {
-            log.debug("[认证] 失败: {}", e.getMessage());
-            if (isInternalCaller(httpServletRequest)) {
-                recordInternalCaller(httpServletRequest);
-                log.debug("[auth] internal service header accepted");
-                return;
-            }
-            throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
+            log.debug("[认证] 通过: Gateway API Key 已授权");
+            return;
         }
+
+        String idToken = httpServletRequest.getHeader(SaIdUtil.ID_TOKEN);
+        if (StrUtil.isNotBlank(idToken)) {
+            try {
+                SaIdUtil.checkToken(idToken);
+                recordInternalCaller(httpServletRequest);
+                log.debug("[认证] 通过: Id-Token 内部互信");
+                return;
+            } catch (Exception e) {
+                log.debug("[认证] Id-Token 无效: {}", e.getMessage());
+            }
+        }
+        throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
     }
 
     /**
@@ -254,7 +259,9 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                     request.getHeader(JbmSecurityConstants.INTERNAL_INSTANCE));
         }
     }
-    private static boolean isInternalCaller(HttpServletRequest request) {
-        return request != null && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
+    private static boolean isGatewayApiKeyCaller(HttpServletRequest request) {
+        return request != null
+                && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.GATEWAY_API_KEY_ID))
+                && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { RefreshCw } from '@lucide/vue'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
@@ -32,6 +32,7 @@ import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import CardContent from '@/components/ui/CardContent.vue'
 import Dialog from '@/components/ui/Dialog.vue'
+import AuthBrandPanel from '@/components/landing/AuthBrandPanel.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -40,6 +41,12 @@ const isDev = import.meta.env.DEV
 
 const activeTab = ref<LoginTabId>('PASSWORD')
 const activeMeta = computed(() => LOGIN_TABS.find((t) => t.id === activeTab.value)!)
+const moreLoginTabs = computed(() => LOGIN_TABS.filter((t) => t.id !== 'PASSWORD'))
+
+function selectLoginTab(tab: LoginTabId) {
+  activeTab.value = tab
+  showMoreModes.value = true
+}
 
 const username = ref(JBM_DEFAULT_USERNAME)
 const password = ref(JBM_DEFAULT_PASSWORD)
@@ -55,7 +62,8 @@ const faceImage = ref('')
 
 const clientId = ref(JBM_DEFAULT_CLIENT_ID)
 const clientSecret = ref(JBM_DEFAULT_CLIENT_SECRET)
-/** jaja7 本地默认展开 OAuth 客户端，便于核对与种子应用一致 */
+const showMoreModes = ref(false)
+/** 生产环境默认收起 OAuth 客户端配置 */
 const showAdvanced = ref(isDev)
 
 const loading = ref(false)
@@ -480,6 +488,10 @@ function applyJaja7LoginDefaults() {
 }
 
 onMounted(() => {
+  const qUser = route.query.username
+  if (typeof qUser === 'string' && qUser.trim()) {
+    username.value = qUser.trim()
+  }
   applyJaja7LoginDefaults()
   loadCaptcha()
 })
@@ -491,15 +503,28 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-    <Card class="w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>JBM 管理后台</CardTitle>
-        <p class="text-sm text-muted-foreground">{{ activeMeta.description }}</p>
-      </CardHeader>
-      <CardContent>
+  <motionless />
+  <div class="flex min-h-screen flex-col lg:flex-row">
+    <div class="hidden min-h-screen lg:block lg:w-[42%] xl:w-[45%]">
+      <AuthBrandPanel title="欢迎回来" subtitle="登录 JBM 开源平台" />
+    </div>
+
+    <div class="flex flex-1 flex-col justify-center bg-background px-4 py-8 sm:px-8 lg:px-12">
+      <div class="mx-auto w-full max-w-md">
+        <div class="mb-6 lg:hidden">
+          <RouterLink to="/" class="text-sm text-muted-foreground hover:text-primary">返回首页</RouterLink>
+          <h1 class="mt-3 text-2xl font-bold">登录</h1>
+        </div>
+
+        <div class="hidden lg:block">
+          <h2 class="text-2xl font-bold tracking-tight">登录账号</h2>
+          <p class="mt-2 text-sm text-muted-foreground">{{ activeMeta.description }}</p>
+        </div>
+
+        <motionless />
         <div
-          class="mb-4 flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1"
+          v-if="showMoreModes"
+          class="mb-4 mt-6 flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1"
           role="tablist"
           aria-label="登录方式"
         >
@@ -521,9 +546,13 @@ onUnmounted(() => {
           </button>
         </div>
 
+        <div v-else class="mt-6">
+          <p class="text-sm text-muted-foreground">使用用户名和密码登录</p>
+        </div>
+
         <form
           v-if="activeTab !== 'SCAN' && activeTab !== 'THIRD_PARTY' && activeTab !== 'AUTH_CODE'"
-          class="space-y-4"
+          class="mt-4 space-y-4"
           @submit.prevent="onSubmit($event)"
         >
           <template v-if="activeTab === 'PASSWORD'">
@@ -679,9 +708,30 @@ onUnmounted(() => {
           >
             {{ seedResetLoading ? '恢复中…' : '恢复 JBM 种子应用凭证（需 Auth 已重启加载新代码）' }}
           </Button>
+
+          <details v-if="!showMoreModes" class="rounded-md border px-3 py-2 text-sm">
+            <summary class="cursor-pointer font-medium text-muted-foreground">更多登录方式</summary>
+            <motionless />
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="tab in moreLoginTabs"
+                :key="tab.id"
+                type="button"
+                class="rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
+                @click="selectLoginTab(tab.id)"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+          </details>
+
+          <p class="text-center text-sm text-muted-foreground">
+            没有账号？
+            <RouterLink to="/register" class="font-medium text-primary hover:underline">立即注册</RouterLink>
+          </p>
         </form>
 
-        <div v-else-if="activeTab === 'AUTH_CODE'" class="space-y-4">
+        <div v-else-if="activeTab === 'AUTH_CODE'" class="mt-4 space-y-4">
           <p class="text-sm text-muted-foreground">
             标准 OAuth2 授权码流程：跳转授权页登录并确认 → 回调携带
             <code class="rounded bg-muted px-1 text-xs">code</code>

@@ -57,6 +57,9 @@ public class JbmSecurityConstants {
     /** 内部调用：调用方实例 service:port */
     public static final String INTERNAL_INSTANCE = "X-Internal-Instance";
 
+    /** Gateway 已验签授权的 API Key ID */
+    public static final String GATEWAY_API_KEY_ID = "X-Gateway-Api-Key-Id";
+
     /** SecurityContextHolder 中记录的调用方服务名 */
     public static final String FROM_SERVICE = "fromService";
 
