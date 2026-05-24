@@ -31,11 +31,16 @@ public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> imple
         if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser())) {
             throw new ServiceException("用户没有登录");
         }
+        Long companyId = LoginHelper.getCompanyId();
+        if (ObjectUtil.isNotEmpty(companyId)) {
+            baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;
+            baseOrg.setGroupId(companyId.toString());
+            return super.selectEntitys(baseOrg);
+        }
         BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             throw new ServiceException("未查询到对应部门");
         }
-        // 获取当前公司的顶层公司
         BaseOrg parentOrg = this.findTopCompany(currentOrg);
         // 避免查询条件为空的情况
         baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;
@@ -50,11 +55,16 @@ public class BaseOrgServiceImpl extends MasterDataTreeServiceImpl<BaseOrg> imple
         if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
             return super.selectEntitys(baseOrg, pageForm);
         }
+        Long companyId = LoginHelper.getCompanyId();
+        if (ObjectUtil.isNotEmpty(companyId)) {
+            baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;
+            baseOrg.setGroupId(companyId.toString());
+            return super.selectEntitys(baseOrg, pageForm);
+        }
         BaseOrg currentOrg = this.selectById(LoginHelper.getDeptId());
         if (ObjectUtil.isEmpty(currentOrg)) {
             return null;
         }
-        // 获取当前公司的顶层公司
         BaseOrg parentOrg = this.findTopCompany(currentOrg);
         // 避免查询条件为空的情况
         baseOrg = ObjectUtil.isEmpty(baseOrg) ? new BaseOrg() : baseOrg;

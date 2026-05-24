@@ -114,4 +114,10 @@ public class BaseApp extends MasterDataEntity {
     @Column(columnDefinition = "TEXT")
     private String privateKey;
 
+    /**
+     * 应用所属组织（元数据）；数据可见性以登录用户的 companyId 为准
+     */
+    @ApiModelProperty(value = "组织ID")
+    private Long orgId;
+
 }

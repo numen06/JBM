@@ -144,6 +144,11 @@ public class JbmLoginUser implements Serializable {
     private Long companyId;
 
     /**
+     * 当前登录应用所属组织（元数据上下文，不用于数据过滤）
+     */
+    private Long appOrgId;
+
+    /**
      * 第三方token
      */
     private String thirdToken;
@@ -152,6 +157,15 @@ public class JbmLoginUser implements Serializable {
      * 是否需要修改密码（首次登录或密码已重置为默认值）
      */
     private Boolean mustChangePassword;
+
+    /** 数据范围组织 ID，与 companyId 一致 */
+    public Long getOrgId() {
+        return companyId;
+    }
+
+    public void setOrgId(Long orgId) {
+        this.companyId = orgId;
+    }
 
     /**
      * 获取登录id

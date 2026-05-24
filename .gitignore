@@ -46,3 +46,4 @@ h2/
 /business-log
 *.log
 /scripts/__pycache__
+/jbm-admin-vue/.npm-cache

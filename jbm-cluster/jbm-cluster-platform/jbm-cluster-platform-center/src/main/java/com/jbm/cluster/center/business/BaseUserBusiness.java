@@ -3,6 +3,7 @@ package com.jbm.cluster.center.business;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseUserOrg;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
@@ -54,4 +55,8 @@ public interface BaseUserBusiness {
     List<BaseRole> getUserRoles(Long userId);
 
     List<Long> getUserRoleIds(Long userId);
+
+    List<BaseUserOrg> getUserOrgs(Long userId);
+
+    List<Long> getUserOrgIds(Long userId);
 }

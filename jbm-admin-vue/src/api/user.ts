@@ -1,5 +1,5 @@
 import { get, post, put, unwrap } from './request'
-import type { BaseAccount, BaseRole, BaseUser, DataPaging, UserInfoStatistics } from './types'
+import type { BaseAccount, BaseRole, BaseUser, BaseUserOrg, DataPaging, UserInfoStatistics } from './types'
 
 export function pageParams(page = 1, size = 20) {
   return { 'pageForm.currPage': page, 'pageForm.pageSize': size }
@@ -28,7 +28,7 @@ export async function getUser(userId: number) {
 }
 
 /** POST /user — Body 为 BaseUserForm，须含 password */
-export async function createUser(data: Partial<BaseUser>) {
+export async function createUser(data: Partial<BaseUser> & { orgIds?: string[] }) {
   const res = await post<void>('/user', {
     ...data,
     userType: data.userType ?? 'normal',
@@ -40,9 +40,14 @@ export async function createUser(data: Partial<BaseUser>) {
 /**
  * PUT /user/{id} — 保存用户并可带 roleIds（与角色授权一并提交）
  */
+export async function getUserOrgs(userId: number) {
+  const res = await get<BaseUserOrg[]>(`/user/${userId}/orgs`)
+  return unwrap(res) ?? []
+}
+
 export async function updateUser(
   userId: number,
-  data: Partial<BaseUser> & { roleIds?: string[] },
+  data: Partial<BaseUser> & { roleIds?: string[]; orgIds?: string[] },
 ) {
   const res = await put<BaseUser>(`/user/${userId}`, data)
   return unwrap(res)

@@ -38,6 +38,8 @@ export interface BaseUser {
   createTime?: string
   password?: string
   userType?: string
+  companyId?: number
+  departmentId?: number
 }
 
 export interface BaseRole {
@@ -84,10 +86,20 @@ export interface BaseOrg {
   id?: number
   orgId?: number
   orgName?: string
+  orgCode?: string
+  orgType?: string
+  managerId?: number
   parentId?: number
   sort?: number
   status?: number
   children?: BaseOrg[]
+}
+
+export interface BaseUserOrg {
+  id?: number
+  userId?: number
+  orgId?: number
+  expireTime?: string
 }
 
 export interface BaseApp {
@@ -95,6 +107,7 @@ export interface BaseApp {
   appName?: string
   appCode?: string
   clientId?: string
+  orgId?: number
   status?: number
 }
 

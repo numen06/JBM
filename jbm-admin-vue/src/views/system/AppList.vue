@@ -5,15 +5,22 @@ import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import CrudDialog from '@/components/CrudDialog.vue'
 import FormField from '@/components/FormField.vue'
+import OrgTreeSelect from '@/components/OrgTreeSelect.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
+import { onMounted } from 'vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { useOrgTree } from '@/composables/useOrgTree'
 import { listApps, deleteApp, createApp, updateApp } from '@/api/app'
 import type { BaseApp } from '@/api/types'
+
+const { orgLabel, loadOrgs } = useOrgTree()
+
+onMounted(loadOrgs)
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(listApps)
 
@@ -30,6 +37,7 @@ const {
   appName: '',
   appCode: '',
   clientId: '',
+  orgId: undefined,
   status: 1,
 }))
 
@@ -38,13 +46,18 @@ async function handleSave() {
     formError.value = '应用名称和编码不能为空'
     return
   }
+  if (!form.value.orgId) {
+    formError.value = '请选择所属组织'
+    return
+  }
   saving.value = true
   formError.value = ''
+  const payload = { ...form.value, orgId: Number(form.value.orgId) }
   try {
     if (editing.value && form.value.appId) {
-      await updateApp(form.value.appId, form.value)
+      await updateApp(form.value.appId, payload)
     } else {
-      await createApp(form.value)
+      await createApp(payload)
     }
     closeDialog()
     load(page.value)
@@ -80,6 +93,7 @@ async function handleDelete(row: BaseApp) {
             <th class="h-10 px-4 text-left font-medium">名称</th>
             <th class="h-10 px-4 text-left font-medium">编码</th>
             <th class="h-10 px-4 text-left font-medium">Client ID</th>
+            <th class="h-10 px-4 text-left font-medium">所属组织</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-right font-medium">操作</th>
           </tr>
@@ -90,6 +104,7 @@ async function handleDelete(row: BaseApp) {
             <td class="p-4">{{ row.appName }}</td>
             <td class="p-4">{{ row.appCode }}</td>
             <td class="p-4 font-mono text-xs">{{ row.clientId }}</td>
+            <td class="p-4">{{ orgLabel(row.orgId) }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
                 {{ row.status === 1 ? '启用' : '停用' }}
@@ -119,6 +134,9 @@ async function handleDelete(row: BaseApp) {
       </FormField>
       <FormField label="应用编码" required>
         <Input v-model="form.appCode" />
+      </FormField>
+      <FormField label="所属组织" required>
+        <OrgTreeSelect v-model="form.orgId" placeholder="请选择组织" required />
       </FormField>
       <FormField label="Client ID">
         <Input v-model="form.clientId" class="font-mono text-sm" />

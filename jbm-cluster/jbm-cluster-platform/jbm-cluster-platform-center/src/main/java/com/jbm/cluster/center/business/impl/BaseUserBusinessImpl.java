@@ -26,9 +26,12 @@ import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.framework.masterdata.business.BaseBusiness;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.api.entitys.basic.BaseUserOrg;
 import com.jbm.cluster.common.mysql.service.BaseOrgService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
+import com.jbm.cluster.common.mysql.service.BaseUserOrgService;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
+import com.jbm.cluster.common.mysql.service.OrgDataScopeHelper;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
@@ -62,6 +65,10 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
     private BaseRoleService roleService;
     @Autowired
     private BaseOrgService orgService;
+    @Autowired
+    private BaseUserOrgService baseUserOrgService;
+    @Autowired
+    private OrgDataScopeHelper orgDataScopeHelper;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
     @Autowired
@@ -136,15 +143,9 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         if (canQueryAllUsers()) {
             return baseUserService.selectEntitys(baseUserForm);
         }
-        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
-        if (ObjectUtil.isEmpty(currentOrg)) {
-            // 用户不存在部门的情况下，仅查询自己的数据
-            baseUserForm.setUserId(LoginHelper.getUserId());
+        if (orgDataScopeHelper.applyUserQueryScope(baseUserForm)) {
             return baseUserService.selectEntitys(baseUserForm);
         }
-        // 仅查询用户所属组织的数据
-        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
-        baseUserForm.setCompanyId(parentOrg.getId());
         return baseUserService.selectUserRows(baseUserForm);
     }
 
@@ -153,15 +154,9 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         if (canQueryAllUsers()) {
             return baseUserService.selectEntitys(baseUserForm, pageForm);
         }
-        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
-        if (ObjectUtil.isEmpty(currentOrg)) {
-            // 用户不存在部门的情况下，仅查询自己的数据
-            baseUserForm.setUserId(LoginHelper.getUserId());
+        if (orgDataScopeHelper.applyUserQueryScope(baseUserForm)) {
             return baseUserService.selectEntitys(baseUserForm, pageForm);
         }
-        // 仅查询用户所属组织的数据
-        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
-        baseUserForm.setCompanyId(parentOrg.getId());
         return baseUserService.selectUserRows(baseUserForm, pageForm);
     }
 
@@ -172,6 +167,9 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         baseUser.setStatus(JbmConstants.ACCOUNT_STATUS_NORMAL);
         // 注册用户为普通管理员
         baseUser.setUserType(JbmConstants.USER_TYPE_NORMAL);
+        if (ObjectUtil.isEmpty(baseUser.getCompanyId())) {
+            baseUser.setCompanyId(1L);
+        }
         // 保存系统用户信息
         baseUserService.insertEntity(baseUser);
         // 默认注册用户名账户
@@ -536,20 +534,8 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
                         .or().like(BaseUser::getRealName, keyword)
                         .or().like(BaseUser::getMobile, keyword))
                 .last("limit 10");
-        if (!cn.dev33.satoken.stp.StpUtil.isLogin()) {
-            return baseUserService.selectEntitys(queryWrapper);
-        }
-        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
-        if (ObjectUtil.isEmpty(currentOrg)) {
-            Long uid = LoginHelper.getUserId();
-            if (uid != null) {
-                queryWrapper.lambda().eq(BaseUser::getUserId, uid);
-            }
-            return baseUserService.selectEntitys(queryWrapper);
-        }
-        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
-        if (parentOrg != null && parentOrg.getId() != null) {
-            queryWrapper.lambda().eq(BaseUser::getCompanyId, parentOrg.getId());
+        if (cn.dev33.satoken.stp.StpUtil.isLogin()) {
+            orgDataScopeHelper.applyToUserQuery(queryWrapper);
         }
         return baseUserService.selectEntitys(queryWrapper);
     }
@@ -635,6 +621,16 @@ public class BaseUserBusinessImpl extends BaseBusiness implements BaseUserBusine
         // 仅返回当前用户拥有的角色
         Set<Long> currentUserRoleIds = LoginHelper.getLoginUser().getRoleIds();
         return roleIds.stream().filter(role -> currentUserRoleIds.contains(role)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BaseUserOrg> getUserOrgs(Long userId) {
+        return baseUserOrgService.findUserOrgs(userId);
+    }
+
+    @Override
+    public List<Long> getUserOrgIds(Long userId) {
+        return baseUserOrgService.getActiveOrgIds(userId);
     }
 
 }

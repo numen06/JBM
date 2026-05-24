@@ -19,23 +19,49 @@
         <result column="status" property="status" jdbcType="TINYINT"/>
     </resultMap>
 
+    <sql id="userListWhere">
+        <where>
+            <if test="form.userId != null">
+                AND base_user.user_id = #{form.userId}
+            </if>
+            <choose>
+                <when test="form.companyIds != null and form.companyIds.size() &gt; 0">
+                    AND base_user.company_id IN
+                    <foreach collection="form.companyIds" item="cid" open="(" separator="," close=")">
+                        #{cid}
+                    </foreach>
+                </when>
+                <when test="form.companyId != null">
+                    AND base_user.company_id = #{form.companyId}
+                </when>
+            </choose>
+            <if test="form.departmentIds != null and form.departmentIds.size() &gt; 0">
+                AND base_user.department_id IN
+                <foreach collection="form.departmentIds" item="did" open="(" separator="," close=")">
+                    #{did}
+                </foreach>
+            </if>
+            <if test="form.departmentId != null and form.departmentId != '' and (form.departmentIds == null or form.departmentIds.size() == 0)">
+                AND base_user.department_id LIKE concat(#{form.departmentId}, '%')
+            </if>
+            <if test="form.userName != null and form.userName != ''">
+                AND base_user.user_name LIKE concat(#{form.userName}, '%')
+            </if>
+            <if test="form.realName != null and form.realName != ''">
+                AND base_user.real_name = #{form.realName}
+            </if>
+            <if test="form.mobile != null and form.mobile != ''">
+                AND base_user.mobile LIKE concat(#{form.mobile}, '%')
+            </if>
+            <if test="form.status != null">AND base_user.status = #{form.status}</if>
+            <if test="form.beginTime != null">AND base_user.create_time &gt;= #{form.beginTime}</if>
+            <if test="form.endTime != null">AND base_user.create_time &lt;= #{form.endTime}</if>
+        </where>
+    </sql>
+
     <select id="selectData" resultType="com.jbm.cluster.api.entitys.basic.BaseUser">
-        SELECT * FROM base_user WHERE base_user.company_id = #{form.companyId}
-        <if test="form.departmentId != null and form.departmentId != ''">
-            AND base_user.department_id LIKE concat(#{form.departmentId}, '%')
-        </if>
-        <if test="form.userName != null and form.userName != ''">
-            AND base_user.user_name LIKE concat(#{form.userName}, '%')
-        </if>
-        <if test="form.realName != null and form.realName != ''">
-            AND base_user.real_name = #{form.realName}
-        </if>
-        <if test="form.mobile != null and form.mobile != ''">
-            AND base_user.mobile LIKE concat(#{form.mobile}, '%')
-        </if>
-        <if test="form.status != null">AND base_user.status = #{form.status}</if>
-        <if test="form.beginTime != null">AND base_user.create_time &gt;= #{form.beginTime}</if>
-        <if test="form.endTime != null">AND base_user.create_time &lt;= #{form.endTime}</if>
+        SELECT * FROM base_user
+        <include refid="userListWhere"/>
     </select>
 
 </mapper>

@@ -250,6 +250,21 @@ public class LoginHelper {
         return getLoginUser().getDeptId();
     }
 
+    /**
+     * 获取用户所属公司/组织 ID（数据过滤范围）
+     */
+    public static Long getCompanyId() {
+        JbmLoginUser loginUser = softGetLoginUser();
+        return loginUser != null ? loginUser.getCompanyId() : null;
+    }
+
+    /**
+     * 获取数据范围组织 ID，与 {@link #getCompanyId()} 一致
+     */
+    public static Long getOrgId() {
+        return getCompanyId();
+    }
+
 //    /**
 //     * 获取用户类型
 //     */

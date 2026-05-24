@@ -19,3 +19,7 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V11__api_key_tables.sql
   - include:
       file: classpath:db/cluster-rbac/changes/V12__api_key_extend_data.yaml
+  - include:
+      file: classpath:db/cluster-rbac/changes/V13__org_and_app_org.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V14__org_legacy_column_patch.sql

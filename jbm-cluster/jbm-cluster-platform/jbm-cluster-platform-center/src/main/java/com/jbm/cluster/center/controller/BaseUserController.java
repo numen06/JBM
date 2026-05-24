@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseUserOrg;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.form.user.UserInfoStatistics;
@@ -15,6 +16,7 @@ import com.jbm.cluster.center.business.BaseUserBusiness;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
 import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
+import com.jbm.cluster.common.mysql.service.BaseUserOrgService;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -49,6 +51,8 @@ public class BaseUserController extends BaseController {
     private BaseRoleService baseRoleService;
     @Autowired
     private BaseAccountService baseAccountService;
+    @Autowired
+    private BaseUserOrgService baseUserOrgService;
 
     @ApiOperation(value = "用户列表")
     @GetMapping
@@ -128,11 +132,20 @@ public class BaseUserController extends BaseController {
         return ResultBody.callback(() -> baseUserBusiness.getUserRoles(userId));
     }
 
+    @ApiOperation(value = "用户跨组织数据授权")
+    @GetMapping("/{userId}/orgs")
+    public ResultBody<List<BaseUserOrg>> getUserOrgs(@PathVariable Long userId) {
+        return ResultBody.callback(() -> baseUserBusiness.getUserOrgs(userId));
+    }
+
     @ApiOperation(value = "创建用户")
     @OperatorLog
     @PostMapping
     public ResultBody<Void> createUser(@RequestBody BaseUserForm form) {
         baseUserBusiness.addUser(form);
+        if (form.getUserId() != null && form.getOrgIds() != null) {
+            baseUserOrgService.saveUserOrgs(form.getUserId(), form.getOrgIds());
+        }
         return ResultBody.ok();
     }
 
@@ -146,6 +159,9 @@ public class BaseUserController extends BaseController {
             if (ObjectUtil.isNotEmpty(form.getRoleIds())) {
                 baseRoleService.saveUserRoles(entity.getUserId(), form.getRoleIds());
             }
+            if (form.getOrgIds() != null) {
+                baseUserOrgService.saveUserOrgs(entity.getUserId(), form.getOrgIds());
+            }
             return entity;
         });
     }
@@ -155,6 +171,9 @@ public class BaseUserController extends BaseController {
     public ResultBody<Void> patchUser(@PathVariable Long userId, @RequestBody BaseUserForm form) {
         form.setUserId(userId);
         baseUserBusiness.updateUser(form);
+        if (form.getOrgIds() != null) {
+            baseUserOrgService.saveUserOrgs(userId, form.getOrgIds());
+        }
         return ResultBody.ok();
     }
 
@@ -251,6 +270,13 @@ public class BaseUserController extends BaseController {
     @PutMapping("/{userId}/roles")
     public ResultBody<Void> putUserRoles(@PathVariable Long userId, @RequestBody BaseUserForm form) {
         baseRoleService.saveUserRoles(userId, form.getRoleIds());
+        return ResultBody.ok();
+    }
+
+    @ApiOperation(value = "分配跨组织数据授权")
+    @PutMapping("/{userId}/orgs")
+    public ResultBody<Void> putUserOrgs(@PathVariable Long userId, @RequestBody BaseUserForm form) {
+        baseUserOrgService.saveUserOrgs(userId, form.getOrgIds());
         return ResultBody.ok();
     }
 

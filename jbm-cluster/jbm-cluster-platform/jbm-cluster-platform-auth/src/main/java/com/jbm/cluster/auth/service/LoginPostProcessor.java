@@ -20,6 +20,7 @@ public class LoginPostProcessor {
         }
         BaseApp baseApp = baseAppPreprocessing.getAppByKey(clientId);
         loginUser.setAppId(baseApp.getAppId());
+        loginUser.setAppOrgId(baseApp.getOrgId());
         loginUser.setClientId(clientId);
         if (StrUtil.isBlank(loginUser.getDevice())) {
             loginUser.setDevice(RequestDeviceType.PC.getDevice());

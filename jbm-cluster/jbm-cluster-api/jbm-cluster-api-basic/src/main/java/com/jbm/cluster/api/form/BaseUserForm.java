@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @program: JBM7
@@ -20,6 +21,12 @@ import java.util.Date;
 public class BaseUserForm extends BaseUser {
     @ApiModelProperty("权限ID数组")
     private String[] roleIds;
+    @ApiModelProperty("跨组织数据授权组织ID数组")
+    private String[] orgIds;
+    @ApiModelProperty(value = "查询范围-多组织", hidden = true)
+    private List<Long> companyIds;
+    @ApiModelProperty(value = "查询范围-部门及下级", hidden = true)
+    private List<Long> departmentIds;
     @ApiModelProperty("旧密码")
     private String originPassword;
     @ApiModelProperty("新密码")

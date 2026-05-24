@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import CrudDialog from '@/components/CrudDialog.vue'
 import FormField from '@/components/FormField.vue'
+import OrgTreeSelect from '@/components/OrgTreeSelect.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
@@ -13,18 +14,30 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
-import { listUsers, closeUser, createUser, updateUser, getUserRoles, getUserAccounts } from '@/api/user'
+import { orgRowId, useOrgTree } from '@/composables/useOrgTree'
+import {
+  listUsers,
+  closeUser,
+  createUser,
+  updateUser,
+  getUserRoles,
+  getUserAccounts,
+  getUserOrgs,
+} from '@/api/user'
 import { listAllRoles } from '@/api/role'
 import { usePermission } from '@/composables/usePermission'
 import type { BaseAccount, BaseRole, BaseUser } from '@/api/types'
 
 const { hasAction } = usePermission()
+const { flatOrgs, orgLabel, loadOrgs } = useOrgTree()
 
 const allRoles = ref<BaseRole[]>([])
 const selectedRoleIds = ref<string[]>([])
+const selectedExtraOrgIds = ref<string[]>([])
 const userAccounts = ref<BaseAccount[]>([])
 
 onMounted(async () => {
+  await loadOrgs()
   try {
     allRoles.value = await listAllRoles()
   } catch {
@@ -53,7 +66,18 @@ const {
   email: '',
   status: 1,
   password: '',
+  companyId: undefined,
+  departmentId: undefined,
 }))
+
+const extraOrgOptions = computed(() =>
+  flatOrgs.value.filter((o) => {
+    const id = orgRowId(o)
+    if (id == null) return false
+    const primary = form.value.companyId ? Number(form.value.companyId) : null
+    return primary == null || id !== primary
+  }),
+)
 
 function search() {
   load(1)
@@ -62,25 +86,32 @@ function search() {
 async function openEditUser(row: BaseUser) {
   openEdit(row)
   selectedRoleIds.value = []
+  selectedExtraOrgIds.value = []
   userAccounts.value = []
   if (!row.userId) return
   try {
-    const [roles, accounts] = await Promise.all([
+    const [roles, accounts, userOrgs] = await Promise.all([
       getUserRoles(row.userId),
       getUserAccounts(row.userId),
+      getUserOrgs(row.userId),
     ])
     selectedRoleIds.value = roles
       .map((r) => (r.roleId != null ? String(r.roleId) : ''))
       .filter(Boolean)
     userAccounts.value = accounts
+    selectedExtraOrgIds.value = userOrgs
+      .map((u) => (u.orgId != null ? String(u.orgId) : ''))
+      .filter(Boolean)
   } catch {
     selectedRoleIds.value = []
     userAccounts.value = []
+    selectedExtraOrgIds.value = []
   }
 }
 
 function openCreateUser() {
   selectedRoleIds.value = []
+  selectedExtraOrgIds.value = []
   userAccounts.value = []
   openCreate()
 }
@@ -99,6 +130,14 @@ function toggleRole(roleId?: number) {
   else selectedRoleIds.value.push(id)
 }
 
+function toggleExtraOrg(orgId?: number) {
+  if (orgId == null) return
+  const id = String(orgId)
+  const idx = selectedExtraOrgIds.value.indexOf(id)
+  if (idx >= 0) selectedExtraOrgIds.value.splice(idx, 1)
+  else selectedExtraOrgIds.value.push(id)
+}
+
 async function handleSave() {
   if (!form.value.userName?.trim()) {
     formError.value = '用户名不能为空'
@@ -110,6 +149,9 @@ async function handleSave() {
   }
   saving.value = true
   formError.value = ''
+  const companyId = form.value.companyId ? Number(form.value.companyId) : undefined
+  const departmentId = form.value.departmentId ? Number(form.value.departmentId) : undefined
+  const orgIds = selectedExtraOrgIds.value
   try {
     if (editing.value && form.value.userId) {
       await updateUser(form.value.userId, {
@@ -117,11 +159,14 @@ async function handleSave() {
         mobile: form.value.mobile,
         email: form.value.email,
         status: form.value.status,
+        companyId,
+        departmentId,
+        orgIds,
         ...(form.value.password ? { password: form.value.password } : {}),
         roleIds: selectedRoleIds.value,
       })
     } else {
-      await createUser(form.value)
+      await createUser({ ...form.value, companyId, departmentId, orgIds })
     }
     closeDialog()
     load(page.value)
@@ -163,6 +208,7 @@ async function handleClose(row: BaseUser) {
             <th class="h-10 px-4 text-left font-medium">昵称</th>
             <th class="h-10 px-4 text-left font-medium">手机</th>
             <th class="h-10 px-4 text-left font-medium">邮箱</th>
+            <th class="h-10 px-4 text-left font-medium">所属组织</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-right font-medium">操作</th>
           </tr>
@@ -174,6 +220,7 @@ async function handleClose(row: BaseUser) {
             <td class="p-4">{{ row.nickName }}</td>
             <td class="p-4">{{ row.mobile }}</td>
             <td class="p-4">{{ row.email }}</td>
+            <td class="p-4">{{ orgLabel(row.companyId) }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
                 {{ row.status === 1 ? '正常' : row.status === 0 ? '禁用' : '其他' }}
@@ -221,6 +268,34 @@ async function handleClose(row: BaseUser) {
       </FormField>
       <FormField label="邮箱">
         <Input v-model="form.email" type="email" />
+      </FormField>
+      <FormField label="所属组织">
+        <OrgTreeSelect v-model="form.companyId" placeholder="— 未选择 —" />
+      </FormField>
+      <FormField label="部门（可选）">
+        <OrgTreeSelect v-model="form.departmentId" placeholder="— 未选择 —" />
+      </FormField>
+      <FormField
+        v-if="extraOrgOptions.length"
+        label="跨组织数据授权（可选）"
+      >
+        <p class="mb-2 text-xs text-muted-foreground">
+          除主组织外，可授权访问其他组织的用户数据（不含主组织本身）。
+        </p>
+        <div class="flex max-h-36 flex-wrap gap-2 overflow-y-auto rounded border p-2">
+          <label
+            v-for="o in extraOrgOptions"
+            :key="`extra-${orgRowId(o)}`"
+            class="flex cursor-pointer items-center gap-1.5 rounded border px-2 py-1 text-sm"
+          >
+            <input
+              type="checkbox"
+              :checked="selectedExtraOrgIds.includes(String(orgRowId(o)))"
+              @change="toggleExtraOrg(orgRowId(o))"
+            />
+            {{ o.orgName }}
+          </label>
+        </div>
       </FormField>
       <FormField :label="editing ? '新密码（留空不改）' : '密码'" :required="!editing">
         <Input v-model="form.password" type="password" autocomplete="new-password" />
