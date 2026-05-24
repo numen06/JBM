@@ -292,3 +292,128 @@ Cursor 执行完成后，请在本计划下追加：
 ## 10. Cursor 执行结果
 ```
 
+## 10. Cursor 执行结果
+
+> 执行时间：2026-05-24 20:22–20:28（Asia/Shanghai）  
+> 执行环境：WSL2 调用 `powershell.exe -NoProfile -Command`，工作目录 `D:\workspaces\JBM7`  
+> 约束：未修改业务代码；仅追加本节。
+
+### 10.1 执行前检查
+
+| 命令 | 结果 | 摘要 |
+|------|------|------|
+| `git status --short` | **通过（范围与计划不一致）** | 组织/多租户相关源码**已无未提交改动**（可能已提交）；仅有 `docs/testing/auth-rest-jaja7/**` 测试报告被脚本更新。 |
+| `netstat -ano \| findstr ":5555 :7777 :8888 :5173"` | **部分占用** | `5555` Auth（PID 32540，IDE 调试）；`5173` 前端 dev；`7777`/`8888` **未监听**。 |
+| `python --version` / `py -3 --version` | **通过** | Python 3.12.10 可用。 |
+
+### 10.2 构建验证
+
+#### 4.1 前端构建
+
+| 命令 | 结果 | 摘要 |
+|------|------|------|
+| `cd jbm-admin-vue; npm.cmd ci --cache .\.npm-cache` | **失败** | `package-lock.json` 与 `package.json` 不同步，缺少 `@emnapi/core@1.10.0`、`@emnapi/runtime@1.10.0`。 |
+| `cd jbm-admin-vue; npm.cmd run build`（已有 `node_modules`） | **通过** | `vue-tsc -b` 无报错；`vite build` 约 574–667ms 完成。 |
+| 产物检查 | **通过** | `OrgTreeSelect-eX52GTo-.js`、`UserList-DiT2IRDj.js`、`AppList-91lK808q.js` 均已生成。 |
+
+#### 4.2 后端编译
+
+| 命令 | 结果 | 摘要 |
+|------|------|------|
+| `mvn -Pjaja7 -pl ...auth,...center,...gateway -am -DskipTests package` | **通过** | 13.8s，`BUILD SUCCESS`；auth/center/gateway 三模块均 SUCCESS。 |
+
+### 10.3 后端启动与健康检查
+
+| 服务 | 端口 | 启动方式 | 结果 | 摘要 |
+|------|------|----------|------|------|
+| Auth | 5555 | 环境已有（IDE Java 调试，PID 32540） | **UP** | `curl.exe http://127.0.0.1:5555/actuator/health` → `{"status":"UP"}` |
+| Center | 8888 | `java -jar .../jbm-cluster-platform-center.jar`（jaja7） | **失败** | 启动约 9s 后退出。根因：`Cannot load driver class: com.mysql.cj.jdbc.Driver`。日志：`D:\workspaces\JBM7\.cursor\logs\center-out.log` |
+| Gateway | 7777 | `java -jar .../jbm-cluster-platform-gateway.jar`（jaja7） | **失败** | 根因：`CenterFeignClients` 含 **Unresolved compilation problems**（`BaseApi`/`BaseApiServiceClient` 无法解析）。日志：`D:\workspaces\JBM7\.cursor\logs\gateway-out.log` |
+| Gateway | 7777 | 健康探测 | **失败** | 无响应（连接拒绝） |
+| Center | 8888 | 健康探测 | **失败** | 无响应 |
+
+**说明**：计划推荐的 `.vscode/launch.json` 复合项 `jaja7: Auth + Center + Gateway` 未在本轮通过 Cursor 终端完整拉起；Center/Gateway JAR 直启失败。后续 API/页面联调需由 IDE 复合调试或修复 JAR 启动问题后再测。
+
+### 10.4 后端 API 实测
+
+#### 6.1 登录链路
+
+| 命令 | HTTP | 结果 | 响应摘要 |
+|------|------|------|----------|
+| `curl.exe -X POST http://127.0.0.1:5555/oauth2/token ...`（直连 Auth） | 200 | **通过** | 返回 `access_token`（长度 225）、`refresh_token`、`expires_in=86396` |
+| `curl.exe -X POST http://127.0.0.1:7777/oauth2/token ...`（经 Gateway） | 0 | **失败** | 连接拒绝，Gateway 未运行 |
+| `GET http://127.0.0.1:5555/current/user`（Bearer token） | 500 | **失败（预期）** | `No handler found for GET /current/user` — 该接口在 Center，非 Auth |
+| `POST http://127.0.0.1:5555/baseOrg/tree` | 500 | **失败（预期）** | `No handler found for POST /baseOrg/tree` — 同上 |
+
+#### 6.2–6.5 组织/应用/用户/数据范围
+
+| 用例 | 结果 | 原因 |
+|------|------|------|
+| 组织树、默认组织 | **未测** | Center + Gateway 未 UP |
+| 应用 orgId、跨组织授权、数据范围 | **未测** | 同上 |
+| `python scripts\run_org_plan_smoke.py` | **失败** | `[FATAL] login failed HTTP 0`（Gateway 7777 不可达） |
+| `python scripts\run_auth_rest_tests.py --profile jaja7 --wait 10 --base-url http://127.0.0.1:5555` | **部分通过** | 汇总见 `docs/testing/auth-rest-jaja7/summary-test-report.md`：oauth2-smoke 2/2、logout 2/2 **PASS**；test-user 0/2、oauth2-core 1/5、satoken-align 1/4、oauth2-lock 0/11 **FAIL**（含 Center 不可达、Token 诊断失败等） |
+
+### 10.5 前端页面实测
+
+| 命令/检查 | 结果 | 摘要 |
+|-----------|------|------|
+| `npm.cmd run dev -- --host 127.0.0.1 --port 5173` | **通过** | Vite 8.0.14 ready；`http://127.0.0.1:5173` HTTP 200 |
+| 登录页 `/login` | **可达** | HTTP 200 |
+| `useOrgTree.ts` 经 dev server 加载 | **通过** | 源码 UTF-8，无 BOM；`orgOptionLabel` 使用全角空格 `　` + `└` 缩进，非乱码 |
+| 7.1–7.3 用户/应用管理 UI 交互 | **未测（阻塞）** | `vite.config.ts` 将所有 API 代理至 `http://127.0.0.1:7777`；Gateway 未运行，登录后业务 API 无法联通，无法完成列表/表单 E2E |
+
+### 10.6 静态代码审查（未改代码）
+
+| 审查点 | 结论 |
+|--------|------|
+| `useOrgTree.ts` 编码/乱码 | **无问题**：UTF-8；`orgLabel` 空值返回 `'—'` |
+| `useOrgTree()` 重复请求 | **存在**：`OrgTreeSelect`、`UserList`、`AppList` 各自 `useOrgTree()` + `loadOrgs()`，非共享状态，会重复拉组织树 |
+| `createUser` + `orgIds` 回填 | **静态推断通过**：`addUser` → `insertEntity` → MyBatis-Plus `save()` 应回填 `userId` 到同一 `form`；**需 Center 运行后实测确认** |
+| `BaseUserOrgServiceImpl#saveUserOrgs` | **风险**：`Long.parseLong` 无 try/catch；无 org 存在性校验；admin/root 有明确拒绝 |
+| `OrgDataScopeHelper#applyUserQueryScope` | **与设计一致但需产品确认**：多组织时设 `companyIds` 且**不再**应用主部门子树（单组织才 `applyDepartmentSubtree`）— 跨组织授权可能扩大主组织可见范围至全公司 |
+| `BaseUserMapper.xml` | **风险仍在**：兼容分支 `department_id LIKE concat(#{form.departmentId}, '%')` 存在数字前缀误匹配；新 `departmentIds IN (...)` 分支更准确 |
+| Liquibase V13 索引 changeset | **风险**：三个 `CREATE INDEX` 共用一个 `idx_base_org_parent_id` precondition |
+| Liquibase V14 | **仅 MySQL**；H2 环境依赖 V13 的 `IF NOT EXISTS` 分支，V14 无 H2 补丁 |
+| `scripts/run_org_plan_smoke.py` | **语法正常**（非计划所述乱码损坏）；第 46 行注释缩进略不一致，不影响运行 |
+
+### 10.7 需修复项（按严重程度）
+
+#### P0 — 阻塞联调/实测
+
+1. **启动 Center + Gateway**：使用 IDE 复合项 `jaja7: Auth + Center + Gateway`，或修复 JAR 启动问题后再跑 §6/§7。
+2. **Center JAR 缺 MySQL 驱动**：`jbm-cluster-platform-center` 的 fat JAR 运行时无法加载 `com.mysql.cj.jdbc.Driver`；需在 center 模块 POM 增加 `mysql-connector-java`（runtime）或调整 repackage 依赖，**非业务代码但阻塞命令行启动**。
+3. **Gateway JAR 含未编译通过类**：`CenterFeignClients.class` 带 Eclipse 增量编译错误；需对 gateway 模块执行完整 Maven 编译后重新打包，或清理 IDE 错误 class 再启动。
+
+#### P1 — 构建/体验
+
+4. **同步 `package-lock.json`**：修复 `@emnapi/*` 缺失，使 `npm.cmd ci` 可复现安装。
+5. **`useOrgTree` 单例化或父级注入**：避免 UserList/AppList/OrgTreeSelect 重复请求 `/baseOrg/tree`。
+6. **产品确认 `OrgDataScopeHelper` 多组织数据范围语义**：有跨组织授权时主组织是否应保留部门子树限制。
+
+#### P2 — 健壮性/迁移
+
+7. **`saveUserOrgs` 非法 orgId**：捕获 `NumberFormatException` 返回 400；可选校验 org 是否存在。
+8. **`BaseUserMapper.xml`**：弃用或修正 `departmentId LIKE` 前缀匹配逻辑。
+9. **Liquibase V13**：为每个索引单独 precondition，或拆 changeset。
+10. **Liquibase V14**：评估 H2 测试环境是否需要等价 dbms:h2 补丁。
+
+### 10.8 日志与报告位置
+
+| 类型 | 路径 |
+|------|------|
+| Center 启动日志 | `D:\workspaces\JBM7\.cursor\logs\center-out.log` |
+| Gateway 启动日志 | `D:\workspaces\JBM7\.cursor\logs\gateway-out.log` |
+| 前端 dev 日志 | `D:\workspaces\JBM7\.cursor\logs\frontend-dev.log` |
+| Auth REST 汇总 | `docs/testing/auth-rest-jaja7/summary-test-report.md` |
+| 临时 Auth 探测脚本 | `.cursor/logs/tmp_auth_probe.py`（辅助用，非业务代码） |
+
+### 10.9 进程状态（执行结束时）
+
+| 进程 | 状态 |
+|------|------|
+| Auth :5555（PID 32540） | **保持运行**（执行前已存在，未停止） |
+| Center :8888 / Gateway :7777 | **未运行** |
+| 前端 dev :5173 | **运行中**（Vite ready） |
+
+**下一步建议（需人工/IDE）**：在 Cursor 中用 **Run and Debug → `jaja7: Auth + Center + Gateway`** 启动三服务后，重跑 `python scripts\run_org_plan_smoke.py` 与 §7 页面实测；Center/Gateway UP 后再验证 `createUser`+`orgIds`、数据范围等用例。
