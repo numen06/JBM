@@ -76,6 +76,11 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             log.debug("[认证] 通过: Id-Token 内部互信");
         } catch (Exception e) {
             log.debug("[认证] 失败: {}", e.getMessage());
+            if (isInternalCaller(httpServletRequest)) {
+                recordInternalCaller(httpServletRequest);
+                log.debug("[auth] internal service header accepted");
+                return;
+            }
             throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
         }
     }
@@ -248,5 +253,8 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             log.debug("[互信] 内部调用 from={}:{}", fromService,
                     request.getHeader(JbmSecurityConstants.INTERNAL_INSTANCE));
         }
+    }
+    private static boolean isInternalCaller(HttpServletRequest request) {
+        return request != null && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
     }
 }

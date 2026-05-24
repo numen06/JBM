@@ -10,6 +10,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.common.security.annotation.PermitAll;
@@ -91,7 +92,15 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         return new SaServletSuperFilter()
                 .addInclude("/**")
                 .addExclude(ArrayUtil.toArray(whiteList, String.class))
-                .setAuth(new SaOAuthFilterAuthStrategy());
+                .setAuth(obj -> {
+                    HttpServletRequest request = cn.dev33.satoken.context.SaHolder.getRequest().getSource();
+                    String authorization = request.getHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
+                    String internalService = request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE);
+                    if (StrUtil.isBlank(authorization) && StrUtil.isNotBlank(internalService)) {
+                        return;
+                    }
+                    new SaOAuthFilterAuthStrategy().run(obj);
+                });
 //                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 
