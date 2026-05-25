@@ -25,11 +25,17 @@ import {
   API_MONITOR_PLACEHOLDER,
   type DashboardMetric as ApiMetric,
   type DashboardNotice,
+  type AggregatedDashboardIdentity,
 } from '@/api/dashboard'
 
 const auth = useAuthStore()
 const menuStore = useMenuStore()
 const permission = usePermission()
+
+const metricsLoading = ref(false)
+const loadedMetricsByKey = ref<Map<string, ApiMetric>>(new Map())
+const dashboardNotices = ref<DashboardNotice[]>([])
+const dashboardIdentity = ref<AggregatedDashboardIdentity | null>(null)
 
 const permCtx = computed<PermissionContext>(() => ({
   isSuperAdmin: permission.isSuperAdmin.value,
@@ -58,6 +64,21 @@ const visibleMenuCount = computed(() =>
     .length,
 )
 
+const displayNickName = computed(
+  () => dashboardIdentity.value?.nickName ?? auth.user?.nickName,
+)
+
+const displayVisibleMenuCount = computed(
+  () => dashboardIdentity.value?.visibleMenuCount ?? visibleMenuCount.value,
+)
+
+const scopeLabel = computed(() => {
+  const scope = dashboardIdentity.value?.scope
+  if (scope === 'platform') return '平台汇总'
+  if (scope === 'app') return '当前应用'
+  return null
+})
+
 const menuStatusBadge = computed(() => {
   if (!menuStore.loaded) return { variant: 'secondary' as const, text: '加载中' }
   if (menuStore.loadError) return { variant: 'destructive' as const, text: '加载失败' }
@@ -72,10 +93,6 @@ const visibleSections = computed(() =>
 )
 
 const showApiMonitorMetric = computed(() => menuStore.isRouteAllowed('/api/monitor'))
-
-const metricsLoading = ref(false)
-const loadedMetricsByKey = ref<Map<string, ApiMetric>>(new Map())
-const dashboardNotices = ref<DashboardNotice[]>([])
 
 /** API 返回 key 与配置 key 的别名 */
 const METRIC_KEY_ALIASES: Record<string, string[]> = {
@@ -159,6 +176,7 @@ async function fetchOverview() {
   if (selfServiceMode.value) {
     loadedMetricsByKey.value = new Map()
     dashboardNotices.value = []
+    dashboardIdentity.value = null
     metricsLoading.value = false
     return
   }
@@ -172,6 +190,7 @@ async function fetchOverview() {
     }
     loadedMetricsByKey.value = map
     dashboardNotices.value = overview.notices
+    dashboardIdentity.value = overview.identity ?? null
   } catch {
     loadedMetricsByKey.value = new Map()
     dashboardNotices.value = [
@@ -230,8 +249,8 @@ const metricCards = computed(() => {
           <p>
             <span class="text-muted-foreground">账号：</span>
             <span class="font-medium">{{ auth.user?.userName ?? '—' }}</span>
-            <span v-if="auth.user?.nickName" class="text-muted-foreground">
-              （{{ auth.user.nickName }}）
+            <span v-if="displayNickName" class="text-muted-foreground">
+              （{{ displayNickName }}）
             </span>
           </p>
           <p>
@@ -246,9 +265,10 @@ const metricCards = computed(() => {
         <div class="flex flex-wrap items-center gap-3 text-sm">
           <span class="text-muted-foreground">
             可见菜单
-            <span class="font-semibold text-foreground">{{ visibleMenuCount }}</span>
+            <span class="font-semibold text-foreground">{{ displayVisibleMenuCount }}</span>
             项
           </span>
+          <Badge v-if="scopeLabel" variant="outline">{{ scopeLabel }}</Badge>
           <Badge :variant="menuStatusBadge.variant">{{ menuStatusBadge.text }}</Badge>
         </div>
       </CardContent>
