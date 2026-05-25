@@ -24,6 +24,8 @@ JBM jaja7 集群日常运维脚本（减少反复手启 Java / 手测 Gateway）
   python scripts/jbm_cluster_ops.py workflow --password Admin@123
   python scripts/jbm_cluster_ops.py test-apikey
   python scripts/jbm_cluster_ops.py start auth center gateway --background --clean
+  python scripts/jbm_cluster_ops.py start center --prepare install --background --clean
+  python scripts/jbm_cluster_ops.py restart --prepare install
   python scripts/jbm_cluster_ops.py stop auth center gateway
 """
 from __future__ import annotations
@@ -54,6 +56,7 @@ CLUSTER_JAVA_MARKERS = (
     "spring-boot.run.profiles=jaja7",
 )
 MVN_MARKERS = ("spring-boot:run", "jbm-cluster-platform-")
+PREPARE_CHOICES = ("compile", "install", "none")
 
 # 将 scripts 目录加入 path
 if str(SCRIPTS) not in sys.path:
@@ -118,14 +121,23 @@ def _maven_executable(preference: str = "auto") -> str:
     return "mvnd" if shutil.which("mvnd") else "mvn"
 
 
-def _maven_service_command(cfg: dict, *, install: bool = False, maven: str = "auto") -> str:
+def _resolve_prepare_mode(args) -> str:
+    """Resolve Maven prepare mode. --install is kept as a backwards-compatible alias."""
+    if getattr(args, "install", False):
+        return "install"
+    prepare = getattr(args, "prepare", "compile")
+    return prepare if prepare in PREPARE_CHOICES else "compile"
+
+
+def _maven_service_command(cfg: dict, *, prepare: str = "compile", maven: str = "auto") -> str:
     mvn = _maven_executable(maven)
     module_path = cfg["module_path"]
     common = [mvn, "-pl", module_path, "-DskipTests=true"]
-    if install:
-        prepare = common + ["-am", "install"]
-    else:
-        prepare = common + ["-am", "compile"]
+    prepare_cmd = None
+    if prepare == "install":
+        prepare_cmd = common + ["-am", "install"]
+    elif prepare == "compile":
+        prepare_cmd = common + ["-am", "compile"]
     run = common + [
         "-Dspring.profiles.active=jaja7",
         "-Dprofile.name=jaja7",
@@ -135,7 +147,9 @@ def _maven_service_command(cfg: dict, *, install: bool = False, maven: str = "au
         "-Dexec.cleanupDaemonThreads=false",
         "-Dexec.args=--spring.profiles.active=jaja7 --profile.name=jaja7",
     ]
-    return f"{_shell_join(prepare)} && {_shell_join(run)}"
+    if prepare_cmd:
+        return f"{_shell_join(prepare_cmd)} && {_shell_join(run)}"
+    return _shell_join(run)
 
 
 def _pids_on_port(port: int) -> list[int]:
@@ -529,6 +543,7 @@ def cmd_start(args):
         _stop_services(names, kill_java=False)
         time.sleep(1.0)
     procs = []
+    prepare_mode = _resolve_prepare_mode(args)
     for i, name in enumerate(names):
         cfg = SERVICES.get(name)
         if not cfg:
@@ -547,11 +562,11 @@ def cmd_start(args):
         if "main_class" in cfg:
             cmd = _maven_service_command(
                 cfg,
-                install=getattr(args, "install", False),
+                prepare=prepare_mode,
                 maven=getattr(args, "maven", "auto"),
             )
             print(f"  maven: {_maven_executable(getattr(args, 'maven', 'auto'))}")
-            print(f"  prepare: {'install' if getattr(args, 'install', False) else 'compile'}")
+            print(f"  prepare: {prepare_mode}")
         else:
             cmd = cfg["mvn_cmd"]
         with open(log, "a", encoding="utf-8") as lf:
@@ -589,12 +604,14 @@ def cmd_restart(args):
     names = ["auth", "center", "gateway"]
     cmd_cleanup(argparse.Namespace(services=names, force=True))
     time.sleep(1.5)
+    prepare_mode = _resolve_prepare_mode(args)
     cmd_start(
         argparse.Namespace(
             services=names,
             background=True,
             clean=False,
-            install=getattr(args, "install", False),
+            install=False,
+            prepare=prepare_mode,
             maven=getattr(args, "maven", "auto"),
         )
     )
@@ -632,7 +649,13 @@ def main():
     p_start.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
     p_start.add_argument("--background", action="store_true", default=True)
     p_start.add_argument("--clean", action="store_true", help="启动前清理同端口占用")
-    p_start.add_argument("--install", action="store_true", help="启动前执行 install；跨模块改了公共包时使用")
+    p_start.add_argument(
+        "--prepare",
+        choices=PREPARE_CHOICES,
+        default="compile",
+        help="启动前准备动作：compile=编译依赖模块；install=安装跨模块公共包；none=直接运行",
+    )
+    p_start.add_argument("--install", action="store_true", help="兼容快捷参数，等同于 --prepare install")
     p_start.add_argument("--maven", choices=["auto", "mvnd", "mvn"], default="auto",
                          help="Maven 命令选择；auto 会优先使用 mvnd，找不到再回退 mvn")
 
@@ -660,7 +683,13 @@ def main():
     )
     p_re = sub.add_parser("restart", help="cleanup → start auth+center+gateway → wait", parents=[parent])
     p_re.add_argument("--timeout", type=int, default=120)
-    p_re.add_argument("--install", action="store_true", help="启动前执行 install；跨模块改了公共包时使用")
+    p_re.add_argument(
+        "--prepare",
+        choices=PREPARE_CHOICES,
+        default="compile",
+        help="重启前准备动作：compile=编译依赖模块；install=安装跨模块公共包；none=直接运行",
+    )
+    p_re.add_argument("--install", action="store_true", help="兼容快捷参数，等同于 --prepare install")
     p_re.add_argument("--maven", choices=["auto", "mvnd", "mvn"], default="auto",
                       help="Maven 命令选择；auto 会优先使用 mvnd，找不到再回退 mvn")
 

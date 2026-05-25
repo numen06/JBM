@@ -66,4 +66,16 @@ public class JbmCacheConstants {
      */
     public static final long USER_AUTHORITY_EXPIRE_SECONDS = 86400L;
 
+    /** 仪表盘平台级计数缓存命名空间（配合 CustomizedRedisCacheManager 的 #秒 后缀） */
+    public static final String DASHBOARD_PLATFORM_COUNTS = "dashboard:platformCounts";
+
+    /** 仪表盘在线用户数缓存 */
+    public static final String DASHBOARD_ONLINE_USERS = "dashboard:onlineUsers";
+
+    /** 仪表盘权限风险扫描缓存 */
+    public static final String DASHBOARD_RISKS = "dashboard:risks";
+
+    /** 仪表盘可见菜单数缓存 */
+    public static final String DASHBOARD_VISIBLE_MENUS = "dashboard:visibleMenus";
+
 }
