@@ -7,6 +7,7 @@ import {
   normalizeMenuPath,
   SELF_SERVICE_NAV_GROUPS,
   SELF_SERVICE_PATHS,
+  STATIC_NAV_GROUPS,
   type NavGroupDef,
 } from '@/constants/adminNav'
 
@@ -47,6 +48,12 @@ export const useMenuStore = defineStore('menu', () => {
     if (allowedPaths.value.has(path)) return true
     const normalized = normalizeMenuPath(path)
     if (normalized && allowedPaths.value.has(normalized)) return true
+    const matchedNavItem = STATIC_NAV_GROUPS
+      .flatMap((group) => group.items)
+      .find((item) => item.to === path || item.to === normalized)
+    if (matchedNavItem?.menuCodes?.some((code) => allowedMenuCodes.value.has(code))) {
+      return true
+    }
     return false
   }
 

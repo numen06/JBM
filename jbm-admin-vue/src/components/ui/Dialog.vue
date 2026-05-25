@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
 
+defineOptions({ inheritAttrs: false })
 defineProps<{ open?: boolean; title?: string }>()
 defineEmits<{ 'update:open': [value: boolean] }>()
 </script>

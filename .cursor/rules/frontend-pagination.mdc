@@ -1,0 +1,27 @@
+---
+description: Frontend list rendering and pagination rules
+globs:
+  - "jbm-admin-vue/src/**/*.vue"
+  - "jbm-admin-vue/src/**/*.ts"
+alwaysApply: true
+---
+
+# Frontend Pagination Rules
+
+Any user-facing list, table, picker, permission selector, dropdown-like catalog, or dialog list that can plausibly exceed 50 rows must use pagination, virtual scrolling, or a server-side paged API. Do not render large full arrays directly with `v-for`.
+
+## Required behavior
+
+- Prefer backend pagination for resource management pages (`/user`, `/menu`, `/app`, logs, gateway lists, etc.).
+- If the backend endpoint is currently all-list only, add local pagination in the UI before rendering rows.
+- For permission/resource selectors, combine search/filter controls with pagination; filtering may apply to the full in-memory result, but DOM rendering must be limited to the current page.
+- Show total count and current page, and provide previous/next controls through `PaginationBar` or an equivalent component.
+- Reset to page 1 when filters, tab, service scope, keyword, or selected entity changes.
+- Bulk actions must clearly state whether they affect the current page or the full filtered result.
+- Avoid “slice first N rows” as a final UX. A temporary display cap is acceptable only while implementing a proper paged or virtualized list.
+
+## Review checklist
+
+- Search for `v-for` over filtered arrays and confirm the rendered collection is paged when the dataset can grow.
+- Browser-test large-list pages and dialogs. DOM snapshots should stay small enough for responsive interaction.
+- If a page previously had a large table, verify search, pagination, and page reset behavior together.

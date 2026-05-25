@@ -23,7 +23,7 @@ import {
   getApiKeyAuthorities,
   grantApiKeyAuthorities,
 } from '@/api/apikey'
-import { listGrantableApis } from '@/api/authority'
+import { listGrantableApis, listResources, type AuthorityResource } from '@/api/authority'
 import { listApps } from '@/api/app'
 import { getDeveloper } from '@/api/developer'
 import type { BaseApiKey, BaseApp, OpenAuthority } from '@/api/types'
@@ -77,8 +77,11 @@ const authError = ref('')
 const authKeyId = ref<number>()
 const authKeyName = ref('')
 const grantableApis = ref<OpenAuthority[]>([])
+const authorityResources = ref<AuthorityResource[]>([])
 const selectedAuthorityIds = ref<string[]>([])
 const authExpireTime = ref('')
+const authorityKeyword = ref('')
+const authorityService = ref('')
 
 function statusLabel(s?: number) {
   if (s === 0) return '禁用'
@@ -164,13 +167,17 @@ async function openAuthority(row: BaseApiKey) {
   authKeyId.value = row.keyId
   authKeyName.value = row.keyName ?? ''
   authError.value = ''
+  authorityKeyword.value = ''
+  authorityService.value = ''
   authDialogOpen.value = true
   try {
-    const [grantable, current] = await Promise.all([
+    const [grantable, current, resources] = await Promise.all([
       listGrantableApis(),
       getApiKeyAuthorities(row.keyId),
+      listResources(),
     ])
     grantableApis.value = grantable
+    authorityResources.value = resources ?? []
     selectedAuthorityIds.value = (current ?? [])
       .map((a) => a.authorityId)
       .filter((id): id is string => !!id)
@@ -211,8 +218,61 @@ async function copyText(text: string) {
 }
 
 const filteredGrantable = computed(() =>
-  grantableApis.value.filter((a) => a.authorityId),
+  grantableApis.value.filter((a) => {
+    if (!a.authorityId) return false
+    const meta = resourceByAuthority.value.get(a.authority ?? '')
+    if (authorityService.value && meta?.serviceId !== authorityService.value) return false
+    const kw = authorityKeyword.value.trim().toLowerCase()
+    if (!kw) return true
+    return (
+      a.authority?.toLowerCase().includes(kw) ||
+      String(a.authorityId).toLowerCase().includes(kw) ||
+      meta?.path?.toLowerCase().includes(kw) ||
+      meta?.serviceId?.toLowerCase().includes(kw)
+    )
+  }),
 )
+
+const resourceByAuthority = computed(() => {
+  const map = new Map<string, AuthorityResource>()
+  for (const r of authorityResources.value) {
+    if (r.authority) map.set(r.authority, r)
+  }
+  return map
+})
+
+const authorityServices = computed(() => {
+  const set = new Set<string>()
+  for (const api of grantableApis.value) {
+    const service = resourceByAuthority.value.get(api.authority ?? '')?.serviceId
+    if (service) set.add(service)
+  }
+  return [...set].sort((a, b) => a.localeCompare(b))
+})
+
+const selectedVisibleCount = computed(() =>
+  filteredGrantable.value.filter((api) => selectedAuthorityIds.value.includes(String(api.authorityId))).length,
+)
+
+function authorityLabel(api: OpenAuthority) {
+  const meta = resourceByAuthority.value.get(api.authority ?? '')
+  return meta?.path || api.authority || String(api.authorityId)
+}
+
+function authorityMeta(api: OpenAuthority) {
+  const meta = resourceByAuthority.value.get(api.authority ?? '')
+  return meta?.serviceId || '未匹配服务'
+}
+
+function setVisibleAuthorities(checked: boolean) {
+  const ids = filteredGrantable.value.map((api) => String(api.authorityId)).filter(Boolean)
+  if (checked) {
+    selectedAuthorityIds.value = [...new Set([...selectedAuthorityIds.value, ...ids])]
+  } else {
+    const remove = new Set(ids)
+    selectedAuthorityIds.value = selectedAuthorityIds.value.filter((id) => !remove.has(id))
+  }
+}
 
 const canCreateApiKey = computed(() => developerStatus.value === 1)
 const developerStatusText = computed(() => {
@@ -387,7 +447,30 @@ onMounted(() => {
         <Input v-model="authExpireTime" type="datetime-local" />
       </FormField>
       <p class="mb-2 text-sm text-muted-foreground">仅可选择您拥有的 API 权限：</p>
-      <div class="max-h-64 overflow-y-auto rounded border p-2 space-y-1">
+      <div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        <Badge variant="secondary">已选 {{ selectedAuthorityIds.length }}</Badge>
+        <Badge variant="outline">当前筛选 {{ filteredGrantable.length }}</Badge>
+      </div>
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <Select v-model="authorityService" class="w-56">
+          <option value="">全部服务</option>
+          <option v-for="service in authorityServices" :key="service" :value="service">
+            {{ service }}
+          </option>
+        </Select>
+        <Input
+          v-model="authorityKeyword"
+          placeholder="搜索 API 路径 / 服务 / 标识"
+          class="w-64"
+        />
+        <Button variant="outline" size="sm" :disabled="!filteredGrantable.length" @click="setVisibleAuthorities(true)">
+          全选当前筛选
+        </Button>
+        <Button variant="ghost" size="sm" :disabled="selectedVisibleCount === 0" @click="setVisibleAuthorities(false)">
+          取消当前筛选
+        </Button>
+      </div>
+      <div class="max-h-80 overflow-y-auto rounded border p-2 space-y-1">
         <label
           v-for="api in filteredGrantable"
           :key="api.authorityId"
@@ -399,7 +482,13 @@ onMounted(() => {
             :checked="selectedAuthorityIds.includes(api.authorityId!)"
             @change="toggleAuthority(api.authorityId!, ($event.target as HTMLInputElement).checked)"
           />
-          <span class="font-mono text-xs">{{ api.authority }}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block break-all font-mono text-xs">{{ authorityLabel(api) }}</span>
+            <span class="mt-1 inline-flex flex-wrap gap-1">
+              <Badge variant="outline">{{ authorityMeta(api) }}</Badge>
+              <Badge variant="outline">{{ api.authorityId }}</Badge>
+            </span>
+          </span>
         </label>
         <p v-if="!filteredGrantable.length" class="text-sm text-muted-foreground p-2">暂无可授权 API</p>
       </div>

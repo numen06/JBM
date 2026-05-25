@@ -1,9 +1,14 @@
 import { get, put, unwrap } from './request'
 
 export interface AuthorityResource {
-  resourceId?: string
-  resourceName?: string
-  resourceType?: string
+  authorityId?: string | number
+  authority?: string
+  path?: string
+  serviceId?: string
+  prefix?: string
+  isAuth?: number
+  isOpen?: number
+  status?: number
 }
 
 export interface AuthorityApi {
@@ -11,6 +16,9 @@ export interface AuthorityApi {
   apiName?: string
   path?: string
   serviceId?: string
+  authorityId?: string | number
+  authority?: string
+  prefix?: string
 }
 
 export interface AuthorityMenu {

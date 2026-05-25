@@ -90,14 +90,14 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         title: '用户权限',
         icon: UserCog,
         to: '/authority/user-permissions',
-        menuCodes: ['user_perm', 'user_permissions'],
+        menuCodes: ['authority', 'authority_catalog', 'user_perm', 'user_permissions'],
       },
       {
         name: 'client-permissions',
         title: '客户端权限',
         icon: KeyRound,
         to: '/authority/client-permissions',
-        menuCodes: ['client_perm', 'app_perm'],
+        menuCodes: ['authority', 'authority_catalog', 'client_perm', 'app_perm'],
       },
       {
         name: 'authority-catalog',
@@ -116,7 +116,7 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         title: 'API 注册中心',
         icon: Server,
         to: '/api/registry',
-        menuCodes: ['api_registry', 'api_mgmt'],
+        menuCodes: ['authority', 'authority_catalog', 'api_registry', 'api_mgmt'],
       },
       {
         name: 'api-monitor',

@@ -10,7 +10,7 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Card from '@/components/ui/Card.vue'
 import CardContent from '@/components/ui/CardContent.vue'
-import { listApis, type AuthorityApi } from '@/api/authority'
+import { listApis, listResources, type AuthorityApi } from '@/api/authority'
 
 const apis = ref<AuthorityApi[]>([])
 const loading = ref(true)
@@ -22,7 +22,24 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    apis.value = await listApis(serviceFilter.value || undefined)
+    const [apiList, resourceList] = await Promise.all([
+      listApis(serviceFilter.value || undefined),
+      listResources(),
+    ])
+    apis.value = apiList.length
+      ? apiList
+      : resourceList
+          .filter((r) => r.authority?.startsWith('API_'))
+          .filter((r) => !serviceFilter.value || r.serviceId === serviceFilter.value)
+          .map((r) => ({
+            apiId: String(r.authorityId ?? ''),
+            apiName: r.authority,
+            path: r.path,
+            serviceId: r.serviceId,
+            authorityId: r.authorityId,
+            authority: r.authority,
+            prefix: r.prefix,
+          }))
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载失败'
     apis.value = []
