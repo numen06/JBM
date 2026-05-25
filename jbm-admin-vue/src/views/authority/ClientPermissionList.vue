@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Save } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import FormField from '@/components/FormField.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
@@ -31,6 +32,8 @@ const selectedAuthorityIds = ref<string[]>([])
 const expireTime = ref('')
 const authorityFilter = ref('')
 const serviceFilter = ref('')
+const authorityPage = ref(1)
+const authorityPageSize = 50
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -86,6 +89,11 @@ const selectedVisibleCount = computed(() =>
   grantableList.value.filter((api) => selectedAuthorityIds.value.includes(String(api.authorityId))).length,
 )
 
+const pagedGrantableList = computed(() => {
+  const start = (authorityPage.value - 1) * authorityPageSize
+  return grantableList.value.slice(start, start + authorityPageSize)
+})
+
 async function loadApps() {
   try {
     const data = await listApps(1, 500)
@@ -123,6 +131,18 @@ async function loadAppPermissions() {
 function onAppChange() {
   if (selectedAppId.value) loadAppPermissions()
 }
+
+watch([authorityFilter, serviceFilter, selectedAppId], () => {
+  authorityPage.value = 1
+})
+
+watch(
+  () => grantableList.value.length,
+  (total) => {
+    const maxPage = Math.max(1, Math.ceil(total / authorityPageSize))
+    if (authorityPage.value > maxPage) authorityPage.value = maxPage
+  },
+)
 
 function toggleAuthority(id: string, checked: boolean) {
   if (checked) {
@@ -263,7 +283,7 @@ onMounted(loadApps)
 
         <div class="max-h-[36rem] space-y-1 overflow-y-auto">
           <label
-            v-for="api in grantableList"
+            v-for="api in pagedGrantableList"
             :key="api.authorityId"
             class="flex cursor-pointer items-start gap-3 rounded px-2 py-2 hover:bg-muted/40"
           >
@@ -286,6 +306,12 @@ onMounted(loadApps)
             没有匹配的 API 权限。
           </p>
         </div>
+        <PaginationBar
+          :page="authorityPage"
+          :total="grantableList.length"
+          :page-size="authorityPageSize"
+          @change="authorityPage = $event"
+        />
       </div>
     </template>
 

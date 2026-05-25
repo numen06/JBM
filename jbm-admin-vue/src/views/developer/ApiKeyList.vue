@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { KeyRound, Plus, Pencil, Shield, Copy, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -82,6 +82,8 @@ const selectedAuthorityIds = ref<string[]>([])
 const authExpireTime = ref('')
 const authorityKeyword = ref('')
 const authorityService = ref('')
+const authorityPage = ref(1)
+const authorityPageSize = 50
 
 function statusLabel(s?: number) {
   if (s === 0) return '禁用'
@@ -254,6 +256,11 @@ const selectedVisibleCount = computed(() =>
   filteredGrantable.value.filter((api) => selectedAuthorityIds.value.includes(String(api.authorityId))).length,
 )
 
+const pagedGrantable = computed(() => {
+  const start = (authorityPage.value - 1) * authorityPageSize
+  return filteredGrantable.value.slice(start, start + authorityPageSize)
+})
+
 function authorityLabel(api: OpenAuthority) {
   const meta = resourceByAuthority.value.get(api.authority ?? '')
   return meta?.path || api.authority || String(api.authorityId)
@@ -273,6 +280,18 @@ function setVisibleAuthorities(checked: boolean) {
     selectedAuthorityIds.value = selectedAuthorityIds.value.filter((id) => !remove.has(id))
   }
 }
+
+watch([authorityKeyword, authorityService, authDialogOpen], () => {
+  authorityPage.value = 1
+})
+
+watch(
+  () => filteredGrantable.value.length,
+  (total) => {
+    const maxPage = Math.max(1, Math.ceil(total / authorityPageSize))
+    if (authorityPage.value > maxPage) authorityPage.value = maxPage
+  },
+)
 
 const canCreateApiKey = computed(() => developerStatus.value === 1)
 const developerStatusText = computed(() => {
@@ -472,7 +491,7 @@ onMounted(() => {
       </div>
       <div class="max-h-80 overflow-y-auto rounded border p-2 space-y-1">
         <label
-          v-for="api in filteredGrantable"
+          v-for="api in pagedGrantable"
           :key="api.authorityId"
           class="flex items-start gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
         >
@@ -492,6 +511,12 @@ onMounted(() => {
         </label>
         <p v-if="!filteredGrantable.length" class="text-sm text-muted-foreground p-2">暂无可授权 API</p>
       </div>
+      <PaginationBar
+        :page="authorityPage"
+        :total="filteredGrantable.length"
+        :page-size="authorityPageSize"
+        @change="authorityPage = $event"
+      />
     </CrudDialog>
   </div>
 </template>

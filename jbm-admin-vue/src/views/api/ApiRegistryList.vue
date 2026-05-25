@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
@@ -17,6 +18,8 @@ const loading = ref(true)
 const error = ref('')
 const keyword = ref('')
 const serviceFilter = ref('')
+const page = ref(1)
+const pageSize = 50
 
 async function load() {
   loading.value = true
@@ -79,7 +82,24 @@ const groupedByService = computed(() => {
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
 })
 
+const pagedApis = computed(() => {
+  const start = (page.value - 1) * pageSize
+  return filteredApis.value.slice(start, start + pageSize)
+})
+
 const viewMode = ref<'table' | 'group'>('group')
+
+watch([keyword, serviceFilter, viewMode], () => {
+  page.value = 1
+})
+
+watch(
+  () => filteredApis.value.length,
+  (total) => {
+    const maxPage = Math.max(1, Math.ceil(total / pageSize))
+    if (page.value > maxPage) page.value = maxPage
+  },
+)
 
 onMounted(load)
 </script>
@@ -131,7 +151,7 @@ onMounted(load)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, i) in filteredApis" :key="i" class="border-b">
+          <tr v-for="(row, i) in pagedApis" :key="i" class="border-b">
             <td class="p-4 font-mono text-xs">{{ row.path || row.apiName }}</td>
             <td class="p-4">{{ row.apiName || '—' }}</td>
             <td class="p-4">
@@ -140,6 +160,7 @@ onMounted(load)
           </tr>
         </tbody>
       </Table>
+      <PaginationBar :page="page" :total="filteredApis.length" :page-size="pageSize" @change="page = $event" />
     </DataTableShell>
 
     <div v-else class="space-y-6">
@@ -155,7 +176,7 @@ onMounted(load)
         </div>
         <ul class="divide-y">
           <li
-            v-for="(row, i) in items"
+            v-for="(row, i) in items.slice(0, 50)"
             :key="i"
             class="flex flex-wrap items-center gap-2 px-4 py-2 font-mono text-xs"
           >
@@ -163,6 +184,9 @@ onMounted(load)
             <span v-if="row.apiName && row.path" class="text-muted-foreground">{{ row.apiName }}</span>
           </li>
         </ul>
+        <p v-if="items.length > 50" class="border-t px-4 py-2 text-xs text-muted-foreground">
+          该服务共 {{ items.length }} 个接口，仅显示前 50 个；请切换表格视图分页浏览或输入路径搜索。
+        </p>
       </div>
       <p v-if="!loading && !groupedByService.length" class="text-sm text-muted-foreground">
         暂无接口数据

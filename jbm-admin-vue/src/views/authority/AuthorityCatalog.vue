@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RefreshCw, Search } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import Card from '@/components/ui/Card.vue'
 import CardContent from '@/components/ui/CardContent.vue'
 import Button from '@/components/ui/Button.vue'
@@ -44,6 +45,8 @@ const error = ref('')
 const filter = ref('')
 const serviceFilter = ref('')
 const apiAccessFilter = ref<ApiAccessFilter>('all')
+const listPage = ref(1)
+const listPageSize = 50
 
 async function load() {
   loading.value = true
@@ -136,7 +139,15 @@ const filteredApis = computed(() => {
   })
 })
 
-const visibleApis = computed(() => filteredApis.value.slice(0, 200))
+const activeTotal = computed(() => {
+  if (activeTab.value === 'apis') return filteredApis.value.length
+  if (activeTab.value === 'menus') return filteredMenus.value.length
+  return filteredActions.value.length
+})
+
+const pagedMenus = computed(() => paginate(filteredMenus.value))
+const pagedActions = computed(() => paginate(filteredActions.value))
+const pagedApis = computed(() => paginate(filteredApis.value))
 
 const stats = computed(() => {
   const apiTotal = apiRows.value.length
@@ -163,6 +174,20 @@ function riskLabel(row: CatalogApiRow) {
   if (/(save|update|grant|put|batch)/.test(path)) return '写操作'
   return '只读/普通'
 }
+
+function paginate<T>(rows: T[]) {
+  const start = (listPage.value - 1) * listPageSize
+  return rows.slice(start, start + listPageSize)
+}
+
+watch([activeTab, filter, serviceFilter, apiAccessFilter], () => {
+  listPage.value = 1
+})
+
+watch(activeTotal, (total) => {
+  const maxPage = Math.max(1, Math.ceil(total / listPageSize))
+  if (listPage.value > maxPage) listPage.value = maxPage
+})
 
 onMounted(load)
 </script>
@@ -238,7 +263,7 @@ onMounted(load)
       </Button>
       <span class="ml-auto inline-flex items-center gap-1 text-sm text-muted-foreground">
         <Search class="h-4 w-4" />
-        当前匹配 {{ activeTab === 'apis' ? filteredApis.length : activeTab === 'menus' ? filteredMenus.length : filteredActions.length }} 条
+        当前匹配 {{ activeTotal }} 条
       </span>
     </div>
 
@@ -257,7 +282,7 @@ onMounted(load)
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in filteredMenus" :key="row.menuId" class="border-b">
+                <tr v-for="row in pagedMenus" :key="row.menuId" class="border-b">
                   <td class="p-2 text-sm">{{ row.menuId }}</td>
                   <td class="p-2 font-mono text-xs">{{ row.menuCode || '-' }}</td>
                   <td class="p-2 text-sm">{{ row.menuName }}</td>
@@ -267,6 +292,7 @@ onMounted(load)
               </tbody>
             </Table>
           </div>
+          <PaginationBar :page="listPage" :total="filteredMenus.length" :page-size="listPageSize" @change="listPage = $event" />
         </DataTableShell>
       </CardContent>
     </Card>
@@ -285,7 +311,7 @@ onMounted(load)
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in filteredActions" :key="row.actionId" class="border-b">
+                <tr v-for="row in pagedActions" :key="row.actionId" class="border-b">
                   <td class="p-2 text-sm">{{ row.actionId }}</td>
                   <td class="p-2 text-sm">{{ row.actionName }}</td>
                   <td class="p-2">
@@ -298,6 +324,7 @@ onMounted(load)
               </tbody>
             </Table>
           </div>
+          <PaginationBar :page="listPage" :total="filteredActions.length" :page-size="listPageSize" @change="listPage = $event" />
         </DataTableShell>
       </CardContent>
     </Card>
@@ -310,9 +337,6 @@ onMounted(load)
           <Badge variant="outline">需授权 {{ stats.protectedApis }}</Badge>
         </div>
         <DataTableShell :loading="loading" :empty="!filteredApis.length">
-          <p v-if="filteredApis.length > visibleApis.length" class="mb-3 text-xs text-muted-foreground">
-            当前匹配 {{ filteredApis.length }} 条，仅展示前 {{ visibleApis.length }} 条；请继续按服务或路径缩小范围。
-          </p>
           <div class="max-h-[36rem] overflow-y-auto">
             <Table>
               <thead>
@@ -325,7 +349,7 @@ onMounted(load)
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, i) in visibleApis" :key="row.apiId || i" class="border-b">
+                <tr v-for="(row, i) in pagedApis" :key="row.apiId || i" class="border-b">
                   <td class="p-2 font-mono text-xs">{{ row.path || row.apiName || '-' }}</td>
                   <td class="p-2">
                     <Badge variant="secondary">{{ row.serviceId || '-' }}</Badge>
@@ -343,6 +367,7 @@ onMounted(load)
               </tbody>
             </Table>
           </div>
+          <PaginationBar :page="listPage" :total="filteredApis.length" :page-size="listPageSize" @change="listPage = $event" />
         </DataTableShell>
       </CardContent>
     </Card>
