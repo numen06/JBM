@@ -31,6 +31,7 @@ import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.common.mysql.event.LoginDatabaseHook;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
+import com.jbm.cluster.core.security.ApiSecurityUtils;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -141,7 +142,8 @@ public class SysLoginService {
     }
 
     public String decryptPassword(String clientId, String key) {
-        if (loginPasswordSecurityService.allowsPlaintextLogin(clientId)) {
+        if (loginPasswordSecurityService.allowsPlaintextLogin(clientId)
+                && !ApiSecurityUtils.looksLikeRsaCiphertext(key)) {
             return key;
         }
         try {
