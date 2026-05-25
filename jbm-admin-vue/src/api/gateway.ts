@@ -1,5 +1,5 @@
 import { get, post, put, del, unwrap } from './request'
-import type { GatewayRoute, GatewayRateLimit, GatewayIpLimit, DataPaging } from './types'
+import type { GatewayRoute, GatewayRateLimit, GatewayIpLimit, DataPaging, DiscoveryService, DiscoveryInstance } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
@@ -94,4 +94,20 @@ export async function updateIpLimit(policyId: number, data: Partial<GatewayIpLim
 export async function deleteIpLimit(policyId: number) {
   const res = await del<void>(`/gateway/limit/ip/${policyId}`)
   return unwrap(res)
+}
+
+export async function listDiscoveryServices() {
+  const res = await get<DiscoveryService[] | string[]>('/gateway/discovery/services')
+  const raw = unwrap(res) ?? []
+  return raw.map((item) => {
+    if (typeof item === 'string') {
+      return { serviceId: item } satisfies DiscoveryService
+    }
+    return item
+  })
+}
+
+export async function listDiscoveryInstances(serviceId: string) {
+  const res = await get<DiscoveryInstance[]>(`/gateway/discovery/services/${encodeURIComponent(serviceId)}/instances`)
+  return unwrap(res) ?? []
 }

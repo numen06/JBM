@@ -138,6 +138,47 @@ export interface BaseAuthority {
   resourceType?: string
 }
 
+export interface BaseApi {
+  apiId?: number
+  apiCode?: string
+  apiName?: string
+  serviceId?: string
+  path?: string
+  requestMethod?: string
+  apiCategory?: string
+  status?: number
+  isAuth?: boolean | number
+  isOpen?: number
+  accessLog?: boolean
+  isPersist?: boolean
+  priority?: number
+  businessScope?: string
+  apiDesc?: string
+}
+
+export interface DiscoveryService {
+  serviceId: string
+  serviceName?: string
+  instanceCount?: number
+  healthyCount?: number
+  versions?: string[]
+  clusters?: string[]
+  instances?: DiscoveryInstance[]
+}
+
+export interface DiscoveryInstance {
+  instanceId?: string
+  host?: string
+  port?: number
+  uri?: string
+  secure?: boolean
+  scheme?: string
+  metadata?: Record<string, string>
+  healthy?: boolean
+  version?: string
+  cluster?: string
+}
+
 export interface GatewayRoute {
   routeId?: number
   routeName?: string
@@ -146,6 +187,7 @@ export interface GatewayRoute {
   url?: string
   status?: number
 }
+
 
 export interface GatewayRateLimit {
   policyId?: number

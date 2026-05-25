@@ -24,15 +24,14 @@ import {
 import { listActions } from '@/api/action'
 import type { BaseAction } from '@/api/types'
 
-type TabId = 'menus' | 'actions' | 'apis'
+type TabId = 'apis' | 'pages'
 type ApiAccessFilter = 'all' | 'protected' | 'open'
 type CatalogApiRow = AuthorityApi & Pick<AuthorityResource, 'isAuth' | 'isOpen' | 'status'>
 
 const activeTab = ref<TabId>('apis')
 const tabs: { id: TabId; label: string }[] = [
   { id: 'apis', label: 'API 权限' },
-  { id: 'menus', label: '菜单权限' },
-  { id: 'actions', label: '按钮权限' },
+  { id: 'pages', label: '页面权限' },
 ]
 
 const menus = ref<AuthorityMenu[]>([])
@@ -71,25 +70,32 @@ async function load() {
   }
 }
 
-const filteredMenus = computed(() => {
-  const kw = filter.value.trim().toLowerCase()
-  if (!kw) return menus.value
-  return menus.value.filter(
-    (m) =>
-      m.menuName?.toLowerCase().includes(kw) ||
-      m.menuCode?.toLowerCase().includes(kw) ||
-      m.path?.toLowerCase().includes(kw),
-  )
+const actionsByMenu = computed(() => {
+  const map = new Map<number, BaseAction[]>()
+  for (const action of actions.value) {
+    if (action.menuId == null) continue
+    if (!map.has(action.menuId)) map.set(action.menuId, [])
+    map.get(action.menuId)!.push(action)
+  }
+  return map
 })
 
-const filteredActions = computed(() => {
+const filteredPageMenus = computed(() => {
   const kw = filter.value.trim().toLowerCase()
-  if (!kw) return actions.value
-  return actions.value.filter(
-    (a) =>
-      a.actionName?.toLowerCase().includes(kw) ||
-      a.actionCode?.toLowerCase().includes(kw),
-  )
+  return menus.value.filter((m) => {
+    if (!kw) return true
+    const menuHit =
+      m.menuName?.toLowerCase().includes(kw) ||
+      m.menuCode?.toLowerCase().includes(kw) ||
+      m.path?.toLowerCase().includes(kw)
+    if (menuHit) return true
+    const menuActs = m.menuId ? actionsByMenu.value.get(m.menuId) ?? [] : []
+    return menuActs.some(
+      (a) =>
+        a.actionName?.toLowerCase().includes(kw) ||
+        a.actionCode?.toLowerCase().includes(kw),
+    )
+  })
 })
 
 const apiRows = computed<CatalogApiRow[]>(() => {
@@ -141,12 +147,10 @@ const filteredApis = computed(() => {
 
 const activeTotal = computed(() => {
   if (activeTab.value === 'apis') return filteredApis.value.length
-  if (activeTab.value === 'menus') return filteredMenus.value.length
-  return filteredActions.value.length
+  return filteredPageMenus.value.length
 })
 
-const pagedMenus = computed(() => paginate(filteredMenus.value))
-const pagedActions = computed(() => paginate(filteredActions.value))
+const pagedPageMenus = computed(() => paginate(filteredPageMenus.value))
 const pagedApis = computed(() => paginate(filteredApis.value))
 
 const stats = computed(() => {
@@ -196,7 +200,7 @@ onMounted(load)
   <div class="space-y-6">
     <PageHeader
       title="权限资源"
-      description="管理员用于确认系统可分配的菜单、按钮和 API 权限；API 资源可按服务、路径和开放状态定位。"
+      description="管理员用于确认系统可分配的 API 权限与页面权限（菜单 + 按钮 ACTION_*）。"
     >
       <template #actions>
         <Select v-if="activeTab === 'apis'" v-model="serviceFilter" class="w-52">
@@ -237,16 +241,16 @@ onMounted(load)
       </Card>
       <Card>
         <CardContent class="pt-6">
-          <p class="text-sm text-muted-foreground">菜单权限</p>
-          <p class="text-2xl font-bold">{{ stats.menus }}</p>
-          <p class="text-xs text-muted-foreground">控制侧栏入口</p>
+          <p class="text-sm text-muted-foreground">页面权限</p>
+          <p class="text-2xl font-bold">{{ stats.menus }} 菜单</p>
+          <p class="text-xs text-muted-foreground">{{ stats.actions }} 个按钮</p>
         </CardContent>
       </Card>
       <Card>
         <CardContent class="pt-6">
-          <p class="text-sm text-muted-foreground">按钮权限</p>
-          <p class="text-2xl font-bold">{{ stats.actions }}</p>
-          <p class="text-xs text-muted-foreground">控制页面操作</p>
+          <p class="text-sm text-muted-foreground">公开 API</p>
+          <p class="text-2xl font-bold">{{ stats.openApis }}</p>
+          <p class="text-xs text-muted-foreground">无需授权即可访问</p>
         </CardContent>
       </Card>
     </div>
@@ -267,64 +271,43 @@ onMounted(load)
       </span>
     </div>
 
-    <Card v-show="activeTab === 'menus'">
+    <Card v-show="activeTab === 'pages'">
       <CardContent class="pt-6">
-        <DataTableShell :loading="loading" :empty="!filteredMenus.length">
-          <div class="max-h-[32rem] overflow-y-auto">
-            <Table>
-              <thead>
-                <tr class="border-b bg-muted/50">
-                  <th class="h-9 px-3 text-left text-xs font-medium">ID</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">编码</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">名称</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">路径</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">父级</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in pagedMenus" :key="row.menuId" class="border-b">
-                  <td class="p-2 text-sm">{{ row.menuId }}</td>
-                  <td class="p-2 font-mono text-xs">{{ row.menuCode || '-' }}</td>
-                  <td class="p-2 text-sm">{{ row.menuName }}</td>
-                  <td class="p-2 font-mono text-xs text-muted-foreground">{{ row.path || '-' }}</td>
-                  <td class="p-2 text-sm text-muted-foreground">{{ row.parentId ?? '-' }}</td>
-                </tr>
-              </tbody>
-            </Table>
+        <DataTableShell :loading="loading" :empty="!filteredPageMenus.length">
+          <div class="max-h-[36rem] space-y-3 overflow-y-auto">
+            <div
+              v-for="menu in pagedPageMenus"
+              :key="menu.menuId"
+              class="rounded border px-3 py-2"
+            >
+              <div class="flex flex-wrap items-center gap-2 text-sm font-medium">
+                <span>{{ menu.menuName }}</span>
+                <span class="font-mono text-xs font-normal text-muted-foreground">{{ menu.path || '—' }}</span>
+                <Badge variant="outline" class="font-mono text-xs">MENU_{{ menu.menuCode }}</Badge>
+              </div>
+              <div
+                v-if="menu.menuId && (actionsByMenu.get(menu.menuId)?.length ?? 0) > 0"
+                class="mt-2 ml-2 flex flex-wrap gap-2"
+              >
+                <Badge
+                  v-for="act in actionsByMenu.get(menu.menuId)"
+                  :key="act.actionId"
+                  variant="secondary"
+                  class="font-normal"
+                >
+                  {{ act.actionName }}
+                  <span class="ml-1 font-mono text-xs">ACTION_{{ act.actionCode }}</span>
+                </Badge>
+              </div>
+              <p v-else class="mt-1 text-xs text-muted-foreground">暂无按钮权限</p>
+            </div>
           </div>
-          <PaginationBar :page="listPage" :total="filteredMenus.length" :page-size="listPageSize" @change="listPage = $event" />
-        </DataTableShell>
-      </CardContent>
-    </Card>
-
-    <Card v-show="activeTab === 'actions'">
-      <CardContent class="pt-6">
-        <DataTableShell :loading="loading" :empty="!filteredActions.length">
-          <div class="max-h-[32rem] overflow-y-auto">
-            <Table>
-              <thead>
-                <tr class="border-b bg-muted/50">
-                  <th class="h-9 px-3 text-left text-xs font-medium">ID</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">按钮</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">权限标识</th>
-                  <th class="h-9 px-3 text-left text-xs font-medium">所属菜单</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in pagedActions" :key="row.actionId" class="border-b">
-                  <td class="p-2 text-sm">{{ row.actionId }}</td>
-                  <td class="p-2 text-sm">{{ row.actionName }}</td>
-                  <td class="p-2">
-                    <Badge variant="outline" class="font-mono text-xs">
-                      ACTION_{{ row.actionCode }}
-                    </Badge>
-                  </td>
-                  <td class="p-2 text-sm text-muted-foreground">{{ row.menuId ?? '-' }}</td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
-          <PaginationBar :page="listPage" :total="filteredActions.length" :page-size="listPageSize" @change="listPage = $event" />
+          <PaginationBar
+            :page="listPage"
+            :total="filteredPageMenus.length"
+            :page-size="listPageSize"
+            @change="listPage = $event"
+          />
         </DataTableShell>
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Plus, Pencil, RefreshCw } from 'lucide-vue-next'
+import { Plus, Pencil, RefreshCw, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -11,13 +11,16 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
+import Card from '@/components/ui/Card.vue'
+import CardContent from '@/components/ui/CardContent.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { usePermission } from '@/composables/usePermission'
 import { useFeedback } from '@/composables/useFeedback'
 import { listMenus, deleteMenu, createMenu, updateMenu, type MenuScope } from '@/api/menu'
+import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listApps } from '@/api/app'
-import type { BaseApp, BaseMenu } from '@/api/types'
+import type { BaseAction, BaseApp, BaseMenu } from '@/api/types'
 
 const { isSuperAdmin } = usePermission()
 const feedback = useFeedback()
@@ -28,6 +31,27 @@ const appIdFilter = ref<number | string>('')
 const statusFilter = ref<number | string>('')
 
 const apps = ref<BaseApp[]>([])
+const selectedMenu = ref<BaseMenu | null>(null)
+const menuActions = ref<BaseAction[]>([])
+const actionsLoading = ref(false)
+const actionsError = ref('')
+
+const {
+  dialogOpen: actionDialogOpen,
+  editing: actionEditing,
+  saving: actionSaving,
+  form: actionForm,
+  formError: actionFormError,
+  openCreate: openActionCreate,
+  openEdit: openActionEdit,
+  closeDialog: closeActionDialog,
+} = useCrudForm<BaseAction>(() => ({
+  actionCode: '',
+  actionName: '',
+  menuId: undefined,
+  priority: 0,
+  status: 1,
+}))
 const appNameMap = computed(() => {
   const map = new Map<number, string>()
   for (const app of apps.value) {
@@ -135,6 +159,78 @@ function onFormScopeChange() {
   }
 }
 
+async function loadMenuActions(menuId?: number) {
+  if (!menuId) {
+    menuActions.value = []
+    return
+  }
+  actionsLoading.value = true
+  actionsError.value = ''
+  try {
+    const data = await listActions(menuId, 1, 200)
+    menuActions.value = data.contents ?? []
+  } catch (e) {
+    actionsError.value = e instanceof Error ? e.message : '加载按钮失败'
+    menuActions.value = []
+  } finally {
+    actionsLoading.value = false
+  }
+}
+
+function selectMenu(row: BaseMenu) {
+  selectedMenu.value = row
+  loadMenuActions(row.menuId)
+}
+
+function openCreateActionForMenu() {
+  if (!selectedMenu.value?.menuId) return
+  openActionCreate()
+  actionForm.value.menuId = selectedMenu.value.menuId
+}
+
+async function handleActionSave() {
+  if (!actionForm.value.actionCode?.trim() || !actionForm.value.actionName?.trim()) {
+    actionFormError.value = '按钮编码和名称不能为空'
+    return
+  }
+  if (!actionForm.value.menuId) {
+    actionFormError.value = '必须归属菜单'
+    return
+  }
+  actionSaving.value = true
+  actionFormError.value = ''
+  try {
+    const payload = {
+      ...actionForm.value,
+      menuId: Number(actionForm.value.menuId),
+      priority: actionForm.value.priority != null ? Number(actionForm.value.priority) : 0,
+    }
+    if (actionEditing.value && actionForm.value.actionId) {
+      await updateAction(actionForm.value.actionId, payload)
+    } else {
+      await createAction(payload)
+    }
+    closeActionDialog()
+    await loadMenuActions(selectedMenu.value?.menuId)
+  } catch (e) {
+    actionFormError.value = e instanceof Error ? e.message : '保存失败'
+  } finally {
+    actionSaving.value = false
+  }
+}
+
+async function handleActionDelete(row: BaseAction) {
+  if (!row.actionId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除按钮',
+    message: `确认删除按钮 ${row.actionName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
+  await deleteAction(row.actionId)
+  await loadMenuActions(selectedMenu.value?.menuId)
+}
+
 async function loadApps() {
   try {
     const data = await listApps(1, 200)
@@ -178,6 +274,9 @@ async function handleSave() {
     }
     closeDialog()
     await load(page.value)
+    if (selectedMenu.value?.menuId === form.value.menuId) {
+      selectedMenu.value = { ...selectedMenu.value, ...payload }
+    }
   } catch (e) {
     formError.value = e instanceof Error ? e.message : '保存失败'
   } finally {
@@ -211,6 +310,10 @@ async function handleDelete(row: BaseMenu) {
   if (!confirmed) return
   try {
     await deleteMenu(row.menuId)
+    if (selectedMenu.value?.menuId === row.menuId) {
+      selectedMenu.value = null
+      menuActions.value = []
+    }
     load(page.value)
   } catch (e) {
     await feedback.alert({
@@ -229,8 +332,8 @@ onMounted(async () => {
 <template>
   <div>
     <PageHeader
-      title="菜单管理"
-      description="平台公共菜单（appId 为空）全局共享；应用菜单归属指定应用。租户管理员仅可管理本组织应用菜单。"
+      title="菜单与按钮"
+      description="维护菜单及其下挂按钮权限（ACTION_{actionCode}）；选中菜单行后在下方管理按钮。"
     >
       <template #actions>
         <Select v-model="scopeFilter" class="w-36" @change="onScopeChange">
@@ -287,7 +390,13 @@ onMounted(async () => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in items" :key="row.menuId" class="border-b">
+          <tr
+            v-for="row in items"
+            :key="row.menuId"
+            class="border-b cursor-pointer hover:bg-muted/30"
+            :class="selectedMenu?.menuId === row.menuId ? 'bg-muted/40' : ''"
+            @click="selectMenu(row)"
+          >
             <td class="p-4">{{ row.menuId }}</td>
             <td class="p-4 font-mono text-xs">{{ row.menuCode }}</td>
             <td class="p-4">
@@ -305,7 +414,7 @@ onMounted(async () => {
                 {{ row.status === 1 ? '启用' : '停用' }}
               </Badge>
             </td>
-            <td class="p-4 text-right space-x-1">
+            <td class="p-4 text-right space-x-1" @click.stop>
               <Button
                 variant="outline"
                 size="sm"
@@ -348,6 +457,64 @@ onMounted(async () => {
         @change="load"
       />
     </DataTableShell>
+
+    <Card v-if="selectedMenu" class="mt-6">
+      <CardContent class="space-y-4 pt-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="font-semibold">{{ selectedMenu.menuName }} — 按钮管理</h3>
+            <p class="text-sm text-muted-foreground">
+              菜单 ID {{ selectedMenu.menuId }} · {{ selectedMenu.path || '无路径' }}
+            </p>
+          </div>
+          <Button @click="openCreateActionForMenu">
+            <Plus class="mr-1 h-4 w-4" />
+            新增按钮
+          </Button>
+        </div>
+        <p v-if="actionsError" class="text-sm text-destructive">{{ actionsError }}</p>
+        <p v-if="actionsLoading" class="text-sm text-muted-foreground">加载按钮中…</p>
+        <Table v-else>
+          <thead>
+            <tr class="border-b bg-muted/50">
+              <th class="h-9 px-3 text-left text-xs font-medium">ID</th>
+              <th class="h-9 px-3 text-left text-xs font-medium">名称</th>
+              <th class="h-9 px-3 text-left text-xs font-medium">权限标识</th>
+              <th class="h-9 px-3 text-left text-xs font-medium">排序</th>
+              <th class="h-9 px-3 text-left text-xs font-medium">状态</th>
+              <th class="h-9 px-3 text-right text-xs font-medium">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="act in menuActions" :key="act.actionId" class="border-b">
+              <td class="p-3 text-sm">{{ act.actionId }}</td>
+              <td class="p-3 text-sm">{{ act.actionName }}</td>
+              <td class="p-3">
+                <Badge variant="outline" class="font-mono text-xs">ACTION_{{ act.actionCode }}</Badge>
+              </td>
+              <td class="p-3 text-sm">{{ act.priority ?? 0 }}</td>
+              <td class="p-3">
+                <Badge :variant="act.status === 1 ? 'default' : 'secondary'">
+                  {{ act.status === 1 ? '启用' : '停用' }}
+                </Badge>
+              </td>
+              <td class="p-3 text-right space-x-1">
+                <Button variant="outline" size="sm" @click="openActionEdit(act)">
+                  <Pencil class="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="destructive" size="sm" @click="handleActionDelete(act)">
+                  <Trash2 class="h-3.5 w-3.5" />
+                </Button>
+              </td>
+            </tr>
+          </tbody>
+        </Table>
+        <p v-if="!actionsLoading && !menuActions.length" class="text-sm text-muted-foreground">
+          当前菜单暂无按钮，点击「新增按钮」创建。
+        </p>
+      </CardContent>
+    </Card>
+    <p v-else class="mt-4 text-sm text-muted-foreground">点击表格中的菜单行以管理其按钮。</p>
 
     <CrudDialog
       v-model:open="dialogOpen"
@@ -393,6 +560,36 @@ onMounted(async () => {
       </FormField>
       <FormField label="状态">
         <Select v-model="form.status">
+          <option :value="1">启用</option>
+          <option :value="0">停用</option>
+        </Select>
+      </FormField>
+    </CrudDialog>
+
+    <CrudDialog
+      v-model:open="actionDialogOpen"
+      :title="actionEditing ? '编辑按钮' : '新建按钮'"
+      :saving="actionSaving"
+      @save="handleActionSave"
+    >
+      <p v-if="actionFormError" class="text-sm text-destructive">{{ actionFormError }}</p>
+      <FormField label="所属菜单">
+        <Input :model-value="selectedMenu?.menuName ?? ''" disabled />
+      </FormField>
+      <FormField label="按钮编码" required>
+        <Input v-model="actionForm.actionCode" placeholder="如 users_add" />
+      </FormField>
+      <FormField label="按钮名称" required>
+        <Input v-model="actionForm.actionName" />
+      </FormField>
+      <p class="text-xs text-muted-foreground">
+        权限标识：ACTION_{{ actionForm.actionCode || '…' }}
+      </p>
+      <FormField label="排序">
+        <Input v-model="actionForm.priority" type="number" />
+      </FormField>
+      <FormField label="状态">
+        <Select v-model="actionForm.status">
           <option :value="1">启用</option>
           <option :value="0">停用</option>
         </Select>

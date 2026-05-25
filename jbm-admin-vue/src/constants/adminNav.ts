@@ -14,12 +14,13 @@ import {
   Globe,
   ScrollText,
   Code2,
-  MousePointerClick,
+  Radar,
   UserCheck,
   UserCog,
   ListTree,
   Server,
   Activity,
+  GitBranch,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -31,6 +32,7 @@ export const MENU_PATH_ALIASES: Record<string, string> = {
   '/system/authorities': '/authority/catalog',
   '/system/developer': '/developer',
   '/system/online-users/index': '/system/online-users',
+  '/system/actions': '/system/menus',
 }
 
 export function normalizeMenuPath(path?: string): string {
@@ -106,6 +108,7 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         to: '/authority/catalog',
         menuCodes: ['authority', 'authority_catalog'],
       },
+      { name: 'menus', title: '菜单与按钮', icon: Menu, to: '/system/menus', menuCodes: ['menus', 'menu', 'actions', 'action'] },
     ],
   },
   {
@@ -113,7 +116,7 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
     items: [
       {
         name: 'api-registry',
-        title: 'API 注册中心',
+        title: 'API 资源管理',
         icon: Server,
         to: '/api/registry',
         menuCodes: ['authority', 'authority_catalog', 'api_registry', 'api_mgmt'],
@@ -130,22 +133,16 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
   {
     label: '网关管理',
     items: [
+      { name: 'gateway-services', title: '服务发现', icon: Radar, to: '/gateway/services', menuCodes: ['gw_services'] },
       { name: 'gateway-routes', title: '路由管理', icon: Route, to: '/gateway/routes', menuCodes: ['gw_routes'] },
-      { name: 'gateway-rate', title: '限流管理', icon: Gauge, to: '/gateway/rate-limit', menuCodes: ['gw_rate'] },
+      { name: 'gateway-gray', title: '灰度发布', icon: GitBranch, to: '/gateway/gray-release', menuCodes: ['gw_gray'] },
+      { name: 'gateway-rate', title: '限流策略', icon: Gauge, to: '/gateway/rate-limit', menuCodes: ['gw_rate'] },
       { name: 'gateway-ip', title: 'IP 限制', icon: Globe, to: '/gateway/ip-limit', menuCodes: ['gw_ip'] },
     ],
   },
   {
     label: '其他',
     items: [
-      { name: 'menus', title: '菜单管理', icon: Menu, to: '/system/menus', menuCodes: ['menus', 'menu'] },
-      {
-        name: 'actions',
-        title: '按钮管理',
-        icon: MousePointerClick,
-        to: '/system/actions',
-        menuCodes: ['actions', 'action'],
-      },
       { name: 'account-logs', title: '审计日志', icon: ScrollText, to: '/log/account', menuCodes: ['account_logs'] },
       { name: 'developer', title: '开发者', icon: Code2, to: '/developer', menuCodes: ['developer', 'developer_mgmt'] },
     ],

@@ -88,6 +88,11 @@ export async function del<T>(url: string, config?: AxiosRequestConfig) {
   return data
 }
 
+export async function patch<T>(url: string, body?: unknown, config?: AxiosRequestConfig) {
+  const { data } = await http.patch<ResultBody<T>>(url, body, config)
+  return data
+}
+
 export async function postForm<T>(
   url: string,
   params: URLSearchParams,

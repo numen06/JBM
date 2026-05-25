@@ -89,7 +89,7 @@ const router = createRouter({
           path: 'api/registry',
           name: 'api-registry',
           component: () => import('@/views/api/ApiRegistryList.vue'),
-          meta: { title: 'API 注册中心' },
+          meta: { title: 'API 资源管理' },
         },
         {
           path: 'api/monitor',
@@ -101,13 +101,11 @@ const router = createRouter({
           path: 'system/menus',
           name: 'menus',
           component: () => import('@/views/system/MenuList.vue'),
-          meta: { title: '菜单管理' },
+          meta: { title: '菜单与按钮' },
         },
         {
           path: 'system/actions',
-          name: 'actions',
-          component: () => import('@/views/system/ActionList.vue'),
-          meta: { title: '按钮管理' },
+          redirect: { name: 'menus' },
         },
         {
           path: 'system/orgs',
@@ -142,6 +140,18 @@ const router = createRouter({
           name: 'gateway-routes',
           component: () => import('@/views/gateway/RouteList.vue'),
           meta: { title: '路由管理' },
+        },
+        {
+          path: 'gateway/services',
+          name: 'gateway-services',
+          component: () => import('@/views/gateway/ServiceDiscovery.vue'),
+          meta: { title: '服务发现' },
+        },
+        {
+          path: 'gateway/gray-release',
+          name: 'gateway-gray',
+          component: () => import('@/views/gateway/GrayRelease.vue'),
+          meta: { title: '灰度发布' },
         },
         {
           path: 'gateway/rate-limit',

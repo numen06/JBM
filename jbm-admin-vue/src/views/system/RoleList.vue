@@ -14,6 +14,7 @@ import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useFeedback } from '@/composables/useFeedback'
+import { useMenuActionPermissions } from '@/composables/useMenuActionPermissions'
 import { listRoles, deleteRole, createRole, updateRole } from '@/api/role'
 import {
   listAuthorityMenus,
@@ -63,14 +64,26 @@ const permRole = ref<BaseRole | null>(null)
 const allMenus = ref<AuthorityMenu[]>([])
 const menuActions = ref<Record<number, BaseAction[]>>({})
 const authorityCatalog = ref<OpenAuthority[]>([])
-const selectedAuthorityIds = ref<Set<string>>(new Set())
 const permSaving = ref(false)
 const permError = ref('')
 
-function authorityIdForActionCode(actionCode: string) {
-  const key = `ACTION_${actionCode}`
-  const hit = authorityCatalog.value.find((c) => c.authority === key)
-  return hit?.authorityId ? String(hit.authorityId) : null
+const {
+  selectedAuthorityIds,
+  authorityIdForActionCode,
+  isMenuFullyChecked,
+  isMenuIndeterminate,
+  toggleMenu,
+  toggleAction,
+  selectAllActionsForMenu,
+  clearAllActionsForMenu,
+  ensureMenuPermissionsBeforeSave,
+  resetSelected,
+} = useMenuActionPermissions(authorityCatalog, menuActions)
+
+function syncMenuCheckbox(el: unknown, menuId?: number) {
+  if (el instanceof HTMLInputElement && menuId) {
+    el.indeterminate = isMenuIndeterminate(menuId)
+  }
 }
 
 async function openPermissions(row: BaseRole) {
@@ -94,30 +107,10 @@ async function openPermissions(row: BaseRole) {
       byMenu[a.menuId].push(a)
     }
     menuActions.value = byMenu
-    selectedAuthorityIds.value = new Set(
-      granted.map((g) => String(g.authorityId)).filter(Boolean),
-    )
+    resetSelected(granted.map((g) => String(g.authorityId)).filter(Boolean))
   } catch (e) {
     permError.value = e instanceof Error ? e.message : '加载权限失败'
   }
-}
-
-function toggleAuthorityId(id: string | null | undefined) {
-  if (!id) return
-  const next = new Set(selectedAuthorityIds.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  selectedAuthorityIds.value = next
-}
-
-function toggleMenu(menuId?: number) {
-  if (!menuId) return
-  toggleAuthorityId(String(menuId))
-}
-
-function toggleAction(actionCode?: string) {
-  if (!actionCode) return
-  toggleAuthorityId(authorityIdForActionCode(actionCode))
 }
 
 async function savePermissions() {
@@ -125,10 +118,8 @@ async function savePermissions() {
   permSaving.value = true
   permError.value = ''
   try {
-    await putRoleAuthorities(
-      permRole.value.roleId,
-      Array.from(selectedAuthorityIds.value),
-    )
+    const ids = ensureMenuPermissionsBeforeSave()
+    await putRoleAuthorities(permRole.value.roleId, ids)
     permDialogOpen.value = false
   } catch (e) {
     permError.value = e instanceof Error ? e.message : '保存失败'
@@ -263,7 +254,7 @@ async function handleDelete(row: BaseRole) {
     >
       <p v-if="permError" class="text-sm text-destructive">{{ permError }}</p>
       <p class="text-sm text-muted-foreground">
-        菜单控制侧栏入口；按钮（ACTION_*）控制页内新建/编辑/删除等操作。须同时勾选菜单与对应按钮。
+        勾选按钮会自动勾选所属菜单；取消菜单会同步取消其下按钮。
       </p>
       <div class="max-h-96 space-y-3 overflow-y-auto">
         <div
@@ -271,15 +262,26 @@ async function handleDelete(row: BaseRole) {
           :key="m.menuId"
           class="rounded border px-3 py-2"
         >
-          <label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              :checked="selectedAuthorityIds.has(String(m.menuId))"
-              @change="toggleMenu(m.menuId)"
-            />
-            {{ m.menuName }}
-            <span class="font-mono text-xs font-normal text-muted-foreground">{{ m.path }}</span>
-          </label>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="flex flex-1 cursor-pointer items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                :checked="isMenuFullyChecked(m.menuId)"
+                :ref="(el) => syncMenuCheckbox(el, m.menuId)"
+                @change="toggleMenu(m.menuId)"
+              />
+              {{ m.menuName }}
+              <span class="font-mono text-xs font-normal text-muted-foreground">{{ m.path }}</span>
+            </label>
+            <div v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0" class="flex gap-1">
+              <Button variant="outline" size="sm" type="button" @click="selectAllActionsForMenu(m.menuId)">
+                全选按钮
+              </Button>
+              <Button variant="outline" size="sm" type="button" @click="clearAllActionsForMenu(m.menuId)">
+                清空按钮
+              </Button>
+            </div>
+          </div>
           <div
             v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0"
             class="mt-2 ml-6 flex flex-wrap gap-2"
@@ -295,7 +297,7 @@ async function handleDelete(row: BaseRole) {
                   !!act.actionCode &&
                   selectedAuthorityIds.has(authorityIdForActionCode(act.actionCode) ?? '')
                 "
-                @change="toggleAction(act.actionCode)"
+                @change="toggleAction(act.actionCode, m.menuId)"
               />
               {{ act.actionName }}
               <span class="font-mono text-muted-foreground">ACTION_{{ act.actionCode }}</span>

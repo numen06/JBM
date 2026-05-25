@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -14,7 +14,13 @@ import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useFeedback } from '@/composables/useFeedback'
-import { listRoutes, deleteRoute, createRoute, updateRoute } from '@/api/gateway'
+import {
+  listRoutes,
+  deleteRoute,
+  createRoute,
+  updateRoute,
+  listDiscoveryServices,
+} from '@/api/gateway'
 import type { GatewayRoute } from '@/api/types'
 
 const keyword = ref('')
@@ -33,6 +39,36 @@ function search() {
   load(1)
 }
 
+// ── 服务发现下拉 ──
+const discoveryServices = ref<{ serviceId: string; healthyCount?: number }[]>([])
+const serviceLoading = ref(false)
+
+async function loadServices() {
+  serviceLoading.value = true
+  try {
+    const list = await listDiscoveryServices()
+    discoveryServices.value = list.map((s) => ({
+      serviceId: s.serviceId,
+      healthyCount: s.healthyCount,
+    }))
+  } catch {
+    discoveryServices.value = []
+  } finally {
+    serviceLoading.value = false
+  }
+}
+
+const serviceMap = computed(() => {
+  const map = new Map<string, number | undefined>()
+  for (const s of discoveryServices.value) {
+    map.set(s.serviceId, s.healthyCount)
+  }
+  return map
+})
+
+// ── 路由表单 ──
+const routeMode = ref<'service' | 'url'>('service')
+
 const {
   dialogOpen,
   editing,
@@ -50,10 +86,51 @@ const {
   status: 1,
 }))
 
+function openCreateRoute() {
+  routeMode.value = 'service'
+  openCreate()
+}
+
+function openEditRoute(row: GatewayRoute) {
+  openEdit(row)
+  if (row.url && !row.serviceId) {
+    routeMode.value = 'url'
+  } else {
+    routeMode.value = 'service'
+  }
+}
+
+function onServiceSelect() {
+  if (routeMode.value === 'service' && form.value.serviceId) {
+    form.value.url = `lb://${form.value.serviceId}`
+  }
+}
+
+function onRouteModeChange() {
+  if (routeMode.value === 'service') {
+    form.value.url = form.value.serviceId ? `lb://${form.value.serviceId}` : ''
+  } else {
+    form.value.serviceId = ''
+  }
+}
+
 async function handleSave() {
   if (!form.value.routeName?.trim() || !form.value.path?.trim()) {
     formError.value = '路由名称和路径不能为空'
     return
+  }
+  if (routeMode.value === 'service') {
+    if (!form.value.serviceId?.trim()) {
+      formError.value = '请选择目标服务'
+      return
+    }
+    form.value.url = `lb://${form.value.serviceId}`
+  } else {
+    form.value.serviceId = ''
+    if (!form.value.url?.trim()) {
+      formError.value = '请填写目标 URL'
+      return
+    }
   }
   saving.value = true
   formError.value = ''
@@ -83,6 +160,13 @@ async function handleDelete(row: GatewayRoute) {
   await deleteRoute(row.routeId)
   load(page.value)
 }
+
+function getHealthyCount(serviceId?: string): number | undefined {
+  if (!serviceId) return undefined
+  return serviceMap.value.get(serviceId)
+}
+
+onMounted(loadServices)
 </script>
 
 <template>
@@ -101,7 +185,7 @@ async function handleDelete(row: GatewayRoute) {
           <option value="0">停用</option>
         </Select>
         <Button variant="outline" @click="search">查询</Button>
-        <Button @click="openCreate">
+        <Button @click="openCreateRoute">
           <Plus class="mr-1 h-4 w-4" />
           新建
         </Button>
@@ -115,6 +199,7 @@ async function handleDelete(row: GatewayRoute) {
             <th class="h-10 px-4 text-left font-medium">名称</th>
             <th class="h-10 px-4 text-left font-medium">路径</th>
             <th class="h-10 px-4 text-left font-medium">服务</th>
+            <th class="h-10 px-4 text-left font-medium">健康实例</th>
             <th class="h-10 px-4 text-left font-medium">目标 URL</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-right font-medium">操作</th>
@@ -125,7 +210,18 @@ async function handleDelete(row: GatewayRoute) {
             <td class="p-4">{{ row.routeId }}</td>
             <td class="p-4">{{ row.routeName }}</td>
             <td class="p-4 font-mono text-xs">{{ row.path }}</td>
-            <td class="p-4">{{ row.serviceId }}</td>
+            <td class="p-4">
+              <Badge v-if="row.serviceId" variant="secondary">{{ row.serviceId }}</Badge>
+              <span v-else class="text-muted-foreground">—</span>
+            </td>
+            <td class="p-4">
+              <template v-if="getHealthyCount(row.serviceId) != null">
+                <Badge :variant="(getHealthyCount(row.serviceId) ?? 0) > 0 ? 'default' : 'destructive'">
+                  {{ getHealthyCount(row.serviceId) }}
+                </Badge>
+              </template>
+              <span v-else class="text-muted-foreground">—</span>
+            </td>
             <td class="p-4 font-mono text-xs text-muted-foreground">{{ row.url }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
@@ -133,7 +229,7 @@ async function handleDelete(row: GatewayRoute) {
               </Badge>
             </td>
             <td class="p-4 text-right space-x-1">
-              <Button variant="outline" size="sm" @click="openEdit(row)">
+              <Button variant="outline" size="sm" @click="openEditRoute(row)">
                 <Pencil class="h-3.5 w-3.5" />
               </Button>
               <Button variant="destructive" size="sm" @click="handleDelete(row)">删除</Button>
@@ -158,12 +254,35 @@ async function handleDelete(row: GatewayRoute) {
       <FormField label="匹配路径" required>
         <Input v-model="form.path" placeholder="/api/xxx/**" class="font-mono text-sm" />
       </FormField>
-      <FormField label="服务 ID">
-        <Input v-model="form.serviceId" placeholder="lb://service-name" />
+      <FormField label="目标模式">
+        <Select v-model="routeMode" @change="onRouteModeChange">
+          <option value="service">服务选择</option>
+          <option value="url">自定义 URL</option>
+        </Select>
       </FormField>
-      <FormField label="目标 URL">
-        <Input v-model="form.url" placeholder="http://host:port" class="font-mono text-sm" />
-      </FormField>
+      <template v-if="routeMode === 'service'">
+        <FormField label="目标服务" required>
+          <Select
+            v-model="form.serviceId"
+            :disabled="serviceLoading"
+            @change="onServiceSelect"
+          >
+            <option value="">{{ serviceLoading ? '加载中...' : '请选择服务' }}</option>
+            <option v-for="s in discoveryServices" :key="s.serviceId" :value="s.serviceId">
+              {{ s.serviceId }}{{ s.healthyCount != null ? ` (${s.healthyCount} 健康)` : '' }}
+            </option>
+          </Select>
+        </FormField>
+        <p v-if="form.serviceId" class="text-xs text-muted-foreground">
+          目标地址：<code class="font-mono">lb://{{ form.serviceId }}</code>
+        </p>
+      </template>
+      <template v-else>
+        <FormField label="目标 URL" required>
+          <Input v-model="form.url" placeholder="http://host:port" class="font-mono text-sm" />
+        </FormField>
+        <p class="text-xs text-muted-foreground">填写完整目标地址，适用于转发到非注册中心的服务。</p>
+      </template>
       <FormField label="状态">
         <Select v-model="form.status">
           <option :value="1">启用</option>
