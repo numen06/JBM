@@ -92,7 +92,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                     Long quota = arry[1];
                     // 允许用户每秒处理多少个请求
                     long replenishRate = item.getLimitQuota() / refreshInterval;
-                    replenishRate = replenishRate < 1 ? 1 : refreshInterval;
+                    replenishRate = Math.max(replenishRate, 1);
                     // 令牌桶的容量，允许在一秒钟内完成的最大请求数
                     long burstCapacity = replenishRate * 2;
                     RouteDefinition definition = new RouteDefinition();

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ArrowLeft, BookOpen, Code2, KeyRound, ShieldCheck, Split } from '@lucide/vue'
+import JbmLogo from '@/components/JbmLogo.vue'
 
 defineProps<{
   title?: string
@@ -22,9 +23,7 @@ defineProps<{
       </RouterLink>
 
       <div class="flex items-center gap-3">
-        <span class="flex size-12 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">
-          JBM
-        </span>
+        <JbmLogo class="size-12 rounded-lg" />
         <div>
           <h1 class="text-2xl font-bold tracking-tight lg:text-3xl">{{ title ?? 'JBM 开源平台' }}</h1>
           <p class="mt-1 text-sm text-slate-400">

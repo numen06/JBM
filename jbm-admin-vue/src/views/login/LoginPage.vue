@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { RefreshCw } from '@lucide/vue'
+import { ArrowLeft, RefreshCw } from '@lucide/vue'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
 import { fetchLoginQr, pollQrLogin } from '@/api/qrcode'
@@ -506,9 +506,13 @@ onUnmounted(() => {
 
     <div class="flex flex-1 flex-col justify-center bg-background px-4 py-8 sm:px-8 lg:px-12">
       <div class="mx-auto w-full max-w-md">
+        <RouterLink to="/" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+          <ArrowLeft class="size-4" />
+          返回首页
+        </RouterLink>
+
         <div class="mb-6 lg:hidden">
-          <RouterLink to="/" class="text-sm text-muted-foreground hover:text-primary">返回首页</RouterLink>
-          <h1 class="mt-3 text-2xl font-bold">登录</h1>
+          <h1 class="text-2xl font-bold">登录</h1>
         </div>
 
         <div class="hidden lg:block">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import JbmLogo from '@/components/JbmLogo.vue'
 </script>
 
 <template>
@@ -8,9 +9,7 @@ import { RouterLink } from 'vue-router'
       <div class="grid gap-8 md:grid-cols-4">
         <div class="md:col-span-2">
           <div class="flex items-center gap-2 font-semibold">
-            <span class="flex size-8 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-              JBM
-            </span>
+            <JbmLogo class="size-8 rounded-md" />
             JBM 开源平台
           </div>
           <p class="mt-3 max-w-md text-sm leading-6 text-muted-foreground">

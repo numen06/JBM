@@ -20,7 +20,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * [Sa-Token 权限认证] 拦截器
+ * 网关层 Sa-Token 全局过滤器（WebFlux）。
+ * <p>
+ * <b>设计说明</b>：网关不在此层执行 {@code StpUtil.checkLogin()}。登录/OAuth2 校验由下游
+ * Center/Auth 的 {@link com.jbm.cluster.common.security.configuration.JbmSecurityConfiguration} 负责；
+ * 网关侧仅做白名单排除、API 签名（{@link ApiSignatureFilter}）、API Key 授权
+ * （{@link DeveloperAuthFilter}）及内部互信 Header 注入（{@link ForwardAuthFilter}）。
+ * 白名单路径见 {@code security.ignore.whites} 与 {@code jbm.api.sign-ignores}。
+ * </p>
  *
  * @author Lion Li
  */
@@ -28,34 +35,21 @@ import java.util.Set;
 public class SaAuthFilter {
 
     /**
-     * 不需要拦截地址
+     * 硬编码补充放行（与 security.ignore.whites 中 favicon/actuator 对齐，避免配置未加载时遗漏）
      */
     private static final String[] excludeUrls = {"/favicon.ico", "/static/favicon.ico", "/actuator/**"};
 
-    // 注册 Sa-Token全局过滤器
     @Bean
     public SaReactorFilter getSaReactorFilter(IgnoreWhiteProperties ignoreWhite) {
         Set<String> whiteList = new HashSet<>();
         CollUtil.addAll(whiteList, excludeUrls);
         CollUtil.addAll(whiteList, ignoreWhite.getWhites());
         return new SaReactorFilter()
-                // 拦截地址
                 .addInclude("/**")
-                // 开放地址
                 .addExclude(ArrayUtil.toArray(whiteList, String.class))
-                // 鉴权方法：每次访问进入
-                .setAuth(obj -> {
-                    // 登录校验 -- 拦截所有路由
-                    SaRouter.match("/**", r -> {
-                        // 检查是否登录 是否有token
-//                        StpUtil.checkLogin();
-                        // 有效率影响 用于临时测试
-                        // if (log.isDebugEnabled()) {
-                        //     log.debug("剩余有效时间: {}", StpUtil.getTokenTimeout());
-                        //     log.debug("临时有效时间: {}", StpUtil.getTokenActivityTimeout());
-                        // }
-                    });
-                }).setError(e -> {
+                //  intentionally 不调用 StpUtil.checkLogin()，见类注释
+                .setAuth(obj -> SaRouter.match("/**", r -> {
+                })).setError(e -> {
                     HttpStatus status = HttpStatus.UNAUTHORIZED;
                     String msg = "网关认证失败，无法访问系统资源";
                     if (e instanceof NotPermissionException) {

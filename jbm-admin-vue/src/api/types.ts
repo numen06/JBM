@@ -121,6 +121,11 @@ export interface BaseDic {
   remark?: string
   dicValue?: string
   parentId?: number
+  level?: number
+  cssClass?: string
+  listClass?: string
+  serviceId?: string
+  children?: BaseDic[]
 }
 
 export interface BaseAuthority {

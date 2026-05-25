@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
 import Button from '@/components/ui/Button.vue'
+import JbmLogo from '@/components/JbmLogo.vue'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
@@ -41,11 +42,7 @@ async function handleLogout() {
       "
     >
       <div class="flex h-14 items-center gap-2 border-b px-4">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground"
-        >
-          J
-        </div>
+        <JbmLogo class="size-8 rounded-md" alt="JBM" />
         <span v-if="!app.sidebarCollapsed" class="font-semibold">JBM 管理后台</span>
       </div>
       <nav class="flex-1 overflow-y-auto p-2">

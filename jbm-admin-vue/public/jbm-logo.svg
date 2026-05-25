@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">JBM Platform Logo</title>
+  <desc id="desc">A compact abstract logo for an open authentication and API platform.</desc>
+  <rect width="256" height="256" rx="56" fill="#0B1220"/>
+  <path d="M80 84C80 72.954 88.954 64 100 64H156C167.046 64 176 72.954 176 84V172C176 183.046 167.046 192 156 192H100C88.954 192 80 183.046 80 172V84Z" fill="#102A43"/>
+  <path d="M128 54L188 89V159L128 194L68 159V89L128 54Z" stroke="#60A5FA" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M128 86L160 104V142L128 160L96 142V104L128 86Z" fill="#0B1220" stroke="#2DD4BF" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M128 54V86" stroke="#A7F3D0" stroke-width="12" stroke-linecap="round"/>
+  <path d="M68 89L96 104" stroke="#93C5FD" stroke-width="12" stroke-linecap="round"/>
+  <path d="M188 89L160 104" stroke="#93C5FD" stroke-width="12" stroke-linecap="round"/>
+  <path d="M68 159L96 142" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
+  <path d="M188 159L160 142" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
+  <path d="M128 160V194" stroke="#A7F3D0" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="128" cy="54" r="12" fill="#2DD4BF"/>
+  <circle cx="68" cy="89" r="10" fill="#60A5FA"/>
+  <circle cx="188" cy="89" r="10" fill="#60A5FA"/>
+  <circle cx="68" cy="159" r="10" fill="#10B981"/>
+  <circle cx="188" cy="159" r="10" fill="#10B981"/>
+  <circle cx="128" cy="194" r="12" fill="#2DD4BF"/>
+</svg>

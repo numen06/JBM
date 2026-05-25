@@ -4,6 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { BookOpen, LayoutDashboard, Menu, X } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/ui/Button.vue'
+import JbmLogo from '@/components/JbmLogo.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -28,11 +29,7 @@ const dashboardTo = computed(() =>
   <header class="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
       <RouterLink to="/" class="flex items-center gap-2.5 font-semibold tracking-tight">
-        <span
-          class="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm"
-        >
-          JBM
-        </span>
+        <JbmLogo class="size-9 rounded-lg shadow-sm" />
         <span class="hidden text-lg sm:inline">JBM 开源平台</span>
       </RouterLink>
 

@@ -1,8 +1,6 @@
 package com.jbm.cluster.platform.gateway.config;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
-import com.jbm.cluster.platform.gateway.filter.GatewayContextFilter;
-import com.jbm.cluster.platform.gateway.filter.RemoveGatewayContextFilter;
 import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
 import com.jbm.cluster.platform.gateway.handler.WebExceptionResolve;
 import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
@@ -14,6 +12,7 @@ import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
 import org.springframework.context.MessageSource;
@@ -30,6 +29,7 @@ import org.springframework.web.server.i18n.LocaleContextResolver;
 import java.util.Collections;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
+import reactor.core.publisher.Mono;
 
 
 /**
@@ -95,20 +95,12 @@ public class GatewayConfig implements WebFluxConfigurer {
         return resourceLocator;
     }
 
+    /**
+     * 动态限流路由 RequestRateLimiter 使用的 key 解析器（按请求路径）。
+     */
     @Bean
-    @ConditionalOnMissingBean(GatewayContextFilter.class)
-    public GatewayContextFilter gatewayContextFilter() {
-        log.info("Load GatewayContextFilter Config Bean");
-        return new GatewayContextFilter();
-    }
-
-
-    @Bean
-    @ConditionalOnMissingBean(RemoveGatewayContextFilter.class)
-    public RemoveGatewayContextFilter removeGatewayContextFilter() {
-        RemoveGatewayContextFilter gatewayContextFilter = new RemoveGatewayContextFilter();
-        log.info("Load RemoveGatewayContextFilter Config Bean");
-        return gatewayContextFilter;
+    public KeyResolver pathKeyResolver() {
+        return exchange -> Mono.just(exchange.getRequest().getURI().getPath());
     }
 
     @Bean

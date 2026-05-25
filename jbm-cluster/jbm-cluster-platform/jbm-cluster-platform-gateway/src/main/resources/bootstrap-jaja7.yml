@@ -57,10 +57,14 @@ jbm:
       - /**/user/sessions/**
       - /internal/dev/**
       - /internal/trust/**
+      - /qrcode/**
+      - /code
     auth-ignores:
       - /oauth2/**
       - /**/oauth2/**
       - /captcha/**
+      - /qrcode/**
+      - /code
       - /user/registrations
       - /**/user/registrations
       - /user/sessions
@@ -68,4 +72,26 @@ jbm:
       - /**/user/sessions
       - /**/user/sessions/**
       - /internal/dev/**
+      - /internal/trust/**
       - /actuator/**
+
+# jaja7 网关 SaReactorFilter 放行（覆盖 bootstrap 默认值，与 sign/auth-ignores 对齐）
+security:
+  ignore:
+    whites:
+      - /favicon.ico
+      - /static/favicon.ico
+      - /actuator/**
+      - /code
+      - /oauth2/**
+      - /captcha/**
+      - /qrcode/**
+      - /user/registrations
+      - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
+      - /internal/dev/**
+      - /internal/trust/**
+      - /*/v2/api-docs

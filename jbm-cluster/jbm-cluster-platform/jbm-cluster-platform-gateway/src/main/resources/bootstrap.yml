@@ -119,12 +119,41 @@ jbm:
       - /*/authority/granted/me
       - /*/authority/granted/me/menu
       - /*/current/user/**
+    # API Key 授权范围校验忽略（与 sign-ignores 对齐公共路径）
+    auth-ignores:
+      - /oauth2/**
+      - /**/oauth2/**
+      - /captcha/**
+      - /qrcode/**
+      - /code
+      - /user/registrations
+      - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
+      - /internal/dev/**
+      - /internal/trust/**
+      - /actuator/**
     # 签名忽略
     sign-ignores:
       - /**/login/**
       - /**/logout/**
+      - /oauth2/**
+      - /**/oauth2/**
       - /oauth2/publicKey
       - /**/oauth2/publicKey
+      - /captcha/**
+      - /qrcode/**
+      - /code
+      - /user/registrations
+      - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
+      - /internal/dev/**
+      - /internal/trust/**
 
 
 # Sa-Token配置
@@ -178,11 +207,25 @@ security:
     enabled: true
     excludeUrls:
       - /system/notice
-  # 不校验白名单
+  # 网关 SaReactorFilter 放行（与 jbm.api.sign-ignores 公共路径对齐）
   ignore:
     whites:
+      - /favicon.ico
+      - /static/favicon.ico
+      - /actuator/**
       - /code
       - /auth/**
       - /admin/**
+      - /oauth2/**
+      - /captcha/**
+      - /qrcode/**
+      - /user/registrations
+      - /**/user/registrations
+      - /user/sessions
+      - /user/sessions/**
+      - /**/user/sessions
+      - /**/user/sessions/**
+      - /internal/dev/**
+      - /internal/trust/**
       - /*/v2/api-docs
       - /csrf
