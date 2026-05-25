@@ -15,10 +15,12 @@ import { onMounted, ref } from 'vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
+import { useFeedback } from '@/composables/useFeedback'
 import { listApps, deleteApp, createApp, updateApp } from '@/api/app'
 import type { BaseApp } from '@/api/types'
 
 const { orgLabel, loadOrgs } = useOrgTree()
+const feedback = useFeedback()
 
 onMounted(loadOrgs)
 
@@ -84,7 +86,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: BaseApp) {
-  if (!row.appId || !confirm(`确认删除应用 ${row.appName}？`)) return
+  if (!row.appId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除应用',
+    message: `确认删除应用 ${row.appName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteApp(row.appId)
   load(page.value)
 }

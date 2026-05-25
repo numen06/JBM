@@ -210,7 +210,13 @@ export interface UserInfoStatistics {
 /** 在线会话（对齐后端 SysUserOnline） */
 export interface SysUserOnline {
   tokenId?: string
+  userId?: number
+  deptId?: number
   deptName?: string
+  companyId?: number
+  companyName?: string
+  appId?: number
+  appName?: string
   userName?: string
   ipaddr?: string
   loginLocation?: string
@@ -224,6 +230,8 @@ export interface SysUserOnline {
 export interface OnlineUserSearchForm {
   ipaddr?: string
   userName?: string
+  appId?: number
+  companyId?: number
   pageForm?: PageForm
 }
 

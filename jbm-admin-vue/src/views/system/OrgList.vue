@@ -27,6 +27,7 @@ import CardTitle from '@/components/ui/CardTitle.vue'
 import CardContent from '@/components/ui/CardContent.vue'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { usePagedList } from '@/composables/usePagedList'
+import { useFeedback } from '@/composables/useFeedback'
 import {
   useOrgTree,
   orgRowId,
@@ -41,6 +42,7 @@ import type { BaseOrg } from '@/api/types'
 type ViewMode = 'tree' | 'list'
 
 const viewMode = ref<ViewMode>('tree')
+const feedback = useFeedback()
 const keyword = ref('')
 const treeKeyword = ref('')
 const selectedOrgId = ref<number | undefined>()
@@ -239,10 +241,19 @@ async function handleDelete(row: BaseOrg) {
   if (!id) return
   const blocked = deleteBlockedReason(row)
   if (blocked) {
-    alert(blocked)
+    await feedback.alert({
+      title: '无法删除组织',
+      message: blocked,
+      variant: 'destructive',
+    })
     return
   }
-  if (!confirm(`确认删除组织「${row.orgName}」？`)) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除组织',
+    message: `确认删除组织「${row.orgName}」？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteOrg({ id })
   if (selectedOrgId.value === id) {
     selectedOrgId.value = undefined

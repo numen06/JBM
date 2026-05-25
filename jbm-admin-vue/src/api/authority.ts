@@ -75,3 +75,22 @@ export async function getUserAuthorities(userId: number) {
   const res = await get<OpenAuthority[]>(`/authority/users/${userId}`)
   return unwrap(res)
 }
+
+export async function putUserAuthorities(userId: number, authorityIds: string[]) {
+  const res = await put<void>(`/authority/users/${userId}`, { authorityIds })
+  return unwrap(res)
+}
+
+export async function getAppAuthorities(appId: number) {
+  const res = await get<OpenAuthority[]>(`/authority/apps/${appId}`)
+  return unwrap(res)
+}
+
+export async function putAppAuthorities(
+  appId: number,
+  authorityIds: string[],
+  expireTime?: string,
+) {
+  const res = await put<void>(`/authority/apps/${appId}`, { authorityIds, expireTime })
+  return unwrap(res)
+}

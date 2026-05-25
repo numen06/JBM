@@ -13,4 +13,8 @@ public class OnlineUserSearchForm extends PageSearchForm {
 
     private String ipaddr;
     private String userName;
+    /** 按应用筛选（可选） */
+    private Long appId;
+    /** 按组织筛选（超管可选） */
+    private Long companyId;
 }

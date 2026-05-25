@@ -5,7 +5,7 @@ import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 export async function listOnlineUsers(
   page = 1,
   size = DEFAULT_PAGE_SIZE,
-  search?: Pick<OnlineUserSearchForm, 'ipaddr' | 'userName'>,
+  search?: Pick<OnlineUserSearchForm, 'ipaddr' | 'userName' | 'appId' | 'companyId'>,
 ) {
   const body: OnlineUserSearchForm = {
     pageForm: { currPage: page, pageSize: size },

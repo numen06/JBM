@@ -1,0 +1,120 @@
+{
+  "base": "http://127.0.0.1:5173",
+  "runId": "2026-05-25T10-02-19-427Z",
+  "startedAt": "2026-05-25T10:02:19.429Z",
+  "user": "jbm_e2e_03339429",
+  "steps": [
+    {
+      "name": "register-from-ui",
+      "status": "passed",
+      "at": "2026-05-25T10:02:23.707Z"
+    },
+    {
+      "name": "new-user-login",
+      "status": "passed",
+      "at": "2026-05-25T10:02:26.089Z",
+      "username": "jbm_e2e_03339429",
+      "clientId": "demo"
+    },
+    {
+      "name": "api-wiki-public",
+      "status": "passed",
+      "at": "2026-05-25T10:02:27.764Z",
+      "url": "http://127.0.0.1:5173/docs",
+      "textLength": 6068
+    },
+    {
+      "name": "admin-login",
+      "status": "passed",
+      "at": "2026-05-25T10:02:30.334Z",
+      "username": "admin",
+      "clientId": "demo"
+    },
+    {
+      "name": "online-statistics-match-list",
+      "status": "passed",
+      "at": "2026-05-25T10:02:37.232Z",
+      "statsOnline": 104,
+      "total": 104,
+      "rowCount": 20
+    },
+    {
+      "name": "online-users-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:42.070Z",
+      "url": "http://127.0.0.1:5173/system/online-users",
+      "textLength": 1640
+    },
+    {
+      "name": "extend-field-group-click",
+      "status": "passed",
+      "at": "2026-05-25T10:02:45.433Z",
+      "beforeLength": 626,
+      "afterLength": 626
+    },
+    {
+      "name": "org-management-tree-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:47.858Z",
+      "url": "http://127.0.0.1:5173/system/orgs",
+      "textLength": 546
+    },
+    {
+      "name": "org-management-list-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:47.990Z"
+    },
+    {
+      "name": "menu-management-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:50.204Z",
+      "url": "http://127.0.0.1:5173/system/menus",
+      "textLength": 1371
+    },
+    {
+      "name": "gateway-routes-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:52.421Z",
+      "url": "http://127.0.0.1:5173/gateway/routes",
+      "textLength": 602
+    },
+    {
+      "name": "gateway-rate-limit-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:54.644Z",
+      "url": "http://127.0.0.1:5173/gateway/rate-limit",
+      "textLength": 399
+    },
+    {
+      "name": "gateway-ip-limit-page",
+      "status": "passed",
+      "at": "2026-05-25T10:02:56.864Z",
+      "url": "http://127.0.0.1:5173/gateway/ip-limit",
+      "textLength": 192
+    }
+  ],
+  "screenshots": [
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\01-register-success.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\02-new-user-dashboard.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\03-api-wiki.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\04-admin-dashboard.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\05-online-users.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\06-extend-fields-group-detail.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\07-org-management-tree.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\08-org-management-list.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\09-menu-management.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\10-gateway-routes.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\11-gateway-rate-limit.png",
+    "D:\\workspaces\\JBM7\\.cursor\\runs\\browser-regression-2026-05-25T10-02-19-427Z\\screenshots\\12-gateway-ip-limit.png"
+  ],
+  "networkErrors": [],
+  "checks": {
+    "online": {
+      "statsOnline": 104,
+      "total": 104,
+      "rowCount": 20
+    }
+  },
+  "status": "passed",
+  "finishedAt": "2026-05-25T10:02:56.864Z"
+}

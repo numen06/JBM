@@ -12,10 +12,12 @@ import Table from '@/components/ui/Table.vue'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { pageRootDicts, pageDictItems, saveDict, deleteDict } from '@/api/dict'
 import { usePermission } from '@/composables/usePermission'
+import { useFeedback } from '@/composables/useFeedback'
 import type { BaseDic } from '@/api/types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const { hasAction } = usePermission()
+const feedback = useFeedback()
 
 type DialogMode = 'group' | 'item'
 
@@ -256,7 +258,12 @@ async function handleDeleteGroup(g: BaseDic) {
     childCount > 0
       ? `分组「${dicName(g)}」下还有 ${childCount} 个字典项，确认删除分组？`
       : `确认删除分组「${dicName(g)}」？`
-  if (!confirm(msg)) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除字典分组',
+    message: msg,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteDict({ id })
   if (selectedGroup.value && dicId(selectedGroup.value) === id) {
     selectedGroup.value = null
@@ -268,7 +275,13 @@ async function handleDeleteGroup(g: BaseDic) {
 
 async function handleDeleteItem(row: BaseDic) {
   const id = dicId(row)
-  if (!id || !confirm(`确认删除字典项「${dicName(row)}」？`)) return
+  if (!id) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除字典项',
+    message: `确认删除字典项「${dicName(row)}」？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteDict({ id })
   await loadItems(itemPage.value)
 }

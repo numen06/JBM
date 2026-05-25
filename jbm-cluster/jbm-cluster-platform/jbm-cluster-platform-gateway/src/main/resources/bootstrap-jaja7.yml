@@ -7,13 +7,13 @@ spring:
         - id: jaja7-center-local
           uri: http://127.0.0.1:8888
           predicates:
-            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/online/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**,/customForms/**,/customFormsItem/**
+            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**,/customForms/**,/customFormsItem/**
           metadata:
             serviceId: jbm-cluster-platform-center
         - id: jaja7-auth-local
           uri: http://127.0.0.1:5555
           predicates:
-            - Path=/oauth2/**,/captcha/**,/qrcode/**,/internal/dev/**
+            - Path=/oauth2/**,/captcha/**,/qrcode/**,/online/**,/internal/dev/**
     nacos:
       config:
         namespace: jbm7

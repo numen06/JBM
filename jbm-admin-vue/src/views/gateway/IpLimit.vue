@@ -13,11 +13,13 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { useFeedback } from '@/composables/useFeedback'
 import { listIpLimits, createIpLimit, updateIpLimit, deleteIpLimit } from '@/api/gateway'
 import type { GatewayIpLimit } from '@/api/types'
 
 const keyword = ref('')
 const policyTypeFilter = ref('')
+const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayIpLimit>(
   (p, s) =>
@@ -73,7 +75,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: GatewayIpLimit) {
-  if (!row.policyId || !confirm(`确认删除 IP 策略 ${row.policyName}？`)) return
+  if (!row.policyId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除 IP 策略',
+    message: `确认删除 IP 策略 ${row.policyName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteIpLimit(row.policyId)
   load(page.value)
 }

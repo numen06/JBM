@@ -14,11 +14,13 @@ import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { usePermission } from '@/composables/usePermission'
+import { useFeedback } from '@/composables/useFeedback'
 import { listMenus, deleteMenu, createMenu, updateMenu, type MenuScope } from '@/api/menu'
 import { listApps } from '@/api/app'
 import type { BaseApp, BaseMenu } from '@/api/types'
 
 const { isSuperAdmin } = usePermission()
+const feedback = useFeedback()
 
 const keyword = ref('')
 const scopeFilter = ref<MenuScope>('visible')
@@ -186,19 +188,36 @@ async function handleSave() {
 async function handleDelete(row: BaseMenu) {
   if (!row.menuId) return
   if (isPlatformMenu(row) && !isSuperAdmin.value) {
-    alert('平台公共菜单仅平台超管可删除')
+    await feedback.alert({
+      title: '无法删除菜单',
+      message: '平台公共菜单仅平台超管可删除',
+      variant: 'destructive',
+    })
     return
   }
   if (row.isPersist) {
-    alert('保留菜单不可删除')
+    await feedback.alert({
+      title: '无法删除菜单',
+      message: '保留菜单不可删除',
+      variant: 'destructive',
+    })
     return
   }
-  if (!confirm(`确认删除菜单 ${row.menuName}？`)) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除菜单',
+    message: `确认删除菜单 ${row.menuName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   try {
     await deleteMenu(row.menuId)
     load(page.value)
   } catch (e) {
-    alert(e instanceof Error ? e.message : '删除失败')
+    await feedback.alert({
+      title: '删除失败',
+      message: e instanceof Error ? e.message : '删除失败',
+      variant: 'destructive',
+    })
   }
 }
 

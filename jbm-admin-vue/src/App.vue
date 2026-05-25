@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import UiFeedbackHost from '@/components/UiFeedbackHost.vue'
 
 const auth = useAuthStore()
 
@@ -12,4 +13,5 @@ onMounted(() => {
 
 <template>
   <RouterView />
+  <UiFeedbackHost />
 </template>

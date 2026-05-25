@@ -9,9 +9,13 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
+import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.SysUserOnline;
 import com.jbm.cluster.common.basic.utils.IpUtils;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
+import com.jbm.cluster.common.mysql.service.BaseOrgService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import jbm.framework.boot.autoconfigure.redis.RedisService;
@@ -37,6 +41,10 @@ public class UserActionListener extends SaTokenListenerForSimple {
 
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private BaseOrgService baseOrgService;
+    @Autowired
+    private BaseAppService baseAppService;
 
     /**
      * 每次登录时触发
@@ -57,8 +65,24 @@ public class UserActionListener extends SaTokenListenerForSimple {
         userOnline.setTokenId(tokenValue);
         userOnline.setExpiredTime(DateUtil.offsetSecond(userOnline.getLoginTime(), loginModel.getTimeout().intValue()));
         userOnline.setUserName(user.getUsername());
+        userOnline.setUserId(user.getUserId());
+        userOnline.setCompanyId(user.getCompanyId());
+        userOnline.setDeptId(user.getDeptId());
+        userOnline.setAppId(user.getAppId());
         if (ObjectUtil.isNotNull(user.getDeptName())) {
             userOnline.setDeptName(user.getDeptName());
+        }
+        if (user.getCompanyId() != null) {
+            BaseOrg company = baseOrgService.selectById(user.getCompanyId());
+            if (company != null) {
+                userOnline.setCompanyName(company.getOrgName());
+            }
+        }
+        if (user.getAppId() != null) {
+            BaseApp app = baseAppService.getAppInfo(user.getAppId());
+            if (app != null) {
+                userOnline.setAppName(app.getAppName());
+            }
         }
         redisService.setCacheObject(JbmCacheConstants.ONLINE_TOKEN_KEY + tokenValue, userOnline, tokenConfig.getTimeout(), TimeUnit.SECONDS);
         log.info("user doLogin, useId:{}, token:{}", loginId, tokenValue);

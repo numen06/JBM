@@ -12,6 +12,7 @@ import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { useFeedback } from '@/composables/useFeedback'
 import {
   listRateLimits,
   createRateLimit,
@@ -22,6 +23,7 @@ import type { GatewayRateLimit } from '@/api/types'
 
 const keyword = ref('')
 const policyTypeFilter = ref('')
+const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayRateLimit>(
   (p, s) =>
@@ -78,7 +80,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: GatewayRateLimit) {
-  if (!row.policyId || !confirm(`确认删除限流策略 ${row.policyName}？`)) return
+  if (!row.policyId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除限流策略',
+    message: `确认删除限流策略 ${row.policyName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteRateLimit(row.policyId)
   load(page.value)
 }

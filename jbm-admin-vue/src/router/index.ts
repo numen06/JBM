@@ -59,9 +59,43 @@ const router = createRouter({
         },
         {
           path: 'system/roles',
+          redirect: { name: 'roles' },
+        },
+        {
+          path: 'authority/roles',
           name: 'roles',
           component: () => import('@/views/system/RoleList.vue'),
           meta: { title: '角色管理' },
+        },
+        {
+          path: 'authority/user-permissions',
+          name: 'user-permissions',
+          component: () => import('@/views/authority/UserPermissionList.vue'),
+          meta: { title: '用户权限' },
+        },
+        {
+          path: 'authority/client-permissions',
+          name: 'client-permissions',
+          component: () => import('@/views/authority/ClientPermissionList.vue'),
+          meta: { title: '客户端权限' },
+        },
+        {
+          path: 'authority/catalog',
+          name: 'authority-catalog',
+          component: () => import('@/views/authority/AuthorityCatalog.vue'),
+          meta: { title: '权限目录' },
+        },
+        {
+          path: 'api/registry',
+          name: 'api-registry',
+          component: () => import('@/views/api/ApiRegistryList.vue'),
+          meta: { title: 'API 注册中心' },
+        },
+        {
+          path: 'api/monitor',
+          name: 'api-monitor',
+          component: () => import('@/views/api/ApiMonitorPage.vue'),
+          meta: { title: 'API 监控' },
         },
         {
           path: 'system/menus',
@@ -83,9 +117,7 @@ const router = createRouter({
         },
         {
           path: 'system/authorities',
-          name: 'authorities',
-          component: () => import('@/views/system/AuthorityList.vue'),
-          meta: { title: '权限管理' },
+          redirect: { name: 'authority-catalog' },
         },
         {
           path: 'system/apps',

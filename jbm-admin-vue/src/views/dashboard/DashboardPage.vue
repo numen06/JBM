@@ -21,7 +21,7 @@ const allShortcuts = [
   { title: 'API Key', to: '/developer/api-keys', icon: KeyRound, selfService: true },
   { title: 'API Wiki', to: '/docs', icon: BookOpen, selfService: true },
   { title: '用户管理', to: '/system/users', icon: Users },
-  { title: '角色管理', to: '/system/roles', icon: Shield },
+  { title: '角色管理', to: '/authority/roles', icon: Shield },
   { title: '应用管理', to: '/system/apps', icon: AppWindow },
   { title: '扩展字段', to: '/system/extend-fields', icon: FormInput },
   { title: '网关路由', to: '/gateway/routes', icon: Route },

@@ -28,9 +28,11 @@ import { listApps } from '@/api/app'
 import { getDeveloper } from '@/api/developer'
 import type { BaseApiKey, BaseApp, OpenAuthority } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
+import { useFeedback } from '@/composables/useFeedback'
 
 const keyword = ref('')
 const statusFilter = ref('')
+const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApiKey>(
   (p, s) =>
@@ -125,7 +127,13 @@ async function handleSave() {
 }
 
 async function handleResetSecret(row: BaseApiKey) {
-  if (!row.keyId || !confirm(`确认重置 ${row.keyName} 的 Secret？`)) return
+  if (!row.keyId) return
+  const confirmed = await feedback.confirm({
+    title: '确认重置 Secret',
+    message: `确认重置 ${row.keyName} 的 Secret？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   const secret = await resetApiKeySecret(row.keyId)
   secretValue.value = secret
   secretKeyName.value = row.keyName ?? row.apiKey ?? ''
@@ -140,7 +148,13 @@ async function handleToggleStatus(row: BaseApiKey) {
 }
 
 async function handleDelete(row: BaseApiKey) {
-  if (!row.keyId || !confirm(`确认删除 API Key「${row.keyName}」？`)) return
+  if (!row.keyId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除 API Key',
+    message: `确认删除 API Key「${row.keyName}」？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteApiKey(row.keyId)
   load(page.value)
 }

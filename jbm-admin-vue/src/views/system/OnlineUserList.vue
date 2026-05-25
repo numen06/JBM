@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
+import OrgTreeSelect from '@/components/OrgTreeSelect.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { usePermission } from '@/composables/usePermission'
+import { useFeedback } from '@/composables/useFeedback'
+import { listApps } from '@/api/app'
 import {
   expireToken,
   expireTokenImmediately,
@@ -16,22 +20,60 @@ import {
   listOnlineUsers,
   logoutUser,
 } from '@/api/online'
-import type { SysUserOnline } from '@/api/types'
+import type { BaseApp, SysUserOnline } from '@/api/types'
 
-const { hasAction } = usePermission()
+const { hasAction, isSuperAdmin } = usePermission()
+const feedback = useFeedback()
 
 const userName = ref('')
 const ipaddr = ref('')
+const appIdFilter = ref<number | string>('')
+const companyIdFilter = ref<number | string | null>('')
+const apps = ref<BaseApp[]>([])
 const actionError = ref('')
 const actionLoading = ref(false)
 
+const appNameMap = computed(() => {
+  const map = new Map<number, string>()
+  for (const app of apps.value) {
+    if (app.appId != null) map.set(app.appId, app.appName ?? String(app.appId))
+  }
+  return map
+})
+
+onMounted(async () => {
+  try {
+    const data = await listApps(1, 200)
+    apps.value = data.contents ?? []
+  } catch {
+    apps.value = []
+  }
+})
+
+function buildSearch() {
+  return {
+    userName: userName.value.trim() || undefined,
+    ipaddr: ipaddr.value.trim() || undefined,
+    appId:
+      appIdFilter.value !== '' && appIdFilter.value != null
+        ? Number(appIdFilter.value)
+        : undefined,
+    companyId:
+      isSuperAdmin.value && companyIdFilter.value !== '' && companyIdFilter.value != null
+        ? Number(companyIdFilter.value)
+        : undefined,
+  }
+}
+
 const { items, total, page, loading, error, load, pageSize } = usePagedList<SysUserOnline>(
-  (p, s) =>
-    listOnlineUsers(p, s, {
-      userName: userName.value.trim() || undefined,
-      ipaddr: ipaddr.value.trim() || undefined,
-    }),
+  (p, s) => listOnlineUsers(p, s, buildSearch()),
 )
+
+function appLabel(row: SysUserOnline) {
+  if (row.appName) return row.appName
+  if (row.appId == null) return '—'
+  return appNameMap.value.get(row.appId) ?? String(row.appId)
+}
 
 function search() {
   load(1)
@@ -66,29 +108,56 @@ async function runAction(fn: () => Promise<unknown>) {
 }
 
 async function handleKickout(row: SysUserOnline) {
-  if (!row.tokenId || !confirm(`确认踢出用户 ${row.userName ?? row.tokenId}？`)) return
+  if (!row.tokenId) return
+  const confirmed = await feedback.confirm({
+    title: '确认踢出用户',
+    message: `确认踢出用户 ${row.userName ?? row.tokenId}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await runAction(() => kickoutUser(row.tokenId!))
 }
 
 async function handleLogout(row: SysUserOnline) {
-  if (!row.tokenId || !confirm(`确认注销会话 ${row.userName ?? row.tokenId}？`)) return
+  if (!row.tokenId) return
+  const confirmed = await feedback.confirm({
+    title: '确认注销会话',
+    message: `确认注销会话 ${row.userName ?? row.tokenId}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await runAction(() => logoutUser(row.tokenId!))
 }
 
 async function handleExpire(row: SysUserOnline) {
   if (!row.tokenId) return
-  const raw = prompt('设置多少分钟后过期？', '30')
+  const raw = await feedback.prompt({
+    title: '设置过期时间',
+    message: '设置多少分钟后过期？',
+    defaultValue: '30',
+    placeholder: '分钟',
+  })
   if (raw == null) return
   const minutes = Number.parseInt(raw, 10)
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    actionError.value = '过期时间须为正整数（分钟）'
+    await feedback.alert({
+      title: '输入无效',
+      message: '过期时间必须为正整数（分钟）',
+      variant: 'destructive',
+    })
     return
   }
   await runAction(() => expireToken(row.tokenId!, minutes))
 }
 
 async function handleExpireImmediately(row: SysUserOnline) {
-  if (!row.tokenId || !confirm(`确认立即过期会话 ${row.userName ?? row.tokenId}？`)) return
+  if (!row.tokenId) return
+  const confirmed = await feedback.confirm({
+    title: '确认立即过期',
+    message: `确认立即过期会话 ${row.userName ?? row.tokenId}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await runAction(() => expireTokenImmediately(row.tokenId!))
 }
 </script>
@@ -100,6 +169,19 @@ async function handleExpireImmediately(row: SysUserOnline) {
       description="Auth /online — 监控当前登录会话，支持踢出、注销与过期控制"
     >
       <template #actions>
+        <OrgTreeSelect
+          v-if="isSuperAdmin"
+          v-model="companyIdFilter"
+          placeholder="全部组织"
+          class="w-44"
+          @update:model-value="search"
+        />
+        <Select v-model="appIdFilter" class="w-40" @change="search">
+          <option value="">全部应用</option>
+          <option v-for="app in apps" :key="app.appId" :value="app.appId">
+            {{ app.appName }}
+          </option>
+        </Select>
         <Input
           v-model="userName"
           placeholder="用户名"
@@ -127,6 +209,8 @@ async function handleExpireImmediately(row: SysUserOnline) {
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">用户名</th>
+            <th class="h-10 px-4 text-left font-medium">组织</th>
+            <th class="h-10 px-4 text-left font-medium">应用</th>
             <th class="h-10 px-4 text-left font-medium">部门</th>
             <th class="h-10 px-4 text-left font-medium">IP</th>
             <th class="h-10 px-4 text-left font-medium">登录地点</th>
@@ -142,6 +226,8 @@ async function handleExpireImmediately(row: SysUserOnline) {
         <tbody>
           <tr v-for="row in items" :key="row.tokenId" class="border-b">
             <td class="p-4 font-medium">{{ row.userName ?? '—' }}</td>
+            <td class="p-4">{{ row.companyName ?? '—' }}</td>
+            <td class="p-4">{{ appLabel(row) }}</td>
             <td class="p-4">{{ row.deptName ?? '—' }}</td>
             <td class="p-4 font-mono text-sm">{{ row.ipaddr ?? '—' }}</td>
             <td class="p-4 text-sm">{{ row.loginLocation ?? '—' }}</td>

@@ -17,7 +17,8 @@ import com.jbm.cluster.common.mysql.service.BaseAccountService;
 import com.jbm.cluster.common.mysql.service.BaseRoleService;
 import com.jbm.cluster.common.mysql.service.BaseUserOrgService;
 import com.jbm.cluster.common.mysql.service.BaseUserService;
-import com.jbm.cluster.core.constant.JbmCacheConstants;
+import com.jbm.cluster.common.mysql.service.OnlineUserFilter;
+import com.jbm.cluster.common.mysql.service.OnlineUserMonitorService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -27,12 +28,10 @@ import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import jbm.framework.boot.autoconfigure.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,7 +55,7 @@ public class BaseUserController extends BaseController {
     @Autowired
     private BaseUserOrgService baseUserOrgService;
     @Autowired
-    private RedisService redisService;
+    private OnlineUserMonitorService onlineUserMonitorService;
 
     @ApiOperation(value = "用户列表")
     @GetMapping
@@ -118,25 +117,7 @@ public class BaseUserController extends BaseController {
     }
 
     private long countOnlineUsers() {
-        Collection<String> onlineKeys = redisService.keys(JbmCacheConstants.ONLINE_TOKEN_KEY + "*");
-        if (onlineKeys == null || onlineKeys.isEmpty()) {
-            return 0L;
-        }
-        long count = 0L;
-        for (String onlineKey : onlineKeys) {
-            try {
-                if (redisService.getCacheObject(onlineKey) == null) {
-                    continue;
-                }
-                Long expireTime = redisService.getExpire(onlineKey);
-                if (expireTime != null && expireTime <= 0) {
-                    continue;
-                }
-                count++;
-            } catch (Exception ignored) {
-            }
-        }
-        return count;
+        return onlineUserMonitorService.countOnlineUsers(new OnlineUserFilter());
     }
 
     @ApiOperation(value = "用户详情")

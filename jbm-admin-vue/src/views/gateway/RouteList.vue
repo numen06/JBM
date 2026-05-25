@@ -13,11 +13,13 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { useFeedback } from '@/composables/useFeedback'
 import { listRoutes, deleteRoute, createRoute, updateRoute } from '@/api/gateway'
 import type { GatewayRoute } from '@/api/types'
 
 const keyword = ref('')
 const statusFilter = ref('')
+const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayRoute>(
   (p, s) =>
@@ -71,7 +73,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: GatewayRoute) {
-  if (!row.routeId || !confirm(`确认删除路由 ${row.routeName}？`)) return
+  if (!row.routeId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除路由',
+    message: `确认删除路由 ${row.routeName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteRoute(row.routeId)
   load(page.value)
 }

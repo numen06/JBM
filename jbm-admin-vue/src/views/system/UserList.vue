@@ -15,6 +15,7 @@ import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { orgRowId, useOrgTree } from '@/composables/useOrgTree'
+import { useFeedback } from '@/composables/useFeedback'
 import {
   listUsers,
   closeUser,
@@ -29,6 +30,7 @@ import { usePermission } from '@/composables/usePermission'
 import type { BaseAccount, BaseRole, BaseUser } from '@/api/types'
 
 const { hasAction } = usePermission()
+const feedback = useFeedback()
 const { flatOrgs, orgLabel, loadOrgs } = useOrgTree()
 
 const allRoles = ref<BaseRole[]>([])
@@ -178,7 +180,13 @@ async function handleSave() {
 }
 
 async function handleClose(row: BaseUser) {
-  if (!row.userId || !confirm(`确认注销用户 ${row.userName}？`)) return
+  if (!row.userId) return
+  const confirmed = await feedback.confirm({
+    title: '确认注销用户',
+    message: `确认注销用户 ${row.userName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await closeUser(row.userId)
   load(page.value)
 }

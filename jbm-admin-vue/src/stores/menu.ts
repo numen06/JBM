@@ -44,7 +44,10 @@ export const useMenuStore = defineStore('menu', () => {
     if (rawMenus.value.length === 0) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true
     if (SELF_SERVICE_PATHS.has(path)) return true
-    return allowedPaths.value.has(path)
+    if (allowedPaths.value.has(path)) return true
+    const normalized = normalizeMenuPath(path)
+    if (normalized && allowedPaths.value.has(normalized)) return true
+    return false
   }
 
   async function fetchMenus() {

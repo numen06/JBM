@@ -38,6 +38,7 @@ const menuStore = useMenuStore()
 const canManageDevelopers = computed(
   () =>
     menuStore.allowedPaths.has('/system/users') ||
+    menuStore.allowedPaths.has('/authority/roles') ||
     menuStore.allowedPaths.has('/system/roles') ||
     menuStore.allowedMenuCodes.has('developer_mgmt'),
 )

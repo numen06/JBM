@@ -16,13 +16,19 @@ import {
   Code2,
   MousePointerClick,
   UserCheck,
+  UserCog,
+  ListTree,
+  Server,
+  Activity,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
 export const MENU_PATH_ALIASES: Record<string, string> = {
   '/system/user': '/system/users',
-  '/system/role': '/system/roles',
-  '/system/authority': '/system/authorities',
+  '/system/role': '/authority/roles',
+  '/system/roles': '/authority/roles',
+  '/system/authority': '/authority/catalog',
+  '/system/authorities': '/authority/catalog',
   '/system/developer': '/developer',
   '/system/online-users/index': '/system/online-users',
 }
@@ -63,23 +69,7 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         to: '/system/online-users',
         menuCodes: ['onlineUsers'],
       },
-      { name: 'roles', title: '角色管理', icon: Shield, to: '/system/roles', menuCodes: ['role', 'roles'] },
-      { name: 'menus', title: '菜单管理', icon: Menu, to: '/system/menus', menuCodes: ['menus', 'menu'] },
-      {
-        name: 'actions',
-        title: '按钮管理',
-        icon: MousePointerClick,
-        to: '/system/actions',
-        menuCodes: ['actions', 'action'],
-      },
       { name: 'orgs', title: '组织管理', icon: Building2, to: '/system/orgs', menuCodes: ['orgs', 'org'] },
-      {
-        name: 'authorities',
-        title: '权限管理',
-        icon: KeyRound,
-        to: '/system/authorities',
-        menuCodes: ['authority'],
-      },
       { name: 'apps', title: '应用管理', icon: AppWindow, to: '/system/apps', menuCodes: ['apps', 'app'] },
       { name: 'dicts', title: '字典管理', icon: BookOpen, to: '/system/dicts', menuCodes: ['dicts', 'dict'] },
       {
@@ -88,6 +78,52 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         icon: FormInput,
         to: '/system/extend-fields',
         menuCodes: ['extend_fields'],
+      },
+    ],
+  },
+  {
+    label: '权限管理',
+    items: [
+      { name: 'roles', title: '角色管理', icon: Shield, to: '/authority/roles', menuCodes: ['role', 'roles'] },
+      {
+        name: 'user-permissions',
+        title: '用户权限',
+        icon: UserCog,
+        to: '/authority/user-permissions',
+        menuCodes: ['user_perm', 'user_permissions'],
+      },
+      {
+        name: 'client-permissions',
+        title: '客户端权限',
+        icon: KeyRound,
+        to: '/authority/client-permissions',
+        menuCodes: ['client_perm', 'app_perm'],
+      },
+      {
+        name: 'authority-catalog',
+        title: '权限目录',
+        icon: ListTree,
+        to: '/authority/catalog',
+        menuCodes: ['authority', 'authority_catalog'],
+      },
+    ],
+  },
+  {
+    label: 'API 管理',
+    items: [
+      {
+        name: 'api-registry',
+        title: 'API 注册中心',
+        icon: Server,
+        to: '/api/registry',
+        menuCodes: ['api_registry', 'api_mgmt'],
+      },
+      {
+        name: 'api-monitor',
+        title: 'API 监控',
+        icon: Activity,
+        to: '/api/monitor',
+        menuCodes: ['api_monitor'],
       },
     ],
   },
@@ -102,6 +138,14 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
   {
     label: '其他',
     items: [
+      { name: 'menus', title: '菜单管理', icon: Menu, to: '/system/menus', menuCodes: ['menus', 'menu'] },
+      {
+        name: 'actions',
+        title: '按钮管理',
+        icon: MousePointerClick,
+        to: '/system/actions',
+        menuCodes: ['actions', 'action'],
+      },
       { name: 'account-logs', title: '审计日志', icon: ScrollText, to: '/log/account', menuCodes: ['account_logs'] },
       { name: 'developer', title: '开发者', icon: Code2, to: '/developer', menuCodes: ['developer', 'developer_mgmt'] },
     ],

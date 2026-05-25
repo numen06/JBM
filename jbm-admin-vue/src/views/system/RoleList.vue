@@ -13,6 +13,7 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { useFeedback } from '@/composables/useFeedback'
 import { listRoles, deleteRole, createRole, updateRole } from '@/api/role'
 import {
   listAuthorityMenus,
@@ -26,6 +27,7 @@ import { listActions } from '@/api/action'
 import type { BaseAction, BaseRole } from '@/api/types'
 
 const keyword = ref('')
+const feedback = useFeedback()
 const statusFilter = ref('')
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseRole>(
@@ -158,7 +160,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: BaseRole) {
-  if (!row.roleId || !confirm(`确认删除角色 ${row.roleName}？`)) return
+  if (!row.roleId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除角色',
+    message: `确认删除角色 ${row.roleName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteRole(row.roleId)
   load(page.value)
 }
@@ -168,7 +176,7 @@ async function handleDelete(row: BaseRole) {
   <div>
     <PageHeader
       title="角色管理"
-      description="Center /role — 菜单 + 按钮级权限（ACTION_*）"
+      description="Center /role — 为角色分配菜单与按钮权限（ACTION_*）"
     >
       <template #actions>
         <Input v-model="keyword" placeholder="编码/名称" class="w-40" @keyup.enter="search" />

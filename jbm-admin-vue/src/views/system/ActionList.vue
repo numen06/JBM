@@ -12,12 +12,14 @@ import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { usePagedList } from '@/composables/usePagedList'
+import { useFeedback } from '@/composables/useFeedback'
 import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listAllMenus } from '@/api/menu'
 import type { BaseAction, BaseMenu } from '@/api/types'
 
 const filterMenuId = ref<string>('')
 const menus = ref<BaseMenu[]>([])
+const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseAction>(
   (p, size) => {
@@ -96,7 +98,13 @@ async function handleSave() {
 }
 
 async function handleDelete(row: BaseAction) {
-  if (!row.actionId || !confirm(`确认删除按钮 ${row.actionName}？`)) return
+  if (!row.actionId) return
+  const confirmed = await feedback.confirm({
+    title: '确认删除按钮',
+    message: `确认删除按钮 ${row.actionName}？`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
   await deleteAction(row.actionId)
   await load(page.value)
 }

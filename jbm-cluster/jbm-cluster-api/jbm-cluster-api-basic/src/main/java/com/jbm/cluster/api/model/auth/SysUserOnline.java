@@ -73,4 +73,22 @@ public class SysUserOnline implements Serializable {
     @ApiModelProperty(value = "临时有效期")
     private Date activityTime;
 
+    @ApiModelProperty(value = "用户ID")
+    private Long userId;
+
+    @ApiModelProperty(value = "部门ID")
+    private Long deptId;
+
+    @ApiModelProperty(value = "组织ID")
+    private Long companyId;
+
+    @ApiModelProperty(value = "组织名称")
+    private String companyName;
+
+    @ApiModelProperty(value = "应用ID")
+    private Long appId;
+
+    @ApiModelProperty(value = "应用名称")
+    private String appName;
+
 }
