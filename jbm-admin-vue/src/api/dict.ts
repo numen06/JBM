@@ -12,6 +12,30 @@ export async function listRootDicts() {
   return unwrap(res)
 }
 
+/** 分页查询字典分组；keyword 匹配编码/名称 */
+export async function pageRootDicts(page = 1, size = 15, keyword?: string) {
+  const model: Partial<BaseDic> = {}
+  const kw = keyword?.trim()
+  if (kw) model.name = kw
+  const res = await post<DataPaging<BaseDic>>('/baseDic/root/pageList', {
+    pageForm: { currPage: page, pageSize: size },
+    model,
+  })
+  return unwrap(res)
+}
+
+/** 分页查询指定分组下的字典项 */
+export async function pageDictItems(parentId: number, page = 1, size = 20, keyword?: string) {
+  const model: Partial<BaseDic> = { parentId }
+  const kw = keyword?.trim()
+  if (kw) model.name = kw
+  const res = await post<DataPaging<BaseDic>>('/baseDic/items/pageList', {
+    pageForm: { currPage: page, pageSize: size },
+    model,
+  })
+  return unwrap(res)
+}
+
 export async function pageDicts(page = 1, size = 20) {
   const res = await post<DataPaging<BaseDic>>('/baseDic/pageList', {
     pageForm: { currPage: page, pageSize: size },

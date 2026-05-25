@@ -204,6 +204,26 @@ export interface UserInfoStatistics {
   usersTotal?: number
 }
 
+/** 在线会话（对齐后端 SysUserOnline） */
+export interface SysUserOnline {
+  tokenId?: string
+  deptName?: string
+  userName?: string
+  ipaddr?: string
+  loginLocation?: string
+  browser?: string
+  os?: string
+  loginTime?: string
+  expiredTime?: string
+  activityTime?: string
+}
+
+export interface OnlineUserSearchForm {
+  ipaddr?: string
+  userName?: string
+  pageForm?: PageForm
+}
+
 export interface CurrentUser {
   userId?: number
   userName?: string

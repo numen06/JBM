@@ -1,11 +1,14 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.common.collect.Maps;
 import com.jbm.cluster.api.entitys.basic.BaseDic;
 import com.jbm.cluster.common.mysql.service.BaseDicService;
 import com.jbm.framework.masterdata.utils.EntityUtils;
+import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.service.mybatis.MasterDataTreeServiceImpl;
+import com.jbm.framework.usage.paging.PageForm;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -55,6 +58,34 @@ public class BaseDicServiceImpl extends MasterDataTreeServiceImpl<BaseDic> imple
         queryWrapper.eq(EntityUtils.toDbName(BaseDic::getParentId), parentId);
         queryWrapper.eq(EntityUtils.toDbName(BaseDic::getCode), code);
         return this.selectEntityByWapper(queryWrapper);
+    }
+
+    @Override
+    public DataPaging<BaseDic> pageRootList(String keyword, PageForm pageForm) {
+        QueryWrapper<BaseDic> queryWrapper = currentQueryWrapper();
+        queryWrapper.isNull(EntityUtils.toDbName(BaseDic::getParentId));
+        applyKeywordLike(queryWrapper, keyword);
+        return this.selectEntitysByWapper(queryWrapper, pageForm);
+    }
+
+    @Override
+    public DataPaging<BaseDic> pageItemsByParentId(Long parentId, String keyword, PageForm pageForm) {
+        QueryWrapper<BaseDic> queryWrapper = currentQueryWrapper();
+        queryWrapper.eq(EntityUtils.toDbName(BaseDic::getParentId), parentId);
+        applyKeywordLike(queryWrapper, keyword);
+        return this.selectEntitysByWapper(queryWrapper, pageForm);
+    }
+
+    private void applyKeywordLike(QueryWrapper<BaseDic> queryWrapper, String keyword) {
+        if (StrUtil.isBlank(keyword)) {
+            return;
+        }
+        String kw = keyword.trim();
+        queryWrapper.and(w -> w.like(EntityUtils.toDbName(BaseDic::getCode), kw)
+                .or()
+                .like(EntityUtils.toDbName(BaseDic::getName), kw)
+                .or()
+                .like(EntityUtils.toDbName(BaseDic::getRemark), kw));
     }
 
 }

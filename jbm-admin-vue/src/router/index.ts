@@ -52,6 +52,12 @@ const router = createRouter({
           meta: { title: '用户管理' },
         },
         {
+          path: 'system/online-users',
+          name: 'online-users',
+          component: () => import('@/views/system/OnlineUserList.vue'),
+          meta: { title: '在线用户' },
+        },
+        {
           path: 'system/roles',
           name: 'roles',
           component: () => import('@/views/system/RoleList.vue'),

@@ -15,6 +15,7 @@ import {
   ScrollText,
   Code2,
   MousePointerClick,
+  UserCheck,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -23,6 +24,7 @@ export const MENU_PATH_ALIASES: Record<string, string> = {
   '/system/role': '/system/roles',
   '/system/authority': '/system/authorities',
   '/system/developer': '/developer',
+  '/system/online-users/index': '/system/online-users',
 }
 
 export function normalizeMenuPath(path?: string): string {
@@ -54,6 +56,13 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
     label: '系统管理',
     items: [
       { name: 'users', title: '用户管理', icon: Users, to: '/system/users', menuCodes: ['user', 'users'] },
+      {
+        name: 'online-users',
+        title: '在线用户',
+        icon: UserCheck,
+        to: '/system/online-users',
+        menuCodes: ['onlineUsers'],
+      },
       { name: 'roles', title: '角色管理', icon: Shield, to: '/system/roles', menuCodes: ['role', 'roles'] },
       { name: 'menus', title: '菜单管理', icon: Menu, to: '/system/menus', menuCodes: ['menus', 'menu'] },
       {
