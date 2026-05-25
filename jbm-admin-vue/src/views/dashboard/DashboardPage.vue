@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Users, UserCheck, AppWindow, Route, Shield, FormInput, ScrollText } from '@lucide/vue'
+import { Users, UserCheck, AppWindow, Route, Shield, FormInput, ScrollText, Code2, KeyRound, BookOpen } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -10,11 +10,16 @@ import CardContent from '@/components/ui/CardContent.vue'
 import Skeleton from '@/components/ui/Skeleton.vue'
 import { getUserStatistics } from '@/api/user'
 import type { UserInfoStatistics } from '@/api/types'
+import { useMenuStore } from '@/stores/menu'
 
 const stats = ref<UserInfoStatistics | null>(null)
 const loading = ref(true)
+const menuStore = useMenuStore()
 
-const shortcuts = [
+const allShortcuts = [
+  { title: '开发者认证', to: '/developer', icon: Code2, selfService: true },
+  { title: 'API Key', to: '/developer/api-keys', icon: KeyRound, selfService: true },
+  { title: 'API Wiki', to: '/docs', icon: BookOpen, selfService: true },
   { title: '用户管理', to: '/system/users', icon: Users },
   { title: '角色管理', to: '/system/roles', icon: Shield },
   { title: '应用管理', to: '/system/apps', icon: AppWindow },
@@ -22,6 +27,10 @@ const shortcuts = [
   { title: '网关路由', to: '/gateway/routes', icon: Route },
   { title: '审计日志', to: '/log/account', icon: ScrollText },
 ]
+
+const shortcuts = computed(() =>
+  allShortcuts.filter((item) => item.selfService || menuStore.isRouteAllowed(item.to)),
+)
 
 onMounted(async () => {
   try {

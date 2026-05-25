@@ -99,12 +99,32 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
   },
 ]
 
+/** 普通注册用户的自助接入入口；后台管理菜单必须来自后端授权。 */
+export const SELF_SERVICE_NAV_GROUPS: NavGroupDef[] = [
+  {
+    label: '概览',
+    items: [{ name: 'dashboard', title: '仪表盘', icon: LayoutDashboard, to: '/dashboard' }],
+  },
+  {
+    label: '开放平台',
+    items: [
+      { name: 'developer', title: '开发者', icon: Code2, to: '/developer', menuCodes: ['developer', 'developer_mgmt'] },
+      { name: 'api-keys', title: 'API Keys', icon: KeyRound, to: '/developer/api-keys', menuCodes: ['api_keys'] },
+      { name: 'docs', title: 'API Wiki', icon: BookOpen, to: '/docs' },
+    ],
+  },
+]
+
+export const SELF_SERVICE_PATHS = new Set(
+  SELF_SERVICE_NAV_GROUPS.flatMap((group) => group.items.map((item) => item.to)),
+)
+
 export function buildNavGroups(
   allowedPaths: Set<string>,
   allowedMenuCodes: Set<string>,
 ): NavGroupDef[] {
   if (allowedPaths.size === 0 && allowedMenuCodes.size === 0) {
-    return STATIC_NAV_GROUPS
+    return SELF_SERVICE_NAV_GROUPS
   }
 
   const groups: NavGroupDef[] = []

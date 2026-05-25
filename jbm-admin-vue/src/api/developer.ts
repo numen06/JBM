@@ -19,6 +19,11 @@ export async function updateDeveloper(userId: number, data: Partial<BaseDevelope
   return unwrap(res)
 }
 
+export async function getDeveloper(userId: number) {
+  const res = await get<BaseDeveloper>(`/developer/${userId}`)
+  return unwrap(res)
+}
+
 export async function applyDeveloper(userType = 'dev') {
   const res = await post<void>('/developer/apply', { userType })
   return unwrap(res)

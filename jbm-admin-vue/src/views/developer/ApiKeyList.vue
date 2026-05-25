@@ -25,12 +25,17 @@ import {
 } from '@/api/apikey'
 import { listGrantableApis } from '@/api/authority'
 import { listApps } from '@/api/app'
+import { getDeveloper } from '@/api/developer'
 import type { BaseApiKey, BaseApp, OpenAuthority } from '@/api/types'
+import { useAuthStore } from '@/stores/auth'
 
 const { items, total, page, loading, error, load, pageSize } =
   usePagedList<BaseApiKey>(listApiKeys)
 
 const apps = ref<BaseApp[]>([])
+const auth = useAuthStore()
+const developerStatus = ref<number | null>(null)
+const developerStatusLoaded = ref(false)
 const secretDialogOpen = ref(false)
 const secretValue = ref('')
 const secretKeyName = ref('')
@@ -183,14 +188,42 @@ const filteredGrantable = computed(() =>
   grantableApis.value.filter((a) => a.authorityId),
 )
 
-onMounted(loadApps)
+const canCreateApiKey = computed(() => developerStatus.value === 1)
+const developerStatusText = computed(() => {
+  if (!developerStatusLoaded.value) return '正在检查开发者状态...'
+  if (developerStatus.value === 1) return ''
+  if (developerStatus.value === 0) return '开发者申请待审批，通过后即可创建 API Key。'
+  return '当前账号还不是已审批开发者，请先在“开发者”页面提交申请。'
+})
+
+async function loadDeveloperStatus() {
+  developerStatusLoaded.value = false
+  try {
+    const userId = auth.user?.userId
+    if (!userId) {
+      developerStatus.value = null
+      return
+    }
+    const developer = await getDeveloper(userId)
+    developerStatus.value = developer?.status ?? null
+  } catch {
+    developerStatus.value = null
+  } finally {
+    developerStatusLoaded.value = true
+  }
+}
+
+onMounted(() => {
+  loadApps()
+  loadDeveloperStatus()
+})
 </script>
 
 <template>
   <div>
     <PageHeader title="API Key 管理" description="Center /apikey — 第三方访问凭证与接口授权">
       <template #actions>
-        <Button @click="openCreate">
+        <Button :disabled="!canCreateApiKey" @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建 API Key
         </Button>
@@ -200,6 +233,10 @@ onMounted(loadApps)
     <p class="mb-4 text-sm text-muted-foreground">
       第三方调用时使用 <code class="rounded bg-muted px-1">X-App-Id</code> 传递
       <strong>apiKey</strong>；网关访问日志可通过 <strong>appKey</strong> 字段筛选。
+    </p>
+
+    <p v-if="developerStatusText" class="mb-4 rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+      {{ developerStatusText }}
     </p>
 
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">

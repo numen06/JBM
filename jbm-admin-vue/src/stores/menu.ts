@@ -2,7 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getCurrentMenus } from '@/api/current'
 import type { BaseMenu } from '@/api/types'
-import { buildNavGroups, normalizeMenuPath, STATIC_NAV_GROUPS, type NavGroupDef } from '@/constants/adminNav'
+import {
+  buildNavGroups,
+  normalizeMenuPath,
+  SELF_SERVICE_NAV_GROUPS,
+  SELF_SERVICE_PATHS,
+  type NavGroupDef,
+} from '@/constants/adminNav'
 
 export const useMenuStore = defineStore('menu', () => {
   const rawMenus = ref<BaseMenu[]>([])
@@ -28,18 +34,16 @@ export const useMenuStore = defineStore('menu', () => {
 
   const navGroups = computed<NavGroupDef[]>(() => {
     if (!loaded.value || rawMenus.value.length === 0) {
-      return STATIC_NAV_GROUPS
+      return SELF_SERVICE_NAV_GROUPS
     }
     return buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
   })
 
-  const isFullAccess = computed(
-    () => !loaded.value || rawMenus.value.length >= 10 || allowedPaths.value.size >= 10,
-  )
-
   function isRouteAllowed(path: string): boolean {
-    if (!loaded.value || rawMenus.value.length === 0 || isFullAccess.value) return true
+    if (!loaded.value) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
+    if (rawMenus.value.length === 0) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true
+    if (SELF_SERVICE_PATHS.has(path)) return true
     return allowedPaths.value.has(path)
   }
 
@@ -67,7 +71,7 @@ export const useMenuStore = defineStore('menu', () => {
     loadError,
     navGroups,
     allowedPaths,
-    isFullAccess,
+    allowedMenuCodes,
     isRouteAllowed,
     fetchMenus,
     clear,
