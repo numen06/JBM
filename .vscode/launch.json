@@ -2,6 +2,48 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Admin Vue: Vite dev",
+      "cwd": "${workspaceFolder}/jbm-admin-vue",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Admin Vue: Chrome",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/jbm-admin-vue",
+      "sourceMapPathOverrides": {
+        "/@fs/*": "${workspaceFolder}/jbm-admin-vue/*",
+        "/@id/*": "${workspaceFolder}/jbm-admin-vue/*",
+        "/src/*": "${webRoot}/src/*"
+      },
+      "preLaunchTask": "admin-vue: vite dev"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Admin Vue: Vite + Chrome",
+      "cwd": "${workspaceFolder}/jbm-admin-vue",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://[^\\s]+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/jbm-admin-vue",
+        "sourceMapPathOverrides": {
+          "/@fs/*": "${workspaceFolder}/jbm-admin-vue/*",
+          "/@id/*": "${workspaceFolder}/jbm-admin-vue/*",
+          "/src/*": "${workspaceFolder}/jbm-admin-vue/src/*"
+        }
+      }
+    },
+    {
       "type": "java",
       "name": "jaja7 Auth (5555)",
       "request": "launch",
@@ -35,6 +77,19 @@
         "jaja7 Gateway (7777)"
       ],
       "stopAll": true
+    },
+    {
+      "name": "jaja7: Full stack (+ Admin Vue)",
+      "configurations": [
+        "jaja7 Auth (5555)",
+        "jaja7 Center (8888)",
+        "jaja7 Gateway (7777)",
+        "Admin Vue: Vite dev"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "order": 4
+      }
     }
   ]
 }

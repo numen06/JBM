@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "admin-vue: vite dev",
+      "type": "npm",
+      "script": "dev",
+      "path": "jbm-admin-vue",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "(vite|VITE)",
+          "endsPattern": "Local:\\s+http://localhost:5173"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "admin-vue"
+      }
+    }
+  ]
+}
