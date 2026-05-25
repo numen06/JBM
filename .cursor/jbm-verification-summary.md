@@ -216,3 +216,68 @@ python scripts\jbm_cluster_ops.py wait --timeout 180
 | 前端 composable | `jbm-admin-vue/src/composables/useOrgTree.ts` |
 | 前端组件 | `jbm-admin-vue/src/components/OrgTreeSelect.vue` |
 | 前端页面 | `jbm-admin-vue/src/views/system/OrgList.vue` |
+
+---
+
+## 集群非核心应用联合修复（2026-05-25）
+
+按计划 `.cursor/plans/集群非核心应用联合修复计划_20260525.plan.md` 完成 P0 横向修复与构建/冒烟脚本。
+
+### 盘点结论
+
+| 服务 | 模块 | 端口 | 入口类 | jaja7 profile |
+|---|---|---:|---|---|
+| Doc | `jbm-cluster-platform-doc` | 9999 | `JbmDocApplication` | 新增 |
+| Push | `jbm-cluster-platform-push` | 3313 | `JbmPushApplication` | 新增 |
+| Logs | `jbm-cluster-platform-logs` | 3312 | `JbmLogsApplication` | 新增 |
+| Job | `jbm-cluster-platform-job` | 4444 | `JbmJobApplication` | 新增 |
+| Weixin | `jbm-cluster-platform-weixin` | 3319 | `JbmWxApplication` | 新增 |
+| Bigscreen | `jbm-cluster-platform-bigscreen` | 3314 | `JbmBigscreenApplication` | 新增 |
+
+`jbm-cluster-platform-ai` 不在 `jbm-cluster-platform/pom.xml` modules 中，无源码目录，按历史产物处理，未纳入本轮。
+
+### 代码修复清单
+
+| 项 | 文件 |
+|---|---|
+| LOG_SERVER 统一为复数 | `jbm-cluster-core/.../JbmClusterConstants.java`（新增 `BIGSCREEN_SERVER`） |
+| 六服务 jaja7 配置 | 各模块 `bootstrap-jaja7.yml` |
+| Gateway 静态路由 + Feign URL | `bootstrap-jaja7.yml`、`application-jaja7.yml`（Weixin 不含 `/user/**`，避免与 Center 冲突） |
+| 运维脚本扩展 | `scripts/jbm_cluster_ops.py`（doc/push/logs/job/weixin/bigscreen + 按服务 wait） |
+| 冒烟脚本 | `scripts/run_cluster_apps_smoke_tests.py`、`scripts/cluster_apps_smoke_modules.json` |
+
+### 构建结果
+
+```powershell
+mvnd -pl jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-doc,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-push,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-logs,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-job,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-weixin,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-bigscreen,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway -am -DskipTests compile
+```
+
+**结果：BUILD SUCCESS**（Push 首次失败为 stale classpath，`-am clean compile` 后通过）
+
+### 冒烟结果（服务未启动时）
+
+```powershell
+python scripts\run_cluster_apps_smoke_tests.py --profile jaja7
+```
+
+- 输出：`.cursor/cluster-apps-smoke-result.json`
+- 报告：`docs/testing/cluster-apps-jaja7/summary-test-report.md`
+- 当前环境：核心/非核心服务均未运行 → 9 用例 **skipped**（脚本 exit 0）
+
+### 推荐联调命令
+
+```powershell
+python scripts\jbm_cluster_ops.py start auth center gateway logs push doc job weixin bigscreen --background --clean --prepare compile
+python scripts\jbm_cluster_ops.py wait auth center gateway logs push doc job weixin bigscreen --timeout 240
+python scripts\run_cluster_apps_smoke_tests.py --profile jaja7
+```
+
+启动日志：`logs/ops-start-<service>.log`
+
+### 遗留风险
+
+- MinIO/MQTT/短信/邮件/微信/OpenObserve 等外部依赖缺失时，各服务启动仍可能失败，需 Nacos `jbm7` 共享配置或本地 mock
+- Job jaja7 已设 `load-on-startup: false`、`sync-enabled: false`，避免危险定时任务
+- Push/Weixin 配置项 `jaja7-dry-run: true` 为占位，业务层若未读取则仍可能尝试真实发送
+- 完整 Gateway 转发断言需六服务 + 核心三服务同时就绪后再跑冒烟
+

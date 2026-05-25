@@ -49,9 +49,21 @@ CLUSTER_JAVA_MARKERS = (
     "jbm-cluster-platform-auth",
     "jbm-cluster-platform-center",
     "jbm-cluster-platform-gateway",
+    "jbm-cluster-platform-doc",
+    "jbm-cluster-platform-push",
+    "jbm-cluster-platform-logs",
+    "jbm-cluster-platform-job",
+    "jbm-cluster-platform-weixin",
+    "jbm-cluster-platform-bigscreen",
     "JbmAuthApplication",
     "JbmCenterApplication",
     "JbmGatewayApplication",
+    "JbmDocApplication",
+    "JbmPushApplication",
+    "JbmLogsApplication",
+    "JbmJobApplication",
+    "JbmWxApplication",
+    "JbmBigscreenApplication",
     "spring-boot:run",
     "spring-boot.run.profiles=jaja7",
 )
@@ -98,6 +110,54 @@ SERVICES = {
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",
         "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",
         "main_class": "com.jbm.cluster.platform.gateway.JbmGatewayApplication",
+    },
+    "doc": {
+        "port": 9999,
+        "url": "http://127.0.0.1:9999",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-doc",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-doc",
+        "main_class": "com.jbm.cluster.doc.JbmDocApplication",
+    },
+    "push": {
+        "port": 3313,
+        "url": "http://127.0.0.1:3313",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-push",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-push",
+        "main_class": "com.jbm.cluster.push.JbmPushApplication",
+    },
+    "logs": {
+        "port": 3312,
+        "url": "http://127.0.0.1:3312",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-logs",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-logs",
+        "main_class": "com.jbm.cluster.logs.JbmLogsApplication",
+    },
+    "job": {
+        "port": 4444,
+        "url": "http://127.0.0.1:4444",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-job",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-job",
+        "main_class": "com.jbm.cluster.job.JbmJobApplication",
+    },
+    "weixin": {
+        "port": 3319,
+        "url": "http://127.0.0.1:3319",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-weixin",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-weixin",
+        "main_class": "com.jbm.cluster.weixin.miniapp.JbmWxApplication",
+    },
+    "bigscreen": {
+        "port": 3314,
+        "url": "http://127.0.0.1:3314",
+        "health": "/actuator/health",
+        "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-bigscreen",
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-bigscreen",
+        "main_class": "com.jbm.cluster.bigscreen.JbmBigscreenApplication",
     },
     "vue": {
         "port": 5173,
@@ -420,7 +480,41 @@ def cmd_status(_args):
     return 0 if all_ok else 1
 
 
+def _wait_service_list(names: list[str], timeout: int, interval: float) -> dict[str, bool]:
+    """按服务名列表探活 actuator/health。"""
+    import time
+
+    deadline = time.time() + timeout
+    targets = {n: SERVICES[n] for n in names if n in SERVICES}
+    result = {n: False for n in targets}
+    headers = {"tenantId": "0"}
+    while time.time() < deadline:
+        for name, cfg in targets.items():
+            if result[name]:
+                continue
+            health = cfg.get("health")
+            if not health:
+                result[name] = bool(_pids_on_port(cfg["port"]))
+                continue
+            url = cfg["url"].rstrip("/") + health
+            if probe_url(url, headers):
+                result[name] = True
+        if all(result.values()):
+            return result
+        time.sleep(interval)
+    return result
+
+
 def cmd_wait(args):
+    names = getattr(args, "services", None) or []
+    if names:
+        print(f"等待 {', '.join(names)}（最多 {args.timeout}s）…")
+        r = _wait_service_list(names, args.timeout, args.interval)
+        for name in names:
+            mark = "OK" if r.get(name) else "FAIL"
+            print(f"  [{mark}] {name}")
+        return 0 if all(r.get(n) for n in names) else 1
+
     need_center = getattr(args, "center", False)
     label = "Gateway + Auth + Center" if need_center else "Gateway + Auth"
     print(f"等待 {label}（最多 {args.timeout}s）…")
@@ -629,7 +723,9 @@ def main():
 
     sub.add_parser("status", help="端口与 HTTP 状态", parents=[parent])
 
-    p_wait = sub.add_parser("wait", help="等待 Gateway+Auth(+Center) 就绪", parents=[parent])
+    p_wait = sub.add_parser("wait", help="等待 Gateway+Auth(+Center) 或指定服务就绪", parents=[parent])
+    p_wait.add_argument("services", nargs="*", choices=list(SERVICES.keys()),
+                        help="指定服务列表；省略则默认 Gateway+Auth")
     p_wait.add_argument("--timeout", type=int, default=90)
     p_wait.add_argument("--interval", type=float, default=2.0)
     p_wait.add_argument("--center", action="store_true", help="同时等待 Center 健康")
@@ -664,7 +760,7 @@ def main():
     p_stop.add_argument("--kill-java", action="store_true", help="额外结束匹配的 spring-boot Java")
 
     p_cleanup = sub.add_parser("cleanup", help="清理端口 + 残留集群 Java（测试前推荐）", parents=[parent])
-    p_cleanup.add_argument("services", nargs="*", choices=["auth", "center", "gateway", "vue"])
+    p_cleanup.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
     p_cleanup.add_argument("--force", action="store_true", help="有残留也返回 0")
 
     p_apikey = sub.add_parser("test-apikey", help="API Key 全流程 REST（TC1–TC12）", parents=[parent])

@@ -1,0 +1,23 @@
+server:
+  port: 3319
+spring:
+  cloud:
+    nacos:
+      config:
+        namespace: jbm7
+        group: DEFAULT_GROUP
+        refreshable-dataids: common.properties
+        server-addr: 10.100.10.62:8848
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties
+      discovery:
+        namespace: jbm7
+        group: DEFAULT_GROUP
+        server-addr: 10.100.10.62:8848
+jbm:
+  cluster:
+    nacos-confs: common.properties,db.properties,redis.properties,rabbitmq.properties
+    token-type: redis
+    permit-all:
+      - /mp/sign/**
+  weixin:
+    jaja7-dry-run: true

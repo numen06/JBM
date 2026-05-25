@@ -12,6 +12,18 @@ spring:
             url: http://127.0.0.1:8888
           jbm-cluster-platform-auth:
             url: http://127.0.0.1:5555
+          jbm-cluster-platform-doc:
+            url: http://127.0.0.1:9999
+          jbm-cluster-platform-push:
+            url: http://127.0.0.1:3313
+          jbm-cluster-platform-logs:
+            url: http://127.0.0.1:3312
+          jbm-cluster-platform-job:
+            url: http://127.0.0.1:4444
+          jbm-cluster-platform-weixin:
+            url: http://127.0.0.1:3319
+          jbm-cluster-platform-bigscreen:
+            url: http://127.0.0.1:3314
     discovery:
       client:
         simple:
@@ -22,3 +34,21 @@ spring:
             jbm-cluster-platform-auth:
               - uri: http://127.0.0.1:5555
                 instance-id: jaja7-auth-local
+            jbm-cluster-platform-doc:
+              - uri: http://127.0.0.1:9999
+                instance-id: jaja7-doc-local
+            jbm-cluster-platform-push:
+              - uri: http://127.0.0.1:3313
+                instance-id: jaja7-push-local
+            jbm-cluster-platform-logs:
+              - uri: http://127.0.0.1:3312
+                instance-id: jaja7-logs-local
+            jbm-cluster-platform-job:
+              - uri: http://127.0.0.1:4444
+                instance-id: jaja7-job-local
+            jbm-cluster-platform-weixin:
+              - uri: http://127.0.0.1:3319
+                instance-id: jaja7-weixin-local
+            jbm-cluster-platform-bigscreen:
+              - uri: http://127.0.0.1:3314
+                instance-id: jaja7-bigscreen-local

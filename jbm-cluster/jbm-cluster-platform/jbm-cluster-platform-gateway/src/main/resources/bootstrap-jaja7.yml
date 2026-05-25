@@ -14,6 +14,42 @@ spring:
           uri: http://127.0.0.1:5555
           predicates:
             - Path=/oauth2/**,/captcha/**,/qrcode/**,/online/**,/internal/dev/**
+        - id: jaja7-doc-local
+          uri: http://127.0.0.1:9999
+          predicates:
+            - Path=/baseDoc/**,/baseDocGroup/**,/baseDocToken/**,/v1/3rd/file/**,/put,/upload,/get/**,/download/**,/remove/**,/getViewUrl
+          metadata:
+            serviceId: jbm-cluster-platform-doc
+        - id: jaja7-push-local
+          uri: http://127.0.0.1:3313
+          predicates:
+            - Path=/pushMessage/**,/notification/**,/pushConfigInfo/**,/emailPushConfig/**,/pushItem/**,/webhookTask/**,/webhookEventConfig/**,/pin/**
+          metadata:
+            serviceId: jbm-cluster-platform-push
+        - id: jaja7-logs-local
+          uri: http://127.0.0.1:3312
+          predicates:
+            - Path=/businessLog/**,/GatewayLogs/**,/clusterAccess/**
+          metadata:
+            serviceId: jbm-cluster-platform-logs
+        - id: jaja7-job-local
+          uri: http://127.0.0.1:4444
+          predicates:
+            - Path=/sysJob/**,/sysJobLog/**,/droolsRule/**,/process/**,/workflowDefinition/**,/dynamicField/**,/dynamicClass/**,/ruleOperationLog/**
+          metadata:
+            serviceId: jbm-cluster-platform-job
+        - id: jaja7-weixin-local
+          uri: http://127.0.0.1:3319
+          predicates:
+            - Path=/mp/**,/wx/menu/**,/portal/**,/media/**
+          metadata:
+            serviceId: jbm-cluster-platform-weixin
+        - id: jaja7-bigscreen-local
+          uri: http://127.0.0.1:3314
+          predicates:
+            - Path=/view/**,/bigscreenView/**
+          metadata:
+            serviceId: jbm-cluster-platform-bigscreen
     nacos:
       config:
         namespace: jbm7
@@ -32,6 +68,18 @@ spring:
             url: http://127.0.0.1:8888
           jbm-cluster-platform-auth:
             url: http://127.0.0.1:5555
+          jbm-cluster-platform-doc:
+            url: http://127.0.0.1:9999
+          jbm-cluster-platform-push:
+            url: http://127.0.0.1:3313
+          jbm-cluster-platform-logs:
+            url: http://127.0.0.1:3312
+          jbm-cluster-platform-job:
+            url: http://127.0.0.1:4444
+          jbm-cluster-platform-weixin:
+            url: http://127.0.0.1:3319
+          jbm-cluster-platform-bigscreen:
+            url: http://127.0.0.1:3314
     sentinel:
       datasource:
         ds1:

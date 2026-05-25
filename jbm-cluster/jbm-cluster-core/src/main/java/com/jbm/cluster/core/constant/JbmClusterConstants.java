@@ -25,7 +25,12 @@ public class JbmClusterConstants {
     /**
      * 服务名称
      */
-    public static final String LOG_SERVER = "jbm-cluster-platform-log";
+    public static final String LOG_SERVER = "jbm-cluster-platform-logs";
+
+    /**
+     * 大屏服务
+     */
+    public static final String BIGSCREEN_SERVER = "jbm-cluster-platform-bigscreen";
 
     /**
      * 任务名称

@@ -1,0 +1,66 @@
+{
+  "profile": "jaja7",
+  "timestamp": "2026-05-26T00:19:15",
+  "baseUrl": "http://127.0.0.1:7777",
+  "servicesAlive": {
+    "auth": true,
+    "center": true,
+    "gateway": true,
+    "logs": false,
+    "push": false,
+    "doc": false,
+    "job": false,
+    "weixin": false,
+    "bigscreen": false
+  },
+  "passed": 0,
+  "failed": 0,
+  "skipped": 9,
+  "results": [
+    {
+      "id": "health-logs",
+      "status": "skipped",
+      "reason": "service logs not reachable"
+    },
+    {
+      "id": "gateway-logs-access",
+      "status": "skipped",
+      "reason": "service logs not reachable"
+    },
+    {
+      "id": "gateway-logs-find",
+      "status": "skipped",
+      "reason": "service logs not reachable"
+    },
+    {
+      "id": "gateway-push-pageList",
+      "status": "skipped",
+      "reason": "service push not reachable"
+    },
+    {
+      "id": "gateway-job-test",
+      "status": "skipped",
+      "reason": "service job not reachable"
+    },
+    {
+      "id": "gateway-bigscreen-isUpload",
+      "status": "skipped",
+      "reason": "service bigscreen not reachable"
+    },
+    {
+      "id": "gateway-doc-pageList",
+      "status": "skipped",
+      "reason": "service doc not reachable"
+    },
+    {
+      "id": "auth-no-token-logs",
+      "status": "skipped",
+      "reason": "service logs not reachable"
+    },
+    {
+      "id": "auth-fake-internal-header",
+      "status": "skipped",
+      "reason": "service logs not reachable"
+    }
+  ]
+}
