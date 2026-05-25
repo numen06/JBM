@@ -33,10 +33,50 @@ Run Maven only when one of these is true:
 When Maven is needed, scope it to the smallest module:
 
 ```bash
-mvn -pl <module-path> -am compile -DskipTests
+mvnd -pl <module-path> -am compile -DskipTests
 ```
 
+Use `mvn` only if `mvnd` is not available. In this workspace `mvnd` is expected to be available through `D:\workspaces\bin\mvnd.cmd`.
+
 Avoid root-level Maven builds during debug unless the change truly spans the whole reactor.
+
+## JBM Cluster Fast Debug
+
+For jaja7 cluster terminal debugging, prefer the helper script over ad-hoc Maven commands. The script automatically uses `mvnd` when available and falls back to `mvn` otherwise.
+
+Default fast path, no local install:
+
+```powershell
+python scripts\jbm_cluster_ops.py restart
+```
+
+This path performs `compile + exec:java` for the Java services, avoiding repeated `install` and jar packaging during the edit-debug loop.
+
+Start selected services:
+
+```powershell
+python scripts\jbm_cluster_ops.py start center
+python scripts\jbm_cluster_ops.py start auth center gateway
+```
+
+Use `install` only when changed upstream modules must be written to the local Maven repository for other modules/tools to resolve them:
+
+```powershell
+python scripts\jbm_cluster_ops.py restart --install
+python scripts\jbm_cluster_ops.py start auth center gateway --install
+```
+
+Use `--maven mvn` only to debug mvnd-specific problems:
+
+```powershell
+python scripts\jbm_cluster_ops.py restart --maven mvn
+```
+
+After script-based verification, stop the services unless the user asks to keep them running:
+
+```powershell
+python scripts\jbm_cluster_ops.py stop auth center gateway
+```
 
 ## Spring Boot Applications
 

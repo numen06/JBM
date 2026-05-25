@@ -62,6 +62,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_LOGS = 131L;
     private static final long MENU_DEVELOPER = 105L;
     private static final long MENU_API_KEY = 113L;
+    private static final long MENU_ONLINE_USERS = 114L;
 
     private static final long ACTION_USERS_VIEW = 2001L;
     private static final long ACTION_USERS_ADD = 2002L;
@@ -71,6 +72,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long ACTION_DICT_ADD = 2102L;
     private static final long ACTION_DICT_EDIT = 2103L;
     private static final long ACTION_DICT_DELETE = 2104L;
+    private static final long ACTION_ONLINE_FORCE_LOGOUT = 2201L;
+    private static final long ACTION_ONLINE_LOGOUT = 2202L;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -119,16 +122,17 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
 
         upsertMenu(MENU_SYSTEM, MENU_PLATFORM, "system", "系统管理", "/system", 1);
         upsertMenu(MENU_USERS, MENU_SYSTEM, "users", "用户管理", "/system/users", 1);
-        upsertMenu(MENU_ROLES, MENU_SYSTEM, "roles", "角色管理", "/system/roles", 2);
-        upsertMenu(MENU_MENUS, MENU_SYSTEM, "menus", "菜单管理", "/system/menus", 3);
-        upsertMenu(MENU_ACTIONS, MENU_SYSTEM, "actions", "按钮管理", "/system/actions", 4);
-        upsertMenu(MENU_ORGS, MENU_SYSTEM, "orgs", "组织管理", "/system/orgs", 5);
-        upsertMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/system/authorities", 6);
-        upsertMenu(MENU_APPS, MENU_SYSTEM, "apps", "应用管理", "/system/apps", 7);
-        upsertMenu(MENU_DICTS, MENU_SYSTEM, "dicts", "字典管理", "/system/dicts", 8);
-        upsertMenu(MENU_EXTEND, MENU_SYSTEM, "extend_fields", "扩展字段", "/system/extend-fields", 9);
-        upsertMenu(MENU_DEVELOPER, MENU_SYSTEM, "developer_mgmt", "开发者管理", "/developer", 10);
-        upsertMenu(MENU_API_KEY, MENU_SYSTEM, "api_key_mgmt", "API Key 管理", "/developer/api-keys", 11);
+        upsertMenu(MENU_ONLINE_USERS, MENU_SYSTEM, "onlineUsers", "在线用户", "/system/online-users", 2);
+        upsertMenu(MENU_ROLES, MENU_SYSTEM, "roles", "角色管理", "/system/roles", 3);
+        upsertMenu(MENU_MENUS, MENU_SYSTEM, "menus", "菜单管理", "/system/menus", 4);
+        upsertMenu(MENU_ACTIONS, MENU_SYSTEM, "actions", "按钮管理", "/system/actions", 5);
+        upsertMenu(MENU_ORGS, MENU_SYSTEM, "orgs", "组织管理", "/system/orgs", 6);
+        upsertMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/system/authorities", 7);
+        upsertMenu(MENU_APPS, MENU_SYSTEM, "apps", "应用管理", "/system/apps", 8);
+        upsertMenu(MENU_DICTS, MENU_SYSTEM, "dicts", "字典管理", "/system/dicts", 9);
+        upsertMenu(MENU_EXTEND, MENU_SYSTEM, "extend_fields", "扩展字段", "/system/extend-fields", 10);
+        upsertMenu(MENU_DEVELOPER, MENU_SYSTEM, "developer_mgmt", "开发者管理", "/developer", 11);
+        upsertMenu(MENU_API_KEY, MENU_SYSTEM, "api_key_mgmt", "API Key 管理", "/developer/api-keys", 12);
 
         upsertMenu(MENU_GATEWAY, MENU_PLATFORM, "gateway", "网关管理", "/gateway", 2);
         upsertMenu(MENU_GW_ROUTE, MENU_GATEWAY, "gw_routes", "路由管理", "/gateway/routes", 1);
@@ -148,6 +152,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         seedAction(ACTION_DICT_ADD, MENU_DICTS, "dict_add", "字典-新增", 2);
         seedAction(ACTION_DICT_EDIT, MENU_DICTS, "dict_edit", "字典-编辑", 3);
         seedAction(ACTION_DICT_DELETE, MENU_DICTS, "dict_delete", "字典-删除", 4);
+        seedAction(ACTION_ONLINE_FORCE_LOGOUT, MENU_ONLINE_USERS, "monitor:online:forceLogout", "在线用户-踢出", 1);
+        seedAction(ACTION_ONLINE_LOGOUT, MENU_ONLINE_USERS, "monitor:online:logout", "在线用户-注销", 2);
     }
 
     /** 仅将菜单+按钮授权给超级管理员角色，供超管在界面中为其他角色分配 */
@@ -155,6 +161,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         List<String> ids = new ArrayList<>();
         ids.add(String.valueOf(MENU_DASHBOARD));
         ids.add(String.valueOf(MENU_USERS));
+        ids.add(String.valueOf(MENU_ONLINE_USERS));
         ids.add(String.valueOf(MENU_ROLES));
         ids.add(String.valueOf(MENU_MENUS));
         ids.add(String.valueOf(MENU_ACTIONS));
@@ -177,6 +184,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(authorityIdForAction(ACTION_DICT_ADD, "dict_add"));
         ids.add(authorityIdForAction(ACTION_DICT_EDIT, "dict_edit"));
         ids.add(authorityIdForAction(ACTION_DICT_DELETE, "dict_delete"));
+        ids.add(authorityIdForAction(ACTION_ONLINE_FORCE_LOGOUT, "monitor:online:forceLogout"));
+        ids.add(authorityIdForAction(ACTION_ONLINE_LOGOUT, "monitor:online:logout"));
 
         List<OpenAuthority> current = baseAuthorityService.findAuthorityByRole(JbmConstants.ROOT_ROLE_ID);
         Set<String> merged = new LinkedHashSet<>(ids);

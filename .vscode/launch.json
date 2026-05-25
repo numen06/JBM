@@ -2,13 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "type": "node-terminal",
       "request": "launch",
       "name": "Admin Vue: Vite dev",
       "cwd": "${workspaceFolder}/jbm-admin-vue",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "console": "integratedTerminal"
+      "command": "npm run dev"
     },
     {
       "type": "chrome",
@@ -24,15 +22,13 @@
       "preLaunchTask": "admin-vue: vite dev"
     },
     {
-      "type": "node",
+      "type": "node-terminal",
       "request": "launch",
       "name": "Admin Vue: Vite + Chrome",
       "cwd": "${workspaceFolder}/jbm-admin-vue",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "console": "integratedTerminal",
+      "command": "npm run dev",
       "serverReadyAction": {
-        "pattern": "Local:\\s+(https?://[^\\s]+)",
+        "pattern": "Local:\\s+(https?://\\S+)",
         "uriFormat": "%s",
         "action": "debugWithChrome",
         "webRoot": "${workspaceFolder}/jbm-admin-vue",

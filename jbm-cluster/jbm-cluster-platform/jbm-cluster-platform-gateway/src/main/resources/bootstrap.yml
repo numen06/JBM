@@ -207,6 +207,7 @@ security:
     enabled: true
     excludeUrls:
       - /system/notice
+      - /baseOrg/**
   # 网关 SaReactorFilter 放行（与 jbm.api.sign-ignores 公共路径对齐）
   ignore:
     whites:

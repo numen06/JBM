@@ -27,3 +27,7 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V15__base_user_org_master_columns.sql
   - include:
       file: classpath:db/cluster-rbac/changes/V16__base_org_utf8mb4.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V17__repair_base_org_utf8_data.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V18__cleanup_empty_org_names.sql

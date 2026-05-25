@@ -8,6 +8,7 @@ import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.cluster.center.business.BaseMenuBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.mysql.service.BaseMenuService;
+import com.jbm.cluster.common.mysql.service.MenuDataScopeHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,14 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
     @Autowired
     private BaseMenuService baseMenuService;
     @Autowired
+    private MenuDataScopeHelper menuDataScopeHelper;
+    @Autowired
     private JbmClusterTemplate jbmClusterTemplate;
 
     @Override
     public BaseMenu addMenuWithGatewayRefresh(BaseMenuForm form) {
         BaseMenu menu = BeanUtil.toBean(form, BaseMenu.class);
+        menuDataScopeHelper.assertCanManageAppId(menu.getAppId());
         BaseMenu result = baseMenuService.addMenu(menu);
         jbmClusterTemplate.refreshGateway();
         return result;
@@ -36,13 +40,17 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
 
     @Override
     public void updateMenuWithGatewayRefresh(BaseMenuForm form) {
+        BaseMenu existing = baseMenuService.getMenu(form.getMenuId());
         BaseMenu menu = BeanUtil.toBean(form, BaseMenu.class);
+        menuDataScopeHelper.assertCanModifyExistingMenu(existing, menu);
         baseMenuService.updateMenu(menu);
         jbmClusterTemplate.refreshGateway();
     }
 
     @Override
     public void removeMenuWithGatewayRefresh(Long menuId) {
+        BaseMenu existing = baseMenuService.getMenu(menuId);
+        menuDataScopeHelper.assertCanManageMenu(existing);
         baseMenuService.removeMenu(menuId);
         jbmClusterTemplate.refreshGateway();
     }

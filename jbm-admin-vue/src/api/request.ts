@@ -6,7 +6,7 @@ import type { ResultBody } from './types'
 
 const http: AxiosInstance = axios.create({
   timeout: 30000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })
 
 http.interceptors.request.use((config) => {

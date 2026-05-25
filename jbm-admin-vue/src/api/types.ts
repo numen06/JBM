@@ -59,8 +59,11 @@ export interface BaseMenu {
   authorityId?: number
   icon?: string
   sort?: number
+  priority?: number
   status?: number
   appId?: number
+  isPersist?: boolean
+  hidden?: number
   children?: BaseMenu[]
 }
 

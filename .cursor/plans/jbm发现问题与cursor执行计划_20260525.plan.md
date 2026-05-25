@@ -33,7 +33,7 @@ todos:
     content: 按开源社区平台风格检查首页、Logo、登录注册入口和 API Wiki，从用户接入 JBM 的 0 到 1 路径补齐文档。
     status: completed
   - id: build-restart-full-e2e-loop
-    content: 执行前端构建、后端目标模块构建、重启本地 Auth/Center/Gateway，然后循环跑字段管理和用户/管理员 E2E，失败则继续修复。
+    content: 各子任务只做局部构建/静态验证并记录待总测用例，不单独重启服务、不单独跑全链路 E2E；所有任务完成后统一总测。
     status: completed
   - id: update-verification-summary
     content: 更新 .cursor/jbm-verification-summary.md，记录修复项、未修复风险、命令结果、截图路径和 JSON 结果路径。
@@ -48,17 +48,36 @@ isProject: false
 
 ## 执行原则
 
-Cursor 执行时不要只跑构建。每个 P0 问题都必须按下面闭环推进：
+Cursor 执行时不要只跑构建，但当前会有多个任务并行开发，不能每个任务都重启服务或跑全链路 E2E。各子任务按下面闭环推进：
 
 1. 读代码和当前 diff。
 2. 修复问题。
-3. 前端/后端构建。
-4. 重启本地服务。
-5. 用浏览器或 Playwright 从页面真实操作。
-6. 截图和 JSON 结果落盘。
-7. 失败则继续修复并重复。
+3. 做局部构建/静态检查。
+4. 记录待总测用例、风险点、建议截图和 JSON 结果路径。
 
 不要回退用户已有改动；如果遇到不相关 dirty 文件，只记录并跳过。
+
+## 并行执行与统一总测约束
+
+当前会有多个 Cursor 任务并行修改代码。为避免互相抢端口、重启服务、清理测试数据，本计划采用“并行开发，串行总测”。
+
+执行约束：
+
+- 各子任务不单独执行 `python scripts\jbm_cluster_ops.py restart`。
+- 各子任务不单独启动或停止 Auth、Center、Gateway、前端 dev server。
+- 各子任务不 kill 任何不属于自己明确创建的进程。
+- 各子任务不单独跑全链路 Playwright/E2E。
+- 测试数据必须使用唯一前缀，避免和其他任务冲突。
+- 各子任务只做代码修复、局部构建/静态检查，并记录待验证场景。
+- 等所有任务完成后，由一个总体验证任务统一构建、统一重启、统一页面实测。
+
+总体验证任务再统一覆盖：
+
+- 前端完整构建。
+- 后端完整构建。
+- 一次性重启 Auth/Center/Gateway/前端。
+- 从用户注册登录、组织、菜单、字段、在线用户、网关、API Key 全流程实测。
+- 汇总截图和 JSON 结果。
 
 ## P0 确认 BUG
 
@@ -240,13 +259,11 @@ cd D:\workspaces\JBM7
 mvn -pl jbm-cluster/jbm-cluster-api/jbm-cluster-api-basic,jbm-cluster/jbm-cluster-common/jbm-cluster-common-mysql,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -DskipTests install
 ```
 
-```powershell
-cd D:\workspaces\JBM7
-python scripts\jbm_cluster_ops.py restart
-```
+注意：下面这些命令只允许总体验证任务统一执行，子任务不要单独执行：
 
 ```powershell
 cd D:\workspaces\JBM7
+python scripts\jbm_cluster_ops.py restart
 node .cursor\e2e-extend-fields-group-detail.cjs
 node .cursor\jbm-user-admin-e2e.cjs
 ```

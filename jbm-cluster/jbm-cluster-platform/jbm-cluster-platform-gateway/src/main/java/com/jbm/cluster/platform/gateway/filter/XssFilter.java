@@ -85,7 +85,7 @@ public class XssFilter implements GlobalFilter, Ordered {
                     bodyStr = filter(bodyStr);
 //                    bodyStr = HtmlUtil.cleanHtmlTag(bodyStr);
                     // 转成字节
-                    byte[] bytes = bodyStr.getBytes();
+                    byte[] bytes = bodyStr.getBytes(StandardCharsets.UTF_8);
                     NettyDataBufferFactory nettyDataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);
                     DataBuffer buffer = nettyDataBufferFactory.allocateBuffer(bytes.length);
                     buffer.write(bytes);

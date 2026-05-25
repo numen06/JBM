@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -14,6 +15,7 @@ import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.BaseMenuService;
+import com.jbm.cluster.common.mysql.service.MenuDataScopeHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.framework.masterdata.usage.PageParams;
@@ -50,6 +52,8 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
     @Autowired
     private BaseAppService baseAppService;
     @Autowired
+    private MenuDataScopeHelper menuDataScopeHelper;
+    @Autowired
     @Lazy
     private BaseMenuService self;
 
@@ -64,12 +68,51 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      */
     @Override
     public DataPaging<BaseMenu> findListPage(BaseMenuForm form) {
-        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(form.getMenuCode()), BaseMenu::getMenuCode, form.getMenuCode())
-                .likeRight(ObjectUtils.isNotEmpty(form.getMenuName()), BaseMenu::getMenuName, form.getMenuName());
-        PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
+        BaseMenuForm queryForm = form != null ? form : new BaseMenuForm();
+        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<BaseMenu> lambda = queryWrapper.lambda();
+        if (StrUtil.isNotBlank(queryForm.getKeyword())) {
+            String kw = queryForm.getKeyword().trim();
+            lambda.and(w -> w.like(BaseMenu::getMenuCode, kw)
+                    .or().like(BaseMenu::getMenuName, kw)
+                    .or().like(BaseMenu::getPath, kw));
+        } else {
+            lambda.likeRight(ObjectUtils.isNotEmpty(queryForm.getMenuCode()), BaseMenu::getMenuCode, queryForm.getMenuCode())
+                    .likeRight(ObjectUtils.isNotEmpty(queryForm.getMenuName()), BaseMenu::getMenuName, queryForm.getMenuName());
+        }
+        lambda.likeRight(ObjectUtils.isNotEmpty(queryForm.getPath()), BaseMenu::getPath, queryForm.getPath())
+                .eq(ObjectUtils.isNotEmpty(queryForm.getStatus()), BaseMenu::getStatus, queryForm.getStatus());
+        applyScopeFilter(lambda, queryForm.getScope(), queryForm.getAppId());
+        menuDataScopeHelper.applyToMenuQuery(lambda);
+        queryWrapper.orderByAsc("parent_id", "priority", "menu_id");
+        PageForm pageForm = queryForm.getPageForm() != null ? queryForm.getPageForm() : new PageForm();
         return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
+    }
+
+    private void applyScopeFilter(LambdaQueryWrapper<BaseMenu> lambda, String scope, Long appId) {
+        String normalized = StrUtil.blankToDefault(scope, "all");
+        switch (normalized) {
+            case "platform":
+                lambda.isNull(BaseMenu::getAppId);
+                break;
+            case "app":
+                if (ObjectUtil.isNotEmpty(appId)) {
+                    lambda.eq(BaseMenu::getAppId, appId);
+                } else {
+                    lambda.isNotNull(BaseMenu::getAppId);
+                }
+                break;
+            case "visible":
+                if (ObjectUtil.isNotEmpty(appId)) {
+                    lambda.and(w -> w.eq(BaseMenu::getAppId, appId).or().isNull(BaseMenu::getAppId));
+                }
+                break;
+            default:
+                if (ObjectUtil.isNotEmpty(appId)) {
+                    lambda.eq(BaseMenu::getAppId, appId);
+                }
+                break;
+        }
     }
 
     /**

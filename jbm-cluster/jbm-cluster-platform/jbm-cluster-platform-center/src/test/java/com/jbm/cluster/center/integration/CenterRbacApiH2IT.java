@@ -139,6 +139,40 @@ class CenterRbacApiH2IT extends CenterH2ApiTestSupport {
     }
 
     @Test
+    @DisplayName("菜单：分页、关键字与 scope 过滤")
+    void menu_paginationScopeAndKeyword() {
+        BaseMenuForm pageForm = new BaseMenuForm();
+        pageForm.setPageForm(JSON.parseObject("{\"currPage\":1,\"pageSize\":5}", com.jbm.framework.usage.paging.PageForm.class));
+
+        ResultBody<DataPaging<com.jbm.cluster.api.entitys.basic.BaseMenu>> page1 =
+                baseMenuController.listMenus(pageForm);
+        assertSuccess(page1);
+        DataPaging<com.jbm.cluster.api.entitys.basic.BaseMenu> paging = page1.getResult();
+        assertThat(paging.getTotal()).isGreaterThan(0);
+        assertThat(paging.getContents()).isNotEmpty();
+        assertThat(paging.getContents().size()).isLessThanOrEqualTo(5);
+
+        BaseMenuForm platformForm = new BaseMenuForm();
+        platformForm.setScope("platform");
+        platformForm.setPageForm(JSON.parseObject("{\"currPage\":1,\"pageSize\":50}", com.jbm.framework.usage.paging.PageForm.class));
+        ResultBody<DataPaging<com.jbm.cluster.api.entitys.basic.BaseMenu>> platformPage =
+                baseMenuController.listMenus(platformForm);
+        assertSuccess(platformPage);
+        assertThat(platformPage.getResult().getContents()).isNotEmpty();
+        assertThat(platformPage.getResult().getContents().stream().allMatch(m -> m.getAppId() == null)).isTrue();
+
+        BaseMenuForm keywordForm = new BaseMenuForm();
+        keywordForm.setKeyword("用户");
+        keywordForm.setPageForm(JSON.parseObject("{\"currPage\":1,\"pageSize\":20}", com.jbm.framework.usage.paging.PageForm.class));
+        ResultBody<DataPaging<com.jbm.cluster.api.entitys.basic.BaseMenu>> keywordPage =
+                baseMenuController.listMenus(keywordForm);
+        assertSuccess(keywordPage);
+        assertThat(keywordPage.getResult().getContents()).isNotEmpty();
+        assertThat(keywordPage.getResult().getContents().stream()
+                .anyMatch(m -> m.getMenuName() != null && m.getMenuName().contains("用户"))).isTrue();
+    }
+
+    @Test
     @DisplayName("应用与开发者：查询")
     void appAndDeveloper_queries() {
         ResultBody<com.jbm.cluster.api.entitys.basic.BaseApp> appByKey =

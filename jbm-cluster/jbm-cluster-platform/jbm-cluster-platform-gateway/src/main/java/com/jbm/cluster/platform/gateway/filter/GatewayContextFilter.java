@@ -70,7 +70,7 @@ public class GatewayContextFilter implements WebFilter, Ordered {
         // 根据Content-Type判断是否读取Body或Form数据
         MediaType contentType = headers.getContentType();
         if (headers.getContentLength() > 0) {
-            if (MediaType.APPLICATION_JSON.equals(contentType) || MediaType.APPLICATION_JSON_UTF8.equals(contentType)) {
+            if (contentType != null && contentType.isCompatibleWith(MediaType.APPLICATION_JSON)) {
                 return readBody(exchange, chain, gatewayContext);
             }
             if (MediaType.APPLICATION_FORM_URLENCODED.equals(contentType)) {

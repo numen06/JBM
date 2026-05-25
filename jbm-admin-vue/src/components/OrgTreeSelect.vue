@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import Select from '@/components/ui/Select.vue'
 import { orgOptionLabel, orgRowId, useOrgTree } from '@/composables/useOrgTree'
 
@@ -9,11 +9,13 @@ const props = withDefaults(
     placeholder?: string
     required?: boolean
     disabled?: boolean
+    excludeIds?: number[]
   }>(),
   {
     placeholder: '请选择组织',
     required: false,
     disabled: false,
+    excludeIds: () => [],
   },
 )
 
@@ -22,6 +24,15 @@ const emit = defineEmits<{
 }>()
 
 const { flatOrgs, loadOrgs } = useOrgTree()
+
+const selectableOrgs = computed(() => {
+  if (!props.excludeIds.length) return flatOrgs.value
+  const excluded = new Set(props.excludeIds)
+  return flatOrgs.value.filter((o) => {
+    const id = orgRowId(o)
+    return id == null || !excluded.has(id)
+  })
+})
 
 onMounted(loadOrgs)
 
@@ -43,7 +54,7 @@ function onChange(raw: string) {
   >
     <option v-if="!required" value="">{{ placeholder }}</option>
     <option v-else value="" disabled>{{ placeholder }}</option>
-    <option v-for="o in flatOrgs" :key="orgRowId(o)" :value="orgRowId(o)">
+    <option v-for="o in selectableOrgs" :key="orgRowId(o)" :value="orgRowId(o)">
       {{ orgOptionLabel(o) }}
     </option>
   </Select>
