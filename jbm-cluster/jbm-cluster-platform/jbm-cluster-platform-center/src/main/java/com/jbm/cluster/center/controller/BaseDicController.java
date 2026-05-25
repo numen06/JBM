@@ -56,6 +56,9 @@ public class BaseDicController extends MasterDataTreeCollection<BaseDic, BaseDic
         try {
             validator(pageRequestBody);
             BaseDic filter = validatorMasterData(pageRequestBody, true);
+            if (filter.getParentId() == null) {
+                return ResultBody.error("缺少字典分组 parentId");
+            }
             PageForm pageForm = pageRequestBody.getPageForm();
             String keyword = resolveKeyword(filter);
             DataPaging<BaseDic> dataPaging = this.service.pageItemsByParentId(filter.getParentId(), keyword, pageForm);

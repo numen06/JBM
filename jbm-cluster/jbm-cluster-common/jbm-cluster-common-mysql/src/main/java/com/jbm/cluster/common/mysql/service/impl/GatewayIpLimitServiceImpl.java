@@ -27,6 +27,15 @@ import java.util.List;
 @Slf4j
 @Service
 public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLimit> implements GatewayIpLimitService {
+    private static final String[] IP_LIMIT_COLUMNS = {
+            "policy_id",
+            "policy_name",
+            "policy_type",
+            "ip_address",
+            "create_time",
+            "update_time",
+            "extend_data"
+    };
 
     @Autowired
     private GatewayIpLimitMapper gatewayIpLimitMapper;
@@ -43,9 +52,13 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLi
     @Override
     public DataPaging<GatewayIpLimit> findListPage(GatewayIpLimitForm form) {
         QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper();
+        queryWrapper.select(IP_LIMIT_COLUMNS);
         queryWrapper.lambda()
-                .likeRight(ObjectUtils.isNotEmpty(form.getPolicyName()), GatewayIpLimit::getPolicyName, form.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(form.getPolicyType()), GatewayIpLimit::getPolicyType, form.getPolicyType());
+        if (ObjectUtils.isNotEmpty(form.getPolicyName())) {
+            String kw = form.getPolicyName();
+            queryWrapper.lambda().and(w -> w.likeRight(GatewayIpLimit::getPolicyName, kw).or().likeRight(GatewayIpLimit::getIpAddress, kw));
+        }
         queryWrapper.orderByDesc("create_time");
         PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
         return this.selectEntitys(PageParams.from(pageForm), queryWrapper);
@@ -95,7 +108,10 @@ public class GatewayIpLimitServiceImpl extends MasterDataServiceImpl<GatewayIpLi
      */
     @Override
     public GatewayIpLimit getIpLimitPolicy(Long policyId) {
-        return gatewayIpLimitMapper.selectById(policyId);
+        QueryWrapper<GatewayIpLimit> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(IP_LIMIT_COLUMNS);
+        queryWrapper.lambda().eq(GatewayIpLimit::getPolicyId, policyId);
+        return gatewayIpLimitMapper.selectOne(queryWrapper);
     }
 
     /**

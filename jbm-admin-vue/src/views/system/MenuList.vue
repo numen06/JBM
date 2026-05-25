@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Plus, Pencil, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -15,8 +15,24 @@ import { listAllMenus, deleteMenu, createMenu, updateMenu } from '@/api/menu'
 import type { BaseMenu } from '@/api/types'
 
 const items = ref<BaseMenu[]>([])
+const keyword = ref('')
 const loading = ref(true)
 const error = ref('')
+
+const filteredItems = computed(() => {
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return items.value
+  return items.value.filter(
+    (row) =>
+      row.menuCode?.toLowerCase().includes(kw) ||
+      row.menuName?.toLowerCase().includes(kw) ||
+      row.path?.toLowerCase().includes(kw),
+  )
+})
+
+function search() {
+  /* 本地过滤，无需请求 */
+}
 
 const {
   dialogOpen,
@@ -92,6 +108,12 @@ onMounted(load)
       description="标准菜单由启动种子写入；超管可增删改（MENU_* 权限标识）"
     >
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="编码/名称/路径"
+          class="w-44"
+          @keyup.enter="search"
+        />
         <Button variant="outline" @click="load">
           <RefreshCw class="mr-1 h-4 w-4" />
           刷新
@@ -102,7 +124,7 @@ onMounted(load)
         </Button>
       </template>
     </PageHeader>
-    <DataTableShell :loading="loading" :error="error" :empty="!items.length">
+    <DataTableShell :loading="loading" :error="error" :empty="!filteredItems.length">
       <Table>
         <thead>
           <tr class="border-b bg-muted/50">
@@ -117,7 +139,7 @@ onMounted(load)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in items" :key="row.menuId" class="border-b">
+          <tr v-for="row in filteredItems" :key="row.menuId" class="border-b">
             <td class="p-4">{{ row.menuId }}</td>
             <td class="p-4 font-mono text-xs">{{ row.menuCode }}</td>
             <td class="p-4">{{ row.menuName }}</td>

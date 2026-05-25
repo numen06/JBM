@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -15,8 +15,19 @@ import { listOrgTree, saveOrg, deleteOrg } from '@/api/org'
 import type { BaseOrg } from '@/api/types'
 
 const flat = ref<Array<BaseOrg & { depth: number }>>([])
+const keyword = ref('')
 const loading = ref(true)
 const error = ref('')
+
+const filteredFlat = computed(() => {
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return flat.value
+  return flat.value.filter((row) => row.orgName?.toLowerCase().includes(kw))
+})
+
+function search() {
+  /* 本地过滤 */
+}
 
 const {
   dialogOpen,
@@ -93,6 +104,12 @@ onMounted(load)
   <div>
     <PageHeader title="组织管理" description="POST /baseOrg/tree — 树形组织维护">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="组织名称"
+          class="w-40"
+          @keyup.enter="search"
+        />
         <Button variant="outline" @click="load">
           <RefreshCw class="mr-1 h-4 w-4" />
           刷新
@@ -103,7 +120,7 @@ onMounted(load)
         </Button>
       </template>
     </PageHeader>
-    <DataTableShell :loading="loading" :error="error" :empty="!flat.length">
+    <DataTableShell :loading="loading" :error="error" :empty="!filteredFlat.length">
       <Table>
         <thead>
           <tr class="border-b bg-muted/50">
@@ -116,7 +133,7 @@ onMounted(load)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in flat" :key="row.id ?? row.orgId" class="border-b">
+          <tr v-for="row in filteredFlat" :key="row.id ?? row.orgId" class="border-b">
             <td class="p-4">{{ row.id ?? row.orgId }}</td>
             <td class="p-4" :style="{ paddingLeft: `${row.depth * 16 + 16}px` }">{{ row.orgName }}</td>
             <td class="p-4">{{ row.parentId ?? '—' }}</td>

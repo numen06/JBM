@@ -25,7 +25,20 @@ import {
 import { listActions } from '@/api/action'
 import type { BaseAction, BaseRole } from '@/api/types'
 
-const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseRole>(listRoles)
+const keyword = ref('')
+const statusFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseRole>(
+  (p, s) =>
+    listRoles(p, s, {
+      keyword: keyword.value || undefined,
+      status: statusFilter.value !== '' ? statusFilter.value : undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -158,6 +171,13 @@ async function handleDelete(row: BaseRole) {
       description="Center /role — 菜单 + 按钮级权限（ACTION_*）"
     >
       <template #actions>
+        <Input v-model="keyword" placeholder="编码/名称" class="w-40" @keyup.enter="search" />
+        <Select v-model="statusFilter" class="w-28">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建

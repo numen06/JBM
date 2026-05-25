@@ -1,13 +1,17 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.PageParams;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,21 @@ import java.util.List;
 @Service
 public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute> implements GatewayRouteService {
 
+    private static final String[] ROUTE_COLUMNS = {
+            "route_id",
+            "route_name",
+            "path",
+            "service_id",
+            "url",
+            "strip_prefix",
+            "retryable",
+            "status",
+            "is_persist",
+            "route_desc",
+            "create_time",
+            "update_time",
+            "extend_data"
+    };
 
     @Autowired
     private DiscoveryClient discoveryClient;
@@ -48,7 +67,27 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
      */
     @Override
     public DataPaging<GatewayRoute> findListPage(GatewayRoutePageForm gatewayRoutePageForm) {
-        return this.selectEntitys(gatewayRoutePageForm.getGatewayRoute(), gatewayRoutePageForm.getPageForm());
+        PageForm pageForm = gatewayRoutePageForm != null && gatewayRoutePageForm.getPageForm() != null
+                ? gatewayRoutePageForm.getPageForm()
+                : new PageForm();
+        GatewayRoute route = gatewayRoutePageForm != null ? gatewayRoutePageForm.getGatewayRoute() : null;
+        QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(ROUTE_COLUMNS);
+        if (route != null) {
+            queryWrapper.lambda().eq(ObjectUtils.isNotEmpty(route.getStatus()), GatewayRoute::getStatus, route.getStatus());
+            if (StrUtil.isNotBlank(route.getRouteName())) {
+                String kw = route.getRouteName();
+                queryWrapper.lambda().and(w -> w.likeRight(GatewayRoute::getRouteName, kw)
+                        .or().likeRight(GatewayRoute::getPath, kw)
+                        .or().likeRight(GatewayRoute::getServiceId, kw));
+            } else {
+                queryWrapper.lambda()
+                        .likeRight(StrUtil.isNotBlank(route.getPath()), GatewayRoute::getPath, route.getPath())
+                        .likeRight(StrUtil.isNotBlank(route.getServiceId()), GatewayRoute::getServiceId, route.getServiceId());
+            }
+        }
+        queryWrapper.orderByDesc("create_time");
+        return selectEntitys(PageParams.from(pageForm), queryWrapper);
     }
 
     /**
@@ -72,7 +111,10 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
      */
     @Override
     public GatewayRoute getRoute(Long routeId) {
-        return getById(routeId);
+        QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(ROUTE_COLUMNS);
+        queryWrapper.lambda().eq(GatewayRoute::getRouteId, routeId);
+        return getOne(queryWrapper);
     }
 
     /**

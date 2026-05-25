@@ -11,7 +11,7 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
@@ -22,7 +22,22 @@ const { orgLabel, loadOrgs } = useOrgTree()
 
 onMounted(loadOrgs)
 
-const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(listApps)
+const keyword = ref('')
+const statusFilter = ref('')
+const orgIdFilter = ref<number | string | null>(null)
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(
+  (p, s) =>
+    listApps(p, s, {
+      keyword: keyword.value || undefined,
+      orgId: orgIdFilter.value !== '' && orgIdFilter.value != null ? orgIdFilter.value : undefined,
+      status: statusFilter.value !== '' ? statusFilter.value : undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -79,6 +94,23 @@ async function handleDelete(row: BaseApp) {
   <div>
     <PageHeader title="应用管理" description="Center /app — OAuth 客户端应用">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="名称/编码"
+          class="w-40"
+          @keyup.enter="search"
+        />
+        <OrgTreeSelect
+          v-model="orgIdFilter"
+          placeholder="全部组织"
+          class="w-44"
+        />
+        <Select v-model="statusFilter" class="w-28">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建

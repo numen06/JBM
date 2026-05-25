@@ -1,25 +1,53 @@
 import { get, post, put, del, unwrap } from './request'
 import type { GatewayRoute, GatewayRateLimit, GatewayIpLimit, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
-export async function listRoutes(page = 1, size = 20) {
-  const res = await get<DataPaging<GatewayRoute>>('/gateway/routes', {
-    params: pageParams(page, size),
-  })
+export type GatewayRouteListQuery = {
+  keyword?: string
+  status?: number | string
+}
+
+export async function listRoutes(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayRouteListQuery) {
+  const params: Record<string, unknown> = { ...pageParams(page, size) }
+  const kw = query?.keyword?.trim()
+  if (kw) {
+    params['gatewayRoute.routeName'] = kw
+  }
+  if (query?.status !== undefined && query.status !== '') {
+    params['gatewayRoute.status'] = Number(query.status)
+  }
+  const res = await get<DataPaging<GatewayRoute>>('/gateway/routes', { params })
   return unwrap(res)
 }
 
-export async function listRateLimits(page = 1, size = 20) {
-  const res = await get<DataPaging<GatewayRateLimit>>('/gateway/limit/rate', {
-    params: pageParams(page, size),
-  })
+export type GatewayRateLimitListQuery = {
+  keyword?: string
+  policyType?: string
+}
+
+export async function listRateLimits(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayRateLimitListQuery) {
+  const params: Record<string, unknown> = { ...pageParams(page, size) }
+  const kw = query?.keyword?.trim()
+  if (kw) params.policyName = kw
+  if (query?.policyType) params.policyType = query.policyType
+  const res = await get<DataPaging<GatewayRateLimit>>('/gateway/limit/rate', { params })
   return unwrap(res)
 }
 
-export async function listIpLimits(page = 1, size = 20) {
-  const res = await get<DataPaging<GatewayIpLimit>>('/gateway/limit/ip', {
-    params: pageParams(page, size),
-  })
+export type GatewayIpLimitListQuery = {
+  keyword?: string
+  policyType?: number | string
+}
+
+export async function listIpLimits(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayIpLimitListQuery) {
+  const params: Record<string, unknown> = { ...pageParams(page, size) }
+  const kw = query?.keyword?.trim()
+  if (kw) params.policyName = kw
+  if (query?.policyType !== undefined && query.policyType !== '') {
+    params.policyType = Number(query.policyType)
+  }
+  const res = await get<DataPaging<GatewayIpLimit>>('/gateway/limit/ip', { params })
   return unwrap(res)
 }
 

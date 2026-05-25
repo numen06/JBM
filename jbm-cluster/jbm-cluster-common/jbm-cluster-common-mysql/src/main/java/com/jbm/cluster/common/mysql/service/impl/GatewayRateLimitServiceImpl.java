@@ -27,6 +27,17 @@ import java.util.List;
 @Slf4j
 @Service
 public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRateLimit> implements GatewayRateLimitService {
+    private static final String[] RATE_LIMIT_COLUMNS = {
+            "policy_id",
+            "policy_name",
+            "policy_type",
+            "limit_quota",
+            "interval_unit",
+            "create_time",
+            "update_time",
+            "extend_data"
+    };
+
     @Autowired
     private GatewayRateLimitMapper gatewayRateLimitMapper;
 
@@ -42,6 +53,7 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
     @Override
     public DataPaging<GatewayRateLimit> findListPage(GatewayRateLimitForm form) {
         QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper();
+        queryWrapper.select(RATE_LIMIT_COLUMNS);
         queryWrapper.lambda()
                 .likeRight(ObjectUtils.isNotEmpty(form.getPolicyName()), GatewayRateLimit::getPolicyName, form.getPolicyName())
                 .eq(ObjectUtils.isNotEmpty(form.getPolicyType()), GatewayRateLimit::getPolicyType, form.getPolicyType());
@@ -84,7 +96,10 @@ public class GatewayRateLimitServiceImpl extends MasterDataServiceImpl<GatewayRa
      */
     @Override
     public GatewayRateLimit getRateLimitPolicy(Long policyId) {
-        return gatewayRateLimitMapper.selectById(policyId);
+        QueryWrapper<GatewayRateLimit> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(RATE_LIMIT_COLUMNS);
+        queryWrapper.lambda().eq(GatewayRateLimit::getPolicyId, policyId);
+        return gatewayRateLimitMapper.selectOne(queryWrapper);
     }
 
     /**

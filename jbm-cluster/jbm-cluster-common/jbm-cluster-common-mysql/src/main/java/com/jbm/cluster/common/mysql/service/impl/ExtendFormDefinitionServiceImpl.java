@@ -1,10 +1,15 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jbm.cluster.api.entitys.center.ExtendFormDefinition;
 import com.jbm.cluster.api.form.center.SaveExtendFormRequest;
 import com.jbm.cluster.common.mysql.mapper.ExtendFormDefinitionMapper;
 import com.jbm.cluster.common.mysql.service.ExtendFormDefinitionService;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import jbm.framework.boot.autoconfigure.extendfield.ExtendFieldProperties;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
 import jbm.framework.boot.autoconfigure.extendfield.service.FieldDefinitionService;
@@ -29,6 +34,21 @@ public class ExtendFormDefinitionServiceImpl implements ExtendFormDefinitionServ
 
     @Autowired
     private ExtendFieldProperties extendFieldProperties;
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
+
+    @Override
+    public DataPaging<ExtendFormDefinition> pageByTenant(String keyword, PageForm pageForm) {
+        Long tenantId = requireTenantId();
+        PageForm pf = normalizePageForm(pageForm);
+        QueryWrapper<ExtendFormDefinition> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tenant_id", tenantId);
+        applyKeyword(queryWrapper, keyword);
+        queryWrapper.orderByDesc("update_time").orderByDesc("id");
+        Page<ExtendFormDefinition> mpPage = new Page<>(pf.getCurrPage(), pf.getPageSize());
+        IPage<ExtendFormDefinition> result = extendFormDefinitionMapper.selectPage(mpPage, queryWrapper);
+        return new DataPaging<>(result.getRecords(), result.getTotal(), result.getPages(), pf);
+    }
 
     @Override
     public ExtendFormDefinition saveAndPublish(String formCode, SaveExtendFormRequest request) {
@@ -117,5 +137,28 @@ public class ExtendFormDefinitionServiceImpl implements ExtendFormDefinitionServ
                     + " 或登录 appId，或开启 use-default-when-missing");
         }
         return tenantId;
+    }
+
+    private PageForm normalizePageForm(PageForm pageForm) {
+        PageForm pf = pageForm != null ? pageForm : new PageForm();
+        if (pf.getCurrPage() == null || pf.getCurrPage() < 1) {
+            pf.setCurrPage(1);
+        }
+        if (pf.getPageSize() == null || pf.getPageSize() < 1) {
+            pf.setPageSize(DEFAULT_PAGE_SIZE);
+        }
+        return pf;
+    }
+
+    private void applyKeyword(QueryWrapper<ExtendFormDefinition> queryWrapper, String keyword) {
+        if (StrUtil.isBlank(keyword)) {
+            return;
+        }
+        String kw = keyword.trim();
+        queryWrapper.and(w -> w.like("form_code", kw)
+                .or()
+                .like("form_name", kw)
+                .or()
+                .apply("CAST(custom_form_id AS CHAR) LIKE {0}", "%" + kw + "%"));
     }
 }

@@ -42,8 +42,22 @@ const canManageDevelopers = computed(
     menuStore.allowedMenuCodes.has('developer_mgmt'),
 )
 
-const { items, total, page, loading, error, load, pageSize } =
-  usePagedList<BaseDeveloper>(listDevelopers)
+const keyword = ref('')
+const statusFilter = ref('')
+const userTypeFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseDeveloper>(
+  (p, s) =>
+    listDevelopers(p, s, {
+      keyword: keyword.value || undefined,
+      status: statusFilter.value !== '' ? statusFilter.value : undefined,
+      userType: userTypeFilter.value || undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -152,6 +166,26 @@ onMounted(() => {
   <div>
     <PageHeader title="开发者" description="申请、审批与开发者账号管理">
       <template #actions>
+        <template v-if="canManageDevelopers && tab === 'all'">
+          <Input
+            v-model="keyword"
+            placeholder="用户名/昵称"
+            class="w-40"
+            @keyup.enter="search"
+          />
+          <Select v-model="statusFilter" class="w-28">
+            <option value="">全部状态</option>
+            <option value="1">正常</option>
+            <option value="0">待审批</option>
+            <option value="2">锁定</option>
+          </Select>
+          <Select v-model="userTypeFilter" class="w-32">
+            <option value="">全部类型</option>
+            <option value="dev">自研开发者</option>
+            <option value="isp">服务提供商</option>
+          </Select>
+          <Button variant="outline" @click="search">查询</Button>
+        </template>
         <Button variant="outline" :disabled="applyLoading" @click="handleApply">
           申请成为开发者
         </Button>

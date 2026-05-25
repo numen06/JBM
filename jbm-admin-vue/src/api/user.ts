@@ -1,12 +1,13 @@
 import { get, post, put, unwrap } from './request'
 import type { BaseAccount, BaseRole, BaseUser, BaseUserOrg, DataPaging, UserInfoStatistics } from './types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
-export function pageParams(page = 1, size = 20) {
+export function pageParams(page = 1, size = DEFAULT_PAGE_SIZE) {
   return { 'pageForm.currPage': page, 'pageForm.pageSize': size }
 }
 
 /** GET /user — 分页；带 keyword 时走 params=keyword 检索 */
-export async function listUsers(page = 1, size = 20, keyword?: string) {
+export async function listUsers(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
   if (keyword?.trim()) {
     const res = await get<BaseUser[]>('/user', { params: { keyword: keyword.trim() } })
     const list = unwrap(res) ?? []

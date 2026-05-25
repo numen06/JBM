@@ -1,5 +1,6 @@
 import { get, post, unwrap } from './request'
 import type { BaseDic, DataPaging } from './types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export async function listDicts() {
   const res = await post<BaseDic[]>('/baseDic/list', {})
@@ -12,31 +13,43 @@ export async function listRootDicts() {
   return unwrap(res)
 }
 
-/** 分页查询字典分组；keyword 匹配编码/名称 */
-export async function pageRootDicts(page = 1, size = 15, keyword?: string) {
-  const model: Partial<BaseDic> = {}
-  const kw = keyword?.trim()
-  if (kw) model.name = kw
-  const res = await post<DataPaging<BaseDic>>('/baseDic/root/pageList', {
+function dicRequestBody(filter: Partial<BaseDic>, page: number, size: number) {
+  return {
     pageForm: { currPage: page, pageSize: size },
-    model,
-  })
+    baseDic: filter,
+  }
+}
+
+/** 分页查询字典分组；keyword 匹配编码/名称 */
+export async function pageRootDicts(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
+  const baseDic: Partial<BaseDic> = {}
+  const kw = keyword?.trim()
+  if (kw) baseDic.name = kw
+  const res = await post<DataPaging<BaseDic>>(
+    '/baseDic/root/pageList',
+    dicRequestBody(baseDic, page, size),
+  )
   return unwrap(res)
 }
 
 /** 分页查询指定分组下的字典项 */
-export async function pageDictItems(parentId: number, page = 1, size = 20, keyword?: string) {
-  const model: Partial<BaseDic> = { parentId }
+export async function pageDictItems(
+  parentId: number | string,
+  page = 1,
+  size = DEFAULT_PAGE_SIZE,
+  keyword?: string,
+) {
+  const baseDic: Partial<BaseDic> = { parentId }
   const kw = keyword?.trim()
-  if (kw) model.name = kw
-  const res = await post<DataPaging<BaseDic>>('/baseDic/items/pageList', {
-    pageForm: { currPage: page, pageSize: size },
-    model,
-  })
+  if (kw) baseDic.name = kw
+  const res = await post<DataPaging<BaseDic>>(
+    '/baseDic/items/pageList',
+    dicRequestBody(baseDic, page, size),
+  )
   return unwrap(res)
 }
 
-export async function pageDicts(page = 1, size = 20) {
+export async function pageDicts(page = 1, size = DEFAULT_PAGE_SIZE) {
   const res = await post<DataPaging<BaseDic>>('/baseDic/pageList', {
     pageForm: { currPage: page, pageSize: size },
   })
@@ -63,11 +76,11 @@ function toDicModel(data: Partial<BaseDic>) {
 }
 
 export async function saveDict(data: Partial<BaseDic>) {
-  const res = await post<BaseDic>('/baseDic/save', { model: toDicModel(data) })
+  const res = await post<BaseDic>('/baseDic/save', { baseDic: toDicModel(data) })
   return unwrap(res)
 }
 
 export async function deleteDict(data: Partial<BaseDic>) {
-  const res = await post<void>('/baseDic/delete', { model: toDicModel(data) })
+  const res = await post<void>('/baseDic/delete', { baseDic: toDicModel(data) })
   return unwrap(res)
 }

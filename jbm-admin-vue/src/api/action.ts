@@ -1,8 +1,9 @@
 import { get, post, put, del, unwrap } from './request'
 import type { BaseAction, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
-export async function listActions(menuId?: number, page = 1, size = 100) {
+export async function listActions(menuId?: number, page = 1, size = DEFAULT_PAGE_SIZE) {
   const res = await get<DataPaging<BaseAction>>('/action', {
     params: {
       ...pageParams(page, size),

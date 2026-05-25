@@ -5,11 +5,14 @@ import com.jbm.cluster.api.form.center.SaveExtendFormRequest;
 import com.jbm.cluster.api.service.IExtendFormDefinitionServiceClient;
 import com.jbm.cluster.common.mysql.service.ExtendFormDefinitionService;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,6 +24,18 @@ public class ExtendFormDefinitionController implements IExtendFormDefinitionServ
 
     @Autowired
     private ExtendFormDefinitionService extendFormDefinitionService;
+
+    @Override
+    @ApiOperation("分页查询表单定义列表")
+    public ResultBody<DataPaging<ExtendFormDefinition>> listFromDb(
+            @RequestParam(value = "pageForm.currPage", required = false) Integer currPage,
+            @RequestParam(value = "pageForm.pageSize", required = false) Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        PageForm pageForm = new PageForm();
+        pageForm.setCurrPage(currPage);
+        pageForm.setPageSize(pageSize);
+        return ResultBody.ok(extendFormDefinitionService.pageByTenant(keyword, pageForm));
+    }
 
     @Override
     @ApiOperation("新建或更新并发布")

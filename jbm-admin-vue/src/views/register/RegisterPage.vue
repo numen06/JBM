@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { RefreshCw } from '@lucide/vue'
+import { ArrowLeft, RefreshCw } from '@lucide/vue'
 import { register } from '@/api/auth'
 import { fetchCaptchaBase64 } from '@/api/captcha'
 import { DEV_CAPTCHA_CODE, JBM_DEFAULT_CLIENT_ID, JBM_DEFAULT_CLIENT_SECRET } from '@/constants/loginModes'
@@ -104,9 +104,13 @@ onMounted(loadCaptcha)
 
     <div class="flex flex-1 flex-col justify-center bg-background px-4 py-10 sm:px-8 lg:px-12">
       <div class="mx-auto w-full max-w-md">
+        <RouterLink to="/" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+          <ArrowLeft class="size-4" />
+          返回首页
+        </RouterLink>
+
         <div class="mb-8 lg:hidden">
-          <RouterLink to="/" class="text-sm text-muted-foreground hover:text-primary">返回首页</RouterLink>
-          <h1 class="mt-4 text-2xl font-bold">注册 JBM 账号</h1>
+          <h1 class="text-2xl font-bold">注册 JBM 账号</h1>
           <p class="mt-1 text-sm text-muted-foreground">创建账号后即可登录控制台、创建 OAuth2 应用</p>
         </div>
 

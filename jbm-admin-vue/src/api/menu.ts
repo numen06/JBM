@@ -1,8 +1,9 @@
 import { get, post, put, del, unwrap } from './request'
 import type { BaseMenu, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
-export async function listMenus(page = 1, size = 20) {
+export async function listMenus(page = 1, size = DEFAULT_PAGE_SIZE) {
   const res = await get<DataPaging<BaseMenu>>('/menu', { params: pageParams(page, size) })
   return unwrap(res)
 }
