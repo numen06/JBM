@@ -18,6 +18,10 @@ import java.util.List;
  */
 public interface IExtendFormDefinitionServiceClient {
 
+    @ApiOperation("查询表单定义列表")
+    @GetMapping
+    ResultBody<List<ExtendFormDefinition>> listFromDb();
+
     @ApiOperation("新建或更新并发布")
     @PostMapping("/{formCode}")
     ResultBody<ExtendFormDefinition> save(

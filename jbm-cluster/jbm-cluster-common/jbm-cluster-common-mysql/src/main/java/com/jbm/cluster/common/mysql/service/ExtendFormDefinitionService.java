@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface ExtendFormDefinitionService {
 
+    List<ExtendFormDefinition> listByTenant();
+
     ExtendFormDefinition saveAndPublish(String formCode, SaveExtendFormRequest request);
 
     void publishToRedis(String formCode);

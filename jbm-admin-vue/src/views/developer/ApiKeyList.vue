@@ -29,8 +29,20 @@ import { getDeveloper } from '@/api/developer'
 import type { BaseApiKey, BaseApp, OpenAuthority } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 
-const { items, total, page, loading, error, load, pageSize } =
-  usePagedList<BaseApiKey>(listApiKeys)
+const keyword = ref('')
+const statusFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApiKey>(
+  (p, s) =>
+    listApiKeys(p, s, {
+      keyword: keyword.value || undefined,
+      status: statusFilter.value !== '' ? statusFilter.value : undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const apps = ref<BaseApp[]>([])
 const auth = useAuthStore()
@@ -223,6 +235,18 @@ onMounted(() => {
   <div>
     <PageHeader title="API Key 管理" description="Center /apikey — 第三方访问凭证与接口授权">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="名称/客户"
+          class="w-40"
+          @keyup.enter="search"
+        />
+        <Select v-model="statusFilter" class="w-28">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">禁用</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button :disabled="!canCreateApiKey" @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建 API Key

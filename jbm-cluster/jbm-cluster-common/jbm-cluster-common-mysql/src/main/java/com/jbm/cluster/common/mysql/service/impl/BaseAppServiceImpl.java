@@ -83,6 +83,8 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         CriteriaQueryWrapper<BaseApp> cq = CriteriaQueryWrapper.from(PageParams.from(pageForm));
         cq.lambda()
                 .eq(ObjectUtils.isNotEmpty(form.getDeveloperId()), BaseApp::getDeveloperId, form.getDeveloperId())
+                .eq(ObjectUtils.isNotEmpty(form.getOrgId()), BaseApp::getOrgId, form.getOrgId())
+                .eq(ObjectUtils.isNotEmpty(form.getStatus()), BaseApp::getStatus, form.getStatus())
                 .eq(ObjectUtils.isNotEmpty(form.getAppType()), BaseApp::getAppType, form.getAppType())
                 .eq(ObjectUtils.isNotEmpty(form.getAid()), BaseApp::getAppId, form.getAid())
                 .likeRight(ObjectUtils.isNotEmpty(form.getAppName()), BaseApp::getAppName, form.getAppName())

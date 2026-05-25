@@ -2,6 +2,59 @@
 
 时间：2026-05-25
 
+## 2026-05-25 继续验证：Cursor 新增功能 + 用户/管理员实测
+
+### 代码审查范围
+
+- 前端新增/增强：开发者、API Key、应用、角色、网关路由、限流、IP 限制、组织、菜单筛选；新增在线用户页。
+- 后端新增/增强：应用/开发者/角色/网关相关列表筛选与排序。
+- 重点风险：网关管理表 `gateway_route`、`gateway_rate_limit`、`gateway_ip_limit` 并不完整具备 `MasterDataEntity` 的继承列，使用默认 MyBatis-Plus 查询会把 `id/code/app_id/parent_id/...` 带入 SQL。
+
+### 编译验证
+
+- 前端：`npm run build` PASS。
+- 后端：`mvn -pl jbm-cluster/jbm-cluster-common/jbm-cluster-common-mysql,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -DskipTests install` PASS。
+- 集群：Auth `5555`、Center `8888`、Gateway `7777` 重启后健康。
+
+### 页面实测结果
+
+本轮通过本地 Chrome + Playwright 从页面真实操作完成，结果文件：
+
+- `.cursor/jbm-user-admin-e2e-result.json`
+
+通过步骤：
+
+1. 普通用户从 `/register` 注册：`jbm_ui_81168364`。
+2. 使用注册账号登录进入 `/dashboard`。
+3. 普通用户进入 `/developer` 提交开发者申请。
+4. 未审批前进入 `/developer/api-keys`，验证“新建 API Key”禁用。
+5. 管理员 `admin / Admin@123` 登录并在开发者页面审批该用户。
+6. 用户再次登录后创建 API Key，Secret 一次性展示正常。
+7. 管理员进入 `/system/online-users`，在线用户页面加载正常。
+8. 管理员进入 `/gateway/routes`，完成路由创建、筛选、编辑、删除。
+9. 管理员进入 `/gateway/rate-limit`，完成限流策略创建、筛选、编辑、删除。
+10. 管理员进入 `/gateway/ip-limit`，完成 IP 限制策略创建、筛选、编辑、删除。
+
+### 本轮修复
+
+- 修复 `GatewayRouteServiceImpl.findListPage/getRoute`：显式选择 `gateway_route` 真实存在字段，避免查询继承列导致 `Unknown column 'id' in 'field list'`。
+- 修复 `GatewayRateLimitServiceImpl.findListPage/getRateLimitPolicy`：显式选择 `gateway_rate_limit` 真实字段。
+- 修复 `GatewayIpLimitServiceImpl.findListPage/getIpLimitPolicy`：显式选择 `gateway_ip_limit` 真实字段。
+- 增加 `.cursor/jbm-user-admin-e2e.cjs`，用于可重复执行从用户注册到管理员网关管理的页面级 E2E 验证。
+
+### 本轮截图
+
+- `.cursor/screenshots/e2e-user-dashboard-after-register.png`
+- `.cursor/screenshots/e2e-user-developer-self-service.png`
+- `.cursor/screenshots/e2e-user-developer-apply-submitted.png`
+- `.cursor/screenshots/e2e-user-apikey-before-admin-approval.png`
+- `.cursor/screenshots/e2e-admin-developer-pending-user.png`
+- `.cursor/screenshots/e2e-user-apikey-after-approval-created.png`
+- `.cursor/screenshots/e2e-admin-online-users-loaded.png`
+- `.cursor/screenshots/e2e-admin-gateway-route-created.png`
+- `.cursor/screenshots/e2e-admin-gateway-rate-created.png`
+- `.cursor/screenshots/e2e-admin-gateway-ip-created.png`
+
 ## 本轮页面实测路径
 
 从匿名用户视角完整走了一遍：

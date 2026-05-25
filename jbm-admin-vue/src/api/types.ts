@@ -112,15 +112,15 @@ export interface BaseApp {
 }
 
 export interface BaseDic {
-  id?: number
-  dicId?: number
+  id?: number | string
+  dicId?: number | string
   code?: string
   dicCode?: string
   name?: string
   dicName?: string
   remark?: string
   dicValue?: string
-  parentId?: number
+  parentId?: number | string
   level?: number
   cssClass?: string
   listClass?: string

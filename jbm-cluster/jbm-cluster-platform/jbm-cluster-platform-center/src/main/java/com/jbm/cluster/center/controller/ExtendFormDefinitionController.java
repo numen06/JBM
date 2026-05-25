@@ -23,6 +23,12 @@ public class ExtendFormDefinitionController implements IExtendFormDefinitionServ
     private ExtendFormDefinitionService extendFormDefinitionService;
 
     @Override
+    @ApiOperation("查询表单定义列表")
+    public ResultBody<List<ExtendFormDefinition>> listFromDb() {
+        return ResultBody.ok(extendFormDefinitionService.listByTenant());
+    }
+
+    @Override
     @ApiOperation("新建或更新并发布")
     public ResultBody<ExtendFormDefinition> save(String formCode, SaveExtendFormRequest request) {
         return ResultBody.ok(extendFormDefinitionService.saveAndPublish(formCode, request));

@@ -9,11 +9,14 @@
                 AND base_role_user.role_id = base_role.role_id)
             </if>
             <if test="form.status != null">AND base_role.status = #{form.status}</if>
-            <if test="form.roleCode != null and form.roleCode != ''">
+            <if test="form.roleCode != null and form.roleCode != '' and (form.roleName == null or form.roleName == '')">
                 AND base_role.role_code LIKE concat(#{form.roleCode}, '%')
             </if>
             <if test="form.roleName != null and form.roleName != ''">
-                AND base_role.role_name LIKE concat(#{form.roleName}, '%')
+                AND (
+                    base_role.role_name LIKE concat(#{form.roleName}, '%')
+                    OR base_role.role_code LIKE concat(#{form.roleName}, '%')
+                )
             </if>
             <if test="form.beginTime != null">AND base_role.create_time &gt;= #{form.beginTime}</if>
             <if test="form.endTime != null">AND base_role.create_time &lt;= #{form.endTime}</if>

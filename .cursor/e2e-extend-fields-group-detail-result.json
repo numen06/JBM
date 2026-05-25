@@ -1,0 +1,28 @@
+{
+  "base": "http://127.0.0.1:5173",
+  "startedAt": "2026-05-25T04:17:04.724Z",
+  "steps": [
+    {
+      "name": "admin login",
+      "status": "passed",
+      "at": "2026-05-25T04:17:09.083Z"
+    },
+    {
+      "name": "field group list loaded",
+      "status": "passed",
+      "at": "2026-05-25T04:17:11.317Z",
+      "mode": "existing"
+    },
+    {
+      "name": "click field group shows right detail",
+      "status": "passed",
+      "at": "2026-05-25T04:17:14.930Z",
+      "groupText": "CEN_FORM\nv1\ncen_form_1779651352849\n1 个字段"
+    }
+  ],
+  "screenshots": [
+    "D:\\workspaces\\JBM7\\.cursor\\screenshots\\e2e-extend-fields-group-detail.png"
+  ],
+  "status": "passed",
+  "finishedAt": "2026-05-25T04:17:14.941Z"
+}

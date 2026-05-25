@@ -143,8 +143,14 @@ public class BaseDeveloperServiceImpl extends MasterDataServiceImpl<BaseDevelope
         queryWrapper.lambda()
                 .eq(ObjectUtils.isNotEmpty(form.getUserId()), BaseDeveloper::getUserId, form.getUserId())
                 .eq(ObjectUtils.isNotEmpty(form.getUserType()), BaseDeveloper::getUserType, form.getUserType())
-                .eq(ObjectUtils.isNotEmpty(form.getUserName()), BaseDeveloper::getUserName, form.getUserName())
+                .eq(ObjectUtils.isNotEmpty(form.getStatus()), BaseDeveloper::getStatus, form.getStatus())
                 .eq(ObjectUtils.isNotEmpty(form.getMobile()), BaseDeveloper::getMobile, form.getMobile());
+        if (ObjectUtils.isNotEmpty(form.getUserName())) {
+            String kw = form.getUserName();
+            queryWrapper.lambda().and(w -> w.likeRight(BaseDeveloper::getUserName, kw).or().likeRight(BaseDeveloper::getNickName, kw));
+        } else if (ObjectUtils.isNotEmpty(form.getNickName())) {
+            queryWrapper.lambda().likeRight(BaseDeveloper::getNickName, form.getNickName());
+        }
         queryWrapper.orderByDesc("create_time");
         PageForm pageForm = form.getPageForm() != null ? form.getPageForm() : new PageForm();
         return this.selectEntitys(PageParams.from(pageForm), queryWrapper);

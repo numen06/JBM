@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -15,8 +16,20 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { listIpLimits, createIpLimit, updateIpLimit, deleteIpLimit } from '@/api/gateway'
 import type { GatewayIpLimit } from '@/api/types'
 
-const { items, total, page, loading, error, load, pageSize } =
-  usePagedList<GatewayIpLimit>(listIpLimits)
+const keyword = ref('')
+const policyTypeFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayIpLimit>(
+  (p, s) =>
+    listIpLimits(p, s, {
+      keyword: keyword.value || undefined,
+      policyType: policyTypeFilter.value !== '' ? policyTypeFilter.value : undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -70,6 +83,18 @@ async function handleDelete(row: GatewayIpLimit) {
   <div>
     <PageHeader title="IP 限制" description="GET /gateway/limit/ip">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="策略名"
+          class="w-40"
+          @keyup.enter="search"
+        />
+        <Select v-model="policyTypeFilter" class="w-28">
+          <option value="">全部类型</option>
+          <option value="1">白名单</option>
+          <option value="0">黑名单</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建

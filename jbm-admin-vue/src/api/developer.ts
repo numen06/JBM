@@ -2,10 +2,21 @@ import { get, post, put, unwrap } from './request'
 import type { BaseDeveloper, DataPaging } from './types'
 import { pageParams } from './user'
 
-export async function listDevelopers(page = 1, size = 20) {
-  const res = await get<DataPaging<BaseDeveloper>>('/developer', {
-    params: pageParams(page, size),
-  })
+export type DeveloperListQuery = {
+  keyword?: string
+  status?: number | string
+  userType?: string
+}
+
+export async function listDevelopers(page = 1, size = 20, query?: DeveloperListQuery) {
+  const params: Record<string, unknown> = { ...pageParams(page, size) }
+  const kw = query?.keyword?.trim()
+  if (kw) params.userName = kw
+  if (query?.userType) params.userType = query.userType
+  if (query?.status !== undefined && query.status !== '') {
+    params.status = Number(query.status)
+  }
+  const res = await get<DataPaging<BaseDeveloper>>('/developer', { params })
   return unwrap(res)
 }
 

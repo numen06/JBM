@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -19,8 +20,20 @@ import {
 } from '@/api/gateway'
 import type { GatewayRateLimit } from '@/api/types'
 
-const { items, total, page, loading, error, load, pageSize } =
-  usePagedList<GatewayRateLimit>(listRateLimits)
+const keyword = ref('')
+const policyTypeFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayRateLimit>(
+  (p, s) =>
+    listRateLimits(p, s, {
+      keyword: keyword.value || undefined,
+      policyType: policyTypeFilter.value || undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -75,6 +88,19 @@ async function handleDelete(row: GatewayRateLimit) {
   <div>
     <PageHeader title="限流策略" description="GET /gateway/limit/rate">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="策略名"
+          class="w-40"
+          @keyup.enter="search"
+        />
+        <Select v-model="policyTypeFilter" class="w-28">
+          <option value="">全部类型</option>
+          <option value="url">URL</option>
+          <option value="origin">Origin</option>
+          <option value="user">User</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建

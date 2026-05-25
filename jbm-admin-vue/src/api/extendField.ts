@@ -7,6 +7,11 @@ import type {
 
 const BASE = '/extend-field/forms'
 
+export async function listExtendForms() {
+  const res = await get<ExtendFormDefinition[]>(BASE)
+  return unwrap(res)
+}
+
 export async function saveExtendForm(formCode: string, request: SaveExtendFormRequest) {
   const res = await post<ExtendFormDefinition>(`${BASE}/${encodeURIComponent(formCode)}`, request)
   return unwrap(res)

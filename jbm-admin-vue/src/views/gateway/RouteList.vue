@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -15,7 +16,20 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { listRoutes, deleteRoute, createRoute, updateRoute } from '@/api/gateway'
 import type { GatewayRoute } from '@/api/types'
 
-const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayRoute>(listRoutes)
+const keyword = ref('')
+const statusFilter = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayRoute>(
+  (p, s) =>
+    listRoutes(p, s, {
+      keyword: keyword.value || undefined,
+      status: statusFilter.value !== '' ? statusFilter.value : undefined,
+    }),
+)
+
+function search() {
+  load(1)
+}
 
 const {
   dialogOpen,
@@ -67,6 +81,18 @@ async function handleDelete(row: GatewayRoute) {
   <div>
     <PageHeader title="网关路由" description="GET /gateway/routes">
       <template #actions>
+        <Input
+          v-model="keyword"
+          placeholder="名称/路径/服务"
+          class="w-44"
+          @keyup.enter="search"
+        />
+        <Select v-model="statusFilter" class="w-28">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </Select>
+        <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
           新建

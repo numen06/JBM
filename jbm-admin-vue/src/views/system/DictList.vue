@@ -21,8 +21,10 @@ type DialogMode = 'group' | 'item'
 const GROUP_PAGE_SIZE = 15
 const ITEM_PAGE_SIZE = 20
 
-function dicId(row: BaseDic) {
-  return row.id ?? row.dicId
+function dicId(row: BaseDic): number | string | undefined {
+  const raw = row.id ?? row.dicId
+  if (raw == null || raw === '') return undefined
+  return raw
 }
 
 function dicCode(row: BaseDic) {

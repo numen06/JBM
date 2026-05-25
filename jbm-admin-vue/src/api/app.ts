@@ -2,8 +2,23 @@ import { get, post, put, del, unwrap } from './request'
 import type { BaseApp, DataPaging } from './types'
 import { pageParams } from './user'
 
-export async function listApps(page = 1, size = 20) {
-  const res = await get<DataPaging<BaseApp>>('/app', { params: pageParams(page, size) })
+export type AppListQuery = {
+  keyword?: string
+  orgId?: number | string
+  status?: number | string
+}
+
+export async function listApps(page = 1, size = 20, query?: AppListQuery) {
+  const params: Record<string, unknown> = { ...pageParams(page, size) }
+  const kw = query?.keyword?.trim()
+  if (kw) params.appName = kw
+  if (query?.orgId !== undefined && query.orgId !== '') {
+    params.orgId = Number(query.orgId)
+  }
+  if (query?.status !== undefined && query.status !== '') {
+    params.status = Number(query.status)
+  }
+  const res = await get<DataPaging<BaseApp>>('/app', { params })
   return unwrap(res)
 }
 

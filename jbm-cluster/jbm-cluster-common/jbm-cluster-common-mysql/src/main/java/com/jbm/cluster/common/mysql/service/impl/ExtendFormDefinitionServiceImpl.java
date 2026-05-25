@@ -31,6 +31,15 @@ public class ExtendFormDefinitionServiceImpl implements ExtendFormDefinitionServ
     private ExtendFieldProperties extendFieldProperties;
 
     @Override
+    public List<ExtendFormDefinition> listByTenant() {
+        Long tenantId = requireTenantId();
+        return extendFormDefinitionMapper.selectList(new QueryWrapper<ExtendFormDefinition>()
+                .eq("tenant_id", tenantId)
+                .orderByDesc("update_time")
+                .orderByDesc("id"));
+    }
+
+    @Override
     public ExtendFormDefinition saveAndPublish(String formCode, SaveExtendFormRequest request) {
         Long tenantId = requireTenantId();
         ExtendFormDefinition row = extendFormDefinitionMapper.selectOne(new QueryWrapper<ExtendFormDefinition>()
