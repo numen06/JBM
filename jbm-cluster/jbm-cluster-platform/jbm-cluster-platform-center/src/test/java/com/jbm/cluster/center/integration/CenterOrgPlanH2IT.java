@@ -38,10 +38,11 @@ class CenterOrgPlanH2IT extends CenterH2ApiTestSupport {
         child.setOrgName("计划IT子组织");
         child.setParentId(1L);
         MasterDataRequsetBody saveBody = new MasterDataRequsetBody();
-        saveBody.put("model", child);
+        saveBody.put("baseOrg", child);
         ResultBody<BaseOrg> saved = baseOrgController.save(saveBody);
         assertSuccess(saved);
         assertThat(saved.getResult().getId()).isNotNull();
+        assertThat(saved.getResult().getOrgName()).isEqualTo("计划IT子组织");
 
         ResultBody<List<BaseUserOrg>> orgs = baseUserController.getUserOrgs(1L);
         assertSuccess(orgs);

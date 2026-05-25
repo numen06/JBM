@@ -1,49 +1,77 @@
 # JBM 本轮验证与修复记录
 
-时间：2026-05-25
+时间：2026-05-25（Cursor 执行计划闭环）
 
-## 2026-05-25 继续验证：Cursor 新增功能 + 用户/管理员实测
+## 执行摘要
 
-### 代码审查范围
+按 `.cursor/plans/jbm发现问题与cursor执行计划_20260525.plan.md` 完成 P0 修复确认、构建、服务重启、页面/API 实测与结果落盘。未回退用户已有改动（组织 UTF-8 迁移 `V16__base_org_utf8mb4.sql`、`OrgList.vue`、`org.ts` 等）。
 
-- 前端新增/增强：开发者、API Key、应用、角色、网关路由、限流、IP 限制、组织、菜单筛选；新增在线用户页。
-- 后端新增/增强：应用/开发者/角色/网关相关列表筛选与排序。
-- 重点风险：网关管理表 `gateway_route`、`gateway_rate_limit`、`gateway_ip_limit` 并不完整具备 `MasterDataEntity` 的继承列，使用默认 MyBatis-Plus 查询会把 `id/code/app_id/parent_id/...` 带入 SQL。
+## 已确认/已存在的 P0 修复
 
-### 编译验证
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 扩展字段管理：左侧字段组 → 右侧字段定义 | **已修复** | `ExtendFieldList.vue` 左侧 `button[data-testid=field-group-item]` + `getExtendFormFromDb`；后端 `GET /extend-field/forms` 分页按租户 |
+| 字典页 TypeScript 构建 | **已修复** | `BaseDic.id/dicId/parentId` 已为 `number \| string` |
+| 网关管理 SQL 继承列 | **已修复** | `GatewayRoute/RateLimit/IpLimitServiceImpl` 显式 `select` 真实列 |
+| 注册 RSA 密码入库 | **已修复** | `SysLoginService.decryptPassword` 识别 RSA 密文后仍解密；注册走同一链路 |
 
-- 前端：`npm run build` PASS。
-- 后端：`mvn -pl jbm-cluster/jbm-cluster-common/jbm-cluster-common-mysql,jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center -am -DskipTests install` PASS。
-- 集群：Auth `5555`、Center `8888`、Gateway `7777` 重启后健康。
+## 本轮 E2E / API 实测结果
 
-### 页面实测结果
+| 脚本 | 结果 | 输出 |
+|---|---|---|
+| `node .cursor/e2e-extend-fields-group-detail.cjs` | **passed** | `.cursor/e2e-extend-fields-group-detail-result.json`、`.cursor/screenshots/e2e-extend-fields-group-detail.png` |
+| `node .cursor/jbm-user-admin-e2e.cjs` | **passed** | `.cursor/jbm-user-admin-e2e-result.json`（注册→登录→开发者→API Key→网关路由/限流/IP） |
+| `python scripts/run_tenant_isolation_tests.py` | **passed** | `.cursor/e2e-tenant-isolation-result.json` |
+| `python scripts/verify_extend_field_cn.py` | **passed** | `.cursor/e2e-utf8-cn-result.json`（客户表单/客户等级） |
+| `cd jbm-admin-vue && npm run build` | **passed** | vue-tsc + vite build |
 
-本轮通过本地 Chrome + Playwright 从页面真实操作完成，结果文件：
+### 用户/管理员 E2E 覆盖步骤
 
-- `.cursor/jbm-user-admin-e2e-result.json`
+1. 普通用户 `/register` 注册（RSA 密码）→ `/login` → `/dashboard`
+2. 提交开发者申请；未审批时 `/developer/api-keys` 新建按钮禁用
+3. 管理员审批 → 用户创建 API Key，Secret 一次性展示
+4. 管理员 `/system/online-users` 加载正常
+5. 管理员 `/gateway/routes`、`/gateway/rate-limit`、`/gateway/ip-limit` 均完成新增、筛选、编辑、删除
 
-通过步骤：
+### 多租户隔离
 
-1. 普通用户从 `/register` 注册：`jbm_ui_81168364`。
-2. 使用注册账号登录进入 `/dashboard`。
-3. 普通用户进入 `/developer` 提交开发者申请。
-4. 未审批前进入 `/developer/api-keys`，验证“新建 API Key”禁用。
-5. 管理员 `admin / Admin@123` 登录并在开发者页面审批该用户。
-6. 用户再次登录后创建 API Key，Secret 一次性展示正常。
-7. 管理员进入 `/system/online-users`，在线用户页面加载正常。
-8. 管理员进入 `/gateway/routes`，完成路由创建、筛选、编辑、删除。
-9. 管理员进入 `/gateway/rate-limit`，完成限流策略创建、筛选、编辑、删除。
-10. 管理员进入 `/gateway/ip-limit`，完成 IP 限制策略创建、筛选、编辑、删除。
+- 租户 0 保存 `iso_tenant_a_*`，租户 1 保存 `iso_tenant_b_*`
+- 各租户列表互不可见；租户 0 无法读取租户 B 的 formCode
 
-### 本轮修复
+## 构建与服务命令
 
-- 修复 `GatewayRouteServiceImpl.findListPage/getRoute`：显式选择 `gateway_route` 真实存在字段，避免查询继承列导致 `Unknown column 'id' in 'field list'`。
-- 修复 `GatewayRateLimitServiceImpl.findListPage/getRateLimitPolicy`：显式选择 `gateway_rate_limit` 真实字段。
-- 修复 `GatewayIpLimitServiceImpl.findListPage/getIpLimitPolicy`：显式选择 `gateway_ip_limit` 真实字段。
-- 增加 `.cursor/jbm-user-admin-e2e.cjs`，用于可重复执行从用户注册到管理员网关管理的页面级 E2E 验证。
+```powershell
+cd D:\workspaces\JBM7\jbm-admin-vue
+npm.cmd run build
 
-### 本轮截图
+cd D:\workspaces\JBM7
+python scripts\jbm_cluster_ops.py start auth center gateway --background --clean
+python scripts\jbm_cluster_ops.py wait --timeout 180
+```
 
+集群 profile：`jaja7`；Auth `5555`、Center `8888`、Gateway `7777`、Vue dev `5173`。
+
+## 本轮脚本微调
+
+- `.cursor/e2e-extend-fields-group-detail.cjs`：等待 `#formCode`；字段组匹配改为任意 `[data-testid=field-group-item]`（不再仅限 `cen_form_*`）
+- `.cursor/jbm-user-admin-e2e.cjs`：网关 CRUD 保存后 `reload` 再断言表格行，避免列表未刷新导致超时
+- 新增 `scripts/verify_extend_field_cn.py`：经 Gateway 验证中文扩展字段读写
+
+## 中文编码
+
+- 数据库：`V16__base_org_utf8mb4.sql` 将 `base_org` 转为 `utf8mb4`
+- API：扩展字段「客户表单」「客户等级」经 Gateway JSON 读写正常（见 `e2e-utf8-cn-result.json`）
+- **已知风险**：历史 E2E 种子 `ui_fields_82227436` 等存在乱码显示；`verify_org_save_cn.py` 因 Center 运行时 `NoClassDefFoundError: com/jbm/util/CollectionUtils`（`mvn spring-boot:run` 启动）暂无法验证 `/baseOrg/tree`，需 IDE 直接调试 Center 或补齐 classpath 后复测
+
+## P1/P2 合理优化（已具备或部分具备）
+
+- 扩展字段列表分页/搜索：已实现 `pageExtendForms(keyword, page, pageSize)`
+- 首页/API Wiki：`LandingPage.vue`、`ApiWikiPage.vue` 已含 0→1 接入路径与 FAQ（未审批、限流、跨租户等）
+- Logo：`JbmLogo` 统一 JBM 图形，导航「JBM 开源平台」
+
+## 截图路径
+
+- `.cursor/screenshots/e2e-extend-fields-group-detail.png`
 - `.cursor/screenshots/e2e-user-dashboard-after-register.png`
 - `.cursor/screenshots/e2e-user-developer-self-service.png`
 - `.cursor/screenshots/e2e-user-developer-apply-submitted.png`
@@ -55,37 +83,8 @@
 - `.cursor/screenshots/e2e-admin-gateway-rate-created.png`
 - `.cursor/screenshots/e2e-admin-gateway-ip-created.png`
 
-## 本轮页面实测路径
+## 后续 P0/P1 待办（未用「构建通过」替代）
 
-从匿名用户视角完整走了一遍：
-
-1. 打开 `/register`，注册账号 `jbm_ui_70664079`。
-2. 注册成功跳转 `/login?username=jbm_ui_70664079`。
-3. 使用注册密码 `UiTest@123456` 登录成功进入 `/dashboard`。
-4. 普通用户进入控制台，仅展示“仪表盘 / 开放平台 / API Wiki”自助入口。
-5. 在 `/developer` 提交“申请成为开发者”，页面提示“申请已提交，请等待管理员审批”。
-6. 未审批时进入 `/developer/api-keys`，页面提示待审批，`新建 API Key` 禁用。
-7. 使用管理员 `admin / Admin@123` 登录，在开发者页审批该用户。
-8. 回到 `jbm_ui_70664079`，`新建 API Key` 启用，创建 `ui-key-468389` 成功，并展示一次性 Secret。
-
-## 发现并修复的问题
-
-- 注册后无法登录：前端注册发送 RSA 加密密码，但 jaja7 明文登录白名单导致后端直接把 RSA 密文当密码保存。已修复为“看起来是 RSA 密文时仍执行解密”。
-- 普通注册用户菜单过宽：菜单加载失败/为空时前端回退全量后台菜单，且 `rawMenus >= 10` 被误判为全权限。已改为普通用户只显示自助接入入口。
-- 开发者页越权展示：普通用户能看到全部开发者、待审批列表和管理操作。已改为只有后台授权用户显示管理列表，普通用户只显示申请入口。
-- API Key 页误导：待审批用户能看到可点击的“新建 API Key”。已加开发者状态检查，只有审批通过后才能创建。
-- Vite 深链冲突：直接访问 `/developer` 被代理到后端 API，返回“缺少签名参数”。已加 HTML 导航 bypass，让 SPA 路由优先返回 `index.html`。
-- 审批按钮原生确认框会卡住自动化。已去掉原生 `confirm`，改为直接审批并刷新列表。
-
-## 回归结果
-
-- 前端构建：`npm run build` PASS。
-- 后端 API Key 全链路：`python scripts/run_api_key_flow_tests.py` PASS。
-- 集群服务：Auth `5555`、Center `8888`、Gateway `7777` 均已启动并参与测试。
-
-## 截图
-
-- `.cursor/screenshots/e2e-admin-approve.png`
-- `.cursor/screenshots/e2e-user-apikey-enabled.png`
-- `.cursor/screenshots/e2e-user-apikey-created.png`
-- `.cursor/screenshots/e2e-apikey-dialog-debug.png`
+1. **组织 API 运行时 classpath**：修复 `mvn spring-boot:run` 下 `/baseOrg/*` 的 `CollectionUtils` NoClassDefFoundError，并复跑 `verify_org_save_cn.py`
+2. **清理乱码测试数据**：删除或重命名 `ui_fields_*`、乱码 `cen_form_*` 扩展字段组
+3. **多租户 API Key / 网关策略隔离**：当前脚本仅覆盖扩展字段；API Key 授权范围与网关策略跨租户 REST 断言可扩展 `run_tenant_isolation_tests.py`

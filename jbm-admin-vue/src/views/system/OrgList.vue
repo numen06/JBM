@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import CrudDialog from '@/components/CrudDialog.vue'
 import FormField from '@/components/FormField.vue'
 import Button from '@/components/ui/Button.vue'
@@ -11,22 +12,20 @@ import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { useCrudForm } from '@/composables/useCrudForm'
-import { listOrgTree, saveOrg, deleteOrg } from '@/api/org'
+import { usePagedList } from '@/composables/usePagedList'
+import { useOrgTree, orgRowId } from '@/composables/useOrgTree'
+import { pageOrgs, saveOrg, deleteOrg } from '@/api/org'
 import type { BaseOrg } from '@/api/types'
 
-const flat = ref<Array<BaseOrg & { depth: number }>>([])
 const keyword = ref('')
-const loading = ref(true)
-const error = ref('')
+const { orgLabel, loadOrgs } = useOrgTree()
 
-const filteredFlat = computed(() => {
-  const kw = keyword.value.trim().toLowerCase()
-  if (!kw) return flat.value
-  return flat.value.filter((row) => row.orgName?.toLowerCase().includes(kw))
-})
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseOrg>(
+  (p, s) => pageOrgs(p, s, keyword.value || undefined),
+)
 
 function search() {
-  /* 本地过滤 */
+  load(1)
 }
 
 const {
@@ -45,28 +44,6 @@ const {
   status: 1,
 }))
 
-function flatten(orgs: BaseOrg[], depth = 0): Array<BaseOrg & { depth: number }> {
-  const out: Array<BaseOrg & { depth: number }> = []
-  for (const o of orgs) {
-    out.push({ ...o, depth })
-    if (o.children?.length) out.push(...flatten(o.children, depth + 1))
-  }
-  return out
-}
-
-async function load() {
-  loading.value = true
-  error.value = ''
-  try {
-    const tree = await listOrgTree()
-    flat.value = flatten(tree)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载失败'
-  } finally {
-    loading.value = false
-  }
-}
-
 async function handleSave() {
   if (!form.value.orgName?.trim()) {
     formError.value = '组织名称不能为空'
@@ -76,13 +53,15 @@ async function handleSave() {
   formError.value = ''
   try {
     await saveOrg({
-      ...form.value,
       id: editing.value ? (form.value.id ?? form.value.orgId) : undefined,
-      parentId: form.value.parentId ? Number(form.value.parentId) : undefined,
-      sort: form.value.sort != null ? Number(form.value.sort) : 0,
+      orgName: form.value.orgName,
+      parentId: form.value.parentId,
+      sort: form.value.sort,
+      status: form.value.status,
     })
     closeDialog()
-    await load()
+    await load(page.value)
+    await loadOrgs()
   } catch (e) {
     formError.value = e instanceof Error ? e.message : '保存失败'
   } finally {
@@ -91,18 +70,19 @@ async function handleSave() {
 }
 
 async function handleDelete(row: BaseOrg) {
-  const id = row.id ?? row.orgId
+  const id = orgRowId(row)
   if (!id || !confirm(`确认删除组织 ${row.orgName}？`)) return
   await deleteOrg({ id })
-  load()
+  await load(page.value)
+  await loadOrgs()
 }
 
-onMounted(load)
+onMounted(loadOrgs)
 </script>
 
 <template>
   <div>
-    <PageHeader title="组织管理" description="POST /baseOrg/tree — 树形组织维护">
+    <PageHeader title="组织管理" description="POST /baseOrg/pageList — 分页维护组织（树结构仍通过 /baseOrg/tree 供选择器使用）">
       <template #actions>
         <Input
           v-model="keyword"
@@ -110,7 +90,8 @@ onMounted(load)
           class="w-40"
           @keyup.enter="search"
         />
-        <Button variant="outline" @click="load">
+        <Button variant="outline" @click="search">搜索</Button>
+        <Button variant="outline" @click="load(page)">
           <RefreshCw class="mr-1 h-4 w-4" />
           刷新
         </Button>
@@ -120,7 +101,7 @@ onMounted(load)
         </Button>
       </template>
     </PageHeader>
-    <DataTableShell :loading="loading" :error="error" :empty="!filteredFlat.length">
+    <DataTableShell :loading="loading" :error="error" :empty="!items.length">
       <Table>
         <thead>
           <tr class="border-b bg-muted/50">
@@ -133,10 +114,10 @@ onMounted(load)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in filteredFlat" :key="row.id ?? row.orgId" class="border-b">
-            <td class="p-4">{{ row.id ?? row.orgId }}</td>
-            <td class="p-4" :style="{ paddingLeft: `${row.depth * 16 + 16}px` }">{{ row.orgName }}</td>
-            <td class="p-4">{{ row.parentId ?? '—' }}</td>
+          <tr v-for="row in items" :key="orgRowId(row)" class="border-b">
+            <td class="p-4">{{ orgRowId(row) }}</td>
+            <td class="p-4">{{ row.orgName }}</td>
+            <td class="p-4">{{ orgLabel(row.parentId) }}</td>
             <td class="p-4">{{ row.sort }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
@@ -154,6 +135,7 @@ onMounted(load)
           </tr>
         </tbody>
       </Table>
+      <PaginationBar :page="page" :total="total" :page-size="pageSize" @change="load" />
     </DataTableShell>
 
     <CrudDialog

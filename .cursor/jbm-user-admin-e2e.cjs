@@ -224,6 +224,8 @@ async function createAndDeleteGatewayItem(page, cfg) {
   await saveDialog(page);
   await expectDialogClosed(page, `${cfg.name} create`);
   await page.waitForTimeout(1500);
+  await page.reload();
+  await waitReady(page);
 
   if (cfg.keyword) {
     await page.locator('input:visible').first().fill(cfg.keyword);
@@ -232,7 +234,7 @@ async function createAndDeleteGatewayItem(page, cfg) {
   }
 
   let row = page.locator('tr').filter({ hasText: cfg.keyword || cfg.create[0] }).first();
-  await row.waitFor({ state: 'visible', timeout: 20000 });
+  await row.waitFor({ state: 'visible', timeout: 30000 });
   await shot(page, cfg.createdShot);
 
   await row.locator('button').first().click();

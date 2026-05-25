@@ -31,6 +31,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -75,21 +77,24 @@ SERVICES = {
         "url": DEFAULT_AUTH,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-auth",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-auth",
+        "main_class": "com.jbm.cluster.auth.JbmAuthApplication",
     },
     "center": {
         "port": 8888,
         "url": DEFAULT_CENTER,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center",
+        "main_class": "com.jbm.cluster.center.JbmCenterApplication",
     },
     "gateway": {
         "port": 7777,
         "url": DEFAULT_GATEWAY,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",
-        "mvn_cmd": 'mvn spring-boot:run "-Dspring-boot.run.profiles=jaja7" "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7" -DskipTests=true',
+        "module_path": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",
+        "main_class": "com.jbm.cluster.platform.gateway.JbmGatewayApplication",
     },
     "vue": {
         "port": 5173,
@@ -99,6 +104,38 @@ SERVICES = {
         "mvn_cmd": "npm run dev",
     },
 }
+
+
+def _shell_join(parts: list[str]) -> str:
+    if sys.platform == "win32":
+        return subprocess.list2cmdline(parts)
+    return shlex.join(parts)
+
+
+def _maven_executable(preference: str = "auto") -> str:
+    if preference in {"mvn", "mvnd"}:
+        return preference
+    return "mvnd" if shutil.which("mvnd") else "mvn"
+
+
+def _maven_service_command(cfg: dict, *, install: bool = False, maven: str = "auto") -> str:
+    mvn = _maven_executable(maven)
+    module_path = cfg["module_path"]
+    common = [mvn, "-pl", module_path, "-DskipTests=true"]
+    if install:
+        prepare = common + ["-am", "install"]
+    else:
+        prepare = common + ["-am", "compile"]
+    run = common + [
+        "-Dspring.profiles.active=jaja7",
+        "-Dprofile.name=jaja7",
+        "org.codehaus.mojo:exec-maven-plugin:3.5.0:java",
+        f"-Dexec.mainClass={cfg['main_class']}",
+        "-Dexec.classpathScope=runtime",
+        "-Dexec.cleanupDaemonThreads=false",
+        "-Dexec.args=--spring.profiles.active=jaja7 --profile.name=jaja7",
+    ]
+    return f"{_shell_join(prepare)} && {_shell_join(run)}"
 
 
 def _pids_on_port(port: int) -> list[int]:
@@ -507,11 +544,22 @@ def cmd_start(args):
         log.parent.mkdir(parents=True, exist_ok=True)
         print(f"[start] {name} in {cwd}")
         print(f"  log: {log}")
+        if "main_class" in cfg:
+            cmd = _maven_service_command(
+                cfg,
+                install=getattr(args, "install", False),
+                maven=getattr(args, "maven", "auto"),
+            )
+            print(f"  maven: {_maven_executable(getattr(args, 'maven', 'auto'))}")
+            print(f"  prepare: {'install' if getattr(args, 'install', False) else 'compile'}")
+        else:
+            cmd = cfg["mvn_cmd"]
         with open(log, "a", encoding="utf-8") as lf:
             lf.write(f"\n--- start {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+            lf.write(f"$ {cmd}\n")
             p = subprocess.Popen(
-                cfg["mvn_cmd"],
-                cwd=str(cwd),
+                cmd,
+                cwd=str(ROOT if "main_class" in cfg else cwd),
                 shell=True,
                 stdout=lf,
                 stderr=subprocess.STDOUT,
@@ -541,7 +589,15 @@ def cmd_restart(args):
     names = ["auth", "center", "gateway"]
     cmd_cleanup(argparse.Namespace(services=names, force=True))
     time.sleep(1.5)
-    cmd_start(argparse.Namespace(services=names, background=True, clean=False))
+    cmd_start(
+        argparse.Namespace(
+            services=names,
+            background=True,
+            clean=False,
+            install=getattr(args, "install", False),
+            maven=getattr(args, "maven", "auto"),
+        )
+    )
     w = argparse.Namespace(timeout=args.timeout, interval=2.0, center=True)
     return cmd_wait(w)
 
@@ -576,6 +632,9 @@ def main():
     p_start.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
     p_start.add_argument("--background", action="store_true", default=True)
     p_start.add_argument("--clean", action="store_true", help="启动前清理同端口占用")
+    p_start.add_argument("--install", action="store_true", help="启动前执行 install；跨模块改了公共包时使用")
+    p_start.add_argument("--maven", choices=["auto", "mvnd", "mvn"], default="auto",
+                         help="Maven 命令选择；auto 会优先使用 mvnd，找不到再回退 mvn")
 
     p_stop = sub.add_parser("stop", help="按端口结束进程（含进程树）", parents=[parent])
     p_stop.add_argument("services", nargs="*", choices=list(SERVICES.keys()))
@@ -601,6 +660,9 @@ def main():
     )
     p_re = sub.add_parser("restart", help="cleanup → start auth+center+gateway → wait", parents=[parent])
     p_re.add_argument("--timeout", type=int, default=120)
+    p_re.add_argument("--install", action="store_true", help="启动前执行 install；跨模块改了公共包时使用")
+    p_re.add_argument("--maven", choices=["auto", "mvnd", "mvn"], default="auto",
+                      help="Maven 命令选择；auto 会优先使用 mvnd，找不到再回退 mvn")
 
     args = ap.parse_args()
     handlers = {

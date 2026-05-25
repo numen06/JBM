@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.server.i18n.LocaleContextResolver;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.util.pattern.PathPatternParser;
@@ -123,6 +124,7 @@ public class GatewayConfig implements WebFluxConfigurer {
     @Bean
     public FastJsonHttpMessageConverter fastJsonHttpMessageConverter() {
         FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();
+        converter.setDefaultCharset(StandardCharsets.UTF_8);
         converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
         return converter;
     }

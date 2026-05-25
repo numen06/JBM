@@ -91,13 +91,34 @@ def main() -> int:
         "POST",
         "/baseOrg/save",
         token,
-        {"model": {"orgName": org_name, "parentId": 1, "status": 1}},
+        {"baseOrg": {"orgName": org_name, "parentId": 1, "status": 1}},
     )
     saved_org = unwrap(jb) or {}
     new_org_id = saved_org.get("id") or saved_org.get("orgId")
     if not new_org_id:
         fail("保存组织未返回 id")
+    if saved_org.get("orgName") != org_name:
+        fail(f"保存组织 orgName 回显错误: {saved_org.get('orgName')!r} != {org_name!r}")
     ok(f"新建组织 id={new_org_id} name={org_name}")
+
+    # 5b) 重新拉树，确认 orgName 持久化正确
+    _, jb, _ = gateway_api("POST", "/baseOrg/tree", token, {})
+    tree2 = unwrap(jb) or []
+
+    def find_org(nodes, oid):
+        for n in nodes or []:
+            nid = n.get("id") or n.get("orgId")
+            if str(nid) == str(oid) or nid == oid:
+                return n
+            found = find_org(n.get("children") or [], oid)
+            if found:
+                return found
+        return None
+
+    persisted = find_org(tree2, new_org_id)
+    if not persisted or persisted.get("orgName") != org_name:
+        fail(f"组织树中 orgName 未正确持久化: {persisted}")
+    ok("组织树 orgName 回显正确")
 
     # 6) 新建应用绑定组织
     app_code = f"orgplan_{SUFFIX}"

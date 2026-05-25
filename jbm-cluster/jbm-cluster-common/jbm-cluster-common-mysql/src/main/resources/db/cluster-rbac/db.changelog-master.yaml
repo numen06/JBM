@@ -25,3 +25,5 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V14__org_legacy_column_patch.sql
   - include:
       file: classpath:db/cluster-rbac/changes/V15__base_user_org_master_columns.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V16__base_org_utf8mb4.sql

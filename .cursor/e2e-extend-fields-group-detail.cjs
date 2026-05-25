@@ -56,7 +56,9 @@ async function ensureSeedForm(page) {
     throw new Error(`extend fields page has API/auth error: ${body.slice(0, 500)}`);
   }
 
-  const listItems = page.locator('[data-testid="field-group-item"]').filter({ hasText: /cen_form_|CEN_FORM|FORM/i });
+  await page.waitForSelector('#formCode', { state: 'visible', timeout: 30000 });
+
+  const listItems = page.locator('[data-testid="field-group-item"]');
   if (await listItems.first().isVisible().catch(() => false)) {
     step('field group list loaded', 'passed', { mode: 'existing' });
     return null;
@@ -80,9 +82,11 @@ async function clickGroupAndAssertDetail(page, preferredCode) {
   await page.goto(`${BASE}/system/extend-fields`);
   await waitReady(page);
 
+  await page.waitForSelector('#formCode', { state: 'visible', timeout: 30000 });
+
   let groupButton = preferredCode
     ? page.locator('[data-testid="field-group-item"]').filter({ hasText: preferredCode }).first()
-    : page.locator('[data-testid="field-group-item"]').filter({ hasText: /cen_form_|CEN_FORM/i }).first();
+    : page.locator('[data-testid="field-group-item"]').first();
 
   await groupButton.waitFor({ state: 'visible', timeout: 20000 });
   const groupText = (await groupButton.innerText()).trim();

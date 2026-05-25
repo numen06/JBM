@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "formCode": "cn_form_684186",
+  "formName": "客户表单",
+  "fieldLabel": "客户等级",
+  "gateway": "http://127.0.0.1:7777"
+}

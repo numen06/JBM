@@ -1,72 +1,72 @@
 {
   "base": "http://127.0.0.1:5173",
-  "user": "jbm_ui_81168364",
-  "startedAt": "2026-05-25T03:52:48.364Z",
+  "user": "jbm_ui_84075422",
+  "startedAt": "2026-05-25T04:41:15.422Z",
   "steps": [
     {
       "name": "user register from UI",
       "status": "passed",
-      "at": "2026-05-25T03:52:52.630Z"
+      "at": "2026-05-25T04:41:19.702Z"
     },
     {
       "name": "user login after register",
       "status": "passed",
-      "at": "2026-05-25T03:52:55.148Z"
+      "at": "2026-05-25T04:41:22.142Z"
     },
     {
       "name": "user submit developer application",
       "status": "passed",
-      "at": "2026-05-25T03:52:57.902Z"
+      "at": "2026-05-25T04:41:24.874Z"
     },
     {
       "name": "api key creation blocked before approval",
       "status": "passed",
-      "at": "2026-05-25T03:52:59.464Z"
+      "at": "2026-05-25T04:41:26.506Z"
     },
     {
       "name": "admin approve developer from UI",
       "status": "passed",
-      "at": "2026-05-25T03:53:07.475Z"
+      "at": "2026-05-25T04:41:34.535Z"
     },
     {
       "name": "user create api key after approval",
       "status": "passed",
-      "at": "2026-05-25T03:53:13.599Z"
+      "at": "2026-05-25T04:41:40.933Z"
     },
     {
       "name": "admin online users page loads",
       "status": "passed",
-      "at": "2026-05-25T03:53:18.657Z"
+      "at": "2026-05-25T04:41:46.121Z"
     },
     {
       "name": "gateway route create and edit",
       "status": "passed",
-      "at": "2026-05-25T03:53:26.103Z"
+      "at": "2026-05-25T04:41:55.957Z"
     },
     {
       "name": "gateway route delete",
       "status": "passed",
-      "at": "2026-05-25T03:53:28.940Z"
+      "at": "2026-05-25T04:41:58.799Z"
     },
     {
       "name": "gateway rate limit create and edit",
       "status": "passed",
-      "at": "2026-05-25T03:53:36.312Z"
+      "at": "2026-05-25T04:42:08.486Z"
     },
     {
       "name": "gateway rate limit delete",
       "status": "passed",
-      "at": "2026-05-25T03:53:39.160Z"
+      "at": "2026-05-25T04:42:11.320Z"
     },
     {
       "name": "gateway ip limit create and edit",
       "status": "passed",
-      "at": "2026-05-25T03:54:01.818Z"
+      "at": "2026-05-25T04:42:21.203Z"
     },
     {
       "name": "gateway ip limit delete",
       "status": "passed",
-      "at": "2026-05-25T03:54:04.659Z"
+      "at": "2026-05-25T04:42:24.075Z"
     }
   ],
   "screenshots": [
@@ -82,5 +82,5 @@
     "D:\\workspaces\\JBM7\\.cursor\\screenshots\\e2e-admin-gateway-ip-created.png"
   ],
   "status": "passed",
-  "finishedAt": "2026-05-25T03:54:04.669Z"
+  "finishedAt": "2026-05-25T04:42:24.085Z"
 }

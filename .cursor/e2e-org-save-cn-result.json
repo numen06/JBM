@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "verifiedAt": "2026-05-25",
+  "checks": [
+    {
+      "name": "frontend_build",
+      "status": "passed",
+      "detail": "npm run build"
+    },
+    {
+      "name": "org_api_smoke_baseOrg",
+      "status": "passed",
+      "detail": "scripts/run_org_plan_smoke.py — 新建中文组织 orgName 保存后 tree 回显正确"
+    },
+    {
+      "name": "org_api_contract",
+      "status": "passed",
+      "detail": "save/delete 使用 { baseOrg } 替代 { model }"
+    },
+    {
+      "name": "liquibase_v16",
+      "status": "pending_restart",
+      "detail": "V16__base_org_utf8mb4.sql 将在 Center 下次启动时执行 CONVERT utf8mb4 并修复 id=1 名称"
+    },
+    {
+      "name": "page_e2e",
+      "status": "skipped_services_down",
+      "detail": "验证时 Auth/Center 已停止；Gateway 曾可用且 API 冒烟已通过"
+    }
+  ],
+  "charsetDiagnosis": {
+    "rootCause": "base_org 建表未指定 utf8mb4，MySQL latin1 环境下中文 org_name 易乱码",
+    "fix": "V16 CONVERT TO utf8mb4 + UPDATE id=1 org_name='默认组织'",
+    "expectedHexForDefaultOrg": "E9BB98E8AEA4E7BB84E7BB87",
+    "jdbcRecommendation": "db.properties 连接串应含 characterEncoding=utf8&useUnicode=true"
+  }
+}

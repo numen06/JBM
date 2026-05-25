@@ -350,6 +350,11 @@ String signature = hmacSha256Hex(apiSecret, canonical);</code></pre>
             <p><strong class="text-foreground">为什么不能直接信任内部头？</strong> 外部请求可以伪造 Header，必须由 Gateway 或 Auth 校验后签发可信上下文。</p>
             <p><strong class="text-foreground">密码为什么需要 RSA？</strong> 即使在开发环境，也保持与生产一致的加密传输约束。</p>
             <p><strong class="text-foreground">API Key 和用户 Token 有什么区别？</strong> 用户 Token 代表登录用户，API Key 代表开发者或应用的开放接口访问权限。</p>
+            <p><strong class="text-foreground">开发者未审批时为什么不能创建 API Key？</strong> 自助注册用户需先提交开发者申请并由管理员审批；未通过前开放平台仅展示申请入口，API Key 创建按钮保持禁用。</p>
+            <p><strong class="text-foreground">API Key 被禁用或过期怎么办？</strong> 调用开放接口将返回 401/403；请在控制台检查 Key 状态、授权应用与过期时间，必要时重新创建并保存一次性 Secret。</p>
+            <p><strong class="text-foreground">IP 不在白名单会怎样？</strong> 网关 IP 限制策略命中后拒绝请求；请确认调用方出口 IP 已加入对应策略，或联系管理员调整白名单。</p>
+            <p><strong class="text-foreground">限流触发后怎么办？</strong> 返回 429 或网关统一错误体；请降低调用频率、申请更高配额，或由管理员在「网关限流」中调整策略。</p>
+            <p><strong class="text-foreground">跨租户访问为什么失败？</strong> 扩展字段、API Key、网关策略等按请求头 <code>tenantId</code> 隔离；租户 A 的 Token/Key 不能读取或修改租户 B 的资源。未传租户时默认使用模块配置的 default-tenant-id（通常为 0）。</p>
           </div>
         </section>
       </main>
