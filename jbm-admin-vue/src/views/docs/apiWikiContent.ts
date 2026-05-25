@@ -15,12 +15,15 @@ export interface ApiEndpoint {
 
 export const docSections: DocSection[] = [
   { id: 'quick-start', title: '快速开始', group: '入门' },
+  { id: 'platform-capability', title: '平台能力地图', group: '入门' },
   { id: 'register-account', title: '1. 注册 JBM 账号', group: '入门' },
-  { id: 'create-app', title: '2. 创建应用', group: '入门' },
+  { id: 'create-app', title: '2. 创建子应用', group: '入门' },
   { id: 'choose-mode', title: '3. 选择接入方式', group: '入门' },
-  { id: 'oauth2-auth-code', title: '授权码模式（推荐）', group: 'OAuth2' },
+  { id: 'oauth2-auth-code', title: '授权码模式', group: 'OAuth2' },
   { id: 'oauth2-password', title: '密码模式', group: 'OAuth2' },
   { id: 'oauth2-refresh', title: '刷新 Token', group: 'OAuth2' },
+  { id: 'openapi-api-key', title: 'API Key 与签名', group: 'OpenAPI' },
+  { id: 'openapi-isolation', title: '租户与数据隔离', group: 'OpenAPI' },
   { id: 'api-auth', title: '认证接口 /oauth2/*', group: 'API 参考' },
   { id: 'api-user', title: '用户接口 /user/*', group: 'API 参考' },
   { id: 'api-authority', title: '权限接口 /authority/*', group: 'API 参考' },
@@ -36,40 +39,42 @@ export const authEndpoints: ApiEndpoint[] = [
   {
     method: 'POST',
     path: '/oauth2/register',
-    desc: '用户自助注册',
+    desc: '用户自助注册。前端先获取 RSA 公钥并加密密码，再带 X-Password-Encrypted 提交。',
     params: [
-      { name: 'userName', type: 'string', required: true, desc: '用户名' },
+      { name: 'userName', type: 'string', required: true, desc: '登录用户名' },
       { name: 'password', type: 'string', required: true, desc: 'RSA 加密后的密码' },
       { name: 'vcode', type: 'string', required: true, desc: '图形验证码' },
       { name: 'client_id', type: 'string', required: true, desc: 'OAuth2 客户端 ID' },
       { name: 'client_secret', type: 'string', required: true, desc: 'OAuth2 客户端密钥' },
-      { name: 'email', type: 'string', desc: '邮箱（可选）' },
-      { name: 'mobile', type: 'string', desc: '手机号（可选）' },
+      { name: 'nickName', type: 'string', desc: '昵称，可选' },
+      { name: 'email', type: 'string', desc: '邮箱，可选' },
+      { name: 'mobile', type: 'string', desc: '手机号，可选' },
     ],
     request: `POST ${gatewayBase}/oauth2/register
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-userName=developer&password=<RSA加密>&vcode=9999&client_id=demo&client_secret=demo123`,
+userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo&client_secret=demo123`,
     response: `{ "success": true, "code": 200, "message": "操作成功" }`,
   },
   {
     method: 'POST',
     path: '/oauth2/token',
-    desc: '获取 Access Token（password / authorization_code）',
+    desc: '获取 Access Token，支持 password、authorization_code、client_credentials 等模式。',
     params: [
-      { name: 'grant_type', type: 'string', required: true, desc: 'password | authorization_code' },
+      { name: 'grant_type', type: 'string', required: true, desc: 'password | authorization_code | client_credentials' },
       { name: 'client_id', type: 'string', required: true, desc: '应用 Client ID' },
       { name: 'client_secret', type: 'string', required: true, desc: '应用 Client Secret' },
-      { name: 'username', type: 'string', desc: '密码模式：用户名' },
-      { name: 'password', type: 'string', desc: '密码模式：RSA 加密密码' },
-      { name: 'code', type: 'string', desc: '授权码模式：授权码' },
-      { name: 'redirect_uri', type: 'string', desc: '授权码模式：回调地址' },
+      { name: 'username', type: 'string', desc: '密码模式用户名' },
+      { name: 'password', type: 'string', desc: '密码模式 RSA 加密密码' },
+      { name: 'code', type: 'string', desc: '授权码模式 code' },
+      { name: 'redirect_uri', type: 'string', desc: '授权码模式回调地址' },
     ],
     request: `POST ${gatewayBase}/oauth2/token
 Content-Type: application/x-www-form-urlencoded
+X-Password-Encrypted: true
 
-grant_type=password&client_id=demo&client_secret=demo123&username=admin&password=<RSA>&scope=all&loginType=PASSWORD`,
+grant_type=password&client_id=demo&client_secret=demo123&username=admin&password=<RSA>&scope=all&loginType=PASSWORD&vcode=9999`,
     response: `{
   "access_token": "eyJ...",
   "refresh_token": "eyJ...",
@@ -81,19 +86,19 @@ grant_type=password&client_id=demo&client_secret=demo123&username=admin&password
   {
     method: 'GET',
     path: '/oauth2/authorize',
-    desc: 'OAuth2 授权页（浏览器跳转）',
+    desc: 'OAuth2 授权页，适用于第三方 Web 或移动端登录跳转。',
     params: [
       { name: 'response_type', type: 'string', required: true, desc: '固定 code' },
       { name: 'client_id', type: 'string', required: true, desc: 'Client ID' },
       { name: 'redirect_uri', type: 'string', required: true, desc: '已登记回调地址' },
-      { name: 'scope', type: 'string', desc: '权限范围，如 all' },
+      { name: 'scope', type: 'string', desc: '权限范围，例如 all' },
       { name: 'state', type: 'string', desc: 'CSRF 防重放随机串' },
     ],
   },
   {
     method: 'POST',
     path: '/oauth2/refresh',
-    desc: '使用 refresh_token 刷新 Access Token',
+    desc: '使用 refresh_token 刷新 Access Token。',
     params: [
       { name: 'grant_type', type: 'string', required: true, desc: 'refresh_token' },
       { name: 'refresh_token', type: 'string', required: true, desc: '刷新令牌' },
@@ -104,18 +109,25 @@ grant_type=password&client_id=demo&client_secret=demo123&username=admin&password
   {
     method: 'GET',
     path: '/oauth2/userinfo',
-    desc: '获取当前登录用户信息',
+    desc: '获取当前登录用户信息。',
     params: [{ name: 'Authorization', type: 'header', required: true, desc: 'Bearer {access_token}' }],
   },
   {
     method: 'DELETE',
     path: '/oauth2/logout',
-    desc: '登出，销毁 Token',
+    desc: '登出并销毁 Token。',
   },
   {
     method: 'GET',
     path: '/oauth2/publicKey',
-    desc: '获取 RSA 公钥（密码加密用）',
+    desc: '获取 RSA 公钥，供密码加密使用。',
     params: [{ name: 'client_id', type: 'string', required: true, desc: 'Client ID' }],
   },
+]
+
+export const openApiHeaders = [
+  { name: 'X-JBM-Api-Key', desc: '开发者或应用 API Key 的 key 值' },
+  { name: 'X-JBM-Timestamp', desc: '毫秒时间戳，服务端按时间窗口防重放' },
+  { name: 'X-JBM-Nonce', desc: '一次性随机串，建议 UUID' },
+  { name: 'X-JBM-Signature', desc: '使用 secret 对 method、path、query、bodyHash、timestamp、nonce 做 HMAC-SHA256' },
 ]

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, BookOpen, Code2, Shield, Zap } from '@lucide/vue'
+import { ArrowLeft, BookOpen, Code2, KeyRound, ShieldCheck, Split } from '@lucide/vue'
 
 defineProps<{
   title?: string
@@ -10,69 +10,83 @@ defineProps<{
 </script>
 
 <template>
-  <div
-    class="relative flex min-h-screen flex-col justify-between overflow-hidden bg-gradient-to-br from-primary via-primary to-blue-700 p-8 text-primary-foreground lg:p-12"
-  >
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute -right-20 -top-20 size-80 rounded-full bg-white/20 blur-3xl" />
-      <div class="absolute -bottom-20 -left-20 size-60 rounded-full bg-white/10 blur-3xl" />
-    </div>
-
+  <div class="relative flex min-h-screen flex-col justify-between overflow-hidden bg-slate-950 p-8 text-slate-100 lg:p-12">
     <div class="relative z-10">
       <RouterLink
         v-if="showBack !== false"
         to="/"
-        class="mb-8 inline-flex items-center gap-1.5 text-sm text-primary-foreground/80 transition-colors hover:text-primary-foreground"
+        class="mb-8 inline-flex items-center gap-1.5 text-sm text-slate-300 transition-colors hover:text-white"
       >
         <ArrowLeft class="size-4" />
         返回首页
       </RouterLink>
 
       <div class="flex items-center gap-3">
-        <span class="flex size-12 items-center justify-center rounded-xl bg-white/15 text-lg font-bold backdrop-blur-sm">
+        <span class="flex size-12 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">
           JBM
         </span>
         <div>
           <h1 class="text-2xl font-bold tracking-tight lg:text-3xl">{{ title ?? 'JBM 开源平台' }}</h1>
-          <p class="mt-1 text-sm text-primary-foreground/80">
+          <p class="mt-1 text-sm text-slate-400">
             {{ subtitle ?? '统一认证授权 · 微服务权限管理' }}
           </p>
         </div>
       </div>
 
-      <p class="mt-6 max-w-sm text-sm leading-relaxed text-primary-foreground/85">
-        面向开发者与企业的开源 OAuth2 认证平台。注册账号、创建应用、获取 Client 凭证，即可快速接入您的业务系统。
+      <p class="mt-6 max-w-sm text-sm leading-relaxed text-slate-300">
+        面向开发者与企业的开源 OAuth2 认证平台。注册账号、创建子应用、获取 Client 凭证与 API Key，
+        即可把 JBM 接入到自己的业务系统。
       </p>
     </div>
 
-    <div class="relative z-10 mt-10 space-y-4">
+    <div class="relative z-10 my-10 rounded-lg border border-white/10 bg-white/[0.03] p-4 font-mono text-xs shadow-2xl">
+      <div class="mb-3 flex items-center justify-between border-b border-white/10 pb-3 text-slate-400">
+        <span>openapi-flow</span>
+        <span>verified</span>
+      </div>
+      <div class="space-y-3">
+        <p><span class="text-emerald-300">1.</span> POST /oauth2/register</p>
+        <p><span class="text-sky-300">2.</span> POST /oauth2/token grant_type=password</p>
+        <p><span class="text-amber-300">3.</span> PUT /apikey/{{ '{id}' }}/authority</p>
+        <p><span class="text-violet-300">4.</span> GET /api/open/** + X-JBM-Signature</p>
+      </div>
+    </div>
+
+    <div class="relative z-10 space-y-4">
       <div class="flex items-start gap-3 text-sm">
-        <Shield class="mt-0.5 size-4 shrink-0 text-primary-foreground/90" />
+        <ShieldCheck class="mt-0.5 size-4 shrink-0 text-emerald-300" />
         <div>
           <p class="font-medium">OAuth2 标准协议</p>
-          <p class="text-primary-foreground/75">授权码、密码、刷新 Token 等多种模式</p>
+          <p class="text-slate-400">授权码、密码、刷新 Token、RSA 密码加密</p>
         </div>
       </div>
       <div class="flex items-start gap-3 text-sm">
-        <Zap class="mt-0.5 size-4 shrink-0 text-primary-foreground/90" />
+        <Split class="mt-0.5 size-4 shrink-0 text-sky-300" />
         <div>
-          <p class="font-medium">开箱即用</p>
-          <p class="text-primary-foreground/75">RBAC 权限、API 网关、多租户支持</p>
+          <p class="font-medium">集群职责清晰</p>
+          <p class="text-slate-400">Gateway、Auth、Center 分层处理认证和授权</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 text-sm">
+        <KeyRound class="mt-0.5 size-4 shrink-0 text-amber-300" />
+        <div>
+          <p class="font-medium">开放 API Key</p>
+          <p class="text-slate-400">按授权清单和签名规则访问 JBM OpenAPI</p>
         </div>
       </div>
       <div class="flex items-center gap-4 pt-2">
         <RouterLink
           to="/docs"
-          class="inline-flex items-center gap-1.5 rounded-md bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+          class="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/15"
         >
           <BookOpen class="size-3.5" />
-          API 文档
+          API Wiki
         </RouterLink>
         <a
           href="https://github.com"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 rounded-md bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-white/25"
+          class="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/15"
         >
           <Code2 class="size-3.5" />
           GitHub

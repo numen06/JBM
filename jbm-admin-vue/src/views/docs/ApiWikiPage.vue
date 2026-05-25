@@ -6,7 +6,7 @@ import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Input from '@/components/ui/Input.vue'
-import { authEndpoints, docSections, gatewayBase } from './apiWikiContent'
+import { authEndpoints, docSections, gatewayBase, openApiHeaders } from './apiWikiContent'
 
 const route = useRoute()
 const searchQuery = ref('')
@@ -66,11 +66,11 @@ watch(
         <div class="sticky top-20 space-y-6">
           <div class="relative">
             <Search class="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input v-model="searchQuery" placeholder="搜索文档…" class="pl-9" />
+            <Input v-model="searchQuery" placeholder="搜索文档..." class="pl-9" />
           </div>
           <nav class="space-y-5">
             <div v-for="[group, items] in groups" :key="group">
-              <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{{ group }}</p>
+              <p class="mb-2 text-xs font-semibold uppercase text-muted-foreground">{{ group }}</p>
               <ul class="space-y-0.5">
                 <li v-for="item in items.filter((i) => filteredSections.some((f) => f.id === i.id))" :key="item.id">
                   <button
@@ -96,30 +96,62 @@ watch(
         <div class="mb-8 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
           <span class="text-muted-foreground">API Gateway 基址：</span>
           <code class="rounded bg-background px-2 py-0.5 font-mono text-primary">{{ gatewayBase }}</code>
-          <span class="ml-3 text-muted-foreground">鉴权头：</span>
+          <span class="ml-3 text-muted-foreground">用户鉴权：</span>
           <code class="rounded bg-background px-2 py-0.5 font-mono text-xs">Authorization: Bearer &lt;token&gt;</code>
         </div>
 
         <section id="quick-start" class="scroll-mt-24 border-b pb-12">
-          <h1 class="text-3xl font-bold tracking-tight">JBM OpenAPI 文档</h1>
-          <p class="mt-4 text-lg text-muted-foreground">
-            本文档面向<strong>第三方开发者</strong>与<strong>内部业务开发者</strong>，说明如何通过 JBM OAuth2 完成注册、创建应用、获取凭证并接入认证体系。
+          <h1 class="text-3xl font-bold tracking-tight">JBM OpenAPI Wiki</h1>
+          <p class="mt-4 text-lg leading-8 text-muted-foreground">
+            本文档从用户视角说明如何注册登录 JBM、创建子应用、申请开放 API、授权 API Key，
+            并通过加密传输和签名请求接入 JBM OpenAPI。
           </p>
           <div class="mt-6 grid gap-4 sm:grid-cols-2">
-            <RouterLink
-              to="/register"
-              class="rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
-            >
+            <RouterLink to="/register" class="rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5">
               <p class="font-semibold">第三方开发者</p>
-              <p class="mt-1 text-sm text-muted-foreground">注册账号 → 创建 OAuth2 应用 → 集成授权码登录</p>
+              <p class="mt-1 text-sm text-muted-foreground">注册账号 -> 创建 OAuth2 应用 -> 申请 API Key -> 签名调用</p>
             </RouterLink>
-            <RouterLink
-              to="/dashboard"
-              class="rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
-            >
-              <p class="font-semibold">内部开发者</p>
-              <p class="mt-1 text-sm text-muted-foreground">登录控制台 → 管理用户/角色/菜单 → 调用 Center API</p>
+            <RouterLink to="/dashboard" class="rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/5">
+              <p class="font-semibold">内部业务开发者</p>
+              <p class="mt-1 text-sm text-muted-foreground">登录控制台 -> 管理用户/角色/菜单 -> 通过 Gateway 调用 Center API</p>
             </RouterLink>
+          </div>
+        </section>
+
+        <section id="platform-capability" class="scroll-mt-24 border-b py-12">
+          <h2 class="text-2xl font-bold">平台能力地图</h2>
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b text-left">
+                  <th class="py-2 pr-4">能力</th>
+                  <th class="py-2 pr-4">用户动作</th>
+                  <th class="py-2">系统边界</th>
+                </tr>
+              </thead>
+              <tbody class="text-muted-foreground">
+                <tr class="border-b">
+                  <td class="py-3 pr-4 font-medium text-foreground">种子数据</td>
+                  <td class="py-3 pr-4">初始化 demo client、管理员、基础菜单与开放权限</td>
+                  <td class="py-3">保证新环境可完成注册、登录和授权验证</td>
+                </tr>
+                <tr class="border-b">
+                  <td class="py-3 pr-4 font-medium text-foreground">多租户</td>
+                  <td class="py-3 pr-4">账号归属租户，角色和数据按租户上下文过滤</td>
+                  <td class="py-3">Center 负责租户模型，Gateway 透传可信上下文</td>
+                </tr>
+                <tr class="border-b">
+                  <td class="py-3 pr-4 font-medium text-foreground">子应用接入</td>
+                  <td class="py-3 pr-4">创建 OAuth2 Client，配置回调地址和授权范围</td>
+                  <td class="py-3">Auth 签发 Token，业务系统只保存自己的 client_secret</td>
+                </tr>
+                <tr>
+                  <td class="py-3 pr-4 font-medium text-foreground">客户端授权访问</td>
+                  <td class="py-3 pr-4">申请开发者、创建 API Key、绑定 API 权限</td>
+                  <td class="py-3">Gateway 校验签名与授权，后端只接受可信转发</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -128,25 +160,22 @@ watch(
           <p class="mt-3 text-muted-foreground">
             访问
             <RouterLink to="/register" class="text-primary hover:underline">注册页面</RouterLink>
-            或调用注册 API。注册成功后使用用户名密码登录控制台。
+            或调用注册 API。密码必须先通过 <code class="rounded bg-muted px-1">/oauth2/publicKey</code> 获取公钥后加密。
           </p>
           <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>POST {{ gatewayBase }}/oauth2/register
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-userName=mydev&amp;password=&lt;RSA加密&gt;&amp;vcode=9999&amp;client_id=demo&amp;client_secret=demo123</code></pre>
-          <p class="mt-3 text-sm text-muted-foreground">
-            密码须先调用 <code class="rounded bg-muted px-1">GET /oauth2/publicKey?client_id=...</code> 获取 RSA 公钥后加密。
-          </p>
+userName=mydev&amp;password=&lt;RSA_ENCRYPTED&gt;&amp;vcode=9999&amp;client_id=demo&amp;client_secret=demo123</code></pre>
         </section>
 
         <section id="create-app" class="scroll-mt-24 border-b py-12">
-          <h2 class="text-2xl font-bold">2. 创建应用（获取 Client ID / Secret）</h2>
+          <h2 class="text-2xl font-bold">2. 创建子应用</h2>
           <ol class="mt-4 list-decimal space-y-2 pl-5 text-muted-foreground">
-            <li>登录后进入控制台 → <strong>应用管理</strong></li>
-            <li>新建 OAuth2 应用，填写应用名称与回调地址 <code class="rounded bg-muted px-1">redirect_uri</code></li>
-            <li>保存后获得 <code class="rounded bg-muted px-1">client_id</code> 与 <code class="rounded bg-muted px-1">client_secret</code></li>
-            <li>在业务系统中配置上述凭证，勿泄露 Secret</li>
+            <li>登录控制台，进入应用管理或开放平台应用页面。</li>
+            <li>填写应用名称、租户归属、回调地址 <code class="rounded bg-muted px-1">redirect_uri</code> 和 Scope。</li>
+            <li>保存后获取 <code class="rounded bg-muted px-1">client_id</code> 与 <code class="rounded bg-muted px-1">client_secret</code>。</li>
+            <li>生产环境只在服务端保存 Secret，不放入浏览器或移动端包体。</li>
           </ol>
         </section>
 
@@ -164,18 +193,18 @@ userName=mydev&amp;password=&lt;RSA加密&gt;&amp;vcode=9999&amp;client_id=demo&
               <tbody class="text-muted-foreground">
                 <tr class="border-b">
                   <td class="py-3 pr-4 font-medium text-foreground">授权码</td>
-                  <td class="py-3 pr-4">Web / 移动端（推荐）</td>
+                  <td class="py-3 pr-4">第三方 Web / 移动端登录，推荐使用</td>
                   <td class="py-3"><code>authorization_code</code></td>
                 </tr>
                 <tr class="border-b">
                   <td class="py-3 pr-4 font-medium text-foreground">密码</td>
-                  <td class="py-3 pr-4">受信任的第一方应用</td>
+                  <td class="py-3 pr-4">JBM 官方后台或受信任第一方应用</td>
                   <td class="py-3"><code>password</code></td>
                 </tr>
                 <tr>
-                  <td class="py-3 pr-4 font-medium text-foreground">刷新</td>
-                  <td class="py-3 pr-4">Token 续期</td>
-                  <td class="py-3"><code>refresh_token</code></td>
+                  <td class="py-3 pr-4 font-medium text-foreground">客户端凭证</td>
+                  <td class="py-3 pr-4">服务端应用访问开放 API</td>
+                  <td class="py-3"><code>client_credentials</code></td>
                 </tr>
               </tbody>
             </table>
@@ -183,26 +212,14 @@ userName=mydev&amp;password=&lt;RSA加密&gt;&amp;vcode=9999&amp;client_id=demo&
         </section>
 
         <section id="oauth2-auth-code" class="scroll-mt-24 border-b py-12">
-          <h2 class="text-2xl font-bold">OAuth2 授权码模式（推荐）</h2>
-          <p class="mt-3 text-muted-foreground">标准三方登录流程，用户浏览器跳转 JBM 授权页，确认后回调携带 code。</p>
-          <ol class="mt-4 list-decimal space-y-3 pl-5 text-sm text-muted-foreground">
-            <li>
-              引导用户访问授权 URL：
-              <pre class="mt-2 overflow-x-auto rounded-lg bg-slate-950 p-3 text-slate-50"><code>{{ gatewayBase }}/oauth2/authorize?response_type=code&amp;client_id=YOUR_CLIENT_ID&amp;redirect_uri=YOUR_CALLBACK&amp;scope=all&amp;state=RANDOM_STATE</code></pre>
-            </li>
-            <li>用户登录并授权，浏览器重定向至 <code class="rounded bg-muted px-1">redirect_uri?code=xxx&amp;state=xxx</code></li>
-            <li>
-              服务端用 code 换 Token：
-              <pre class="mt-2 overflow-x-auto rounded-lg bg-slate-950 p-3 text-slate-50"><code>POST {{ gatewayBase }}/oauth2/token
-grant_type=authorization_code&amp;code=xxx&amp;client_id=...&amp;client_secret=...&amp;redirect_uri=...</code></pre>
-            </li>
-            <li>后续 API 请求携带 <code class="rounded bg-muted px-1">Authorization: Bearer {access_token}</code></li>
-          </ol>
+          <h2 class="text-2xl font-bold">OAuth2 授权码模式</h2>
+          <p class="mt-3 text-muted-foreground">用户浏览器跳转 JBM 授权页，登录并授权后回调业务系统，业务服务端再用 code 换 Token。</p>
+          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>{{ gatewayBase }}/oauth2/authorize?response_type=code&amp;client_id=YOUR_CLIENT_ID&amp;redirect_uri=YOUR_CALLBACK&amp;scope=all&amp;state=RANDOM_STATE</code></pre>
         </section>
 
         <section id="oauth2-password" class="scroll-mt-24 border-b py-12">
           <h2 class="text-2xl font-bold">OAuth2 密码模式</h2>
-          <p class="mt-3 text-muted-foreground">适用于 JBM 官方管理后台等第一方应用，密码经 RSA 加密传输。</p>
+          <p class="mt-3 text-muted-foreground">适用于 JBM 管理后台等第一方应用，密码经 RSA 加密传输。</p>
           <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>POST {{ gatewayBase }}/oauth2/token
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
@@ -218,15 +235,54 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=refresh_token&amp;client_id=demo&amp;client_secret=demo123&amp;refresh_token=YOUR_REFRESH_TOKEN</code></pre>
         </section>
 
+        <section id="openapi-api-key" class="scroll-mt-24 border-b py-12">
+          <h2 class="text-2xl font-bold">API Key 与签名调用</h2>
+          <p class="mt-3 text-muted-foreground">
+            开发者通过控制台申请 API Key，并由管理员绑定可访问的 OpenAPI 权限。调用时网关校验签名、时间戳、
+            nonce 与授权清单，验证成功后再转发给后端服务。
+          </p>
+          <div class="mt-5 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b text-left">
+                  <th class="py-2 pr-4">Header</th>
+                  <th class="py-2">说明</th>
+                </tr>
+              </thead>
+              <tbody class="text-muted-foreground">
+                <tr v-for="header in openApiHeaders" :key="header.name" class="border-b">
+                  <td class="py-3 pr-4 font-mono text-xs text-foreground">{{ header.name }}</td>
+                  <td class="py-3">{{ header.desc }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>GET {{ gatewayBase }}/api/open/v1/user/profile
+X-JBM-Api-Key: ak_xxx
+X-JBM-Timestamp: 1760000000000
+X-JBM-Nonce: 1d48f4c2-9a2c-47ac
+X-JBM-Signature: hex(hmac_sha256(secret, canonicalRequest))</code></pre>
+        </section>
+
+        <section id="openapi-isolation" class="scroll-mt-24 border-b py-12">
+          <h2 class="text-2xl font-bold">租户与数据隔离</h2>
+          <p class="mt-3 text-muted-foreground">
+            多租户场景下，登录 Token、开发者身份、应用、API Key 与业务数据都应携带租户上下文。
+            后端服务只信任 Gateway 或 Auth 生成的上下文，不信任外部请求伪造的内部头。
+          </p>
+          <ul class="mt-4 space-y-2 text-sm text-muted-foreground">
+            <li>外部 Bearer Token 必须由 Auth 校验，不能因为携带内部头而绕过。</li>
+            <li>服务间请求使用 Sa-Token IdToken 或网关验证后的 API Key 上下文。</li>
+            <li>租户字段应参与查询过滤、权限判断、审计日志和 API Key 授权范围。</li>
+          </ul>
+        </section>
+
         <section id="api-auth" class="scroll-mt-24 border-b py-12">
           <h2 class="text-2xl font-bold">认证接口 /oauth2/*</h2>
           <div class="mt-6 space-y-8">
             <div v-for="ep in authEndpoints" :key="ep.path + ep.method" class="rounded-lg border p-5">
               <div class="flex flex-wrap items-center gap-2">
-                <span
-                  class="rounded px-2 py-0.5 font-mono text-xs font-semibold"
-                  :class="methodColor(ep.method)"
-                >
+                <span class="rounded px-2 py-0.5 font-mono text-xs font-semibold" :class="methodColor(ep.method)">
                   {{ ep.method }}
                 </span>
                 <code class="font-mono text-sm">{{ ep.path }}</code>
@@ -258,91 +314,43 @@ grant_type=refresh_token&amp;client_id=demo&amp;client_secret=demo123&amp;refres
 
         <section id="api-user" class="scroll-mt-24 border-b py-12">
           <h2 class="text-2xl font-bold">用户接口 /user/*</h2>
-          <p class="mt-3 text-muted-foreground">需 Bearer Token，由 Center 服务提供（经 Gateway 转发）。</p>
+          <p class="mt-3 text-muted-foreground">需要 Bearer Token，由 Center 服务提供，经 Gateway 转发。</p>
           <ul class="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><Badge variant="outline" class="mr-2">GET</Badge><code>/user/info/statistics</code> — 用户统计</li>
-            <li><Badge variant="outline" class="mr-2">GET</Badge><code>/user/list</code> — 用户列表（需权限）</li>
-            <li><Badge variant="outline" class="mr-2">POST</Badge><code>/user/save</code> — 创建用户</li>
-            <li><Badge variant="outline" class="mr-2">GET</Badge><code>/current/user</code> — 当前登录用户信息</li>
+            <li><Badge variant="outline" class="mr-2">GET</Badge><code>/user/info/statistics</code> - 用户统计</li>
+            <li><Badge variant="outline" class="mr-2">GET</Badge><code>/user/list</code> - 用户列表，需要权限</li>
+            <li><Badge variant="outline" class="mr-2">POST</Badge><code>/user/save</code> - 创建用户</li>
           </ul>
         </section>
 
         <section id="api-authority" class="scroll-mt-24 border-b py-12">
           <h2 class="text-2xl font-bold">权限接口 /authority/*</h2>
-          <ul class="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><code>/authority/menu</code> — 当前用户菜单树</li>
-            <li><code>/authority/role/list</code> — 角色列表</li>
-            <li><code>/authority/action/list</code> — 按钮权限</li>
-          </ul>
+          <p class="mt-3 text-muted-foreground">维护开放 API 权限点、API Key 授权关系和 RBAC 权限。</p>
         </section>
 
         <section id="api-developer" class="scroll-mt-24 border-b py-12">
           <h2 class="text-2xl font-bold">开发者接口 /developer/*</h2>
-          <ul class="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><code>/developer/list</code> — 开发者列表</li>
-            <li><code>/developer/apikey/list</code> — API Key 管理</li>
-            <li><code>/app/list</code> — OAuth2 应用列表</li>
-          </ul>
+          <p class="mt-3 text-muted-foreground">开发者申请、管理员审批、应用与 API Key 管理均通过该域完成。</p>
         </section>
 
         <section id="sdk-frontend" class="scroll-mt-24 border-b py-12">
-          <h2 class="text-2xl font-bold">前端接入示例（Vue 3）</h2>
-          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>// 1. 跳转授权
-const state = crypto.randomUUID()
-sessionStorage.setItem('oauth_state', state)
-location.href = `${GATEWAY}/oauth2/authorize?response_type=code&amp;client_id=${CLIENT_ID}&amp;redirect_uri=${encodeURIComponent(CALLBACK)}&amp;scope=all&amp;state=${state}`
-
-// 2. 回调页用 code 换 token
-const body = new URLSearchParams({
-  grant_type: 'authorization_code',
-  code,
-  client_id: CLIENT_ID,
-  client_secret: CLIENT_SECRET,
-  redirect_uri: CALLBACK,
-})
-const res = await fetch(`${GATEWAY}/oauth2/token`, { method: 'POST', body })
-const { access_token } = await res.json()
-
-// 3. 请求 API
-fetch(`${GATEWAY}/current/user`, {
-  headers: { Authorization: `Bearer ${access_token}` },
-})</code></pre>
+          <h2 class="text-2xl font-bold">前端接入示例</h2>
+          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>const url = `${gatewayBase}/oauth2/authorize`
+location.href = `${url}?response_type=code&amp;client_id=${clientId}&amp;redirect_uri=${callback}&amp;scope=all&amp;state=${state}`</code></pre>
         </section>
 
         <section id="sdk-backend" class="scroll-mt-24 border-b py-12">
-          <h2 class="text-2xl font-bold">后端接入示例（Spring Boot）</h2>
-          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>@Configuration
-@EnableJbmOAuth2ResourceServer
-public class SecurityConfig {
-    // 配置 resource server，校验 JBM 颁发的 JWT / Token
-}
-
-// Feign 调用 Center API 时传递 Token
-@RequestHeader("Authorization") String bearerToken</code></pre>
+          <h2 class="text-2xl font-bold">后端接入示例</h2>
+          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>String canonical = method + "\\n" + path + "\\n" + query + "\\n" + bodyHash + "\\n" + timestamp + "\\n" + nonce;
+String signature = hmacSha256Hex(apiSecret, canonical);</code></pre>
         </section>
 
         <section id="faq" class="scroll-mt-24 py-12">
           <h2 class="text-2xl font-bold">常见问题</h2>
-          <dl class="mt-6 space-y-6">
-            <div>
-              <dt class="font-semibold">invalid client_secret 怎么办？</dt>
-              <dd class="mt-1 text-sm text-muted-foreground">
-                确认 client_id / client_secret 与「应用管理」中一致；开发环境可使用 demo / demo123。
-              </dd>
-            </div>
-            <div>
-              <dt class="font-semibold">密码模式报密码未加密？</dt>
-              <dd class="mt-1 text-sm text-muted-foreground">
-                须先 GET /oauth2/publicKey，RSA 加密密码，并设置请求头 X-Password-Encrypted: true。
-              </dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Gateway 地址是什么？</dt>
-              <dd class="mt-1 text-sm text-muted-foreground">
-                本地默认 {{ gatewayBase }}，所有 /oauth2、/user、/current 等 API 均通过 Gateway 访问。
-              </dd>
-            </div>
-          </dl>
+          <div class="mt-4 space-y-4 text-sm text-muted-foreground">
+            <p><strong class="text-foreground">为什么不能直接信任内部头？</strong> 外部请求可以伪造 Header，必须由 Gateway 或 Auth 校验后签发可信上下文。</p>
+            <p><strong class="text-foreground">密码为什么需要 RSA？</strong> 即使在开发环境，也保持与生产一致的加密传输约束。</p>
+            <p><strong class="text-foreground">API Key 和用户 Token 有什么区别？</strong> 用户 Token 代表登录用户，API Key 代表开发者或应用的开放接口访问权限。</p>
+          </div>
         </section>
       </main>
     </div>

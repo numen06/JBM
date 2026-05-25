@@ -1,49 +1,67 @@
 # jbm-admin-vue
 
-JBM7 集群管理前端：Vue 3 + Vite + TypeScript + Tailwind CSS + shadcn 风格组件，对接 **jaja7** 本地环境。
+JBM7 管理后台与开放平台前端，基于 Vue 3 + Vite + TypeScript + Pinia + Tailwind CSS。当前前端包含管理控制台、开源社区首页、注册登录、JBM OpenAPI Wiki 和 API Key 接入说明。
 
-## 前置条件
+## 页面预览
 
-须**同时**启动三个服务（`spring.profiles.active=jaja7`，Nacos 命名空间 **jbm7**）：
+![JBM 首页](../docs/images/jbm-landing.png)
+
+![JBM 登录页](../docs/images/jbm-login.png)
+
+![JBM OpenAPI Wiki](../docs/images/jbm-openapi-wiki.png)
+
+## 新增能力
+
+- 公开首页：面向开源社区和第三方开发者展示 JBM 平台能力。
+- 注册页：支持账号注册、验证码、RSA 加密密码提交。
+- 登录页：支持 OAuth2 密码模式，默认接入 Gateway。
+- OpenAPI Wiki：从用户视角说明注册登录、子应用接入、API Key、签名调用和租户隔离。
+- 开放平台导航：未登录用户可访问首页、注册、登录和 API 文档。
+- 管理控制台：登录后进入用户、角色、菜单、应用、开发者、API Key 等模块。
+
+## 前置服务
+
+前端只访问 Gateway，不直接访问 Auth 或 Center。开发环境建议使用 `jaja7` profile。
 
 | 服务 | 端口 | 说明 |
-|------|------|------|
-| Gateway | 7777 | 对外统一入口，前端只连此端口 |
-| Auth | 5555 | OAuth2、验证码（经 Gateway 转发） |
-| Center | 8888 | 业务 API（经 Gateway 转发） |
+| --- | --- | --- |
+| Gateway | `7777` | 前端统一 API 入口 |
+| Auth | `5555` | OAuth2、注册、登录、验证码 |
+| Center | `8888` | 用户、权限、应用、API Key |
+| Vue | `5173` | 前端开发服务 |
 
-VS Code：运行 **「jaja7: Auth + Center + Gateway」** 复合启动（`.vscode/launch.json`）。
+启动后端：
 
-Maven 打包/过滤资源：`mvn -Pjaja7 ...`（`jbm-cluster/pom.xml` 中 `config.namespace=jbm7`）。
-
-## 开发
-
-```bash
-cd jbm-admin-vue
-npm install --registry https://registry.npmjs.org
-npm run dev
+```powershell
+cd ..
+python scripts\jbm_cluster_ops.py restart
+python scripts\jbm_cluster_ops.py status
 ```
 
-浏览器访问 http://localhost:5173
+## 本地开发
 
-### 默认登录
+```bash
+npm install --registry https://registry.npmjs.org
+npm run dev -- --host 127.0.0.1 --port 5173
+```
 
-- OAuth2 密码模式：`POST /oauth2/token`（经 Gateway）
-- 图形验证码：`GET /captcha/vcode64`，登录表单传 `vcode`
-- 默认客户端：`demo` / `demo123`
-- 管理员示例：`admin` / `Admin@123`（以环境为准）
+访问：
 
-### API 代理
+- 首页：<http://127.0.0.1:5173/>
+- 登录：<http://127.0.0.1:5173/login>
+- 注册：<http://127.0.0.1:5173/register>
+- OpenAPI Wiki：<http://127.0.0.1:5173/docs>
+- 管理控制台：<http://127.0.0.1:5173/dashboard>
 
-`vite.config.ts` 中**全部**前缀代理到 Gateway `http://127.0.0.1:7777`，不直连 Auth/Center。
+## 默认登录
 
-## 功能模块
-
-- 登录 / Token 刷新 / 登出
-- 仪表盘（用户统计）
-- 系统：用户、角色、菜单、组织、权限、应用、字典
-- 网关：路由、限流、IP 限制
-- 审计日志、开发者列表
+| 项 | 值 |
+| --- | --- |
+| 用户名 | `admin` |
+| 密码 | `Admin@123` |
+| Client ID | `demo` |
+| Client Secret | `demo123` |
+| 开发验证码 | `9999` |
 
 ## 构建
 
@@ -51,9 +69,24 @@ npm run dev
 npm run build
 ```
 
-## 技术栈
+## API 代理
 
-- Vue 3 + Vue Router + Pinia
-- Axios（`Authorization: Bearer` + `tenantId`）
-- Tailwind CSS v4
-- Lucide 图标（`@lucide/vue`）
+`vite.config.ts` 将前端 API 请求代理到 Gateway：
+
+```text
+http://127.0.0.1:7777
+```
+
+登录、注册、验证码、用户、权限、应用和 API Key 都经由 Gateway 访问。
+
+## 验证记录
+
+本轮已通过：
+
+- `npm run build`
+- 浏览器打开 `/`、`/login`、`/register`、`/docs`
+- 默认 admin 登录并跳转 `/dashboard`
+- 后端 `run_all_rest_tests.py`
+- API Key / OpenAPI 接入链路 `run_api_key_flow_tests.py`
+
+详细记录见 [验证总结](../.cursor/jbm-verification-summary.md)。

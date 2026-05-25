@@ -123,6 +123,10 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
     }
 
     private static boolean isGatewayTrustedRequest(HttpServletRequest request) {
+        String authorization = request.getHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
+        if (StrUtil.isNotBlank(authorization)) {
+            return false;
+        }
         String idToken = request.getHeader(SaIdUtil.ID_TOKEN);
         if (StrUtil.isNotBlank(idToken) && SaIdUtil.isValid(idToken)) {
             return true;
