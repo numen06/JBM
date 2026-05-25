@@ -1,6 +1,7 @@
 import { get, post, put, del, unwrap } from './request'
 import type { BaseApiKey, DataPaging, OpenAuthority } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export type ApiKeyListQuery = {
   developerId?: number
@@ -8,7 +9,7 @@ export type ApiKeyListQuery = {
   status?: number | string
 }
 
-export async function listApiKeys(page = 1, size = 20, query?: ApiKeyListQuery) {
+export async function listApiKeys(page = 1, size = DEFAULT_PAGE_SIZE, query?: ApiKeyListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   if (query?.developerId != null) params.developerId = query.developerId
   const kw = query?.keyword?.trim()

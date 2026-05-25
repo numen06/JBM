@@ -1,6 +1,7 @@
 import { get, post, put, unwrap } from './request'
 import type { BaseDeveloper, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export type DeveloperListQuery = {
   keyword?: string
@@ -8,7 +9,7 @@ export type DeveloperListQuery = {
   userType?: string
 }
 
-export async function listDevelopers(page = 1, size = 20, query?: DeveloperListQuery) {
+export async function listDevelopers(page = 1, size = DEFAULT_PAGE_SIZE, query?: DeveloperListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) params.userName = kw

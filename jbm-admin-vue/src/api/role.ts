@@ -1,13 +1,14 @@
 import { get, post, put, del, unwrap } from './request'
 import type { BaseRole, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export type RoleListQuery = {
   keyword?: string
   status?: number | string
 }
 
-export async function listRoles(page = 1, size = 20, query?: RoleListQuery) {
+export async function listRoles(page = 1, size = DEFAULT_PAGE_SIZE, query?: RoleListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) params.roleName = kw

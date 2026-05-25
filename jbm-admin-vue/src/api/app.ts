@@ -1,6 +1,7 @@
 import { get, post, put, del, unwrap } from './request'
 import type { BaseApp, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export type AppListQuery = {
   keyword?: string
@@ -8,7 +9,7 @@ export type AppListQuery = {
   status?: number | string
 }
 
-export async function listApps(page = 1, size = 20, query?: AppListQuery) {
+export async function listApps(page = 1, size = DEFAULT_PAGE_SIZE, query?: AppListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) params.appName = kw

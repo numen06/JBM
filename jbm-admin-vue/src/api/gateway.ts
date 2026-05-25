@@ -1,13 +1,14 @@
 import { get, post, put, del, unwrap } from './request'
 import type { GatewayRoute, GatewayRateLimit, GatewayIpLimit, DataPaging } from './types'
 import { pageParams } from './user'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export type GatewayRouteListQuery = {
   keyword?: string
   status?: number | string
 }
 
-export async function listRoutes(page = 1, size = 20, query?: GatewayRouteListQuery) {
+export async function listRoutes(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayRouteListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) {
@@ -25,7 +26,7 @@ export type GatewayRateLimitListQuery = {
   policyType?: string
 }
 
-export async function listRateLimits(page = 1, size = 20, query?: GatewayRateLimitListQuery) {
+export async function listRateLimits(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayRateLimitListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) params.policyName = kw
@@ -39,7 +40,7 @@ export type GatewayIpLimitListQuery = {
   policyType?: number | string
 }
 
-export async function listIpLimits(page = 1, size = 20, query?: GatewayIpLimitListQuery) {
+export async function listIpLimits(page = 1, size = DEFAULT_PAGE_SIZE, query?: GatewayIpLimitListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
   if (kw) params.policyName = kw

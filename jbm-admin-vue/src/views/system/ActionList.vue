@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import CrudDialog from '@/components/CrudDialog.vue'
 import FormField from '@/components/FormField.vue'
 import Button from '@/components/ui/Button.vue'
@@ -10,15 +11,20 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import { useCrudForm } from '@/composables/useCrudForm'
+import { usePagedList } from '@/composables/usePagedList'
 import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listAllMenus } from '@/api/menu'
 import type { BaseAction, BaseMenu } from '@/api/types'
 
 const filterMenuId = ref<string>('')
 const menus = ref<BaseMenu[]>([])
-const items = ref<BaseAction[]>([])
-const loading = ref(true)
-const error = ref('')
+
+const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseAction>(
+  (p, size) => {
+    const mid = filterMenuId.value ? Number(filterMenuId.value) : undefined
+    return listActions(mid, p, size)
+  },
+)
 
 const {
   dialogOpen,
@@ -42,21 +48,6 @@ async function loadMenus() {
     menus.value = await listAllMenus()
   } catch {
     menus.value = []
-  }
-}
-
-async function load() {
-  loading.value = true
-  error.value = ''
-  try {
-    const mid = filterMenuId.value ? Number(filterMenuId.value) : undefined
-    const page = await listActions(mid, 1, 200)
-    items.value = page.contents ?? []
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '加载失败'
-    items.value = []
-  } finally {
-    loading.value = false
   }
 }
 
@@ -96,7 +87,7 @@ async function handleSave() {
       await createAction(payload)
     }
     closeDialog()
-    await load()
+    await load(page.value)
   } catch (e) {
     formError.value = e instanceof Error ? e.message : '保存失败'
   } finally {
@@ -107,13 +98,12 @@ async function handleSave() {
 async function handleDelete(row: BaseAction) {
   if (!row.actionId || !confirm(`确认删除按钮 ${row.actionName}？`)) return
   await deleteAction(row.actionId)
-  await load()
+  await load(page.value)
 }
 
-watch(filterMenuId, () => load())
+watch(filterMenuId, () => load(1))
 onMounted(async () => {
   await loadMenus()
-  await load()
 })
 </script>
 
@@ -168,6 +158,7 @@ onMounted(async () => {
           </tr>
         </tbody>
       </Table>
+      <PaginationBar :page="page" :total="total" :page-size="pageSize" @change="load" />
     </DataTableShell>
 
     <CrudDialog

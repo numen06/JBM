@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ArrowDown, ArrowUp, Plus, RefreshCw, Search, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
@@ -12,12 +13,13 @@ import Dialog from '@/components/ui/Dialog.vue'
 import Badge from '@/components/ui/Badge.vue'
 import {
   getExtendFormFromDb,
-  listExtendForms,
+  pageExtendForms,
   listFieldDefinitions,
   publishExtendForm,
   saveExtendForm,
 } from '@/api/extendField'
 import type { ExtendFormDefinition, FieldDefinition } from '@/api/types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const FIELD_TYPES = [
   { value: 'string', label: '字符串' },
@@ -40,19 +42,13 @@ const saving = ref(false)
 const error = ref('')
 const successMsg = ref('')
 const keyword = ref('')
+const groupPage = ref(1)
+const groupTotal = ref(0)
+const groupPageSize = DEFAULT_PAGE_SIZE
 
 const redisDialogOpen = ref(false)
 const redisFields = ref<FieldDefinition[]>([])
 const redisLoading = ref(false)
-
-const filteredForms = computed(() => {
-  const kw = keyword.value.trim().toLowerCase()
-  if (!kw) return forms.value
-  return forms.value.filter((f) =>
-    [f.formCode, f.formName, String(f.customFormId ?? '')]
-      .some((v) => String(v ?? '').toLowerCase().includes(kw)),
-  )
-})
 
 function emptyField(): FieldDefinition {
   return {
@@ -77,11 +73,14 @@ function applyDefinition(def: ExtendFormDefinition) {
       : [emptyField()]
 }
 
-async function refreshForms(selectFirst = false) {
+async function loadGroups(page = groupPage.value, selectFirst = false) {
   listLoading.value = true
   error.value = ''
   try {
-    forms.value = await listExtendForms()
+    const data = await pageExtendForms(page, groupPageSize, keyword.value.trim() || undefined)
+    forms.value = data.contents ?? []
+    groupTotal.value = data.total ?? 0
+    groupPage.value = page
     if (selectedCode.value) {
       const current = forms.value.find((f) => f.formCode === selectedCode.value)
       if (current) applyDefinition(current)
@@ -90,10 +89,19 @@ async function refreshForms(selectFirst = false) {
     }
   } catch (e) {
     forms.value = []
+    groupTotal.value = 0
     error.value = e instanceof Error ? e.message : '加载字段组失败'
   } finally {
     listLoading.value = false
   }
+}
+
+function refreshForms(selectFirst = false) {
+  return loadGroups(groupPage.value, selectFirst)
+}
+
+function searchGroups() {
+  loadGroups(1, false)
 }
 
 async function selectForm(form: ExtendFormDefinition) {
@@ -124,7 +132,7 @@ async function loadFromDb() {
     const def = await getExtendFormFromDb(code)
     applyDefinition(def)
     successMsg.value = `已加载表单「${code}」`
-    await refreshForms()
+    await loadGroups(1)
   } catch (e) {
     meta.value = null
     selectedCode.value = ''
@@ -270,7 +278,7 @@ function formatTime(t?: string) {
   }
 }
 
-onMounted(() => refreshForms(true))
+onMounted(() => loadGroups(1, true))
 </script>
 
 <template>
@@ -291,21 +299,26 @@ onMounted(() => refreshForms(true))
       <aside class="flex w-full shrink-0 flex-col rounded-lg border bg-card lg:w-80">
         <div class="flex items-center justify-between border-b px-3 py-2">
           <span class="text-sm font-medium">字段组</span>
-          <Badge variant="secondary">{{ forms.length }}</Badge>
+          <Badge variant="secondary">{{ groupTotal }}</Badge>
         </div>
         <div class="flex gap-1 border-b px-3 py-2">
-          <Input v-model="keyword" placeholder="编码/名称" class="h-8 flex-1 text-sm" />
-          <Button variant="outline" size="sm" class="h-8 px-2">
+          <Input
+            v-model="keyword"
+            placeholder="编码/名称"
+            class="h-8 flex-1 text-sm"
+            @keyup.enter="searchGroups"
+          />
+          <Button variant="outline" size="sm" class="h-8 px-2" @click="searchGroups">
             <Search class="h-3.5 w-3.5" />
           </Button>
         </div>
         <div class="min-h-[280px] flex-1 overflow-y-auto p-2">
           <p v-if="listLoading" class="px-2 py-4 text-sm text-muted-foreground">加载中...</p>
-          <p v-else-if="!filteredForms.length" class="px-2 py-4 text-sm text-muted-foreground">
+          <p v-else-if="!forms.length" class="px-2 py-4 text-sm text-muted-foreground">
             {{ keyword ? '无匹配字段组' : '暂无字段组，可在右侧输入 formCode 新建' }}
           </p>
           <ul v-else class="space-y-0.5">
-            <li v-for="f in filteredForms" :key="f.formCode">
+            <li v-for="f in forms" :key="f.formCode">
               <button
                 type="button"
                 data-testid="field-group-item"
@@ -323,6 +336,13 @@ onMounted(() => refreshForms(true))
             </li>
           </ul>
         </div>
+        <PaginationBar
+          v-if="groupTotal > 0"
+          :page="groupPage"
+          :total="groupTotal"
+          :page-size="groupPageSize"
+          @change="(p) => loadGroups(p)"
+        />
       </aside>
 
       <section class="min-w-0 flex-1">

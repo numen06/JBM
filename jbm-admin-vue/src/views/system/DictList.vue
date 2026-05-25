@@ -13,13 +13,14 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { pageRootDicts, pageDictItems, saveDict, deleteDict } from '@/api/dict'
 import { usePermission } from '@/composables/usePermission'
 import type { BaseDic } from '@/api/types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const { hasAction } = usePermission()
 
 type DialogMode = 'group' | 'item'
 
-const GROUP_PAGE_SIZE = 15
-const ITEM_PAGE_SIZE = 20
+const GROUP_PAGE_SIZE = DEFAULT_PAGE_SIZE
+const ITEM_PAGE_SIZE = DEFAULT_PAGE_SIZE
 
 function dicId(row: BaseDic): number | string | undefined {
   const raw = row.id ?? row.dicId

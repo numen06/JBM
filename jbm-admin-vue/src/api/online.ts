@@ -1,9 +1,10 @@
 import { del, post, unwrap } from './request'
 import type { DataPaging, OnlineUserSearchForm, SysUserOnline } from './types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export async function listOnlineUsers(
   page = 1,
-  size = 20,
+  size = DEFAULT_PAGE_SIZE,
   search?: Pick<OnlineUserSearchForm, 'ipaddr' | 'userName'>,
 ) {
   const body: OnlineUserSearchForm = {

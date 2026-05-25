@@ -1,5 +1,6 @@
 import { get, post, unwrap } from './request'
 import type { BaseDic, DataPaging } from './types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export async function listDicts() {
   const res = await post<BaseDic[]>('/baseDic/list', {})
@@ -20,7 +21,7 @@ function dicRequestBody(filter: Partial<BaseDic>, page: number, size: number) {
 }
 
 /** 分页查询字典分组；keyword 匹配编码/名称 */
-export async function pageRootDicts(page = 1, size = 15, keyword?: string) {
+export async function pageRootDicts(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
   const baseDic: Partial<BaseDic> = {}
   const kw = keyword?.trim()
   if (kw) baseDic.name = kw
@@ -35,7 +36,7 @@ export async function pageRootDicts(page = 1, size = 15, keyword?: string) {
 export async function pageDictItems(
   parentId: number | string,
   page = 1,
-  size = 20,
+  size = DEFAULT_PAGE_SIZE,
   keyword?: string,
 ) {
   const baseDic: Partial<BaseDic> = { parentId }
@@ -48,7 +49,7 @@ export async function pageDictItems(
   return unwrap(res)
 }
 
-export async function pageDicts(page = 1, size = 20) {
+export async function pageDicts(page = 1, size = DEFAULT_PAGE_SIZE) {
   const res = await post<DataPaging<BaseDic>>('/baseDic/pageList', {
     pageForm: { currPage: page, pageSize: size },
   })

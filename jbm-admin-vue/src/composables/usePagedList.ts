@@ -1,9 +1,10 @@
 import { ref, onMounted, type Ref } from 'vue'
 import type { DataPaging } from '@/api/types'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export function usePagedList<T>(
   fetcher: (page: number, size: number) => Promise<DataPaging<T>>,
-  pageSize = 20,
+  pageSize = DEFAULT_PAGE_SIZE,
 ) {
   const items: Ref<T[]> = ref([])
   const total = ref(0)

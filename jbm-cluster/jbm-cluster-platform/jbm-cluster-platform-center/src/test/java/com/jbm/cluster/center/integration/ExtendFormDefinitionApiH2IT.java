@@ -5,6 +5,7 @@ import com.jbm.cluster.api.form.center.SaveExtendFormRequest;
 import com.jbm.cluster.center.controller.ExtendFormDefinitionController;
 import com.jbm.cluster.center.integration.support.ExtendFieldH2RedisTestSupport;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
 import jbm.framework.boot.autoconfigure.extendfield.model.FieldDefinition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,33 @@ class ExtendFormDefinitionApiH2IT extends ExtendFieldH2RedisTestSupport {
         assertSuccess(fromRedis);
         assertThat(fromRedis.getResult()).extracting(FieldDefinition::getFieldName)
                 .containsExactly("note");
+    }
+
+    @Test
+    @DisplayName("listFromDb：分页查询字段组列表")
+    void listFromDb_pagesByTenant() {
+        FieldDefinition field = new FieldDefinition();
+        field.setFieldName("f1");
+        field.setFieldType("string");
+        for (int i = 0; i < 12; i++) {
+            String formCode = "it_page_form_" + i + "_" + System.nanoTime();
+            SaveExtendFormRequest request = new SaveExtendFormRequest();
+            request.setFormName("分页测试" + i);
+            request.setFields(Collections.singletonList(field));
+            request.setAutoPublish(false);
+            assertSuccess(extendFormDefinitionController.save(formCode, request));
+        }
+
+        ResultBody<DataPaging<ExtendFormDefinition>> page1 =
+                extendFormDefinitionController.listFromDb(1, 10, null);
+        assertSuccess(page1);
+        assertThat(page1.getResult().getContents()).hasSize(10);
+        assertThat(page1.getResult().getTotal()).isGreaterThanOrEqualTo(12);
+
+        ResultBody<DataPaging<ExtendFormDefinition>> page2 =
+                extendFormDefinitionController.listFromDb(2, 10, null);
+        assertSuccess(page2);
+        assertThat(page2.getResult().getContents()).isNotEmpty();
     }
 
     @Test
