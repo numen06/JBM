@@ -1,6 +1,8 @@
 server:
   port: 4444
 spring:
+  liquibase:
+    enabled: false
   cloud:
     nacos:
       config:

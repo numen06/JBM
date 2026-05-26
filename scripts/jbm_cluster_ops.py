@@ -189,30 +189,50 @@ def _resolve_prepare_mode(args) -> str:
     return prepare if prepare in PREPARE_CHOICES else "compile"
 
 
+def _service_jar_path(cfg: dict) -> Path:
+    """Fat jar produced by spring-boot repackage (finalName = artifactId)."""
+    artifact = cfg["module_dir"].name
+    return cfg["module_dir"] / "target" / f"{artifact}.jar"
+
+
+def _java_jar_run_command(cfg: dict) -> str:
+    """Run packaged Spring Boot jar (avoids spring-boot:run / IDE stale class issues on Windows)."""
+    java = shutil.which("java") or "java"
+    jar = _service_jar_path(cfg)
+    return _shell_join(
+        [
+            java,
+            "-Dspring.profiles.active=jaja7",
+            "-Dprofile.name=jaja7",
+            "-jar",
+            str(jar),
+        ]
+    )
+
+
 def _maven_service_command(
     cfg: dict, *, prepare: str = "compile", maven: str = "auto"
 ) -> tuple[str, str]:
-    """Return (shell command, working directory). Prepare runs from repo root; exec runs in module dir."""
+    """Return (shell command, working directory). Prepare from repo root; run via java -jar."""
     mvn = _maven_executable(maven)
     module_path = cfg["module_path"]
-    pom_file = str(cfg["module_dir"] / "pom.xml")
     root_common = [mvn, "-pl", module_path, "-DskipTests=true"]
     prepare_cmd = None
     if prepare == "install":
         prepare_cmd = root_common + ["-am", "install"]
     elif prepare == "compile":
-        prepare_cmd = root_common + ["-am", "compile"]
-    run = [mvn, "-f", pom_file, "-am", "-DskipTests=true"] + [
-        "-Dspring-boot.run.profiles=jaja7",
-        "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7",
-        "spring-boot:run",
-    ]
-    run_cmd = _shell_join(run)
+        prepare_cmd = root_common + ["-am", "package"]
+    run_cmd = _java_jar_run_command(cfg)
     if prepare_cmd:
         prepare_shell = _shell_join(prepare_cmd)
         cmd = f"{prepare_shell} && {run_cmd}"
     else:
-        cmd = run_cmd
+        jar = _service_jar_path(cfg)
+        if not jar.is_file():
+            prepare_shell = _shell_join(root_common + ["-am", "package"])
+            cmd = f"{prepare_shell} && {run_cmd}"
+        else:
+            cmd = run_cmd
     return cmd, str(ROOT)
 
 

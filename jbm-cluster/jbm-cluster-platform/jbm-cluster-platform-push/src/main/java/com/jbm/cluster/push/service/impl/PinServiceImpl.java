@@ -9,6 +9,7 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.util.StringUtils;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,11 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class PinServiceImpl implements PinService {
 
-    @Autowired
+    @Autowired(required = false)
     private AliyunSmsTemplate aliyunSmsTemplate;
+
+    @Value("${jbm.push.jaja7-dry-run:false}")
+    private boolean jaja7DryRun;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -57,11 +61,18 @@ public class PinServiceImpl implements PinService {
         }
         count++;
         final String code = buildCode(phoneNumber);
-        JSONObject ret = aliyunSmsTemplate.sendPin(code, phoneNumber);
-        ret.put("pin", code);
-        if (!"OK".equalsIgnoreCase(ret.getString("Code"))) {
-            throw new ServiceException("发送失败");
+        JSONObject ret;
+        if (jaja7DryRun || aliyunSmsTemplate == null) {
+            ret = new JSONObject();
+            ret.put("Code", "OK");
+            ret.put("Message", "jaja7 dry-run: SMS not sent");
+        } else {
+            ret = aliyunSmsTemplate.sendPin(code, phoneNumber);
+            if (!"OK".equalsIgnoreCase(ret.getString("Code"))) {
+                throw new ServiceException("发送失败");
+            }
         }
+        ret.put("pin", code);
         stringRedisTemplate.opsForValue().set(key, count.toString(), 30, TimeUnit.MINUTES);
         return ret;
     }

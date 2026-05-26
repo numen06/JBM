@@ -29,7 +29,7 @@ public class NotificationHandler {
     @Autowired
     private NotificationDispatcher notificationDispatcher;
 
-    @Autowired
+    @Autowired(required = false)
     private MqttNotificationExchanger mqttNotificationExchanger;
 
     @Autowired
@@ -54,6 +54,7 @@ public class NotificationHandler {
      * @return
      */
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(MqttNotificationExchanger.class)
     public Function<Flux<Message<MqttNotification>>, Mono<Void>> mqtt() {
         return flux -> flux.flatMap(message ->
                 Mono.fromRunnable(() -> mqttNotificationExchanger.send(message.getPayload()))

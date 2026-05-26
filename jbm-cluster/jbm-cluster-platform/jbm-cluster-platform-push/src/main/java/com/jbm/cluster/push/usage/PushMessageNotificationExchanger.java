@@ -25,7 +25,7 @@ import java.util.Map;
 public class PushMessageNotificationExchanger implements ApplicationContextAware {
     private Collection<NotificationExchanger> exchangers;
 
-    @Autowired
+    @Autowired(required = false)
     private MqttNotificationExchanger mqttNotificationExchanger;
 
     @Autowired
@@ -51,8 +51,10 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
         switch (pushMessageItem.getPushWay()) {
             case internal:
             case mqtt:
-                MqttNotification mqttNotification = mqttNotificationExchanger.build(pushMessageBody, pushMessageItem);
-                jbmClusterNotification.sendMqttNotification(mqttNotification);
+                if (mqttNotificationExchanger != null) {
+                    MqttNotification mqttNotification = mqttNotificationExchanger.build(pushMessageBody, pushMessageItem);
+                    jbmClusterNotification.sendMqttNotification(mqttNotification);
+                }
                 break;
             case wechat:
                 WeixinNotification weixinNotification = weixinNoficationExchanger.build(pushMessageBody, pushMessageItem);

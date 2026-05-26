@@ -5,11 +5,10 @@ import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import jbm.framework.boot.autoconfigure.mqtt.client.SimpleMqttClient;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 
 /**
  * @author scolin
@@ -19,12 +18,16 @@ import javax.annotation.Resource;
 @Service
 @Slf4j
 public class MQTTService {
-    @Resource
+    @Autowired(required = false)
     private RealMqttPahoClientFactory deviceMqttPahoClientFactory;
     private SimpleMqttClient simpleMqttClient;
 
     @PostConstruct
     public void init() {
+        if (deviceMqttPahoClientFactory == null) {
+            log.warn("MQTT未配置，MQTT功能将不可用");
+            return;
+        }
         try {
             this.simpleMqttClient = this.deviceMqttPahoClientFactory.getClientInstance();
             log.info("MQTT客户端初始化成功");
