@@ -189,27 +189,31 @@ def _resolve_prepare_mode(args) -> str:
     return prepare if prepare in PREPARE_CHOICES else "compile"
 
 
-def _maven_service_command(cfg: dict, *, prepare: str = "compile", maven: str = "auto") -> str:
+def _maven_service_command(
+    cfg: dict, *, prepare: str = "compile", maven: str = "auto"
+) -> tuple[str, str]:
+    """Return (shell command, working directory). Prepare runs from repo root; exec runs in module dir."""
     mvn = _maven_executable(maven)
     module_path = cfg["module_path"]
-    common = [mvn, "-pl", module_path, "-DskipTests=true"]
+    pom_file = str(cfg["module_dir"] / "pom.xml")
+    root_common = [mvn, "-pl", module_path, "-DskipTests=true"]
     prepare_cmd = None
     if prepare == "install":
-        prepare_cmd = common + ["-am", "install"]
+        prepare_cmd = root_common + ["-am", "install"]
     elif prepare == "compile":
-        prepare_cmd = common + ["-am", "compile"]
-    run = common + [
-        "-Dspring.profiles.active=jaja7",
-        "-Dprofile.name=jaja7",
-        "org.codehaus.mojo:exec-maven-plugin:3.5.0:java",
-        f"-Dexec.mainClass={cfg['main_class']}",
-        "-Dexec.classpathScope=runtime",
-        "-Dexec.cleanupDaemonThreads=false",
-        "-Dexec.args=--spring.profiles.active=jaja7 --profile.name=jaja7",
+        prepare_cmd = root_common + ["-am", "compile"]
+    run = [mvn, "-f", pom_file, "-am", "-DskipTests=true"] + [
+        "-Dspring-boot.run.profiles=jaja7",
+        "-Dspring-boot.run.jvmArguments=-Dprofile.name=jaja7",
+        "spring-boot:run",
     ]
+    run_cmd = _shell_join(run)
     if prepare_cmd:
-        return f"{_shell_join(prepare_cmd)} && {_shell_join(run)}"
-    return _shell_join(run)
+        prepare_shell = _shell_join(prepare_cmd)
+        cmd = f"{prepare_shell} && {run_cmd}"
+    else:
+        cmd = run_cmd
+    return cmd, str(ROOT)
 
 
 def _pids_on_port(port: int) -> list[int]:
@@ -644,7 +648,7 @@ def cmd_start(args):
             print(f"未知服务: {name}", file=sys.stderr)
             return 1
         if i > 0:
-            time.sleep(3.0)
+            time.sleep(15.0)
         cwd = cfg["module_dir"]
         if not cwd.is_dir():
             print(f"目录不存在: {cwd}", file=sys.stderr)
@@ -654,21 +658,23 @@ def cmd_start(args):
         print(f"[start] {name} in {cwd}")
         print(f"  log: {log}")
         if "main_class" in cfg:
-            cmd = _maven_service_command(
+            cmd, work_dir = _maven_service_command(
                 cfg,
                 prepare=prepare_mode,
                 maven=getattr(args, "maven", "auto"),
             )
             print(f"  maven: {_maven_executable(getattr(args, 'maven', 'auto'))}")
             print(f"  prepare: {prepare_mode}")
+            print(f"  cwd: {work_dir}")
         else:
             cmd = cfg["mvn_cmd"]
+            work_dir = str(cwd)
         with open(log, "a", encoding="utf-8") as lf:
             lf.write(f"\n--- start {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
             lf.write(f"$ {cmd}\n")
             p = subprocess.Popen(
                 cmd,
-                cwd=str(ROOT if "main_class" in cfg else cwd),
+                cwd=str(work_dir if "main_class" in cfg else cwd),
                 shell=True,
                 stdout=lf,
                 stderr=subprocess.STDOUT,

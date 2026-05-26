@@ -6,7 +6,7 @@ import com.jbm.cluster.api.entitys.push.EmailPushConfig;
 
 /**
  * @Author: auto generate by jbm
- * @Create: 2023-12-04 14:19:55
+ * @Create: 2026-05-26 15:56:55
  */
 @MapperRepository
 public interface EmailPushConfigMapper extends SuperMapper<EmailPushConfig> {

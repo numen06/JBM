@@ -1,6 +1,8 @@
 server:
   port: 3313
 spring:
+  liquibase:
+    enabled: false
   cloud:
     nacos:
       config:

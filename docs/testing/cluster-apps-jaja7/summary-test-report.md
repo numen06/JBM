@@ -1,18 +1,14 @@
 # 集群非核心应用 jaja7 冒烟报告
 
-时间：2026-05-26T00:19:15
+时间：2026-05-26T17:00:46
 Profile：jaja7
 
 ## 服务探活
 
-- auth: UP
-- center: UP
-- gateway: UP
 - logs: DOWN
 - push: DOWN
 - doc: DOWN
 - job: DOWN
-- weixin: DOWN
 - bigscreen: DOWN
 
 ## 用例结果

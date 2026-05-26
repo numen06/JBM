@@ -38,9 +38,14 @@ public class BaseAppPreprocessing {
 
     @PostConstruct
     public void clearCache() {
-        if (cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE) != null) {
-            log.info("清理{}缓存", JbmCacheConstants.APP_CACHE_NAMESPACE);
-            Objects.requireNonNull(cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE)).clear();
+        try {
+            if (cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE) != null) {
+                log.info("清理{}缓存", JbmCacheConstants.APP_CACHE_NAMESPACE);
+                Objects.requireNonNull(cacheManager.getCache(JbmCacheConstants.APP_CACHE_NAMESPACE)).clear();
+            }
+        } catch (Exception ex) {
+            log.warn("启动时清理 {} 缓存失败（Redis 不可用时不阻断启动）: {}",
+                    JbmCacheConstants.APP_CACHE_NAMESPACE, ex.getMessage());
         }
     }
 }

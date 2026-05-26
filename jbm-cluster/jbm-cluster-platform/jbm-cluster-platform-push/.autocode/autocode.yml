@@ -1,0 +1,21 @@
+# 自动生成代码记录（扫描包时建立的实体与生成文件对应关系）
+!!com.jbm.framework.masterdata.code.model.AutocodeYaml
+generatedAt: '2026-05-26 15:56:55'
+items:
+- entity: com.jbm.cluster.api.entitys.push.EmailPushConfig
+  generated:
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/push/mapper/EmailPushConfigMapper.java
+    timestamp: '2026-05-26 15:56:55'
+  - codeType: mapperXml
+    path: src/main/resources/mapper/EmailPushConfigMapper.xml
+    timestamp: '2026-05-26 15:56:55'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/push/service/EmailPushConfigService.java
+    timestamp: '2026-05-26 15:56:55'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/push/service/impl/EmailPushConfigServiceImpl.java
+    timestamp: '2026-05-26 15:56:55'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/push/controller/EmailPushConfigController.java
+    timestamp: '2026-05-26 15:56:55'

@@ -1,16 +1,20 @@
 {
   "profile": "jaja7",
-  "timestamp": "2026-05-26T00:19:15",
+  "timestamp": "2026-05-26T17:00:46",
   "baseUrl": "http://127.0.0.1:7777",
+  "servicesFilter": [
+    "bigscreen",
+    "doc",
+    "job",
+    "logs",
+    "push"
+  ],
+  "weixin": "excluded",
   "servicesAlive": {
-    "auth": true,
-    "center": true,
-    "gateway": true,
     "logs": false,
     "push": false,
     "doc": false,
     "job": false,
-    "weixin": false,
     "bigscreen": false
   },
   "passed": 0,

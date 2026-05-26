@@ -281,3 +281,27 @@ python scripts\run_cluster_apps_smoke_tests.py --profile jaja7
 - Push/Weixin 配置项 `jaja7-dry-run: true` 为占位，业务层若未读取则仍可能尝试真实发送
 - 完整 Gateway 转发断言需六服务 + 核心三服务同时就绪后再跑冒烟
 
+## 集群应用启动循环修复（2026-05-26）
+
+目标服务：auth、center、gateway、doc、push、logs、job、bigscreen  
+排除服务：weixin
+
+| 服务 | compile | started | health | gateway smoke | 说明 |
+|---|---|---|---|---|---|
+| auth | passed | failed | failed | blocked | spring-boot:run exit 1；日志含 Redis/依赖 |
+| center | passed | failed | failed | blocked | 并行 mvnd 锁；曾 clean compile 修复 |
+| gateway | passed | failed | failed | blocked | 同左 |
+| doc | passed | failed | failed | skipped | 服务未监听 |
+| push | passed | failed | failed | skipped | 已恢复误删源码 + mapper namespace |
+| logs | passed | failed | failed | skipped | 服务未监听 |
+| job | passed | failed | failed | skipped | 服务未监听 |
+| bigscreen | passed | failed | failed | skipped | 服务未监听 |
+| weixin | excluded | excluded | excluded | excluded | 本轮按要求排除 |
+
+循环轮次：3  
+结果文件：`.cursor/cluster-start-loop-result.json`、`.cursor/cluster-apps-smoke-result.json`  
+报告目录：`docs/testing/cluster-apps-jaja7/`（`start-loop-report.md`、`summary-test-report.md`）
+
+本轮补丁：`BaseAppPreprocessing` / `LoginAssemblyConfiguration` Redis 降级；`jbm_cluster_ops.py` 使用 `-f module/pom.xml spring-boot:run`。  
+**未满足**计划最终退出条件（8 服务 health + Gateway 冒烟 passed）；阻塞主要为外部 Redis/Nacos 与并行启动资源竞争。验证后已 `ops stop`。
+

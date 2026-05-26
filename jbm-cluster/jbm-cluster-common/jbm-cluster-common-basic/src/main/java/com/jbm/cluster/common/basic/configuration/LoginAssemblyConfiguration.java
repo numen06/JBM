@@ -51,7 +51,11 @@ public class LoginAssemblyConfiguration {
                     loginAuthenticate.put(loginType.toString(), iLoginAuthenticate);
                     String key = JbmSecurityConstants.LOGIN_AUTHENTICATE_KEY + loginType.toString();
                     log.info("装配登录注册器[{}],服务名[{}]", loginType, SpringUtil.getApplicationName());
-                    redisService.setCacheObject(key, SpringUtil.getApplicationName());
+                    try {
+                        redisService.setCacheObject(key, SpringUtil.getApplicationName());
+                    } catch (Exception ex) {
+                        log.warn("Redis 不可用，跳过登录注册器缓存 [{}]: {}", loginType, ex.getMessage());
+                    }
                 });
             }
         });

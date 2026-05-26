@@ -77,11 +77,20 @@ def main() -> int:
     ap.add_argument("--auth-url", default=DEFAULT_AUTH)
     ap.add_argument("--user", default="admin")
     ap.add_argument("--password", default="Admin@123")
+    ap.add_argument(
+        "--services",
+        default="",
+        help="逗号分隔服务名，仅跑这些服务的用例（如 doc,push）；weixin 默认排除",
+    )
     args = ap.parse_args()
 
     cfg = load_config()
     apply_rest_profile(cfg, args.profile)
     base_url = args.base_url.rstrip("/")
+
+    service_filter = {s.strip() for s in args.services.split(",") if s.strip()} if args.services else None
+    if service_filter:
+        cfg["services"] = {k: v for k, v in cfg.get("services", {}).items() if k in service_filter}
 
     alive = probe_services(cfg)
     service_down = {n for n, ok in alive.items() if not ok}
@@ -94,6 +103,8 @@ def main() -> int:
 
     results = []
     for case in cfg.get("cases", []):
+        if service_filter and case.get("service") not in service_filter:
+            continue
         port = cfg.get("services", {}).get(case.get("service", ""), {}).get("port")
         case = {**case, "port": port}
         r = run_case(case, token, base_url, service_down)
@@ -105,6 +116,8 @@ def main() -> int:
         "profile": args.profile,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "baseUrl": base_url,
+        "servicesFilter": sorted(service_filter) if service_filter else None,
+        "weixin": "excluded",
         "servicesAlive": alive,
         "passed": sum(1 for r in results if r["status"] == "passed"),
         "failed": sum(1 for r in results if r["status"] == "failed"),

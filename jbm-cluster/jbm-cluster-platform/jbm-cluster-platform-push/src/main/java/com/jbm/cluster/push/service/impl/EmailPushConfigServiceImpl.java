@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * @Author: auto generate by jbm
- * @Create: 2023-12-04 14:19:55
+ * @Create: 2026-05-26 15:56:55
  */
 @Service
 public class EmailPushConfigServiceImpl extends MasterDataServiceImpl<EmailPushConfig> implements EmailPushConfigService {
