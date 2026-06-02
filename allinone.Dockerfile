@@ -1,20 +1,20 @@
 # ------------------------------------------------------------
 # Stage 1: 前端构建 — Vue 3 + Vite（国内 npm 源）
-# Vite 8 要求 Node ^20.19.0 或 >=22.12.0；构建阶段用 root 避免 node 用户无写权限
 # ------------------------------------------------------------
-FROM m.daocloud.io/docker.io/node:22.12 AS frontend-builder
+FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS frontend-builder
 
-USER root
 WORKDIR /app/jbm-admin-vue
 
-ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com \
-    NPM_CONFIG_AUDIT=false \
-    NPM_CONFIG_FUND=false
+USER root
+RUN mkdir -p /app/jbm-admin-vue && chown -R node:node /app
+USER node
 
-COPY jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
+RUN npm config set registry https://registry.npmmirror.com
+
+COPY --chown=node:node jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
 RUN npm ci
 
-COPY jbm-admin-vue/ ./
+COPY --chown=node:node jbm-admin-vue/ ./
 RUN npm run build
 
 # ------------------------------------------------------------
