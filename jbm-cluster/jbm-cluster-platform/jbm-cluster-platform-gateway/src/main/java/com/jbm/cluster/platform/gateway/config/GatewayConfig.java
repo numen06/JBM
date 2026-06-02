@@ -4,6 +4,7 @@ import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
 import com.jbm.cluster.platform.gateway.handler.WebExceptionResolve;
+import com.jbm.cluster.platform.gateway.locator.DiscoveryAliasRouteDefinitionLocator;
 import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
 import com.jbm.cluster.platform.gateway.locator.DynamicRouteDefinitionLocator;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
@@ -11,7 +12,9 @@ import com.jbm.cluster.platform.gateway.resolver.I18nLocaleResolver;
 import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
 import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
@@ -73,6 +76,13 @@ public class GatewayConfig implements WebFluxConfigurer {
         DynamicRouteDefinitionLocator locator = new DynamicRouteDefinitionLocator(gatewayRouteService, gatewayRateLimitService, repository);
         log.info("DynamicRouteDefinitionLocator [{}]", locator);
         return locator;
+    }
+
+    @Bean
+    public RouteDefinitionLocator discoveryAliasRouteDefinitionLocator(
+            ReactiveDiscoveryClient discoveryClient,
+            @Value("${profile.name:${spring.profiles.active:}}") String profileName) {
+        return new DiscoveryAliasRouteDefinitionLocator(discoveryClient, profileName);
     }
 
     /**

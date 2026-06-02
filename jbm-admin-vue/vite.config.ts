@@ -8,33 +8,9 @@ import type { IncomingMessage } from 'node:http'
 const gateway = 'http://127.0.0.1:7777'
 
 const gatewayPrefixes = [
-  '/oauth2',
-  '/captcha',
-  '/qrcode',
-  '/user',
-  '/current',
-  '/authority',
-  '/role',
-  '/menu',
-  '/account',
-  '/online',
-  '/statistics',
-  '/internal',
-  '/app',
-  '/gateway',
-  '/baseDic',
-  '/developer',
-  '/baseOrg',
-  '/baseAccountLogs',
-  '/action',
-  '/api',
-  '/baseAuthorityAction',
-  '/baseAuthorityRole',
-  '/baseAuthorityUser',
-  '/baseAuthorityApp',
-  '/gatewayRateLimitApi',
-  '/gatewayIpLimitApi',
-  '/extend-field',
+  '/auth',
+  '/center',
+  '/jbm-cluster-platform-',
 ]
 
 function proxyMap(target: string, prefixes: string[]) {

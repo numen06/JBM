@@ -11,6 +11,41 @@ const http: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })
 
+const AUTH_PATH_PREFIXES = [
+  '/oauth2',
+  '/captcha',
+  '/qrcode',
+  '/internal/dev',
+  '/internal/trust',
+]
+
+const SERVICE_PATH_PREFIXES = [
+  '/auth',
+  '/center',
+  '/jbm-cluster-platform-',
+]
+
+function matchesPathPrefix(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(`${prefix}/`)
+}
+
+function withServicePrefix(url: string): string {
+  if (!url || /^https?:\/\//i.test(url)) {
+    return url
+  }
+  const normalized = url.startsWith('/') ? url : `/${url}`
+  if (SERVICE_PATH_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
+    return normalized
+  }
+  const queryIndex = normalized.search(/[?#]/)
+  const path = queryIndex >= 0 ? normalized.slice(0, queryIndex) : normalized
+  const suffix = queryIndex >= 0 ? normalized.slice(queryIndex) : ''
+  const service = AUTH_PATH_PREFIXES.some((prefix) => matchesPathPrefix(path, prefix))
+    ? '/auth'
+    : '/center'
+  return `${service}${path}${suffix}`
+}
+
 http.interceptors.request.use((config) => {
   const auth = useAuthStore()
   if (auth.accessToken) {
@@ -71,27 +106,27 @@ export function unwrap<T>(body: ResultBody<T>): T {
 }
 
 export async function get<T>(url: string, config?: AxiosRequestConfig) {
-  const { data } = await http.get<ResultBody<T>>(url, config)
+  const { data } = await http.get<ResultBody<T>>(withServicePrefix(url), config)
   return data
 }
 
 export async function post<T>(url: string, body?: unknown, config?: AxiosRequestConfig) {
-  const { data } = await http.post<ResultBody<T>>(url, body, config)
+  const { data } = await http.post<ResultBody<T>>(withServicePrefix(url), body, config)
   return data
 }
 
 export async function put<T>(url: string, body?: unknown, config?: AxiosRequestConfig) {
-  const { data } = await http.put<ResultBody<T>>(url, body, config)
+  const { data } = await http.put<ResultBody<T>>(withServicePrefix(url), body, config)
   return data
 }
 
 export async function del<T>(url: string, config?: AxiosRequestConfig) {
-  const { data } = await http.delete<ResultBody<T>>(url, config)
+  const { data } = await http.delete<ResultBody<T>>(withServicePrefix(url), config)
   return data
 }
 
 export async function patch<T>(url: string, body?: unknown, config?: AxiosRequestConfig) {
-  const { data } = await http.patch<ResultBody<T>>(url, body, config)
+  const { data } = await http.patch<ResultBody<T>>(withServicePrefix(url), body, config)
   return data
 }
 
@@ -100,7 +135,7 @@ export async function postForm<T>(
   params: URLSearchParams,
   config?: AxiosRequestConfig,
 ) {
-  const { data } = await http.post<ResultBody<T>>(url, params, {
+  const { data } = await http.post<ResultBody<T>>(withServicePrefix(url), params, {
     ...config,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

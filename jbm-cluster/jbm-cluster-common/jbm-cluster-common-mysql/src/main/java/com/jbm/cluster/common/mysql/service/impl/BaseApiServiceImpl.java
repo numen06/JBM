@@ -42,7 +42,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     @Resource
     @Lazy
     private BaseApiService self;
-    private static final int API_DESC_MAX_LENGTH = 100;
 
     @Override
     public BaseApi saveEntity(BaseApi baseApi) {
@@ -56,12 +55,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         }
         jbmClusterTemplate.refreshGateway();
         return baseApi;
-    }
-
-    private void normalizeApi(BaseApi api) {
-        if (api != null && api.getApiDesc() != null && api.getApiDesc().length() > API_DESC_MAX_LENGTH) {
-            api.setApiDesc(api.getApiDesc().substring(0, API_DESC_MAX_LENGTH));
-        }
     }
 
     /**
@@ -136,7 +129,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     }
 
     private void doAddApi(BaseApi api) {
-        normalizeApi(api);
         //默认记入日志
         api.setAccessLog(ObjectUtil.defaultIfNull(api.getAccessLog(), true));
         if (isExist(api.getApiCode())) {
@@ -200,7 +192,6 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
     }
 
     private void doUpdateApi(BaseApi api) {
-        normalizeApi(api);
         BaseApi saved = getApi(api.getApiId());
         saved.setAccessLog(ObjectUtil.defaultIfNull(saved.getAccessLog(), true));
         if (saved == null) {

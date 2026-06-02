@@ -30,6 +30,7 @@ jbm:
       - /oauth2/**
       - /**/oauth2/**
       - /captcha/**
+      - /**/captcha/**
       - /user/registrations
       - /**/user/registrations
       - /user/sessions
@@ -44,6 +45,7 @@ jbm:
       - /oauth2/**
       - /**/oauth2/**
       - /captcha/**
+      - /**/captcha/**
       - /qrcode/**
       - /code
       - /user/registrations
@@ -66,6 +68,7 @@ security:
       - /code
       - /oauth2/**
       - /captcha/**
+      - /**/captcha/**
       - /qrcode/**
       - /user/registrations
       - /**/user/registrations

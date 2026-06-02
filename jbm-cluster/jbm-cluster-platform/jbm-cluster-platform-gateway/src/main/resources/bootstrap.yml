@@ -110,6 +110,7 @@ jbm:
       - /oauth2/**
       - /**/oauth2/**
       - /captcha/**
+      - /**/captcha/**
       - /qrcode/**
       - /code
       - /user/registrations
@@ -130,6 +131,7 @@ jbm:
       - /oauth2/publicKey
       - /**/oauth2/publicKey
       - /captcha/**
+      - /**/captcha/**
       - /qrcode/**
       - /code
       - /user/registrations
@@ -205,6 +207,7 @@ security:
       - /admin/**
       - /oauth2/**
       - /captcha/**
+      - /**/captcha/**
       - /qrcode/**
       - /user/registrations
       - /**/user/registrations
