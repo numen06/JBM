@@ -7,11 +7,14 @@
 ALTER TABLE base_org CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 --changeset jbm:org-v17-repair-default-org-name dbms:mysql splitStatements:true validCheckSum:8:cf32f592713cb7b48b132a8bd8e85bcd validCheckSum:8:c7ae499160c087b167e3f1b6fe195684
+--validCheckSum 8:cf32f592713cb7b48b132a8bd8e85bcd
+--validCheckSum 8:c7ae499160c087b167e3f1b6fe195684
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:1 SELECT COUNT(*) FROM base_org WHERE id = 1 AND org_name <> '默认组织'
 UPDATE base_org SET org_name = '默认组织' WHERE id = 1;
 
 --changeset jbm:org-v17-cleanup-e2e-test-orgs dbms:mysql splitStatements:true
+--validCheckSum 8:e9193401b1a73196db6675550c1aa25c
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:1 SELECT COUNT(*) FROM base_org WHERE id <> 1 AND (org_name LIKE '计划测试组织\_%' ESCAPE '\\' OR org_name LIKE '测试组织UTF8%')
 DELETE FROM base_org WHERE id <> 1 AND org_name LIKE '计划测试组织\_%' ESCAPE '\\';

@@ -2,9 +2,11 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
 import { extractApiError } from '@/lib/errors'
+import { apiBaseUrl } from '@/runtimeConfig'
 import type { ResultBody } from './types'
 
 const http: AxiosInstance = axios.create({
+  baseURL: apiBaseUrl,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })

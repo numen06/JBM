@@ -61,6 +61,7 @@ ALTER TABLE base_org ADD COLUMN group_id VARCHAR(64);
 ALTER TABLE base_org ADD COLUMN status INT DEFAULT 1;
 
 --changeset jbm:org-v13-seed-default-org splitStatements:true
+--validCheckSum 8:63be7badd37bb88ca48936fcfc4777e0
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM base_org WHERE id = 1
 

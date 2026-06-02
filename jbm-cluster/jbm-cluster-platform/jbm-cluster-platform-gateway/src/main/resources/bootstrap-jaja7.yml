@@ -5,47 +5,47 @@ spring:
     gateway:
       routes:
         - id: jaja7-center-local
-          uri: http://127.0.0.1:8888
+          uri: lb://jbm-cluster-platform-center
           predicates:
             - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**,/customForms/**,/customFormsItem/**
           metadata:
             serviceId: jbm-cluster-platform-center
         - id: jaja7-auth-local
-          uri: http://127.0.0.1:5555
+          uri: lb://jbm-cluster-platform-auth
           predicates:
             - Path=/oauth2/**,/captcha/**,/qrcode/**,/online/**,/internal/dev/**
         - id: jaja7-doc-local
-          uri: http://127.0.0.1:9999
+          uri: lb://jbm-cluster-platform-doc
           predicates:
             - Path=/baseDoc/**,/baseDocGroup/**,/baseDocToken/**,/v1/3rd/file/**,/put,/upload,/get/**,/download/**,/remove/**,/getViewUrl
           metadata:
             serviceId: jbm-cluster-platform-doc
         - id: jaja7-push-local
-          uri: http://127.0.0.1:3313
+          uri: lb://jbm-cluster-platform-push
           predicates:
             - Path=/pushMessage/**,/notification/**,/pushConfigInfo/**,/emailPushConfig/**,/pushItem/**,/webhookTask/**,/webhookEventConfig/**,/pin/**
           metadata:
             serviceId: jbm-cluster-platform-push
         - id: jaja7-logs-local
-          uri: http://127.0.0.1:3312
+          uri: lb://jbm-cluster-platform-logs
           predicates:
             - Path=/businessLog/**,/GatewayLogs/**,/clusterAccess/**
           metadata:
             serviceId: jbm-cluster-platform-logs
         - id: jaja7-job-local
-          uri: http://127.0.0.1:4444
+          uri: lb://jbm-cluster-platform-job
           predicates:
             - Path=/sysJob/**,/sysJobLog/**,/droolsRule/**,/process/**,/workflowDefinition/**,/dynamicField/**,/dynamicClass/**,/ruleOperationLog/**
           metadata:
             serviceId: jbm-cluster-platform-job
         - id: jaja7-weixin-local
-          uri: http://127.0.0.1:3319
+          uri: lb://jbm-cluster-platform-weixin
           predicates:
             - Path=/mp/**,/wx/menu/**,/portal/**,/media/**
           metadata:
             serviceId: jbm-cluster-platform-weixin
         - id: jaja7-bigscreen-local
-          uri: http://127.0.0.1:3314
+          uri: lb://jbm-cluster-platform-bigscreen
           predicates:
             - Path=/view/**,/bigscreenView/**
           metadata:
@@ -61,25 +61,6 @@ spring:
         namespace: jbm7
         group: DEFAULT_GROUP
         server-addr: 10.100.10.62:8848
-    openfeign:
-      client:
-        config:
-          jbm-cluster-platform-center:
-            url: http://127.0.0.1:8888
-          jbm-cluster-platform-auth:
-            url: http://127.0.0.1:5555
-          jbm-cluster-platform-doc:
-            url: http://127.0.0.1:9999
-          jbm-cluster-platform-push:
-            url: http://127.0.0.1:3313
-          jbm-cluster-platform-logs:
-            url: http://127.0.0.1:3312
-          jbm-cluster-platform-job:
-            url: http://127.0.0.1:4444
-          jbm-cluster-platform-weixin:
-            url: http://127.0.0.1:3319
-          jbm-cluster-platform-bigscreen:
-            url: http://127.0.0.1:3314
     sentinel:
       datasource:
         ds1:

@@ -10,19 +10,21 @@ import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * jaja7 本地联调：Gateway 直连 Center（127.0.0.1），避免 Feign/Nacos 依赖。
+ * jaja7 本地联调：显式配置 jbm.local.center-url 时直连 Center，避免 Feign/Nacos 依赖。
  */
 @Slf4j
 @Component
 @Profile("jaja7")
+@ConditionalOnProperty(name = "jbm.local.center-url")
 public class Jaja7LocalCenterClient {
 
-    @Value("${jbm.local.center-url:http://127.0.0.1:8888}")
+    @Value("${jbm.local.center-url}")
     private String centerUrl;
 
     public BaseApiKey getByApiKey(String apiKey) {

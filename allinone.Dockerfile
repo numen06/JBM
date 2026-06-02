@@ -114,6 +114,10 @@ COPY --from=builder /app/dist/jbm-cluster-platform-weixin.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 FROM nginx:1.27-alpine AS jbm-admin
+ENV JBM_API_PREFIX=/v3/api/ \
+    JBM_GATEWAY_UPSTREAM=jbm-cluster-platform-gateway:7777
 COPY jbm-admin-vue/nginx.docker.conf /etc/nginx/conf.d/default.conf
+COPY jbm-admin-vue/docker-entrypoint.d/40-jbm-runtime-config.sh /docker-entrypoint.d/40-jbm-runtime-config.sh
+RUN chmod +x /docker-entrypoint.d/40-jbm-runtime-config.sh
 COPY --from=frontend-builder /app/jbm-admin-vue/dist /usr/share/nginx/html
 EXPOSE 80
