@@ -1,7 +1,7 @@
 # ------------------------------------------------------------
 # Stage 1: 前端构建 — Vue 3 + Vite（国内 npm 源）
 # ------------------------------------------------------------
-FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS frontend-builder
+FROM m.daocloud.io/docker.io/node:22.12 AS frontend-builder
 
 WORKDIR /app/jbm-admin-vue
 
