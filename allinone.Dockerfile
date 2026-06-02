@@ -5,12 +5,16 @@ FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.
 
 WORKDIR /app/jbm-admin-vue
 
+USER root
+RUN mkdir -p /app/jbm-admin-vue && chown -R node:node /app
+USER node
+
 RUN npm config set registry https://registry.npmmirror.com
 
-COPY jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
-RUN npm install
+COPY --chown=node:node jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
+RUN npm ci
 
-COPY jbm-admin-vue/ ./
+COPY --chown=node:node jbm-admin-vue/ ./
 RUN npm run build
 
 # ------------------------------------------------------------
