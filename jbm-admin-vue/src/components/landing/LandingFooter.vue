@@ -5,9 +5,9 @@ import JbmLogo from '@/components/JbmLogo.vue'
 
 <template>
   <footer class="border-t bg-muted/30">
-    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <div class="grid gap-8 md:grid-cols-4">
-        <div class="md:col-span-2">
+    <div class="mx-auto w-full max-w-[1680px] px-4 py-12 sm:px-6 lg:px-8 xl:px-10">
+      <div class="grid gap-8 md:grid-cols-[minmax(0,1.5fr)_minmax(160px,0.45fr)_minmax(160px,0.45fr)]">
+        <div>
           <div class="flex items-center gap-2 font-semibold">
             <JbmLogo class="size-8 rounded-md" />
             JBM 开源平台
@@ -34,9 +34,8 @@ import JbmLogo from '@/components/JbmLogo.vue'
           </ul>
         </div>
       </div>
-      <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t pt-8 text-sm text-muted-foreground sm:flex-row">
+      <div class="mt-10 border-t pt-8 text-sm text-muted-foreground">
         <p>&copy; {{ new Date().getFullYear() }} JBM Cluster Platform. 开源统一认证授权平台。</p>
-        <p class="text-xs">Gateway: <code class="rounded bg-muted px-1">http://127.0.0.1:7777</code></p>
       </div>
     </div>
   </footer>

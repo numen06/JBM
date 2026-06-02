@@ -75,21 +75,21 @@ const steps = [
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen w-full overflow-x-hidden bg-background">
     <LandingNav />
 
     <section class="border-b bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_78%)]">
-      <div class="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:py-20">
+      <div class="mx-auto grid w-full max-w-[1680px] gap-10 px-4 py-14 sm:px-6 lg:min-h-[560px] lg:grid-cols-[minmax(0,0.94fr)_minmax(420px,0.86fr)] lg:items-center lg:px-8 lg:py-16 xl:gap-16 xl:px-10">
         <div class="flex flex-col justify-center">
           <p class="mb-4 inline-flex w-fit items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
             <GitBranch class="size-3.5 text-emerald-600" />
             开源社区平台 · OAuth2 · JBM OpenAPI
           </p>
-          <h1 class="max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          <h1 class="max-w-4xl text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             JBM
             <span class="text-primary"> 统一认证授权平台</span>
           </h1>
-          <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          <p class="mt-6 max-w-4xl text-lg leading-8 text-muted-foreground">
             面向开源社区、企业中台和第三方开发者的认证授权底座。从注册登录、子应用接入、
             多租户隔离到 API Key 签名调用，提供一条可验证的 OpenAPI 接入路径。
           </p>
@@ -113,7 +113,7 @@ const steps = [
               </Button>
             </a>
           </div>
-          <div class="mt-8 grid max-w-2xl gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+          <div class="mt-8 grid max-w-4xl gap-3 text-sm text-muted-foreground sm:grid-cols-3">
             <div class="rounded-md border bg-background px-3 py-2">
               <span class="font-semibold text-foreground">OAuth2</span>
               <p>授权码 / 密码 / 刷新令牌</p>
@@ -129,8 +129,8 @@ const steps = [
           </div>
         </div>
 
-        <div class="relative flex items-center">
-          <div class="w-full rounded-lg border bg-slate-950 p-4 font-mono text-sm text-slate-100 shadow-2xl">
+        <div class="relative flex items-center lg:justify-end">
+          <div class="mx-auto w-full max-w-4xl rounded-lg border bg-slate-950 p-3 font-mono text-xs text-slate-100 shadow-2xl sm:p-4 sm:text-sm lg:mr-0 lg:max-w-[760px]">
             <div class="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
               <div class="flex items-center gap-2">
                 <span class="size-2.5 rounded-full bg-red-400" />
@@ -165,8 +165,8 @@ const steps = [
       </div>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <section class="mx-auto w-full max-w-[1680px] px-4 py-16 sm:px-6 lg:px-8 xl:px-10">
+      <div class="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div>
           <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">平台能力地图</h2>
           <p class="mt-3 max-w-2xl text-muted-foreground">
@@ -178,8 +178,8 @@ const steps = [
           <ArrowRight class="size-4" />
         </RouterLink>
       </div>
-      <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card v-for="item in capabilities" :key="item.title" class="border-border/70">
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card v-for="item in capabilities" :key="item.title" class="min-h-44 border-border/70">
           <CardHeader class="pb-2">
             <div class="mb-2 flex size-10 items-center justify-center rounded-md border bg-muted text-primary">
               <component :is="item.icon" class="size-5" />
@@ -194,7 +194,7 @@ const steps = [
     </section>
 
     <section class="border-y bg-muted/30 py-16">
-      <div class="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1fr]">
+      <div class="mx-auto grid w-full max-w-[1680px] gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(300px,0.74fr)_minmax(0,1.26fr)] lg:px-8 xl:px-10">
         <div>
           <Layers3 class="size-9 text-primary" />
           <h2 class="mt-4 text-2xl font-bold tracking-tight">分布式集群边界</h2>
@@ -202,7 +202,7 @@ const steps = [
             Gateway、Auth、Center 各司其职，内部服务不盲信外部 Bearer Token，避免伪造内部头绕过鉴权。
           </p>
         </div>
-        <div class="grid gap-3">
+        <div class="grid gap-3 sm:grid-cols-2">
           <div v-for="practice in clusterPractices" :key="practice" class="flex items-start gap-3 rounded-md border bg-background p-3 text-sm">
             <ShieldCheck class="mt-0.5 size-4 shrink-0 text-emerald-600" />
             <span>{{ practice }}</span>
@@ -211,17 +211,17 @@ const steps = [
       </div>
     </section>
 
-    <section id="quick-start" class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      <div class="text-center">
+    <section id="quick-start" class="mx-auto w-full max-w-[1680px] px-4 py-16 sm:px-6 lg:px-8 xl:px-10">
+      <div class="max-w-3xl">
         <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">从用户视角接入 JBM</h2>
         <p class="mt-3 text-muted-foreground">从注册登录开始，逐步完成子应用接入、API 授权和加密调用。</p>
       </div>
-      <div class="mt-10 grid gap-6 md:grid-cols-3">
+      <div class="mt-10 grid gap-4 md:grid-cols-3">
         <RouterLink
           v-for="s in steps"
           :key="s.step"
           :to="s.link"
-          class="group rounded-lg border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-primary/5"
+          class="group min-h-56 rounded-lg border bg-card p-6 transition-colors hover:border-primary/50 hover:bg-primary/5"
         >
           <span class="text-sm font-semibold text-primary">{{ s.step }}</span>
           <h3 class="mt-4 text-lg font-semibold group-hover:text-primary">{{ s.title }}</h3>
@@ -235,7 +235,7 @@ const steps = [
     </section>
 
     <section class="border-t bg-background py-14">
-      <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 md:flex-row md:items-center md:justify-between">
+      <div class="mx-auto flex w-full max-w-[1680px] flex-col gap-6 px-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8 xl:px-10">
         <div>
           <Network class="size-8 text-primary" />
           <h2 class="mt-3 text-2xl font-bold">准备开放你的第一个 JBM API？</h2>

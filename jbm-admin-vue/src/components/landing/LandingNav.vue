@@ -27,7 +27,7 @@ const dashboardTo = computed(() =>
 
 <template>
   <header class="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <div class="mx-auto flex h-16 w-full max-w-[1680px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10">
       <RouterLink to="/" class="flex items-center gap-2.5 font-semibold tracking-tight">
         <JbmLogo class="size-9 rounded-lg shadow-sm" />
         <span class="hidden text-lg sm:inline">JBM 开源平台</span>

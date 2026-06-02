@@ -20,6 +20,9 @@ spring:
             namespace: jbm7
 
 jbm:
+  gateway:
+    loadbalancer:
+      prefer-local: true
   api:
     check-sign: true
     check-auth: true
