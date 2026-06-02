@@ -2,54 +2,6 @@ server:
   port: 7777
 spring:
   cloud:
-    gateway:
-      routes:
-        - id: jaja7-center-local
-          uri: lb://jbm-cluster-platform-center
-          predicates:
-            - Path=/user/**,/current/**,/authority/**,/role/**,/menu/**,/account/**,/statistics/**,/internal/**,/app/**,/gateway/**,/baseDic/**,/developer/**,/apikey/**,/baseOrg/**,/baseAccountLogs/**,/action/**,/api/**,/baseAuthorityAction/**,/baseAuthorityRole/**,/baseAuthorityUser/**,/baseAuthorityApp/**,/gatewayRateLimitApi/**,/gatewayIpLimitApi/**,/extend-field/**,/customForms/**,/customFormsItem/**
-          metadata:
-            serviceId: jbm-cluster-platform-center
-        - id: jaja7-auth-local
-          uri: lb://jbm-cluster-platform-auth
-          predicates:
-            - Path=/oauth2/**,/captcha/**,/qrcode/**,/online/**,/internal/dev/**
-        - id: jaja7-doc-local
-          uri: lb://jbm-cluster-platform-doc
-          predicates:
-            - Path=/baseDoc/**,/baseDocGroup/**,/baseDocToken/**,/v1/3rd/file/**,/put,/upload,/get/**,/download/**,/remove/**,/getViewUrl
-          metadata:
-            serviceId: jbm-cluster-platform-doc
-        - id: jaja7-push-local
-          uri: lb://jbm-cluster-platform-push
-          predicates:
-            - Path=/pushMessage/**,/notification/**,/pushConfigInfo/**,/emailPushConfig/**,/pushItem/**,/webhookTask/**,/webhookEventConfig/**,/pin/**
-          metadata:
-            serviceId: jbm-cluster-platform-push
-        - id: jaja7-logs-local
-          uri: lb://jbm-cluster-platform-logs
-          predicates:
-            - Path=/businessLog/**,/GatewayLogs/**,/clusterAccess/**
-          metadata:
-            serviceId: jbm-cluster-platform-logs
-        - id: jaja7-job-local
-          uri: lb://jbm-cluster-platform-job
-          predicates:
-            - Path=/sysJob/**,/sysJobLog/**,/droolsRule/**,/process/**,/workflowDefinition/**,/dynamicField/**,/dynamicClass/**,/ruleOperationLog/**
-          metadata:
-            serviceId: jbm-cluster-platform-job
-        - id: jaja7-weixin-local
-          uri: lb://jbm-cluster-platform-weixin
-          predicates:
-            - Path=/mp/**,/wx/menu/**,/portal/**,/media/**
-          metadata:
-            serviceId: jbm-cluster-platform-weixin
-        - id: jaja7-bigscreen-local
-          uri: lb://jbm-cluster-platform-bigscreen
-          predicates:
-            - Path=/view/**,/bigscreenView/**
-          metadata:
-            serviceId: jbm-cluster-platform-bigscreen
     nacos:
       config:
         namespace: jbm7

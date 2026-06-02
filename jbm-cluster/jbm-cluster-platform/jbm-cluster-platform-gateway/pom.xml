@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-fegin</artifactId>
+            <artifactId>jbm-cluster-common-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- SpringCloud Alibaba Nacos -->

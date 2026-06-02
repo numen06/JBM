@@ -5,8 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
-import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
-import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
+import com.jbm.cluster.common.mysql.service.BaseApiKeyService;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,9 +26,9 @@ public class ApiClientConfigProvider {
             .build(this::loadApiKey);
 
     @Autowired
-    private BaseAppServiceClient baseAppServiceClient;
+    private BaseAppService baseAppService;
     @Autowired
-    private CenterFeignClients centerFeignClients;
+    private BaseApiKeyService baseApiKeyService;
 
     public String getPublicKey(String appId) {
         if (StrUtil.isBlank(appId)) {
@@ -59,7 +59,7 @@ public class ApiClientConfigProvider {
         if (apiKeyRow != null && StrUtil.isNotBlank(apiKeyRow.getPublicKey())) {
             return apiKeyRow.getPublicKey();
         }
-        BaseApp app = baseAppServiceClient.getAppByKey(appId);
+        BaseApp app = baseAppService.getAppInfoByKey(appId);
         if (app == null || StrUtil.isBlank(app.getPublicKey())) {
             return null;
         }
@@ -68,7 +68,7 @@ public class ApiClientConfigProvider {
 
     private BaseApiKey loadApiKey(String apiKey) {
         try {
-            return centerFeignClients.apiKey().getByApiKey(apiKey);
+            return baseApiKeyService.getByApiKey(apiKey);
         } catch (Exception e) {
             return null;
         }

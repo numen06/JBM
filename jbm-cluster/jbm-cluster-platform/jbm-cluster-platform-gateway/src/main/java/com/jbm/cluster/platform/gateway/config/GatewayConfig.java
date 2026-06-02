@@ -7,10 +7,9 @@ import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
 import com.jbm.cluster.platform.gateway.locator.DynamicRouteDefinitionLocator;
 import com.jbm.cluster.platform.gateway.resolver.DatabaseMessageSource;
 import com.jbm.cluster.platform.gateway.resolver.I18nLocaleResolver;
-import com.jbm.cluster.platform.gateway.service.RouteDataSource;
-import com.jbm.cluster.platform.gateway.service.impl.JdbcRouteDataSource;
+import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
+import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.route.InMemoryRouteDefinitionRepository;
@@ -61,26 +60,18 @@ public class GatewayConfig implements WebFluxConfigurer {
 
 
     /**
-     * 从数据库加载路由
-     *
-     * @return
-     */
-    @Bean
-    @ConditionalOnMissingBean(RouteDataSource.class)
-    public JdbcRouteDataSource jdbcRouteDataSource(JdbcDataSourceProperties dataSourceProperties) {
-        return new JdbcRouteDataSource(dataSourceProperties);
-    }
-
-    /**
      * 动态路由加载
      *
      * @return
      */
     @Bean
-    public DynamicRouteDefinitionLocator dynamicRouteDefinitionLocator(RouteDataSource routeDataSource, InMemoryRouteDefinitionRepository repository) {
-        DynamicRouteDefinitionLocator jdbcRouteDefinitionLocator = new DynamicRouteDefinitionLocator(routeDataSource, repository);
-        log.info("JdbcRouteDefinitionLocator [{}]", jdbcRouteDefinitionLocator);
-        return jdbcRouteDefinitionLocator;
+    public DynamicRouteDefinitionLocator dynamicRouteDefinitionLocator(
+            GatewayRouteService gatewayRouteService,
+            GatewayRateLimitService gatewayRateLimitService,
+            InMemoryRouteDefinitionRepository repository) {
+        DynamicRouteDefinitionLocator locator = new DynamicRouteDefinitionLocator(gatewayRouteService, gatewayRateLimitService, repository);
+        log.info("DynamicRouteDefinitionLocator [{}]", locator);
+        return locator;
     }
 
     /**
@@ -120,7 +111,7 @@ public class GatewayConfig implements WebFluxConfigurer {
         return new DatabaseMessageSource(jdbcDataSourceProperties);
     }
 
-    /** FeignAutoConfiguration 依赖，勿注册 Servlet 版 HttpMessageConverters */
+    /** Gateway 为 Reactive 应用，勿注册 Servlet 版 HttpMessageConverters。 */
     @Bean
     public FastJsonHttpMessageConverter fastJsonHttpMessageConverter() {
         FastJsonHttpMessageConverter converter = new FastJsonHttpMessageConverter();

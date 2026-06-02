@@ -3,8 +3,8 @@ package com.jbm.cluster.platform.gateway.locator;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.model.IpLimitApi;
-import com.jbm.cluster.api.service.feign.client.BaseAuthorityServiceClient;
-import com.jbm.cluster.api.service.feign.client.GatewayServiceClient;
+import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
@@ -43,9 +43,9 @@ public class DynamicResourceLocator extends DynamicResourceService {
     private Map<String, Object> cache = new ConcurrentHashMap<>();
 
     @Autowired
-    private BaseAuthorityServiceClient baseAuthorityServiceClient;
+    private BaseAuthorityService baseAuthorityService;
     @Autowired
-    private GatewayServiceClient gatewayServiceClient;
+    private GatewayIpLimitService gatewayIpLimitService;
 
     private RouteDefinitionLocator routeDefinitionLocator;
 
@@ -95,7 +95,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
     public List<AuthorityResource> loadAuthorityResources() {
         List<AuthorityResource> resources = Lists.newArrayList();
         try {
-            resources = baseAuthorityServiceClient.findAuthorityResource();
+            resources = baseAuthorityService.findAuthorityResource();
             if (resources != null) {
                 for (AuthorityResource item : resources) {
                     String path = item.getPath();
@@ -119,7 +119,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
     public List<IpLimitApi> loadIpBlackList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiBlackList();
+            list = gatewayIpLimitService.findBlackList();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));
@@ -138,7 +138,7 @@ public class DynamicResourceLocator extends DynamicResourceService {
     public List<IpLimitApi> loadIpWhiteList() {
         List<IpLimitApi> list = Lists.newArrayList();
         try {
-            list = gatewayServiceClient.getApiWhiteList();
+            list = gatewayIpLimitService.findWhiteList();
             if (list != null) {
                 for (IpLimitApi item : list) {
                     item.setPath(getFullPath(item.getServiceId(), item.getPath()));

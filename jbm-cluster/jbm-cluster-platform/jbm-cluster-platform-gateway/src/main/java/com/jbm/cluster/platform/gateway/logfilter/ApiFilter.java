@@ -10,15 +10,13 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.bus.event.RemoteRefreshRouteEvent;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
+import com.jbm.cluster.common.mysql.service.BaseApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import feign.FeignException;
-import jbm.framework.boot.autoconfigure.feign.RemoteServiceException;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ApiFilter implements AccessLogFilter {
     @Autowired
-    private CenterFeignClients centerFeignClients;
+    private BaseApiService baseApiService;
     LoadingCache<String, BaseApi> appLoadingCache = Caffeine.newBuilder()
             //一小时没有读取释放
             .expireAfterAccess(15, TimeUnit.MINUTES)
@@ -39,7 +37,7 @@ public class ApiFilter implements AccessLogFilter {
                 public @Nullable BaseApi load(@NonNull String path) throws Exception {
                     String serviceId = StrUtil.subBefore(path, "/", false);
                     String realPath = StrUtil.removePrefix(path, serviceId);
-                    return centerFeignClients.api().findApiByPath(serviceId, realPath);
+                    return baseApiService.findApiByPath(serviceId, realPath);
                 }
             });
 
@@ -54,7 +52,7 @@ public class ApiFilter implements AccessLogFilter {
     @Override
     public void filter(GatewayLogInfo gatewayLogInfo, Map<String, String> headers) {
         //不存在服务ID直接退出
-        if (!ObjectUtil.isAllNotEmpty(gatewayLogInfo.getServiceId(), centerFeignClients)) {
+        if (!ObjectUtil.isAllNotEmpty(gatewayLogInfo.getServiceId(), baseApiService)) {
             return;
         }
         String realPath = gatewayLogInfo.getPath();
@@ -82,38 +80,8 @@ public class ApiFilter implements AccessLogFilter {
                     && e.getMessage().contains("blocking")) {
                 log.warn("[ApiFilter]获取API元数据跳过(线程模型): {}", e.getMessage());
             } else {
-                RemoteServiceException remote = findRemoteServiceException(e);
-                if (remote != null) {
-                    log.warn("[ApiFilter]获取API元数据失败(远程服务异常): {}", remote.getMessage());
-                } else {
-                    FeignException fe = findFeignException(e);
-                    if (fe != null && fe.status() >= 400 && fe.status() < 500) {
-                        log.warn("[ApiFilter]获取API元数据失败 HTTP {}: {}", fe.status(), fe.getMessage());
-                    } else {
-                        log.error("获取API信息异常", e);
-                    }
-                }
+                log.error("获取API信息异常", e);
             }
         }
-    }
-
-    private static RemoteServiceException findRemoteServiceException(Throwable t) {
-        while (t != null) {
-            if (t instanceof RemoteServiceException) {
-                return (RemoteServiceException) t;
-            }
-            t = t.getCause();
-        }
-        return null;
-    }
-
-    private static FeignException findFeignException(Throwable t) {
-        while (t != null) {
-            if (t instanceof FeignException) {
-                return (FeignException) t;
-            }
-            t = t.getCause();
-        }
-        return null;
     }
 }

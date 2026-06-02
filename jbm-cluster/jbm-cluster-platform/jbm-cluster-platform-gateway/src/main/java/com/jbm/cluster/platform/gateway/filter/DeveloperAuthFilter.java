@@ -6,9 +6,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.entitys.basic.BaseApiKey;
-import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
 import com.jbm.cluster.core.constant.ApiKeyConstants;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
+import com.jbm.cluster.common.mysql.service.BaseApiKeyService;
+import com.jbm.cluster.common.mysql.service.BaseApiService;
 import com.jbm.cluster.platform.gateway.config.properties.ApiSecurityProperties;
 import com.jbm.cluster.platform.gateway.security.ApiClientConfigProvider;
 import com.jbm.cluster.platform.gateway.utils.PathMatcherUtils;
@@ -40,7 +41,9 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
     @Autowired
     private ApiClientConfigProvider apiClientConfigProvider;
     @Autowired
-    private CenterFeignClients centerFeignClients;
+    private BaseApiService baseApiService;
+    @Autowired
+    private BaseApiKeyService baseApiKeyService;
 
     private final LoadingCache<String, Boolean> authorityCache = Caffeine.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -50,8 +53,7 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
                 if (parts.length != 2) {
                     return false;
                 }
-                return Boolean.TRUE.equals(centerFeignClients.apiKey().checkAuthority(
-                        Long.parseLong(parts[0]), Long.parseLong(parts[1])));
+                return baseApiKeyService.hasAuthorityForApi(Long.parseLong(parts[0]), Long.parseLong(parts[1]));
             });
 
     @Override
@@ -93,7 +95,7 @@ public class DeveloperAuthFilter implements GlobalFilter, Ordered {
         String realPath = normalizePath(path);
         BaseApi baseApi;
         try {
-            baseApi = centerFeignClients.api().findApiByPath(serviceId, realPath);
+            baseApi = baseApiService.findApiByPath(serviceId, realPath);
         } catch (Exception e) {
             log.debug("[DeveloperAuthFilter] findApiByPath failed: {}", e.getMessage());
             return chain.filter(exchange);

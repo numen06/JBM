@@ -9,8 +9,8 @@ import com.jbm.cluster.api.entitys.basic.BaseApiKey;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
-import com.jbm.cluster.platform.gateway.config.CenterFeignClients;
-import com.jbm.cluster.api.service.feign.client.BaseAppServiceClient;
+import com.jbm.cluster.common.mysql.service.BaseApiKeyService;
+import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.ApiSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
@@ -27,16 +27,16 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TokenFilter implements AccessLogFilter {
     @Autowired
-    private BaseAppServiceClient baseAppServiceClient;
+    private BaseAppService baseAppService;
     @Autowired
-    private CenterFeignClients centerFeignClients;
+    private BaseApiKeyService baseApiKeyService;
 
     LoadingCache<String, BaseApp> appLoadingCache = Caffeine.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build(new CacheLoader<String, BaseApp>() {
                 @Override
                 public @Nullable BaseApp load(@NonNull String appkey) throws Exception {
-                    return baseAppServiceClient.getAppByKey(appkey);
+                    return baseAppService.getAppInfoByKey(appkey);
                 }
             });
 
@@ -45,7 +45,7 @@ public class TokenFilter implements AccessLogFilter {
             .build(new CacheLoader<String, BaseApiKey>() {
                 @Override
                 public @Nullable BaseApiKey load(@NonNull String apiKey) throws Exception {
-                    return centerFeignClients.apiKey().getByApiKey(apiKey);
+                    return baseApiKeyService.getByApiKey(apiKey);
                 }
             });
 

@@ -3,7 +3,8 @@ package com.jbm.cluster.platform.gateway.locator;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.model.RateLimitApi;
-import com.jbm.cluster.platform.gateway.service.RouteDataSource;
+import com.jbm.cluster.common.mysql.service.GatewayRateLimitService;
+import com.jbm.cluster.common.mysql.service.GatewayRouteService;
 import com.jbm.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
@@ -18,9 +19,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 自定义动态路由加载器
@@ -32,10 +36,16 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
 
     private ApplicationEventPublisher publisher;
     private InMemoryRouteDefinitionRepository repository;
-    private RouteDataSource routeDataSource;
+    private GatewayRouteService gatewayRouteService;
+    private GatewayRateLimitService gatewayRateLimitService;
+    private final Set<String> managedRouteIds = ConcurrentHashMap.newKeySet();
 
-    public DynamicRouteDefinitionLocator(RouteDataSource routeDataSource, InMemoryRouteDefinitionRepository repository) {
-        this.routeDataSource = routeDataSource;
+    public DynamicRouteDefinitionLocator(
+            GatewayRouteService gatewayRouteService,
+            GatewayRateLimitService gatewayRateLimitService,
+            InMemoryRouteDefinitionRepository repository) {
+        this.gatewayRouteService = gatewayRouteService;
+        this.gatewayRateLimitService = gatewayRateLimitService;
         this.repository = repository;
     }
 
@@ -82,9 +92,12 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
     private Mono<Void> loadRoutes() {
         //从数据库拿到路由配置
         try {
-            List<GatewayRoute> routeList = routeDataSource.getRouteList();
-            List<RateLimitApi> limitApiList = routeDataSource.getLimitApiList();
-            if (limitApiList != null) {
+            clearManagedRoutes();
+            List<GatewayRoute> loadedRoutes = gatewayRouteService.findRouteList();
+            List<RateLimitApi> loadedLimitApis = gatewayRateLimitService.findRateLimitApiList();
+            final List<GatewayRoute> routeList = loadedRoutes == null ? Collections.emptyList() : loadedRoutes;
+            final List<RateLimitApi> limitApiList = loadedLimitApis == null ? Collections.emptyList() : loadedLimitApis;
+            if (!limitApiList.isEmpty()) {
                 // 加载限流
                 limitApiList.forEach(item -> {
                     long[] arry = DynamicResourceLocator.getIntervalAndQuota(item.getIntervalUnit());
@@ -99,6 +112,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                     List<PredicateDefinition> predicates = Lists.newArrayList();
                     List<FilterDefinition> filters = Lists.newArrayList();
                     definition.setId(item.getApiId().toString());
+                    managedRouteIds.add(definition.getId());
                     PredicateDefinition predicatePath = new PredicateDefinition();
                     String fullPath = getFullPath(routeList, item.getServiceId(), item.getPath());
                     Map<String, String> predicatePathParams = new HashMap<>(8);
@@ -138,7 +152,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                     this.repository.save(Mono.just(definition)).subscribe();
                 });
             }
-            if (routeList != null) {
+            if (!routeList.isEmpty()) {
                 // 最后加载路由
                 routeList.forEach(gatewayRoute -> {
                     try {
@@ -146,6 +160,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                         List<PredicateDefinition> predicates = Lists.newArrayList();
                         List<FilterDefinition> filters = Lists.newArrayList();
                         definition.setId(gatewayRoute.getRouteName());
+                        managedRouteIds.add(definition.getId());
                         // 路由地址
                         PredicateDefinition predicatePath = new PredicateDefinition();
                         Map<String, String> predicatePathParams = new HashMap<>(8);
@@ -181,6 +196,13 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
             log.error("加载动态路由错误", e);
         }
         return Mono.empty();
+    }
+
+    private void clearManagedRoutes() {
+        managedRouteIds.forEach(routeId -> repository.delete(Mono.just(routeId))
+                .onErrorResume(e -> Mono.empty())
+                .subscribe());
+        managedRouteIds.clear();
     }
 
     @Override
