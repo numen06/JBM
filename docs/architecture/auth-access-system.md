@@ -21,8 +21,8 @@
 flowchart LR
     U[用户] -->|OAuth| A[Auth :5555]
     A --> R[(Redis)]
-    U -->|Bearer| G[Gateway :7777]
-    G -->|Auth + Id-Token| C[Center :8888]
+    U -->|Bearer| G[Gateway :6060]
+    G -->|Auth + Id-Token| C[Center :7777]
     C --> R
 ```
 
@@ -67,7 +67,7 @@ tenantId: 0
 | 保留 | 客户端 `Authorization`（不覆盖、不删除） |
 | 追加 | `Satoken-Id-Token`、`X-Internal-Service`、`X-Internal-Instance`、`X-Original-Path` |
 
-本地静态路由：`jbm-cluster-platform-gateway/src/main/resources/bootstrap-jaja7.yml`（Center `8888`、Auth `5555`）。
+本地静态路由：`jbm-cluster-platform-gateway/src/main/resources/bootstrap-jaja7.yml`（Center `7777`、Auth `5555`）。
 
 ### 4.3 下游：`SaOAuthFilterAuthStrategy`
 
@@ -169,8 +169,8 @@ tenantId: 0
 | 服务 | 端口 | 配置 |
 |------|------|------|
 | Auth | 5555 | `spring.profiles.active=jaja7` |
-| Center | 8888 | 同上 |
-| Gateway | 7777 | `jaja7` + `bootstrap-jaja7.yml` |
+| Center | 7777 | 同上 |
+| Gateway | 6060 | `jaja7` + `bootstrap-jaja7.yml` |
 
 ```bash
 set NO_PROXY=*

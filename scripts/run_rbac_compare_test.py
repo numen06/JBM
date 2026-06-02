@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-GATEWAY = "http://127.0.0.1:7777"
+GATEWAY = "http://127.0.0.1:6060"
 CLIENT_ID = "demo"
 CLIENT_SECRET = "demo123"
 ADMIN = "admin"

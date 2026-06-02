@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 
-/** jaja7 本地：所有 API 经 Gateway 7777（需同时启动 Gateway / Auth / Center） */
-const gateway = 'http://127.0.0.1:7777'
+/** jaja7 本地：所有 API 经 Gateway 6060（需同时启动 Gateway / Auth / Center） */
+const gateway = 'http://127.0.0.1:6060'
 
 const gatewayPrefixes = [
   '/auth',

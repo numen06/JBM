@@ -8,7 +8,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:7777").rstrip("/")
+GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:6060").rstrip("/")
 CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID", "demo")
 CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET", "demo123")
 PASSWORDS = [

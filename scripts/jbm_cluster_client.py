@@ -13,9 +13,9 @@ from jbm_rest_profile import REST_PROFILE
 
 _NO_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
-DEFAULT_GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:7777").rstrip("/")
+DEFAULT_GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:6060").rstrip("/")
 DEFAULT_AUTH = os.environ.get("JBM_AUTH", "http://127.0.0.1:5555").rstrip("/")
-DEFAULT_CENTER = os.environ.get("JBM_CENTER", "http://127.0.0.1:8888").rstrip("/")
+DEFAULT_CENTER = os.environ.get("JBM_CENTER", "http://127.0.0.1:7777").rstrip("/")
 DEFAULT_CLIENT_ID = os.environ.get("OAUTH_CLIENT_ID", "jbmSeedDevAppKey00000001")
 DEFAULT_CLIENT_SECRET = os.environ.get("OAUTH_CLIENT_SECRET", "jbmSeedDevSecret0000000001")
 DEFAULT_TENANT = os.environ.get("JBM_TENANT_ID", "0")

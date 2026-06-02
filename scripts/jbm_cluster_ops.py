@@ -96,7 +96,7 @@ SERVICES = {
         "main_class": "com.jbm.cluster.auth.JbmAuthApplication",
     },
     "center": {
-        "port": 8888,
+        "port": 7777,
         "url": DEFAULT_CENTER,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center",
@@ -104,7 +104,7 @@ SERVICES = {
         "main_class": "com.jbm.cluster.center.JbmCenterApplication",
     },
     "gateway": {
-        "port": 7777,
+        "port": 6060,
         "url": DEFAULT_GATEWAY,
         "health": "/actuator/health",
         "module_dir": ROOT / "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-gateway",

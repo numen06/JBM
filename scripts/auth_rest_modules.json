@@ -401,7 +401,7 @@
       ]
     }
   ],
-  "gateway_base_url": "http://127.0.0.1:7777",
+  "gateway_base_url": "http://127.0.0.1:6060",
   "tenant_header": "tenantId",
   "tenant_id": "0"
 }

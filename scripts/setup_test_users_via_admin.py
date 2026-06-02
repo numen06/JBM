@@ -3,7 +3,7 @@
 通过超级管理员 API 创建 RBAC 测试数据（非代码种子）。
 用于验证菜单/按钮/多凭证，无需反复改 Initializer 或重启 Center。
 
-用法（Gateway 7777 已启动）:
+用法（Gateway 6060 已启动）:
   python scripts/setup_test_users_via_admin.py
   python scripts/jbm_cluster_ops.py setup-rbac
 """
@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-GATEWAY = "http://127.0.0.1:7777"
+GATEWAY = "http://127.0.0.1:6060"
 CLIENT_ID = "demo"
 CLIENT_SECRET = "demo123"
 ADMIN_USER = "admin"

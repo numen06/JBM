@@ -1,6 +1,6 @@
 {
   "profile": "jaja7",
-  "base_url": "http://127.0.0.1:7777",
+  "base_url": "http://127.0.0.1:6060",
   "auth_base_url": "http://127.0.0.1:5555",
   "username": "",
   "password": "",

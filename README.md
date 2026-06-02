@@ -96,9 +96,9 @@ python scripts\jbm_cluster_ops.py status
 
 | 服务 | 端口 | 说明 |
 | --- | --- | --- |
-| Gateway | `7777` | 前端与第三方统一访问入口 |
+| Gateway | `6060` | 前端与第三方统一访问入口 |
 | Auth | `5555` | OAuth2、登录、注册、验证码 |
-| Center | `8888` | 用户、角色、菜单、应用、API Key 等业务 API |
+| Center | `7777` | 用户、角色、菜单、应用、API Key 等业务 API |
 | Vue | `5173` | 前端开发服务 |
 
 ### 2. 启动前端
@@ -139,7 +139,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 示例：
 
 ```http
-POST http://127.0.0.1:7777/oauth2/register
+POST http://127.0.0.1:6060/oauth2/register
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
@@ -147,7 +147,7 @@ userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo&client_sec
 ```
 
 ```http
-GET http://127.0.0.1:7777/api/open/v1/user/profile
+GET http://127.0.0.1:6060/api/open/v1/user/profile
 X-JBM-Api-Key: ak_xxx
 X-JBM-Timestamp: 1760000000000
 X-JBM-Nonce: 1d48f4c2-9a2c-47ac
@@ -167,7 +167,7 @@ npm run build
 
 # 后端全量 REST 回归
 cd ..
-python scripts\run_all_rest_tests.py --profile jaja7 --wait 60 --base-url http://127.0.0.1:7777 --auth-url http://127.0.0.1:5555
+python scripts\run_all_rest_tests.py --profile jaja7 --wait 60 --base-url http://127.0.0.1:6060 --auth-url http://127.0.0.1:5555
 
 # API Key / OpenAPI 接入链路
 $env:ADMIN_PASSWORD='Admin@123'

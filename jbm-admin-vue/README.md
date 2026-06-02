@@ -25,9 +25,9 @@ JBM7 管理后台与开放平台前端，基于 Vue 3 + Vite + TypeScript + Pini
 
 | 服务 | 端口 | 说明 |
 | --- | --- | --- |
-| Gateway | `7777` | 前端统一 API 入口 |
+| Gateway | `6060` | 前端统一 API 入口 |
 | Auth | `5555` | OAuth2、注册、登录、验证码 |
-| Center | `8888` | 用户、权限、应用、API Key |
+| Center | `7777` | 用户、权限、应用、API Key |
 | Vue | `5173` | 前端开发服务 |
 
 启动后端：
@@ -74,7 +74,7 @@ npm run build
 `vite.config.ts` 将前端 API 请求代理到 Gateway：
 
 ```text
-http://127.0.0.1:7777
+http://127.0.0.1:6060
 ```
 
 登录、注册、验证码、用户、权限、应用和 API Key 都经由 Gateway 访问。

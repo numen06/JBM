@@ -1,7 +1,7 @@
 # JBM 网关架构说明
 
 模块：`jbm-cluster-platform-gateway`  
-默认端口：`6060`（`jaja7` profile：`7777`）  
+默认端口：`6060`（`jaja7` profile：`6060`）
 技术栈：Spring Cloud Gateway（WebFlux）+ Sa-Token + Sentinel + 动态 JDBC 路由
 
 ## 1. 请求处理链
@@ -51,7 +51,7 @@ flowchart TD
 
 示例 `bootstrap-jaja7.yml`：
 
-- `jaja7-center-local` → `http://127.0.0.1:8888`，路径前缀 `/user/**`、`/gateway/**` 等
+- `jaja7-center-local` → `http://127.0.0.1:7777`，路径前缀 `/user/**`、`/gateway/**` 等
 - `jaja7-auth-local` → `http://127.0.0.1:5555`，路径 `/oauth2/**`、`/captcha/**` 等
 
 `spring.cloud.gateway.discovery.locator.enabled` 默认为 `false`，不以服务名自动建路由。
@@ -120,7 +120,7 @@ flowchart TD
 | Profile | Gateway | Center | Auth | 说明 |
 |---------|---------|--------|------|------|
 | 默认 | 6060 | Nacos 发现 | Nacos 发现 | 动态 DB 路由为主 |
-| jaja7 | 7777 | 8888 静态 | 5555 静态 | 本地联调，`check-sign`/`check-auth` 开启 |
+| jaja7 | 6060 | 7777 静态 | 5555 静态 | 本地联调，`check-sign`/`check-auth` 开启 |
 
 ## 6. 异常与限流
 

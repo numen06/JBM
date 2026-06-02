@@ -37,7 +37,7 @@ public class HttpTest {
             Future<HttpResponse> future = executorService.submit(new Callable<HttpResponse>() {
                 @Override
                 public HttpResponse call() throws Exception {
-                    HttpRequest httpRequest = new HttpRequest("http://127.0.0.1:8888").body("i=" + f);
+                    HttpRequest httpRequest = new HttpRequest("http://127.0.0.1:7777").body("i=" + f);
                     httpRequest.addRequestInterceptor(new HttpInterceptor<HttpRequest>() {
                         @Override
                         public void process(HttpRequest httpObj) {

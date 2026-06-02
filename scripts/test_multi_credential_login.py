@@ -8,7 +8,7 @@ import urllib.request
 
 _NO_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
-GATEWAY = "http://127.0.0.1:7777"
+GATEWAY = "http://127.0.0.1:6060"
 CLIENT_ID = "demo"
 CLIENT_SECRET = "demo123"
 PASSWORD = "Admin@123"

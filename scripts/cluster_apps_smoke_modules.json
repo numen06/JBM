@@ -2,8 +2,8 @@
   "profile": "jaja7",
   "services": {
     "auth": { "port": 5555, "health": "/actuator/health" },
-    "center": { "port": 8888, "health": "/actuator/health" },
-    "gateway": { "port": 7777, "health": "/actuator/health" },
+    "center": { "port": 7777, "health": "/actuator/health" },
+    "gateway": { "port": 6060, "health": "/actuator/health" },
     "logs": { "port": 3312, "health": "/actuator/health" },
     "push": { "port": 3313, "health": "/actuator/health" },
     "doc": { "port": 9999, "health": "/actuator/health" },

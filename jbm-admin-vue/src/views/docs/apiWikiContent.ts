@@ -33,7 +33,7 @@ export const docSections: DocSection[] = [
   { id: 'faq', title: '常见问题', group: 'FAQ' },
 ]
 
-export const gatewayBase = 'http://127.0.0.1:7777'
+export const gatewayBase = 'http://127.0.0.1:6060'
 
 export const authEndpoints: ApiEndpoint[] = [
   {

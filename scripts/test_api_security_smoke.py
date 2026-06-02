@@ -5,7 +5,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:7777")
+GATEWAY = os.environ.get("JBM_GATEWAY", "http://127.0.0.1:6060")
 
 
 def get(url):

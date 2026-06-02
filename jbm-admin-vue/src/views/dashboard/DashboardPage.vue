@@ -374,8 +374,8 @@ const metricCards = computed(() => {
         <p>
           须同时启动
           <code class="rounded bg-muted px-1">Auth:5555</code>、
-          <code class="rounded bg-muted px-1">Center:8888</code>、
-          <code class="rounded bg-muted px-1">Gateway:7777</code>，Spring profile
+          <code class="rounded bg-muted px-1">Center:7777</code>、
+          <code class="rounded bg-muted px-1">Gateway:6060</code>，Spring profile
           <code class="rounded bg-muted px-1">jaja7</code>。Center 重启后会自动补全菜单/组织/字典种子数据。
         </p>
         <p>
@@ -394,7 +394,7 @@ const metricCards = computed(() => {
         </p>
         <p>
           前端与脚本仅访问 Gateway：
-          <code class="rounded bg-muted px-1">http://127.0.0.1:7777</code>（含
+          <code class="rounded bg-muted px-1">http://127.0.0.1:6060</code>（含
           <code class="rounded bg-muted px-1">/oauth2</code>、
           <code class="rounded bg-muted px-1">/captcha</code>、Center API）。
         </p>

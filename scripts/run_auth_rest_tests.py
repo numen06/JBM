@@ -262,7 +262,7 @@ def start_auth(profile):
 
 def resolve_base(cfg, step):
     if (step.get("service") or "auth").lower() == "gateway":
-        return (cfg.get("gateway_base_url") or "http://127.0.0.1:7777").rstrip("/")
+        return (cfg.get("gateway_base_url") or "http://127.0.0.1:6060").rstrip("/")
     return cfg["base_url"].rstrip("/")
 
 
@@ -457,7 +457,7 @@ def main():
         ctx["token"] = args.token
     else:
         try:
-            gateway_base = (cfg.get("gateway_base_url") or "http://127.0.0.1:7777").rstrip("/")
+            gateway_base = (cfg.get("gateway_base_url") or "http://127.0.0.1:6060").rstrip("/")
             ctx["gatewayToken"] = login_password(
                 "admin",
                 os.environ.get("LOGIN_PASSWORD") or "Admin@123",

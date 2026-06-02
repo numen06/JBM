@@ -1,6 +1,6 @@
-# RBAC + multi-credential verification (Gateway 7777)
+# RBAC + multi-credential verification (Gateway 6060)
 $ErrorActionPreference = 'Continue'
-$Gateway = 'http://127.0.0.1:7777'
+$Gateway = 'http://127.0.0.1:6060'
 $ClientId = 'demo'
 $ClientSecret = 'demo123'
 $Password = 'Admin@123'
