@@ -1,6 +1,7 @@
 package com.jbm.cluster.platform.gateway.config;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
 import com.jbm.cluster.platform.gateway.handler.WebExceptionResolve;
 import com.jbm.cluster.platform.gateway.locator.DynamicResourceLocator;
@@ -93,6 +94,11 @@ public class GatewayConfig implements WebFluxConfigurer {
     @Bean
     public KeyResolver pathKeyResolver() {
         return exchange -> Mono.just(exchange.getRequest().getURI().getPath());
+    }
+
+    @Bean
+    public JbmClusterTemplate jbmClusterTemplate() {
+        return new JbmClusterTemplate();
     }
 
     @Bean

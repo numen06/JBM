@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ public class ReactiveWebUtils {
         String ip = null;
         if (StrUtil.isNotBlank(forwarded)) {
             String realIp = headers.get("X-Real-IP");
-            if (realIp.equalsIgnoreCase(forwarded)) {
+            if (StrUtil.isNotBlank(realIp) && realIp.equalsIgnoreCase(forwarded)) {
                 ip = realIp;
             } else {
                 ip = StrUtil.split(forwarded, ",").get(0);
@@ -50,7 +51,7 @@ public class ReactiveWebUtils {
             ip = headers.get("X-Real-IP");
         }
         if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddress().getAddress().getHostAddress();
+            ip = getRemoteAddress(request);
         }
         //对于通过多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
         if (ip != null && ip.length() > 0) {
@@ -59,6 +60,21 @@ public class ReactiveWebUtils {
                 ip = ips[0];
             }
         }
-        return ip;
+        return StrUtil.blankToDefault(ip, "0.0.0.0");
+    }
+
+    private static String getRemoteAddress(ServerHttpRequest request) {
+        try {
+            InetSocketAddress remoteAddress = request.getRemoteAddress();
+            if (remoteAddress == null) {
+                return null;
+            }
+            if (remoteAddress.getAddress() != null) {
+                return remoteAddress.getAddress().getHostAddress();
+            }
+            return remoteAddress.getHostString();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

@@ -98,6 +98,7 @@ public class GatewayRouteServiceImpl extends MasterDataServiceImpl<GatewayRoute>
     @Override
     public List<GatewayRoute> findRouteList() {
         QueryWrapper<GatewayRoute> queryWrapper = new QueryWrapper();
+        queryWrapper.select(ROUTE_COLUMNS);
         queryWrapper.lambda().eq(GatewayRoute::getStatus, JbmConstants.ENABLED);
         List<GatewayRoute> list = list(queryWrapper);
         return list;

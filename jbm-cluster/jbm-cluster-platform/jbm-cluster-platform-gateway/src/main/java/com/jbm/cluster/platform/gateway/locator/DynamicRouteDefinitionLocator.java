@@ -75,6 +75,30 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
         return fullPath[0];
     }
 
+    private Integer getStripPrefix(List<GatewayRoute> routeList, String serviceId) {
+        if (routeList != null) {
+            for (GatewayRoute route : routeList) {
+                if (route.getServiceId() != null && route.getServiceId().equals(serviceId)) {
+                    return route.getStripPrefix();
+                }
+            }
+        }
+        return 1;
+    }
+
+    private void addStripPrefixFilter(List<FilterDefinition> filters, Integer stripPrefix) {
+        int stripPrefixValue = stripPrefix == null ? 1 : stripPrefix;
+        if (stripPrefixValue <= 0) {
+            return;
+        }
+        FilterDefinition stripPrefixDefinition = new FilterDefinition();
+        Map<String, String> stripPrefixParams = new HashMap<>(8);
+        stripPrefixDefinition.setName("StripPrefix");
+        stripPrefixParams.put(NameUtils.GENERATED_NAME_PREFIX + "0", String.valueOf(stripPrefixValue));
+        stripPrefixDefinition.setArgs(stripPrefixParams);
+        filters.add(stripPrefixDefinition);
+    }
+
     /**
      * 动态加载路由
      * * 示例
@@ -127,12 +151,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                     URI uri = UriComponentsBuilder.fromUriString(StringUtils.isNotBlank(item.getUrl()) ? item.getUrl() : "lb://" + item.getServiceId()).build().toUri();
 
                     // 路径去前缀
-                    FilterDefinition stripPrefixDefinition = new FilterDefinition();
-                    Map<String, String> stripPrefixParams = new HashMap<>(8);
-                    stripPrefixDefinition.setName("StripPrefix");
-                    stripPrefixParams.put(NameUtils.GENERATED_NAME_PREFIX + "0", "1");
-                    stripPrefixDefinition.setArgs(stripPrefixParams);
-                    filters.add(stripPrefixDefinition);
+                    addStripPrefixFilter(filters, getStripPrefix(routeList, item.getServiceId()));
                     // 限流
                     FilterDefinition rateLimiterDefinition = new FilterDefinition();
                     Map<String, String> rateLimiterParams = new HashMap<>(8);
@@ -174,12 +193,7 @@ public class DynamicRouteDefinitionLocator extends DynamicResourceService implem
                         // 服务地址
                         URI uri = UriComponentsBuilder.fromUriString(StringUtils.isNotBlank(gatewayRoute.getUrl()) ? gatewayRoute.getUrl() : "lb://" + gatewayRoute.getServiceId()).build().toUri();
 
-                        FilterDefinition stripPrefixDefinition = new FilterDefinition();
-                        Map<String, String> stripPrefixParams = new HashMap<>(8);
-                        stripPrefixDefinition.setName("StripPrefix");
-                        stripPrefixParams.put(NameUtils.GENERATED_NAME_PREFIX + "0", "1");
-                        stripPrefixDefinition.setArgs(stripPrefixParams);
-                        filters.add(stripPrefixDefinition);
+                        addStripPrefixFilter(filters, gatewayRoute.getStripPrefix());
 
                         definition.setPredicates(predicates);
                         definition.setFilters(filters);
