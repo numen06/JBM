@@ -1,5 +1,20 @@
 # ------------------------------------------------------------
-# Stage 1: 构建阶段 — 使用 Dragonwell + 手动安装 Maven（国内源）
+# Stage 1: 前端构建 — Vue 3 + Vite（国内 npm 源）
+# ------------------------------------------------------------
+FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS frontend-builder
+
+WORKDIR /app/jbm-admin-vue
+
+RUN npm config set registry https://registry.npmmirror.com
+
+COPY jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
+RUN npm install
+
+COPY jbm-admin-vue/ ./
+RUN npm run build
+
+# ------------------------------------------------------------
+# Stage 2: 后端构建 — 使用 Dragonwell + 手动安装 Maven（国内源）
 # ------------------------------------------------------------
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-anolis AS builder
 
@@ -93,3 +108,8 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 FROM base AS jbm-cluster-platform-weixin
 COPY --from=builder /app/dist/jbm-cluster-platform-weixin.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+FROM nginx:1.27-alpine AS jbm-admin
+COPY jbm-admin-vue/nginx.docker.conf /etc/nginx/conf.d/default.conf
+COPY --from=frontend-builder /app/jbm-admin-vue/dist /usr/share/nginx/html
+EXPOSE 80
