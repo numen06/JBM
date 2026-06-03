@@ -168,7 +168,7 @@ public class SystemDataInitializer implements ApplicationRunner {
         saveMenu(MENU_SYSTEM, MENU_PLATFORM_ROOT, "system", "系统管理", "/system", 1);
         saveMenu(MENU_USER, MENU_SYSTEM, "user", "用户管理", "/system/user", 1);
         saveMenu(MENU_ROLE, MENU_SYSTEM, "role", "角色管理", "/system/role", 2);
-        saveMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/system/authority", 3);
+        saveMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/authority/catalog", 3);
         saveMenu(MENU_DEVELOPER, MENU_SYSTEM, "developer", "开发者管理", "/system/developer", 4);
     }
 

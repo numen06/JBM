@@ -118,6 +118,10 @@ const router = createRouter({
           redirect: { name: 'authority-catalog' },
         },
         {
+          path: 'system/authority',
+          redirect: { name: 'authority-catalog' },
+        },
+        {
           path: 'system/apps',
           name: 'apps',
           component: () => import('@/views/system/AppList.vue'),

@@ -127,7 +127,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         upsertMenu(MENU_MENUS, MENU_SYSTEM, "menus", "菜单管理", "/system/menus", 4);
         upsertMenu(MENU_ACTIONS, MENU_SYSTEM, "actions", "按钮管理", "/system/actions", 5);
         upsertMenu(MENU_ORGS, MENU_SYSTEM, "orgs", "组织管理", "/system/orgs", 6);
-        upsertMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/system/authorities", 7);
+        upsertMenu(MENU_AUTHORITY, MENU_SYSTEM, "authority", "权限管理", "/authority/catalog", 7);
         upsertMenu(MENU_APPS, MENU_SYSTEM, "apps", "应用管理", "/system/apps", 8);
         upsertMenu(MENU_DICTS, MENU_SYSTEM, "dicts", "字典管理", "/system/dicts", 9);
         upsertMenu(MENU_EXTEND, MENU_SYSTEM, "extend_fields", "扩展字段", "/system/extend-fields", 10);

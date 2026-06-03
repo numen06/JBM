@@ -85,7 +85,7 @@ def gateway_api(method: str, path: str, token: str = "", body: Any = None, *, fo
 def login_password(username: str, password: str, *, gateway: str = "") -> str:
     if gateway:
         # 直连指定 Gateway 根地址
-        url = gateway.rstrip("/") + "/oauth2/token"
+        url = gateway.rstrip("/") + "/auth/oauth2/token"
         headers = {"tenantId": DEFAULT_TENANT}
         status, raw = http_request(
             "POST",
@@ -112,7 +112,7 @@ def login_password(username: str, password: str, *, gateway: str = "") -> str:
         raise RuntimeError("no access_token")
     status, jb, _ = gateway_api(
         "POST",
-        "/oauth2/token",
+        "/auth/oauth2/token",
         body={
             "grant_type": "password",
             "client_id": DEFAULT_CLIENT_ID,
