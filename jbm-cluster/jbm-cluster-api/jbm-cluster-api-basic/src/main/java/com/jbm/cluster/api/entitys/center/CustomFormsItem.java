@@ -3,7 +3,7 @@ package com.jbm.cluster.api.entitys.center;
 
 import com.jbm.cluster.api.constants.center.ComponentType;
 import com.jbm.cluster.api.constants.center.FieldType;
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,6 +23,7 @@ import javax.validation.constraints.NotEmpty;
 @Data
 @Entity
 @Table
+@TableName(value = "custom_forms_item", autoResultMap = true)
 @ApiModel("自定义表单字段")
 public class CustomFormsItem extends MasterDataEntity {
 

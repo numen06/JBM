@@ -12,19 +12,33 @@ import Table from '@/components/ui/Table.vue'
 import Dialog from '@/components/ui/Dialog.vue'
 import Badge from '@/components/ui/Badge.vue'
 import {
+  getCustomFormDesignDetail,
   getExtendFormFromDb,
   pageExtendForms,
   listFieldDefinitions,
   publishExtendForm,
-  saveExtendForm,
+  saveCustomFormDesign,
 } from '@/api/extendField'
-import type { ExtendFormDefinition, FieldDefinition } from '@/api/types'
+import type { CustomFormDesign, CustomFormsItem, ExtendFormDefinition, FieldDefinition } from '@/api/types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const FIELD_TYPES = [
-  { value: 'string', label: '字符串' },
+  { value: 'text', label: '文本' },
   { value: 'number', label: '数字' },
   { value: 'date', label: '日期' },
+  { value: 'radio', label: '单选' },
+  { value: 'checkbox', label: '多选' },
+] as const
+
+const COMPONENT_TYPES = [
+  { value: 'input', label: '输入框' },
+  { value: 'textarea', label: '多行文本' },
+  { value: 'select', label: '下拉选择' },
+  { value: 'inputNumber', label: '数字输入' },
+  { value: 'datePicker', label: '日期选择' },
+  { value: 'radio', label: '单选组' },
+  { value: 'checkbox', label: '多选组' },
+  { value: 'cascader', label: '级联' },
 ] as const
 
 const forms = ref<ExtendFormDefinition[]>([])
@@ -33,8 +47,9 @@ const formCodeInput = ref('')
 const formName = ref('')
 const customFormId = ref<string>('')
 const autoPublish = ref(true)
-const fields = ref<FieldDefinition[]>([])
+const fields = ref<CustomFormsItem[]>([])
 const meta = ref<ExtendFormDefinition | null>(null)
+const designMeta = ref<CustomFormDesign | null>(null)
 
 const listLoading = ref(false)
 const loading = ref(false)
@@ -50,26 +65,49 @@ const redisDialogOpen = ref(false)
 const redisFields = ref<FieldDefinition[]>([])
 const redisLoading = ref(false)
 
-function emptyField(): FieldDefinition {
+function emptyField(): CustomFormsItem {
   return {
     fieldName: '',
-    fieldType: 'string',
-    fieldLabel: '',
-    required: false,
-    sortable: false,
-    queryable: false,
+    fieldType: 'text',
+    labelName: '',
+    componentType: 'input',
+    isRequired: false,
+    isShow: true,
+    isFilter: false,
   }
 }
 
-function applyDefinition(def: ExtendFormDefinition) {
+function applyRuntimeDefinition(def: ExtendFormDefinition) {
   meta.value = def
   selectedCode.value = def.formCode
   formCodeInput.value = def.formCode
-  formName.value = def.formName ?? ''
-  customFormId.value = def.customFormId != null ? String(def.customFormId) : ''
+  if (!formName.value) formName.value = def.formName ?? ''
+  if (!customFormId.value && def.customFormId != null) customFormId.value = String(def.customFormId)
+}
+
+function runtimeToDesignFields(def: ExtendFormDefinition): CustomFormsItem[] {
+  return def.fields?.length > 0
+    ? def.fields.map((f) => ({
+        ...emptyField(),
+        fieldName: f.fieldName,
+        fieldType: f.fieldType === 'string' ? 'text' : f.fieldType,
+        labelName: f.fieldLabel || f.fieldName,
+        isRequired: !!f.required,
+        isFilter: !!f.queryable,
+      }))
+    : [emptyField()]
+}
+
+function applyDesignDefinition(def: CustomFormDesign) {
+  designMeta.value = def
+  const code = def.code ?? formCodeInput.value.trim()
+  selectedCode.value = code
+  formCodeInput.value = code
+  formName.value = def.name ?? ''
+  customFormId.value = def.id != null ? String(def.id) : ''
   fields.value =
-    def.fields?.length > 0
-      ? def.fields.map((f) => ({ ...emptyField(), ...f }))
+    def.customFormsItemList?.length
+      ? def.customFormsItemList.map((f) => ({ ...emptyField(), ...f }))
       : [emptyField()]
 }
 
@@ -83,9 +121,9 @@ async function loadGroups(page = groupPage.value, selectFirst = false) {
     groupPage.value = page
     if (selectedCode.value) {
       const current = forms.value.find((f) => f.formCode === selectedCode.value)
-      if (current) applyDefinition(current)
+      if (current) applyRuntimeDefinition(current)
     } else if (selectFirst && forms.value.length) {
-      applyDefinition(forms.value[0])
+      await selectForm(forms.value[0])
     }
   } catch (e) {
     forms.value = []
@@ -110,8 +148,16 @@ async function selectForm(form: ExtendFormDefinition) {
   error.value = ''
   successMsg.value = ''
   try {
-    const def = await getExtendFormFromDb(form.formCode)
-    applyDefinition(def)
+    const runtime = await getExtendFormFromDb(form.formCode)
+    applyRuntimeDefinition(runtime)
+    try {
+      const design = await getCustomFormDesignDetail(form.formCode)
+      applyDesignDefinition(design)
+    } catch {
+      designMeta.value = null
+      customFormId.value = runtime.customFormId != null ? String(runtime.customFormId) : ''
+      fields.value = runtimeToDesignFields(runtime)
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载字段定义失败'
   } finally {
@@ -129,12 +175,18 @@ async function loadFromDb() {
   error.value = ''
   successMsg.value = ''
   try {
-    const def = await getExtendFormFromDb(code)
-    applyDefinition(def)
+    const def = await getCustomFormDesignDetail(code)
+    applyDesignDefinition(def)
+    try {
+      applyRuntimeDefinition(await getExtendFormFromDb(code))
+    } catch {
+      meta.value = null
+    }
     successMsg.value = `已加载表单「${code}」`
     await loadGroups(1)
   } catch (e) {
     meta.value = null
+    designMeta.value = null
     selectedCode.value = ''
     formName.value = ''
     customFormId.value = ''
@@ -152,6 +204,7 @@ function startNewForm() {
     return
   }
   meta.value = null
+  designMeta.value = null
   selectedCode.value = code
   formName.value = ''
   customFormId.value = ''
@@ -183,16 +236,25 @@ function moveField(index: number, delta: number) {
 
 function buildRequest() {
   const normalized = fields.value
-    .filter((f) => f.fieldName?.trim() || f.fieldLabel?.trim())
+    .filter((f) => f.fieldName?.trim() || f.labelName?.trim())
     .map((f) => ({
       fieldName: f.fieldName.trim(),
-      fieldType: f.fieldType || 'string',
-      fieldLabel: f.fieldLabel.trim() || f.fieldName.trim(),
-      required: !!f.required,
-      sortable: !!f.sortable,
-      queryable: !!f.queryable,
-      defaultValue: f.defaultValue === '' ? undefined : f.defaultValue,
-      options: f.options,
+      fieldType: f.fieldType || 'text',
+      labelName: f.labelName.trim() || f.fieldName.trim(),
+      componentType: f.componentType || 'input',
+      format: f.format || undefined,
+      decimalType: f.decimalType || undefined,
+      decimalValue: f.decimalValue,
+      choiceType: f.choiceType || undefined,
+      choiceValue: f.choiceValue || undefined,
+      dateType: f.dateType || undefined,
+      isRequired: !!f.isRequired,
+      isShow: f.isShow !== false,
+      isFilter: !!f.isFilter,
+      fieldBelong: f.fieldBelong || '1',
+      valueKey: f.valueKey || undefined,
+      labelKey: f.labelKey || undefined,
+      childrenKey: f.childrenKey || undefined,
     }))
 
   if (!normalized.length) {
@@ -200,10 +262,11 @@ function buildRequest() {
   }
 
   return {
-    formName: formName.value.trim() || undefined,
-    fields: normalized,
-    customFormId: customFormId.value ? Number(customFormId.value) : undefined,
-    autoPublish: autoPublish.value,
+    code: formCodeInput.value.trim(),
+    name: formName.value.trim() || formCodeInput.value.trim(),
+    formOrTable: 'form',
+    customFormsItemList: normalized,
+    autoPublishExtendField: autoPublish.value,
   }
 }
 
@@ -217,11 +280,16 @@ async function handleSave() {
   error.value = ''
   successMsg.value = ''
   try {
-    const def = await saveExtendForm(code, buildRequest())
-    applyDefinition(def)
+    const def = await saveCustomFormDesign(buildRequest())
+    applyDesignDefinition(def)
+    try {
+      applyRuntimeDefinition(await getExtendFormFromDb(code))
+    } catch {
+      meta.value = null
+    }
     successMsg.value = autoPublish.value
-      ? `已保存并发布到 Redis（版本 ${def.version ?? '-'}）`
-      : `已保存到数据库（版本 ${def.version ?? '-'}）`
+      ? `已保存设计态并发布到 Redis`
+      : `已保存设计态`
     await refreshForms()
   } catch (e) {
     error.value = e instanceof Error ? e.message : '保存失败'
@@ -285,7 +353,7 @@ onMounted(() => loadGroups(1, true))
   <div>
     <PageHeader
       title="扩展字段管理"
-      description="字段组 + 字段定义，数据库为真源，按需发布到 Redis"
+      description="自定义表单设计态为真源，保存后按 formCode 发布运行时扩展字段"
     >
       <template #actions>
         <Button variant="outline" :disabled="listLoading || loading" @click="refreshForms(true)">
@@ -361,8 +429,8 @@ onMounted(() => loadGroups(1, true))
               <Input id="formName" v-model="formName" placeholder="显示名称" />
             </div>
             <div class="space-y-2">
-              <Label for="customFormId">关联 custom_forms.id</Label>
-              <Input id="customFormId" v-model="customFormId" type="number" placeholder="可选" />
+              <Label for="customFormId">custom_forms.id</Label>
+              <Input id="customFormId" v-model="customFormId" type="number" placeholder="保存后生成" disabled />
             </div>
           </div>
 
@@ -414,12 +482,12 @@ onMounted(() => loadGroups(1, true))
                   <tr class="border-b bg-muted/50">
                     <th class="h-10 w-20 px-2 text-left font-medium">排序</th>
                     <th class="h-10 px-2 text-left font-medium">字段名</th>
-                    <th class="h-10 px-2 text-left font-medium">类型</th>
+                    <th class="h-10 px-2 text-left font-medium">数据类型</th>
+                    <th class="h-10 px-2 text-left font-medium">组件</th>
                     <th class="h-10 px-2 text-left font-medium">标签</th>
                     <th class="h-10 px-2 text-center font-medium">必填</th>
-                    <th class="h-10 px-2 text-center font-medium">可排序</th>
-                    <th class="h-10 px-2 text-center font-medium">可查询</th>
-                    <th class="h-10 px-2 text-left font-medium">默认值</th>
+                    <th class="h-10 px-2 text-center font-medium">显示</th>
+                    <th class="h-10 px-2 text-center font-medium">筛选</th>
                     <th class="h-10 w-16 px-2 text-right font-medium">操作</th>
                   </tr>
                 </thead>
@@ -444,24 +512,21 @@ onMounted(() => loadGroups(1, true))
                       </Select>
                     </td>
                     <td class="p-2">
-                      <Input v-model="row.fieldLabel" placeholder="显示标签" class="text-xs" />
-                    </td>
-                    <td class="p-2 text-center">
-                      <input v-model="row.required" type="checkbox" class="rounded border" />
-                    </td>
-                    <td class="p-2 text-center">
-                      <input v-model="row.sortable" type="checkbox" class="rounded border" />
-                    </td>
-                    <td class="p-2 text-center">
-                      <input v-model="row.queryable" type="checkbox" class="rounded border" />
+                      <Select v-model="row.componentType" class="min-w-[112px]">
+                        <option v-for="t in COMPONENT_TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
+                      </Select>
                     </td>
                     <td class="p-2">
-                      <Input
-                        :model-value="row.defaultValue != null && row.defaultValue !== '' ? String(row.defaultValue) : ''"
-                        placeholder="可选"
-                        class="text-xs"
-                        @update:model-value="row.defaultValue = $event || undefined"
-                      />
+                      <Input v-model="row.labelName" placeholder="显示标签" class="text-xs" />
+                    </td>
+                    <td class="p-2 text-center">
+                      <input v-model="row.isRequired" type="checkbox" class="rounded border" />
+                    </td>
+                    <td class="p-2 text-center">
+                      <input v-model="row.isShow" type="checkbox" class="rounded border" />
+                    </td>
+                    <td class="p-2 text-center">
+                      <input v-model="row.isFilter" type="checkbox" class="rounded border" />
                     </td>
                     <td class="p-2 text-right">
                       <Button variant="ghost" size="icon" class="h-8 w-8" @click="removeField(index)">

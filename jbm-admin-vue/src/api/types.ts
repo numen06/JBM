@@ -347,3 +347,49 @@ export interface SaveExtendFormRequest {
   customFormId?: number
   autoPublish?: boolean
 }
+
+/** 自定义表单字段明细（设计态真源） */
+export interface CustomFormsItem {
+  id?: number | string
+  formId?: number | string
+  fieldName: string
+  labelName: string
+  fieldType: 'text' | 'number' | 'date' | 'radio' | 'checkbox' | string
+  componentType:
+    | 'input'
+    | 'textarea'
+    | 'select'
+    | 'inputNumber'
+    | 'datePicker'
+    | 'switchPicker'
+    | 'radio'
+    | 'checkbox'
+    | 'cascader'
+    | 'slot'
+    | string
+  format?: string
+  decimalType?: string
+  decimalValue?: number
+  choiceType?: string
+  choiceValue?: string
+  dateType?: string
+  isRequired?: boolean
+  isShow?: boolean
+  isFilter?: boolean
+  fieldBelong?: string
+  valueKey?: string
+  labelKey?: string
+  childrenKey?: string
+}
+
+/** 自定义表单（设计态真源） */
+export interface CustomFormDesign {
+  id?: number | string
+  code?: string
+  name?: string
+  menuIds?: string
+  formOrTable?: 'form' | 'table' | string
+  dataSource?: string
+  customFormsItemList?: CustomFormsItem[]
+  autoPublishExtendField?: boolean
+}

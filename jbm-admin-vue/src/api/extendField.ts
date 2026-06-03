@@ -1,6 +1,7 @@
 import { get, post, put, unwrap } from './request'
 import type {
   DataPaging,
+  CustomFormDesign,
   ExtendFormDefinition,
   FieldDefinition,
   SaveExtendFormRequest,
@@ -9,6 +10,7 @@ import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const BASE = '/extend-field/forms'
+const CUSTOM_FORMS_BASE = '/customForms'
 
 export async function pageExtendForms(
   page = 1,
@@ -52,5 +54,19 @@ export async function listFieldDefinitions(formCode: string) {
   const res = await get<FieldDefinition[]>(
     `${BASE}/${encodeURIComponent(formCode)}/definitions`,
   )
+  return unwrap(res)
+}
+
+export async function getCustomFormDesignDetail(codeOrId: string | number) {
+  const body =
+    typeof codeOrId === 'number' || /^\d+$/.test(String(codeOrId))
+      ? { id: Number(codeOrId) }
+      : { code: String(codeOrId) }
+  const res = await post<CustomFormDesign>(`${CUSTOM_FORMS_BASE}/getDetail`, body)
+  return unwrap(res)
+}
+
+export async function saveCustomFormDesign(request: CustomFormDesign) {
+  const res = await post<CustomFormDesign>(`${CUSTOM_FORMS_BASE}/saveData`, request)
   return unwrap(res)
 }

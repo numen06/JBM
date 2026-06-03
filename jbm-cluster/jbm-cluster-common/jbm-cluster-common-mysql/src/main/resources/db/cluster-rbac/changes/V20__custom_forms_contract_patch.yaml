@@ -1,0 +1,508 @@
+databaseChangeLog:
+  - changeSet:
+      id: custom-forms-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-app-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: custom-forms-parent-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: custom-forms-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: custom-forms-leaf-path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: custom-forms-extend-data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: custom-forms-create-time
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: create_time
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: create_time
+                  type: TIMESTAMP
+  - changeSet:
+      id: custom-forms-update-time
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: update_time
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: update_time
+                  type: TIMESTAMP
+  - changeSet:
+      id: custom-forms-code-index
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - columnExists:
+            tableName: custom_forms
+            columnName: code
+        - not:
+            indexExists:
+              tableName: custom_forms
+              indexName: idx_custom_forms_code
+      changes:
+        - createIndex:
+            tableName: custom_forms
+            indexName: idx_custom_forms_code
+            columns:
+              - column:
+                  name: code
+  - changeSet:
+      id: custom-forms-item-format
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: format
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: format
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-item-code
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: code
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-item-app-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: app_id
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+  - changeSet:
+      id: custom-forms-item-decimal-type
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: decimal_type
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: decimal_type
+                  type: VARCHAR(16)
+  - changeSet:
+      id: custom-forms-item-decimal-value
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: decimal_value
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: decimal_value
+                  type: INT
+  - changeSet:
+      id: custom-forms-item-choice-type
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: choice_type
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: choice_type
+                  type: VARCHAR(16)
+  - changeSet:
+      id: custom-forms-item-choice-value
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: choice_value
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: choice_value
+                  type: VARCHAR(256)
+  - changeSet:
+      id: custom-forms-item-date-type
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: date_type
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: date_type
+                  type: VARCHAR(16)
+  - changeSet:
+      id: custom-forms-item-is-show
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: is_show
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: is_show
+                  type: BOOLEAN
+  - changeSet:
+      id: custom-forms-item-field-belong
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: field_belong
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: field_belong
+                  type: VARCHAR(16)
+  - changeSet:
+      id: custom-forms-item-value-key
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: value_key
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: value_key
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-item-label-key
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: label_key
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: label_key
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-item-children-key
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: children_key
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: children_key
+                  type: VARCHAR(64)
+  - changeSet:
+      id: custom-forms-item-parent-id
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: parent_id
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+  - changeSet:
+      id: custom-forms-item-level
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: level
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: level
+                  type: INT
+  - changeSet:
+      id: custom-forms-item-leaf-path
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: leaf_path
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: leaf_path
+                  type: VARCHAR(512)
+  - changeSet:
+      id: custom-forms-item-extend-data
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: extend_data
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: extend_data
+                  type: LONGTEXT
+  - changeSet:
+      id: custom-forms-item-create-time
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: create_time
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: create_time
+                  type: TIMESTAMP
+  - changeSet:
+      id: custom-forms-item-update-time
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms_item
+        - not:
+            columnExists:
+              tableName: custom_forms_item
+              columnName: update_time
+      changes:
+        - addColumn:
+            tableName: custom_forms_item
+            columns:
+              - column:
+                  name: update_time
+                  type: TIMESTAMP

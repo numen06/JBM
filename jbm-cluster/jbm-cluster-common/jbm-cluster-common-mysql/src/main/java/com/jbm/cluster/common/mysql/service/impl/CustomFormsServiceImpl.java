@@ -16,6 +16,9 @@ import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * @Author: auto generate by jbm
@@ -24,16 +27,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> implements CustomFormsService {
 
-    /** 兼容未执行 V6/V10 迁移、缺少 MasterData 通用列的旧库 */
+    /** 兼容未执行 V20 前、部分设计态列缺失的旧库；V20 会补齐这些列。 */
     private static final String[] LEGACY_FORM_COLUMNS = {
-            "id", "name", "menu_ids", "form_or_table", "data_source", "create_time", "update_time"
+            "id", "code", "name", "menu_ids", "form_or_table", "data_source",
+            "app_id", "parent_id", "level", "leaf_path", "extend_data", "create_time", "update_time"
     };
 
     private static final String[] LEGACY_ITEM_COLUMNS = {
             "id", "form_id", "field_name", "label_name", "field_type", "component_type",
             "format", "decimal_type", "decimal_value", "choice_type", "choice_value", "date_type",
             "is_required", "is_show", "is_filter", "field_belong", "value_key", "label_key",
-            "children_key", "create_time", "update_time"
+            "children_key", "code", "app_id", "parent_id", "level", "leaf_path",
+            "extend_data", "create_time", "update_time"
     };
     @Autowired
     private CustomFormsItemService customFormsItemService;
@@ -42,32 +47,66 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
     private ExtendFormDefinitionService extendFormDefinitionService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public CustomForms saveData(CustomFormsForm form) {
+        if (form == null) {
+            throw new ServiceException("表单参数不能为空");
+        }
+        boolean autoPublish = !Boolean.FALSE.equals(form.getAutoPublishExtendField());
+        if (autoPublish && StrUtil.isBlank(form.getCode())) {
+            throw new ServiceException("自动发布扩展字段时表单编码 code/formCode 不能为空");
+        }
+        if (form.getId() == null && StrUtil.isNotBlank(form.getCode())) {
+            CustomForms existing = getOne(new QueryWrapper<CustomForms>()
+                    .select("id")
+                    .eq("code", form.getCode())
+                    .last("LIMIT 1"));
+            if (existing != null) {
+                form.setId(existing.getId());
+            }
+        }
         CustomForms customForms = super.saveEntity(form);
+        if (form.getCustomFormsItemList() != null) {
+            customFormsItemService.remove(new QueryWrapper<CustomFormsItem>()
+                    .eq("form_id", customForms.getId()));
+            form.getCustomFormsItemList().forEach(item -> {
+                item.setId(null);
+                item.setFormId(customForms.getId());
+            });
+        }
         if (CollUtil.isNotEmpty(form.getCustomFormsItemList())) {
-            form.getCustomFormsItemList().forEach(item -> item.setFormId(customForms.getId()));
             customFormsItemService.saveEntitys(form.getCustomFormsItemList());
         }
         if (extendFormDefinitionService != null
-                && !Boolean.FALSE.equals(form.getAutoPublishExtendField())
-                && StrUtil.isNotBlank(customForms.getCode())) {
+                && autoPublish) {
+            List<CustomFormsItem> publishItems = form.getCustomFormsItemList();
+            if (publishItems == null) {
+                publishItems = customFormsItemService.list(new QueryWrapper<CustomFormsItem>()
+                        .select(LEGACY_ITEM_COLUMNS)
+                        .eq("form_id", customForms.getId()));
+            }
             extendFormDefinitionService.publishFromCustomForms(
                     customForms.getId(),
                     customForms.getCode(),
                     customForms.getName(),
-                    CustomFormsItemToFieldDefinitionConverter.convert(form.getCustomFormsItemList()));
+                    CustomFormsItemToFieldDefinitionConverter.convert(publishItems));
         }
         return customForms;
     }
 
     @Override
     public CustomFormsResult getDetail(CustomFormsForm form) {
-        if (form == null || form.getId() == null) {
-            throw new ServiceException("表单ID不能为空");
+        if (form == null || (form.getId() == null && StrUtil.isBlank(form.getCode()))) {
+            throw new ServiceException("表单ID或编码不能为空");
         }
-        CustomForms customForms = getOne(new QueryWrapper<CustomForms>()
-                .select(LEGACY_FORM_COLUMNS)
-                .eq("id", form.getId()));
+        QueryWrapper<CustomForms> queryWrapper = new QueryWrapper<CustomForms>()
+                .select(LEGACY_FORM_COLUMNS);
+        if (form.getId() != null) {
+            queryWrapper.eq("id", form.getId());
+        } else {
+            queryWrapper.eq("code", form.getCode());
+        }
+        CustomForms customForms = getOne(queryWrapper.last("LIMIT 1"));
         if (customForms == null) {
             throw new ServiceException("自定义表单不存在");
         }
