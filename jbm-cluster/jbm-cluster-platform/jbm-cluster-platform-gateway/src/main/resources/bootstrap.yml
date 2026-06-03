@@ -98,6 +98,7 @@ jbm:
       - /*/oauth/**
       - /**/user/registrations
       - /user/registrations
+      - /**/published-docs/**
       - /actuator/health
       - /actuator/info
     # 忽略权限鉴定

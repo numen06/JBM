@@ -59,6 +59,8 @@ jbm:
       - /**/user/sessions/**
       - /internal/dev/**
       - /internal/trust/**
+      - /published-docs/**
+      - /**/published-docs/**
       - /actuator/**
 
 # jaja7 网关 SaReactorFilter 放行（覆盖 bootstrap 默认值，与 sign/auth-ignores 对齐）
@@ -81,4 +83,6 @@ security:
       - /**/user/sessions/**
       - /internal/dev/**
       - /internal/trust/**
+      - /published-docs/**
+      - /**/published-docs/**
       - /*/v2/api-docs

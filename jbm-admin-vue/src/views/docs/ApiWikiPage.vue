@@ -6,11 +6,17 @@ import LandingNav from '@/components/landing/LandingNav.vue'
 import LandingFooter from '@/components/landing/LandingFooter.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Input from '@/components/ui/Input.vue'
+import { listPublishedDocs, getPublishedDoc } from '@/api/openapiDocs'
+import type { PublishedDocSummary } from '@/api/types'
 import { authEndpoints, docSections, gatewayBase, openApiHeaders } from './apiWikiContent'
 
 const route = useRoute()
 const searchQuery = ref('')
 const activeSection = ref('quick-start')
+const publishedDocs = ref<PublishedDocSummary[]>([])
+const selectedPublishedKey = ref('')
+const publishedSpecPreview = ref('')
+const publishedLoading = ref(false)
 
 const groups = computed(() => {
   const map = new Map<string, typeof docSections>()
@@ -46,6 +52,39 @@ function methodColor(method: string) {
 onMounted(() => {
   const hash = route.hash.replace('#', '')
   if (hash) scrollTo(hash)
+  loadPublishedDocs()
+})
+
+async function loadPublishedDocs() {
+  try {
+    publishedDocs.value = await listPublishedDocs()
+    if (publishedDocs.value.length) {
+      selectedPublishedKey.value = publishedDocs.value[0].docKey ?? ''
+      await loadPublishedSpec(selectedPublishedKey.value)
+    }
+  } catch {
+    publishedDocs.value = []
+  }
+}
+
+async function loadPublishedSpec(docKey: string) {
+  if (!docKey) {
+    publishedSpecPreview.value = ''
+    return
+  }
+  publishedLoading.value = true
+  try {
+    const spec = await getPublishedDoc(docKey)
+    publishedSpecPreview.value = spec ?? ''
+  } catch {
+    publishedSpecPreview.value = ''
+  } finally {
+    publishedLoading.value = false
+  }
+}
+
+watch(selectedPublishedKey, (key) => {
+  loadPublishedSpec(key)
 })
 
 watch(
@@ -342,6 +381,34 @@ location.href = `${url}?response_type=code&amp;client_id=${clientId}&amp;redirec
           <h2 class="text-2xl font-bold">后端接入示例</h2>
           <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>String canonical = method + "\\n" + path + "\\n" + query + "\\n" + bodyHash + "\\n" + timestamp + "\\n" + nonce;
 String signature = hmacSha256Hex(apiSecret, canonical);</code></pre>
+        </section>
+
+        <section id="published-api" class="scroll-mt-24 border-b py-12">
+          <h2 class="text-2xl font-bold">已发布开放 API 文档</h2>
+          <p class="mt-3 text-muted-foreground">
+            本节仅展示经管理员发布确认的 API 快照，不包含内部接口目录，也不提供在线测试。
+          </p>
+          <div v-if="!publishedDocs.length" class="mt-6 rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+            暂无已发布接口文档，请先通过管理端「API 文档与调试」发布公开快照。
+          </div>
+          <div v-else class="mt-6 space-y-4">
+            <select
+              v-model="selectedPublishedKey"
+              class="rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option v-for="doc in publishedDocs" :key="doc.docKey" :value="doc.docKey">
+                {{ doc.title }} ({{ doc.version }})
+              </option>
+            </select>
+            <p v-if="publishedDocs.find((d) => d.docKey === selectedPublishedKey)?.publishedSummary" class="text-sm text-muted-foreground">
+              {{ publishedDocs.find((d) => d.docKey === selectedPublishedKey)?.publishedSummary }}
+            </p>
+            <div v-if="publishedLoading" class="text-sm text-muted-foreground">加载中...</div>
+            <pre
+              v-else-if="publishedSpecPreview"
+              class="max-h-[480px] overflow-auto rounded-lg bg-slate-950 p-4 text-xs text-slate-100"
+            ><code>{{ publishedSpecPreview }}</code></pre>
+          </div>
         </section>
 
         <section id="faq" class="scroll-mt-24 py-12">

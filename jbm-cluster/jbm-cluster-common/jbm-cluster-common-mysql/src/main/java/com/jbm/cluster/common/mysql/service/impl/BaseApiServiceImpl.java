@@ -266,5 +266,18 @@ public class BaseApiServiceImpl extends MasterDataServiceImpl<BaseApi> implement
         return CollUtil.getFirst(list);
     }
 
+    @Override
+    public BaseApi findApiByServicePathMethod(String serviceId, String path, String requestMethod) {
+        if (ObjectUtils.isEmpty(serviceId) || ObjectUtils.isEmpty(path) || ObjectUtils.isEmpty(requestMethod)) {
+            return null;
+        }
+        QueryWrapper<BaseApi> queryWrapper = new QueryWrapper();
+        queryWrapper.lambda()
+                .eq(BaseApi::getServiceId, serviceId)
+                .eq(BaseApi::getPath, path)
+                .eq(BaseApi::getRequestMethod, requestMethod.toUpperCase());
+        return CollUtil.getFirst(baseApiMapper.selectList(queryWrapper));
+    }
+
 
 }

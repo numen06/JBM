@@ -35,3 +35,7 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V19__base_api_desc_text.sql
   - include:
       file: classpath:db/cluster-rbac/changes/V20__custom_forms_contract_patch.yaml
+  - include:
+      file: classpath:db/cluster-rbac/changes/V21__openapi_docs.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V22__openapi_docs_master_columns.sql

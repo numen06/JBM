@@ -98,6 +98,12 @@ const router = createRouter({
           meta: { title: 'API 资源管理' },
         },
         {
+          path: 'api/docs',
+          name: 'api-docs',
+          component: () => import('@/views/api/ApiDocsPage.vue'),
+          meta: { title: 'API 文档与调试' },
+        },
+        {
           path: 'api/monitor',
           name: 'api-monitor',
           component: () => import('@/views/api/ApiMonitorPage.vue'),

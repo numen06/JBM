@@ -394,3 +394,122 @@ export interface CustomFormDesign {
   customFormsItemList?: CustomFormsItem[]
   autoPublishExtendField?: boolean
 }
+
+export interface OpenApiSource {
+  serviceId: string
+  title?: string
+  url?: string
+  syncStatus?: string
+  syncMessage?: string
+  operationTotal?: number
+  linkedApiTotal?: number
+  unlinkedApiTotal?: number
+  lastSyncTime?: string
+}
+
+export interface OpenApiOperationView {
+  operationId?: number
+  serviceId?: string
+  method?: string
+  path?: string
+  tag?: string
+  summary?: string
+  apiId?: number
+  apiCode?: string
+  isOpen?: number
+  isAuth?: boolean
+  status?: number
+  linked?: boolean
+  syncState?: string
+  deprecated?: number
+}
+
+export interface OpenApiOperationDetail extends OpenApiOperationView {
+  docId?: number
+  description?: string
+  tags?: string
+  parametersJson?: string
+  requestBodyJson?: string
+  responsesJson?: string
+  schemasJson?: string
+  securityJson?: string
+  examplesJson?: string
+  rawOperationJson?: string
+  requestMethod?: string
+}
+
+export interface OpenApiSyncResult {
+  serviceId?: string
+  syncStatus?: string
+  syncMessage?: string
+  operationTotal?: number
+  linkedApiTotal?: number
+  unlinkedApiTotal?: number
+  sourceHash?: string
+  syncTime?: string
+}
+
+export interface OpenApiTestRequest {
+  operationId?: number
+  serviceId?: string
+  path?: string
+  method?: string
+  pathParams?: Record<string, string>
+  queryParams?: Record<string, string>
+  headers?: Record<string, string>
+  body?: string | null
+  confirm?: boolean
+}
+
+export interface OpenApiTestResult {
+  success?: boolean
+  status?: number
+  durationMs?: number
+  headers?: Record<string, string>
+  bodyPreview?: string
+  truncated?: boolean
+  target?: string
+  errorMessage?: string
+}
+
+export interface OpenApiExportRequest {
+  format?: string
+  selectionMode?: string
+  serviceIds?: string[]
+  operationIds?: number[]
+  filters?: Record<string, unknown>
+  includeSchemas?: boolean
+  includeExamples?: boolean
+  includeGovernance?: boolean
+}
+
+export interface OpenApiPublishRequest {
+  docKey?: string
+  title?: string
+  version?: string
+  publishedSummary?: string
+  selectionMode?: string
+  serviceIds?: string[]
+  operationIds?: number[]
+}
+
+export interface PublishedDocSummary {
+  docKey?: string
+  title?: string
+  version?: string
+  publishedAt?: string
+  publishedSummary?: string
+  url?: string
+}
+
+export type OpenApiOperationQuery = {
+  serviceId?: string
+  keyword?: string
+  method?: string
+  isOpen?: number | string
+  isAuth?: number | string
+  status?: number | string
+  syncState?: string
+  linked?: boolean
+  tag?: string
+}

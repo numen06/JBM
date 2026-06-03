@@ -63,6 +63,9 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_DEVELOPER = 105L;
     private static final long MENU_API_KEY = 113L;
     private static final long MENU_ONLINE_USERS = 114L;
+    private static final long MENU_API_MGMT = 140L;
+    private static final long MENU_API_REGISTRY = 141L;
+    private static final long MENU_API_DOCS = 142L;
 
     private static final long ACTION_USERS_VIEW = 2001L;
     private static final long ACTION_USERS_ADD = 2002L;
@@ -139,6 +142,10 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         upsertMenu(MENU_GW_RATE, MENU_GATEWAY, "gw_rate", "限流管理", "/gateway/rate-limit", 2);
         upsertMenu(MENU_GW_IP, MENU_GATEWAY, "gw_ip", "IP 限制", "/gateway/ip-limit", 3);
 
+        upsertMenu(MENU_API_MGMT, MENU_PLATFORM, "api_mgmt", "API 管理", "/api", 4);
+        upsertMenu(MENU_API_REGISTRY, MENU_API_MGMT, "api_registry", "API 资源管理", "/api/registry", 1);
+        upsertMenu(MENU_API_DOCS, MENU_API_MGMT, "api_docs", "API 文档与调试", "/api/docs", 2);
+
         upsertMenu(MENU_OTHER, MENU_PLATFORM, "other", "其他", "/log", 3);
         upsertMenu(MENU_LOGS, MENU_OTHER, "account_logs", "审计日志", "/log/account", 1);
     }
@@ -175,6 +182,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(String.valueOf(MENU_GW_ROUTE));
         ids.add(String.valueOf(MENU_GW_RATE));
         ids.add(String.valueOf(MENU_GW_IP));
+        ids.add(String.valueOf(MENU_API_REGISTRY));
+        ids.add(String.valueOf(MENU_API_DOCS));
         ids.add(String.valueOf(MENU_LOGS));
         ids.add(authorityIdForAction(ACTION_USERS_VIEW, "users_view"));
         ids.add(authorityIdForAction(ACTION_USERS_ADD, "users_add"));

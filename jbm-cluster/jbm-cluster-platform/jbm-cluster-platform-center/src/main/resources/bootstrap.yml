@@ -51,6 +51,7 @@ jbm:
       - /user/sessions
       - /user/sessions/**
       - /internal/gateway/**
+      - /published-docs/**
       #      - /authority/access
       #      - /authority/app
       #      - /app/*/info

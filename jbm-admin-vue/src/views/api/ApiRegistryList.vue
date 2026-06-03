@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
+import { Plus, Pencil, Trash2, RefreshCw, BookOpen } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -30,9 +31,13 @@ import {
 import type { BaseApi } from '@/api/types'
 
 const feedback = useFeedback()
+const route = useRoute()
+const router = useRouter()
 
 const keyword = ref('')
 const serviceFilter = ref('')
+const pathFilter = ref('')
+const methodFilter = ref('')
 const statusFilter = ref<number | string>('')
 const isOpenFilter = ref<number | string>('')
 const isAuthFilter = ref<number | string>('')
@@ -50,6 +55,8 @@ function buildQuery(): BaseApiListQuery {
   return {
     keyword: keyword.value || undefined,
     serviceId: serviceFilter.value || undefined,
+    path: pathFilter.value || undefined,
+    requestMethod: methodFilter.value || undefined,
     status: statusFilter.value !== '' ? statusFilter.value : undefined,
     isOpen: isOpenFilter.value !== '' ? isOpenFilter.value : undefined,
     isAuth: isAuthFilter.value !== '' ? isAuthFilter.value : undefined,
@@ -278,7 +285,31 @@ async function loadServices() {
   }
 }
 
-onMounted(loadServices)
+function goDocs(row: BaseApi) {
+  router.push({
+    path: '/api/docs',
+    query: {
+      serviceId: row.serviceId,
+      path: row.path,
+      method: row.requestMethod,
+    },
+  })
+}
+
+function applyRouteQuery() {
+  const q = route.query
+  if (typeof q.serviceId === 'string') serviceFilter.value = q.serviceId
+  if (typeof q.path === 'string') pathFilter.value = q.path
+  if (typeof q.requestMethod === 'string') methodFilter.value = q.requestMethod
+}
+
+onMounted(async () => {
+  applyRouteQuery()
+  await loadServices()
+  if (route.query.serviceId || route.query.path) {
+    search()
+  }
+})
 </script>
 
 <template>
@@ -394,6 +425,9 @@ onMounted(loadServices)
               {{ row.accessLog ? '有' : '无' }}
             </td>
             <td class="p-3 text-right space-x-1">
+              <Button variant="outline" size="sm" title="查看文档" @click="goDocs(row)">
+                <BookOpen class="h-3.5 w-3.5" />
+              </Button>
               <Button variant="outline" size="sm" @click="handleOpenEdit(row)">
                 <Pencil class="h-3.5 w-3.5" />
               </Button>

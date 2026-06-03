@@ -30,6 +30,7 @@ export const docSections: DocSection[] = [
   { id: 'api-developer', title: '开发者接口 /developer/*', group: 'API 参考' },
   { id: 'sdk-frontend', title: '前端接入示例', group: 'SDK 与示例' },
   { id: 'sdk-backend', title: '后端接入示例', group: 'SDK 与示例' },
+  { id: 'published-api', title: '已发布开放 API', group: 'API 参考' },
   { id: 'faq', title: '常见问题', group: 'FAQ' },
 ]
 

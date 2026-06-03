@@ -91,5 +91,7 @@ public interface BaseApiService extends IMasterDataService<BaseApi> {
 
     BaseApi findApiByPath(String serviceId, String path);
 
+    BaseApi findApiByServicePathMethod(String serviceId, String path, String requestMethod);
+
     Integer batchUpdateAccessLog(List<String> ids, Boolean accessLog);
 }

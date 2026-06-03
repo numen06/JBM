@@ -21,6 +21,7 @@ import {
   Server,
   Activity,
   GitBranch,
+  FileCode2,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -120,6 +121,13 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         icon: Server,
         to: '/api/registry',
         menuCodes: ['authority', 'authority_catalog', 'api_registry', 'api_mgmt'],
+      },
+      {
+        name: 'api-docs',
+        title: 'API 文档与调试',
+        icon: FileCode2,
+        to: '/api/docs',
+        menuCodes: ['api_docs'],
       },
       {
         name: 'api-monitor',
