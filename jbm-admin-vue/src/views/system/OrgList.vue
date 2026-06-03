@@ -241,11 +241,7 @@ async function handleDelete(row: BaseOrg) {
   if (!id) return
   const blocked = deleteBlockedReason(row)
   if (blocked) {
-    await feedback.alert({
-      title: '无法删除组织',
-      message: blocked,
-      variant: 'destructive',
-    })
+    feedback.toast.warning(blocked, '无法删除组织')
     return
   }
   const confirmed = await feedback.confirm({

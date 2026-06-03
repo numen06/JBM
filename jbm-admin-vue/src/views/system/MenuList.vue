@@ -287,19 +287,11 @@ async function handleSave() {
 async function handleDelete(row: BaseMenu) {
   if (!row.menuId) return
   if (isPlatformMenu(row) && !isSuperAdmin.value) {
-    await feedback.alert({
-      title: '无法删除菜单',
-      message: '平台公共菜单仅平台超管可删除',
-      variant: 'destructive',
-    })
+    feedback.toast.warning('平台公共菜单仅平台超管可删除', '无法删除菜单')
     return
   }
   if (row.isPersist) {
-    await feedback.alert({
-      title: '无法删除菜单',
-      message: '保留菜单不可删除',
-      variant: 'destructive',
-    })
+    feedback.toast.warning('保留菜单不可删除', '无法删除菜单')
     return
   }
   const confirmed = await feedback.confirm({
@@ -316,11 +308,7 @@ async function handleDelete(row: BaseMenu) {
     }
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '删除失败',
-      message: e instanceof Error ? e.message : '删除失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '删除失败', '删除失败')
   }
 }
 

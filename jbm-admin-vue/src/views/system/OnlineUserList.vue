@@ -187,11 +187,7 @@ async function handleExpire(row: SysUserOnline) {
   if (raw == null) return
   const minutes = Number.parseInt(raw, 10)
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    await feedback.alert({
-      title: '输入无效',
-      message: '过期时间必须为正整数（分钟）。',
-      variant: 'destructive',
-    })
+    feedback.toast.error('过期时间必须为正整数（分钟）。', '输入无效')
     return
   }
   await runAction(() => expireToken(row.tokenId!, minutes))

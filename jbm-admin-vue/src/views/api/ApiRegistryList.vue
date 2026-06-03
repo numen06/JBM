@@ -180,11 +180,7 @@ async function handleDelete(row: BaseApi) {
     selectedIds.value.delete(row.apiId)
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '删除失败',
-      message: e instanceof Error ? e.message : '删除失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '删除失败', '删除失败')
   }
 }
 
@@ -202,11 +198,7 @@ async function handleBatchDelete() {
     selectedIds.value = new Set()
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '批量删除失败',
-      message: e instanceof Error ? e.message : '操作失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '操作失败', '批量删除失败')
   }
 }
 
@@ -223,11 +215,7 @@ async function handleBatchStatus(status: number) {
     await batchPatchApiStatus(ids, status)
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '操作失败',
-      message: e instanceof Error ? e.message : '操作失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '操作失败', '操作失败')
   }
 }
 
@@ -244,11 +232,7 @@ async function handleBatchOpen(open: boolean) {
     await batchPatchApiOpen(ids, open)
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '操作失败',
-      message: e instanceof Error ? e.message : '操作失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '操作失败', '操作失败')
   }
 }
 
@@ -265,11 +249,7 @@ async function handleBatchAuth(auth: boolean) {
     await batchPatchApiAuth(ids, auth ? 1 : 0)
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '操作失败',
-      message: e instanceof Error ? e.message : '操作失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '操作失败', '操作失败')
   }
 }
 
@@ -286,11 +266,7 @@ async function handleBatchAccessLog(accessLog: boolean) {
     await batchPatchApiAccessLog(ids, accessLog)
     load(page.value)
   } catch (e) {
-    await feedback.alert({
-      title: '操作失败',
-      message: e instanceof Error ? e.message : '操作失败',
-      variant: 'destructive',
-    })
+    feedback.toast.error(e instanceof Error ? e.message : '操作失败', '操作失败')
   }
 }
 

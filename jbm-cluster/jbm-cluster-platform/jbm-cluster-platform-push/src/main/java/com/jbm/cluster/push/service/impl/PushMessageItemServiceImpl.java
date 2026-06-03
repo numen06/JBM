@@ -119,6 +119,17 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
     public DataPaging<PushMessageItem> findUserPushMessage(PushMessageForm pushMessageform) {
         QueryWrapper<PushMessageItem> queryWrapper = currentQueryWrapper();
         queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), pushMessageform.getRecUserId());
+        if (pushMessageform.getReadFlag() != null) {
+            queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), pushMessageform.getReadFlag());
+        }
         return this.selectEntitysByWapper(queryWrapper, pushMessageform.getPageForm());
+    }
+
+    @Override
+    public long countUnread(Long recUserId) {
+        QueryWrapper<PushMessageItem> queryWrapper = currentQueryWrapper();
+        queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), recUserId);
+        queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), false);
+        return this.count(queryWrapper);
     }
 }

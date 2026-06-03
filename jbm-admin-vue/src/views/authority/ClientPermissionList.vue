@@ -173,7 +173,7 @@ async function savePermissions() {
       selectedAuthorityIds.value,
       expireTime.value || undefined,
     )
-    await feedback.alert({ title: '已保存', message: '客户端 API 权限已更新。' })
+    feedback.toast.success('客户端 API 权限已更新。', '已保存')
   } catch (e) {
     error.value = e instanceof Error ? e.message : '保存失败'
   } finally {

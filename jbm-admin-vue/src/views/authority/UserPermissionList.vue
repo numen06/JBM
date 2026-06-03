@@ -111,7 +111,7 @@ async function savePermissions() {
   try {
     const ids = ensureMenuPermissionsBeforeSave()
     await putUserAuthorities(selectedUser.value.userId, ids)
-    await feedback.alert({ title: '已保存', message: '用户权限已更新。' })
+    feedback.toast.success('用户权限已更新。', '已保存')
   } catch (e) {
     permError.value = e instanceof Error ? e.message : '保存失败'
   } finally {

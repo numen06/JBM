@@ -41,6 +41,7 @@ export const useMenuStore = defineStore('menu', () => {
   })
 
   function isRouteAllowed(path: string): boolean {
+    if (path === '/messages') return true
     if (!loaded.value) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
     if (rawMenus.value.length === 0) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true

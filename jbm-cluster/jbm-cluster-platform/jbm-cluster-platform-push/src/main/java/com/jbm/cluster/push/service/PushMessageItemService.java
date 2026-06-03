@@ -30,4 +30,6 @@ public interface PushMessageItemService extends IMasterDataService<PushMessageIt
     void sendCallBack(PushCallback pushCallback);
 
     DataPaging<PushMessageItem> findUserPushMessage(PushMessageForm pushMessageform);
+
+    long countUnread(Long recUserId);
 }

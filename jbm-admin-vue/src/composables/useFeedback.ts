@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 
 export type FeedbackVariant = 'default' | 'destructive'
 export type FeedbackKind = 'alert' | 'confirm' | 'prompt'
+export type ToastVariant = 'success' | 'info' | 'warning' | 'error'
 
 export interface FeedbackOptions {
   title?: string
@@ -22,15 +23,30 @@ interface FeedbackRequest extends PromptOptions {
   resolve: (value: boolean | string | null) => void
 }
 
+export interface ToastOptions {
+  title?: string
+  message: string
+  variant?: ToastVariant
+  duration?: number
+}
+
+export interface ToastRequest extends Required<Omit<ToastOptions, 'duration'>> {
+  id: number
+  duration: number
+}
+
 const state = reactive<{
   active: FeedbackRequest | null
   queue: FeedbackRequest[]
+  toasts: ToastRequest[]
 }>({
   active: null,
   queue: [],
+  toasts: [],
 })
 
 let nextId = 1
+let nextToastId = 1
 
 function enqueue(request: FeedbackRequest) {
   if (state.active) state.queue.push(request)
@@ -59,6 +75,35 @@ function open(kind: FeedbackKind, options: FeedbackOptions | PromptOptions) {
       resolve,
     })
   })
+}
+
+function dismissToast(id: number) {
+  const index = state.toasts.findIndex((item) => item.id === id)
+  if (index >= 0) state.toasts.splice(index, 1)
+}
+
+function toast(options: string | ToastOptions) {
+  const payload = typeof options === 'string' ? { message: options } : options
+  const variant = payload.variant ?? 'info'
+  const item: ToastRequest = {
+    id: nextToastId++,
+    title:
+      payload.title ??
+      {
+        success: '操作成功',
+        info: '提示',
+        warning: '请注意',
+        error: '操作失败',
+      }[variant],
+    message: payload.message,
+    variant,
+    duration: payload.duration ?? 3600,
+  }
+  state.toasts.push(item)
+  if (item.duration > 0) {
+    window.setTimeout(() => dismissToast(item.id), item.duration)
+  }
+  return item.id
 }
 
 export function useFeedback() {
@@ -94,6 +139,21 @@ export function useFeedback() {
         placeholder: options.placeholder,
       }).then((value) => (typeof value === 'string' ? value : null))
     },
+    toast: Object.assign(toast, {
+      success(message: string, title?: string) {
+        return toast({ title, message, variant: 'success' })
+      },
+      info(message: string, title?: string) {
+        return toast({ title, message, variant: 'info' })
+      },
+      warning(message: string, title?: string) {
+        return toast({ title, message, variant: 'warning' })
+      },
+      error(message: string, title?: string) {
+        return toast({ title, message, variant: 'error' })
+      },
+    }),
+    dismissToast,
     finish,
   }
 }

@@ -9,6 +9,8 @@ export interface ResultBody<T = unknown> {
 export interface PageForm {
   currPage?: number
   pageSize?: number
+  sortRule?: string
+  keyword?: string
 }
 
 export interface DataPaging<T> {
@@ -284,6 +286,34 @@ export interface CurrentUser {
   avatar?: string
   roles?: BaseRole[]
   authorities?: { authorityId?: string; authority?: string }[]
+}
+
+export type PushMessageType = 'notification' | 'alarm' | 'alert' | string
+export type PushMessageWay =
+  | 'internal'
+  | 'mqtt'
+  | 'wechat'
+  | 'miniapp'
+  | 'email'
+  | 'sms'
+  | 'app'
+  | string
+
+export interface PushMessage {
+  msgId?: string
+  pushStatus?: string
+  pushWay?: PushMessageWay
+  readFlag?: boolean
+  content?: unknown
+  title?: string
+  level?: number
+  type?: PushMessageType
+  createTime?: string
+}
+
+export interface PushMessageQuery {
+  readFlag?: boolean
+  pageForm?: PageForm
 }
 
 /** 扩展字段元数据（与后端 FieldDefinition 对齐） */

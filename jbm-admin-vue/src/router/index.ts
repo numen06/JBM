@@ -46,6 +46,12 @@ const router = createRouter({
           meta: { title: '仪表盘' },
         },
         {
+          path: 'messages',
+          name: 'messages',
+          component: () => import('@/views/messages/MessageCenter.vue'),
+          meta: { title: '消息中心' },
+        },
+        {
           path: 'system/users',
           name: 'users',
           component: () => import('@/views/system/UserList.vue'),

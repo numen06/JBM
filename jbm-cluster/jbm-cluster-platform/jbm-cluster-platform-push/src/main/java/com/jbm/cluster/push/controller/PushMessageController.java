@@ -15,6 +15,7 @@ import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +50,13 @@ public class PushMessageController {
     @PostMapping("/unread")
     public ResultBody<String> unread(@RequestBody ObjectIdsForm idsForm) {
         this.pushMessageItemService.unread(idsForm.getIds());
-        return ResultBody.success("标记未F读成功");
+        return ResultBody.success("标记未读成功");
     }
 
     @ApiOperation("查询消息列表")
     @PostMapping("/pageList")
     public ResultBody<DataPaging<PushMessageResult>> pageList(@RequestBody PushMessageForm pushMessageform) {
+        pushMessageform = normalizePageForm(pushMessageform);
         DataPaging<PushMessageResult> dataPaging = this.pushMessageBodyService.selectPushMessagePageList(pushMessageform);
         return ResultBody.success(dataPaging, "查询消息列表成功");
     }
@@ -64,10 +66,26 @@ public class PushMessageController {
     @PostMapping("/findCurrMessagePage")
     public ResultBody<DataPaging<PushMessageResult>> findCurrMessagePage(@RequestBody PushMessageForm pushMessageform) {
         JbmLoginUser jbmLoginUser = SecurityUtils.getLoginUser();
+        pushMessageform = normalizePageForm(pushMessageform);
         pushMessageform.setRecUserId(jbmLoginUser.getUserId());
         pushMessageform.getPageForm().setSortRule("createTime:desc");
         DataPaging<PushMessageResult> dataPaging = this.pushMessageBodyService.findUserPushMessage(pushMessageform);
         return ResultBody.success(dataPaging, "获取登录人的消息列表成功");
+    }
+
+    @ApiOperation("获取登录人的未读消息数")
+    @PostMapping("/unreadCount")
+    public ResultBody<Long> unreadCount() {
+        JbmLoginUser jbmLoginUser = SecurityUtils.getLoginUser();
+        return ResultBody.success(this.pushMessageItemService.countUnread(jbmLoginUser.getUserId()), "获取未读消息数成功");
+    }
+
+    private PushMessageForm normalizePageForm(PushMessageForm pushMessageform) {
+        PushMessageForm form = pushMessageform == null ? new PushMessageForm() : pushMessageform;
+        if (form.getPageForm() == null) {
+            form.setPageForm(new PageForm(1, 20));
+        }
+        return form;
     }
 
     @ApiOperation("发送用户站内信")
