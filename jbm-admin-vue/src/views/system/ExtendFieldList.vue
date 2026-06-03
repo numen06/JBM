@@ -265,6 +265,7 @@ function buildRequest() {
     code: formCodeInput.value.trim(),
     name: formName.value.trim() || formCodeInput.value.trim(),
     formOrTable: 'form',
+    detail: designMeta.value?.detail,
     customFormsItemList: normalized,
     autoPublishExtendField: autoPublish.value,
   }

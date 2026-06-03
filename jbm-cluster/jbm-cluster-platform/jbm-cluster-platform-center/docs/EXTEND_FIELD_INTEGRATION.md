@@ -42,6 +42,8 @@ jbm:
 ## CustomForms 联动
 
 - 表单 `code` 即 `formCode`。
+- `custom_forms.detail` 保存前端设计器完整 JSON（`formItems` + `formConfig`）；`extend_data` 不存表单设计。
+- `custom_forms_item` 保存可平铺字段明细，发布时只转换运行时字段子集。
 - `saveData` 成功后默认 `autoPublishExtendField=true`，将 `CustomFormsItem` 映射为 `FieldDefinition` 并发布。
 
 ## 其它微服务接入

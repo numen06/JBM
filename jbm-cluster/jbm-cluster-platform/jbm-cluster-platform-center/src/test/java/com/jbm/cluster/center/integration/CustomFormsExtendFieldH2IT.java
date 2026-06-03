@@ -80,6 +80,26 @@ class CustomFormsExtendFieldH2IT extends ExtendFieldH2RedisTestSupport {
     }
 
     @Test
+    @DisplayName("saveData stores and preserves designer detail JSON")
+    void saveData_storesAndPreservesDetailJson() {
+        String formCode = "it_design_" + System.nanoTime();
+        String detailJson = "{\"formItems\":[],\"formConfig\":{\"labelWidth\":120}}";
+        CustomFormsForm first = buildForm(formCode, "note", true);
+        first.setDetail(detailJson);
+
+        CustomForms saved = customFormsService.saveData(first);
+        CustomFormsForm query = new CustomFormsForm();
+        query.setId(saved.getId());
+        assertThat(customFormsService.getDetail(query).getDetail()).isEqualTo(detailJson);
+
+        customFormsService.saveData(buildForm(formCode, "score", true));
+        CustomFormsResult detail = customFormsService.getDetail(query);
+        assertThat(detail.getDetail()).isEqualTo(detailJson);
+        assertThat(detail.getCustomFormsItemList()).extracting(CustomFormsItem::getFieldName)
+                .containsExactly("score");
+    }
+
+    @Test
     @DisplayName("重复保存同一 code 时替换字段明细")
     void saveData_sameCode_replacesItems() {
         String formCode = "it_replace_" + System.nanoTime();

@@ -390,6 +390,7 @@ export interface CustomFormDesign {
   menuIds?: string
   formOrTable?: 'form' | 'table' | string
   dataSource?: string
+  detail?: string
   customFormsItemList?: CustomFormsItem[]
   autoPublishExtendField?: boolean
 }

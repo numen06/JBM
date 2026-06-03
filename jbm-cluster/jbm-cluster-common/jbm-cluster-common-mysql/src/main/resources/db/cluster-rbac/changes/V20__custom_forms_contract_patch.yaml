@@ -108,6 +108,24 @@ databaseChangeLog:
                   name: extend_data
                   type: LONGTEXT
   - changeSet:
+      id: custom-forms-detail
+      author: jbm
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: custom_forms
+        - not:
+            columnExists:
+              tableName: custom_forms
+              columnName: detail
+      changes:
+        - addColumn:
+            tableName: custom_forms
+            columns:
+              - column:
+                  name: detail
+                  type: LONGTEXT
+  - changeSet:
       id: custom-forms-create-time
       author: jbm
       preConditions:

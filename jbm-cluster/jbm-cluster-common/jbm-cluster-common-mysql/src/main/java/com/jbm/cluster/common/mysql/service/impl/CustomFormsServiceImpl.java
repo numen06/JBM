@@ -29,7 +29,7 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
 
     /** 兼容未执行 V20 前、部分设计态列缺失的旧库；V20 会补齐这些列。 */
     private static final String[] LEGACY_FORM_COLUMNS = {
-            "id", "code", "name", "menu_ids", "form_or_table", "data_source",
+            "id", "code", "name", "menu_ids", "form_or_table", "data_source", "detail",
             "app_id", "parent_id", "level", "leaf_path", "extend_data", "create_time", "update_time"
     };
 
@@ -56,13 +56,25 @@ public class CustomFormsServiceImpl extends MasterDataServiceImpl<CustomForms> i
         if (autoPublish && StrUtil.isBlank(form.getCode())) {
             throw new ServiceException("自动发布扩展字段时表单编码 code/formCode 不能为空");
         }
+        CustomForms existing = null;
         if (form.getId() == null && StrUtil.isNotBlank(form.getCode())) {
-            CustomForms existing = getOne(new QueryWrapper<CustomForms>()
-                    .select("id")
+            existing = getOne(new QueryWrapper<CustomForms>()
+                    .select("id", "detail")
                     .eq("code", form.getCode())
                     .last("LIMIT 1"));
             if (existing != null) {
                 form.setId(existing.getId());
+            }
+        }
+        if (form.getId() != null && form.getDetail() == null) {
+            if (existing == null) {
+                existing = getOne(new QueryWrapper<CustomForms>()
+                        .select("id", "detail")
+                        .eq("id", form.getId())
+                        .last("LIMIT 1"));
+            }
+            if (existing != null) {
+                form.setDetail(existing.getDetail());
             }
         }
         CustomForms customForms = super.saveEntity(form);

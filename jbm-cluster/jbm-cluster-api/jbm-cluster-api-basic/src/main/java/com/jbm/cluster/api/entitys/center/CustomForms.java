@@ -37,4 +37,6 @@ public class CustomForms extends MasterDataEntity {
     private FormOrTable formOrTable;
     @ApiModelProperty("数据源")
     private String dataSource;
+    @ApiModelProperty("表单设计JSON")
+    private String detail;
 }

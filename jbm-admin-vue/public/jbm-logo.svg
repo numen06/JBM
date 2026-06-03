@@ -1,20 +1,36 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">JBM Platform Logo</title>
-  <desc id="desc">A compact abstract logo for an open authentication and API platform.</desc>
-  <rect width="256" height="256" rx="56" fill="#0B1220"/>
-  <path d="M80 84C80 72.954 88.954 64 100 64H156C167.046 64 176 72.954 176 84V172C176 183.046 167.046 192 156 192H100C88.954 192 80 183.046 80 172V84Z" fill="#102A43"/>
-  <path d="M128 54L188 89V159L128 194L68 159V89L128 54Z" stroke="#60A5FA" stroke-width="14" stroke-linejoin="round"/>
-  <path d="M128 86L160 104V142L128 160L96 142V104L128 86Z" fill="#0B1220" stroke="#2DD4BF" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M128 54V86" stroke="#A7F3D0" stroke-width="12" stroke-linecap="round"/>
-  <path d="M68 89L96 104" stroke="#93C5FD" stroke-width="12" stroke-linecap="round"/>
-  <path d="M188 89L160 104" stroke="#93C5FD" stroke-width="12" stroke-linecap="round"/>
-  <path d="M68 159L96 142" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
-  <path d="M188 159L160 142" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
-  <path d="M128 160V194" stroke="#A7F3D0" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="128" cy="54" r="12" fill="#2DD4BF"/>
-  <circle cx="68" cy="89" r="10" fill="#60A5FA"/>
-  <circle cx="188" cy="89" r="10" fill="#60A5FA"/>
-  <circle cx="68" cy="159" r="10" fill="#10B981"/>
-  <circle cx="188" cy="159" r="10" fill="#10B981"/>
-  <circle cx="128" cy="194" r="12" fill="#2DD4BF"/>
+  <desc id="desc">A compact J-focused logo for the JBM platform.</desc>
+  <defs>
+    <linearGradient id="backgroundGlow" x1="34" y1="28" x2="221" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F766E"/>
+      <stop offset="0.42" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="jStroke" x1="76" y1="58" x2="164" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="0.55" stop-color="#DFF7FF"/>
+      <stop offset="1" stop-color="#99F6E4"/>
+    </linearGradient>
+    <linearGradient id="accentStroke" x1="66" y1="72" x2="191" y2="183" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="145%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#020617" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#07111F"/>
+  <path d="M32 184C72 152 92 92 137 64C171 43 202 47 224 58V256H32V184Z" fill="url(#backgroundGlow)" opacity="0.72"/>
+  <path d="M57 78C76 55 109 42 144 42C180 42 209 58 226 82" stroke="#38BDF8" stroke-width="10" stroke-linecap="round" opacity="0.45"/>
+  <path d="M58 173C78 205 112 221 149 214C174 210 197 196 211 175" stroke="#34D399" stroke-width="10" stroke-linecap="round" opacity="0.44"/>
+  <g filter="url(#softShadow)">
+    <path d="M91 65H171" stroke="#0B1220" stroke-width="34" stroke-linecap="round"/>
+    <path d="M154 65V150C154 185 127 205 96 194C78 188 66 174 63 158" stroke="#0B1220" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M91 65H171" stroke="url(#jStroke)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M154 65V150C154 185 127 205 96 194C78 188 66 174 63 158" stroke="url(#jStroke)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <path d="M87 118C102 103 120 96 143 97" stroke="url(#accentStroke)" stroke-width="9" stroke-linecap="round" opacity="0.92"/>
+  <circle cx="174" cy="65" r="13" fill="#2DD4BF"/>
+  <circle cx="174" cy="65" r="5" fill="#ECFEFF"/>
 </svg>
