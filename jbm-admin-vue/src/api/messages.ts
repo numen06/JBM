@@ -1,7 +1,7 @@
 import { post, unwrap } from './request'
 import type { DataPaging, PushMessage, PushMessageQuery } from './types'
 
-const BASE = '/jbm-cluster-platform-push/pushMessage'
+const BASE = '/push/pushMessage'
 
 export async function listCurrentMessages(
   page = 1,

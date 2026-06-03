@@ -15,31 +15,63 @@ const AUTH_PATH_PREFIXES = [
   '/oauth2',
   '/captcha',
   '/qrcode',
+  '/online',
+  '/token',
   '/internal/dev',
   '/internal/trust',
 ]
 
-const SERVICE_PATH_PREFIXES = [
+const JBM_SERVICE_PATH_PREFIXES = [
   '/auth',
   '/center',
-  '/jbm-cluster-platform-',
+  '/doc',
+  '/push',
+  '/logs',
+  '/bigscreen',
+  '/job',
+  '/weixin',
+]
+
+const JBM_SERVICE_ALIAS_MAP: Array<[string, string]> = [
+  ['/jbm-cluster-platform-auth', '/auth'],
+  ['/jbm-cluster-platform-center', '/center'],
+  ['/jbm-cluster-platform-doc', '/doc'],
+  ['/jbm-cluster-platform-push', '/push'],
+  ['/jbm-cluster-platform-logs', '/logs'],
+  ['/jbm-cluster-platform-bigscreen', '/bigscreen'],
+  ['/jbm-cluster-platform-job', '/job'],
+  ['/jbm-cluster-platform-weixin', '/weixin'],
 ]
 
 function matchesPathPrefix(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(`${prefix}/`)
 }
 
-function withServicePrefix(url: string): string {
+function hasServicePrefix(path: string): boolean {
+  return JBM_SERVICE_PATH_PREFIXES.some((prefix) => matchesPathPrefix(path, prefix))
+}
+
+function normalizeJbmServiceAlias(path: string): string {
+  for (const [fullPrefix, shortPrefix] of JBM_SERVICE_ALIAS_MAP) {
+    if (matchesPathPrefix(path, fullPrefix)) {
+      return `${shortPrefix}${path.slice(fullPrefix.length)}`
+    }
+  }
+  return path
+}
+
+export function withServicePrefix(url: string): string {
   if (!url || /^https?:\/\//i.test(url)) {
     return url
   }
   const normalized = url.startsWith('/') ? url : `/${url}`
-  if (SERVICE_PATH_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
-    return normalized
+  const serviceNormalized = normalizeJbmServiceAlias(normalized)
+  if (hasServicePrefix(serviceNormalized)) {
+    return serviceNormalized
   }
-  const queryIndex = normalized.search(/[?#]/)
-  const path = queryIndex >= 0 ? normalized.slice(0, queryIndex) : normalized
-  const suffix = queryIndex >= 0 ? normalized.slice(queryIndex) : ''
+  const queryIndex = serviceNormalized.search(/[?#]/)
+  const path = queryIndex >= 0 ? serviceNormalized.slice(0, queryIndex) : serviceNormalized
+  const suffix = queryIndex >= 0 ? serviceNormalized.slice(queryIndex) : ''
   const service = AUTH_PATH_PREFIXES.some((prefix) => matchesPathPrefix(path, prefix))
     ? '/auth'
     : '/center'
@@ -47,6 +79,9 @@ function withServicePrefix(url: string): string {
 }
 
 http.interceptors.request.use((config) => {
+  if (config.url) {
+    config.url = withServicePrefix(config.url)
+  }
   const auth = useAuthStore()
   if (auth.accessToken) {
     const token = auth.accessToken.startsWith('Bearer ')
