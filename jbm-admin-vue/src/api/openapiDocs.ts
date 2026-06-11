@@ -72,7 +72,7 @@ export async function saveOpenApiUseCase(operationId: number, payload: OpenApiUs
 }
 
 export async function publishOpenApiDocs(payload: OpenApiPublishRequest) {
-  const res = await post<unknown>('/api-docs/publish', payload)
+  const res = await post<PublishedDocSummary>('/api-docs/publish', payload)
   return unwrap(res)
 }
 

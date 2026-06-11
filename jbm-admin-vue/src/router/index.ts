@@ -36,6 +36,12 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/docs/openapi/:docKey',
+      name: 'published-openapi-doc',
+      component: () => import('@/views/docs/PublishedOpenApiPage.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/',
       component: () => import('@/layouts/AdminLayout.vue'),
       children: [

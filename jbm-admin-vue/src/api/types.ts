@@ -509,15 +509,18 @@ export interface OpenApiPublishRequest {
   title?: string
   version?: string
   publishedSummary?: string
+  format?: string
   selectionMode?: string
   serviceIds?: string[]
   operationIds?: number[]
+  filters?: Record<string, unknown>
 }
 
 export interface PublishedDocSummary {
   docKey?: string
   title?: string
   version?: string
+  contentType?: string
   publishedAt?: string
   publishedSummary?: string
   url?: string

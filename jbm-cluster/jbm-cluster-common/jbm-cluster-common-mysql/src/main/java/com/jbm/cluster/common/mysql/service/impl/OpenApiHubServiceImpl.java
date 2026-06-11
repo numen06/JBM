@@ -196,6 +196,16 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
     }
 
     @Override
+    public String renderHtml(OpenApiExportRequest request) {
+        List<OpenApiOperation> operations = resolveOperationsForExport(request);
+        if (operations.isEmpty()) {
+            throw new ServiceException("没有可预览的接口");
+        }
+        hydrateMissingSchemas(operations);
+        return buildHtml(operations);
+    }
+
+    @Override
     public OpenApiTestResult test(OpenApiTestRequest request, String authorization) {
         return openApiTestProxyService.execute(request, authorization);
     }
@@ -892,6 +902,13 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
     }
 
     private void writeHtml(List<OpenApiOperation> operations, HttpServletResponse response) throws IOException {
+        String html = buildHtml(operations);
+        response.setContentType("text/html; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + exportFilename("html") + "\"");
+        response.getOutputStream().write(html.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String buildHtml(List<OpenApiOperation> operations) {
         List<OpenApiOperation> sorted = sortedOperations(operations);
         StringBuilder html = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
                 + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
@@ -936,9 +953,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             appendHtmlOperation(html, op, index++);
         }
         html.append("</main></body></html>");
-        response.setContentType("text/html; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + exportFilename("html") + "\"");
-        response.getOutputStream().write(html.toString().getBytes(StandardCharsets.UTF_8));
+        return html.toString();
     }
 
     private void appendMarkdownOperation(StringBuilder md, OpenApiOperation op) {

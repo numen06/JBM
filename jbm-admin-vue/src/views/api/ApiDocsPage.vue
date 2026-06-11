@@ -79,8 +79,6 @@ const savingUseCase = ref(false)
 const useCaseName = ref('')
 const useCaseDescription = ref('')
 const previewing = ref(false)
-const previewUrl = ref('')
-const previewHtmlContent = ref('')
 
 const publishTitle = ref('JBM Open API')
 const publishVersion = ref('1.0.0')
@@ -288,17 +286,60 @@ async function doExport(format: string) {
 }
 
 async function previewHtml() {
+  const previewWindow = window.open('', '_blank')
+  if (previewWindow) {
+    const loadingHtml = [
+      '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OpenAPI 文档预览</title></head>',
+      '<body style="font-family: system-ui, sans-serif; padding: 24px;">正在生成可分享预览...</body></html>',
+    ].join('')
+    previewWindow.document.open()
+    previewWindow.document.write(loadingHtml)
+    previewWindow.document.close()
+  }
   previewing.value = true
   try {
-    const blob = await exportOpenApiDocs(exportPayload('HTML'))
-    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
-    previewUrl.value = ''
-    previewHtmlContent.value = await blob.text()
-    feedback.toast.success('预览已生成')
+    const docKey = `preview-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}`
+    const doc = await publishOpenApiDocs(previewPublishPayload(docKey))
+    const url = `${window.location.origin}/docs/openapi/${encodeURIComponent(doc?.docKey || docKey)}`
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.location.href = url
+      previewWindow.focus()
+    } else {
+      window.open(url, '_blank')
+    }
+    feedback.toast.success('预览地址已生成')
   } catch (e) {
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.close()
+    }
     feedback.toast.error(e instanceof Error ? e.message : '预览失败')
   } finally {
     previewing.value = false
+  }
+}
+
+function previewPublishPayload(docKey: string) {
+  const ids = [...checkedIds.value]
+  const base = {
+    docKey,
+    title: publishTitle.value || 'JBM Open API 预览',
+    version: publishVersion.value || 'preview',
+    publishedSummary: publishSummary.value || '在线预览快照',
+    format: 'HTML',
+  }
+  if (ids.length) {
+    return {
+      ...base,
+      selectionMode: 'CHECKED',
+      operationIds: ids,
+    }
+  }
+  const query = buildQuery()
+  return {
+    ...base,
+    selectionMode: 'FILTERED',
+    serviceIds: selectedServiceId.value ? [selectedServiceId.value] : undefined,
+    filters: query,
   }
 }
 
@@ -859,12 +900,6 @@ onMounted(async () => {
             <Upload class="mr-1 size-4" />
             发布为公开文档
           </Button>
-          <iframe
-            v-if="previewHtmlContent"
-            :srcdoc="previewHtmlContent"
-            title="OpenAPI 文档预览"
-            class="mt-4 h-[560px] w-full rounded border bg-background"
-          />
         </div>
       </div>
     </div>

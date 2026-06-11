@@ -51,6 +51,7 @@ public class PublishedApiDocController extends BaseController {
         map.put("docKey", doc.getDocKey());
         map.put("title", doc.getTitle());
         map.put("version", doc.getVersion());
+        map.put("contentType", doc.getContentType());
         map.put("publishedAt", doc.getPublishedAt());
         map.put("publishedSummary", doc.getPublishedSummary());
         map.put("url", "/published-docs/openapi/" + doc.getDocKey());

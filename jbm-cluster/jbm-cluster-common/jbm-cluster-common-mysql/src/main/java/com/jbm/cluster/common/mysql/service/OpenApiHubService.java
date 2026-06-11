@@ -18,6 +18,8 @@ public interface OpenApiHubService {
 
     void export(OpenApiExportRequest request, HttpServletResponse response);
 
+    String renderHtml(OpenApiExportRequest request);
+
     OpenApiTestResult test(OpenApiTestRequest request, String authorization);
 
     OpenApiOperation saveUseCase(Long operationId, OpenApiUseCaseSaveRequest request, Long userId);

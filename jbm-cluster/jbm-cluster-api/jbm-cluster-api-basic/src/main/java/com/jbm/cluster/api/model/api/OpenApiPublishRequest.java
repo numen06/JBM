@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @ApiModel("OpenAPI 发布请求")
@@ -22,6 +23,9 @@ public class OpenApiPublishRequest {
     @ApiModelProperty("发布说明")
     private String publishedSummary;
 
+    @ApiModelProperty("发布格式 JSON/HTML")
+    private String format;
+
     @ApiModelProperty("选择模式")
     private String selectionMode;
 
@@ -30,4 +34,7 @@ public class OpenApiPublishRequest {
 
     @ApiModelProperty("操作 ID 列表")
     private List<Long> operationIds;
+
+    @ApiModelProperty("筛选条件")
+    private Map<String, Object> filters;
 }
