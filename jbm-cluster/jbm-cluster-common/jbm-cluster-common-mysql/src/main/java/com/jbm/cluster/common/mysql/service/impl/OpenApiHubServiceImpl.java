@@ -3,6 +3,7 @@ package com.jbm.cluster.common.mysql.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
 import com.jbm.cluster.api.entitys.basic.OpenApiDocument;
@@ -42,6 +43,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -169,6 +171,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         if (operations.isEmpty()) {
             throw new ServiceException("没有可导出的接口");
         }
+        hydrateMissingSchemas(operations);
         String format = request != null && StrUtil.isNotBlank(request.getFormat())
                 ? request.getFormat().toUpperCase() : "JSON";
         try {
@@ -267,6 +270,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             markMissing(existingByKey, seenKeys, now);
             return new SyncStats(0, 0);
         }
+        String schemasJson = extractSchemasJson(root);
         for (String pathKey : paths.keySet()) {
             String path = OpenApiHubSupport.normalizePath(pathKey);
             JSONObject pathItem = paths.getJSONObject(pathKey);
@@ -314,6 +318,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
                 }
                 entity.setResponsesJson(operation.getJSONObject("responses") != null
                         ? operation.getJSONObject("responses").toJSONString() : null);
+                entity.setSchemasJson(schemasJson);
                 entity.setSecurityJson(operation.getJSONArray("security") != null
                         ? operation.getJSONArray("security").toJSONString() : null);
                 entity.setRawOperationJson(operation.toJSONString());
@@ -347,6 +352,41 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         }
         markMissing(existingByKey, seenKeys, now);
         return new SyncStats(total, linked);
+    }
+
+    private String extractSchemasJson(JSONObject root) {
+        JSONObject schemas = new JSONObject(true);
+        JSONObject definitions = root.getJSONObject("definitions");
+        if (definitions != null) {
+            schemas.putAll(definitions);
+        }
+        JSONObject components = root.getJSONObject("components");
+        if (components != null && components.getJSONObject("schemas") != null) {
+            schemas.putAll(components.getJSONObject("schemas"));
+        }
+        return schemas.isEmpty() ? null : schemas.toJSONString();
+    }
+
+    private void hydrateMissingSchemas(List<OpenApiOperation> operations) {
+        Map<Long, String> schemasByDocId = new HashMap<>();
+        for (OpenApiOperation operation : operations) {
+            if (operation == null || StrUtil.isNotBlank(operation.getSchemasJson()) || operation.getDocId() == null) {
+                continue;
+            }
+            String schemasJson = schemasByDocId.get(operation.getDocId());
+            if (!schemasByDocId.containsKey(operation.getDocId())) {
+                schemasJson = null;
+                OpenApiDocument doc = openApiDocumentMapper.selectById(operation.getDocId());
+                if (doc != null && StrUtil.isNotBlank(doc.getRawSpec())) {
+                    try {
+                        schemasJson = extractSchemasJson(JSON.parseObject(doc.getRawSpec()));
+                    } catch (Exception ignored) {
+                    }
+                }
+                schemasByDocId.put(operation.getDocId(), schemasJson);
+            }
+            operation.setSchemasJson(schemasJson);
+        }
     }
 
     private void markMissing(Map<String, OpenApiOperation> existingByKey, Set<String> seenKeys, Date now) {
@@ -590,37 +630,635 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
     }
 
     private void writeMarkdown(List<OpenApiOperation> operations, HttpServletResponse response) throws IOException {
-        StringBuilder md = new StringBuilder("# JBM API Export\n\n");
-        for (OpenApiOperation op : operations) {
-            md.append("## ").append(op.getRequestMethod()).append(' ').append(op.getPath()).append("\n\n");
-            if (StrUtil.isNotBlank(op.getSummary())) {
-                md.append(op.getSummary()).append("\n\n");
+        List<OpenApiOperation> sorted = sortedOperations(operations);
+        StringBuilder md = new StringBuilder("# JBM OpenAPI 接口文档\n\n");
+        md.append("- 生成时间: ").append(nowText()).append("\n");
+        md.append("- 接口数量: ").append(sorted.size()).append("\n");
+        md.append("- 说明: 本文档由已同步的 Swagger/OpenAPI spec 生成，JSON/YAML 导出仍保留给 Apifox/Postman 导入。\n\n");
+        md.append("## 目录\n\n");
+        for (OpenApiOperation op : sorted) {
+            md.append("- ").append(op.getServiceId()).append(" / ").append(firstTag(op)).append(" / ")
+                    .append(op.getRequestMethod()).append(' ').append(op.getPath()).append("\n");
+        }
+        md.append("\n");
+
+        String currentService = null;
+        String currentTag = null;
+        for (OpenApiOperation op : sorted) {
+            if (!StrUtil.equals(currentService, op.getServiceId())) {
+                currentService = op.getServiceId();
+                currentTag = null;
+                md.append("## ").append(currentService).append("\n\n");
             }
-            if (StrUtil.isNotBlank(op.getDescription())) {
-                md.append(op.getDescription()).append("\n\n");
+            String tag = firstTag(op);
+            if (!StrUtil.equals(currentTag, tag)) {
+                currentTag = tag;
+                md.append("### ").append(tag).append("\n\n");
             }
-            md.append("- 开放: ").append(op.getIsOpen()).append("\n");
-            md.append("- 认证: ").append(op.getIsAuth()).append("\n");
-            md.append("- 状态: ").append(op.getStatus()).append("\n\n");
+            appendMarkdownOperation(md, op);
         }
         response.setContentType("text/markdown; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"openapi.md\"");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + exportFilename("md") + "\"");
         response.getOutputStream().write(md.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private void writeHtml(List<OpenApiOperation> operations, HttpServletResponse response) throws IOException {
+        List<OpenApiOperation> sorted = sortedOperations(operations);
         StringBuilder html = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
-                + "<title>JBM API Export</title></head><body><h1>JBM API Export</h1>");
-        for (OpenApiOperation op : operations) {
-            html.append("<h2>").append(op.getRequestMethod()).append(' ').append(op.getPath()).append("</h2>");
-            if (StrUtil.isNotBlank(op.getSummary())) {
-                html.append("<p>").append(op.getSummary()).append("</p>");
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+                + "<title>JBM OpenAPI 接口文档</title><style>"
+                + "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#172033;background:#f8fafc;}"
+                + "aside{position:fixed;left:0;top:0;bottom:0;width:300px;overflow:auto;background:#fff;border-right:1px solid #e5e7eb;padding:20px;box-sizing:border-box;}"
+                + "main{margin-left:300px;padding:28px 40px;max-width:1180px;}"
+                + "h1{font-size:28px;margin:0 0 8px;}h2{margin-top:34px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;}h3{margin-top:26px;}"
+                + ".op{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;padding:18px;}"
+                + ".method{display:inline-block;min-width:58px;text-align:center;border-radius:4px;padding:3px 8px;margin-right:8px;font-weight:700;font-size:12px;background:#dbeafe;color:#1d4ed8;}"
+                + ".GET{background:#dcfce7;color:#166534}.POST{background:#dbeafe;color:#1d4ed8}.PUT{background:#fef3c7;color:#92400e}.PATCH{background:#ffedd5;color:#9a3412}.DELETE{background:#fee2e2;color:#991b1b}"
+                + "code,pre{font-family:Consolas,'JetBrains Mono',monospace;}pre{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:12px;overflow:auto;}"
+                + "table{width:100%;border-collapse:collapse;margin:10px 0 16px;}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top;}th{background:#f1f5f9;}"
+                + ".meta{color:#64748b;font-size:13px}.toc a{display:block;color:#334155;text-decoration:none;margin:6px 0;font-size:13px}.empty{color:#94a3b8;}"
+                + "</style></head><body><aside><h2>目录</h2><div class=\"toc\">");
+        int index = 0;
+        for (OpenApiOperation op : sorted) {
+            html.append("<a href=\"#op-").append(index).append("\">")
+                    .append(escapeHtml(op.getServiceId())).append(" / ")
+                    .append(escapeHtml(firstTag(op))).append(" / ")
+                    .append(escapeHtml(op.getRequestMethod())).append(' ')
+                    .append(escapeHtml(op.getPath())).append("</a>");
+            index++;
+        }
+        html.append("</div></aside><main><h1>JBM OpenAPI 接口文档</h1>")
+                .append("<p class=\"meta\">生成时间: ").append(escapeHtml(nowText()))
+                .append(" · 接口数量: ").append(sorted.size()).append("</p>");
+        index = 0;
+        String currentService = null;
+        String currentTag = null;
+        for (OpenApiOperation op : sorted) {
+            if (!StrUtil.equals(currentService, op.getServiceId())) {
+                currentService = op.getServiceId();
+                currentTag = null;
+                html.append("<h2>").append(escapeHtml(currentService)).append("</h2>");
+            }
+            String tag = firstTag(op);
+            if (!StrUtil.equals(currentTag, tag)) {
+                currentTag = tag;
+                html.append("<h3>").append(escapeHtml(tag)).append("</h3>");
+            }
+            appendHtmlOperation(html, op, index++);
+        }
+        html.append("</main></body></html>");
+        response.setContentType("text/html; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + exportFilename("html") + "\"");
+        response.getOutputStream().write(html.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void appendMarkdownOperation(StringBuilder md, OpenApiOperation op) {
+        md.append("#### ").append(op.getRequestMethod()).append(' ').append(op.getPath()).append("\n\n");
+        md.append(StrUtil.blankToDefault(op.getSummary(), "接口说明待补充")).append("\n\n");
+        if (StrUtil.isNotBlank(op.getDescription()) && !StrUtil.equals(op.getSummary(), op.getDescription())) {
+            md.append(op.getDescription()).append("\n\n");
+        }
+        md.append("| 属性 | 值 |\n|---|---|\n");
+        md.append("| 服务 | ").append(tableCell(op.getServiceId())).append(" |\n");
+        md.append("| 标签 | ").append(tableCell(firstTag(op))).append(" |\n");
+        md.append("| 是否开放 | ").append(tableCell(Boolean.TRUE.equals(op.getIsOpen() != null && op.getIsOpen() == 1) ? "是" : "否")).append(" |\n");
+        md.append("| 是否认证 | ").append(tableCell(op.getIsAuth() != null && op.getIsAuth() == 1 ? "是" : "否")).append(" |\n");
+        md.append("| 治理状态 | ").append(tableCell(text(op.getStatus()))).append(" |\n\n");
+        appendMarkdownParameters(md, op, "path", "路径参数");
+        appendMarkdownParameters(md, op, "query", "查询参数");
+        appendMarkdownParameters(md, op, "header", "请求头");
+        appendMarkdownParameters(md, op, "formData", "表单参数");
+        appendMarkdownRequestBody(md, op);
+        appendMarkdownResponses(md, op);
+    }
+
+    private void appendMarkdownParameters(StringBuilder md, OpenApiOperation op, String in, String title) {
+        JSONArray params = filterParameters(op, in);
+        if (params.isEmpty()) {
+            return;
+        }
+        md.append("**").append(title).append("**\n\n");
+        md.append("| 参数 | 类型 | 必填 | 示例 | 说明 |\n|---|---|---|---|---|\n");
+        for (Object item : params) {
+            JSONObject p = (JSONObject) item;
+            md.append("| ").append(tableCell(p.getString("name")))
+                    .append(" | ").append(tableCell(parameterType(p)))
+                    .append(" | ").append(Boolean.TRUE.equals(p.getBoolean("required")) ? "是" : "否")
+                    .append(" | ").append(tableCell(exampleValue(p)))
+                    .append(" | ").append(tableCell(p.getString("description")))
+                    .append(" |\n");
+        }
+        md.append("\n");
+    }
+
+    private void appendMarkdownRequestBody(StringBuilder md, OpenApiOperation op) {
+        JSONObject schema = requestSchema(op);
+        if (schema == null) {
+            return;
+        }
+        JSONObject schemas = parseJsonObject(op.getSchemasJson());
+        List<SchemaField> fields = schemaFields(schema, schemas);
+        md.append("**请求体**\n\n");
+        appendMarkdownSchemaTable(md, fields);
+        Object sample = sampleFromSchema(schema, schemas, 0);
+        md.append("请求示例\n\n```json\n").append(prettyJson(sample)).append("\n```\n\n");
+    }
+
+    private void appendMarkdownResponses(StringBuilder md, OpenApiOperation op) {
+        JSONObject responses = parseJsonObject(op.getResponsesJson());
+        if (responses == null || responses.isEmpty()) {
+            return;
+        }
+        JSONObject schemas = parseJsonObject(op.getSchemasJson());
+        md.append("**响应**\n\n");
+        for (String status : responses.keySet()) {
+            JSONObject response = responses.getJSONObject(status);
+            if (response == null) {
+                continue;
+            }
+            md.append("状态码 `").append(status).append("`: ")
+                    .append(StrUtil.blankToDefault(response.getString("description"), "-")).append("\n\n");
+            JSONObject schema = responseSchema(response);
+            if (schema != null) {
+                appendMarkdownSchemaTable(md, schemaFields(schema, schemas));
+                md.append("响应示例\n\n```json\n").append(prettyJson(sampleFromSchema(schema, schemas, 0))).append("\n```\n\n");
             }
         }
-        html.append("</body></html>");
-        response.setContentType("text/html; charset=UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"openapi.html\"");
-        response.getOutputStream().write(html.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void appendMarkdownSchemaTable(StringBuilder md, List<SchemaField> fields) {
+        if (fields.isEmpty()) {
+            md.append("_结构未在 spec 中声明，详见原始 schema。_\n\n");
+            return;
+        }
+        md.append("| 字段 | 类型 | 必填 | 说明 |\n|---|---|---|---|\n");
+        for (SchemaField field : fields) {
+            md.append("| ").append(tableCell(field.name))
+                    .append(" | ").append(tableCell(field.type))
+                    .append(" | ").append(field.required ? "是" : "否")
+                    .append(" | ").append(tableCell(field.description))
+                    .append(" |\n");
+        }
+        md.append("\n");
+    }
+
+    private void appendHtmlOperation(StringBuilder html, OpenApiOperation op, int index) {
+        html.append("<section class=\"op\" id=\"op-").append(index).append("\"><h3><span class=\"method ")
+                .append(escapeHtml(op.getRequestMethod())).append("\">")
+                .append(escapeHtml(op.getRequestMethod())).append("</span><code>")
+                .append(escapeHtml(op.getPath())).append("</code></h3>");
+        html.append("<p>").append(escapeHtml(StrUtil.blankToDefault(op.getSummary(), "接口说明待补充"))).append("</p>");
+        if (StrUtil.isNotBlank(op.getDescription()) && !StrUtil.equals(op.getSummary(), op.getDescription())) {
+            html.append("<p class=\"meta\">").append(escapeHtml(op.getDescription())).append("</p>");
+        }
+        html.append("<table><tbody>")
+                .append(htmlRow("服务", op.getServiceId()))
+                .append(htmlRow("标签", firstTag(op)))
+                .append(htmlRow("是否开放", op.getIsOpen() != null && op.getIsOpen() == 1 ? "是" : "否"))
+                .append(htmlRow("是否认证", op.getIsAuth() != null && op.getIsAuth() == 1 ? "是" : "否"))
+                .append(htmlRow("治理状态", text(op.getStatus())))
+                .append("</tbody></table>");
+        appendHtmlParameters(html, op, "path", "路径参数");
+        appendHtmlParameters(html, op, "query", "查询参数");
+        appendHtmlParameters(html, op, "header", "请求头");
+        appendHtmlParameters(html, op, "formData", "表单参数");
+        appendHtmlRequestBody(html, op);
+        appendHtmlResponses(html, op);
+        html.append("</section>");
+    }
+
+    private void appendHtmlParameters(StringBuilder html, OpenApiOperation op, String in, String title) {
+        JSONArray params = filterParameters(op, in);
+        if (params.isEmpty()) {
+            return;
+        }
+        html.append("<h4>").append(escapeHtml(title)).append("</h4><table><thead><tr>")
+                .append("<th>参数</th><th>类型</th><th>必填</th><th>示例</th><th>说明</th>")
+                .append("</tr></thead><tbody>");
+        for (Object item : params) {
+            JSONObject p = (JSONObject) item;
+            html.append("<tr><td><code>").append(escapeHtml(p.getString("name"))).append("</code></td>")
+                    .append("<td>").append(escapeHtml(parameterType(p))).append("</td>")
+                    .append("<td>").append(Boolean.TRUE.equals(p.getBoolean("required")) ? "是" : "否").append("</td>")
+                    .append("<td>").append(escapeHtml(exampleValue(p))).append("</td>")
+                    .append("<td>").append(escapeHtml(p.getString("description"))).append("</td></tr>");
+        }
+        html.append("</tbody></table>");
+    }
+
+    private void appendHtmlRequestBody(StringBuilder html, OpenApiOperation op) {
+        JSONObject schema = requestSchema(op);
+        if (schema == null) {
+            return;
+        }
+        JSONObject schemas = parseJsonObject(op.getSchemasJson());
+        html.append("<h4>请求体</h4>");
+        appendHtmlSchemaTable(html, schemaFields(schema, schemas));
+        html.append("<p class=\"meta\">请求示例</p><pre>").append(escapeHtml(prettyJson(sampleFromSchema(schema, schemas, 0)))).append("</pre>");
+    }
+
+    private void appendHtmlResponses(StringBuilder html, OpenApiOperation op) {
+        JSONObject responses = parseJsonObject(op.getResponsesJson());
+        if (responses == null || responses.isEmpty()) {
+            return;
+        }
+        JSONObject schemas = parseJsonObject(op.getSchemasJson());
+        html.append("<h4>响应</h4>");
+        for (String status : responses.keySet()) {
+            JSONObject response = responses.getJSONObject(status);
+            if (response == null) {
+                continue;
+            }
+            html.append("<p><strong>").append(escapeHtml(status)).append("</strong> ")
+                    .append(escapeHtml(StrUtil.blankToDefault(response.getString("description"), ""))).append("</p>");
+            JSONObject schema = responseSchema(response);
+            if (schema != null) {
+                appendHtmlSchemaTable(html, schemaFields(schema, schemas));
+                html.append("<pre>").append(escapeHtml(prettyJson(sampleFromSchema(schema, schemas, 0)))).append("</pre>");
+            }
+        }
+    }
+
+    private void appendHtmlSchemaTable(StringBuilder html, List<SchemaField> fields) {
+        if (fields.isEmpty()) {
+            html.append("<p class=\"empty\">结构未在 spec 中声明，详见原始 schema。</p>");
+            return;
+        }
+        html.append("<table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody>");
+        for (SchemaField field : fields) {
+            html.append("<tr><td><code>").append(escapeHtml(field.name)).append("</code></td>")
+                    .append("<td>").append(escapeHtml(field.type)).append("</td>")
+                    .append("<td>").append(field.required ? "是" : "否").append("</td>")
+                    .append("<td>").append(escapeHtml(field.description)).append("</td></tr>");
+        }
+        html.append("</tbody></table>");
+    }
+
+    private List<OpenApiOperation> sortedOperations(List<OpenApiOperation> operations) {
+        List<OpenApiOperation> sorted = new ArrayList<>(operations);
+        sorted.sort((a, b) -> {
+            int service = text(a.getServiceId()).compareToIgnoreCase(text(b.getServiceId()));
+            if (service != 0) {
+                return service;
+            }
+            int tag = firstTag(a).compareToIgnoreCase(firstTag(b));
+            if (tag != 0) {
+                return tag;
+            }
+            int path = text(a.getPath()).compareToIgnoreCase(text(b.getPath()));
+            if (path != 0) {
+                return path;
+            }
+            return text(a.getRequestMethod()).compareToIgnoreCase(text(b.getRequestMethod()));
+        });
+        return sorted;
+    }
+
+    private JSONArray filterParameters(OpenApiOperation op, String in) {
+        JSONArray result = new JSONArray();
+        JSONArray params = parseJsonArray(op.getParametersJson());
+        for (Object item : params) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject param = (JSONObject) item;
+            if (StrUtil.equalsIgnoreCase(in, param.getString("in"))) {
+                result.add(param);
+            }
+        }
+        return result;
+    }
+
+    private JSONObject requestSchema(OpenApiOperation op) {
+        JSONObject requestBody = parseJsonObject(op.getRequestBodyJson());
+        JSONObject schema = schemaFromBodyObject(requestBody);
+        if (schema != null) {
+            return schema;
+        }
+        JSONArray params = parseJsonArray(op.getParametersJson());
+        for (Object item : params) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject param = (JSONObject) item;
+            if (StrUtil.equalsIgnoreCase("body", param.getString("in")) && param.getJSONObject("schema") != null) {
+                return param.getJSONObject("schema");
+            }
+        }
+        return null;
+    }
+
+    private JSONObject schemaFromBodyObject(JSONObject body) {
+        if (body == null) {
+            return null;
+        }
+        if (body.getJSONObject("schema") != null) {
+            return body.getJSONObject("schema");
+        }
+        JSONObject content = body.getJSONObject("content");
+        if (content != null && !content.isEmpty()) {
+            JSONObject media = content.getJSONObject("application/json");
+            if (media == null) {
+                for (String key : content.keySet()) {
+                    media = content.getJSONObject(key);
+                    if (media != null) {
+                        break;
+                    }
+                }
+            }
+            if (media != null) {
+                return media.getJSONObject("schema");
+            }
+        }
+        return null;
+    }
+
+    private JSONObject responseSchema(JSONObject response) {
+        if (response == null) {
+            return null;
+        }
+        if (response.getJSONObject("schema") != null) {
+            return response.getJSONObject("schema");
+        }
+        JSONObject content = response.getJSONObject("content");
+        if (content != null && !content.isEmpty()) {
+            JSONObject media = content.getJSONObject("application/json");
+            if (media == null) {
+                for (String key : content.keySet()) {
+                    media = content.getJSONObject(key);
+                    if (media != null) {
+                        break;
+                    }
+                }
+            }
+            if (media != null) {
+                return media.getJSONObject("schema");
+            }
+        }
+        return null;
+    }
+
+    private List<SchemaField> schemaFields(JSONObject schema, JSONObject schemas) {
+        List<SchemaField> fields = new ArrayList<>();
+        appendSchemaFields(fields, "", schema, schemas, Collections.emptySet(), 0);
+        return fields;
+    }
+
+    private void appendSchemaFields(List<SchemaField> fields, String prefix, JSONObject schema,
+                                    JSONObject schemas, Set<String> required, int depth) {
+        if (schema == null || depth > 3) {
+            return;
+        }
+        JSONObject resolved = resolveSchema(schema, schemas);
+        if (resolved == null) {
+            return;
+        }
+        JSONObject properties = resolved.getJSONObject("properties");
+        if (properties == null && "array".equals(resolved.getString("type"))) {
+            JSONObject items = resolveSchema(resolved.getJSONObject("items"), schemas);
+            if (items != null) {
+                properties = items.getJSONObject("properties");
+                required = requiredNames(items);
+                prefix = StrUtil.isBlank(prefix) ? "[]" : prefix + "[]";
+            }
+        }
+        if (properties == null || properties.isEmpty()) {
+            if (StrUtil.isNotBlank(prefix)) {
+                fields.add(new SchemaField(prefix, schemaType(resolved, schemas), required.contains(prefix), resolved.getString("description")));
+            }
+            return;
+        }
+        Set<String> requiredNames = requiredNames(resolved);
+        for (String name : properties.keySet()) {
+            JSONObject property = properties.getJSONObject(name);
+            if (property == null) {
+                continue;
+            }
+            JSONObject propertyResolved = resolveSchema(property, schemas);
+            String fieldName = StrUtil.isBlank(prefix) ? name : prefix + "." + name;
+            fields.add(new SchemaField(fieldName, schemaType(property, schemas), requiredNames.contains(name),
+                    propertyResolved != null ? propertyResolved.getString("description") : property.getString("description")));
+            JSONObject nested = propertyResolved != null ? propertyResolved : property;
+            if (nested.getJSONObject("properties") != null
+                    || nested.getString("$ref") != null
+                    || ("array".equals(nested.getString("type")) && nested.getJSONObject("items") != null)) {
+                appendSchemaFields(fields, fieldName, nested, schemas, requiredNames(nested), depth + 1);
+            }
+        }
+    }
+
+    private JSONObject resolveSchema(JSONObject schema, JSONObject schemas) {
+        if (schema == null) {
+            return null;
+        }
+        String ref = schema.getString("$ref");
+        if (StrUtil.isNotBlank(ref) && schemas != null) {
+            String name = ref.substring(ref.lastIndexOf('/') + 1);
+            JSONObject resolved = schemas.getJSONObject(name);
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        JSONArray allOf = schema.getJSONArray("allOf");
+        if (allOf != null && !allOf.isEmpty() && allOf.get(0) instanceof JSONObject) {
+            JSONObject merged = new JSONObject(true);
+            for (Object item : allOf) {
+                if (!(item instanceof JSONObject)) {
+                    continue;
+                }
+                JSONObject part = resolveSchema((JSONObject) item, schemas);
+                if (part != null) {
+                    merged.putAll(part);
+                }
+            }
+            return merged.isEmpty() ? schema : merged;
+        }
+        return schema;
+    }
+
+    private Set<String> requiredNames(JSONObject schema) {
+        JSONArray required = schema != null ? schema.getJSONArray("required") : null;
+        Set<String> names = new HashSet<>();
+        if (required != null) {
+            for (Object item : required) {
+                names.add(String.valueOf(item));
+            }
+        }
+        return names;
+    }
+
+    private String schemaType(JSONObject schema, JSONObject schemas) {
+        if (schema == null) {
+            return "";
+        }
+        if (StrUtil.isNotBlank(schema.getString("$ref"))) {
+            return schema.getString("$ref").substring(schema.getString("$ref").lastIndexOf('/') + 1);
+        }
+        String type = schema.getString("type");
+        if ("array".equals(type)) {
+            return "array<" + schemaType(schema.getJSONObject("items"), schemas) + ">";
+        }
+        if (StrUtil.isBlank(type) && schema.getJSONObject("properties") != null) {
+            type = "object";
+        }
+        String format = schema.getString("format");
+        return StrUtil.isNotBlank(format) ? type + "(" + format + ")" : StrUtil.blankToDefault(type, "object");
+    }
+
+    private Object sampleFromSchema(JSONObject schema, JSONObject schemas, int depth) {
+        if (schema == null || depth > 3) {
+            return new LinkedHashMap<>();
+        }
+        JSONObject resolved = resolveSchema(schema, schemas);
+        if (resolved == null) {
+            return new LinkedHashMap<>();
+        }
+        Object example = resolved.get("example");
+        if (example == null) {
+            example = resolved.get("default");
+        }
+        if (example != null) {
+            return example;
+        }
+        String type = resolved.getString("type");
+        if ("array".equals(type)) {
+            List<Object> list = new ArrayList<>();
+            list.add(sampleFromSchema(resolved.getJSONObject("items"), schemas, depth + 1));
+            return list;
+        }
+        JSONObject properties = resolved.getJSONObject("properties");
+        if (properties != null && !properties.isEmpty()) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            for (String name : properties.keySet()) {
+                map.put(name, sampleFromSchema(properties.getJSONObject(name), schemas, depth + 1));
+            }
+            return map;
+        }
+        if ("integer".equals(type) || "number".equals(type)) {
+            return 0;
+        }
+        if ("boolean".equals(type)) {
+            return false;
+        }
+        return "string";
+    }
+
+    private String parameterType(JSONObject param) {
+        if (param == null) {
+            return "";
+        }
+        if (param.getJSONObject("schema") != null) {
+            return schemaType(param.getJSONObject("schema"), null);
+        }
+        String type = param.getString("type");
+        if ("array".equals(type) && param.getJSONObject("items") != null) {
+            return "array<" + param.getJSONObject("items").getString("type") + ">";
+        }
+        return StrUtil.blankToDefault(type, "string");
+    }
+
+    private String exampleValue(JSONObject param) {
+        if (param == null) {
+            return "";
+        }
+        Object example = param.get("example");
+        if (example == null) {
+            example = param.get("default");
+        }
+        if (example != null) {
+            return String.valueOf(example);
+        }
+        String type = parameterType(param);
+        if (type.startsWith("integer") || type.startsWith("number")) {
+            return "0";
+        }
+        if (type.startsWith("boolean")) {
+            return "false";
+        }
+        return "";
+    }
+
+    private String firstTag(OpenApiOperation op) {
+        JSONArray tags = parseJsonArray(op.getTags());
+        if (!tags.isEmpty()) {
+            return String.valueOf(tags.get(0));
+        }
+        return StrUtil.blankToDefault(op.getServiceId(), "默认分组");
+    }
+
+    private JSONObject parseJsonObject(String raw) {
+        if (StrUtil.isBlank(raw)) {
+            return null;
+        }
+        try {
+            Object parsed = JSON.parse(raw);
+            return parsed instanceof JSONObject ? (JSONObject) parsed : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private JSONArray parseJsonArray(String raw) {
+        if (StrUtil.isBlank(raw)) {
+            return new JSONArray();
+        }
+        try {
+            Object parsed = JSON.parse(raw);
+            return parsed instanceof JSONArray ? (JSONArray) parsed : new JSONArray();
+        } catch (Exception e) {
+            return new JSONArray();
+        }
+    }
+
+    private String prettyJson(Object value) {
+        try {
+            return JSON.toJSONString(value, true);
+        } catch (Exception e) {
+            return text(value);
+        }
+    }
+
+    private String nowText() {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    }
+
+    private String exportFilename(String ext) {
+        return "jbm-openapi-" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + "." + ext;
+    }
+
+    private String htmlRow(String key, String value) {
+        return "<tr><th>" + escapeHtml(key) + "</th><td>" + escapeHtml(value) + "</td></tr>";
+    }
+
+    private String tableCell(String value) {
+        return StrUtil.blankToDefault(value, "").replace("|", "\\|").replace("\r", " ").replace("\n", "<br>");
+    }
+
+    private String text(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private String escapeHtml(String value) {
+        String text = StrUtil.blankToDefault(value, "");
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
+    private static class SchemaField {
+        private final String name;
+        private final String type;
+        private final boolean required;
+        private final String description;
+
+        private SchemaField(String name, String type, boolean required, String description) {
+            this.name = name;
+            this.type = type;
+            this.required = required;
+            this.description = description;
+        }
     }
 
     private Map<String, Object> buildExportSpec(List<OpenApiOperation> operations) {
@@ -650,6 +1288,18 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             pathItem.put(op.getRequestMethod().toLowerCase(), operation);
         }
         spec.put("paths", paths);
+        JSONObject schemas = new JSONObject(true);
+        for (OpenApiOperation op : operations) {
+            JSONObject opSchemas = parseJsonObject(op.getSchemasJson());
+            if (opSchemas != null) {
+                schemas.putAll(opSchemas);
+            }
+        }
+        if (!schemas.isEmpty()) {
+            Map<String, Object> components = new LinkedHashMap<>();
+            components.put("schemas", schemas);
+            spec.put("components", components);
+        }
         return spec;
     }
 

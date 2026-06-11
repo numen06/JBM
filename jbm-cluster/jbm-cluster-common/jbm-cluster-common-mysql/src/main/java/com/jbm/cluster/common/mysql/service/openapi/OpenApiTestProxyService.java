@@ -12,9 +12,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -44,7 +50,7 @@ public class OpenApiTestProxyService {
     @Autowired
     private OpenApiRouteAliasSupport routeAliasSupport;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate(requestFactory());
 
     public OpenApiTestResult execute(OpenApiTestRequest request, String callerAuthorization) {
         OpenApiOperation operation = resolveOperation(request);
@@ -54,39 +60,72 @@ public class OpenApiTestProxyService {
         String resolvedPath = resolvePath(operation.getPath(), request.getPathParams());
         String url = buildUrl(alias, resolvedPath, request.getQueryParams());
         HttpHeaders headers = sanitizeHeaders(request.getHeaders());
-        applyCallerAuthorization(headers, callerAuthorization);
+        boolean authorizationApplied = applyCallerAuthorization(headers, callerAuthorization);
+        applyDefaultContentType(headers, request.getBody());
         HttpEntity<String> entity = new HttpEntity<>(request.getBody(), headers);
         long start = System.currentTimeMillis();
         OpenApiTestResult result = new OpenApiTestResult();
         result.setTarget(method + " /" + alias + resolvedPath);
+        result.setRequestUrl(url);
+        result.setAuthorizationApplied(authorizationApplied);
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     url, HttpMethod.valueOf(method), entity, String.class);
-            long duration = System.currentTimeMillis() - start;
             result.setSuccess(true);
             result.setStatus(response.getStatusCodeValue());
-            result.setDurationMs(duration);
             result.setHeaders(flattenHeaders(response.getHeaders()));
-            String body = response.getBody() != null ? response.getBody() : "";
-            result.setTruncated(body.length() > BODY_PREVIEW_LIMIT);
-            result.setBodyPreview(result.getTruncated() ? body.substring(0, BODY_PREVIEW_LIMIT) : body);
+            applyBodyPreview(result, response.getBody());
+        } catch (HttpStatusCodeException e) {
+            result.setSuccess(false);
+            result.setStatus(e.getRawStatusCode());
+            result.setHeaders(flattenHeaders(e.getResponseHeaders()));
+            result.setErrorType("HTTP_STATUS");
+            result.setErrorMessage(StrUtil.maxLength(e.getStatusText(), 500));
+            applyBodyPreview(result, e.getResponseBodyAsString());
+        } catch (ResourceAccessException e) {
+            result.setSuccess(false);
+            result.setErrorType("NETWORK");
+            result.setErrorMessage(StrUtil.maxLength(e.getMessage(), 500));
+            log.warn("OpenAPI test proxy network failed: {}", result.getTarget(), e);
+        } catch (RestClientException e) {
+            result.setSuccess(false);
+            result.setErrorType("CLIENT");
+            result.setErrorMessage(StrUtil.maxLength(e.getMessage(), 500));
+            log.warn("OpenAPI test proxy client failed: {}", result.getTarget(), e);
         } catch (Exception e) {
             result.setSuccess(false);
-            result.setDurationMs(System.currentTimeMillis() - start);
+            result.setErrorType("UNKNOWN");
             result.setErrorMessage(StrUtil.maxLength(e.getMessage(), 500));
             log.warn("OpenAPI test proxy failed: {}", result.getTarget(), e);
+        } finally {
+            result.setDurationMs(System.currentTimeMillis() - start);
         }
         return result;
     }
 
-    private void applyCallerAuthorization(HttpHeaders headers, String authorization) {
+    private boolean applyCallerAuthorization(HttpHeaders headers, String authorization) {
         if (StrUtil.isBlank(authorization)) {
-            return;
+            return false;
         }
         String value = authorization.trim();
         if (StrUtil.startWithIgnoreCase(value, "Bearer ")) {
             headers.set(HttpHeaders.AUTHORIZATION, value);
+            return true;
         }
+        return false;
+    }
+
+    private void applyDefaultContentType(HttpHeaders headers, String body) {
+        if (StrUtil.isNotBlank(body) && headers.getContentType() == null) {
+            headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        }
+    }
+
+    private void applyBodyPreview(OpenApiTestResult result, String body) {
+        String preview = body != null ? body : "";
+        result.setTruncated(preview.length() > BODY_PREVIEW_LIMIT);
+        result.setBodyPreview(Boolean.TRUE.equals(result.getTruncated())
+                ? preview.substring(0, BODY_PREVIEW_LIMIT) : preview);
     }
 
     private OpenApiOperation resolveOperation(OpenApiTestRequest request) {
@@ -134,7 +173,9 @@ public class OpenApiTestProxyService {
                 if (!first) {
                     url.append('&');
                 }
-                url.append(entry.getKey()).append('=').append(entry.getValue());
+                url.append(UriUtils.encodeQueryParam(StrUtil.nullToEmpty(entry.getKey()), "UTF-8"))
+                        .append('=')
+                        .append(UriUtils.encodeQueryParam(StrUtil.nullToEmpty(entry.getValue()), "UTF-8"));
                 first = false;
             }
         }
@@ -147,7 +188,8 @@ public class OpenApiTestProxyService {
         }
         String resolved = template;
         for (Map.Entry<String, String> entry : pathParams.entrySet()) {
-            resolved = resolved.replace("{" + entry.getKey() + "}", entry.getValue());
+            resolved = resolved.replace("{" + entry.getKey() + "}",
+                    UriUtils.encodePathSegment(StrUtil.nullToEmpty(entry.getValue()), "UTF-8"));
         }
         return resolved;
     }
@@ -177,5 +219,12 @@ public class OpenApiTestProxyService {
             }
         });
         return map;
+    }
+
+    private static SimpleClientHttpRequestFactory requestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(TIMEOUT_MS);
+        factory.setReadTimeout(TIMEOUT_MS);
+        return factory;
     }
 }

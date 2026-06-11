@@ -469,7 +469,10 @@ export interface OpenApiTestResult {
   bodyPreview?: string
   truncated?: boolean
   target?: string
+  requestUrl?: string
+  errorType?: string
   errorMessage?: string
+  authorizationApplied?: boolean
 }
 
 export interface OpenApiExportRequest {

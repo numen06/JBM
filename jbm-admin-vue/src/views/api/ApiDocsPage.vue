@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Upload,
   Search,
+  Eye,
 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -16,6 +17,7 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { useFeedback } from '@/composables/useFeedback'
+import { useAuthStore } from '@/stores/auth'
 import {
   listOpenApiSources,
   listOpenApiOperations,
@@ -29,6 +31,7 @@ import type { OpenApiOperationDetail, OpenApiOperationView, OpenApiSource } from
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const feedback = useFeedback()
+const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -53,12 +56,24 @@ const operationDetail = ref<OpenApiOperationDetail | null>(null)
 const checkedIds = ref<Set<number>>(new Set())
 const detailTab = ref('overview')
 
-const testQueryJson = ref('{}')
-const testHeadersJson = ref('{"tenantId":"0"}')
+type TestParam = {
+  name: string
+  in: string
+  type: string
+  required: boolean
+  description?: string
+  value: string
+}
+
+const testPathParams = ref<TestParam[]>([])
+const testQueryParams = ref<TestParam[]>([])
+const testHeaderParams = ref<TestParam[]>([])
 const testBody = ref('')
 const testConfirm = ref(false)
 const testResult = ref<string>('')
 const testing = ref(false)
+const previewing = ref(false)
+const previewUrl = ref('')
 
 const publishTitle = ref('JBM Open API')
 const publishVersion = ref('1.0.0')
@@ -67,6 +82,10 @@ const publishDocKey = ref('default')
 
 const selectedSource = computed(() =>
   sources.value.find((s) => s.serviceId === selectedServiceId.value),
+)
+
+const selectedMethod = computed(() =>
+  (operationDetail.value?.method ?? operationDetail.value?.requestMethod ?? '').toUpperCase(),
 )
 
 function sourceScore(source: OpenApiSource) {
@@ -158,9 +177,43 @@ async function selectOperation(op: OpenApiOperationView) {
   try {
     operationDetail.value = await getOpenApiOperation(op.operationId)
     detailTab.value = 'overview'
-    testBody.value = op.method === 'GET' ? '' : '{}'
+    resetTestForm(operationDetail.value)
   } catch (e) {
     feedback.toast.error(e instanceof Error ? e.message : '加载接口详情失败')
+  }
+}
+
+function resetTestForm(detail: OpenApiOperationDetail) {
+  const params = parseJsonBlock(detail.parametersJson)
+  const list = Array.isArray(params) ? params : []
+  const tenantId = authStore.tenantId || '0'
+  testPathParams.value = list.filter((p) => p?.in === 'path').map(toTestParam)
+  testQueryParams.value = list.filter((p) => p?.in === 'query').map(toTestParam)
+  testHeaderParams.value = list.filter((p) => p?.in === 'header').map(toTestParam)
+  if (!testHeaderParams.value.some((p) => p.name.toLowerCase() === 'tenantid')) {
+    testHeaderParams.value.unshift({
+      name: 'tenantId',
+      in: 'header',
+      type: 'string',
+      required: false,
+      description: '租户标识',
+      value: tenantId,
+    })
+  }
+  const method = (detail.method ?? detail.requestMethod ?? 'GET').toUpperCase()
+  testBody.value = ['GET', 'HEAD', 'OPTIONS'].includes(method) ? '' : buildRequestBodySample(detail)
+  testConfirm.value = false
+  testResult.value = ''
+}
+
+function toTestParam(raw: Record<string, unknown>): TestParam {
+  return {
+    name: String(raw.name ?? ''),
+    in: String(raw.in ?? ''),
+    type: parameterType(raw),
+    required: raw.required === true,
+    description: typeof raw.description === 'string' ? raw.description : '',
+    value: defaultParamValue(raw),
   }
 }
 
@@ -209,20 +262,8 @@ function toggleCheckAll() {
 }
 
 async function doExport(format: string) {
-  const ids = [...checkedIds.value]
-  if (!ids.length) {
-    feedback.toast.warning('请先勾选要导出的接口')
-    return
-  }
   try {
-    const blob = await exportOpenApiDocs({
-      format,
-      selectionMode: 'CHECKED',
-      operationIds: ids,
-      includeSchemas: true,
-      includeExamples: true,
-      includeGovernance: true,
-    })
+    const blob = await exportOpenApiDocs(exportPayload(format))
     const ext = format === 'HTML' ? 'html' : format === 'MARKDOWN' ? 'md' : 'json'
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -233,6 +274,20 @@ async function doExport(format: string) {
     feedback.toast.success('导出已开始下载')
   } catch (e) {
     feedback.toast.error(e instanceof Error ? e.message : '导出失败')
+  }
+}
+
+async function previewHtml() {
+  previewing.value = true
+  try {
+    const blob = await exportOpenApiDocs(exportPayload('HTML'))
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = URL.createObjectURL(blob)
+    feedback.toast.success('预览已生成')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '预览失败')
+  } finally {
+    previewing.value = false
   }
 }
 
@@ -259,26 +314,26 @@ async function doPublish() {
 
 async function sendTest() {
   if (!selectedOperationId.value || !operationDetail.value) return
-  const method = operationDetail.value.method ?? operationDetail.value.requestMethod ?? 'GET'
+  const method = selectedMethod.value || 'GET'
   const needsConfirm = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())
   if (needsConfirm && !testConfirm.value) {
     feedback.toast.warning('写操作测试请先勾选确认')
     return
   }
+  const missingPath = testPathParams.value.filter((p) => p.required && !p.value.trim()).map((p) => p.name)
+  if (missingPath.length) {
+    feedback.toast.warning(`请填写路径参数：${missingPath.join(', ')}`)
+    return
+  }
   testing.value = true
   testResult.value = ''
   try {
-    let queryParams: Record<string, string> = {}
-    let headers: Record<string, string> = {}
-    try {
-      queryParams = JSON.parse(testQueryJson.value || '{}')
-      headers = JSON.parse(testHeadersJson.value || '{}')
-    } catch {
-      feedback.toast.error('Query/Headers JSON 格式不正确')
-      return
-    }
+    const pathParams = paramsToRecord(testPathParams.value, true)
+    const queryParams = paramsToRecord(testQueryParams.value, false)
+    const headers = paramsToRecord(testHeaderParams.value, false)
     const result = await testOpenApiOperation({
       operationId: selectedOperationId.value,
+      pathParams,
       queryParams,
       headers,
       body: testBody.value || null,
@@ -289,6 +344,41 @@ async function sendTest() {
     testResult.value = e instanceof Error ? e.message : '测试失败'
   } finally {
     testing.value = false
+  }
+}
+
+function paramsToRecord(params: TestParam[], includeEmptyRequired: boolean) {
+  const record: Record<string, string> = {}
+  for (const param of params) {
+    const value = param.value.trim()
+    if (value || (includeEmptyRequired && param.required)) {
+      record[param.name] = value
+    }
+  }
+  return record
+}
+
+function exportPayload(format: string) {
+  const ids = [...checkedIds.value]
+  if (ids.length) {
+    return {
+      format,
+      selectionMode: 'CHECKED',
+      operationIds: ids,
+      includeSchemas: true,
+      includeExamples: true,
+      includeGovernance: true,
+    }
+  }
+  const query = buildQuery()
+  return {
+    format,
+    selectionMode: 'FILTERED',
+    serviceIds: selectedServiceId.value ? [selectedServiceId.value] : undefined,
+    filters: query,
+    includeSchemas: true,
+    includeExamples: true,
+    includeGovernance: true,
   }
 }
 
@@ -324,6 +414,107 @@ function parseJsonBlock(raw?: string) {
   } catch {
     return raw
   }
+}
+
+function parameterType(raw: Record<string, unknown>) {
+  const schema = raw.schema as Record<string, unknown> | undefined
+  if (schema) return schemaType(schema)
+  const type = String(raw.type ?? 'string')
+  if (type === 'array') {
+    const items = raw.items as Record<string, unknown> | undefined
+    return `array<${String(items?.type ?? 'object')}>`
+  }
+  return type
+}
+
+function defaultParamValue(raw: Record<string, unknown>) {
+  const value = raw.example ?? raw.default
+  if (value != null) return String(value)
+  const type = parameterType(raw)
+  if (type.startsWith('number') || type.startsWith('integer')) return '0'
+  if (type.startsWith('boolean')) return 'false'
+  return ''
+}
+
+function buildRequestBodySample(detail: OpenApiOperationDetail) {
+  const schema = requestSchema(detail)
+  const schemas = parseJsonBlock(detail.schemasJson)
+  if (!schema) return '{}'
+  return JSON.stringify(sampleFromSchema(schema, isPlainObject(schemas) ? schemas : {}, 0), null, 2)
+}
+
+function requestSchema(detail: OpenApiOperationDetail): Record<string, unknown> | null {
+  const body = parseJsonBlock(detail.requestBodyJson)
+  const fromBody = schemaFromBody(body)
+  if (fromBody) return fromBody
+  const params = parseJsonBlock(detail.parametersJson)
+  if (Array.isArray(params)) {
+    const bodyParam = params.find((p) => p?.in === 'body' && p.schema)
+    if (bodyParam?.schema) return bodyParam.schema
+  }
+  return null
+}
+
+function schemaFromBody(body: unknown): Record<string, unknown> | null {
+  if (!isPlainObject(body)) return null
+  if (isPlainObject(body.schema)) return body.schema
+  if (isPlainObject(body.content)) {
+    const json = body.content['application/json']
+    if (isPlainObject(json) && isPlainObject(json.schema)) return json.schema
+    const first = Object.values(body.content).find(isPlainObject)
+    if (isPlainObject(first) && isPlainObject(first.schema)) return first.schema
+  }
+  return null
+}
+
+function sampleFromSchema(schema: Record<string, unknown>, schemas: Record<string, unknown>, depth: number): unknown {
+  if (depth > 3) return {}
+  const resolved = resolveSchema(schema, schemas)
+  if (resolved.example != null) return resolved.example
+  if (resolved.default != null) return resolved.default
+  if (resolved.type === 'array') {
+    return [sampleFromSchema(asObject(resolved.items), schemas, depth + 1)]
+  }
+  if (isPlainObject(resolved.properties)) {
+    const result: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(resolved.properties)) {
+      result[key] = sampleFromSchema(asObject(value), schemas, depth + 1)
+    }
+    return result
+  }
+  if (resolved.type === 'integer' || resolved.type === 'number') return 0
+  if (resolved.type === 'boolean') return false
+  return 'string'
+}
+
+function resolveSchema(schema: Record<string, unknown>, schemas: Record<string, unknown>) {
+  const ref = typeof schema.$ref === 'string' ? schema.$ref : ''
+  if (ref) {
+    const key = ref.slice(ref.lastIndexOf('/') + 1)
+    const resolved = schemas[key]
+    if (isPlainObject(resolved)) return resolved
+  }
+  if (Array.isArray(schema.allOf)) {
+    return schema.allOf.reduce<Record<string, unknown>>((acc, item) => {
+      if (isPlainObject(item)) Object.assign(acc, resolveSchema(item, schemas))
+      return acc
+    }, {})
+  }
+  return schema
+}
+
+function schemaType(schema: Record<string, unknown>): string {
+  if (typeof schema.$ref === 'string') return schema.$ref.slice(schema.$ref.lastIndexOf('/') + 1)
+  if (schema.type === 'array') return `array<${schemaType(asObject(schema.items))}>`
+  return String(schema.type ?? (schema.properties ? 'object' : 'object'))
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return isPlainObject(value) ? value : {}
 }
 
 watch(selectedServiceId, () => {
@@ -463,8 +654,8 @@ onMounted(async () => {
             <div class="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="rounded px-2 py-0.5 text-sm font-medium" :class="methodBadgeClass(operationDetail.method)">
-                    {{ operationDetail.method }}
+                  <span class="rounded px-2 py-0.5 text-sm font-medium" :class="methodBadgeClass(selectedMethod)">
+                    {{ selectedMethod }}
                   </span>
                   <code class="text-sm">{{ operationDetail.path }}</code>
                 </div>
@@ -516,21 +707,50 @@ onMounted(async () => {
 
           <div class="rounded-lg border bg-card p-4">
             <h3 class="mb-2 font-medium">安全测试</h3>
-            <div class="grid gap-2 md:grid-cols-2">
-              <div>
-                <label class="text-xs text-muted-foreground">Query Params (JSON)</label>
-                <textarea v-model="testQueryJson" rows="3" class="mt-1 w-full rounded border bg-background p-2 font-mono text-xs" />
+            <div v-if="testPathParams.length" class="mb-3">
+              <div class="mb-1 text-xs text-muted-foreground">Path Params</div>
+              <div class="space-y-2">
+                <div v-for="param in testPathParams" :key="`path-${param.name}`" class="grid gap-2 md:grid-cols-[180px_1fr]">
+                  <label class="text-sm">
+                    {{ param.name }}
+                    <span v-if="param.required" class="text-destructive">*</span>
+                    <span class="ml-1 text-xs text-muted-foreground">{{ param.type }}</span>
+                  </label>
+                  <Input v-model="param.value" :placeholder="param.description || param.name" />
+                </div>
               </div>
-              <div>
-                <label class="text-xs text-muted-foreground">Headers (JSON)</label>
-                <textarea v-model="testHeadersJson" rows="3" class="mt-1 w-full rounded border bg-background p-2 font-mono text-xs" />
+            </div>
+            <div v-if="testQueryParams.length" class="mb-3">
+              <div class="mb-1 text-xs text-muted-foreground">Query Params</div>
+              <div class="space-y-2">
+                <div v-for="param in testQueryParams" :key="`query-${param.name}`" class="grid gap-2 md:grid-cols-[180px_1fr]">
+                  <label class="text-sm">
+                    {{ param.name }}
+                    <span v-if="param.required" class="text-destructive">*</span>
+                    <span class="ml-1 text-xs text-muted-foreground">{{ param.type }}</span>
+                  </label>
+                  <Input v-model="param.value" :placeholder="param.description || param.name" />
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="mb-1 text-xs text-muted-foreground">Headers</div>
+              <div class="space-y-2">
+                <div v-for="param in testHeaderParams" :key="`header-${param.name}`" class="grid gap-2 md:grid-cols-[180px_1fr]">
+                  <label class="text-sm">
+                    {{ param.name }}
+                    <span v-if="param.required" class="text-destructive">*</span>
+                    <span class="ml-1 text-xs text-muted-foreground">{{ param.type }}</span>
+                  </label>
+                  <Input v-model="param.value" :placeholder="param.description || param.name" />
+                </div>
               </div>
             </div>
             <div class="mt-2">
               <label class="text-xs text-muted-foreground">Body</label>
               <textarea v-model="testBody" rows="4" class="mt-1 w-full rounded border bg-background p-2 font-mono text-xs" />
             </div>
-            <label v-if="operationDetail.method && !['GET','HEAD','OPTIONS'].includes(operationDetail.method.toUpperCase())" class="mt-2 flex items-center gap-2 text-sm">
+            <label v-if="selectedMethod && !['GET','HEAD','OPTIONS'].includes(selectedMethod)" class="mt-2 flex items-center gap-2 text-sm">
               <input v-model="testConfirm" type="checkbox" />
               确认执行写操作测试
             </label>
@@ -546,8 +766,13 @@ onMounted(async () => {
 
         <div class="rounded-lg border bg-card p-4">
           <h3 class="mb-2 font-medium">导出 / 发布</h3>
-          <p class="mb-3 text-sm text-muted-foreground">已选择 {{ checkedIds.size }} 个接口</p>
+          <p class="mb-3 text-sm text-muted-foreground">
+            已选择 {{ checkedIds.size }} 个接口；未选择时导出当前筛选范围。
+          </p>
           <div class="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" :disabled="previewing" @click="previewHtml">
+              <Eye class="mr-1 size-4" /> 在线预览
+            </Button>
             <Button variant="outline" size="sm" @click="doExport('JSON')">
               <Download class="mr-1 size-4" /> JSON
             </Button>
@@ -568,6 +793,12 @@ onMounted(async () => {
             <Upload class="mr-1 size-4" />
             发布为公开文档
           </Button>
+          <iframe
+            v-if="previewUrl"
+            :src="previewUrl"
+            title="OpenAPI 文档预览"
+            class="mt-4 h-[560px] w-full rounded border bg-background"
+          />
         </div>
       </div>
     </div>

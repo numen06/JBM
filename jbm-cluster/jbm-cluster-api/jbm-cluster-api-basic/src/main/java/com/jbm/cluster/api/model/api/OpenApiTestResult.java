@@ -31,6 +31,15 @@ public class OpenApiTestResult {
     @ApiModelProperty("目标描述")
     private String target;
 
+    @ApiModelProperty("实际请求 URL")
+    private String requestUrl;
+
+    @ApiModelProperty("错误类型")
+    private String errorType;
+
     @ApiModelProperty("错误信息")
     private String errorMessage;
+
+    @ApiModelProperty("是否携带调用者 Authorization")
+    private Boolean authorizationApplied;
 }
