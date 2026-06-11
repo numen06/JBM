@@ -64,14 +64,17 @@ public class PublishedApiDocServiceImpl extends MasterDataServiceImpl<PublishedA
             throw new ServiceException("请选择要发布的接口");
         }
         List<OpenApiOperation> selected = resolveOperations(request);
-        List<OpenApiOperation> publishable = openApiSpecSanitizer.filterPublishable(selected);
+        boolean html = StrUtil.equalsIgnoreCase(request.getFormat(), "HTML");
+        List<OpenApiOperation> publishable = html ? selected : openApiSpecSanitizer.filterPublishable(selected);
+        if (publishable.isEmpty() && html) {
+            throw new ServiceException("没有可预览的接口");
+        }
         if (publishable.isEmpty()) {
             throw new ServiceException("所选接口均不满足发布条件（需启用、已开放且已关联 API 资源）");
         }
         List<Long> publishableIds = publishable.stream()
                 .map(OpenApiOperation::getOperationId)
                 .collect(java.util.stream.Collectors.toList());
-        boolean html = StrUtil.equalsIgnoreCase(request.getFormat(), "HTML");
         String docKey = StrUtil.blankToDefault(request.getDocKey(), "default");
         String spec = html
                 ? openApiHubService.renderHtml(exportRequest(publishableIds))
