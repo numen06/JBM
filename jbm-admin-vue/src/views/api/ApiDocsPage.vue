@@ -480,8 +480,14 @@ function parameterType(raw: Record<string, unknown>) {
 function defaultParamValue(raw: Record<string, unknown>) {
   const value = raw.example ?? raw.default
   if (value != null) return String(value)
+  const name = String(raw.name ?? '').toLowerCase()
+  if (name === 'width') return '120'
+  if (name === 'height') return '40'
+  if (name === 'page' || name.endsWith('page') || name.endsWith('pageindex')) return '1'
+  if (name === 'size' || name.endsWith('pagesize') || name === 'limit') return '10'
+  if (name === 'id' || name.endsWith('id')) return '1'
   const type = parameterType(raw)
-  if (type.startsWith('number') || type.startsWith('integer')) return '0'
+  if (type.startsWith('number') || type.startsWith('integer')) return '1'
   if (type.startsWith('boolean')) return 'false'
   return ''
 }
