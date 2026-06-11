@@ -42,6 +42,8 @@ jbm:
       - /**/user/sessions/**
       - /internal/dev/**
       - /internal/trust/**
+      - /published-docs/**
+      - /**/published-docs/**
       - /qrcode/**
       - /code
     auth-ignores:

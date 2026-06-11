@@ -143,6 +143,8 @@ jbm:
       - /**/user/sessions/**
       - /internal/dev/**
       - /internal/trust/**
+      - /published-docs/**
+      - /**/published-docs/**
 
 
 # Sa-Token配置
