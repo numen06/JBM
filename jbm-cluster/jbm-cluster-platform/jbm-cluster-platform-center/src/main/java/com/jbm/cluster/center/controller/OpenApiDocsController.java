@@ -17,7 +17,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.util.List;
 
 @Api(tags = "OpenAPI 文档中心")
@@ -75,8 +77,82 @@ public class OpenApiDocsController extends BaseController {
     @PostMapping("/test")
     public ResultBody<OpenApiTestResult> test(
             @RequestBody OpenApiTestRequest request,
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            HttpServletRequest servletRequest) {
+        request.setGatewayBaseUrl(sameOriginGatewayBaseUrl(request.getGatewayBaseUrl(), servletRequest));
         return ResultBody.callback(() -> openApiHubService.test(request, authorization));
+    }
+
+    private String sameOriginGatewayBaseUrl(String gatewayBaseUrl, HttpServletRequest request) {
+        if (gatewayBaseUrl == null || gatewayBaseUrl.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            URI uri = URI.create(gatewayBaseUrl.trim());
+            if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
+                return null;
+            }
+            if (uri.getHost() == null || uri.getUserInfo() != null) {
+                return null;
+            }
+            String uriHost = uri.getHost() + (uri.getPort() > 0 ? ":" + uri.getPort() : "");
+            if (!sameHost(uriHost, forwardedHost(request))
+                    && !sameHost(uriHost, uriHost(request.getHeader("Origin")))
+                    && !sameHost(uriHost, uriHost(request.getHeader("Referer")))) {
+                return null;
+            }
+            return trimTrailingSlash(uri.toString());
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String forwardedHost(HttpServletRequest request) {
+        String host = firstHeaderValue(request.getHeader("X-Forwarded-Host"));
+        if (host == null || host.isEmpty()) {
+            host = request.getHeader("Host");
+        }
+        if (host == null || host.isEmpty()) {
+            int port = request.getServerPort();
+            boolean defaultPort = ("http".equalsIgnoreCase(request.getScheme()) && port == 80)
+                    || ("https".equalsIgnoreCase(request.getScheme()) && port == 443);
+            host = request.getServerName() + (defaultPort ? "" : ":" + port);
+        }
+        return host;
+    }
+
+    private boolean sameHost(String left, String right) {
+        return left != null && right != null && left.equalsIgnoreCase(right);
+    }
+
+    private String uriHost(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            URI uri = URI.create(firstHeaderValue(value));
+            if (uri.getHost() == null) {
+                return null;
+            }
+            return uri.getHost() + (uri.getPort() > 0 ? ":" + uri.getPort() : "");
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private String firstHeaderValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        int comma = value.indexOf(',');
+        return (comma >= 0 ? value.substring(0, comma) : value).trim();
+    }
+
+    private String trimTrailingSlash(String value) {
+        while (value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
     }
 
     @ApiOperation("导出文档")

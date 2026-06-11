@@ -36,4 +36,7 @@ public class OpenApiTestRequest {
 
     @ApiModelProperty("写操作二次确认")
     private Boolean confirm;
+
+    @ApiModelProperty("测试代理网关基址")
+    private String gatewayBaseUrl;
 }

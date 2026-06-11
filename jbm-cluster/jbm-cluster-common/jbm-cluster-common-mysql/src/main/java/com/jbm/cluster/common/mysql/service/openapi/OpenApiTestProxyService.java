@@ -58,7 +58,7 @@ public class OpenApiTestProxyService {
         validateMethod(method, request.getConfirm());
         String alias = routeAliasSupport.routeAliasFor(operation.getServiceId());
         String resolvedPath = resolvePath(operation.getPath(), request.getPathParams());
-        String url = buildUrl(alias, resolvedPath, request.getQueryParams());
+        String url = buildUrl(effectiveGatewayBaseUrl(request), alias, resolvedPath, request.getQueryParams());
         HttpHeaders headers = sanitizeHeaders(request.getHeaders());
         boolean authorizationApplied = applyCallerAuthorization(headers, callerAuthorization);
         applyDefaultContentType(headers, request.getBody());
@@ -159,8 +159,15 @@ public class OpenApiTestProxyService {
         }
     }
 
-    private String buildUrl(String alias, String path, Map<String, String> queryParams) {
-        String base = StrUtil.removeSuffix(gatewayBaseUrl, "/");
+    private String effectiveGatewayBaseUrl(OpenApiTestRequest request) {
+        if (request != null && StrUtil.isNotBlank(request.getGatewayBaseUrl())) {
+            return StrUtil.removeSuffix(request.getGatewayBaseUrl().trim(), "/");
+        }
+        return StrUtil.removeSuffix(gatewayBaseUrl, "/");
+    }
+
+    private String buildUrl(String baseUrl, String alias, String path, Map<String, String> queryParams) {
+        String base = StrUtil.removeSuffix(baseUrl, "/");
         StringBuilder url = new StringBuilder(base).append('/').append(alias);
         if (!path.startsWith("/")) {
             url.append('/');

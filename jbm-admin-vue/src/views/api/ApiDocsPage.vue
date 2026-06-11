@@ -18,6 +18,7 @@ import Select from '@/components/ui/Select.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { useFeedback } from '@/composables/useFeedback'
 import { useAuthStore } from '@/stores/auth'
+import { apiBaseUrl } from '@/runtimeConfig'
 import {
   listOpenApiSources,
   listOpenApiOperations,
@@ -79,6 +80,7 @@ const useCaseName = ref('')
 const useCaseDescription = ref('')
 const previewing = ref(false)
 const previewUrl = ref('')
+const previewHtmlContent = ref('')
 
 const publishTitle = ref('JBM Open API')
 const publishVersion = ref('1.0.0')
@@ -290,7 +292,8 @@ async function previewHtml() {
   try {
     const blob = await exportOpenApiDocs(exportPayload('HTML'))
     if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
-    previewUrl.value = URL.createObjectURL(blob)
+    previewUrl.value = ''
+    previewHtmlContent.value = await blob.text()
     feedback.toast.success('预览已生成')
   } catch (e) {
     feedback.toast.error(e instanceof Error ? e.message : '预览失败')
@@ -347,6 +350,7 @@ async function sendTest() {
       headers,
       body: testBody.value || null,
       confirm: needsConfirm ? testConfirm.value : false,
+      gatewayBaseUrl: currentGatewayBaseUrl(),
     })
     lastTestResult.value = result
     testResult.value = JSON.stringify(result, null, 2)
@@ -395,6 +399,13 @@ function paramsToRecord(params: TestParam[], includeEmptyRequired: boolean) {
     }
   }
   return record
+}
+
+function currentGatewayBaseUrl() {
+  if (/^https?:\/\//i.test(apiBaseUrl)) {
+    return apiBaseUrl.replace(/\/+$/, '')
+  }
+  return `${window.location.origin}${apiBaseUrl}`.replace(/\/+$/, '')
 }
 
 function exportPayload(format: string) {
@@ -843,8 +854,8 @@ onMounted(async () => {
             发布为公开文档
           </Button>
           <iframe
-            v-if="previewUrl"
-            :src="previewUrl"
+            v-if="previewHtmlContent"
+            :srcdoc="previewHtmlContent"
             title="OpenAPI 文档预览"
             class="mt-4 h-[560px] w-full rounded border bg-background"
           />

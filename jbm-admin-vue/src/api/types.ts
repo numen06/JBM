@@ -459,6 +459,7 @@ export interface OpenApiTestRequest {
   headers?: Record<string, string>
   body?: string | null
   confirm?: boolean
+  gatewayBaseUrl?: string
 }
 
 export interface OpenApiUseCaseSaveRequest {
