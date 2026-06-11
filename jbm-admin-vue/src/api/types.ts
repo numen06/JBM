@@ -461,6 +461,23 @@ export interface OpenApiTestRequest {
   confirm?: boolean
 }
 
+export interface OpenApiUseCaseSaveRequest {
+  name?: string
+  description?: string
+  pathParams?: Record<string, string>
+  queryParams?: Record<string, string>
+  headers?: Record<string, string>
+  body?: string | null
+  requestUrl?: string
+  success?: boolean
+  responseStatus?: number
+  responseHeaders?: Record<string, string>
+  responseBody?: string
+  errorType?: string
+  errorMessage?: string
+  durationMs?: number
+}
+
 export interface OpenApiTestResult {
   success?: boolean
   status?: number

@@ -10,6 +10,7 @@ import type {
   OpenApiSyncResult,
   OpenApiTestRequest,
   OpenApiTestResult,
+  OpenApiUseCaseSaveRequest,
   PublishedDocSummary,
 } from './types'
 import { pageParams } from './user'
@@ -62,6 +63,11 @@ export async function syncOpenApiDocs(serviceIds?: string[]) {
 
 export async function testOpenApiOperation(payload: OpenApiTestRequest) {
   const res = await post<OpenApiTestResult>('/api-docs/test', payload)
+  return unwrap(res)
+}
+
+export async function saveOpenApiUseCase(operationId: number, payload: OpenApiUseCaseSaveRequest) {
+  const res = await post<OpenApiOperationDetail>(`/api-docs/operations/${operationId}/use-cases`, payload)
   return unwrap(res)
 }
 

@@ -15,6 +15,7 @@ import com.jbm.cluster.api.model.api.OpenApiSyncRequest;
 import com.jbm.cluster.api.model.api.OpenApiSyncResult;
 import com.jbm.cluster.api.model.api.OpenApiTestRequest;
 import com.jbm.cluster.api.model.api.OpenApiTestResult;
+import com.jbm.cluster.api.model.api.OpenApiUseCaseSaveRequest;
 import com.jbm.cluster.common.mysql.mapper.OpenApiDocumentMapper;
 import com.jbm.cluster.common.mysql.mapper.OpenApiOperationMapper;
 import com.jbm.cluster.common.mysql.service.BaseApiService;
@@ -199,6 +200,53 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         return openApiTestProxyService.execute(request, authorization);
     }
 
+    @Override
+    public OpenApiOperation saveUseCase(Long operationId, OpenApiUseCaseSaveRequest request, Long userId) {
+        if (operationId == null) {
+            throw new ServiceException("operationId 不能为空");
+        }
+        OpenApiOperation operation = openApiOperationService.getById(operationId);
+        if (operation == null) {
+            throw new ServiceException("接口不存在");
+        }
+        JSONObject examples = normalizedExamples(operation.getExamplesJson());
+        JSONArray useCases = examples.getJSONArray("useCases");
+        if (useCases == null) {
+            useCases = new JSONArray();
+            examples.put("useCases", useCases);
+        }
+        Date now = new Date();
+        JSONObject useCase = new JSONObject(true);
+        useCase.put("id", String.valueOf(System.currentTimeMillis()));
+        useCase.put("name", StrUtil.blankToDefault(request != null ? request.getName() : null,
+                StrUtil.blankToDefault(operation.getSummary(), operation.getRequestMethod() + " " + operation.getPath())));
+        useCase.put("description", request != null ? request.getDescription() : null);
+        useCase.put("source", "TEST");
+        useCase.put("savedBy", userId);
+        useCase.put("savedAt", now.getTime());
+        JSONObject req = new JSONObject(true);
+        req.put("pathParams", request != null ? request.getPathParams() : null);
+        req.put("queryParams", request != null ? request.getQueryParams() : null);
+        req.put("headers", request != null ? request.getHeaders() : null);
+        req.put("body", parseMaybeJson(request != null ? request.getBody() : null));
+        req.put("requestUrl", request != null ? request.getRequestUrl() : null);
+        useCase.put("request", req);
+        JSONObject res = new JSONObject(true);
+        res.put("success", request != null ? request.getSuccess() : null);
+        res.put("status", request != null ? request.getResponseStatus() : null);
+        res.put("headers", request != null ? request.getResponseHeaders() : null);
+        res.put("body", parseMaybeJson(request != null ? request.getResponseBody() : null));
+        res.put("errorType", request != null ? request.getErrorType() : null);
+        res.put("errorMessage", request != null ? request.getErrorMessage() : null);
+        res.put("durationMs", request != null ? request.getDurationMs() : null);
+        useCase.put("response", res);
+        useCases.add(useCase);
+        operation.setExamplesJson(examples.toJSONString());
+        operation.setUpdateTime(now);
+        openApiOperationMapper.updateById(operation);
+        return operation;
+    }
+
     private OpenApiSyncResult syncOneService(String serviceId) {
         OpenApiSyncResult result = new OpenApiSyncResult();
         result.setServiceId(serviceId);
@@ -321,6 +369,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
                 entity.setSchemasJson(schemasJson);
                 entity.setSecurityJson(operation.getJSONArray("security") != null
                         ? operation.getJSONArray("security").toJSONString() : null);
+                entity.setExamplesJson(mergeExamplesJson(extractOperationExamplesJson(operation), entity.getExamplesJson()));
                 entity.setRawOperationJson(operation.toJSONString());
                 String opHash = OpenApiHubSupport.sha256(entity.getRawOperationJson());
                 String previousHash = entity.getSourceHash();
@@ -365,6 +414,186 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             schemas.putAll(components.getJSONObject("schemas"));
         }
         return schemas.isEmpty() ? null : schemas.toJSONString();
+    }
+
+    private String extractOperationExamplesJson(JSONObject operation) {
+        if (operation == null) {
+            return null;
+        }
+        JSONObject examples = new JSONObject(true);
+        JSONObject specExamples = new JSONObject(true);
+        if (operation.containsKey("examples")) {
+            specExamples.put("operation", operation.get("examples"));
+        }
+        JSONArray requestExamples = new JSONArray();
+        collectBodyExamples(operation.getJSONObject("requestBody"), requestExamples);
+        JSONArray parameters = operation.getJSONArray("parameters");
+        if (parameters != null) {
+            JSONArray parameterExamples = new JSONArray();
+            for (Object item : parameters) {
+                if (!(item instanceof JSONObject)) {
+                    continue;
+                }
+                JSONObject param = (JSONObject) item;
+                if (param.containsKey("example") || param.containsKey("examples")) {
+                    JSONObject example = new JSONObject(true);
+                    example.put("name", param.getString("name"));
+                    example.put("in", param.getString("in"));
+                    example.put("example", param.get("example"));
+                    example.put("examples", param.get("examples"));
+                    parameterExamples.add(example);
+                }
+                if (StrUtil.equalsIgnoreCase("body", param.getString("in"))) {
+                    collectBodyExamples(param, requestExamples);
+                }
+            }
+            if (!parameterExamples.isEmpty()) {
+                specExamples.put("parameters", parameterExamples);
+            }
+        }
+        if (!requestExamples.isEmpty()) {
+            specExamples.put("request", requestExamples);
+        }
+        JSONObject responses = operation.getJSONObject("responses");
+        if (responses != null) {
+            JSONArray responseExamples = new JSONArray();
+            for (String status : responses.keySet()) {
+                JSONObject response = responses.getJSONObject(status);
+                if (response == null) {
+                    continue;
+                }
+                collectResponseExamples(status, response, responseExamples);
+            }
+            if (!responseExamples.isEmpty()) {
+                specExamples.put("responses", responseExamples);
+            }
+        }
+        if (!specExamples.isEmpty()) {
+            examples.put("specExamples", specExamples);
+        }
+        return examples.isEmpty() ? null : examples.toJSONString();
+    }
+
+    private String mergeExamplesJson(String specExamplesJson, String existingExamplesJson) {
+        JSONObject merged = normalizedExamples(specExamplesJson);
+        JSONObject existing = normalizedExamples(existingExamplesJson);
+        JSONArray useCases = existing.getJSONArray("useCases");
+        if (useCases != null && !useCases.isEmpty()) {
+            merged.put("useCases", useCases);
+        }
+        return merged.isEmpty() ? null : merged.toJSONString();
+    }
+
+    private JSONObject normalizedExamples(String raw) {
+        JSONObject normalized = new JSONObject(true);
+        JSONObject parsed = parseJsonObject(raw);
+        if (parsed == null) {
+            return normalized;
+        }
+        if (parsed.getJSONObject("specExamples") != null) {
+            normalized.put("specExamples", parsed.getJSONObject("specExamples"));
+        } else if (!parsed.isEmpty() && parsed.getJSONArray("useCases") == null) {
+            normalized.put("specExamples", parsed);
+        }
+        if (parsed.getJSONArray("useCases") != null) {
+            normalized.put("useCases", parsed.getJSONArray("useCases"));
+        }
+        return normalized;
+    }
+
+    private void collectBodyExamples(JSONObject body, JSONArray target) {
+        if (body == null) {
+            return;
+        }
+        addNamedExample(target, "默认请求", body.get("example"), body.getString("summary"), body.getString("description"));
+        JSONObject examples = body.getJSONObject("examples");
+        if (examples != null) {
+            addExamplesObject(target, examples);
+        }
+        JSONObject content = body.getJSONObject("content");
+        if (content == null) {
+            return;
+        }
+        for (String mediaType : content.keySet()) {
+            JSONObject media = content.getJSONObject(mediaType);
+            if (media == null) {
+                continue;
+            }
+            addNamedExample(target, mediaType, media.get("example"), media.getString("summary"), media.getString("description"));
+            JSONObject mediaExamples = media.getJSONObject("examples");
+            if (mediaExamples != null) {
+                addExamplesObject(target, mediaExamples);
+            }
+        }
+    }
+
+    private void collectResponseExamples(String status, JSONObject response, JSONArray target) {
+        addNamedExample(target, status, response.get("example"), response.getString("summary"), response.getString("description"));
+        JSONObject examples = response.getJSONObject("examples");
+        if (examples != null) {
+            for (String mediaType : examples.keySet()) {
+                addNamedExample(target, status + " " + mediaType, examples.get(mediaType), response.getString("summary"), response.getString("description"), status);
+            }
+        }
+        JSONObject content = response.getJSONObject("content");
+        if (content == null) {
+            return;
+        }
+        for (String mediaType : content.keySet()) {
+            JSONObject media = content.getJSONObject(mediaType);
+            if (media == null) {
+                continue;
+            }
+            addNamedExample(target, status + " " + mediaType, media.get("example"), media.getString("summary"), media.getString("description"), status);
+            JSONObject mediaExamples = media.getJSONObject("examples");
+            if (mediaExamples != null) {
+                for (String name : mediaExamples.keySet()) {
+                    Object value = mediaExamples.get(name);
+                    JSONObject wrapper = value instanceof JSONObject ? (JSONObject) value : null;
+                    addNamedExample(target, name, wrapper != null && wrapper.containsKey("value") ? wrapper.get("value") : value,
+                            wrapper != null ? wrapper.getString("summary") : null,
+                            wrapper != null ? wrapper.getString("description") : null,
+                            status);
+                }
+            }
+        }
+    }
+
+    private void addExamplesObject(JSONArray target, JSONObject examples) {
+        for (String name : examples.keySet()) {
+            Object value = examples.get(name);
+            JSONObject wrapper = value instanceof JSONObject ? (JSONObject) value : null;
+            addNamedExample(target, name, wrapper != null && wrapper.containsKey("value") ? wrapper.get("value") : value,
+                    wrapper != null ? wrapper.getString("summary") : null,
+                    wrapper != null ? wrapper.getString("description") : null);
+        }
+    }
+
+    private void addNamedExample(JSONArray target, String name, Object value, String summary, String description) {
+        addNamedExample(target, name, value, summary, description, null);
+    }
+
+    private void addNamedExample(JSONArray target, String name, Object value, String summary, String description, String status) {
+        if (value == null) {
+            return;
+        }
+        JSONObject example = new JSONObject(true);
+        example.put("name", StrUtil.blankToDefault(summary, name));
+        example.put("description", description);
+        example.put("status", status);
+        example.put("value", value);
+        target.add(example);
+    }
+
+    private Object parseMaybeJson(String raw) {
+        if (StrUtil.isBlank(raw)) {
+            return raw;
+        }
+        try {
+            return JSON.parse(raw);
+        } catch (Exception e) {
+            return raw;
+        }
     }
 
     private void hydrateMissingSchemas(List<OpenApiOperation> operations) {
@@ -676,7 +905,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
                 + ".GET{background:#dcfce7;color:#166534}.POST{background:#dbeafe;color:#1d4ed8}.PUT{background:#fef3c7;color:#92400e}.PATCH{background:#ffedd5;color:#9a3412}.DELETE{background:#fee2e2;color:#991b1b}"
                 + "code,pre{font-family:Consolas,'JetBrains Mono',monospace;}pre{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:12px;overflow:auto;}"
                 + "table{width:100%;border-collapse:collapse;margin:10px 0 16px;}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top;}th{background:#f1f5f9;}"
-                + ".meta{color:#64748b;font-size:13px}.toc a{display:block;color:#334155;text-decoration:none;margin:6px 0;font-size:13px}.empty{color:#94a3b8;}"
+                + ".meta{color:#64748b;font-size:13px}.toc a{display:block;color:#334155;text-decoration:none;margin:6px 0;font-size:13px}.empty{color:#94a3b8;}.usecase{border-left:3px solid #2563eb;padding-left:12px;margin:14px 0;}"
                 + "</style></head><body><aside><h2>目录</h2><div class=\"toc\">");
         int index = 0;
         for (OpenApiOperation op : sorted) {
@@ -729,6 +958,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         appendMarkdownParameters(md, op, "header", "请求头");
         appendMarkdownParameters(md, op, "formData", "表单参数");
         appendMarkdownRequestBody(md, op);
+        appendMarkdownUseCases(md, op);
         appendMarkdownResponses(md, op);
     }
 
@@ -762,6 +992,36 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         appendMarkdownSchemaTable(md, fields);
         Object sample = sampleFromSchema(schema, schemas, 0);
         md.append("请求示例\n\n```json\n").append(prettyJson(sample)).append("\n```\n\n");
+    }
+
+    private void appendMarkdownUseCases(StringBuilder md, OpenApiOperation op) {
+        List<ApiUseCase> useCases = buildUseCases(op);
+        if (useCases.isEmpty()) {
+            return;
+        }
+        md.append("**接口用例**\n\n");
+        int index = 1;
+        for (ApiUseCase useCase : useCases) {
+            md.append("##### 用例 ").append(index++).append(": ").append(useCase.name).append("\n\n");
+            if (StrUtil.isNotBlank(useCase.description)) {
+                md.append(useCase.description).append("\n\n");
+            }
+            appendMarkdownUseCaseBlock(md, "Path Params", useCase.pathParams);
+            appendMarkdownUseCaseBlock(md, "Query Params", useCase.queryParams);
+            appendMarkdownUseCaseBlock(md, "Headers", useCase.headers);
+            if (useCase.body != null) {
+                md.append("请求 Body\n\n```json\n").append(prettyJson(useCase.body)).append("\n```\n\n");
+            }
+            md.append("预期响应 `").append(useCase.responseStatus).append("`\n\n");
+            md.append("```json\n").append(prettyJson(useCase.responseBody)).append("\n```\n\n");
+        }
+    }
+
+    private void appendMarkdownUseCaseBlock(StringBuilder md, String title, Map<String, Object> value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        md.append(title).append("\n\n```json\n").append(prettyJson(value)).append("\n```\n\n");
     }
 
     private void appendMarkdownResponses(StringBuilder md, OpenApiOperation op) {
@@ -823,6 +1083,7 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         appendHtmlParameters(html, op, "header", "请求头");
         appendHtmlParameters(html, op, "formData", "表单参数");
         appendHtmlRequestBody(html, op);
+        appendHtmlUseCases(html, op);
         appendHtmlResponses(html, op);
         html.append("</section>");
     }
@@ -855,6 +1116,39 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         html.append("<h4>请求体</h4>");
         appendHtmlSchemaTable(html, schemaFields(schema, schemas));
         html.append("<p class=\"meta\">请求示例</p><pre>").append(escapeHtml(prettyJson(sampleFromSchema(schema, schemas, 0)))).append("</pre>");
+    }
+
+    private void appendHtmlUseCases(StringBuilder html, OpenApiOperation op) {
+        List<ApiUseCase> useCases = buildUseCases(op);
+        if (useCases.isEmpty()) {
+            return;
+        }
+        html.append("<h4>接口用例</h4>");
+        int index = 1;
+        for (ApiUseCase useCase : useCases) {
+            html.append("<div class=\"usecase\"><p><strong>用例 ").append(index++).append(": ")
+                    .append(escapeHtml(useCase.name)).append("</strong></p>");
+            if (StrUtil.isNotBlank(useCase.description)) {
+                html.append("<p class=\"meta\">").append(escapeHtml(useCase.description)).append("</p>");
+            }
+            appendHtmlUseCaseBlock(html, "Path Params", useCase.pathParams);
+            appendHtmlUseCaseBlock(html, "Query Params", useCase.queryParams);
+            appendHtmlUseCaseBlock(html, "Headers", useCase.headers);
+            if (useCase.body != null) {
+                html.append("<p class=\"meta\">请求 Body</p><pre>")
+                        .append(escapeHtml(prettyJson(useCase.body))).append("</pre>");
+            }
+            html.append("<p class=\"meta\">预期响应 ").append(escapeHtml(useCase.responseStatus)).append("</p><pre>")
+                    .append(escapeHtml(prettyJson(useCase.responseBody))).append("</pre></div>");
+        }
+    }
+
+    private void appendHtmlUseCaseBlock(StringBuilder html, String title, Map<String, Object> value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        html.append("<p class=\"meta\">").append(escapeHtml(title)).append("</p><pre>")
+                .append(escapeHtml(prettyJson(value))).append("</pre>");
     }
 
     private void appendHtmlResponses(StringBuilder html, OpenApiOperation op) {
@@ -912,6 +1206,217 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             return text(a.getRequestMethod()).compareToIgnoreCase(text(b.getRequestMethod()));
         });
         return sorted;
+    }
+
+    private List<ApiUseCase> buildUseCases(OpenApiOperation op) {
+        JSONObject examples = normalizedExamples(op.getExamplesJson());
+        List<ApiUseCase> saved = savedUseCases(examples);
+        if (!saved.isEmpty()) {
+            return saved;
+        }
+        JSONObject schemas = parseJsonObject(op.getSchemasJson());
+        Map<String, Object> pathParams = parameterExampleMap(op, "path");
+        Map<String, Object> queryParams = parameterExampleMap(op, "query");
+        Map<String, Object> headers = parameterExampleMap(op, "header");
+        JSONObject requestSchema = requestSchema(op);
+        Object defaultBody = requestSchema != null ? sampleFromSchema(requestSchema, schemas, 0) : null;
+        ResponseExample defaultResponse = defaultResponseExample(op, schemas);
+
+        List<NamedExample> requestExamples = specRequestExamples(examples);
+        if (requestExamples.isEmpty()) {
+            requestExamples.add(new NamedExample("默认用例", "按参数示例和 schema 示例调用", defaultBody));
+        }
+        List<NamedExample> responseExamples = specResponseExamples(examples);
+        List<ApiUseCase> useCases = new ArrayList<>();
+        int index = 0;
+        for (NamedExample requestExample : requestExamples) {
+            NamedExample responseExample = findMatchingExample(responseExamples, requestExample.name, index);
+            ApiUseCase useCase = new ApiUseCase();
+            useCase.name = StrUtil.blankToDefault(requestExample.name, "用例 " + (index + 1));
+            useCase.description = requestExample.description;
+            useCase.pathParams = new LinkedHashMap<>(pathParams);
+            useCase.queryParams = new LinkedHashMap<>(queryParams);
+            useCase.headers = new LinkedHashMap<>(headers);
+            useCase.body = requestExample.value != null ? requestExample.value : defaultBody;
+            useCase.responseStatus = responseExample != null && StrUtil.isNotBlank(responseExample.status)
+                    ? responseExample.status : defaultResponse.status;
+            useCase.responseBody = responseExample != null && responseExample.value != null
+                    ? responseExample.value : defaultResponse.body;
+            useCases.add(useCase);
+            index++;
+        }
+        useCases.addAll(parameterUseCases(op, defaultBody, defaultResponse));
+        return useCases;
+    }
+
+    private List<ApiUseCase> savedUseCases(JSONObject examples) {
+        List<ApiUseCase> useCases = new ArrayList<>();
+        JSONArray saved = examples != null ? examples.getJSONArray("useCases") : null;
+        if (saved == null) {
+            return useCases;
+        }
+        for (Object item : saved) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject raw = (JSONObject) item;
+            JSONObject req = raw.getJSONObject("request");
+            JSONObject res = raw.getJSONObject("response");
+            ApiUseCase useCase = new ApiUseCase();
+            useCase.name = StrUtil.blankToDefault(raw.getString("name"), "测试用例");
+            useCase.description = raw.getString("description");
+            useCase.pathParams = objectMap(req != null ? req.getJSONObject("pathParams") : null);
+            useCase.queryParams = objectMap(req != null ? req.getJSONObject("queryParams") : null);
+            useCase.headers = objectMap(req != null ? req.getJSONObject("headers") : null);
+            useCase.body = req != null ? req.get("body") : null;
+            useCase.responseStatus = res != null && res.get("status") != null ? String.valueOf(res.get("status")) : "";
+            useCase.responseBody = res != null ? res.get("body") : null;
+            if (useCase.responseBody == null && res != null && StrUtil.isNotBlank(res.getString("errorMessage"))) {
+                JSONObject error = new JSONObject(true);
+                error.put("errorType", res.getString("errorType"));
+                error.put("errorMessage", res.getString("errorMessage"));
+                useCase.responseBody = error;
+            }
+            useCases.add(useCase);
+        }
+        return useCases;
+    }
+
+    private List<NamedExample> specRequestExamples(JSONObject examples) {
+        List<NamedExample> list = new ArrayList<>();
+        JSONObject spec = examples != null ? examples.getJSONObject("specExamples") : null;
+        JSONArray request = spec != null ? spec.getJSONArray("request") : null;
+        if (request == null) {
+            return list;
+        }
+        for (Object item : request) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject raw = (JSONObject) item;
+            list.add(new NamedExample(raw.getString("name"), raw.getString("description"), raw.get("value")));
+        }
+        return list;
+    }
+
+    private List<NamedExample> specResponseExamples(JSONObject examples) {
+        List<NamedExample> list = new ArrayList<>();
+        JSONObject spec = examples != null ? examples.getJSONObject("specExamples") : null;
+        JSONArray responses = spec != null ? spec.getJSONArray("responses") : null;
+        if (responses == null) {
+            return list;
+        }
+        for (Object item : responses) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject raw = (JSONObject) item;
+            NamedExample example = new NamedExample(raw.getString("name"), raw.getString("description"), raw.get("value"));
+            example.status = raw.getString("status");
+            list.add(example);
+        }
+        return list;
+    }
+
+    private List<ApiUseCase> parameterUseCases(OpenApiOperation op, Object defaultBody, ResponseExample defaultResponse) {
+        List<ApiUseCase> useCases = new ArrayList<>();
+        JSONArray params = parseJsonArray(op.getParametersJson());
+        for (Object item : params) {
+            if (!(item instanceof JSONObject)) {
+                continue;
+            }
+            JSONObject param = (JSONObject) item;
+            JSONObject examples = param.getJSONObject("examples");
+            if (examples == null || examples.isEmpty()) {
+                continue;
+            }
+            for (String name : examples.keySet()) {
+                Object value = examples.get(name);
+                JSONObject wrapper = value instanceof JSONObject ? (JSONObject) value : null;
+                Object actualValue = wrapper != null && wrapper.containsKey("value") ? wrapper.get("value") : value;
+                ApiUseCase useCase = new ApiUseCase();
+                useCase.name = param.getString("name") + " - " + name;
+                useCase.description = wrapper != null ? wrapper.getString("description") : param.getString("description");
+                useCase.pathParams = parameterExampleMap(op, "path");
+                useCase.queryParams = parameterExampleMap(op, "query");
+                useCase.headers = parameterExampleMap(op, "header");
+                putParamValue(useCase, param.getString("in"), param.getString("name"), actualValue);
+                useCase.body = defaultBody;
+                useCase.responseStatus = defaultResponse.status;
+                useCase.responseBody = defaultResponse.body;
+                useCases.add(useCase);
+            }
+        }
+        return useCases;
+    }
+
+    private void putParamValue(ApiUseCase useCase, String in, String name, Object value) {
+        if (StrUtil.equalsIgnoreCase("path", in)) {
+            useCase.pathParams.put(name, value);
+        } else if (StrUtil.equalsIgnoreCase("query", in)) {
+            useCase.queryParams.put(name, value);
+        } else if (StrUtil.equalsIgnoreCase("header", in)) {
+            useCase.headers.put(name, value);
+        }
+    }
+
+    private NamedExample findMatchingExample(List<NamedExample> examples, String name, int index) {
+        for (NamedExample example : examples) {
+            if (StrUtil.equalsIgnoreCase(example.name, name)) {
+                return example;
+            }
+        }
+        if (index >= 0 && index < examples.size()) {
+            return examples.get(index);
+        }
+        return examples.isEmpty() ? null : examples.get(0);
+    }
+
+    private ResponseExample defaultResponseExample(OpenApiOperation op, JSONObject schemas) {
+        JSONObject responses = parseJsonObject(op.getResponsesJson());
+        if (responses == null || responses.isEmpty()) {
+            return new ResponseExample("200", new LinkedHashMap<>());
+        }
+        String status = defaultResponseStatus(responses);
+        JSONObject response = responses.getJSONObject(status);
+        JSONObject schema = responseSchema(response);
+        Object body = schema != null ? sampleFromSchema(schema, schemas, 0) : new LinkedHashMap<>();
+        return new ResponseExample(status, body);
+    }
+
+    private String defaultResponseStatus(JSONObject responses) {
+        for (String status : responses.keySet()) {
+            if (status.startsWith("2")) {
+                return status;
+            }
+        }
+        return responses.keySet().iterator().next();
+    }
+
+    private Map<String, Object> parameterExampleMap(OpenApiOperation op, String in) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        JSONArray params = filterParameters(op, in);
+        for (Object item : params) {
+            JSONObject param = (JSONObject) item;
+            Object value = param.containsKey("example") ? param.get("example") : param.get("default");
+            if (value == null) {
+                value = exampleValue(param);
+            }
+            if (StrUtil.isNotBlank(param.getString("name")) && value != null && StrUtil.isNotBlank(String.valueOf(value))) {
+                map.put(param.getString("name"), value);
+            }
+        }
+        return map;
+    }
+
+    private Map<String, Object> objectMap(JSONObject object) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        if (object != null) {
+            for (String key : object.keySet()) {
+                map.put(key, object.get(key));
+            }
+        }
+        return map;
     }
 
     private JSONArray filterParameters(OpenApiOperation op, String in) {
@@ -1258,6 +1763,40 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             this.type = type;
             this.required = required;
             this.description = description;
+        }
+    }
+
+    private static class ApiUseCase {
+        private String name;
+        private String description;
+        private Map<String, Object> pathParams = new LinkedHashMap<>();
+        private Map<String, Object> queryParams = new LinkedHashMap<>();
+        private Map<String, Object> headers = new LinkedHashMap<>();
+        private Object body;
+        private String responseStatus;
+        private Object responseBody;
+    }
+
+    private static class NamedExample {
+        private final String name;
+        private final String description;
+        private final Object value;
+        private String status;
+
+        private NamedExample(String name, String description, Object value) {
+            this.name = name;
+            this.description = description;
+            this.value = value;
+        }
+    }
+
+    private static class ResponseExample {
+        private final String status;
+        private final Object body;
+
+        private ResponseExample(String status, Object body) {
+            this.status = status;
+            this.body = body;
         }
     }
 

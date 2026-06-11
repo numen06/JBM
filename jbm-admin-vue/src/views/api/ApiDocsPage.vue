@@ -24,10 +24,11 @@ import {
   getOpenApiOperation,
   syncOpenApiDocs,
   testOpenApiOperation,
+  saveOpenApiUseCase,
   exportOpenApiDocs,
   publishOpenApiDocs,
 } from '@/api/openapiDocs'
-import type { OpenApiOperationDetail, OpenApiOperationView, OpenApiSource } from '@/api/types'
+import type { OpenApiOperationDetail, OpenApiOperationView, OpenApiSource, OpenApiTestResult } from '@/api/types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const feedback = useFeedback()
@@ -71,7 +72,11 @@ const testHeaderParams = ref<TestParam[]>([])
 const testBody = ref('')
 const testConfirm = ref(false)
 const testResult = ref<string>('')
+const lastTestResult = ref<OpenApiTestResult | null>(null)
 const testing = ref(false)
+const savingUseCase = ref(false)
+const useCaseName = ref('')
+const useCaseDescription = ref('')
 const previewing = ref(false)
 const previewUrl = ref('')
 
@@ -204,6 +209,9 @@ function resetTestForm(detail: OpenApiOperationDetail) {
   testBody.value = ['GET', 'HEAD', 'OPTIONS'].includes(method) ? '' : buildRequestBodySample(detail)
   testConfirm.value = false
   testResult.value = ''
+  lastTestResult.value = null
+  useCaseName.value = detail.summary || `${method} ${detail.path || ''}`
+  useCaseDescription.value = ''
 }
 
 function toTestParam(raw: Record<string, unknown>): TestParam {
@@ -327,6 +335,7 @@ async function sendTest() {
   }
   testing.value = true
   testResult.value = ''
+  lastTestResult.value = null
   try {
     const pathParams = paramsToRecord(testPathParams.value, true)
     const queryParams = paramsToRecord(testQueryParams.value, false)
@@ -339,11 +348,41 @@ async function sendTest() {
       body: testBody.value || null,
       confirm: needsConfirm ? testConfirm.value : false,
     })
+    lastTestResult.value = result
     testResult.value = JSON.stringify(result, null, 2)
   } catch (e) {
     testResult.value = e instanceof Error ? e.message : '测试失败'
   } finally {
     testing.value = false
+  }
+}
+
+async function saveUseCase() {
+  if (!selectedOperationId.value || !lastTestResult.value || !operationDetail.value) return
+  savingUseCase.value = true
+  try {
+    const saved = await saveOpenApiUseCase(selectedOperationId.value, {
+      name: useCaseName.value || operationDetail.value.summary || `${selectedMethod.value} ${operationDetail.value.path}`,
+      description: useCaseDescription.value,
+      pathParams: paramsToRecord(testPathParams.value, false),
+      queryParams: paramsToRecord(testQueryParams.value, false),
+      headers: paramsToRecord(testHeaderParams.value, false),
+      body: testBody.value || null,
+      requestUrl: lastTestResult.value.requestUrl,
+      success: lastTestResult.value.success,
+      responseStatus: lastTestResult.value.status,
+      responseHeaders: lastTestResult.value.headers,
+      responseBody: lastTestResult.value.bodyPreview,
+      errorType: lastTestResult.value.errorType,
+      errorMessage: lastTestResult.value.errorMessage,
+      durationMs: lastTestResult.value.durationMs,
+    })
+    operationDetail.value = saved
+    feedback.toast.success('测试用例已保存')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '保存用例失败')
+  } finally {
+    savingUseCase.value = false
   }
 }
 
@@ -761,6 +800,16 @@ onMounted(async () => {
               </Button>
             </div>
             <pre v-if="testResult" class="mt-3 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">{{ testResult }}</pre>
+            <div v-if="lastTestResult" class="mt-3 rounded border bg-background p-3">
+              <div class="grid gap-2 md:grid-cols-2">
+                <Input v-model="useCaseName" placeholder="用例名称" />
+                <Input v-model="useCaseDescription" placeholder="用例说明，例如：正常查询 / 参数为空 / 权限不足" />
+              </div>
+              <Button class="mt-2" size="sm" variant="secondary" :disabled="savingUseCase" @click="saveUseCase">
+                <Upload class="mr-1 size-4" />
+                保存为用例
+              </Button>
+            </div>
           </div>
         </template>
 

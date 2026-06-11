@@ -57,6 +57,14 @@ public class OpenApiDocsController extends BaseController {
         return ResultBody.callback(() -> openApiHubService.getOperationDetail(operationId));
     }
 
+    @ApiOperation("保存接口测试用例")
+    @PostMapping("/operations/{operationId}/use-cases")
+    public ResultBody<OpenApiOperation> saveUseCase(
+            @PathVariable Long operationId,
+            @RequestBody OpenApiUseCaseSaveRequest request) {
+        return ResultBody.callback(() -> openApiHubService.saveUseCase(operationId, request, LoginHelper.getUserId()));
+    }
+
     @ApiOperation("同步 OpenAPI 文档")
     @PostMapping("/sync")
     public ResultBody<List<OpenApiSyncResult>> sync(@RequestBody(required = false) OpenApiSyncRequest request) {
