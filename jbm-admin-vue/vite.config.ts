@@ -4,10 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 
-/** jaja7 本地：所有 API 经 Gateway 6060（需同时启动 Gateway / Auth / Center） */
-const gateway = 'http://127.0.0.1:6060'
+/** jaja7 本地：默认经本机 Gateway 6060；也可用 VITE_PROXY_TARGET 指向已发布后台。 */
+const gateway = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:6060'
 
 const gatewayPrefixes = [
+  '/v3/api',
   '/auth',
   '/center',
   '/jbm-cluster-platform-',
