@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 文档服务与 Minio 就绪监听器。
- * 三级门禁（Nacos 注册、doc 健康、Minio 探通）全部通过后才触发大屏加载。
+ * 文档服务就绪监听器。
+ * 大屏只依赖 doc 的 HTTP 下载能力，Minio 就绪由 doc 服务自行保障。
  */
 @Component
 @Slf4j
@@ -30,10 +30,10 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
 
     private static final String DOC_SERVICE_NAME = "jbm-cluster-platform-doc";
     private static final String HEALTH_PATH = "/actuator/health";
-    private static final String MINIO_HEALTH_PATH = "/health/minio";
     private static final int HTTP_TIMEOUT_MS = 3000;
     private static final long MAX_WAIT_TIME_MS = 5 * 60 * 1000L;
     private static final long CHECK_INTERVAL_MS = 2000L;
+    private static final long LOG_INTERVAL_MS = 30 * 1000L;
 
     @Resource
     private DiscoveryClient discoveryClient;
@@ -48,21 +48,27 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         applicationStartTime = System.currentTimeMillis();
-        log.info("开始监听文档服务[{}]与 Minio 状态，就绪后触发大屏加载", DOC_SERVICE_NAME);
-        waitForStorageAndTrigger();
+        log.info("开始监听文档服务[{}]，就绪后触发大屏加载", DOC_SERVICE_NAME);
+        ThreadUtil.execute(this::waitForDocAndTrigger);
     }
 
-    private void waitForStorageAndTrigger() {
+    private void waitForDocAndTrigger() {
+        long lastLogTime = 0;
         while (true) {
             long elapsed = System.currentTimeMillis() - applicationStartTime;
             if (elapsed > MAX_WAIT_TIME_MS) {
-                log.warn("初始轮询超时（{}分钟），将由定时任务继续检查 Minio 就绪状态",
+                log.warn("初始轮询超时（{}分钟），将由定时任务继续检查文档服务状态",
                         MAX_WAIT_TIME_MS / 60000);
                 break;
             }
             tryLoadIfReady(false);
             if (!needsLoad()) {
                 return;
+            }
+            long now = System.currentTimeMillis();
+            if (now - lastLogTime >= LOG_INTERVAL_MS) {
+                logWaitingReason();
+                lastLogTime = now;
             }
             ThreadUtil.sleep(CHECK_INTERVAL_MS);
         }
@@ -80,9 +86,9 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         if (!needsLoad()) {
             return;
         }
-        if (!isFullyReady()) {
+        if (!isDocReady()) {
             if (scheduled) {
-                log.debug("⏳ Minio 未就绪，跳过加载");
+                logWaitingReason();
             }
             return;
         }
@@ -90,14 +96,23 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
             return;
         }
         try {
-            log.info("✅ Minio 已就绪，开始加载大屏");
+            log.info("文档服务已就绪，开始加载大屏");
             bigscreenViewService.loadAllBigscreens();
-            log.info("✅ 所有大屏加载完成");
+            log.info("所有大屏加载完成");
         } catch (Exception e) {
             log.error("触发大屏加载异常", e);
         } finally {
             loading.set(false);
         }
+    }
+
+    private void logWaitingReason() {
+        ServiceInstance instance = getDocInstance();
+        if (ObjectUtil.isEmpty(instance)) {
+            log.info("等待文档服务 [{}] 在 Nacos 注册", DOC_SERVICE_NAME);
+            return;
+        }
+        log.info("等待文档服务 HTTP 可达: {}", instance.getUri());
     }
 
     private boolean needsLoad() {
@@ -109,21 +124,12 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         }
     }
 
-    private boolean isFullyReady() {
+    private boolean isDocReady() {
         ServiceInstance instance = getDocInstance();
         if (ObjectUtil.isEmpty(instance)) {
             return false;
         }
-        String baseUri = instance.getUri().toString();
-        if (!isDocHealthUp(baseUri)) {
-            log.debug("⏳ 文档服务 HTTP 未就绪: {}", baseUri);
-            return false;
-        }
-        if (!isStorageReady(baseUri)) {
-            log.debug("⏳ Minio 存储链路未就绪: {}", baseUri);
-            return false;
-        }
-        return true;
+        return isDocServiceReachable(instance.getUri().toString());
     }
 
     private ServiceInstance getDocInstance() {
@@ -136,23 +142,11 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         }
     }
 
-    private boolean isDocHealthUp(String baseUri) {
-        return probeHttp(baseUri + HEALTH_PATH, "\"status\":\"UP\"");
-    }
-
-    private boolean isStorageReady(String baseUri) {
-        return probeHttp(baseUri + MINIO_HEALTH_PATH, "\"ready\":true");
-    }
-
-    private boolean probeHttp(String url, String successMarker) {
-        try (HttpResponse response = HttpRequest.get(url).timeout(HTTP_TIMEOUT_MS).execute()) {
-            if (!response.isOk()) {
-                return false;
-            }
-            String body = response.body();
-            return StrUtil.isNotBlank(body) && body.contains(successMarker);
+    private boolean isDocServiceReachable(String baseUri) {
+        try (HttpResponse response = HttpRequest.get(baseUri + HEALTH_PATH).timeout(HTTP_TIMEOUT_MS).execute()) {
+            return response.getStatus() > 0 && StrUtil.isNotBlank(response.body());
         } catch (Exception e) {
-            log.debug("探针请求失败 [{}]: {}", url, e.getMessage());
+            log.debug("文档服务探针失败 [{}]: {}", baseUri + HEALTH_PATH, e.getMessage());
             return false;
         }
     }

@@ -42,7 +42,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     /**
      * 加载所有大屏
-     * 由 DocServiceReadyListener 在文档服务就绪后调用
+     * 由 DocServiceReadyListener 在文档服务 HTTP 可达后调用
      */
     @Override
     public void loadAllBigscreens() {
@@ -227,7 +227,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     /**
      * 获取文档服务器地址
-     * 注意：该方法应该在文档服务就绪后调用（由 DocServiceReadyListener 保证）
+     * 注意：该方法应在文档服务 HTTP 可达后调用（由 DocServiceReadyListener 保证）
      *
      * @return 文档服务器地址
      */
