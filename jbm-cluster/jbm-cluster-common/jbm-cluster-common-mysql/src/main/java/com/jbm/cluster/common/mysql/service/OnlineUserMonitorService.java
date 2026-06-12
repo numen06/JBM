@@ -1,10 +1,10 @@
 package com.jbm.cluster.common.mysql.service;
 
+import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.model.auth.SysUserOnline;
@@ -114,11 +114,17 @@ public class OnlineUserMonitorService {
                     sysUserOnline.setTokenId(token);
                 }
                 try {
+                    StpUtil.getLoginIdByToken(token);
+                } catch (Exception ex) {
+                    redisService.deleteObject(onlineKey);
+                    continue;
+                }
+                try {
                     Long activityTimeout = StpUtil.stpLogic.getTokenActivityTimeoutByToken(token);
                     if (activityTimeout != null && activityTimeout > 0) {
                         sysUserOnline.setActivityTime(DateUtil.offset(DateTime.now(), DateField.SECOND, activityTimeout.intValue()));
                     }
-                    Long expireTime = redisService.getExpire(onlineKey);
+                    Long expireTime = getTokenExpire(token, onlineKey);
                     if (expireTime != null && expireTime > 0) {
                         sysUserOnline.setExpiredTime(DateUtil.offset(DateTime.now(), DateField.SECOND, expireTime.intValue()));
                     }
@@ -130,6 +136,18 @@ public class OnlineUserMonitorService {
         }
         userOnlineList.removeAll(Collections.singleton(null));
         return userOnlineList;
+    }
+
+    private Long getTokenExpire(String token, String onlineKey) {
+        String tokenName = SaManager.getConfig().getTokenName();
+        if (StrUtil.isBlank(tokenName)) {
+            tokenName = "satoken";
+        }
+        Long tokenExpire = redisService.getExpire(tokenName + ":login:token:" + token);
+        if (tokenExpire != null && tokenExpire > 0) {
+            return tokenExpire;
+        }
+        return redisService.getExpire(onlineKey);
     }
 
     private void enrichMissingFields(List<SysUserOnline> onlineList) {

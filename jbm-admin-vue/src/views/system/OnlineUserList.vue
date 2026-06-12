@@ -118,17 +118,35 @@ function resetFilters() {
   load(1)
 }
 
-function formatTime(t?: string) {
+function parseTime(t?: string) {
   if (!t) return '-'
   const date = new Date(t)
   if (Number.isNaN(date.getTime())) return t
-  return date.toLocaleString()
+  return date.getTime()
+}
+
+function formatTime(t?: string) {
+  const time = parseTime(t)
+  if (typeof time !== 'number') return time
+  return new Date(time).toLocaleString()
+}
+
+function effectiveExpiredAt(row: SysUserOnline) {
+  const times = [parseTime(row.activityTime), parseTime(row.expiredTime)]
+    .filter((time): time is number => typeof time === 'number')
+  if (!times.length) return undefined
+  return Math.min(...times)
+}
+
+function formatEffectiveExpiredTime(row: SysUserOnline) {
+  const time = effectiveExpiredAt(row)
+  if (time == null) return '-'
+  return new Date(time).toLocaleString()
 }
 
 function isExpired(row: SysUserOnline) {
-  if (!row.expiredTime) return false
-  const time = new Date(row.expiredTime).getTime()
-  return Number.isFinite(time) && time < Date.now()
+  const time = effectiveExpiredAt(row)
+  return time != null && time < Date.now()
 }
 
 function isCurrentSession(row: SysUserOnline) {
@@ -264,7 +282,7 @@ async function handleExpireImmediately(row: SysUserOnline) {
               <th class="h-10 px-4 text-left font-medium">来源</th>
               <th class="h-10 px-4 text-left font-medium">客户端</th>
               <th class="h-10 px-4 text-left font-medium">登录时间</th>
-              <th class="h-10 px-4 text-left font-medium">过期时间</th>
+              <th class="h-10 px-4 text-left font-medium">生效过期时间</th>
               <th class="h-10 px-4 text-left font-medium">Token</th>
               <th class="h-10 px-4 text-right font-medium">操作</th>
             </tr>
@@ -297,7 +315,11 @@ async function handleExpireImmediately(row: SysUserOnline) {
                 <div class="text-xs text-muted-foreground">{{ row.os ?? '-' }}</div>
               </td>
               <td class="p-4 text-sm text-muted-foreground">{{ formatTime(row.loginTime) }}</td>
-              <td class="p-4 text-sm text-muted-foreground">{{ formatTime(row.expiredTime) }}</td>
+              <td class="p-4 text-sm text-muted-foreground">
+                <div class="text-foreground">{{ formatEffectiveExpiredTime(row) }}</div>
+                <div v-if="row.activityTime" class="mt-1 text-xs">空闲：{{ formatTime(row.activityTime) }}</div>
+                <div v-if="row.expiredTime" class="text-xs">硬过期：{{ formatTime(row.expiredTime) }}</div>
+              </td>
               <td class="p-4 font-mono text-xs text-muted-foreground" :title="row.tokenId">
                 {{ shortToken(row.tokenId) }}
               </td>

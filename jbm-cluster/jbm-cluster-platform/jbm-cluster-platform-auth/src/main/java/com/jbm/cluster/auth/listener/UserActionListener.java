@@ -64,6 +64,9 @@ public class UserActionListener extends SaTokenListenerForSimple {
         userOnline.setLoginTime(DateTime.now());
         userOnline.setTokenId(tokenValue);
         userOnline.setExpiredTime(DateUtil.offsetSecond(userOnline.getLoginTime(), loginModel.getTimeout().intValue()));
+        if (tokenConfig.getActivityTimeout() > 0) {
+            userOnline.setActivityTime(DateUtil.offsetSecond(userOnline.getLoginTime(), (int) tokenConfig.getActivityTimeout()));
+        }
         userOnline.setUserName(user.getUsername());
         userOnline.setUserId(user.getUserId());
         userOnline.setCompanyId(user.getCompanyId());

@@ -43,6 +43,8 @@ const JBM_SERVICE_ALIAS_MAP: Array<[string, string]> = [
   ['/jbm-cluster-platform-weixin', '/weixin'],
 ]
 
+type RetriableRequestConfig = AxiosRequestConfig & { _retry?: boolean }
+
 function matchesPathPrefix(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(`${prefix}/`)
 }
@@ -78,6 +80,33 @@ export function withServicePrefix(url: string): string {
   return `${service}${path}${suffix}`
 }
 
+function isUnauthorizedBody(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false
+  const body = data as Record<string, unknown>
+  const status = Number(body.httpStatus ?? body.status ?? body.code)
+  if (status === 401) return true
+  const message = extractApiError(data, '')
+  return /token.*(过期|失效)|未登录|重新登录|unauthorized|not.?login/i.test(message)
+}
+
+async function handleUnauthorized(config: RetriableRequestConfig) {
+  const auth = useAuthStore()
+  if (auth.refreshToken && !refreshing && !config._retry) {
+    refreshing = true
+    config._retry = true
+    try {
+      await auth.refreshAccessToken()
+      refreshing = false
+      return http(config)
+    } catch {
+      refreshing = false
+    }
+  }
+  auth.clearSession()
+  router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+  return Promise.reject(new Error('登录已过期，请重新登录'))
+}
+
 http.interceptors.request.use((config) => {
   if (config.url) {
     config.url = withServicePrefix(config.url)
@@ -98,28 +127,19 @@ http.interceptors.request.use((config) => {
 let refreshing = false
 
 http.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const auth = useAuthStore()
+    const config = response.config as RetriableRequestConfig
+    if (auth.accessToken && !config._retry && isUnauthorizedBody(response.data)) {
+      return handleUnauthorized(config)
+    }
+    return response
+  },
   async (error) => {
     const status = error.response?.status
-    const config = error.config as AxiosRequestConfig & { _retry?: boolean }
+    const config = error.config as RetriableRequestConfig
     if (status === 401 && !config._retry) {
-      const auth = useAuthStore()
-      if (auth.refreshToken && !refreshing) {
-        refreshing = true
-        config._retry = true
-        try {
-          await auth.refreshAccessToken()
-          refreshing = false
-          return http(config)
-        } catch {
-          refreshing = false
-          auth.clearSession()
-          router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
-        }
-      } else {
-        auth.clearSession()
-        router.push({ name: 'login' })
-      }
+      return handleUnauthorized(config)
     }
     const message = extractApiError(error, '请求失败')
     return Promise.reject(new Error(message))

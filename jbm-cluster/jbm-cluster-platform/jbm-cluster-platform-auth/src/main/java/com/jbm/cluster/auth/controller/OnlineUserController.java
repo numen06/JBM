@@ -10,6 +10,7 @@ import com.jbm.cluster.api.model.auth.SysUserOnline;
 import com.jbm.cluster.auth.form.OnlineUserSearchForm;
 import com.jbm.cluster.common.mysql.service.OnlineUserFilter;
 import com.jbm.cluster.common.mysql.service.OnlineUserMonitorService;
+import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
@@ -122,6 +123,10 @@ public class OnlineUserController {
                         }
                         if (redisService.getExpire(oauth2AccessKey) > 0) {
                             redisService.expire(oauth2AccessKey, expireSeconds);
+                        }
+                        String onlineKey = JbmCacheConstants.ONLINE_TOKEN_KEY + tokenValue;
+                        if (redisService.getExpire(onlineKey) > 0) {
+                            redisService.expire(onlineKey, expireSeconds);
                         }
 
                         log.info("Token已设置为{}分钟后过期: {}", minutes, tokenValue);
