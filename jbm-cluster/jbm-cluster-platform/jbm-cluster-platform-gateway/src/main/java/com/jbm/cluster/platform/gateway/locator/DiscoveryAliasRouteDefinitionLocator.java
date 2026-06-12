@@ -52,16 +52,23 @@ public class DiscoveryAliasRouteDefinitionLocator implements RouteDefinitionLoca
         }
         List<RouteDefinition> definitions = new ArrayList<>(aliases.size());
         for (String alias : aliases) {
+            if (isPushService(serviceId)) {
+                definitions.add(buildRouteDefinition(serviceId, "/" + alias + "/ws/**", 1, alias + "-ws", true));
+            }
             definitions.add(buildRouteDefinition(serviceId, "/" + alias + "/**", 1, alias));
         }
         return definitions;
     }
 
     private RouteDefinition buildRouteDefinition(String serviceId, String path, int stripPrefixCount, String routeKey) {
+        return buildRouteDefinition(serviceId, path, stripPrefixCount, routeKey, false);
+    }
+
+    private RouteDefinition buildRouteDefinition(String serviceId, String path, int stripPrefixCount, String routeKey, boolean websocket) {
         RouteDefinition definition = new RouteDefinition();
         definition.setId("discovery-alias-" + serviceId + "-" + routeKey);
-        definition.setUri(serviceUri(serviceId));
-        definition.setOrder(100);
+        definition.setUri(websocket ? websocketServiceUri(serviceId) : serviceUri(serviceId));
+        definition.setOrder(websocket ? 50 : 100);
 
         PredicateDefinition predicate = new PredicateDefinition();
         predicate.setName("Path");
@@ -84,6 +91,10 @@ public class DiscoveryAliasRouteDefinitionLocator implements RouteDefinitionLoca
 
     private URI serviceUri(String serviceId) {
         return UriComponentsBuilder.fromUriString("lb://" + serviceId).build().toUri();
+    }
+
+    private URI websocketServiceUri(String serviceId) {
+        return UriComponentsBuilder.fromUriString("lb:ws://" + serviceId).build().toUri();
     }
 
     private Set<String> aliasesFor(String serviceId) {
@@ -110,6 +121,11 @@ public class DiscoveryAliasRouteDefinitionLocator implements RouteDefinitionLoca
         if (StrUtil.isNotBlank(alias)) {
             aliases.add(alias);
         }
+    }
+
+    private boolean isPushService(String serviceId) {
+        return StrUtil.equals(serviceId, JbmClusterConstants.PUSH_SERVER)
+                || StrUtil.startWith(serviceId, JbmClusterConstants.PUSH_SERVER + "-");
     }
 
     private static Map<String, String> defaultServiceAliases() {

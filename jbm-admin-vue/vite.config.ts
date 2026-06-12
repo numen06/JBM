@@ -11,6 +11,7 @@ const gatewayPrefixes = [
   '/v3/api',
   '/auth',
   '/center',
+  '/push',
   '/jbm-cluster-platform-',
 ]
 
@@ -21,6 +22,7 @@ function proxyMap(target: string, prefixes: string[]) {
       {
         target,
         changeOrigin: true,
+        ws: true,
         bypass(req: IncomingMessage) {
           const accept = req.headers.accept || ''
           if (req.method === 'GET' && accept.includes('text/html')) {

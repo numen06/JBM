@@ -22,6 +22,7 @@ import {
   Activity,
   GitBranch,
   FileCode2,
+  Send,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -154,6 +155,7 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
   {
     label: '其他',
     items: [
+      { name: 'push-test', title: 'Push 通讯测试', icon: Send, to: '/messages/push-test', menuCodes: ['push', 'push_test', 'pushTasks'] },
       { name: 'account-logs', title: '审计日志', icon: ScrollText, to: '/log/account', menuCodes: ['account_logs'] },
       { name: 'developer', title: '开发者', icon: Code2, to: '/developer', menuCodes: ['developer', 'developer_mgmt'] },
     ],

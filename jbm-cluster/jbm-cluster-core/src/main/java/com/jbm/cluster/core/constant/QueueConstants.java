@@ -79,6 +79,11 @@ public class QueueConstants {
     public static final String PUSH_MESSAGE_STREAM = "pushMsg-in-0";
 
     /**
+     * 站内信实时投递广播
+     */
+    public static final String PUSH_REALTIME_MESSAGE_STREAM = "pushRealtimeMessage-in-0";
+
+    /**
      * 业务日志通道
      */
     public static final String BUSINESS_LOG_STREAM = "businessLog-in-0";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
 import { Bell, LogOut, Mail, MailOpen, PanelLeft } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
@@ -38,6 +38,7 @@ const roleHint = computed(() => {
 })
 
 async function handleLogout() {
+  messageStore.disconnectRealtime()
   await auth.logout()
   messageStore.clear()
   router.push({ name: 'login' })
@@ -60,6 +61,10 @@ function contentText(value: unknown) {
   }
 }
 
+function messageSource(message: { sysMsg?: boolean; sendUserId?: number }) {
+  return message.sysMsg || !message.sendUserId ? '系统通知' : '用户消息'
+}
+
 async function toggleMessages() {
   messagesOpen.value = !messagesOpen.value
   if (messagesOpen.value) await messageStore.refreshSummary()
@@ -77,7 +82,16 @@ async function markRecentRead(msgId?: string) {
 
 onMounted(() => {
   messageStore.refreshSummary()
+  messageStore.connectRealtime()
 })
+
+watch(
+  () => auth.accessToken,
+  (token) => {
+    if (token) messageStore.connectRealtime()
+    else messageStore.disconnectRealtime()
+  },
+)
 </script>
 
 <template>
@@ -194,6 +208,9 @@ onMounted(() => {
                     <Mail v-else class="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <span class="min-w-0 flex-1">
                       <span class="block truncate text-sm font-medium">{{ message.title || '未命名消息' }}</span>
+                      <span class="mt-1 block text-xs text-muted-foreground">
+                        {{ messageSource(message) }}
+                      </span>
                       <span class="mt-1 block line-clamp-2 text-xs leading-5 text-muted-foreground">
                         {{ contentText(message.content) }}
                       </span>

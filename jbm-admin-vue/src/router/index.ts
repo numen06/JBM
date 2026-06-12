@@ -58,6 +58,12 @@ const router = createRouter({
           meta: { title: '消息中心' },
         },
         {
+          path: 'messages/push-test',
+          name: 'push-test',
+          component: () => import('@/views/messages/PushTestPage.vue'),
+          meta: { title: 'Push 通讯测试' },
+        },
+        {
           path: 'system/users',
           name: 'users',
           component: () => import('@/views/system/UserList.vue'),
@@ -254,10 +260,20 @@ router.beforeEach(async (to) => {
   if (!auth.user) await auth.fetchUser()
   const menuStore = useMenuStore()
   if (!menuStore.loaded) await menuStore.fetchMenus()
+  if (to.path === '/messages/push-test' && isPushTestAllowed(auth.user)) {
+    return true
+  }
   if (!menuStore.isRouteAllowed(to.path)) {
     return { name: 'dashboard' }
   }
   return true
 })
+
+function isPushTestAllowed(user: ReturnType<typeof useAuthStore>['user']) {
+  if (!user) return false
+  if (user.userId === 1 || user.userName?.toLowerCase() === 'admin') return true
+  const authorities = user.authorities?.map((item) => item.authority || item.authorityId || '') ?? []
+  return authorities.some((item) => ['push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item))
+}
 
 export default router

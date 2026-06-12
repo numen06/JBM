@@ -10,7 +10,7 @@ spring:
         enabled: true
       id: ${spring.application.name}:${server.port}
     function:
-      definition: notification;mqtt;pushCallBack;pushMsg;businessEvent;businessEventResource;
+      definition: notification;mqtt;pushCallBack;pushMsg;pushRealtimeMessage;businessEvent;businessEventResource;
     stream:
       #      default-binder: kafka
       bindings:
@@ -22,6 +22,8 @@ spring:
           group: ${spring.application.name}
         pushMsg-in-0:
           group: ${spring.application.name}
+        pushRealtimeMessage-in-0:
+          content-type: application/json
         businessEvent-in-0:
           group: ${spring.application.name}
         businessEventResource-in-0:
@@ -56,6 +58,7 @@ jbm:
     token-type: redis
     permit-all:
       - /get/**
+      - /ws/**
 swagger2:
   enabled: true
   description: 平台文档服务器

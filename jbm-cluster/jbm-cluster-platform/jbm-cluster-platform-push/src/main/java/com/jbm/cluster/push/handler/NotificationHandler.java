@@ -4,6 +4,8 @@ import com.jbm.cluster.api.entitys.message.MqttNotification;
 import com.jbm.cluster.api.entitys.message.Notification;
 import com.jbm.cluster.api.model.push.PushCallback;
 import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.push.model.PushRealtimeMessageEvent;
+import com.jbm.cluster.push.service.PushRealtimeMessageService;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.cluster.push.usage.MqttNotificationExchanger;
@@ -87,12 +89,32 @@ public class NotificationHandler {
 
     @Autowired
     private PushMessageBodyService pushMessageBodyService;
+    @Autowired
+    private PushRealtimeMessageService pushRealtimeMessageService;
 
     @Bean
     public Function<Flux<Message<PushMsg>>, Mono<Void>> pushMsg() {
-        return flux -> flux.map(message -> {
-            pushMessageBodyService.sendPushMsg(message.getPayload());
-            return message;
-        }).then();
+        return flux -> flux.flatMap(message ->
+                Mono.fromRunnable(() -> pushMessageBodyService.sendPushMsg(message.getPayload()))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .onErrorResume(e -> {
+                            log.error("pushMsg 通道消费失败", e);
+                            return Mono.empty();
+                        })
+                        .then()
+        ).then();
+    }
+
+    @Bean
+    public Function<Flux<Message<PushRealtimeMessageEvent>>, Mono<Void>> pushRealtimeMessage() {
+        return flux -> flux.flatMap(message ->
+                Mono.fromRunnable(() -> pushRealtimeMessageService.deliver(message.getPayload()))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .onErrorResume(e -> {
+                            log.error("pushRealtimeMessage 通道消费失败", e);
+                            return Mono.empty();
+                        })
+                        .then()
+        ).then();
     }
 }

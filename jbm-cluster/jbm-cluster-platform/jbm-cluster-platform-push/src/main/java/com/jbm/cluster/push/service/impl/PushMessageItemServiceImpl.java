@@ -9,6 +9,7 @@ import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.model.push.PushCallback;
 import com.jbm.cluster.push.form.PushMessageForm;
+import com.jbm.cluster.push.service.PushRealtimeMessageService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.cluster.push.usage.PushMessageNotificationExchanger;
 import com.jbm.framework.masterdata.utils.EntityUtils;
@@ -32,6 +33,8 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
 
     @Autowired
     private PushMessageNotificationExchanger pushMessageNotificationExchanger;
+    @Autowired
+    private PushRealtimeMessageService pushRealtimeMessageService;
 
     @Override
     public boolean read(List<String> ids) {
@@ -81,6 +84,9 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
         pushMessageItem.setSendUserId(pushMessageBody.getSendUserId());
         pushMessageItem.setRecUserId(recUserId);
         pushMessageItem = saveEntity(pushMessageItem);
+        if (PushWay.internal == pushWay) {
+            pushRealtimeMessageService.publish(pushMessageBody, pushMessageItem);
+        }
         pushMessageNotificationExchanger.exchange(pushMessageBody, pushMessageItem);
         return pushMessageItem.getMsgId();
     }

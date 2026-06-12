@@ -21,5 +21,6 @@ jbm:
     token-type: redis
     permit-all:
       - /get/**
+      - /ws/**
   push:
     jaja7-dry-run: true

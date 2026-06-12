@@ -301,6 +301,10 @@ export type PushMessageWay =
 
 export interface PushMessage {
   msgId?: string
+  msgBodyId?: number
+  recUserId?: number
+  sendUserId?: number
+  sysMsg?: boolean
   pushStatus?: string
   pushWay?: PushMessageWay
   readFlag?: boolean
@@ -309,11 +313,51 @@ export interface PushMessage {
   level?: number
   type?: PushMessageType
   createTime?: string
+  url?: string
+  extend?: Record<string, unknown>
+  testRunId?: string
+  clientSentAt?: number
 }
 
 export interface PushMessageQuery {
   readFlag?: boolean
   pageForm?: PageForm
+}
+
+export interface PushTestRequest {
+  recUserIds?: number[]
+  tags?: string
+  title?: string
+  content?: string
+  pushMsgType?: PushMessageType
+  extend?: Record<string, unknown>
+  messageCount?: number
+  batchSize?: number
+  intervalMillis?: number
+  waitAck?: boolean
+}
+
+export interface PushTestTaskStatus {
+  taskId?: string
+  status?: string
+  requestedMessages?: number
+  resolvedUsers?: number
+  startedAt?: number
+  finishedAt?: number
+  sentCount?: number
+  failedCount?: number
+  ackCount?: number
+  avgLatencyMs?: number
+  maxLatencyMs?: number
+  errorMessage?: string
+}
+
+export interface PushTestAck {
+  testRunId?: string
+  msgId?: string
+  recUserId?: number
+  receivedAt?: number
+  latencyMs?: number
 }
 
 /** 扩展字段元数据（与后端 FieldDefinition 对齐） */

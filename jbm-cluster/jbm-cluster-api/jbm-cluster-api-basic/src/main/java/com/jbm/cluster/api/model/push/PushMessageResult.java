@@ -17,6 +17,14 @@ public class PushMessageResult implements Serializable {
 
     @ApiModelProperty(value = "推送消息ID")
     private String msgId;
+    @ApiModelProperty("消息内容ID")
+    private Long msgBodyId;
+    @ApiModelProperty("接收者ID")
+    private Long recUserId;
+    @ApiModelProperty("发送者ID")
+    private Long sendUserId;
+    @ApiModelProperty("是否系统消息")
+    private Boolean sysMsg;
     @ApiModelProperty("发送状态")
     private PushStatus pushStatus;
     @ApiModelProperty("发送渠道")
@@ -33,8 +41,10 @@ public class PushMessageResult implements Serializable {
     private PushMsgType type;
     @ApiModelProperty("创建时间")
     private Date createTime;
-//    @ApiModelProperty("扩展字段")
-//    private Map<String, Object> extend;
+    @ApiModelProperty("超链接")
+    private String url;
+    @ApiModelProperty("扩展字段")
+    private Map<String, Object> extend;
 
 
 }

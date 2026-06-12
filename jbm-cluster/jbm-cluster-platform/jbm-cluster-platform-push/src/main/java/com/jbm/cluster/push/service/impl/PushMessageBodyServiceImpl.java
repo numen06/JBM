@@ -12,6 +12,7 @@ import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.cluster.api.model.push.PushMsg;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
+import com.jbm.cluster.push.service.PushRecipientResolver;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
 import com.jbm.framework.exceptions.ServiceException;
@@ -22,7 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -35,6 +38,8 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
     private NotificationDispatcher notificationDispatcher;
     @Autowired
     private PushMessageItemService pushMessageItemService;
+    @Autowired
+    private PushRecipientResolver pushRecipientResolver;
 
     @Override
     public DataPaging<PushMessageBody> selectPageList(PageRequestBody pageRequestBody) {
@@ -58,6 +63,7 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
                 PushMessageBody pushMessageBody = selectById(pushMessageItem.getMsgBodyId());
                 BeanUtil.copyProperties(pushMessageItem, pushMessageResult);
                 BeanUtil.copyProperties(pushMessageBody, pushMessageResult);
+                pushMessageResult.setSysMsg(pushMessageResult.getSendUserId() == null);
                 pushMessageBodyList.add(pushMessageResult);
             }
         });
@@ -101,6 +107,9 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
 
     @Override
     public void sendPushMsg(PushMsg pushMsg) {
+        if (ObjectUtil.isEmpty(pushMsg)) {
+            throw new ServiceException("推送消息不能为空");
+        }
         if (ObjectUtil.isEmpty(pushMsg.getPushWays())) {
             pushMsg.setPushWays(Lists.newArrayList(PushWay.internal));
         }
@@ -110,7 +119,8 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         if (ObjectUtil.isEmpty(pushMsg.getContent())) {
             throw new ServiceException("请指定推送内容");
         }
-        if (ObjectUtil.isAllEmpty(pushMsg.getRecUserIds(), pushMsg.getTags())) {
+        Set<Long> recUserIds = pushRecipientResolver.resolve(pushMsg);
+        if (ObjectUtil.isEmpty(recUserIds)) {
             throw new ServiceException("用户站内信请指定接收者，标签组");
         }
         if (BooleanUtil.isFalse(pushMsg.getSysMsg())) {
@@ -121,13 +131,16 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         PushMessageBody pushMessageBody = new PushMessageBody();
         pushMessageBody.setSendUserId(pushMsg.getSendUserId());
         pushMessageBody.setTitle(pushMsg.getTitle());
-        pushMessageBody.setType(pushMsg.getPushMsgType());
+        pushMessageBody.setType(ObjectUtil.defaultIfNull(pushMsg.getPushMsgType(), PushMsgType.notification));
         pushMessageBody.setContent(pushMsg.getContent());
         pushMessageBody.setExtend(pushMsg.getExtend());
         pushMessageBody.setTemplateCode(pushMsg.getTemplateCode());
         pushMessageBody.setUrl(pushMsg.getUrl());
+        pushMessageBody.setTags(pushMsg.getTags());
+        pushMessageBody.setLevel(pushMsg.getLevel());
         self.saveEntity(pushMessageBody);
-        pushMsg.getRecUserIds().forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
+        List<Long> targetUserIds = new ArrayList<>(recUserIds);
+        targetUserIds.forEach(recUserId -> pushMsg.getPushWays().forEach(pushWay -> pushMessageItemService.toPush(pushWay, pushMessageBody, recUserId)));
     }
 
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { CheckCheck, Mail, MailOpen, RefreshCw, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -12,9 +13,11 @@ import { useFeedback } from '@/composables/useFeedback'
 import { listCurrentMessages } from '@/api/messages'
 import type { PushMessage } from '@/api/types'
 import { useMessageStore } from '@/stores/messages'
+import { useAuthStore } from '@/stores/auth'
 
 const feedback = useFeedback()
 const messageStore = useMessageStore()
+const auth = useAuthStore()
 const statusFilter = ref<'all' | 'unread'>('all')
 const selectedIds = ref<Set<string>>(new Set())
 
@@ -27,6 +30,11 @@ const { items, total, page, loading, error, load, pageSize } = usePagedList<Push
 )
 
 const selectedList = computed(() => [...selectedIds.value])
+const canUsePushTest = computed(() => {
+  if (auth.user?.userId === 1 || auth.user?.userName?.toLowerCase() === 'admin') return true
+  const authorities = auth.user?.authorities?.map((item) => item.authority || item.authorityId || '') ?? []
+  return authorities.some((item) => ['push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item))
+})
 const allChecked = computed(() => {
   if (!items.value.length) return false
   return items.value.every((message) => message.msgId && selectedIds.value.has(message.msgId))
@@ -82,6 +90,14 @@ function typeVariant(type?: string) {
   return 'secondary'
 }
 
+function sourceLabel(message: PushMessage) {
+  return message.sysMsg || !message.sendUserId ? '系统通知' : '用户消息'
+}
+
+function sourceVariant(message: PushMessage) {
+  return message.sysMsg || !message.sendUserId ? 'secondary' : 'outline'
+}
+
 async function refresh() {
   await load(page.value)
   await messageStore.refreshSummary()
@@ -125,6 +141,11 @@ async function deleteSelected() {
   <div>
     <PageHeader title="消息中心" description="查看站内通知、警报与系统弹窗消息。">
       <template #actions>
+        <RouterLink v-if="canUsePushTest" to="/messages/push-test">
+          <Button variant="outline" size="sm">
+            通讯测试
+          </Button>
+        </RouterLink>
         <div class="inline-flex rounded-md border bg-background p-1">
           <Button
             :variant="statusFilter === 'all' ? 'secondary' : 'ghost'"
@@ -174,6 +195,7 @@ async function deleteSelected() {
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-left font-medium">标题</th>
             <th class="h-10 px-4 text-left font-medium">内容</th>
+            <th class="h-10 px-4 text-left font-medium">来源</th>
             <th class="h-10 px-4 text-left font-medium">类型</th>
             <th class="h-10 px-4 text-left font-medium">时间</th>
           </tr>
@@ -202,6 +224,9 @@ async function deleteSelected() {
             <td class="max-w-[240px] p-4 font-medium">{{ message.title || '-' }}</td>
             <td class="max-w-[420px] p-4 text-sm text-muted-foreground">
               <p class="line-clamp-3 whitespace-pre-line">{{ contentText(message.content) }}</p>
+            </td>
+            <td class="p-4">
+              <Badge :variant="sourceVariant(message)">{{ sourceLabel(message) }}</Badge>
             </td>
             <td class="p-4">
               <Badge :variant="typeVariant(message.type)">{{ typeLabel(message.type) }}</Badge>
