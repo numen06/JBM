@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Plus, Pencil, Trash2, RefreshCw, FolderOpen, Search } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -18,6 +19,8 @@ import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 const { hasAction } = usePermission()
 const feedback = useFeedback()
+const route = useRoute()
+const router = useRouter()
 
 type DialogMode = 'group' | 'item'
 
@@ -87,6 +90,16 @@ const dialogTitle = computed(() => {
   return editing.value ? '编辑字典项' : '新建字典项'
 })
 
+const routeGroupId = computed(() => {
+  const id = route.params.groupId
+  return typeof id === 'string' ? id : ''
+})
+
+function isDicId(row: BaseDic, id: string) {
+  const raw = dicId(row)
+  return raw != null && String(raw) === id
+}
+
 async function loadGroups(page = groupPage.value) {
   groupsLoading.value = true
   groupsError.value = ''
@@ -96,7 +109,11 @@ async function loadGroups(page = groupPage.value) {
     groupTotal.value = data.total ?? 0
     groupPage.value = page
 
-    if (selectedGroup.value) {
+    if (routeGroupId.value) {
+      const routed = groups.value.find((g) => isDicId(g, routeGroupId.value))
+      if (routed) selectedGroup.value = routed
+      else if (!selectedGroup.value && groups.value.length) selectedGroup.value = groups.value[0]
+    } else if (selectedGroup.value) {
       const id = dicId(selectedGroup.value)
       const still = groups.value.find((g) => dicId(g) === id)
       if (still) {
@@ -173,6 +190,10 @@ function onItemPageChange(p: number) {
 
 function selectGroup(g: BaseDic) {
   selectedGroup.value = g
+  const id = dicId(g)
+  if (id != null && routeGroupId.value !== String(id)) {
+    router.push({ name: 'dict-items', params: { groupId: String(id) } })
+  }
 }
 
 function openCreateGroup() {
@@ -269,6 +290,7 @@ async function handleDeleteGroup(g: BaseDic) {
     selectedGroup.value = null
     items.value = []
     itemTotal.value = 0
+    router.push({ name: 'dicts' })
   }
   await loadGroups(1)
 }
@@ -308,6 +330,14 @@ watch(itemKeyword, () => {
   itemSearchTimer = setTimeout(applyItemSearch, 400)
 })
 
+watch(routeGroupId, (id) => {
+  if (!id) return
+  const routed = groups.value.find((g) => isDicId(g, id))
+  if (routed && (!selectedGroup.value || !isDicId(selectedGroup.value, id))) {
+    selectedGroup.value = routed
+  }
+})
+
 onMounted(() => loadGroups(1))
 </script>
 
@@ -322,9 +352,9 @@ onMounted(() => loadGroups(1))
       </template>
     </PageHeader>
 
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
       <!-- 左侧：字典分组 -->
-      <aside class="flex w-full shrink-0 flex-col rounded-lg border bg-card lg:w-80">
+      <aside class="flex w-full shrink-0 flex-col rounded-lg border bg-card xl:w-80">
         <div class="flex items-center justify-between border-b px-3 py-2">
           <span class="text-sm font-medium">字典分组</span>
           <Button

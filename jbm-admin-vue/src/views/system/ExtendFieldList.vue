@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown, ArrowUp, Plus, RefreshCw, Search, Trash2 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -21,6 +22,9 @@ import {
 } from '@/api/extendField'
 import type { CustomFormDesign, CustomFormsItem, ExtendFormDefinition, FieldDefinition } from '@/api/types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+
+const route = useRoute()
+const router = useRouter()
 
 const FIELD_TYPES = [
   { value: 'text', label: '文本' },
@@ -64,6 +68,11 @@ const groupPageSize = DEFAULT_PAGE_SIZE
 const redisDialogOpen = ref(false)
 const redisFields = ref<FieldDefinition[]>([])
 const redisLoading = ref(false)
+
+const routeFormCode = computed(() => {
+  const code = route.params.formCode
+  return typeof code === 'string' ? code : ''
+})
 
 function emptyField(): CustomFormsItem {
   return {
@@ -158,6 +167,9 @@ async function selectForm(form: ExtendFormDefinition) {
       customFormId.value = runtime.customFormId != null ? String(runtime.customFormId) : ''
       fields.value = runtimeToDesignFields(runtime)
     }
+    if (routeFormCode.value !== form.formCode) {
+      router.push({ name: 'extend-field-detail', params: { formCode: form.formCode } })
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载字段定义失败'
   } finally {
@@ -184,6 +196,9 @@ async function loadFromDb() {
     }
     successMsg.value = `已加载表单「${code}」`
     await loadGroups(1)
+    if (routeFormCode.value !== code) {
+      router.push({ name: 'extend-field-detail', params: { formCode: code } })
+    }
   } catch (e) {
     meta.value = null
     designMeta.value = null
@@ -211,6 +226,9 @@ function startNewForm() {
   fields.value = [emptyField()]
   error.value = ''
   successMsg.value = `新建表单「${code}」，编辑字段后保存`
+  if (routeFormCode.value !== code) {
+    router.push({ name: 'extend-field-detail', params: { formCode: code } })
+  }
 }
 
 function addField() {
@@ -347,7 +365,24 @@ function formatTime(t?: string) {
   }
 }
 
-onMounted(() => loadGroups(1, true))
+async function loadRoutedForm(code: string) {
+  if (!code || selectedCode.value === code) return
+  formCodeInput.value = code
+  await loadFromDb()
+}
+
+watch(routeFormCode, (code) => {
+  if (code) loadRoutedForm(code)
+})
+
+onMounted(async () => {
+  if (routeFormCode.value) {
+    await loadGroups(1, false)
+    await loadRoutedForm(routeFormCode.value)
+  } else {
+    await loadGroups(1, true)
+  }
+})
 </script>
 
 <template>
@@ -364,8 +399,8 @@ onMounted(() => loadGroups(1, true))
       </template>
     </PageHeader>
 
-    <div class="flex flex-col gap-4 lg:flex-row">
-      <aside class="flex w-full shrink-0 flex-col rounded-lg border bg-card lg:w-80">
+    <div class="flex flex-col gap-4 xl:flex-row">
+      <aside class="flex w-full shrink-0 flex-col rounded-lg border bg-card xl:w-80">
         <div class="flex items-center justify-between border-b px-3 py-2">
           <span class="text-sm font-medium">字段组</span>
           <Badge variant="secondary">{{ groupTotal }}</Badge>

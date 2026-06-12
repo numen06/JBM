@@ -98,6 +98,18 @@ const router = createRouter({
           meta: { title: '权限目录' },
         },
         {
+          path: 'authority/catalog/apis',
+          name: 'authority-catalog-apis',
+          component: () => import('@/views/authority/AuthorityCatalog.vue'),
+          meta: { title: 'API 权限目录' },
+        },
+        {
+          path: 'authority/catalog/pages',
+          name: 'authority-catalog-pages',
+          component: () => import('@/views/authority/AuthorityCatalog.vue'),
+          meta: { title: '页面权限目录' },
+        },
+        {
           path: 'api/registry',
           name: 'api-registry',
           component: () => import('@/views/api/ApiRegistryList.vue'),
@@ -152,10 +164,22 @@ const router = createRouter({
           meta: { title: '字典管理' },
         },
         {
+          path: 'system/dicts/:groupId',
+          name: 'dict-items',
+          component: () => import('@/views/system/DictList.vue'),
+          meta: { title: '字典项' },
+        },
+        {
           path: 'system/extend-fields',
           name: 'extend-fields',
           component: () => import('@/views/system/ExtendFieldList.vue'),
           meta: { title: '扩展字段管理' },
+        },
+        {
+          path: 'system/extend-fields/:formCode',
+          name: 'extend-field-detail',
+          component: () => import('@/views/system/ExtendFieldList.vue'),
+          meta: { title: '扩展字段详情' },
         },
         {
           path: 'gateway/routes',
@@ -198,6 +222,12 @@ const router = createRouter({
           name: 'developer',
           component: () => import('@/views/developer/DeveloperList.vue'),
           meta: { title: '开发者' },
+        },
+        {
+          path: 'developer/pending',
+          name: 'developer-pending',
+          component: () => import('@/views/developer/DeveloperList.vue'),
+          meta: { title: '开发者审批' },
         },
         {
           path: 'developer/api-keys',

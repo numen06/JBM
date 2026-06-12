@@ -11,6 +11,10 @@ import {
   type NavGroupDef,
 } from '@/constants/adminNav'
 
+function isPathInBase(path: string, base: string) {
+  return path === base || path.startsWith(`${base}/`)
+}
+
 export const useMenuStore = defineStore('menu', () => {
   const rawMenus = ref<BaseMenu[]>([])
   const loaded = ref(false)
@@ -42,16 +46,21 @@ export const useMenuStore = defineStore('menu', () => {
 
   function isRouteAllowed(path: string): boolean {
     if (path === '/messages') return true
-    if (!loaded.value) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
-    if (rawMenus.value.length === 0) return path === '/dashboard' || SELF_SERVICE_PATHS.has(path)
+    if (!loaded.value) {
+      return path === '/dashboard' || [...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))
+    }
+    if (rawMenus.value.length === 0) {
+      return path === '/dashboard' || [...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))
+    }
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true
-    if (SELF_SERVICE_PATHS.has(path)) return true
+    if ([...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))) return true
     if (allowedPaths.value.has(path)) return true
+    if ([...allowedPaths.value].some((p) => isPathInBase(path, p))) return true
     const normalized = normalizeMenuPath(path)
     if (normalized && allowedPaths.value.has(normalized)) return true
     const matchedNavItem = STATIC_NAV_GROUPS
       .flatMap((group) => group.items)
-      .find((item) => item.to === path || item.to === normalized)
+      .find((item) => isPathInBase(path, item.to) || item.to === normalized)
     if (matchedNavItem?.menuCodes?.some((code) => allowedMenuCodes.value.has(code))) {
       return true
     }

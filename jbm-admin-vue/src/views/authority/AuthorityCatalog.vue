@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { RefreshCw, Search } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -28,7 +29,9 @@ type TabId = 'apis' | 'pages'
 type ApiAccessFilter = 'all' | 'protected' | 'open'
 type CatalogApiRow = AuthorityApi & Pick<AuthorityResource, 'isAuth' | 'isOpen' | 'status'>
 
-const activeTab = ref<TabId>('apis')
+const route = useRoute()
+const router = useRouter()
+const activeTab = computed<TabId>(() => (route.path.endsWith('/pages') ? 'pages' : 'apis'))
 const tabs: { id: TabId; label: string }[] = [
   { id: 'apis', label: 'API 权限' },
   { id: 'pages', label: '页面权限' },
@@ -184,6 +187,10 @@ function paginate<T>(rows: T[]) {
   return rows.slice(start, start + listPageSize)
 }
 
+function switchTab(tab: TabId) {
+  router.push({ name: tab === 'apis' ? 'authority-catalog-apis' : 'authority-catalog-pages' })
+}
+
 watch([activeTab, filter, serviceFilter, apiAccessFilter], () => {
   listPage.value = 1
 })
@@ -261,7 +268,7 @@ onMounted(load)
         :key="t.id"
         :variant="activeTab === t.id ? 'default' : 'outline'"
         size="sm"
-        @click="activeTab = t.id"
+        @click="switchTab(t.id)"
       >
         {{ t.label }}
       </Button>

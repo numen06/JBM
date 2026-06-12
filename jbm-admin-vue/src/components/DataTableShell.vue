@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="rounded-lg border">
+  <div class="overflow-x-auto rounded-lg border">
     <div v-if="loading" class="space-y-2 p-4">
       <Skeleton v-for="i in 5" :key="i" class="h-10 w-full" />
     </div>

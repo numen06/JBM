@@ -687,7 +687,7 @@ onMounted(async () => {
       </Badge>
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-[minmax(280px,360px)_1fr]">
+    <div class="grid gap-4 xl:grid-cols-[minmax(280px,360px)_1fr]">
       <div class="rounded-lg border bg-card">
         <div class="flex items-center justify-between border-b px-3 py-2 text-sm font-medium">
           <label class="flex items-center gap-2">

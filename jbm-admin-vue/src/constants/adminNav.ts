@@ -34,6 +34,9 @@ export const MENU_PATH_ALIASES: Record<string, string> = {
   '/system/developer': '/developer',
   '/system/online-users/index': '/system/online-users',
   '/system/actions': '/system/menus',
+  '/authority/catalog/apis': '/authority/catalog',
+  '/authority/catalog/pages': '/authority/catalog',
+  '/developer/pending': '/developer',
 }
 
 export function normalizeMenuPath(path?: string): string {

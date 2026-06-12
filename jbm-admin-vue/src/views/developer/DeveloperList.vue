@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Plus, Pencil, UserCheck } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -28,7 +29,9 @@ import {
 import type { BaseDeveloper } from '@/api/types'
 import { useMenuStore } from '@/stores/menu'
 
-const tab = ref<'all' | 'pending'>('all')
+const route = useRoute()
+const router = useRouter()
+const tab = ref<'all' | 'pending'>(route.name === 'developer-pending' ? 'pending' : 'all')
 const pending = ref<BaseDeveloper[]>([])
 const pendingLoading = ref(false)
 const pendingError = ref('')
@@ -103,10 +106,7 @@ async function loadPending() {
 }
 
 async function switchTab(next: 'all' | 'pending') {
-  tab.value = next
-  if (next === 'pending' && canManageDevelopers.value) {
-    await loadPending()
-  }
+  await router.push({ name: next === 'pending' ? 'developer-pending' : 'developer' })
 }
 
 async function handleApprove(row: BaseDeveloper) {
@@ -160,6 +160,20 @@ async function handleSave() {
 
 onMounted(() => {
   if (canManageDevelopers.value) loadPending()
+})
+
+watch(
+  () => route.name,
+  async (name) => {
+    tab.value = name === 'developer-pending' ? 'pending' : 'all'
+    if (tab.value === 'pending' && canManageDevelopers.value) {
+      await loadPending()
+    }
+  },
+)
+
+watch(canManageDevelopers, (canManage) => {
+  if (canManage && tab.value === 'pending') loadPending()
 })
 </script>
 

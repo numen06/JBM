@@ -19,6 +19,12 @@ const messageStore = useMessageStore()
 const messagesOpen = ref(false)
 
 const navGroups = computed(() => menuStore.navGroups)
+const activeNavPath = computed(() => {
+  const items = navGroups.value.flatMap((group) => group.items)
+  return items
+    .filter((item) => route.path === item.to || route.path.startsWith(`${item.to}/`))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to
+})
 const unreadLabel = computed(() =>
   messageStore.unreadCount > 99 ? '99+' : String(messageStore.unreadCount),
 )
@@ -109,7 +115,7 @@ onMounted(() => {
             :class="
               cn(
                 'mb-0.5 flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent',
-                route.path === item.to && 'bg-accent font-medium text-accent-foreground',
+                activeNavPath === item.to && 'bg-accent font-medium text-accent-foreground',
               )
             "
             :title="item.title"
@@ -121,7 +127,7 @@ onMounted(() => {
       </nav>
     </aside>
 
-    <div class="flex flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col">
       <header class="flex h-14 items-center justify-between border-b bg-card px-4">
         <div class="flex items-center gap-2">
           <Button variant="ghost" size="icon" @click="app.toggleSidebar">
@@ -210,7 +216,7 @@ onMounted(() => {
           </Button>
         </div>
       </header>
-      <main class="flex-1 overflow-auto p-6">
+      <main class="min-w-0 flex-1 overflow-auto p-4 lg:p-6">
         <RouterView />
       </main>
     </div>
