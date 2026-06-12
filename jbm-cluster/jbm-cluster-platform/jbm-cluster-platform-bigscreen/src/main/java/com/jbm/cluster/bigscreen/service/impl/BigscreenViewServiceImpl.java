@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.StreamProgress;
 import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
@@ -32,6 +33,9 @@ import java.util.List;
 @Service
 @Slf4j
 public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenView> implements BigscreenViewService {
+
+    private static final int DOWNLOAD_MAX_RETRIES = 3;
+    private static final long DOWNLOAD_RETRY_INTERVAL_MS = 5000L;
 
     @Resource
     private DiscoveryClient discoveryClient;
@@ -62,6 +66,17 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         }
     }
 
+    @Override
+    public boolean hasPendingLoad() {
+        List<BigscreenView> list = this.selectAll();
+        for (BigscreenView bigscreenView : list) {
+            if (!this.isUpload(bigscreenView)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /***
      * 是否已经上传
      * @param bigscreenView
@@ -73,13 +88,29 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             throw new ServiceException("ID不能为空");
         }
         bigscreenView = this.getById(bigscreenView.getId());
-        File viewDir = this.getViewDir(bigscreenView);
-        return FileUtil.exist(viewDir);
+        return FileUtil.exist(this.getViewIndexFile(bigscreenView));
+    }
+
+    private String normalizeViewPath(String viewUrl) {
+        if (StrUtil.isBlank(viewUrl)) {
+            return viewUrl;
+        }
+        return StrUtil.removePrefix(viewUrl, "/");
     }
 
     private File getViewDir(BigscreenView bigscreenView) {
-        File viewDir = Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl()).toFile();
-        return viewDir;
+        return Paths.get(BigscreenConstants.ZIP_DIR, normalizeViewPath(bigscreenView.getViewUrl())).toFile();
+    }
+
+    private File getViewIndexFile(BigscreenView bigscreenView) {
+        return Paths.get(getViewDir(bigscreenView).getPath(), "index.html").toFile();
+    }
+
+    private void ensureViewsDir() {
+        File zipDir = FileUtil.newFile(BigscreenConstants.ZIP_DIR);
+        if (!FileUtil.exist(zipDir)) {
+            FileUtil.mkdir(zipDir);
+        }
     }
 
 
@@ -90,41 +121,54 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     private File downloadZip(final BigscreenView bigscreenView) {
         File zip = this.getViewZip(bigscreenView);
-        if (StrUtil.isNotBlank(bigscreenView.getResourcePath())) {
-            //如果是HTTP请求
-            if (HttpUtil.isHttp(bigscreenView.getResourcePath()) || HttpUtil.isHttps(bigscreenView.getResourcePath())) {
-                //如果已经是HTTP请求则放弃处理
-            } else {
-                String fileName = FileNameUtil.getName(bigscreenView.getResourcePath());
-                String docAddress = this.getDocAddress();
-                StringBuffer urlBuffer = new StringBuffer(docAddress);
-                urlBuffer.append("/download/").append(fileName);
-                log.info("直接转换文档服务器下载地址:{}", urlBuffer.toString());
-                bigscreenView.setResourcePath(urlBuffer.toString());
+        String downloadUrl = resolveDownloadUrl(bigscreenView);
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= DOWNLOAD_MAX_RETRIES; attempt++) {
+            try {
+                HttpDownloader.downloadFile(downloadUrl, zip, 60, new StreamProgress() {
+                    @Override
+                    public void start() {
+                        log.info("开始下载:{}", bigscreenView.getViewName());
+                    }
+
+                    @Override
+                    public void progress(long total, long progressSize) {
+                        log.debug("已下载[{}]bytes", progressSize);
+                    }
+
+                    @Override
+                    public void finish() {
+                        log.info("完成下载:{}", bigscreenView.getViewName());
+                    }
+                });
+                return zip;
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("下载大屏[{}]失败，第{}/{}次: {}", bigscreenView.getViewName(), attempt,
+                        DOWNLOAD_MAX_RETRIES, e.getMessage());
+                if (attempt < DOWNLOAD_MAX_RETRIES) {
+                    ThreadUtil.sleep(DOWNLOAD_RETRY_INTERVAL_MS);
+                }
             }
         }
+        throw new ServiceException("下载资源包错误", lastException);
+    }
 
-        HttpDownloader.downloadFile(bigscreenView.getResourcePath(), zip, 60, new StreamProgress() {
-            @Override
-            public void start() {
-                log.info("开始下载:{}", bigscreenView.getViewName());
-            }
-
-            @Override
-            public void progress(long total, long progressSize) {
-                log.debug("已下载[{}]bytes", progressSize);
-            }
-
-            @Override
-            public void finish() {
-                log.info("完成下载:{}", bigscreenView.getViewName());
-            }
-        });
-        return zip;
+    private String resolveDownloadUrl(BigscreenView bigscreenView) {
+        if (StrUtil.isBlank(bigscreenView.getResourcePath())) {
+            throw new ServiceException("资源路径为空");
+        }
+        if (HttpUtil.isHttp(bigscreenView.getResourcePath()) || HttpUtil.isHttps(bigscreenView.getResourcePath())) {
+            return bigscreenView.getResourcePath();
+        }
+        String fileName = FileNameUtil.getName(bigscreenView.getResourcePath());
+        String downloadUrl = this.getDocAddress() + "/download/" + fileName;
+        log.info("直接转换文档服务器下载地址:{}", downloadUrl);
+        return downloadUrl;
     }
 
     private void unZipView(final BigscreenView bigscreenView, File zipFile) {
-        File distDir = Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl()).toFile();
+        File distDir = getViewDir(bigscreenView);
         log.info("大屏【{}】的解压路径:{}", bigscreenView.getViewName(), distDir.getAbsolutePath());
         ZipUtil.unzip(zipFile, distDir);
     }
@@ -288,11 +332,8 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             throw new ServiceException("ID不能为空");
         }
         bigscreenView = this.getById(bigscreenView.getId());
-        File zipDir = FileUtil.newFile(BigscreenConstants.ZIP_DIR);
-        if (!FileUtil.exist(zipDir)) {
-            FileUtil.createTempFile(zipDir);
-        }
-        File zipFile = null;
+        ensureViewsDir();
+        File zipFile;
         try {
             zipFile = this.downloadZip(bigscreenView);
         } catch (ServiceException e) {
@@ -301,8 +342,7 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
             throw new ServiceException("下载资源包错误", e);
         }
         this.unZipView(bigscreenView, zipFile);
-        //如果不存在视图首页则提示
-        if (!FileUtil.exist(Paths.get(BigscreenConstants.ZIP_DIR, bigscreenView.getViewUrl(), "index.html").toFile())) {
+        if (!FileUtil.exist(getViewIndexFile(bigscreenView))) {
             //发生异常清理视图
             this.cleanView(bigscreenView);
             throw new ServiceException("不存在index.html首页文件");

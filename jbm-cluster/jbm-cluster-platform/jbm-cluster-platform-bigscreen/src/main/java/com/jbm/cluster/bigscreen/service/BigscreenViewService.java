@@ -20,4 +20,9 @@ public interface BigscreenViewService extends IMasterDataService<BigscreenView> 
      * 加载所有大屏
      */
     void loadAllBigscreens();
+
+    /**
+     * 是否存在尚未部署到本地的大屏
+     */
+    boolean hasPendingLoad();
 }

@@ -42,6 +42,8 @@ jbm:
       - /download/**
       - /getViewUrl/**
       - /v1/3rd/file/**
+      - /health/minio
+      - /actuator/health
 swagger2:
   enabled: true
   description: 平台文档服务器

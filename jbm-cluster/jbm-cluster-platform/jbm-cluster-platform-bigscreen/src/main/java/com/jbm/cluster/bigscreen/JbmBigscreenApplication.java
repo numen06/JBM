@@ -1,5 +1,6 @@
 package com.jbm.cluster.bigscreen;
 
+import cn.hutool.core.io.FileUtil;
 import com.jbm.cluster.api.entitys.bigscreen.BigscreenView;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.mapper.BigscreenViewMapper;
@@ -45,6 +46,9 @@ public class JbmBigscreenApplication implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         File baseDir = new File(BigscreenConstants.ZIP_DIR);
+        if (!FileUtil.exist(baseDir)) {
+            FileUtil.mkdir(baseDir);
+        }
         try {
             log.info("静态地址是:{}", baseDir.getCanonicalPath());
             registry.addResourceHandler("/views/**").addResourceLocations("file:views/");
