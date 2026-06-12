@@ -913,32 +913,70 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         StringBuilder html = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
                 + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
                 + "<title>JBM OpenAPI 接口文档</title><style>"
-                + "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#172033;background:#f8fafc;}"
-                + "aside{position:fixed;left:0;top:0;bottom:0;width:300px;overflow:auto;background:#fff;border-right:1px solid #e5e7eb;padding:20px;box-sizing:border-box;}"
-                + "main{margin-left:300px;padding:28px 40px;max-width:1180px;}"
+                + "html{scroll-behavior:smooth;}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#172033;background:#f8fafc;}"
+                + "aside{position:fixed;left:0;top:0;bottom:0;width:340px;overflow:auto;background:#fff;border-right:1px solid #e5e7eb;padding:18px 16px;box-sizing:border-box;}"
+                + "main{margin-left:340px;padding:28px 42px 60px;max-width:1160px;}"
                 + "h1{font-size:28px;margin:0 0 8px;}h2{margin-top:34px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;}h3{margin-top:26px;}"
-                + ".op{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;padding:18px;}"
+                + ".toc-title{font-size:18px;margin:0 0 12px}.toc-meta{font-size:12px;color:#64748b;margin:0 0 14px}.toc details{margin:4px 0}.toc summary{cursor:pointer;list-style:none}.toc summary::-webkit-details-marker{display:none}"
+                + ".toc-service>summary{font-weight:700;color:#0f172a;padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb;}"
+                + ".toc-service-body{padding:5px 0 7px 10px}.toc-tag>summary{font-size:13px;color:#475569;padding:7px 8px;margin-top:5px;border-radius:6px}.toc-tag>summary:hover{background:#f1f5f9}"
+                + ".toc-link-list{padding-left:8px;border-left:1px solid #e2e8f0;margin-left:8px}.toc-link{display:grid;grid-template-columns:42px 1fr;gap:4px 8px;color:#334155;text-decoration:none;padding:7px 8px;margin:2px 0;border-radius:6px;font-size:12px;line-height:1.35;}"
+                + ".toc-link:hover,.toc-link.active{background:#e0f2fe;color:#075985}.toc-path{font-family:Consolas,'JetBrains Mono',monospace;overflow-wrap:anywhere}.toc-summary{grid-column:2;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}"
+                + ".toc-method{display:inline-block;text-align:center;border-radius:4px;padding:2px 4px;font-weight:700;font-size:10px;background:#dbeafe;color:#1d4ed8;align-self:start;}"
+                + ".op{background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;padding:18px;scroll-margin-top:18px;}"
+                + ".op.active{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.18)}"
                 + ".method{display:inline-block;min-width:58px;text-align:center;border-radius:4px;padding:3px 8px;margin-right:8px;font-weight:700;font-size:12px;background:#dbeafe;color:#1d4ed8;}"
                 + ".GET{background:#dcfce7;color:#166534}.POST{background:#dbeafe;color:#1d4ed8}.PUT{background:#fef3c7;color:#92400e}.PATCH{background:#ffedd5;color:#9a3412}.DELETE{background:#fee2e2;color:#991b1b}"
                 + "code,pre{font-family:Consolas,'JetBrains Mono',monospace;}pre{background:#0f172a;color:#e2e8f0;border-radius:6px;padding:12px;overflow:auto;}"
                 + "table{width:100%;border-collapse:collapse;margin:10px 0 16px;}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top;}th{background:#f1f5f9;}"
-                + ".meta{color:#64748b;font-size:13px}.toc a{display:block;color:#334155;text-decoration:none;margin:6px 0;font-size:13px}.empty{color:#94a3b8;}.usecase{border-left:3px solid #2563eb;padding-left:12px;margin:14px 0;}"
-                + "</style></head><body><aside><h2>目录</h2><div class=\"toc\">");
+                + ".meta{color:#64748b;font-size:13px}.empty{color:#94a3b8;}.usecase{border-left:3px solid #2563eb;padding-left:12px;margin:14px 0;}"
+                + "@media(max-width:900px){aside{position:static;width:auto;max-height:42vh;border-right:0;border-bottom:1px solid #e5e7eb;}main{margin-left:0;padding:22px 18px 40px;}.toc-summary{white-space:normal;}}"
+                + "</style></head><body><aside><h2 class=\"toc-title\">目录</h2><p class=\"toc-meta\">按服务和分组浏览接口</p><div class=\"toc\">");
         int index = 0;
+        String currentService = null;
+        String currentTag = null;
         for (OpenApiOperation op : sorted) {
-            html.append("<a href=\"#op-").append(index).append("\">")
-                    .append(escapeHtml(op.getServiceId())).append(" / ")
-                    .append(escapeHtml(firstTag(op))).append(" / ")
-                    .append(escapeHtml(op.getRequestMethod())).append(' ')
-                    .append(escapeHtml(op.getPath())).append("</a>");
+            String service = StrUtil.blankToDefault(op.getServiceId(), "未分组服务");
+            String tag = firstTag(op);
+            if (!StrUtil.equals(currentService, service)) {
+                if (currentTag != null) {
+                    html.append("</div></details>");
+                    currentTag = null;
+                }
+                if (currentService != null) {
+                    html.append("</div></details>");
+                }
+                currentService = service;
+                html.append("<details class=\"toc-service\" open><summary>")
+                        .append(escapeHtml(service)).append("</summary><div class=\"toc-service-body\">");
+            }
+            if (!StrUtil.equals(currentTag, tag)) {
+                if (currentTag != null) {
+                    html.append("</div></details>");
+                }
+                currentTag = tag;
+                html.append("<details class=\"toc-tag\" open><summary>")
+                        .append(escapeHtml(tag)).append("</summary><div class=\"toc-link-list\">");
+            }
+            html.append("<a class=\"toc-link\" href=\"#op-").append(index).append("\" data-target=\"op-").append(index).append("\">")
+                    .append("<span class=\"toc-method ").append(escapeHtml(op.getRequestMethod())).append("\">")
+                    .append(escapeHtml(op.getRequestMethod())).append("</span>")
+                    .append("<span class=\"toc-path\">").append(escapeHtml(op.getPath())).append("</span>")
+                    .append("<span class=\"toc-summary\">").append(escapeHtml(StrUtil.blankToDefault(op.getSummary(), "接口说明待补充"))).append("</span></a>");
             index++;
+        }
+        if (currentTag != null) {
+            html.append("</div></details>");
+        }
+        if (currentService != null) {
+            html.append("</div></details>");
         }
         html.append("</div></aside><main><h1>JBM OpenAPI 接口文档</h1>")
                 .append("<p class=\"meta\">生成时间: ").append(escapeHtml(nowText()))
                 .append(" · 接口数量: ").append(sorted.size()).append("</p>");
         index = 0;
-        String currentService = null;
-        String currentTag = null;
+        currentService = null;
+        currentTag = null;
         for (OpenApiOperation op : sorted) {
             if (!StrUtil.equals(currentService, op.getServiceId())) {
                 currentService = op.getServiceId();
@@ -952,7 +990,19 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
             }
             appendHtmlOperation(html, op, index++);
         }
-        html.append("</main></body></html>");
+        html.append("</main><script>(function(){var links=[].slice.call(document.querySelectorAll('.toc-link'));")
+                .append("var sections=[].slice.call(document.querySelectorAll('.op'));")
+                .append("function active(id){links.forEach(function(a){a.classList.toggle('active',a.getAttribute('data-target')===id);});")
+                .append("sections.forEach(function(s){s.classList.toggle('active',s.id===id);});}")
+                .append("links.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();var id=a.getAttribute('data-target');")
+                .append("var target=document.getElementById(id);if(!target){return;}target.scrollIntoView({behavior:'smooth',block:'start'});")
+                .append("if(window.history&&window.history.replaceState){window.history.replaceState(null,'','#'+id);}active(id);});});")
+                .append("if('IntersectionObserver' in window){var observer=new IntersectionObserver(function(entries){")
+                .append("entries.filter(function(e){return e.isIntersecting;}).sort(function(a,b){return b.intersectionRatio-a.intersectionRatio;})")
+                .append(".slice(0,1).forEach(function(e){active(e.target.id);});},{rootMargin:'-10% 0px -70% 0px',threshold:[0,.2,.6]});")
+                .append("sections.forEach(function(s){observer.observe(s);});}")
+                .append("if(location.hash){var first=document.getElementById(location.hash.slice(1));if(first){first.scrollIntoView();active(first.id);}}")
+                .append("else if(sections[0]){active(sections[0].id);}})();</script></body></html>");
         return html.toString();
     }
 
