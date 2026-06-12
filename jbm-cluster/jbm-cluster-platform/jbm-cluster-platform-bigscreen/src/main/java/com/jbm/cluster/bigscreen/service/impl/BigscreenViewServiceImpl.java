@@ -1,6 +1,5 @@
 package com.jbm.cluster.bigscreen.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.StreamProgress;
 import cn.hutool.core.io.file.FileNameUtil;
@@ -11,14 +10,14 @@ import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpDownloader;
 import cn.hutool.http.HttpUtil;
 import com.jbm.cluster.api.entitys.bigscreen.BigscreenView;
+import com.jbm.cluster.api.service.feign.RemoteFileService;
 import com.jbm.cluster.bigscreen.common.BigscreenConstants;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -38,11 +37,11 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
     private static final long DOWNLOAD_RETRY_INTERVAL_MS = 5000L;
 
     @Resource
-    private DiscoveryClient discoveryClient;
+    private RemoteFileService remoteFileService;
 
     /**
      * 加载所有大屏
-     * 由 DocServiceReadyListener 在文档服务 HTTP 可达后调用
+     * 由 DocServiceReadyListener 在文档文件服务就绪后调用
      */
     @Override
     public void loadAllBigscreens() {
@@ -121,26 +120,37 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
 
     private File downloadZip(final BigscreenView bigscreenView) {
         File zip = this.getViewZip(bigscreenView);
-        String downloadUrl = resolveDownloadUrl(bigscreenView);
         Exception lastException = null;
         for (int attempt = 1; attempt <= DOWNLOAD_MAX_RETRIES; attempt++) {
             try {
-                HttpDownloader.downloadFile(downloadUrl, zip, 60, new StreamProgress() {
-                    @Override
-                    public void start() {
-                        log.info("开始下载:{}", bigscreenView.getViewName());
-                    }
+                log.info("开始下载:{}", bigscreenView.getViewName());
+                if (isDirectHttpUrl(bigscreenView.getResourcePath())) {
+                    HttpDownloader.downloadFile(bigscreenView.getResourcePath(), zip, 60, new StreamProgress() {
+                        @Override
+                        public void start() {
+                        }
 
-                    @Override
-                    public void progress(long total, long progressSize) {
-                        log.debug("已下载[{}]bytes", progressSize);
-                    }
+                        @Override
+                        public void progress(long total, long progressSize) {
+                            log.debug("已下载[{}]bytes", progressSize);
+                        }
 
-                    @Override
-                    public void finish() {
-                        log.info("完成下载:{}", bigscreenView.getViewName());
+                        @Override
+                        public void finish() {
+                        }
+                    });
+                } else {
+                    String fileName = resolveDocFileName(bigscreenView);
+                    log.info("通过 Feign 下载文档:{}", fileName);
+                    ResponseEntity<byte[]> response = remoteFileService.download(fileName);
+                    if (response == null || !response.getStatusCode().is2xxSuccessful()
+                            || response.getBody() == null || response.getBody().length == 0) {
+                        int status = response == null ? -1 : response.getStatusCodeValue();
+                        throw new ServiceException("下载文件失败: HTTP " + status);
                     }
-                });
+                    FileUtil.writeBytes(response.getBody(), zip);
+                }
+                log.info("完成下载:{}", bigscreenView.getViewName());
                 return zip;
             } catch (Exception e) {
                 lastException = e;
@@ -154,17 +164,15 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         throw new ServiceException("下载资源包错误", lastException);
     }
 
-    private String resolveDownloadUrl(BigscreenView bigscreenView) {
+    private boolean isDirectHttpUrl(String resourcePath) {
+        return HttpUtil.isHttp(resourcePath) || HttpUtil.isHttps(resourcePath);
+    }
+
+    private String resolveDocFileName(BigscreenView bigscreenView) {
         if (StrUtil.isBlank(bigscreenView.getResourcePath())) {
             throw new ServiceException("资源路径为空");
         }
-        if (HttpUtil.isHttp(bigscreenView.getResourcePath()) || HttpUtil.isHttps(bigscreenView.getResourcePath())) {
-            return bigscreenView.getResourcePath();
-        }
-        String fileName = FileNameUtil.getName(bigscreenView.getResourcePath());
-        String downloadUrl = this.getDocAddress() + "/download/" + fileName;
-        log.info("直接转换文档服务器下载地址:{}", downloadUrl);
-        return downloadUrl;
+        return FileNameUtil.getName(bigscreenView.getResourcePath());
     }
 
     private void unZipView(final BigscreenView bigscreenView, File zipFile) {
@@ -223,21 +231,6 @@ public class BigscreenViewServiceImpl extends MasterDataServiceImpl<BigscreenVie
         bigscreenView.setId(id);
         this.cleanView(bigscreenView);
         return super.deleteById(id);
-    }
-
-    /**
-     * 获取文档服务器地址
-     * 注意：该方法应在文档服务 HTTP 可达后调用（由 DocServiceReadyListener 保证）
-     *
-     * @return 文档服务器地址
-     */
-    public String getDocAddress() {
-        List<ServiceInstance> instances = discoveryClient.getInstances("jbm-cluster-platform-doc");
-        ServiceInstance instance = CollUtil.getFirst(instances);
-        if (ObjectUtil.isEmpty(instance)) {
-            throw new ServiceException("文档服务器不在线");
-        }
-        return instance.getUri().toString();
     }
 
 

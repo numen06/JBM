@@ -1,43 +1,34 @@
 package com.jbm.cluster.bigscreen.listener;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpRequest;
-import cn.hutool.http.HttpResponse;
+import com.jbm.cluster.api.service.feign.RemoteFileService;
 import com.jbm.cluster.bigscreen.service.BigscreenViewService;
+import com.jbm.cluster.core.constant.JbmClusterConstants;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 文档服务就绪监听器。
- * 大屏只问 doc「文件服务是否就绪」（GET /health/file），不关心 doc 内部存储实现。
+ * 通过 Feign 调用 doc，能调通即说明 Nacos 注册且路由可达；仅再确认文件服务业务就绪后触发加载。
  */
 @Component
 @Slf4j
 public class DocServiceReadyListener implements ApplicationListener<ApplicationReadyEvent> {
 
-    private static final String DOC_SERVICE_NAME = "jbm-cluster-platform-doc";
-    private static final String DOC_FILE_READY_PATH = "/health/file";
-    private static final String DOC_READY_MARKER = "\"ready\":true";
-    private static final int HTTP_TIMEOUT_MS = 3000;
     private static final long MAX_WAIT_TIME_MS = 5 * 60 * 1000L;
     private static final long CHECK_INTERVAL_MS = 2000L;
     private static final long LOG_INTERVAL_MS = 30 * 1000L;
 
-    @Resource
-    private DiscoveryClient discoveryClient;
+    @Autowired(required = false)
+    private RemoteFileService remoteFileService;
 
     @Autowired(required = false)
     private BigscreenViewService bigscreenViewService;
@@ -49,7 +40,7 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         applicationStartTime = System.currentTimeMillis();
-        log.info("开始监听文档服务[{}]，就绪后触发大屏加载", DOC_SERVICE_NAME);
+        log.info("开始通过 Feign 监听文档服务[{}]，文件就绪后触发大屏加载", JbmClusterConstants.DOC_SERVER);
         ThreadUtil.execute(this::waitForDocAndTrigger);
     }
 
@@ -58,8 +49,7 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         while (true) {
             long elapsed = System.currentTimeMillis() - applicationStartTime;
             if (elapsed > MAX_WAIT_TIME_MS) {
-                log.warn("初始轮询超时（{}分钟），将由定时任务继续检查文档服务状态",
-                        MAX_WAIT_TIME_MS / 60000);
+                log.warn("初始轮询超时（{}分钟），将由定时任务继续尝试", MAX_WAIT_TIME_MS / 60000);
                 break;
             }
             tryLoadIfReady(false);
@@ -81,13 +71,13 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
     }
 
     private void tryLoadIfReady(boolean scheduled) {
-        if (bigscreenViewService == null) {
+        if (bigscreenViewService == null || remoteFileService == null) {
             return;
         }
         if (!needsLoad()) {
             return;
         }
-        if (!isDocReady()) {
+        if (!isDocFileServiceReady()) {
             if (scheduled) {
                 logWaitingReason();
             }
@@ -97,7 +87,7 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
             return;
         }
         try {
-            log.info("文档服务已就绪，开始加载大屏");
+            log.info("文档文件服务已就绪，开始加载大屏");
             bigscreenViewService.loadAllBigscreens();
             log.info("所有大屏加载完成");
         } catch (Exception e) {
@@ -108,12 +98,17 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
     }
 
     private void logWaitingReason() {
-        ServiceInstance instance = getDocInstance();
-        if (ObjectUtil.isEmpty(instance)) {
-            log.info("等待文档服务 [{}] 在 Nacos 注册", DOC_SERVICE_NAME);
-            return;
+        try {
+            Map<String, Object> health = remoteFileService.fileHealth();
+            if (health != null && Boolean.TRUE.equals(health.get("ready"))) {
+                return;
+            }
+            log.info("文档服务 [{}] 已可达，等待文件服务就绪", JbmClusterConstants.DOC_SERVER);
+        } catch (FeignException e) {
+            log.info("等待文档服务 [{}] 可通过 Feign 访问", JbmClusterConstants.DOC_SERVER);
+        } catch (Exception e) {
+            log.info("等待文档服务 [{}] 可通过 Feign 访问: {}", JbmClusterConstants.DOC_SERVER, e.getMessage());
         }
-        log.info("等待文档服务具备文件下载能力: {}", instance.getUri());
     }
 
     private boolean needsLoad() {
@@ -125,33 +120,12 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         }
     }
 
-    private boolean isDocReady() {
-        ServiceInstance instance = getDocInstance();
-        if (ObjectUtil.isEmpty(instance)) {
-            return false;
-        }
-        return isDocReadyForDownload(instance.getUri().toString());
-    }
-
-    private ServiceInstance getDocInstance() {
+    private boolean isDocFileServiceReady() {
         try {
-            List<ServiceInstance> instances = discoveryClient.getInstances(DOC_SERVICE_NAME);
-            return CollUtil.getFirst(instances);
+            Map<String, Object> health = remoteFileService.fileHealth();
+            return health != null && Boolean.TRUE.equals(health.get("ready"));
         } catch (Exception e) {
-            log.debug("获取文档服务实例异常: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    private boolean isDocReadyForDownload(String baseUri) {
-        try (HttpResponse response = HttpRequest.get(baseUri + DOC_FILE_READY_PATH).timeout(HTTP_TIMEOUT_MS).execute()) {
-            if (!response.isOk()) {
-                return false;
-            }
-            String body = response.body();
-            return StrUtil.isNotBlank(body) && body.contains(DOC_READY_MARKER);
-        } catch (Exception e) {
-            log.debug("文档文件服务探针失败 [{}]: {}", baseUri + DOC_FILE_READY_PATH, e.getMessage());
+            log.debug("Feign 调用文档服务未就绪: {}", e.getMessage());
             return false;
         }
     }
