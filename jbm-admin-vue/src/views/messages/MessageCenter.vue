@@ -33,7 +33,9 @@ const selectedList = computed(() => [...selectedIds.value])
 const canUsePushTest = computed(() => {
   if (auth.user?.userId === 1 || auth.user?.userName?.toLowerCase() === 'admin') return true
   const authorities = auth.user?.authorities?.map((item) => item.authority || item.authorityId || '') ?? []
-  return authorities.some((item) => ['push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item))
+  return authorities.some((item) =>
+    ['message_push_test', 'MENU_message_push_test', 'push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item),
+  )
 })
 const allChecked = computed(() => {
   if (!items.value.length) return false

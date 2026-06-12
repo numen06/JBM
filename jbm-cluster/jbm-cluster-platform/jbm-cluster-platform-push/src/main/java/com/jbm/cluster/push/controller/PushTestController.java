@@ -61,7 +61,9 @@ public class PushTestController {
         }
         JbmLoginUser user = LoginHelper.softGetLoginUser();
         Set<String> authorities = user == null ? null : user.getAuthorities();
-        if (authorities != null && (authorities.contains("push_test")
+        if (authorities != null && (authorities.contains("message_push_test")
+                || authorities.contains("MENU_message_push_test")
+                || authorities.contains("push_test")
                 || authorities.contains("MENU_push_test")
                 || authorities.contains("ACTION_push:test"))) {
             return;

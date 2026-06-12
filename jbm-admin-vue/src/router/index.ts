@@ -273,7 +273,9 @@ function isPushTestAllowed(user: ReturnType<typeof useAuthStore>['user']) {
   if (!user) return false
   if (user.userId === 1 || user.userName?.toLowerCase() === 'admin') return true
   const authorities = user.authorities?.map((item) => item.authority || item.authorityId || '') ?? []
-  return authorities.some((item) => ['push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item))
+  return authorities.some((item) =>
+    ['message_push_test', 'MENU_message_push_test', 'push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item),
+  )
 }
 
 export default router

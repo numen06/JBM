@@ -45,6 +45,7 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_SYSTEM = 101L;
     private static final long MENU_GATEWAY = 120L;
     private static final long MENU_OTHER = 130L;
+    private static final long MENU_MESSAGES = 150L;
 
     private static final long MENU_DASHBOARD = 110L;
     private static final long MENU_USERS = 102L;
@@ -66,6 +67,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_API_MGMT = 140L;
     private static final long MENU_API_REGISTRY = 141L;
     private static final long MENU_API_DOCS = 142L;
+    private static final long MENU_MESSAGE_CENTER = 151L;
+    private static final long MENU_MESSAGE_PUSH_TEST = 152L;
 
     private static final long ACTION_USERS_VIEW = 2001L;
     private static final long ACTION_USERS_ADD = 2002L;
@@ -146,7 +149,11 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         upsertMenu(MENU_API_REGISTRY, MENU_API_MGMT, "api_registry", "API 资源管理", "/api/registry", 1);
         upsertMenu(MENU_API_DOCS, MENU_API_MGMT, "api_docs", "API 文档与调试", "/api/docs", 2);
 
-        upsertMenu(MENU_OTHER, MENU_PLATFORM, "other", "其他", "/log", 3);
+        upsertMenu(MENU_MESSAGES, MENU_PLATFORM, "messages", "消息管理", "/messages", 3);
+        upsertMenu(MENU_MESSAGE_CENTER, MENU_MESSAGES, "message_center", "消息中心", "/messages", 1);
+        upsertMenu(MENU_MESSAGE_PUSH_TEST, MENU_MESSAGES, "message_push_test", "Push 通讯测试", "/messages/push-test", 2);
+
+        upsertMenu(MENU_OTHER, MENU_PLATFORM, "other", "其他", "/log", 5);
         upsertMenu(MENU_LOGS, MENU_OTHER, "account_logs", "审计日志", "/log/account", 1);
     }
 
@@ -184,6 +191,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(String.valueOf(MENU_GW_IP));
         ids.add(String.valueOf(MENU_API_REGISTRY));
         ids.add(String.valueOf(MENU_API_DOCS));
+        ids.add(String.valueOf(MENU_MESSAGE_CENTER));
+        ids.add(String.valueOf(MENU_MESSAGE_PUSH_TEST));
         ids.add(String.valueOf(MENU_LOGS));
         ids.add(authorityIdForAction(ACTION_USERS_VIEW, "users_view"));
         ids.add(authorityIdForAction(ACTION_USERS_ADD, "users_add"));
