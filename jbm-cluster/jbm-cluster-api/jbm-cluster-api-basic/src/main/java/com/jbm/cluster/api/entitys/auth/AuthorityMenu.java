@@ -62,7 +62,7 @@ public class AuthorityMenu extends BaseMenu implements Serializable {
             return false;
         }
         AuthorityMenu a = (AuthorityMenu) obj;
-        return this.authorityId.equals(a.getAuthorityId());
+        return Objects.equals(this.authorityId, a.getAuthorityId());
     }
 
     @Override

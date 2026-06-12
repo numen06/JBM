@@ -1,6 +1,7 @@
 package com.jbm.cluster.center.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
@@ -49,15 +50,42 @@ public class CurrentUserController {
     @ApiOperation(value = "当前用户菜单")
     @GetMapping("/user/menus")
     public ResultBody<List<AuthorityMenu>> listCurrentUserMenus() {
-        JbmLoginUser loginUser = SecurityUtils.getLoginUser();
-        boolean fullMenuFlag = LoginHelper.isAdmin();
-        if (!fullMenuFlag && loginUser != null && loginUser.getUserId() != null) {
-            BaseUser baseUser = baseUserService.getUserById(loginUser.getUserId());
-            fullMenuFlag = JbmConstants.isSuperUser(baseUser.getUserId(), baseUser.getUserName(), baseUser.getUserType());
+        return ResultBody.callback(() -> {
+            JbmLoginUser loginUser = LoginHelper.softGetLoginUser();
+            Long userId = resolveUserId(loginUser);
+            Long appId = resolveAppId(loginUser);
+            boolean fullMenu = LoginHelper.isAdmin(userId);
+            if (!fullMenu && userId != null) {
+                BaseUser baseUser = baseUserService.getUserById(userId);
+                fullMenu = baseUser != null
+                        && JbmConstants.isSuperUser(baseUser.getUserId(), baseUser.getUserName(), baseUser.getUserType());
+            }
+            return baseAuthorityService.findAuthorityMenuByUser(userId, appId, fullMenu);
+        });
+    }
+
+    private Long resolveUserId(JbmLoginUser loginUser) {
+        if (loginUser != null && loginUser.getUserId() != null) {
+            return loginUser.getUserId();
         }
-        final boolean fullMenu = fullMenuFlag;
-        return ResultBody.callback(() -> baseAuthorityService.findAuthorityMenuByUser(
-                loginUser.getUserId(), loginUser.getAppId(), fullMenu));
+        return LoginHelper.getUserId();
+    }
+
+    private Long resolveAppId(JbmLoginUser loginUser) {
+        if (loginUser != null && loginUser.getAppId() != null) {
+            return loginUser.getAppId();
+        }
+        try {
+            List<String> parts = StrUtil.split(StpUtil.getLoginIdAsString(), LoginHelper.JOIN_CODE);
+            if (parts.size() >= 3) {
+                String appId = parts.get(parts.size() - 2);
+                if (StrUtil.isNotBlank(appId)) {
+                    return Long.parseLong(appId);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     @SaCheckLogin

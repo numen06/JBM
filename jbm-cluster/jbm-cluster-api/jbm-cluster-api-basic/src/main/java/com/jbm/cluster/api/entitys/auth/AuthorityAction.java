@@ -62,7 +62,7 @@ public class AuthorityAction extends BaseAction {
             return false;
         }
         AuthorityAction a = (AuthorityAction) obj;
-        return this.authorityId.equals(a.getAuthorityId());
+        return Objects.equals(this.authorityId, a.getAuthorityId());
     }
 
     @Override

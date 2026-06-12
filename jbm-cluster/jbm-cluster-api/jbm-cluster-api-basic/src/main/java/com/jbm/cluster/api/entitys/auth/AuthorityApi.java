@@ -62,7 +62,7 @@ public class AuthorityApi extends BaseApi implements Serializable {
             return false;
         }
         AuthorityApi a = (AuthorityApi) obj;
-        return this.authorityId.equals(a.getAuthorityId());
+        return Objects.equals(this.authorityId, a.getAuthorityId());
     }
 
     @Override
