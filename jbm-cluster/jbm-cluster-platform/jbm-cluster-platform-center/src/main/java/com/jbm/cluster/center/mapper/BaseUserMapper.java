@@ -33,4 +33,14 @@ public interface BaseUserMapper extends SuperMapper<BaseUser> {
      */
     IPage<BaseUser> selectData(@Param("form") BaseUserForm form, Page page);
 
+    /**
+     * 按组织范围查询用户列表
+     */
+    List<BaseUser> selectOrgUsers(@Param("form") BaseUserForm form);
+
+    /**
+     * 按组织范围查询用户分页列表
+     */
+    IPage<BaseUser> selectOrgUsers(@Param("form") BaseUserForm form, Page page);
+
 }

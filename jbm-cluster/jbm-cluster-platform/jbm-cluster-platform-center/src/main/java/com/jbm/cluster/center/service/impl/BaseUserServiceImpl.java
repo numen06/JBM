@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.AccountType;
+import com.jbm.cluster.api.constants.OrgUserScope;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseOrg;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
@@ -124,6 +125,66 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
         BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
         baseUserForm.setCompanyId(parentOrg.getId());
         return super.selectPageList(pageForm, (page) -> this.baseUserMapper.selectData(baseUserForm, page));
+    }
+
+    @Override
+    public List<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm baseUserForm) {
+        BaseUserForm queryForm = prepareOrgUserForm(baseUserForm);
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+            return super.selectEntitys(queryForm);
+        }
+        applyOrgUserScope(queryForm, scope);
+        return this.baseUserMapper.selectOrgUsers(queryForm);
+    }
+
+    @Override
+    public DataPaging<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm baseUserForm, PageForm pageForm) {
+        BaseUserForm queryForm = prepareOrgUserForm(baseUserForm);
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+            return super.selectEntitys(queryForm, pageForm);
+        }
+        applyOrgUserScope(queryForm, scope);
+        return super.selectPageList(pageForm, (page) -> this.baseUserMapper.selectOrgUsers(queryForm, page));
+    }
+
+    private BaseUserForm prepareOrgUserForm(BaseUserForm baseUserForm) {
+        if (baseUserForm == null) {
+            return new BaseUserForm();
+        }
+        BaseUserForm queryForm = BeanUtil.copyProperties(baseUserForm, BaseUserForm.class);
+        clearOrgScopeFields(queryForm);
+        return queryForm;
+    }
+
+    private void clearOrgScopeFields(BaseUserForm form) {
+        form.setCompanyId(null);
+        form.setDepartmentId(null);
+        form.setDepartmentIds(null);
+        form.setExactDepartment(null);
+        form.setUserId(null);
+    }
+
+    private void applyOrgUserScope(BaseUserForm form, OrgUserScope scope) {
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            form.setUserId(LoginHelper.getUserId());
+            return;
+        }
+        BaseOrg parentOrg = this.orgService.findTopCompany(currentOrg);
+        form.setCompanyId(parentOrg.getId());
+        switch (scope) {
+            case DEPARTMENT:
+                form.setDepartmentId(LoginHelper.getDeptId());
+                form.setExactDepartment(true);
+                break;
+            case DEPARTMENT_TREE:
+                List<BaseOrg> orgs = this.orgService.findRelegationCompany(currentOrg);
+                form.setDepartmentIds(orgs.stream().map(BaseOrg::getId).collect(Collectors.toList()));
+                break;
+            case COMPANY:
+            default:
+                break;
+        }
     }
 
     @Override

@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.jbm.cluster.api.constants.OrgUserScope;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
@@ -13,7 +15,10 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -128,5 +133,87 @@ public class CurrentUserController {
         boolean fullMenu = LoginHelper.isAdmin() || JbmConstants.ROOT.equals(loginUser.getUsername());
         List<AuthorityMenu> result = baseAuthorityService.findAuthorityMenuByUser(loginUser.getUserId(), loginUser.getAppId(), fullMenu);
         return ResultBody.callback(() -> result);
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同公司用户列表", notes = "基于当前登录人所属顶层公司查询用户")
+    @GetMapping("/org/users/company")
+    public ResultBody<List<BaseUser>> listCompanyUsers(
+            @RequestParam(value = "userName", required = false) String userName,
+            @RequestParam(value = "realName", required = false) String realName,
+            @RequestParam(value = "mobile", required = false) String mobile,
+            @RequestParam(value = "status", required = false) Integer status
+    ) {
+        BaseUserForm form = buildUserForm(userName, realName, mobile, status);
+        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.COMPANY, form));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同公司用户分页列表", notes = "基于当前登录人所属顶层公司分页查询用户")
+    @PostMapping("/org/users/company/pageList")
+    public ResultBody<DataPaging<BaseUser>> pageCompanyUsers(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return pageOrgUsers(OrgUserScope.COMPANY, pageRequestBody);
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同部门用户列表", notes = "基于当前登录人所属部门精确匹配查询用户")
+    @GetMapping("/org/users/department")
+    public ResultBody<List<BaseUser>> listDepartmentUsers(
+            @RequestParam(value = "userName", required = false) String userName,
+            @RequestParam(value = "realName", required = false) String realName,
+            @RequestParam(value = "mobile", required = false) String mobile,
+            @RequestParam(value = "status", required = false) Integer status
+    ) {
+        BaseUserForm form = buildUserForm(userName, realName, mobile, status);
+        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.DEPARTMENT, form));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同部门用户分页列表", notes = "基于当前登录人所属部门精确匹配分页查询用户")
+    @PostMapping("/org/users/department/pageList")
+    public ResultBody<DataPaging<BaseUser>> pageDepartmentUsers(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return pageOrgUsers(OrgUserScope.DEPARTMENT, pageRequestBody);
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同部门及子部门用户列表", notes = "基于当前登录人所属部门及下级组织查询用户")
+    @GetMapping("/org/users/departmentTree")
+    public ResultBody<List<BaseUser>> listDepartmentTreeUsers(
+            @RequestParam(value = "userName", required = false) String userName,
+            @RequestParam(value = "realName", required = false) String realName,
+            @RequestParam(value = "mobile", required = false) String mobile,
+            @RequestParam(value = "status", required = false) Integer status
+    ) {
+        BaseUserForm form = buildUserForm(userName, realName, mobile, status);
+        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.DEPARTMENT_TREE, form));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取同部门及子部门用户分页列表", notes = "基于当前登录人所属部门及下级组织分页查询用户")
+    @PostMapping("/org/users/departmentTree/pageList")
+    public ResultBody<DataPaging<BaseUser>> pageDepartmentTreeUsers(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return pageOrgUsers(OrgUserScope.DEPARTMENT_TREE, pageRequestBody);
+    }
+
+    private ResultBody<DataPaging<BaseUser>> pageOrgUsers(OrgUserScope scope, PageRequestBody pageRequestBody) {
+        return ResultBody.callback(() -> {
+            PageRequestBody requestBody = ObjectUtil.defaultIfNull(pageRequestBody, new PageRequestBody());
+            BaseUserForm form = requestBody.tryGet(BaseUserForm.class);
+            if (ObjectUtil.isNotEmpty(form.getDateRange())) {
+                form.setBeginTime(form.getDateRange()[0]);
+                form.setEndTime(form.getDateRange()[1]);
+            }
+            PageForm pageForm = requestBody.getPageForm();
+            return baseUserService.selectOrgUsers(scope, form, pageForm);
+        });
+    }
+
+    private BaseUserForm buildUserForm(String userName, String realName, String mobile, Integer status) {
+        BaseUserForm form = new BaseUserForm();
+        form.setUserName(userName);
+        form.setRealName(realName);
+        form.setMobile(mobile);
+        form.setStatus(status);
+        return form;
     }
 }

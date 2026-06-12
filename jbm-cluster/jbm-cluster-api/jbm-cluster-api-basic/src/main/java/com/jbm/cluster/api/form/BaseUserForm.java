@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @program: JBM7
@@ -31,4 +32,8 @@ public class BaseUserForm extends BaseUser {
     private Date beginTime;
     @ApiModelProperty("结束时间")
     private Date endTime;
+    @ApiModelProperty("部门ID列表（查询用）")
+    private List<Long> departmentIds;
+    @ApiModelProperty("是否精确匹配部门ID")
+    private Boolean exactDepartment;
 }

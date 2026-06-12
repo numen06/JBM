@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.service;
 
+import com.jbm.cluster.api.constants.OrgUserScope;
 import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
@@ -147,4 +148,8 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     List<Long> getUserRoleIds(Long userId);
 
     List<BaseUser> getUsersByIds(List<Long> ids);
+
+    List<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm form);
+
+    DataPaging<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm form, PageForm pageForm);
 }
