@@ -42,7 +42,7 @@ jbm:
       - /download/**
       - /getViewUrl/**
       - /v1/3rd/file/**
-      - /health/minio
+      - /health/file
       - /actuator/health
 swagger2:
   enabled: true

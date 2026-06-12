@@ -22,14 +22,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 文档服务就绪监听器。
- * 大屏只依赖 doc 的 HTTP 下载能力，Minio 就绪由 doc 服务自行保障。
+ * 大屏只问 doc「文件服务是否就绪」（GET /health/file），不关心 doc 内部存储实现。
  */
 @Component
 @Slf4j
 public class DocServiceReadyListener implements ApplicationListener<ApplicationReadyEvent> {
 
     private static final String DOC_SERVICE_NAME = "jbm-cluster-platform-doc";
-    private static final String HEALTH_PATH = "/actuator/health";
+    private static final String DOC_FILE_READY_PATH = "/health/file";
+    private static final String DOC_READY_MARKER = "\"ready\":true";
     private static final int HTTP_TIMEOUT_MS = 3000;
     private static final long MAX_WAIT_TIME_MS = 5 * 60 * 1000L;
     private static final long CHECK_INTERVAL_MS = 2000L;
@@ -112,7 +113,7 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
             log.info("等待文档服务 [{}] 在 Nacos 注册", DOC_SERVICE_NAME);
             return;
         }
-        log.info("等待文档服务 HTTP 可达: {}", instance.getUri());
+        log.info("等待文档服务具备文件下载能力: {}", instance.getUri());
     }
 
     private boolean needsLoad() {
@@ -129,7 +130,7 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         if (ObjectUtil.isEmpty(instance)) {
             return false;
         }
-        return isDocServiceReachable(instance.getUri().toString());
+        return isDocReadyForDownload(instance.getUri().toString());
     }
 
     private ServiceInstance getDocInstance() {
@@ -142,11 +143,15 @@ public class DocServiceReadyListener implements ApplicationListener<ApplicationR
         }
     }
 
-    private boolean isDocServiceReachable(String baseUri) {
-        try (HttpResponse response = HttpRequest.get(baseUri + HEALTH_PATH).timeout(HTTP_TIMEOUT_MS).execute()) {
-            return response.getStatus() > 0 && StrUtil.isNotBlank(response.body());
+    private boolean isDocReadyForDownload(String baseUri) {
+        try (HttpResponse response = HttpRequest.get(baseUri + DOC_FILE_READY_PATH).timeout(HTTP_TIMEOUT_MS).execute()) {
+            if (!response.isOk()) {
+                return false;
+            }
+            String body = response.body();
+            return StrUtil.isNotBlank(body) && body.contains(DOC_READY_MARKER);
         } catch (Exception e) {
-            log.debug("文档服务探针失败 [{}]: {}", baseUri + HEALTH_PATH, e.getMessage());
+            log.debug("文档文件服务探针失败 [{}]: {}", baseUri + DOC_FILE_READY_PATH, e.getMessage());
             return false;
         }
     }
