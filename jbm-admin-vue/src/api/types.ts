@@ -284,6 +284,8 @@ export interface CurrentUser {
   userName?: string
   nickName?: string
   avatar?: string
+  companyId?: number
+  departmentId?: number
   roles?: BaseRole[]
   authorities?: { authorityId?: string; authority?: string }[]
 }

@@ -6,6 +6,13 @@ export function pageParams(page = 1, size = DEFAULT_PAGE_SIZE) {
   return { 'pageForm.currPage': page, 'pageForm.pageSize': size }
 }
 
+export interface UserListFilters {
+  keyword?: string
+  companyId?: number | string | null
+  departmentId?: number | string | null
+  status?: number
+}
+
 /** GET /user — 分页；带 keyword 时走 params=keyword 检索 */
 export async function listUsers(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
   if (keyword?.trim()) {
@@ -20,6 +27,19 @@ export async function listUsers(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: st
   const res = await get<DataPaging<BaseUser>>('/user', {
     params: pageParams(page, size),
   })
+  return unwrap(res)
+}
+
+export async function listUsersByFilter(page = 1, size = DEFAULT_PAGE_SIZE, filters: UserListFilters = {}) {
+  const params: Record<string, string | number> = {
+    ...pageParams(page, size),
+  }
+  const keyword = filters.keyword?.trim()
+  if (keyword) params.userName = keyword
+  if (filters.companyId != null && filters.companyId !== '') params.companyId = Number(filters.companyId)
+  if (filters.departmentId != null && filters.departmentId !== '') params.departmentId = Number(filters.departmentId)
+  if (filters.status != null) params.status = filters.status
+  const res = await get<DataPaging<BaseUser>>('/user', { params })
   return unwrap(res)
 }
 
