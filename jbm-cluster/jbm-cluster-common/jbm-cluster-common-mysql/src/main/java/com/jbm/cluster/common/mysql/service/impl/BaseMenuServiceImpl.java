@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 
 /**
  * @author wesley.zhang
@@ -130,7 +131,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 .eq(ObjectUtil.isNotEmpty(baseMenu.getStatus()), BaseMenu::getStatus, baseMenu.getStatus());
         List<BaseMenu> list = baseMenuMapper.selectList(baseMenuQueryWrapper);
         //根据优先级从小到大排序
-        list.sort((BaseMenu h1, BaseMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
+        list.sort(menuComparator());
         return list;
     }
 
@@ -148,8 +149,16 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 .eq(ObjectUtil.isNotEmpty(baseMenu.getStatus()), BaseMenu::getStatus, baseMenu.getStatus());
         List<BaseMenu> list = baseMenuMapper.selectList(baseMenuQueryWrapper);
         //根据优先级从小到大排序
-        list.sort((BaseMenu h1, BaseMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
+        list.sort(menuComparator());
         return list;
+    }
+
+    private Comparator<BaseMenu> menuComparator() {
+        Comparator<Integer> integerComparator = Comparator.nullsLast(Integer::compareTo);
+        Comparator<Long> longComparator = Comparator.nullsLast(Long::compareTo);
+        return Comparator.comparing(BaseMenu::getParentId, longComparator)
+                .thenComparing(BaseMenu::getPriority, integerComparator)
+                .thenComparing(BaseMenu::getMenuId, longComparator);
     }
 
     /**

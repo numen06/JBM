@@ -588,7 +588,7 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
     public List<AuthorityMenu> findAuthorityMenuByUser(Long userId, Long appId, Boolean root) {
         if (root) {
             // 超级管理员 / ROOT：仍按 appId 聚合（当前应用菜单 + app_id 为空的平台菜单），与 selectAuthorityMenuByRole 等一致
-            return findAuthorityMenu(null, appId, false);
+            return sortAuthorityMenus(findAuthorityMenu(null, appId, false));
         }
         // 用户权限列表
         List<AuthorityMenu> authorities = Lists.newArrayList();
@@ -608,8 +608,19 @@ public class BaseAuthorityServiceImpl extends MasterDataServiceImpl<BaseAuthorit
         HashSet h = new HashSet(authorities);
         authorities.clear();
         authorities.addAll(h);
-        //根据优先级从小到大排序
-        authorities.sort((AuthorityMenu h1, AuthorityMenu h2) -> h1.getPriority().compareTo(h2.getPriority()));
+        return sortAuthorityMenus(authorities);
+    }
+
+    private List<AuthorityMenu> sortAuthorityMenus(List<AuthorityMenu> authorities) {
+        if (authorities == null || authorities.isEmpty()) {
+            return authorities;
+        }
+        Comparator<Integer> integerComparator = Comparator.nullsLast(Integer::compareTo);
+        Comparator<Long> longComparator = Comparator.nullsLast(Long::compareTo);
+        authorities.sort(
+                Comparator.comparing(AuthorityMenu::getParentId, longComparator)
+                        .thenComparing(AuthorityMenu::getPriority, integerComparator)
+                        .thenComparing(AuthorityMenu::getMenuId, longComparator));
         return authorities;
     }
 
