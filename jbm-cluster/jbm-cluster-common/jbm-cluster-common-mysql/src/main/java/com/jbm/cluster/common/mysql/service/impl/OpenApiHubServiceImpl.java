@@ -918,6 +918,8 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
                 + "main{margin-left:340px;padding:28px 42px 60px;max-width:1160px;}"
                 + "h1{font-size:28px;margin:0 0 8px;}h2{margin-top:34px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;}h3{margin-top:26px;}"
                 + ".toc-title{font-size:18px;margin:0 0 12px}.toc-meta{font-size:12px;color:#64748b;margin:0 0 14px}.toc details{margin:4px 0}.toc summary{cursor:pointer;list-style:none}.toc summary::-webkit-details-marker{display:none}"
+                + ".toc-search{width:100%;height:34px;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;margin:0 0 10px;box-sizing:border-box;font-size:13px;color:#0f172a;background:#fff;outline:none;}"
+                + ".toc-search:focus{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.16)}.toc-empty{display:none;color:#94a3b8;font-size:13px;padding:10px 4px;}"
                 + ".toc-service>summary{font-weight:700;color:#0f172a;padding:8px 10px;border-radius:6px;background:#f8fafc;border:1px solid #e5e7eb;}"
                 + ".toc-service-body{padding:5px 0 7px 10px}.toc-tag>summary{font-size:13px;color:#475569;padding:7px 8px;margin-top:5px;border-radius:6px}.toc-tag>summary:hover{background:#f1f5f9}"
                 + ".toc-link-list{padding-left:8px;border-left:1px solid #e2e8f0;margin-left:8px}.toc-link{display:grid;grid-template-columns:42px 1fr;gap:4px 8px;color:#334155;text-decoration:none;padding:7px 8px;margin:2px 0;border-radius:6px;font-size:12px;line-height:1.35;}"
@@ -931,7 +933,9 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
                 + "table{width:100%;border-collapse:collapse;margin:10px 0 16px;}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top;}th{background:#f1f5f9;}"
                 + ".meta{color:#64748b;font-size:13px}.empty{color:#94a3b8;}.usecase{border-left:3px solid #2563eb;padding-left:12px;margin:14px 0;}"
                 + "@media(max-width:900px){aside{position:static;width:auto;max-height:42vh;border-right:0;border-bottom:1px solid #e5e7eb;}main{margin-left:0;padding:22px 18px 40px;}.toc-summary{white-space:normal;}}"
-                + "</style></head><body><aside><h2 class=\"toc-title\">目录</h2><p class=\"toc-meta\">按服务和分组浏览接口</p><div class=\"toc\">");
+                + "</style></head><body><aside><h2 class=\"toc-title\">目录</h2><p class=\"toc-meta\">按服务和分组浏览接口</p>"
+                + "<input class=\"toc-search\" type=\"search\" placeholder=\"搜索服务、分组、路径或说明\" aria-label=\"搜索接口\">"
+                + "<div class=\"toc-empty\">没有匹配的接口</div><div class=\"toc\">");
         int index = 0;
         String currentService = null;
         String currentTag = null;
@@ -992,11 +996,24 @@ public class OpenApiHubServiceImpl implements OpenApiHubService {
         }
         html.append("</main><script>(function(){var links=[].slice.call(document.querySelectorAll('.toc-link'));")
                 .append("var sections=[].slice.call(document.querySelectorAll('.op'));")
+                .append("var search=document.querySelector('.toc-search');var empty=document.querySelector('.toc-empty');")
                 .append("function active(id){links.forEach(function(a){a.classList.toggle('active',a.getAttribute('data-target')===id);});")
                 .append("sections.forEach(function(s){s.classList.toggle('active',s.id===id);});}")
+                .append("function norm(v){return String(v||'').toLowerCase().replace(/\\s+/g,' ').trim();}")
+                .append("function filterToc(){var q=norm(search&&search.value);var visible=0;")
+                .append("links.forEach(function(a){var hit=!q||norm(a.textContent).indexOf(q)>-1;")
+                .append("a.style.display=hit?'grid':'none';if(hit){visible++;}});")
+                .append("[].slice.call(document.querySelectorAll('.toc-tag')).forEach(function(d){")
+                .append("var any=[].slice.call(d.querySelectorAll('.toc-link')).some(function(a){return a.style.display!=='none';});")
+                .append("d.style.display=any?'block':'none';if(q&&any){d.open=true;}});")
+                .append("[].slice.call(document.querySelectorAll('.toc-service')).forEach(function(d){")
+                .append("var any=[].slice.call(d.querySelectorAll('.toc-tag')).some(function(t){return t.style.display!=='none';});")
+                .append("d.style.display=any?'block':'none';if(q&&any){d.open=true;}});")
+                .append("if(empty){empty.style.display=visible?'none':'block';}}")
                 .append("links.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();var id=a.getAttribute('data-target');")
                 .append("var target=document.getElementById(id);if(!target){return;}target.scrollIntoView({behavior:'smooth',block:'start'});")
                 .append("if(window.history&&window.history.replaceState){window.history.replaceState(null,'','#'+id);}active(id);});});")
+                .append("if(search){search.addEventListener('input',filterToc);}")
                 .append("if('IntersectionObserver' in window){var observer=new IntersectionObserver(function(entries){")
                 .append("entries.filter(function(e){return e.isIntersecting;}).sort(function(a,b){return b.intersectionRatio-a.intersectionRatio;})")
                 .append(".slice(0,1).forEach(function(e){active(e.target.id);});},{rootMargin:'-10% 0px -70% 0px',threshold:[0,.2,.6]});")
