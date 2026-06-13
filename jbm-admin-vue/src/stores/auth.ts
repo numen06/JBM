@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   const tenantId = ref('0')
   const user = ref<CurrentUser | null>(null)
   const mustChangePassword = ref(false)
+  let storageSyncBound = false
 
   const isLoggedIn = computed(() => !!accessToken.value)
 
@@ -81,11 +82,13 @@ export const useAuthStore = defineStore('auth', () => {
     persistTokens()
   }
 
-  async function fetchUser() {
+  async function fetchUser(): Promise<CurrentUser | null> {
     try {
       user.value = await getCurrentUser()
+      return user.value
     } catch {
       user.value = null
+      return null
     }
   }
 
@@ -104,13 +107,41 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(REFRESH_KEY)
   }
 
+  function syncSessionFromStorage(event?: StorageEvent) {
+    if (event?.key && ![TOKEN_KEY, REFRESH_KEY].includes(event.key)) return
+    const nextAccessToken = localStorage.getItem(TOKEN_KEY) || ''
+    const nextRefreshToken = localStorage.getItem(REFRESH_KEY) || ''
+    if (nextAccessToken === accessToken.value && nextRefreshToken === refreshToken.value) return
+    const tokenChanged = nextAccessToken !== accessToken.value
+    accessToken.value = nextAccessToken
+    refreshToken.value = nextRefreshToken
+    if (tokenChanged) {
+      user.value = null
+      mustChangePassword.value = false
+      useMenuStore().clear()
+      if (nextAccessToken) {
+        init()
+      }
+    }
+  }
+
+  function bindSessionStorageSync() {
+    if (storageSyncBound || typeof window === 'undefined') return
+    storageSyncBound = true
+    window.addEventListener('storage', syncSessionFromStorage)
+  }
+
   function clearMustChangePassword() {
     mustChangePassword.value = false
   }
 
   async function init() {
     if (accessToken.value) {
-      await fetchUser()
+      const currentUser = await fetchUser()
+      if (!currentUser) {
+        clearSession()
+        return
+      }
       await useMenuStore().fetchMenus()
     }
   }
@@ -132,6 +163,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshAccessToken,
     fetchUser,
     clearSession,
+    bindSessionStorageSync,
     init,
   }
 })

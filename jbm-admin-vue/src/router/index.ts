@@ -250,6 +250,13 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (to.meta.public) {
     if (auth.isLoggedIn && to.meta.authRedirect) {
+      if (!auth.user) {
+        const currentUser = await auth.fetchUser()
+        if (!currentUser) {
+          auth.clearSession()
+          return true
+        }
+      }
       return { name: 'dashboard' }
     }
     return true
@@ -257,9 +264,18 @@ router.beforeEach(async (to) => {
   if (!auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  if (!auth.user) await auth.fetchUser()
+  if (!auth.user) {
+    const currentUser = await auth.fetchUser()
+    if (!currentUser) {
+      auth.clearSession()
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+  }
   const menuStore = useMenuStore()
   if (!menuStore.loaded) await menuStore.fetchMenus()
+  if (!auth.isLoggedIn) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
   if (to.path === '/messages/push-test' && isPushTestAllowed(auth.user)) {
     return true
   }

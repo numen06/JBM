@@ -88,8 +88,15 @@ onMounted(() => {
 watch(
   () => auth.accessToken,
   (token) => {
-    if (token) messageStore.connectRealtime()
-    else messageStore.disconnectRealtime()
+    if (token) {
+      messageStore.connectRealtime()
+    } else {
+      messageStore.disconnectRealtime()
+      messageStore.clear()
+      if (!route.meta.public) {
+        router.replace({ name: 'login', query: { redirect: route.fullPath } })
+      }
+    }
   },
 )
 </script>

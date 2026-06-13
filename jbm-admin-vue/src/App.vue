@@ -7,6 +7,7 @@ import UiFeedbackHost from '@/components/UiFeedbackHost.vue'
 const auth = useAuthStore()
 
 onMounted(() => {
+  auth.bindSessionStorageSync()
   auth.init()
 })
 </script>

@@ -45,6 +45,8 @@ const JBM_SERVICE_ALIAS_MAP: Array<[string, string]> = [
 
 type RetriableRequestConfig = AxiosRequestConfig & { _retry?: boolean }
 
+let refreshPromise: Promise<void> | null = null
+
 function matchesPathPrefix(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(`${prefix}/`)
 }
@@ -80,30 +82,53 @@ export function withServicePrefix(url: string): string {
   return `${service}${path}${suffix}`
 }
 
+function getRequestPath(config?: AxiosRequestConfig): string {
+  if (!config?.url) return ''
+  const rawUrl = config.url
+  try {
+    const base = /^https?:\/\//i.test(rawUrl) ? undefined : window.location.origin
+    const parsed = new URL(rawUrl, base)
+    return normalizeJbmServiceAlias(parsed.pathname)
+  } catch {
+    const path = rawUrl.split(/[?#]/)[0] ?? ''
+    return normalizeJbmServiceAlias(path.startsWith('/') ? path : `/${path}`)
+  }
+}
+
+function isAuthTokenEndpoint(config?: AxiosRequestConfig): boolean {
+  const path = getRequestPath(config)
+  return ['/auth/oauth2/token', '/auth/oauth2/refresh', '/auth/oauth2/callback'].some((item) =>
+    matchesPathPrefix(path, item),
+  )
+}
+
 function isUnauthorizedBody(data: unknown): boolean {
   if (!data || typeof data !== 'object') return false
   const body = data as Record<string, unknown>
   const status = Number(body.httpStatus ?? body.status ?? body.code)
   if (status === 401) return true
   const message = extractApiError(data, '')
-  return /token.*(过期|失效)|未登录|重新登录|unauthorized|not.?login/i.test(message)
+  return /(未登录|重新登录|登录已过期|登录超时|未能读取到有效\s*token|token.*(过期|失效|无效|非法|不存在|被顶下线|被踢下线)|(过期|失效|无效|非法).*token|令牌.*(过期|失效|无效)|unauthorized|not.?login|invalid.?token|token.?expired)/i.test(message)
 }
 
 async function handleUnauthorized(config: RetriableRequestConfig) {
   const auth = useAuthStore()
-  if (auth.refreshToken && !refreshing && !config._retry) {
-    refreshing = true
+  if (auth.refreshToken && !config._retry && !isAuthTokenEndpoint(config)) {
     config._retry = true
     try {
-      await auth.refreshAccessToken()
-      refreshing = false
+      refreshPromise ??= auth.refreshAccessToken().finally(() => {
+        refreshPromise = null
+      })
+      await refreshPromise
       return http(config)
     } catch {
-      refreshing = false
+      refreshPromise = null
     }
   }
   auth.clearSession()
-  router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+  if (router.currentRoute.value.name !== 'login') {
+    router.replace({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+  }
   return Promise.reject(new Error('登录已过期，请重新登录'))
 }
 
@@ -124,13 +149,16 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-let refreshing = false
-
 http.interceptors.response.use(
   (response) => {
     const auth = useAuthStore()
     const config = response.config as RetriableRequestConfig
-    if (auth.accessToken && !config._retry && isUnauthorizedBody(response.data)) {
+    if (
+      auth.accessToken &&
+      !config._retry &&
+      !isAuthTokenEndpoint(config) &&
+      isUnauthorizedBody(response.data)
+    ) {
       return handleUnauthorized(config)
     }
     return response
@@ -138,7 +166,7 @@ http.interceptors.response.use(
   async (error) => {
     const status = error.response?.status
     const config = error.config as RetriableRequestConfig
-    if (status === 401 && !config._retry) {
+    if (status === 401 && !config._retry && !isAuthTokenEndpoint(config)) {
       return handleUnauthorized(config)
     }
     const message = extractApiError(error, '请求失败')
