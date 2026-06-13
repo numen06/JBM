@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-redis</artifactId>
             <version>${project.version}</version>
             <optional>true</optional>

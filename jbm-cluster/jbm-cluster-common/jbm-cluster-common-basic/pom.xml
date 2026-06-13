@@ -46,10 +46,6 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-framework-autoconfigure-dictionary</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-eventbus</artifactId>
-        </dependency>
         <!-- Jbm Spring -->
         <dependency>
             <groupId>com.jbm</groupId>

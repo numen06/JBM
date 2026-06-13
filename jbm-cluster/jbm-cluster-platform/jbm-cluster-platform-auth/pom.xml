@@ -14,16 +14,8 @@
     <dependencies>
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node-basic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-mysql</artifactId>
+            <artifactId>jbm-cluster-node-mysql</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
@@ -59,11 +51,6 @@
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-api-basic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-basic</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!--        <dependency>-->

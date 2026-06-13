@@ -20,37 +20,12 @@
         <!--        </dependency>-->
         <dependency>
             <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-node-basic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-mysql</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-cluster-common-satoken</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-extendfield</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jbm</groupId>
-            <artifactId>jbm-framework-autoconfigure-redis</artifactId>
+            <artifactId>jbm-cluster-node-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.tokenjan</groupId>
             <artifactId>pinyin4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.jbm</groupId>

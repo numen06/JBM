@@ -1,7 +1,7 @@
 package com.jbm.cluster.logs.service;
 
-import com.jbm.cluster.common.basic.module.JbmBusinessLogTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,14 +23,7 @@ public class DemoBusinessLogService {
      */
     public void executeSimpleDemo(String logId) {
         try {
-            JbmBusinessLogTemplate.withLogContext(builder -> {
-                builder.logId(logId)
-                        .businessId(logId)
-                        .businessType("DEMO")
-                        .source("business-log-demo")
-                        .expireDays(7)
-                        .autoTimestamp(true);
-            }, () -> {
+            withDemoLogContext(logId, () -> {
                 try {
                     log.info("=== 简单日志演示开始 ===");
                     log.info("开始执行任务...");
@@ -69,34 +62,27 @@ public class DemoBusinessLogService {
      */
     public void executeSingleStageDemo(String logId) {
         try {
-            JbmBusinessLogTemplate.withLogContext(builder -> {
-                builder.logId(logId)
-                        .businessId(logId)
-                        .businessType("DEMO")
-                        .source("business-log-demo")
-                        .expireDays(7)
-                        .autoTimestamp(true);
-            }, () -> {
+            withDemoLogContext(logId, () -> {
                 try {
                     // 初始化单个阶段
-                    log.info(JbmBusinessLogTemplate.stageInit("process,数据处理,1"));
+                    log.info(stageInit("process,数据处理,1"));
                     
                     log.info("开始处理数据...");
                     Thread.sleep(500);
                     
-                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 20, "读取数据文件", 20));
+                    log.info(stageUpdate("process", "RUNNING", 20, "读取数据文件", 20));
                     Thread.sleep(600);
                     
-                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 40, "数据校验中...", 40));
+                    log.info(stageUpdate("process", "RUNNING", 40, "数据校验中...", 40));
                     Thread.sleep(700);
                     
-                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 60, "开始处理业务逻辑", 60));
+                    log.info(stageUpdate("process", "RUNNING", 60, "开始处理业务逻辑", 60));
                     Thread.sleep(800);
                     
-                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 80, "保存处理结果", 80));
+                    log.info(stageUpdate("process", "RUNNING", 80, "保存处理结果", 80));
                     Thread.sleep(600);
                     
-                    log.info(JbmBusinessLogTemplate.stageUpdate("process", "DONE", 100, "数据处理完成，共处理1000条记录", 100));
+                    log.info(stageUpdate("process", "DONE", 100, "数据处理完成，共处理1000条记录", 100));
                     log.info("任务执行完成");
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -118,17 +104,10 @@ public class DemoBusinessLogService {
      */
     public void executeMultiStageDemo(String logId) {
         try {
-            JbmBusinessLogTemplate.withLogContext(builder -> {
-                builder.logId(logId)
-                        .businessId(logId)
-                        .businessType("DEMO")
-                        .source("business-log-demo")
-                        .expireDays(7)
-                        .autoTimestamp(true);
-            }, () -> {
+            withDemoLogContext(logId, () -> {
                 try {
                     // 初始化多个阶段
-                    log.info(JbmBusinessLogTemplate.stageInit("prepare,准备资源,1;process,处理数据,2;archive,归档输出,3"));
+                    log.info(stageInit("prepare,准备资源,1;process,处理数据,2;archive,归档输出,3"));
                     
                     // 阶段1：准备资源
                     executePrepareStage();
@@ -157,13 +136,13 @@ public class DemoBusinessLogService {
      * 阶段信息中包含业务日志内容，避免重复
      */
     private void executePrepareStage() throws InterruptedException {
-        log.info(JbmBusinessLogTemplate.stageUpdate("prepare", "RUNNING", 20, "开始准备基础资源...", 10));
+        log.info(stageUpdate("prepare", "RUNNING", 20, "开始准备基础资源...", 10));
         Thread.sleep(800);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("prepare", "RUNNING", 50, "检查系统环境配置", 15));
+        log.info(stageUpdate("prepare", "RUNNING", 50, "检查系统环境配置", 15));
         Thread.sleep(600);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("prepare", "DONE", 100, "资源准备完毕，共分配3个处理线程", 25));
+        log.info(stageUpdate("prepare", "DONE", 100, "资源准备完毕，共分配3个处理线程", 25));
     }
 
     /**
@@ -171,19 +150,19 @@ public class DemoBusinessLogService {
      * 阶段信息中包含业务日志内容，避免重复
      */
     private void executeProcessStage() throws InterruptedException {
-        log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 10, "开始批量处理数据...", 30));
+        log.info(stageUpdate("process", "RUNNING", 10, "开始批量处理数据...", 30));
         Thread.sleep(500);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 30, "读取数据文件，共1000条记录", 40));
+        log.info(stageUpdate("process", "RUNNING", 30, "读取数据文件，共1000条记录", 40));
         Thread.sleep(600);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 60, "数据校验完成，通过记录：980条，失败记录：20条", 60));
+        log.info(stageUpdate("process", "RUNNING", 60, "数据校验完成，通过记录：980条，失败记录：20条", 60));
         Thread.sleep(700);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("process", "RUNNING", 85, "开始写入数据库，批量插入中...", 70));
+        log.info(stageUpdate("process", "RUNNING", 85, "开始写入数据库，批量插入中...", 70));
         Thread.sleep(800);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("process", "DONE", 100, "数据处理完成，成功导入980条记录", 75));
+        log.info(stageUpdate("process", "DONE", 100, "数据处理完成，成功导入980条记录", 75));
     }
 
     /**
@@ -191,13 +170,45 @@ public class DemoBusinessLogService {
      * 阶段信息中包含业务日志内容，避免重复
      */
     private void executeArchiveStage() throws InterruptedException {
-        log.info(JbmBusinessLogTemplate.stageUpdate("archive", "RUNNING", 20, "开始归档生成报告...", 80));
+        log.info(stageUpdate("archive", "RUNNING", 20, "开始归档生成报告...", 80));
         Thread.sleep(500);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("archive", "RUNNING", 60, "生成处理统计报告", 90));
+        log.info(stageUpdate("archive", "RUNNING", 60, "生成处理统计报告", 90));
         Thread.sleep(600);
         
-        log.info(JbmBusinessLogTemplate.stageUpdate("archive", "DONE", 100, "归档完成，任务结束。总耗时：3.2秒", 100));
+        log.info(stageUpdate("archive", "DONE", 100, "归档完成，任务结束。总耗时：3.2秒", 100));
+    }
+
+    private void withDemoLogContext(String logId, Runnable runnable) {
+        try {
+            MDC.put("businessLogId", logId);
+            MDC.put("traceId", logId);
+            MDC.put("businessType", "DEMO");
+            MDC.put("businessId", logId);
+            MDC.put("source", "business-log-demo");
+            MDC.put("expireDays", "7");
+            MDC.put("autoTimestamp", "true");
+            runnable.run();
+        } finally {
+            MDC.remove("businessLogId");
+            MDC.remove("traceId");
+            MDC.remove("businessType");
+            MDC.remove("businessId");
+            MDC.remove("source");
+            MDC.remove("expireDays");
+            MDC.remove("autoTimestamp");
+        }
+    }
+
+    private String stageInit(String stages) {
+        return "[STAGE:INIT:" + stages + "]";
+    }
+
+    private String stageUpdate(String stageCode, String status, int progress, String message, Integer overallProgress) {
+        String stageInfo = stageCode + "," + status + "," + progress + "," + message;
+        if (overallProgress != null) {
+            stageInfo += "," + overallProgress;
+        }
+        return "[STAGE:UPDATE:" + stageInfo + "]";
     }
 }
-
