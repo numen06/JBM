@@ -1,0 +1,28 @@
+server:
+  host: 0.0.0.0
+  port: 3312
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.100.10.62:8848
+        namespace: jbm7
+        group: DEFAULT_GROUP
+      config:
+        server-addr: 10.100.10.62:8848
+        namespace: jbm7
+        group: DEFAULT_GROUP
+
+integrations:
+  openobserve:
+    url: http://127.0.0.1:5080
+    org: default
+  rabbitmq:
+    enabled: true
+    url: amqp://admin:admin@10.100.10.121:5672/
+    access-logs-queue: accessLogs-in-0.jbm-cluster-platform-logs
+    business-log-queue: businessLog-in-0.jbm-cluster-platform-logs
+  redis:
+    enabled: false
+    url: redis://127.0.0.1:6379/0

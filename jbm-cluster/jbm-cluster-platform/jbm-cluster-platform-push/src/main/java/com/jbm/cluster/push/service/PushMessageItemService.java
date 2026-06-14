@@ -25,9 +25,13 @@ public interface PushMessageItemService extends IMasterDataService<PushMessageIt
 
     boolean unread(String id);
 
+    boolean readAllForUser(Long recUserId);
+
     String toPush(PushWay pushWay, PushMessageBody pushMessageBody, Long recUserId);
 
     void sendCallBack(PushCallback pushCallback);
+
+    DataPaging<PushMessageItem> pageList(PushMessageForm pushMessageform);
 
     DataPaging<PushMessageItem> findUserPushMessage(PushMessageForm pushMessageform);
 

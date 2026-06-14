@@ -1,0 +1,24 @@
+server:
+  port: 3313
+
+spring:
+  application:
+    name: jbm-cluster-platform-push
+
+jbm:
+  python:
+    app: push
+    module: jbm-cluster-platform-push
+    openapi:
+      title: JBM Python Push Service
+      description: Python compatibility service for jbm-cluster-platform-push.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json
+  cluster:
+    token-type: redis
+    permit-all:
+      - /get/**
+      - /ws
+      - /ws/**

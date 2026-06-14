@@ -31,7 +31,7 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
     @Autowired
     private WeixinNoficationExchanger weixinNoficationExchanger;
 
-    @Autowired
+    @Autowired(required = false)
     private JbmClusterNotification jbmClusterNotification;
 
     private SimpleMqttClient mqttClient;
@@ -51,12 +51,15 @@ public class PushMessageNotificationExchanger implements ApplicationContextAware
         switch (pushMessageItem.getPushWay()) {
             case internal:
             case mqtt:
-                if (mqttNotificationExchanger != null) {
+                if (mqttNotificationExchanger != null && jbmClusterNotification != null) {
                     MqttNotification mqttNotification = mqttNotificationExchanger.build(pushMessageBody, pushMessageItem);
                     jbmClusterNotification.sendMqttNotification(mqttNotification);
                 }
                 break;
             case wechat:
+                if (jbmClusterNotification == null) {
+                    return false;
+                }
                 WeixinNotification weixinNotification = weixinNoficationExchanger.build(pushMessageBody, pushMessageItem);
                 jbmClusterNotification.sendNotification(weixinNotification);
                 break;

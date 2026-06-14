@@ -8,7 +8,6 @@ import com.jbm.cluster.job.util.CronUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -27,7 +26,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-@ConditionalOnBean(name = "lockProvider")
 public class JobSchedulerManager implements DisposableBean {
 
     private final SysJobMapper sysJobMapper;

@@ -42,6 +42,9 @@ public class ApiSignatureFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
         ServerHttpRequest request = exchange.getRequest();
+        if (isWebSocketUpgrade(request)) {
+            return chain.filter(exchange);
+        }
         String path = request.getURI().getPath();
         if (PathMatcherUtils.matches(path, apiSecurityProperties.getSignIgnores())) {
             return chain.filter(exchange);
@@ -81,5 +84,15 @@ public class ApiSignatureFilter implements GlobalFilter, Ordered {
 
     private static String header(ServerHttpRequest request, String name) {
         return request.getHeaders().getFirst(name);
+    }
+
+    private static boolean isWebSocketUpgrade(ServerHttpRequest request) {
+        String upgrade = request.getHeaders().getFirst(HttpHeaders.UPGRADE);
+        if (!StrUtil.equalsIgnoreCase("websocket", upgrade)) {
+            return false;
+        }
+        return request.getHeaders().getConnection().stream()
+                .flatMap(value -> StrUtil.splitTrim(value, ',').stream())
+                .anyMatch(value -> StrUtil.equalsIgnoreCase("upgrade", value));
     }
 }

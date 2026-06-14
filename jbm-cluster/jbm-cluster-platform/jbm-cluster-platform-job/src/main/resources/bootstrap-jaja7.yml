@@ -2,7 +2,8 @@ server:
   port: 4444
 spring:
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/cluster-job/db.changelog-master.yaml
   cloud:
     nacos:
       config:

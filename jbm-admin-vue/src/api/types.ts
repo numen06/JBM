@@ -190,6 +190,43 @@ export interface GatewayRoute {
   status?: number
 }
 
+export type JobStatus = 'NORMAL' | 'PAUSE' | 0 | 1
+export type MisfirePolicy = 'DEFAULT' | 'IGNORE_MISFIRES' | 'FIRE_AND_PROCEED' | 'DO_NOTHING' | 0 | 1 | 2 | 3
+
+export interface SysJob {
+  id?: number
+  jobId?: number
+  jobName?: string
+  jobGroup?: string
+  invokeTarget?: string
+  methodType?: string
+  cronExpression?: string
+  misfirePolicy?: MisfirePolicy
+  concurrent?: boolean
+  recordLog?: boolean
+  status?: JobStatus
+  createBy?: string
+  updateBy?: string
+  description?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface SysJobLog {
+  id?: number
+  jobLogId?: number
+  jobName?: string
+  runTime?: number
+  jobGroup?: string
+  invokeTarget?: string
+  jobMessage?: string
+  status?: string | number
+  exceptionInfo?: string
+  startTime?: string
+  stopTime?: string
+  createTime?: string
+}
+
 
 export interface GatewayRateLimit {
   policyId?: number
@@ -212,6 +249,90 @@ export interface BaseAccountLog {
   operation?: string
   createTime?: string
   ip?: string
+}
+
+export interface ClusterAccessInfo {
+  total?: number
+  today?: number
+}
+
+export interface GatewayLog {
+  id?: number | string
+  logId?: number | string
+  accessId?: string
+  requestId?: string
+  traceId?: string
+  appKey?: string
+  appName?: string
+  headers?: string
+  params?: string
+  responseBody?: string
+  userName?: string
+  requestRealName?: string
+  serviceId?: string
+  path?: string
+  method?: string
+  requestMethod?: string
+  status?: number | string
+  httpStatus?: number | string
+  spendTime?: number | string
+  costTime?: number | string
+  useTime?: number | string
+  ip?: string
+  requestIp?: string
+  createTime?: string
+  requestTime?: string
+  responseTime?: string
+  timestamp?: string
+  error?: string
+}
+
+export interface GatewayLogFilterRule {
+  ruleId?: string
+  ruleName?: string
+  enabled?: boolean
+  builtin?: boolean
+  pathPattern?: string
+  method?: string
+  serviceId?: string
+  statusCode?: string
+  remark?: string
+  hitCount?: number
+  lastHitTime?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface BusinessLogSummary {
+  logId?: string
+  module?: string
+  operation?: string
+  username?: string
+  userId?: string
+  traceId?: string
+  status?: string
+  requestIp?: string
+  businessType?: string
+  businessId?: string
+  source?: string
+  totalLines?: number
+  createTime?: string
+  updateTime?: string
+  expireDate?: string
+}
+
+export interface BusinessLogLine {
+  logId?: string
+  lineNumber?: number
+  content?: string
+  createTime?: string
+  traceId?: string
+  businessType?: string
+  businessId?: string
+  source?: string
+  stageCode?: string
+  stageName?: string
+  stageStatus?: string
 }
 
 export interface BaseDeveloper {
@@ -322,8 +443,33 @@ export interface PushMessage {
 }
 
 export interface PushMessageQuery {
+  keyword?: string
   readFlag?: boolean
+  type?: PushMessageType
+  sourceType?: 'system' | 'user'
+  pushWay?: PushMessageWay
+  pushStatus?: string
+  recUserId?: number
   pageForm?: PageForm
+}
+
+export interface PushConfigInfo {
+  id?: number
+  enable?: boolean
+  type?: number
+  releaseContent?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface EmailPushConfig {
+  id?: number
+  host?: string
+  username?: string
+  password?: string
+  port?: string
+  createTime?: string
+  updateTime?: string
 }
 
 export interface PushTestRequest {
@@ -337,6 +483,7 @@ export interface PushTestRequest {
   batchSize?: number
   intervalMillis?: number
   waitAck?: boolean
+  showInMessageCenter?: boolean
 }
 
 export interface PushTestTaskStatus {
@@ -457,6 +604,7 @@ export interface OpenApiOperationView {
   operationId?: number
   serviceId?: string
   method?: string
+  requestMethod?: string
   path?: string
   tag?: string
   summary?: string

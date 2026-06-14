@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -18,6 +19,7 @@ import { orgRowId, useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
 import {
   listUsers,
+  getUser,
   closeUser,
   createUser,
   updateUser,
@@ -31,6 +33,7 @@ import type { BaseAccount, BaseRole, BaseUser } from '@/api/types'
 
 const { hasAction } = usePermission()
 const feedback = useFeedback()
+const route = useRoute()
 const { flatOrgs, orgLabel, loadOrgs } = useOrgTree()
 
 const allRoles = ref<BaseRole[]>([])
@@ -45,6 +48,7 @@ onMounted(async () => {
   } catch {
     allRoles.value = []
   }
+  await openUserFromRoute()
 })
 
 const keyword = ref('')
@@ -110,6 +114,26 @@ async function openEditUser(row: BaseUser) {
     selectedExtraOrgIds.value = []
   }
 }
+
+async function openUserFromRoute() {
+  const userId = Number(route.query.userId)
+  if (!Number.isFinite(userId) || userId <= 0) return
+  keyword.value = String(userId)
+  await load(1)
+  try {
+    const user = await getUser(userId)
+    if (user?.userId) await openEditUser(user)
+  } catch {
+    feedback.toast.error('用户信息加载失败')
+  }
+}
+
+watch(
+  () => route.query.userId,
+  () => {
+    openUserFromRoute()
+  },
+)
 
 function openCreateUser() {
   selectedRoleIds.value = []

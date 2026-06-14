@@ -5,6 +5,7 @@ import {
   deleteMessages,
   getUnreadMessageCount,
   listCurrentMessages,
+  markCurrentMessagesAllRead,
   markMessagesRead,
   markMessagesUnread,
 } from '@/api/messages'
@@ -60,6 +61,12 @@ export const useMessageStore = defineStore('messages', () => {
     unreadCount.value = Math.max(0, unreadCount.value - changedUnread)
   }
 
+  async function readAllCurrent() {
+    await markCurrentMessagesAllRead()
+    recent.value = recent.value.map((message) => ({ ...message, readFlag: true }))
+    unreadCount.value = 0
+  }
+
   async function unread(ids: string[]) {
     await markMessagesUnread(ids)
     const idSet = new Set(ids)
@@ -95,12 +102,20 @@ export const useMessageStore = defineStore('messages', () => {
     if (/^https?:\/\//i.test(apiBaseUrl)) {
       const url = new URL(apiBaseUrl)
       url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-      url.pathname = path
+      url.pathname = joinUrlPath(url.pathname, path)
       url.search = ''
       return url.toString()
     }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${window.location.host}${path}`
+    const basePath = apiBaseUrl || '/'
+    return `${protocol}//${window.location.host}${joinUrlPath(basePath, path)}`
+  }
+
+  function joinUrlPath(base: string, path: string) {
+    const normalizedBase = base.replace(/\/+$/, '')
+    const normalizedPath = path.replace(/^\/+/, '')
+    if (!normalizedBase) return `/${normalizedPath}`
+    return `${normalizedBase}/${normalizedPath}`
   }
 
   function connectRealtime() {
@@ -114,8 +129,8 @@ export const useMessageStore = defineStore('messages', () => {
       brokerURL: buildWsUrl(),
       connectHeaders: { Authorization: token },
       reconnectDelay: 3000,
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000,
+      heartbeatIncoming: 0,
+      heartbeatOutgoing: 0,
       onConnect: () => {
         wsConnected.value = true
         wsConnecting.value = false
@@ -157,11 +172,6 @@ export const useMessageStore = defineStore('messages', () => {
   function handleRealtimeMessage(message: IMessage) {
     const payload = JSON.parse(message.body) as PushMessage
     lastRealtimeMessage.value = payload
-    if (payload.msgId && !recent.value.some((item) => item.msgId === payload.msgId)) {
-      recent.value = [payload, ...recent.value].slice(0, 5)
-    }
-    if (!payload.readFlag) unreadCount.value += 1
-    notifyRealtimeMessage(payload)
     if (payload.testRunId) {
       const receivedAt = Date.now()
       ackPushTestMessage({
@@ -171,11 +181,17 @@ export const useMessageStore = defineStore('messages', () => {
         receivedAt,
         latencyMs: payload.clientSentAt ? receivedAt - payload.clientSentAt : undefined,
       }).catch(() => undefined)
+      if (!shouldShowTestMessage(payload)) return
     }
+    if (payload.msgId && !recent.value.some((item) => item.msgId === payload.msgId)) {
+      recent.value = [payload, ...recent.value].slice(0, 5)
+    }
+    if (!payload.readFlag) unreadCount.value += 1
+    notifyRealtimeMessage(payload)
   }
 
   function notifyRealtimeMessage(message: PushMessage) {
-    if (message.testRunId) return
+    if (message.testRunId && !shouldShowTestMessage(message)) return
     const source = message.sysMsg || !message.sendUserId ? '系统通知' : '用户消息'
     const title = `${source}：${message.title || '新消息'}`
     const content = contentText(message.content)
@@ -196,6 +212,10 @@ export const useMessageStore = defineStore('messages', () => {
     }
   }
 
+  function shouldShowTestMessage(message: PushMessage) {
+    return message.extend?.showInMessageCenter === true || message.extend?.showInMessageCenter === 'true'
+  }
+
   return {
     recent,
     unreadRecent,
@@ -208,6 +228,7 @@ export const useMessageStore = defineStore('messages', () => {
     lastRealtimeMessage,
     refreshSummary,
     read,
+    readAllCurrent,
     unread,
     remove,
     clear,

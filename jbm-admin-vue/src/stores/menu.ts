@@ -17,6 +17,8 @@ function isPathInBase(path: string, base: string) {
 
 export const useMenuStore = defineStore('menu', () => {
   const rawMenus = ref<BaseMenu[]>([])
+  const authorityMenuCodes = ref<string[]>([])
+  const superAdmin = ref(false)
   const loaded = ref(false)
   const loadError = ref('')
 
@@ -32,24 +34,31 @@ export const useMenuStore = defineStore('menu', () => {
   const allowedMenuCodes = computed(() => {
     const set = new Set<string>()
     for (const m of rawMenus.value) {
-      if (m.menuCode) set.add(m.menuCode)
+      if (m.menuCode) addMenuCode(set, m.menuCode)
+    }
+    for (const code of authorityMenuCodes.value) {
+      addMenuCode(set, code)
     }
     return set
   })
 
   const navGroups = computed<NavGroupDef[]>(() => {
+    if (superAdmin.value) return STATIC_NAV_GROUPS
     if (!loaded.value || rawMenus.value.length === 0) {
-      return SELF_SERVICE_NAV_GROUPS
+      return authorityMenuCodes.value.length === 0
+        ? SELF_SERVICE_NAV_GROUPS
+        : buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
     }
     return buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
   })
 
   function isRouteAllowed(path: string): boolean {
-    if (path === '/messages') return true
+    if (superAdmin.value) return true
+    if (path === '/message-center') return true
     if (!loaded.value) {
       return path === '/dashboard' || [...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))
     }
-    if (rawMenus.value.length === 0) {
+    if (rawMenus.value.length === 0 && authorityMenuCodes.value.length === 0) {
       return path === '/dashboard' || [...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))
     }
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true
@@ -81,12 +90,23 @@ export const useMenuStore = defineStore('menu', () => {
 
   function clear() {
     rawMenus.value = []
+    authorityMenuCodes.value = []
+    superAdmin.value = false
     loaded.value = false
     loadError.value = ''
   }
 
+  function setAuthorityCodes(codes: string[]) {
+    authorityMenuCodes.value = codes
+  }
+
+  function setSuperAdmin(value: boolean) {
+    superAdmin.value = value
+  }
+
   return {
     rawMenus,
+    superAdmin,
     loaded,
     loadError,
     navGroups,
@@ -94,6 +114,14 @@ export const useMenuStore = defineStore('menu', () => {
     allowedMenuCodes,
     isRouteAllowed,
     fetchMenus,
+    setAuthorityCodes,
+    setSuperAdmin,
     clear,
   }
 })
+
+function addMenuCode(set: Set<string>, code: string) {
+  if (!code) return
+  set.add(code)
+  if (code.startsWith('MENU_')) set.add(code.slice(5))
+}

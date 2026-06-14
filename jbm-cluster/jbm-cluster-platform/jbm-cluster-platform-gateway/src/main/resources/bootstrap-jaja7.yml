@@ -46,6 +46,10 @@ jbm:
       - /**/published-docs/**
       - /qrcode/**
       - /code
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**
     auth-ignores:
       - /oauth2/**
       - /**/oauth2/**
@@ -64,6 +68,10 @@ jbm:
       - /published-docs/**
       - /**/published-docs/**
       - /actuator/**
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**
 
 # jaja7 网关 SaReactorFilter 放行（覆盖 bootstrap 默认值，与 sign/auth-ignores 对齐）
 security:
@@ -88,3 +96,7 @@ security:
       - /published-docs/**
       - /**/published-docs/**
       - /*/v2/api-docs
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**

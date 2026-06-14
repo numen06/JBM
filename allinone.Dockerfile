@@ -7,9 +7,9 @@ WORKDIR /app/jbm-admin-vue
 
 USER root
 RUN mkdir -p /app/jbm-admin-vue && chown -R node:node /app
-USER node
-
 RUN npm config set registry https://registry.npmmirror.com
+RUN npm --version
+USER node
 
 COPY --chown=node:node jbm-admin-vue/package.json jbm-admin-vue/package-lock.json ./
 RUN npm ci
@@ -51,7 +51,8 @@ RUN wget https://maven.aliyun.com/repository/public/org/apache/maven/apache-mave
 COPY . .
 
 # 执行构建，跳过测试（生产环境可移除）指定setting.xml
-RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests -s settings.xml
+ARG MAVEN_BUILD_ARGS="clean install"
+RUN --mount=type=cache,target=/root/.m2 mvn ${MAVEN_BUILD_ARGS} -DskipTests -nsu -s settings.xml
 
 # ------------------------------------------------------------
 # 公共运行基础（使用轻量 Dragonwell JRE）
@@ -113,7 +114,7 @@ FROM base AS jbm-cluster-platform-weixin
 COPY --from=builder /app/dist/jbm-cluster-platform-weixin.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
-FROM nginx:1.27-alpine AS jbm-admin
+FROM m.daocloud.io/docker.io/nginx:1.27-alpine AS jbm-admin
 ENV JBM_API_PREFIX=/v3/api/ \
     JBM_GATEWAY_PORT=6060
 COPY jbm-admin-vue/nginx.docker.conf /etc/nginx/conf.d/default.conf

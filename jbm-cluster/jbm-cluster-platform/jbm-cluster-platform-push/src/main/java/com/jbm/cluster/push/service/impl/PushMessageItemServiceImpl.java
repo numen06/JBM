@@ -1,8 +1,10 @@
 package com.jbm.cluster.push.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.AbstractWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.google.common.collect.Lists;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.push.PushStatus;
 import com.jbm.cluster.api.constants.push.PushWay;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
@@ -30,6 +32,7 @@ import java.util.function.Consumer;
 @Service
 public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessageItem> implements PushMessageItemService {
 
+    private static final String EXCLUDE_TEST_MESSAGE_BODY_SQL = "select id from push_message_body where template_code = '__push_test__' or ((template_code is null or template_code <> '__push_test_visible__') and title in ('Push通讯测试', 'Push 通讯测试'))";
 
     @Autowired
     private PushMessageNotificationExchanger pushMessageNotificationExchanger;
@@ -72,6 +75,19 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
     @Override
     public boolean unread(String id) {
         return this.unread(Lists.newArrayList(id));
+    }
+
+    @Override
+    public boolean readAllForUser(Long recUserId) {
+        UpdateWrapper<PushMessageItem> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.set(EntityUtils.toDbName(PushMessageItem::getReadFlag), true);
+        updateWrapper.and(wrapper -> wrapper
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), recUserId)
+                .or()
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), 0L));
+        updateWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), false);
+        excludeTestMessages(updateWrapper);
+        return this.update(updateWrapper);
     }
 
     @Override
@@ -122,20 +138,107 @@ public class PushMessageItemServiceImpl extends MasterDataServiceImpl<PushMessag
     }
 
     @Override
-    public DataPaging<PushMessageItem> findUserPushMessage(PushMessageForm pushMessageform) {
+    public DataPaging<PushMessageItem> pageList(PushMessageForm pushMessageform) {
         QueryWrapper<PushMessageItem> queryWrapper = currentQueryWrapper();
-        queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), pushMessageform.getRecUserId());
+        selectExistingColumns(queryWrapper);
+        if (!Boolean.TRUE.equals(pushMessageform.getIncludeTestMessages())) {
+            excludeTestMessages(queryWrapper);
+        }
+        if (pushMessageform.getRecUserId() != null) {
+            queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), pushMessageform.getRecUserId());
+        }
         if (pushMessageform.getReadFlag() != null) {
             queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), pushMessageform.getReadFlag());
         }
+        applyItemFilters(queryWrapper, pushMessageform);
+        applyBodyFilters(queryWrapper, pushMessageform);
+        applyKeyword(queryWrapper, pushMessageform);
+        return this.selectEntitysByWapper(queryWrapper, pushMessageform.getPageForm());
+    }
+
+    @Override
+    public DataPaging<PushMessageItem> findUserPushMessage(PushMessageForm pushMessageform) {
+        QueryWrapper<PushMessageItem> queryWrapper = currentQueryWrapper();
+        selectExistingColumns(queryWrapper);
+        queryWrapper.and(wrapper -> wrapper
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), pushMessageform.getRecUserId())
+                .or()
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), 0L));
+        excludeTestMessages(queryWrapper);
+        if (pushMessageform.getReadFlag() != null) {
+            queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), pushMessageform.getReadFlag());
+        }
+        applyItemFilters(queryWrapper, pushMessageform);
+        applyBodyFilters(queryWrapper, pushMessageform);
+        applyKeyword(queryWrapper, pushMessageform);
         return this.selectEntitysByWapper(queryWrapper, pushMessageform.getPageForm());
     }
 
     @Override
     public long countUnread(Long recUserId) {
         QueryWrapper<PushMessageItem> queryWrapper = currentQueryWrapper();
-        queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), recUserId);
+        queryWrapper.and(wrapper -> wrapper
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), recUserId)
+                .or()
+                .eq(EntityUtils.toDbName(PushMessageItem::getRecUserId), 0L));
         queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getReadFlag), false);
+        excludeTestMessages(queryWrapper);
         return this.count(queryWrapper);
+    }
+
+    private void selectExistingColumns(QueryWrapper<PushMessageItem> queryWrapper) {
+        queryWrapper.select("msg_id", "msg_body_id", "rec_user_id", "send_user_id", "push_status", "push_way", "read_flag", "create_time", "update_time");
+    }
+
+    private void excludeTestMessages(AbstractWrapper<PushMessageItem, String, ?> queryWrapper) {
+        queryWrapper.notInSql(EntityUtils.toDbName(PushMessageItem::getMsgBodyId), EXCLUDE_TEST_MESSAGE_BODY_SQL);
+    }
+
+    private void applyItemFilters(QueryWrapper<PushMessageItem> queryWrapper, PushMessageForm pushMessageform) {
+        if (pushMessageform == null) {
+            return;
+        }
+        if (pushMessageform.getPushWay() != null) {
+            queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getPushWay), pushMessageform.getPushWay());
+        }
+        if (pushMessageform.getPushStatus() != null) {
+            queryWrapper.eq(EntityUtils.toDbName(PushMessageItem::getPushStatus), pushMessageform.getPushStatus());
+        }
+        String sourceType = StrUtil.trim(pushMessageform.getSourceType());
+        if ("system".equalsIgnoreCase(sourceType)) {
+            queryWrapper.isNull(EntityUtils.toDbName(PushMessageItem::getSendUserId));
+        } else if ("user".equalsIgnoreCase(sourceType)) {
+            queryWrapper.isNotNull(EntityUtils.toDbName(PushMessageItem::getSendUserId));
+        }
+    }
+
+    private void applyBodyFilters(QueryWrapper<PushMessageItem> queryWrapper, PushMessageForm pushMessageform) {
+        if (pushMessageform == null || pushMessageform.getType() == null) {
+            return;
+        }
+        queryWrapper.apply(
+                EntityUtils.toDbName(PushMessageItem::getMsgBodyId)
+                        + " in (select id from push_message_body where type = {0})",
+                pushMessageform.getType().name());
+    }
+
+    private void applyKeyword(QueryWrapper<PushMessageItem> queryWrapper, PushMessageForm pushMessageform) {
+        if (pushMessageform == null || pushMessageform.getPageForm() == null) {
+            return;
+        }
+        String keyword = StrUtil.trim(pushMessageform.getPageForm().getKeyword());
+        if (StrUtil.isBlank(keyword)) {
+            return;
+        }
+        queryWrapper.and(wrapper -> wrapper
+                .like(EntityUtils.toDbName(PushMessageItem::getMsgId), keyword)
+                .or().like(EntityUtils.toDbName(PushMessageItem::getRecUserId), keyword)
+                .or().like(EntityUtils.toDbName(PushMessageItem::getSendUserId), keyword)
+                .or().apply(
+                        EntityUtils.toDbName(PushMessageItem::getMsgBodyId)
+                                + " in (select id from push_message_body where title like concat('%', {0}, '%')"
+                                + " or content like concat('%', {0}, '%')"
+                                + " or template_code like concat('%', {0}, '%'))",
+                        keyword));
     }
 }

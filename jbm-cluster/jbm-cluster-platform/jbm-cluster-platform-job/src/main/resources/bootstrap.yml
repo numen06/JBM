@@ -6,6 +6,9 @@ shedlock:
   default-lock-at-most-for: PT30M
 
 spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:db/cluster-job/db.changelog-master.yaml
   application:
     name: ${artifactId}
   cloud:
@@ -13,7 +16,7 @@ spring:
     bus:
       id: ${spring.application.name}:${server.port}
     function:
-      definition: scheduledJob;
+      definition: scheduledJob
     stream:
       #      default-binder: kafka
       bindings:

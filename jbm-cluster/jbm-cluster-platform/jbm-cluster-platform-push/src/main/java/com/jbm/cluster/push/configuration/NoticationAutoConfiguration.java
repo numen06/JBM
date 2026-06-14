@@ -1,10 +1,12 @@
 package com.jbm.cluster.push.configuration;
 
 import com.jbm.cluster.push.usage.*;
+import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import jbm.framework.aliyun.sms.AliyunSmsTemplate;
 import jbm.framework.boot.autoconfigure.mail.MailSendTemplate;
 import jbm.framework.boot.autoconfigure.mqtt.RealMqttPahoClientFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +17,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class NoticationAutoConfiguration {
 
+    @Bean
+    @ConditionalOnMissingBean
+    public JbmClusterNotification jbmClusterNotification() {
+        return new JbmClusterNotification();
+    }
 
     @Bean
     @ConditionalOnBean(AliyunSmsTemplate.class)

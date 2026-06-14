@@ -27,8 +27,15 @@ public class PushRealtimeMessageServiceImpl implements PushRealtimeMessageServic
     public void publish(PushMessageBody body, PushMessageItem item) {
         PushRealtimeMessageEvent event = buildEvent(body, item);
         if (streamBridge != null) {
-            streamBridge.send(QueueConstants.PUSH_REALTIME_MESSAGE_STREAM, event);
-            return;
+            try {
+                boolean sent = streamBridge.send(QueueConstants.PUSH_REALTIME_MESSAGE_STREAM, event);
+                if (sent) {
+                    return;
+                }
+                log.warn("站内信实时广播发送失败 msgId={}, recUserId={}", event.getMsgId(), event.getRecUserId());
+            } catch (Exception e) {
+                log.warn("站内信实时广播异常 msgId={}, recUserId={}", event.getMsgId(), event.getRecUserId(), e);
+            }
         }
         deliver(event);
     }

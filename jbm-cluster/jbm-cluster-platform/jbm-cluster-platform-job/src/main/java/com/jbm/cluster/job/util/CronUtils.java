@@ -3,6 +3,8 @@ package com.jbm.cluster.job.util;
 import org.springframework.scheduling.support.CronExpression;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 /**
@@ -50,10 +52,10 @@ public final class CronUtils {
      */
     public static Instant nextInstant(String cronExpression, Instant base) {
         CronExpression cron = CronExpression.parse(cronExpression);
-        Instant next = cron.next(base);
+        ZonedDateTime next = cron.next(ZonedDateTime.ofInstant(base, ZoneId.systemDefault()));
         if (next == null) {
             throw new IllegalArgumentException("Cron 表达式无后续触发时间: " + cronExpression);
         }
-        return next;
+        return next.toInstant();
     }
 }

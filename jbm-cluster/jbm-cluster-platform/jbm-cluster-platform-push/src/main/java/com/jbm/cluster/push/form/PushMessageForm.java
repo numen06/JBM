@@ -2,6 +2,7 @@ package com.jbm.cluster.push.form;
 
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
+import com.jbm.cluster.api.constants.push.PushMsgType;
 import com.jbm.framework.usage.paging.PageForm;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -22,5 +23,13 @@ public class PushMessageForm extends PushMessageItem {
 //
     private PageForm pageForm;
 
+    @ApiModelProperty("是否包含通讯测试消息")
+    private Boolean includeTestMessages;
+
+    @ApiModelProperty("消息类型")
+    private PushMsgType type;
+
+    @ApiModelProperty("来源类型：system,user")
+    private String sourceType;
 
 }

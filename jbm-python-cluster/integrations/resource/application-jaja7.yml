@@ -1,0 +1,7 @@
+integrations:
+  storage:
+    backend: s3
+  minio:
+    enabled: true
+    endpoint-url: http://10.100.10.62:19000
+    bucket: doc

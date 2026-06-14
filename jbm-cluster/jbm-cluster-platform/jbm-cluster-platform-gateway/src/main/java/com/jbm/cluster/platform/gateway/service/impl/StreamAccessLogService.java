@@ -16,6 +16,7 @@ import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
 import com.jbm.cluster.platform.gateway.logfilter.AccessLogFilter;
 import com.jbm.cluster.platform.gateway.service.AccessLogService;
+import com.jbm.cluster.platform.gateway.service.GatewayAccessLogFilterService;
 import com.jbm.cluster.platform.gateway.utils.ReactiveWebUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,8 @@ public class StreamAccessLogService implements AccessLogService {
     private StreamBridge streamBridge;
     @Autowired
     private ApplicationContext applicationContext;
+    @Autowired
+    private GatewayAccessLogFilterService accessLogFilterService;
 
     /**
      * 不记录日志
@@ -169,7 +172,7 @@ public class StreamAccessLogService implements AccessLogService {
                 }
             }
             //大于0代表记录日志
-            if (gatewayLogs.getLoglevel() > 0) {
+            if (gatewayLogs.getLoglevel() > 0 && !accessLogFilterService.shouldSkip(gatewayLogs)) {
                 //发送数据
                 streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
             }

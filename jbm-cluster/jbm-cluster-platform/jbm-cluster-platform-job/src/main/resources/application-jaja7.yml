@@ -1,3 +1,4 @@
 spring:
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/cluster-job/db.changelog-master.yaml

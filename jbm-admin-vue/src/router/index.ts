@@ -55,13 +55,41 @@ const router = createRouter({
           path: 'messages',
           name: 'messages',
           component: () => import('@/views/messages/MessageCenter.vue'),
+          meta: { title: '消息管理' },
+        },
+        {
+          path: 'message-center',
+          name: 'message-center',
+          component: () => import('@/views/messages/UserMessageCenter.vue'),
           meta: { title: '消息中心' },
         },
         {
           path: 'messages/push-test',
-          name: 'push-test',
+          redirect: { name: 'message-send-test' },
+        },
+        {
+          path: 'messages/send-test',
+          name: 'message-send-test',
           component: () => import('@/views/messages/PushTestPage.vue'),
-          meta: { title: 'Push 通讯测试' },
+          meta: { title: '发送测试' },
+        },
+        {
+          path: 'messages/channels',
+          name: 'message-channels',
+          component: () => import('@/views/messages/ChannelSettings.vue'),
+          meta: { title: '渠道设置' },
+        },
+        {
+          path: 'jobs',
+          name: 'jobs',
+          component: () => import('@/views/job/JobList.vue'),
+          meta: { title: '任务管理' },
+        },
+        {
+          path: 'jobs/logs',
+          name: 'job-logs',
+          component: () => import('@/views/job/JobLogList.vue'),
+          meta: { title: '调度日志' },
         },
         {
           path: 'system/users',
@@ -132,6 +160,18 @@ const router = createRouter({
           name: 'api-monitor',
           component: () => import('@/views/api/ApiMonitorPage.vue'),
           meta: { title: 'API 监控' },
+        },
+        {
+          path: 'documents',
+          name: 'documents',
+          component: () => import('@/views/doc/DocumentManagement.vue'),
+          meta: { title: '文档管理' },
+        },
+        {
+          path: 'documents/tools',
+          name: 'document-tools',
+          component: () => import('@/views/doc/DocumentTools.vue'),
+          meta: { title: '文档功能区' },
         },
         {
           path: 'system/menus',
@@ -218,6 +258,49 @@ const router = createRouter({
           meta: { title: 'IP 限制' },
         },
         {
+          path: 'logs',
+          redirect: { name: 'log-management' },
+        },
+        {
+          path: 'logs/gateway',
+          redirect: { name: 'log-management' },
+        },
+        {
+          path: 'logs/access',
+          redirect: { name: 'log-management' },
+        },
+        {
+          path: 'logs/login',
+          redirect: { name: 'login-logs' },
+        },
+        {
+          path: 'logs/filter-rules',
+          redirect: { name: 'log-filter-rules' },
+        },
+        {
+          path: 'logs/account',
+          redirect: { name: 'account-logs' },
+        },
+        {
+          path: 'log/gateway',
+          name: 'log-management',
+          component: () => import('@/views/log/LogManagement.vue'),
+          meta: { title: '访问日志' },
+        },
+        {
+          path: 'log/login',
+          name: 'login-logs',
+          component: () => import('@/views/log/LogManagement.vue'),
+          props: { category: 'login' },
+          meta: { title: '登录日志' },
+        },
+        {
+          path: 'log/filter-rules',
+          name: 'log-filter-rules',
+          component: () => import('@/views/log/LogFilterRules.vue'),
+          meta: { title: '采集设置' },
+        },
+        {
           path: 'log/account',
           name: 'account-logs',
           component: () => import('@/views/log/AccountLogs.vue'),
@@ -276,7 +359,7 @@ router.beforeEach(async (to) => {
   if (!auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  if (to.path === '/messages/push-test' && isPushTestAllowed(auth.user)) {
+  if ((to.path === '/messages/send-test' || to.path === '/messages/channels') && isMessageAdminToolAllowed(auth.user)) {
     return true
   }
   if (!menuStore.isRouteAllowed(to.path)) {
@@ -285,12 +368,25 @@ router.beforeEach(async (to) => {
   return true
 })
 
-function isPushTestAllowed(user: ReturnType<typeof useAuthStore>['user']) {
+function isMessageAdminToolAllowed(user: ReturnType<typeof useAuthStore>['user']) {
   if (!user) return false
   if (user.userId === 1 || user.userName?.toLowerCase() === 'admin') return true
   const authorities = user.authorities?.map((item) => item.authority || item.authorityId || '') ?? []
   return authorities.some((item) =>
-    ['message_push_test', 'MENU_message_push_test', 'push_test', 'MENU_push_test', 'ACTION_push:test', 'MENU_push'].includes(item),
+    [
+      'message_send_test',
+      'MENU_message_send_test',
+      'message_push_test',
+      'MENU_message_push_test',
+      'message_channels',
+      'MENU_message_channels',
+      'push_test',
+      'MENU_push_test',
+      'push_config',
+      'MENU_push_config',
+      'ACTION_push:test',
+      'MENU_push',
+    ].includes(item),
   )
 }
 

@@ -33,7 +33,11 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class PushTestServiceImpl implements PushTestService, DisposableBean {
 
+    private static final String PUSH_TEST_TEMPLATE_CODE = "__push_test__";
+    private static final String PUSH_TEST_VISIBLE_TEMPLATE_CODE = "__push_test_visible__";
     private static final int MAX_LIGHT_MESSAGES = 5000;
+    private static final long MIN_ACK_WAIT_MS = 5000L;
+    private static final long MAX_ACK_WAIT_MS = 60000L;
 
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
@@ -42,11 +46,15 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
 
     private final Map<String, PushTestTaskStatus> tasks = new ConcurrentHashMap<>();
     private final Map<String, AtomicLong> latencyTotals = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> ackKeys = new ConcurrentHashMap<>();
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
     @Override
     public PushTestTaskStatus send(PushTestRequest request) {
         PushTestRequest safeRequest = normalizeRequest(request);
+        if (safeRequest.getShowInMessageCenter() == null) {
+            safeRequest.setShowInMessageCenter(true);
+        }
         PushTestTaskStatus task = createTask(safeRequest, 1);
         sendOne(safeRequest, task.getTaskId(), 1);
         task.setSentCount(1L);
@@ -58,6 +66,7 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
     @Override
     public PushTestTaskStatus startPerf(PushTestRequest request) {
         PushTestRequest safeRequest = normalizeRequest(request);
+        safeRequest.setShowInMessageCenter(false);
         int messageCount = normalizeMessageCount(safeRequest.getMessageCount());
         PushTestTaskStatus task = createTask(safeRequest, messageCount);
         task.setStatus("RUNNING");
@@ -78,6 +87,12 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
         PushTestTaskStatus task = tasks.get(ack.getTestRunId());
         if (task == null) {
             return null;
+        }
+        String ackKey = StrUtil.format("{}:{}", ObjectUtil.defaultIfNull(ack.getRecUserId(), 0L),
+                StrUtil.blankToDefault(String.valueOf(ack.getMsgId()), ""));
+        Set<String> taskAckKeys = ackKeys.computeIfAbsent(ack.getTestRunId(), key -> ConcurrentHashMap.newKeySet());
+        if (!taskAckKeys.add(ackKey)) {
+            return task;
         }
         long latency = ack.getLatencyMs() != null ? ack.getLatencyMs() : 0L;
         if (latency <= 0 && ack.getReceivedAt() != null) {
@@ -101,6 +116,14 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
                 task.setSentCount(ObjectUtil.defaultIfNull(task.getSentCount(), 0L) + 1L);
                 if (interval > 0L && i < messageCount && i % batchSize == 0) {
                     Thread.sleep(interval);
+                }
+            }
+            if (Boolean.TRUE.equals(request.getWaitAck())) {
+                long expectedAckCount = (long) messageCount * Math.max(1, ObjectUtil.defaultIfNull(task.getResolvedUsers(), 1));
+                if (!waitForAck(task, expectedAckCount, ackWaitTimeout(messageCount))) {
+                    task.setStatus("ACK_TIMEOUT");
+                    task.setErrorMessage("ACK等待超时");
+                    return;
                 }
             }
             task.setStatus("FINISHED");
@@ -133,7 +156,23 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
         task.setMaxLatencyMs(0L);
         tasks.put(task.getTaskId(), task);
         latencyTotals.put(task.getTaskId(), new AtomicLong());
+        ackKeys.put(task.getTaskId(), ConcurrentHashMap.newKeySet());
         return task;
+    }
+
+    private boolean waitForAck(PushTestTaskStatus task, long expectedAckCount, long timeoutMs) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            if (ObjectUtil.defaultIfNull(task.getAckCount(), 0L) >= expectedAckCount) {
+                return true;
+            }
+            Thread.sleep(100L);
+        }
+        return ObjectUtil.defaultIfNull(task.getAckCount(), 0L) >= expectedAckCount;
+    }
+
+    private long ackWaitTimeout(int messageCount) {
+        return Math.min(MAX_ACK_WAIT_MS, Math.max(MIN_ACK_WAIT_MS, messageCount * 100L));
     }
 
     private void sendOne(PushTestRequest request, String taskId, int sequence) {
@@ -153,12 +192,15 @@ public class PushTestServiceImpl implements PushTestService, DisposableBean {
         pushMsg.setTitle(StrUtil.blankToDefault(safeRequest.getTitle(), "Push通讯测试"));
         String content = StrUtil.blankToDefault(safeRequest.getContent(), "Push WebSocket闭环测试消息");
         pushMsg.setContent(sequence > 0 ? content + " #" + sequence : content);
+        boolean showInMessageCenter = Boolean.TRUE.equals(safeRequest.getShowInMessageCenter());
+        pushMsg.setTemplateCode(showInMessageCenter ? PUSH_TEST_VISIBLE_TEMPLATE_CODE : PUSH_TEST_TEMPLATE_CODE);
         Map<String, Object> extend = new LinkedHashMap<>();
         if (safeRequest.getExtend() != null) {
             extend.putAll(safeRequest.getExtend());
         }
         extend.put("testRunId", taskId);
         extend.put("sequence", sequence);
+        extend.put("showInMessageCenter", showInMessageCenter);
         extend.put("clientSentAt", System.currentTimeMillis());
         pushMsg.setExtend(extend);
         return pushMsg;

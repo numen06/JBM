@@ -72,7 +72,7 @@ async function toggleMessages() {
 
 async function openMessageCenter() {
   messagesOpen.value = false
-  await router.push({ name: 'messages' })
+  await router.push({ name: 'message-center' })
 }
 
 async function markRecentRead(msgId?: string) {

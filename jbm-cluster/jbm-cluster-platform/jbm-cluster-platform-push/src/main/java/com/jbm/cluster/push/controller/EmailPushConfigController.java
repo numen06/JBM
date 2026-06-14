@@ -2,6 +2,7 @@ package com.jbm.cluster.push.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.jbm.framework.exceptions.ServiceException;
@@ -33,6 +34,10 @@ import java.util.List;
 @RequestMapping("/emailPushConfig")
 public class EmailPushConfigController extends BaseController {
 
+    private static final String[] EXISTING_COLUMNS = {
+            "id", "host", "username", "password", "port", "create_time", "update_time"
+    };
+
     @Resource
     private EmailPushConfigService service;
 
@@ -57,7 +62,7 @@ public class EmailPushConfigController extends BaseController {
         try {
             EmailPushConfig entity = resolveQuery(form);
             PageForm pageForm = resolvePageForm(form);
-            DataPaging<EmailPushConfig> dataPaging = service.selectEntitys(entity, pageForm);
+            DataPaging<EmailPushConfig> dataPaging = service.selectEntitysByWapper(buildQuery(entity), pageForm);
             return ResultBody.success(dataPaging, "查询分页列表成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -70,7 +75,7 @@ public class EmailPushConfigController extends BaseController {
             @RequestBody(required = false) EntityRequestForm<EmailPushConfig> form) {
         try {
             EmailPushConfig entity = resolveQuery(form);
-            List<EmailPushConfig> list = service.selectEntitys(entity);
+            List<EmailPushConfig> list = service.selectEntitysByWapper(buildQuery(entity));
             return ResultBody.success(list, "查询列表成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -86,7 +91,8 @@ public class EmailPushConfigController extends BaseController {
             if (ObjectUtil.isNull(entity)) {
                 throw new ServiceException("参数错误");
             }
-            entity = service.selectEntity(entity);
+            List<EmailPushConfig> list = service.selectEntitysByWapper(buildQuery(entity));
+            entity = CollectionUtil.isEmpty(list) ? null : list.get(0);
             return ResultBody.success(entity, "查询对象成功");
         } catch (Exception e) {
             return ResultBody.error(e);
@@ -172,5 +178,23 @@ public class EmailPushConfigController extends BaseController {
         } catch (Exception e) {
             return ResultBody.error(e);
         }
+    }
+
+    private QueryWrapper<EmailPushConfig> buildQuery(EmailPushConfig entity) {
+        QueryWrapper<EmailPushConfig> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(EXISTING_COLUMNS);
+        if (entity == null) {
+            return queryWrapper;
+        }
+        if (ObjectUtil.isNotNull(entity.getId())) {
+            queryWrapper.eq("id", entity.getId());
+        }
+        if (ObjectUtil.isNotEmpty(entity.getHost())) {
+            queryWrapper.eq("host", entity.getHost());
+        }
+        if (ObjectUtil.isNotEmpty(entity.getUsername())) {
+            queryWrapper.eq("username", entity.getUsername());
+        }
+        return queryWrapper;
     }
 }

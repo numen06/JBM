@@ -22,6 +22,7 @@ import {
   UserCog,
   FormInput,
   BarChart3,
+  Files,
 } from '@lucide/vue'
 
 // ---------------------------------------------------------------------------
@@ -561,6 +562,27 @@ export const DASHBOARD_SECTIONS: DashboardSection[] = [
         description: '管理灰度发布策略',
         path: '/gateway/gray-release',
         menuCodes: ['gw_gray'],
+      },
+    ],
+  },
+
+  // —— 文档管理 ——
+  {
+    key: 'documents',
+    title: '文档管理',
+    icon: Files,
+    description: '上传、预览、下载和维护业务文档',
+    menuCodes: ['documents', 'doc_files', 'doc_mgmt', 'base_doc'],
+    paths: ['/documents'],
+    links: [
+      {
+        key: 'doc-files',
+        title: '文件管理',
+        to: '/documents',
+        icon: Files,
+        description: '管理文档资源与临时上传分组',
+        path: '/documents',
+        menuCodes: ['documents', 'doc_files', 'doc_mgmt', 'base_doc'],
       },
     ],
   },

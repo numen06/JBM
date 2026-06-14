@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class PCoderService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    @Autowired
+    @Autowired(required = false)
     private JbmClusterNotification jbmClusterNotification;
 
     public String getCacheKey(String phone) {
@@ -46,6 +46,9 @@ public class PCoderService {
         smsNotification.setParams(MapUtil.of("code", code));
         smsNotification.setSignName("甲佳智能");
         smsNotification.setTemplateCode("SMS_236340338");
+        if (jbmClusterNotification == null) {
+            throw new ValidateException("短信通知通道未启用");
+        }
         jbmClusterNotification.sendSmsNotification(smsNotification);
         return code;
     }

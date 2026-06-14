@@ -7,6 +7,7 @@ import com.jbm.cluster.api.event.annotation.BusinessEventListener;
 import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.common.basic.annotation.JbmClusterEvent;
 import com.jbm.cluster.common.basic.annotation.JbmClusterScheduled;
+import com.jbm.cluster.common.security.annotation.Logical;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;
 import com.jbm.cluster.job.exception.JobSchedulerException;
@@ -46,7 +47,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 导出定时任务列表
      */
     @ApiOperation(value = "导出定时任务列表", notes = "")
-    @RequiresPermissions("monitor:job:export")
+    @RequiresPermissions(value = {"monitor:job:export", "job_export"}, logical = Logical.OR)
     @PostMapping("/export")
     public void export(HttpServletResponse response, SysJob sysJob) {
         List<SysJob> list = this.service.selectJobList(sysJob);
@@ -67,7 +68,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     @JbmClusterEvent(eventTypeClass = SysJob.class)
     @JbmClusterScheduled(cron = "*/5 * * * * ?")
     @ApiOperation(value = "新增定时任务", notes = "")
-    @RequiresPermissions("monitor:job:add")
+    @RequiresPermissions(value = {"monitor:job:add", "job_add"}, logical = Logical.OR)
     @PostMapping("/add")
     public ResultBody add(@RequestBody SysJob job) throws JobSchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
@@ -93,7 +94,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 修改定时任务
      */
     @ApiOperation(value = "修改定时任务", notes = "")
-    @RequiresPermissions("monitor:job:edit")
+    @RequiresPermissions(value = {"monitor:job:edit", "job_edit"}, logical = Logical.OR)
     @PostMapping("/edit")
     public ResultBody edit(@RequestBody SysJob job) throws JobSchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
@@ -119,7 +120,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 定时任务状态修改
      */
     @ApiOperation(value = "定时任务状态修改", notes = "")
-    @RequiresPermissions("monitor:job:changeStatus")
+    @RequiresPermissions(value = {"monitor:job:changeStatus", "job_status"}, logical = Logical.OR)
     @PutMapping("/changeStatus")
     public ResultBody changeStatus(@RequestBody SysJob job) {
         SysJob newJob = this.service.selectById(job.getJobId());
@@ -137,12 +138,48 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 定时任务立即执行一次
      */
     @ApiOperation(value = "定时任务立即执行一次", notes = "")
-    @RequiresPermissions("monitor:job:changeStatus")
+    @RequiresPermissions(value = {"monitor:job:changeStatus", "job_run"}, logical = Logical.OR)
     @PutMapping("/run")
     public ResultBody run(@RequestBody SysJob job) {
         return ResultBody.callback(() -> {
             try {
                 return this.service.run(job);
+            } catch (JobSchedulerException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @ApiOperation(value = "定时任务详情", notes = "")
+    @GetMapping("/{jobId}")
+    public ResultBody<SysJob> get(@PathVariable Long jobId) {
+        return ResultBody.callback(() -> this.service.selectById(jobId));
+    }
+
+    @ApiOperation(value = "创建定时任务", notes = "REST 兼容入口")
+    @RequiresPermissions(value = {"monitor:job:add", "job_add"}, logical = Logical.OR)
+    @PostMapping
+    public ResultBody create(@RequestBody SysJob job) throws JobSchedulerException, TaskException {
+        return add(job);
+    }
+
+    @ApiOperation(value = "更新定时任务", notes = "REST 兼容入口")
+    @RequiresPermissions(value = {"monitor:job:edit", "job_edit"}, logical = Logical.OR)
+    @PutMapping("/{jobId}")
+    public ResultBody update(@PathVariable Long jobId, @RequestBody SysJob job) throws JobSchedulerException, TaskException {
+        job.setJobId(jobId);
+        return edit(job);
+    }
+
+    @ApiOperation(value = "删除定时任务", notes = "")
+    @RequiresPermissions(value = {"monitor:job:remove", "job_delete"}, logical = Logical.OR)
+    @DeleteMapping("/{jobId}")
+    public ResultBody<Integer> delete(@PathVariable Long jobId) {
+        SysJob job = new SysJob();
+        job.setJobId(jobId);
+        return ResultBody.callback(() -> {
+            try {
+                return this.service.deleteJob(job);
             } catch (JobSchedulerException e) {
                 throw new RuntimeException(e);
             }

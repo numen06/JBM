@@ -1,0 +1,22 @@
+server:
+  port: 4444
+
+spring:
+  application:
+    name: jbm-cluster-platform-job
+
+jbm:
+  python:
+    app: job
+    module: jbm-cluster-platform-job
+    openapi:
+      title: JBM Python Job Service
+      description: Python compatibility service for jbm-cluster-platform-job.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json
+  cluster:
+    token-type: redis
+    permit-all:
+      - /get/**

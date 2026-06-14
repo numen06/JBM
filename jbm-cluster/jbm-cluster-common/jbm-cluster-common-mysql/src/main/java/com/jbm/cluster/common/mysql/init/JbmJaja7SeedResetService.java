@@ -69,7 +69,9 @@ public class JbmJaja7SeedResetService {
 
     private int resetRootAccounts() {
         QueryWrapper<BaseAccount> q = new QueryWrapper<>();
-        q.lambda().eq(BaseAccount::getUserId, JbmConstants.ROOT_USER_ID);
+        q.lambda().eq(BaseAccount::getUserId, JbmConstants.ROOT_USER_ID)
+                .or()
+                .eq(BaseAccount::getAccount, JbmConstants.ROOT_USER_NAME);
         List<BaseAccount> accounts = baseAccountMapper.selectList(q);
         Date now = new Date();
         String encoded = SecurityUtils.encryptPassword(rootPassword);

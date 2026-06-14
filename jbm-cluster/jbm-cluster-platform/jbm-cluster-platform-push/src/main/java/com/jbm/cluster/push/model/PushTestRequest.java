@@ -22,4 +22,5 @@ public class PushTestRequest implements Serializable {
     private Integer batchSize;
     private Long intervalMillis;
     private Boolean waitAck;
+    private Boolean showInMessageCenter;
 }

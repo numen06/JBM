@@ -11,6 +11,7 @@ import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.message.PushMessageTest;
 import com.jbm.cluster.push.service.PushMessageBodyService;
 import com.jbm.cluster.push.service.PushMessageItemService;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.form.ObjectIdsForm;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -46,6 +47,13 @@ public class PushMessageController {
         return ResultBody.success("标记已读成功");
     }
 
+    @ApiOperation("登录人全部已读")
+    @PostMapping("/readAllCurr")
+    public ResultBody<String> readAllCurr() {
+        this.pushMessageItemService.readAllForUser(currentUserId());
+        return ResultBody.success("全部标记已读成功");
+    }
+
     @ApiOperation("未阅读")
     @PostMapping("/unread")
     public ResultBody<String> unread(@RequestBody ObjectIdsForm idsForm) {
@@ -65,9 +73,9 @@ public class PushMessageController {
     @ApiOperation("获取登录人的消息列表")
     @PostMapping("/findCurrMessagePage")
     public ResultBody<DataPaging<PushMessageResult>> findCurrMessagePage(@RequestBody PushMessageForm pushMessageform) {
-        JbmLoginUser jbmLoginUser = SecurityUtils.getLoginUser();
+        Long userId = currentUserId();
         pushMessageform = normalizePageForm(pushMessageform);
-        pushMessageform.setRecUserId(jbmLoginUser.getUserId());
+        pushMessageform.setRecUserId(userId);
         pushMessageform.getPageForm().setSortRule("createTime:desc");
         DataPaging<PushMessageResult> dataPaging = this.pushMessageBodyService.findUserPushMessage(pushMessageform);
         return ResultBody.success(dataPaging, "获取登录人的消息列表成功");
@@ -76,8 +84,7 @@ public class PushMessageController {
     @ApiOperation("获取登录人的未读消息数")
     @PostMapping("/unreadCount")
     public ResultBody<Long> unreadCount() {
-        JbmLoginUser jbmLoginUser = SecurityUtils.getLoginUser();
-        return ResultBody.success(this.pushMessageItemService.countUnread(jbmLoginUser.getUserId()), "获取未读消息数成功");
+        return ResultBody.success(this.pushMessageItemService.countUnread(currentUserId()), "获取未读消息数成功");
     }
 
     private PushMessageForm normalizePageForm(PushMessageForm pushMessageform) {
@@ -86,6 +93,14 @@ public class PushMessageController {
             form.setPageForm(new PageForm(1, 20));
         }
         return form;
+    }
+
+    private Long currentUserId() {
+        JbmLoginUser jbmLoginUser = SecurityUtils.getLoginUser();
+        if (jbmLoginUser == null || jbmLoginUser.getUserId() == null) {
+            throw new ServiceException("登录已失效，请重新登录");
+        }
+        return jbmLoginUser.getUserId();
     }
 
     @ApiOperation("发送用户站内信")

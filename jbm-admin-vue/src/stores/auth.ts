@@ -85,11 +85,27 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser(): Promise<CurrentUser | null> {
     try {
       user.value = await getCurrentUser()
+      const menuStore = useMenuStore()
+      menuStore.setSuperAdmin(isSuperAdminUser(user.value))
+      menuStore.setAuthorityCodes(
+        user.value.authorities?.map((item) => item.authority || item.authorityId || '') ?? [],
+      )
       return user.value
     } catch {
       user.value = null
+      const menuStore = useMenuStore()
+      menuStore.setSuperAdmin(false)
+      menuStore.setAuthorityCodes([])
       return null
     }
+  }
+
+  function isSuperAdminUser(currentUser: CurrentUser | null) {
+    if (!currentUser) return false
+    if (currentUser.userName === 'admin') return true
+    return (currentUser.roles ?? []).some(
+      (role) => role.roleCode === 'super_admin' || role.roleId === 1,
+    )
   }
 
   async function logout() {

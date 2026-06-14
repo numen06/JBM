@@ -3,6 +3,7 @@ package com.jbm.cluster.job.controller;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.jbm.cluster.api.entitys.job.SysJobLog;
+import com.jbm.cluster.common.security.annotation.Logical;
 import com.jbm.cluster.common.security.annotation.RequiresPermissions;
 import com.jbm.cluster.job.service.SysJobLogService;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -34,7 +35,7 @@ public class SysJobLogController extends MasterDataCollection<SysJobLog, SysJobL
      * 导出定时任务调度日志列表
      */
     @ApiOperation(value = "导出定时任务调度日志列表")
-    @RequiresPermissions("monitor:job:export")
+    @RequiresPermissions(value = {"monitor:job:export", "job_log_export"}, logical = Logical.OR)
     @PostMapping("/export")
     public void export(HttpServletResponse response, SysJobLog sysJobLog) {
         List<SysJobLog> list = this.service.selectJobLogList(sysJobLog);
@@ -53,7 +54,7 @@ public class SysJobLogController extends MasterDataCollection<SysJobLog, SysJobL
      * 清空定时任务调度日志
      */
     @ApiOperation(value = "清空定时任务调度日志")
-    @RequiresPermissions("monitor:job:remove")
+    @RequiresPermissions(value = {"monitor:job:remove", "job_log_clean"}, logical = Logical.OR)
     @DeleteMapping("/clean")
     public ResultBody clean() {
         this.service.cleanJobLog();

@@ -33,7 +33,7 @@ const userPoolLoading = ref(false)
 const userPoolTotal = ref(0)
 const userPoolPage = ref(1)
 const tags = ref('')
-const title = ref('Push 通讯测试')
+const title = ref('发送测试消息')
 const content = ref('这是一条站内信 WebSocket 闭环测试消息')
 const messageCount = ref(100)
 const batchSize = ref(20)
@@ -154,6 +154,7 @@ function buildRequest(perf = false): PushTestRequest {
     title: title.value.trim(),
     content: content.value.trim(),
     pushMsgType: 'notification',
+    showInMessageCenter: true,
   }
   if (targetMode.value === 'self' && currentUserId.value) request.recUserIds = [currentUserId.value]
   if (targetMode.value === 'users') request.recUserIds = [...selectedUserIds.value]
@@ -191,6 +192,7 @@ async function startPerf() {
   perfRunning.value = true
   try {
     currentTask.value = await startPushPerfTest(buildRequest(true))
+    feedback.toast.success('轻压测已启动')
     startPolling()
   } catch (e) {
     perfRunning.value = false
@@ -204,6 +206,7 @@ async function refreshTask() {
   if (currentTask.value?.status !== 'RUNNING') {
     perfRunning.value = false
     stopPolling()
+    await messages.refreshSummary().catch(() => undefined)
   }
 }
 
@@ -244,7 +247,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <PageHeader title="Push 通讯测试" description="验证 RabbitMQ 入站、站内信落库、WebSocket 到达和 ACK 指标。">
+    <PageHeader title="发送测试" description="向指定用户发送测试消息，验证站内信落库、WebSocket 到达和 ACK 指标。">
       <template #actions>
         <Badge :variant="messages.wsConnected ? 'default' : 'destructive'">
           {{ messages.wsConnected ? 'WS 已连接' : messages.wsConnecting ? 'WS 连接中' : 'WS 未连接' }}

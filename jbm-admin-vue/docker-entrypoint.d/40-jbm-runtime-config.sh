@@ -4,6 +4,7 @@ set -eu
 api_prefix="${JBM_API_PREFIX:-/v3/api/}"
 gateway_port="${JBM_GATEWAY_PORT:-6060}"
 gateway_upstream="${JBM_GATEWAY_UPSTREAM:-jbm-cluster-platform-gateway:${gateway_port}}"
+push_ws_upstream="${JBM_PUSH_WS_UPSTREAM:-jbm-cluster-platform-push:3313}"
 
 api_prefix="/$(printf '%s' "$api_prefix" | sed 's#^/*##; s#/*$##')/"
 api_prefix_no_slash="$(printf '%s' "$api_prefix" | sed 's#/$##')"
@@ -12,6 +13,10 @@ api_prefix_regex="$(printf '%s' "$api_prefix" | sed 's#[.[\*^$()+?{}|]#\\&#g')"
 case "$gateway_upstream" in
   http://*|https://*) gateway_url="$gateway_upstream" ;;
   *) gateway_url="http://$gateway_upstream" ;;
+esac
+case "$push_ws_upstream" in
+  http://*|https://*) push_ws_url="$push_ws_upstream" ;;
+  *) push_ws_url="http://$push_ws_upstream" ;;
 esac
 
 js_api_prefix="$(printf '%s' "$api_prefix" | sed 's#\\#\\\\#g; s#"#\\"#g')"
@@ -33,6 +38,7 @@ server {
 
     resolver 127.0.0.11 valid=10s ipv6=off;
     set \$gateway_url $gateway_url;
+    set \$push_ws_url $push_ws_url;
 
     location / {
         try_files \$uri \$uri/ /index.html;
@@ -42,6 +48,21 @@ server {
         return 308 $api_prefix;
     }
 
+    location = ${api_prefix}push/ws {
+        rewrite ^${api_prefix_regex}push/ws\$ /ws break;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 3600s;
+        proxy_pass \$push_ws_url;
+    }
+
     location $api_prefix {
         rewrite ^$api_prefix_regex(.*)\$ /\$1 break;
         proxy_http_version 1.1;
@@ -49,9 +70,11 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_connect_timeout 5s;
         proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_read_timeout 3600s;
         proxy_pass \$gateway_url;
     }
 }

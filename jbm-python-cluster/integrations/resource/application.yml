@@ -1,0 +1,14 @@
+integrations:
+  database:
+    url: sqlite+aiosqlite:///./data/jbm-python-cluster.db
+  storage:
+    backend: filesystem
+    local-dir: ./data/files
+  minio:
+    enabled: false
+    endpoint-url: http://minio:9000
+    bucket: doc
+    access-key: admin
+    secret-key: admin@123
+    region: us-east-1
+    secure: false

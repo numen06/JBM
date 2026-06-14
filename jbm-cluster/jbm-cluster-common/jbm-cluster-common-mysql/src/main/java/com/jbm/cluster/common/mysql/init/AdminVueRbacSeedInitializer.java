@@ -46,6 +46,8 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_GATEWAY = 120L;
     private static final long MENU_OTHER = 130L;
     private static final long MENU_MESSAGES = 150L;
+    private static final long MENU_JOBS = 160L;
+    private static final long MENU_DOCS = 170L;
 
     private static final long MENU_DASHBOARD = 110L;
     private static final long MENU_USERS = 102L;
@@ -68,7 +70,11 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long MENU_API_REGISTRY = 141L;
     private static final long MENU_API_DOCS = 142L;
     private static final long MENU_MESSAGE_CENTER = 151L;
-    private static final long MENU_MESSAGE_PUSH_TEST = 152L;
+    private static final long MENU_MESSAGE_SEND_TEST = 152L;
+    private static final long MENU_MESSAGE_CHANNELS = 153L;
+    private static final long MENU_JOB_LIST = 161L;
+    private static final long MENU_JOB_LOGS = 162L;
+    private static final long MENU_DOC_FILES = 171L;
 
     private static final long ACTION_USERS_VIEW = 2001L;
     private static final long ACTION_USERS_ADD = 2002L;
@@ -80,6 +86,14 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
     private static final long ACTION_DICT_DELETE = 2104L;
     private static final long ACTION_ONLINE_FORCE_LOGOUT = 2201L;
     private static final long ACTION_ONLINE_LOGOUT = 2202L;
+    private static final long ACTION_JOB_ADD = 2301L;
+    private static final long ACTION_JOB_EDIT = 2302L;
+    private static final long ACTION_JOB_DELETE = 2303L;
+    private static final long ACTION_JOB_STATUS = 2304L;
+    private static final long ACTION_JOB_RUN = 2305L;
+    private static final long ACTION_JOB_EXPORT = 2306L;
+    private static final long ACTION_JOB_LOG_CLEAN = 2311L;
+    private static final long ACTION_JOB_LOG_EXPORT = 2312L;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -150,8 +164,16 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         upsertMenu(MENU_API_DOCS, MENU_API_MGMT, "api_docs", "API 文档与调试", "/api/docs", 2);
 
         upsertMenu(MENU_MESSAGES, MENU_PLATFORM, "messages", "消息管理", "/messages", 3);
-        upsertMenu(MENU_MESSAGE_CENTER, MENU_MESSAGES, "message_center", "消息中心", "/messages", 1);
-        upsertMenu(MENU_MESSAGE_PUSH_TEST, MENU_MESSAGES, "message_push_test", "Push 通讯测试", "/messages/push-test", 2);
+        upsertMenu(MENU_MESSAGE_CENTER, MENU_MESSAGES, "message_records", "消息记录", "/messages", 1);
+        upsertMenu(MENU_MESSAGE_SEND_TEST, MENU_MESSAGES, "message_send_test", "发送测试", "/messages/send-test", 2);
+        upsertMenu(MENU_MESSAGE_CHANNELS, MENU_MESSAGES, "message_channels", "渠道设置", "/messages/channels", 3);
+
+        upsertMenu(MENU_JOBS, MENU_PLATFORM, "jobs", "任务调度", "/jobs", 6);
+        upsertMenu(MENU_JOB_LIST, MENU_JOBS, "task_jobs", "任务管理", "/jobs", 1);
+        upsertMenu(MENU_JOB_LOGS, MENU_JOBS, "task_job_logs", "调度日志", "/jobs/logs", 2);
+
+        upsertMenu(MENU_DOCS, MENU_PLATFORM, "documents", "文档管理", "/documents", 7);
+        upsertMenu(MENU_DOC_FILES, MENU_DOCS, "doc_files", "文件管理", "/documents", 1);
 
         upsertMenu(MENU_OTHER, MENU_PLATFORM, "other", "其他", "/log", 5);
         upsertMenu(MENU_LOGS, MENU_OTHER, "account_logs", "审计日志", "/log/account", 1);
@@ -168,6 +190,14 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         seedAction(ACTION_DICT_DELETE, MENU_DICTS, "dict_delete", "字典-删除", 4);
         seedAction(ACTION_ONLINE_FORCE_LOGOUT, MENU_ONLINE_USERS, "monitor:online:forceLogout", "在线用户-踢出", 1);
         seedAction(ACTION_ONLINE_LOGOUT, MENU_ONLINE_USERS, "monitor:online:logout", "在线用户-注销", 2);
+        seedAction(ACTION_JOB_ADD, MENU_JOB_LIST, "job_add", "任务-新增", 1);
+        seedAction(ACTION_JOB_EDIT, MENU_JOB_LIST, "job_edit", "任务-编辑", 2);
+        seedAction(ACTION_JOB_DELETE, MENU_JOB_LIST, "job_delete", "任务-删除", 3);
+        seedAction(ACTION_JOB_STATUS, MENU_JOB_LIST, "job_status", "任务-启停", 4);
+        seedAction(ACTION_JOB_RUN, MENU_JOB_LIST, "job_run", "任务-执行", 5);
+        seedAction(ACTION_JOB_EXPORT, MENU_JOB_LIST, "job_export", "任务-导出", 6);
+        seedAction(ACTION_JOB_LOG_CLEAN, MENU_JOB_LOGS, "job_log_clean", "调度日志-清空", 1);
+        seedAction(ACTION_JOB_LOG_EXPORT, MENU_JOB_LOGS, "job_log_export", "调度日志-导出", 2);
     }
 
     /** 仅将菜单+按钮授权给超级管理员角色，供超管在界面中为其他角色分配 */
@@ -192,7 +222,11 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(String.valueOf(MENU_API_REGISTRY));
         ids.add(String.valueOf(MENU_API_DOCS));
         ids.add(String.valueOf(MENU_MESSAGE_CENTER));
-        ids.add(String.valueOf(MENU_MESSAGE_PUSH_TEST));
+        ids.add(String.valueOf(MENU_MESSAGE_SEND_TEST));
+        ids.add(String.valueOf(MENU_MESSAGE_CHANNELS));
+        ids.add(String.valueOf(MENU_JOB_LIST));
+        ids.add(String.valueOf(MENU_JOB_LOGS));
+        ids.add(String.valueOf(MENU_DOC_FILES));
         ids.add(String.valueOf(MENU_LOGS));
         ids.add(authorityIdForAction(ACTION_USERS_VIEW, "users_view"));
         ids.add(authorityIdForAction(ACTION_USERS_ADD, "users_add"));
@@ -204,6 +238,14 @@ public class AdminVueRbacSeedInitializer implements ApplicationRunner {
         ids.add(authorityIdForAction(ACTION_DICT_DELETE, "dict_delete"));
         ids.add(authorityIdForAction(ACTION_ONLINE_FORCE_LOGOUT, "monitor:online:forceLogout"));
         ids.add(authorityIdForAction(ACTION_ONLINE_LOGOUT, "monitor:online:logout"));
+        ids.add(authorityIdForAction(ACTION_JOB_ADD, "job_add"));
+        ids.add(authorityIdForAction(ACTION_JOB_EDIT, "job_edit"));
+        ids.add(authorityIdForAction(ACTION_JOB_DELETE, "job_delete"));
+        ids.add(authorityIdForAction(ACTION_JOB_STATUS, "job_status"));
+        ids.add(authorityIdForAction(ACTION_JOB_RUN, "job_run"));
+        ids.add(authorityIdForAction(ACTION_JOB_EXPORT, "job_export"));
+        ids.add(authorityIdForAction(ACTION_JOB_LOG_CLEAN, "job_log_clean"));
+        ids.add(authorityIdForAction(ACTION_JOB_LOG_EXPORT, "job_log_export"));
 
         List<OpenAuthority> current = baseAuthorityService.findAuthorityByRole(JbmConstants.ROOT_ROLE_ID);
         Set<String> merged = new LinkedHashSet<>(ids);

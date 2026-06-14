@@ -1,0 +1,36 @@
+server:
+  port: 9999
+
+spring:
+  application:
+    name: jbm-cluster-platform-doc
+
+jbm:
+  python:
+    app: doc
+    module: jbm-cluster-platform-doc
+    openapi:
+      title: JBM Python Doc Service
+      description: Python implementation for jbm-cluster-platform-doc.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json
+  cluster:
+    token-type: redis
+    permit-all:
+      - /get/**
+      - /download/**
+      - /getViewUrl/**
+      - /v1/3rd/file/**
+
+wps:
+  domain: https://wwo.wps.cn/office/
+  appid: ""
+  appsecret: ""
+  downloadHost: ""
+  localDir: ./data/wps
+
+redirect:
+  key: _w_redirect
+  value: ""

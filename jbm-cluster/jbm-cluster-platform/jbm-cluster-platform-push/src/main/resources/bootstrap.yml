@@ -23,6 +23,7 @@ spring:
         pushMsg-in-0:
           group: ${spring.application.name}
         pushRealtimeMessage-in-0:
+          group: ${spring.application.name}
           content-type: application/json
         businessEvent-in-0:
           group: ${spring.application.name}
@@ -58,6 +59,7 @@ jbm:
     token-type: redis
     permit-all:
       - /get/**
+      - /ws
       - /ws/**
 swagger2:
   enabled: true
@@ -67,5 +69,3 @@ swagger2:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
-
-

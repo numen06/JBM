@@ -1,0 +1,70 @@
+[project]
+name = "jbm-python-cluster"
+version = "0.1.0"
+description = "Python cluster services for incremental JBM service migration."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aioboto3>=13.1.1",
+    "aio-pika>=9.4.3",
+    "aiosqlite>=0.20.0",
+    "fastapi>=0.115.0",
+    "httpx>=0.27.0",
+    "nacos-sdk-python==0.1.14",
+    "opentelemetry-exporter-otlp-proto-http>=1.25.0",
+    "opentelemetry-instrumentation-fastapi>=0.46b0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "python-multipart>=0.0.9",
+    "pyyaml>=6.0.1",
+    "redis>=5.0.7",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncmy>=0.2.9",
+    "sse-starlette>=2.1.3",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.7",
+    "ruff>=0.5.0",
+]
+telemetry = [
+    "openobserve-telemetry-sdk>=0.1.0",
+]
+
+[project.scripts]
+jbm-python-doc = "jbm_cluster_py.platform.doc.main:run"
+jbm-python-logs = "jbm_cluster_py.platform.logs.main:run"
+jbm-python-push = "jbm_cluster_py.platform.push.main:run"
+jbm-python-job = "jbm_cluster_py.platform.job.main:run"
+
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "common/src/jbm_cluster_py",
+    "integrations/src/jbm_cluster_py",
+    "logs/src/jbm_cluster_py",
+    "doc/src/jbm_cluster_py",
+    "push/src/jbm_cluster_py",
+    "job/src/jbm_cluster_py",
+]
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+pythonpath = ["common/src", "integrations/src", "logs/src", "doc/src", "push/src", "job/src"]
+testpaths = ["common/tests", "logs/tests", "doc/tests", "push/tests", "job/tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

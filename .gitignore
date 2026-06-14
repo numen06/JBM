@@ -47,3 +47,9 @@ h2/
 *.log
 /scripts/__pycache__
 /jbm-admin-vue/.npm-cache
+
+# python local/runtime artifacts
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/

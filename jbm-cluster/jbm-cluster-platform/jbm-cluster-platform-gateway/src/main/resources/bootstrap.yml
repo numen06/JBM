@@ -123,6 +123,10 @@ jbm:
       - /internal/dev/**
       - /internal/trust/**
       - /actuator/**
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**
     # 签名忽略
     sign-ignores:
       - /**/login/**
@@ -145,6 +149,10 @@ jbm:
       - /internal/trust/**
       - /published-docs/**
       - /**/published-docs/**
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**
 
 
 # Sa-Token配置
@@ -221,4 +229,8 @@ security:
       - /internal/dev/**
       - /internal/trust/**
       - /*/v2/api-docs
+      - /push/ws
+      - /push/ws/**
+      - /**/push/ws
+      - /**/push/ws/**
       - /csrf

@@ -9,14 +9,16 @@ export function usePagedList<T>(
   const items: Ref<T[]> = ref([])
   const total = ref(0)
   const page = ref(1)
+  const currentPageSize = ref(pageSize)
   const loading = ref(false)
   const error = ref('')
 
-  async function load(p = page.value) {
+  async function load(p = page.value, nextPageSize = currentPageSize.value) {
     loading.value = true
     error.value = ''
     try {
-      const data = await fetcher(p, pageSize)
+      currentPageSize.value = nextPageSize
+      const data = await fetcher(p, currentPageSize.value)
       items.value = data.contents ?? []
       total.value = data.total ?? 0
       page.value = p
@@ -30,5 +32,5 @@ export function usePagedList<T>(
 
   onMounted(() => load(1))
 
-  return { items, total, page, loading, error, load, pageSize }
+  return { items, total, page, loading, error, load, pageSize: currentPageSize }
 }

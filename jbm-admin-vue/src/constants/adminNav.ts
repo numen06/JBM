@@ -24,6 +24,10 @@ import {
   FileCode2,
   Bell,
   Send,
+  ListChecks,
+  ClipboardList,
+  LogIn,
+  Files,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -39,6 +43,26 @@ export const MENU_PATH_ALIASES: Record<string, string> = {
   '/authority/catalog/apis': '/authority/catalog',
   '/authority/catalog/pages': '/authority/catalog',
   '/developer/pending': '/developer',
+  '/monitor/job': '/jobs',
+  '/monitor/job/log': '/jobs/logs',
+  '/monitor/log': '/log/gateway',
+  '/monitor/logs': '/log/gateway',
+  '/job': '/jobs',
+  '/job/logs': '/jobs/logs',
+  '/logs': '/log/gateway',
+  '/logs/gateway': '/log/gateway',
+  '/logs/access': '/log/gateway',
+  '/logs/filter-rules': '/log/filter-rules',
+  '/logs/account': '/log/account',
+  '/logs/login': '/log/login',
+  '/doc': '/documents',
+  '/doc/files': '/documents',
+  '/document': '/documents',
+  '/documents/files': '/documents',
+  '/GatewayLogs': '/log/gateway',
+  '/baseAccountLogs': '/log/account',
+  '/accountLogs': '/log/account',
+  '/messages/push-test': '/messages/send-test',
 }
 
 export function normalizeMenuPath(path?: string): string {
@@ -158,24 +182,94 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
     items: [
       {
         name: 'messages',
-        title: '消息中心',
+        title: '消息记录',
         icon: Bell,
         to: '/messages',
-        menuCodes: ['messages', 'message_center', 'push'],
+        menuCodes: ['messages', 'message_records', 'message_center', 'push'],
       },
       {
-        name: 'push-test',
-        title: 'Push 通讯测试',
+        name: 'message-send-test',
+        title: '发送测试',
         icon: Send,
-        to: '/messages/push-test',
-        menuCodes: ['message_push_test', 'push_test', 'pushTasks'],
+        to: '/messages/send-test',
+        menuCodes: ['message_send_test', 'message_push_test', 'push_test', 'pushTasks'],
+      },
+      {
+        name: 'message-channels',
+        title: '渠道设置',
+        icon: KeyRound,
+        to: '/messages/channels',
+        menuCodes: ['message_channels', 'push_config', 'push'],
+      },
+    ],
+  },
+  {
+    label: '任务调度',
+    items: [
+      {
+        name: 'jobs',
+        title: '任务管理',
+        icon: ListChecks,
+        to: '/jobs',
+        menuCodes: ['jobs', 'job', 'task_jobs', 'monitor_job'],
+      },
+      {
+        name: 'job-logs',
+        title: '调度日志',
+        icon: ClipboardList,
+        to: '/jobs/logs',
+        menuCodes: ['job_logs', 'task_job_logs', 'monitor_job_log'],
+      },
+    ],
+  },
+  {
+    label: '文档管理',
+    items: [
+      {
+        name: 'documents',
+        title: '文件管理',
+        icon: Files,
+        to: '/documents',
+        menuCodes: ['documents', 'doc_files', 'doc_mgmt', 'base_doc'],
+      },
+    ],
+  },
+  {
+    label: '日志管理',
+    items: [
+      {
+        name: 'log-management',
+        title: '访问日志',
+        icon: ScrollText,
+        to: '/log/gateway',
+        menuCodes: ['account_logs', 'logs', 'log', 'gateway', 'gateway_logs', 'access_logs', 'cluster_access'],
+      },
+      {
+        name: 'login-logs',
+        title: '登录日志',
+        icon: LogIn,
+        to: '/log/login',
+        menuCodes: ['account_logs', 'login_logs', 'login_log', 'auth_logs', 'audit_logs'],
+      },
+      {
+        name: 'log-filter-rules',
+        title: '采集设置',
+        icon: ListChecks,
+        to: '/log/filter-rules',
+        menuCodes: ['account_logs', 'gateway_logs', 'access_logs', 'log_filter_rules', 'cluster_access'],
+      },
+      {
+        name: 'account-logs',
+        title: '审计日志',
+        icon: ScrollText,
+        to: '/log/account',
+        menuCodes: ['account_logs', 'business_logs', 'audit_logs'],
       },
     ],
   },
   {
     label: '其他',
     items: [
-      { name: 'account-logs', title: '审计日志', icon: ScrollText, to: '/log/account', menuCodes: ['account_logs'] },
       { name: 'developer', title: '开发者', icon: Code2, to: '/developer', menuCodes: ['developer', 'developer_mgmt'] },
     ],
   },
