@@ -7,6 +7,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.model.basic.OrgUserQueryResult;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -152,4 +153,6 @@ public interface BaseUserService extends IMasterDataService<BaseUser> {
     List<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm form);
 
     DataPaging<BaseUser> selectOrgUsers(OrgUserScope scope, BaseUserForm form, PageForm pageForm);
+
+    OrgUserQueryResult selectOrgUsersWithTree(OrgUserScope scope, BaseUserForm form);
 }

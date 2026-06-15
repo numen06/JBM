@@ -9,6 +9,7 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.model.basic.OrgUserQueryResult;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -136,16 +137,16 @@ public class CurrentUserController {
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "获取同公司用户列表", notes = "基于当前登录人所属顶层公司查询用户")
+    @ApiOperation(value = "获取同公司用户列表", notes = "返回用户列表及部门-用户树")
     @GetMapping("/org/users/company")
-    public ResultBody<List<BaseUser>> listCompanyUsers(
+    public ResultBody<OrgUserQueryResult> listCompanyUsers(
             @RequestParam(value = "userName", required = false) String userName,
             @RequestParam(value = "realName", required = false) String realName,
             @RequestParam(value = "mobile", required = false) String mobile,
             @RequestParam(value = "status", required = false) Integer status
     ) {
         BaseUserForm form = buildUserForm(userName, realName, mobile, status);
-        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.COMPANY, form));
+        return ResultBody.callback(() -> baseUserService.selectOrgUsersWithTree(OrgUserScope.COMPANY, form));
     }
 
     @SaCheckLogin
@@ -156,16 +157,16 @@ public class CurrentUserController {
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "获取同部门用户列表", notes = "基于当前登录人所属部门精确匹配查询用户")
+    @ApiOperation(value = "获取同部门用户列表", notes = "返回用户列表及部门-用户树")
     @GetMapping("/org/users/department")
-    public ResultBody<List<BaseUser>> listDepartmentUsers(
+    public ResultBody<OrgUserQueryResult> listDepartmentUsers(
             @RequestParam(value = "userName", required = false) String userName,
             @RequestParam(value = "realName", required = false) String realName,
             @RequestParam(value = "mobile", required = false) String mobile,
             @RequestParam(value = "status", required = false) Integer status
     ) {
         BaseUserForm form = buildUserForm(userName, realName, mobile, status);
-        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.DEPARTMENT, form));
+        return ResultBody.callback(() -> baseUserService.selectOrgUsersWithTree(OrgUserScope.DEPARTMENT, form));
     }
 
     @SaCheckLogin
@@ -176,16 +177,16 @@ public class CurrentUserController {
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "获取同部门及子部门用户列表", notes = "基于当前登录人所属部门及下级组织查询用户")
+    @ApiOperation(value = "获取同部门及子部门用户列表", notes = "返回用户列表及部门-用户树")
     @GetMapping("/org/users/departmentTree")
-    public ResultBody<List<BaseUser>> listDepartmentTreeUsers(
+    public ResultBody<OrgUserQueryResult> listDepartmentTreeUsers(
             @RequestParam(value = "userName", required = false) String userName,
             @RequestParam(value = "realName", required = false) String realName,
             @RequestParam(value = "mobile", required = false) String mobile,
             @RequestParam(value = "status", required = false) Integer status
     ) {
         BaseUserForm form = buildUserForm(userName, realName, mobile, status);
-        return ResultBody.callback(() -> baseUserService.selectOrgUsers(OrgUserScope.DEPARTMENT_TREE, form));
+        return ResultBody.callback(() -> baseUserService.selectOrgUsersWithTree(OrgUserScope.DEPARTMENT_TREE, form));
     }
 
     @SaCheckLogin

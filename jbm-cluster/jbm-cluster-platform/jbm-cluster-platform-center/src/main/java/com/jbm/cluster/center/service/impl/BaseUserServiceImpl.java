@@ -23,6 +23,8 @@ import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.model.basic.OrgUserQueryResult;
+import com.jbm.cluster.api.model.basic.OrgUserTreeNode;
 import com.jbm.cluster.center.mapper.BaseUserMapper;
 import com.jbm.cluster.center.service.*;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
@@ -42,7 +44,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -185,6 +190,111 @@ public class BaseUserServiceImpl extends MasterDataServiceImpl<BaseUser> impleme
             default:
                 break;
         }
+    }
+
+    @Override
+    public OrgUserQueryResult selectOrgUsersWithTree(OrgUserScope scope, BaseUserForm baseUserForm) {
+        List<BaseUser> users = this.selectOrgUsers(scope, baseUserForm);
+        List<BaseOrg> orgs = this.resolveScopeOrgs(scope);
+        List<OrgUserTreeNode> tree = this.buildOrgUserTree(orgs, users);
+        return new OrgUserQueryResult(users, tree);
+    }
+
+    private List<BaseOrg> resolveScopeOrgs(OrgUserScope scope) {
+        if (ObjectUtil.isEmpty(LoginHelper.softGetLoginUser()) || LoginHelper.isAdmin()) {
+            return this.orgService.selectEntitys(new BaseOrg());
+        }
+        BaseOrg currentOrg = this.orgService.selectById(LoginHelper.getDeptId());
+        if (ObjectUtil.isEmpty(currentOrg)) {
+            return Lists.newArrayList();
+        }
+        switch (scope) {
+            case DEPARTMENT:
+                return Lists.newArrayList(currentOrg);
+            case DEPARTMENT_TREE:
+                return this.orgService.findRelegationCompany(currentOrg);
+            case COMPANY:
+            default:
+                return this.orgService.selectEntitys(new BaseOrg());
+        }
+    }
+
+    private List<OrgUserTreeNode> buildOrgUserTree(List<BaseOrg> orgs, List<BaseUser> users) {
+        if (ObjectUtil.isEmpty(orgs)) {
+            return users.stream().map(this::buildUserTreeNode).collect(Collectors.toList());
+        }
+        Map<Long, List<BaseUser>> usersByDept = users.stream()
+                .filter(user -> ObjectUtil.isNotEmpty(user.getDepartmentId()))
+                .collect(Collectors.groupingBy(BaseUser::getDepartmentId));
+        List<BaseUser> unassignedUsers = users.stream()
+                .filter(user -> ObjectUtil.isEmpty(user.getDepartmentId()))
+                .collect(Collectors.toList());
+
+        Set<Long> orgIds = orgs.stream().map(BaseOrg::getId).collect(Collectors.toSet());
+        Map<Long, OrgUserTreeNode> orgNodeMap = new HashMap<>();
+        for (BaseOrg org : orgs) {
+            OrgUserTreeNode orgNode = buildOrgTreeNode(org);
+            List<BaseUser> deptUsers = usersByDept.getOrDefault(org.getId(), Lists.newArrayList());
+            for (BaseUser user : deptUsers) {
+                orgNode.getChildren().add(buildUserTreeNode(user));
+            }
+            orgNodeMap.put(org.getId(), orgNode);
+        }
+
+        Set<Long> attachedAsChild = new HashSet<>();
+        for (BaseOrg org : orgs) {
+            Long parentId = org.getParentId();
+            if (ObjectUtil.isNotEmpty(parentId) && orgIds.contains(parentId)) {
+                OrgUserTreeNode parentNode = orgNodeMap.get(parentId);
+                if (ObjectUtil.isNotEmpty(parentNode)) {
+                    parentNode.getChildren().add(orgNodeMap.get(org.getId()));
+                    attachedAsChild.add(org.getId());
+                }
+            }
+        }
+
+        List<OrgUserTreeNode> roots = Lists.newArrayList();
+        for (BaseOrg org : orgs) {
+            if (!attachedAsChild.contains(org.getId())) {
+                roots.add(orgNodeMap.get(org.getId()));
+            }
+        }
+
+        if (ObjectUtil.isNotEmpty(unassignedUsers)) {
+            OrgUserTreeNode unassignedNode = new OrgUserTreeNode();
+            unassignedNode.setKey("org_unassigned");
+            unassignedNode.setTitle("未分配部门");
+            unassignedNode.setValue("unassigned");
+            unassignedNode.setNodeType("org");
+            unassignedNode.setDisabled(true);
+            for (BaseUser user : unassignedUsers) {
+                unassignedNode.getChildren().add(buildUserTreeNode(user));
+            }
+            roots.add(unassignedNode);
+        }
+        return roots;
+    }
+
+    private OrgUserTreeNode buildOrgTreeNode(BaseOrg org) {
+        OrgUserTreeNode node = new OrgUserTreeNode();
+        node.setKey("org_" + org.getId());
+        node.setTitle(org.getOrgName());
+        node.setValue(String.valueOf(org.getId()));
+        node.setNodeType("org");
+        node.setOrgId(org.getId());
+        node.setDisabled(true);
+        return node;
+    }
+
+    private OrgUserTreeNode buildUserTreeNode(BaseUser user) {
+        OrgUserTreeNode node = new OrgUserTreeNode();
+        node.setKey("user_" + user.getUserId());
+        node.setTitle(StrUtil.blankToDefault(user.getRealName(), user.getNickName()));
+        node.setValue(String.valueOf(user.getUserId()));
+        node.setNodeType("user");
+        node.setUserId(user.getUserId());
+        node.setDisabled(false);
+        return node;
     }
 
     @Override
