@@ -11,6 +11,7 @@ spring:
         namespace: jbm7
         group: DEFAULT_GROUP
       config:
+        enabled: true
         server-addr: 10.100.10.62:8848
         namespace: jbm7
         group: DEFAULT_GROUP

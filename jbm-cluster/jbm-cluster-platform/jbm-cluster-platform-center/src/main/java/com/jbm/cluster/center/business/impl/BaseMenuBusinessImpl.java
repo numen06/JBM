@@ -7,12 +7,12 @@ import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.api.form.BaseMenuForm;
 import com.jbm.cluster.center.business.BaseMenuBusiness;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.cluster.common.mysql.service.MenuDataScopeHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
@@ -24,6 +24,8 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
 
     @Autowired
     private BaseMenuService baseMenuService;
+    @Autowired
+    private BaseActionService baseActionService;
     @Autowired
     private MenuDataScopeHelper menuDataScopeHelper;
     @Autowired
@@ -83,16 +85,22 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
             exportMenu.setServiceId(menu.getServiceId());
             exportMenu.setAppId(menu.getAppId());
             exportMenu.setHidden(menu.getHidden());
+            if (menu.getMenuId() != null) {
+                exportMenu.setImportActionList(baseActionService.findListByMenuId(menu.getMenuId()));
+            }
             exportList.add(exportMenu);
         }
         return exportList;
     }
 
     @Override
-    public int importMenusWithGatewayRefresh(MultipartFile file) {
+    public int importMenusWithGatewayRefresh(MultipartFile file, Long appId) {
         try {
             if (file == null || file.isEmpty()) {
                 throw new ServiceException("import file required");
+            }
+            if (ObjectUtil.isNotEmpty(appId)) {
+                menuDataScopeHelper.assertCanManageAppId(appId);
             }
             String jsonContent = new String(file.getBytes(), StandardCharsets.UTF_8);
             if (ObjectUtil.isEmpty(jsonContent)) {
@@ -101,6 +109,13 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
             List<BaseMenu> menus = JSON.parseArray(jsonContent, BaseMenu.class);
             if (menus == null || menus.isEmpty()) {
                 throw new ServiceException("import file format error");
+            }
+            if (ObjectUtil.isNotEmpty(appId)) {
+                for (BaseMenu menu : menus) {
+                    if (ObjectUtil.isNotEmpty(menu.getAppId())) {
+                        menu.setAppId(appId);
+                    }
+                }
             }
             int successCount = baseMenuService.importMenus(menus);
             jbmClusterTemplate.refreshGateway();

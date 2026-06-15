@@ -9,6 +9,12 @@ export type AppListQuery = {
   status?: number | string
 }
 
+export interface AppCredentials {
+  appId?: number
+  clientId?: string
+  clientSecret?: string
+}
+
 export async function listApps(page = 1, size = DEFAULT_PAGE_SIZE, query?: AppListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
@@ -24,12 +30,17 @@ export async function listApps(page = 1, size = DEFAULT_PAGE_SIZE, query?: AppLi
 }
 
 export async function createApp(data: Partial<BaseApp>) {
-  const res = await post<number>('/app', data)
+  const res = await post<AppCredentials>('/app', data)
   return unwrap(res)
 }
 
 export async function updateApp(appId: number, data: Partial<BaseApp>) {
   const res = await put<void>(`/app/${appId}`, data)
+  return unwrap(res)
+}
+
+export async function resetAppSecret(appId: number) {
+  const res = await put<string>(`/app/${appId}/secret`)
   return unwrap(res)
 }
 

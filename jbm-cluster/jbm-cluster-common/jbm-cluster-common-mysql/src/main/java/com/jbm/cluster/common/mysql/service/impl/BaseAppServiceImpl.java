@@ -249,7 +249,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         }
         // 生成新的密钥
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
-        appInfo.setSecretKey(secretKey);
+        appInfo.setSecretKey(SecurityUtils.encryptPassword(secretKey));
         appInfo.setUpdateTime(new Date());
         baseAppMapper.updateById(appInfo);
 //        jdbcClientDetailsService.updateClientSecret(appInfo.getApiKey(), secretKey);
@@ -292,6 +292,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
 
     /** 兼容远程库 NOT NULL 且无默认值的 legacy 列 */
     private static void normalizeAppDefaults(BaseApp app) {
+        app.setAppType(StrUtil.blankToDefault(app.getAppType(), "pc"));
         app.setAppNameEn(StrUtil.blankToDefault(app.getAppNameEn(), StrUtil.blankToDefault(app.getAppName(), "")));
         app.setAppIcon(StrUtil.blankToDefault(app.getAppIcon(), ""));
         app.setAppIcons(StrUtil.blankToDefault(app.getAppIcons(), ""));

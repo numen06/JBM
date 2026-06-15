@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, Header, WebSocket, WebSocketDisconnect
 
 from jbm_cluster_py.common.result import fail, ok
+from jbm_cluster_py.platform.push.business_events import BusinessEventService
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ def _ids(body: Optional[Dict[str, Any]]) -> list[Any]:
     return value if isinstance(value, list) else [value]
 
 
-def build_push_router(service: PushService) -> APIRouter:
+def build_push_router(service: PushService, business_events: Optional[BusinessEventService] = None) -> APIRouter:
     router = APIRouter()
 
     @router.websocket("/ws")
@@ -173,6 +174,69 @@ def build_push_router(service: PushService) -> APIRouter:
     @router.post("/notification/send/mqtt")
     async def notification_send(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         return ok({"accepted": True, "payload": body or {}}, "发送通知成功")
+
+    @router.post("/webhookTask/businessEventListener")
+    async def business_event_listener(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        return ok("监听测试-1成功", "监听测试-1成功")
+
+    @router.post("/webhookTask/businessEventListener2")
+    async def business_event_listener2(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        return ok("监听测试-2成功", "监听测试-2成功")
+
+    @router.get("/webhookTask/run")
+    async def webhook_task_run(eventId: str) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.send_business_event_by_event_id(eventId), "触发成功")
+
+    @router.post("/webhookTask/req")
+    async def webhook_task_req(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.send_task(body or {}), "请求成功")
+
+    @router.get("/webhookTask/retry")
+    async def webhook_task_retry(taskId: str) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.retry_event_task(taskId), "重试成功")
+
+    @router.get("/webhookTask/clear")
+    async def webhook_task_clear() -> Dict[str, Any]:
+        return ok(False, "清理成功")
+
+    @router.post("/webhookTask/findTask")
+    async def webhook_task_find(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.repository.find_task(body or {}), "查询成功")
+
+    @router.post("/webhookTask/selectWebhookTasks")
+    async def webhook_task_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.repository.page_webhook_tasks(body or {}), "查询成功")
+
+    @router.post("/webhookEventConfig/saveConfig")
+    async def webhook_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.repository.save_config(body or {}), "保存对象成功")
+
+    @router.post("/webhookEventConfig/findConfig")
+    async def webhook_config_find(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        payload = body or {}
+        result = None
+        if payload.get("eventId"):
+            result = await business_events.repository.select_config_by_event_id(str(payload["eventId"]))
+        elif payload.get("businessEventCode") and payload.get("url"):
+            result = await business_events.repository.select_config_by_code_url(
+                str(payload["businessEventCode"]),
+                str(payload["url"]),
+            )
+        return ok(result, "查询成功")
 
     return router
 

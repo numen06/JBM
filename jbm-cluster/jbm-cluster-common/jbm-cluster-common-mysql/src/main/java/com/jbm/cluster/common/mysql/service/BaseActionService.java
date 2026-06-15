@@ -22,6 +22,14 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      */
     BaseAction getAction(Long actionId);
 
+    /**
+     * 根据编码获取操作
+     *
+     * @param actionCode
+     * @return
+     */
+    BaseAction getActionByCode(String actionCode);
+
     DataPaging<BaseAction> findListPage(BaseActionForm form);
 
     /**

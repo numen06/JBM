@@ -112,6 +112,8 @@ export interface BaseApp {
   appName?: string
   appCode?: string
   clientId?: string
+  apiKey?: string
+  secretKey?: string
   orgId?: number
   status?: number
 }

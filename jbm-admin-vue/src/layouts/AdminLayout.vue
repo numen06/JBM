@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
-import { Bell, LogOut, Mail, MailOpen, PanelLeft } from '@lucide/vue'
+import { Bell, ChevronRight, LogOut, Mail, MailOpen, PanelLeft } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
@@ -17,6 +17,7 @@ const app = useAppStore()
 const menuStore = useMenuStore()
 const messageStore = useMessageStore()
 const messagesOpen = ref(false)
+const NAV_GROUP_STATE_KEY = 'jbm_admin_expanded_nav_groups'
 
 const navGroups = computed(() => menuStore.navGroups)
 const activeNavPath = computed(() => {
@@ -25,6 +26,10 @@ const activeNavPath = computed(() => {
     .filter((item) => route.path === item.to || route.path.startsWith(`${item.to}/`))
     .sort((a, b) => b.to.length - a.to.length)[0]?.to
 })
+const activeGroupLabel = computed(() =>
+  navGroups.value.find((group) => group.items.some((item) => item.to === activeNavPath.value))?.label,
+)
+const expandedGroupLabels = ref<string[]>([])
 const unreadLabel = computed(() =>
   messageStore.unreadCount > 99 ? '99+' : String(messageStore.unreadCount),
 )
@@ -80,10 +85,70 @@ async function markRecentRead(msgId?: string) {
   await messageStore.read([msgId])
 }
 
+function persistExpandedGroups(labels = expandedGroupLabels.value) {
+  localStorage.setItem(NAV_GROUP_STATE_KEY, JSON.stringify(labels))
+}
+
+function setExpandedGroups(labels: string[]) {
+  const validLabels = new Set(navGroups.value.map((group) => group.label))
+  expandedGroupLabels.value = [...new Set(labels)].filter((label) => validLabels.has(label))
+  persistExpandedGroups()
+}
+
+function isGroupExpanded(label: string) {
+  return expandedGroupLabels.value.includes(label)
+}
+
+function toggleGroup(label: string) {
+  if (app.sidebarCollapsed) return
+  if (isGroupExpanded(label)) {
+    setExpandedGroups(expandedGroupLabels.value.filter((item) => item !== label))
+  } else {
+    setExpandedGroups([...expandedGroupLabels.value, label])
+  }
+}
+
+function expandCurrentGroup() {
+  const active = activeGroupLabel.value
+  if (!active || expandedGroupLabels.value.includes(active)) return
+  setExpandedGroups([...expandedGroupLabels.value, active])
+}
+
+function loadExpandedGroups() {
+  const stored = localStorage.getItem(NAV_GROUP_STATE_KEY)
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setExpandedGroups(parsed.filter((label): label is string => typeof label === 'string'))
+        expandCurrentGroup()
+        return
+      }
+    } catch {
+      localStorage.removeItem(NAV_GROUP_STATE_KEY)
+    }
+  }
+  setExpandedGroups(activeGroupLabel.value ? [activeGroupLabel.value] : navGroups.value.slice(0, 1).map((group) => group.label))
+}
+
 onMounted(() => {
+  loadExpandedGroups()
   messageStore.refreshSummary()
   messageStore.connectRealtime()
 })
+
+watch(activeGroupLabel, expandCurrentGroup)
+
+watch(
+  () => navGroups.value.map((group) => group.label).join('|'),
+  () => {
+    setExpandedGroups(expandedGroupLabels.value)
+    expandCurrentGroup()
+    if (!expandedGroupLabels.value.length && navGroups.value.length) {
+      setExpandedGroups([navGroups.value[0].label])
+    }
+  },
+)
 
 watch(
   () => auth.accessToken,
@@ -122,28 +187,46 @@ watch(
         >
           {{ menuStore.loadError }}
         </p>
-        <div v-for="group in navGroups" :key="group.label" class="mb-4">
-          <p
+        <div v-for="group in navGroups" :key="group.label" class="mb-1">
+          <button
             v-if="!app.sidebarCollapsed"
-            class="mb-1 px-2 text-xs font-medium text-muted-foreground"
+            type="button"
+            class="mb-1 flex h-8 w-full items-center justify-between rounded-md px-2 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            :aria-expanded="isGroupExpanded(group.label)"
+            @click="toggleGroup(group.label)"
           >
-            {{ group.label }}
-          </p>
-          <RouterLink
-            v-for="item in group.items"
-            :key="item.name"
-            :to="item.to"
-            :class="
-              cn(
-                'mb-0.5 flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent',
-                activeNavPath === item.to && 'bg-accent font-medium text-accent-foreground',
-              )
-            "
-            :title="item.title"
-          >
-            <component :is="item.icon" class="h-4 w-4 shrink-0" />
-            <span v-if="!app.sidebarCollapsed">{{ item.title }}</span>
-          </RouterLink>
+            <span class="truncate">{{ group.label }}</span>
+            <span class="ml-2 flex items-center gap-1">
+              <span class="text-[10px] font-normal text-muted-foreground/80">{{ group.items.length }}</span>
+              <ChevronRight
+                :class="
+                  cn(
+                    'h-3.5 w-3.5 shrink-0 transition-transform',
+                    isGroupExpanded(group.label) && 'rotate-90',
+                  )
+                "
+              />
+            </span>
+          </button>
+          <div v-else class="mx-2 my-2 h-px bg-border" :title="group.label" />
+          <div v-show="app.sidebarCollapsed || isGroupExpanded(group.label)" class="space-y-0.5">
+            <RouterLink
+              v-for="item in group.items"
+              :key="item.name"
+              :to="item.to"
+              :class="
+                cn(
+                  'flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent',
+                  app.sidebarCollapsed && 'justify-center',
+                  activeNavPath === item.to && 'bg-accent font-medium text-accent-foreground',
+                )
+              "
+              :title="item.title"
+            >
+              <component :is="item.icon" class="h-4 w-4 shrink-0" />
+              <span v-if="!app.sidebarCollapsed" class="truncate">{{ item.title }}</span>
+            </RouterLink>
+          </div>
         </div>
       </nav>
     </aside>

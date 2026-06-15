@@ -7,8 +7,12 @@ import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
 import com.jbm.cluster.common.mysql.service.GatewayIpLimitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
+import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
 
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,19 +78,51 @@ public class DynamicResourceLocator extends DynamicResourceService {
      * 获取路由后的地址
      */
     protected String getFullPath(String serviceId, String path) {
-        final String[] fullPath = {path.startsWith("/") ? path : "/" + path};
-        routeDefinitionLocator.getRouteDefinitions()
-                .filter(routeDefinition -> routeDefinition.getId().equals(serviceId))
-                .subscribe(routeDefinition -> {
-                            routeDefinition.getPredicates().stream()
-                                    .filter(predicateDefinition -> ("Path").equalsIgnoreCase(predicateDefinition.getName()))
-                                    .filter(predicateDefinition -> !predicateDefinition.getArgs().containsKey("_rateLimit"))
-                                    .forEach(predicateDefinition -> {
-                                        fullPath[0] = predicateDefinition.getArgs().get("pattern").replace("/**", path.startsWith("/") ? path : "/" + path);
-                                    });
-                        }
-                );
-        return fullPath[0];
+        return getFullPath(loadRoutePathPatterns(), serviceId, path);
+    }
+
+    private Map<String, String> loadRoutePathPatterns() {
+        Map<String, String> patterns = new HashMap<>(16);
+        if (routeDefinitionLocator == null) {
+            return patterns;
+        }
+        try {
+            List<RouteDefinition> routeDefinitions = routeDefinitionLocator.getRouteDefinitions()
+                    .collectList()
+                    .block(Duration.ofSeconds(10));
+            if (routeDefinitions == null) {
+                return patterns;
+            }
+            routeDefinitions.forEach(routeDefinition -> routeDefinition.getPredicates().stream()
+                            .filter(predicateDefinition -> ("Path").equalsIgnoreCase(predicateDefinition.getName()))
+                            .filter(predicateDefinition -> !predicateDefinition.getArgs().containsKey("_rateLimit"))
+                            .findFirst()
+                            .map(this::getPathPattern)
+                            .ifPresent(pattern -> patterns.put(routeDefinition.getId(), pattern)));
+        } catch (Exception e) {
+            log.warn("加载动态路由路径缓存失败，将使用资源原始路径", e);
+        }
+        return patterns;
+    }
+
+    private String getPathPattern(PredicateDefinition predicateDefinition) {
+        String pattern = predicateDefinition.getArgs().get("pattern");
+        if (pattern == null && !predicateDefinition.getArgs().isEmpty()) {
+            pattern = predicateDefinition.getArgs().values().iterator().next();
+        }
+        return pattern;
+    }
+
+    protected String getFullPath(Map<String, String> routePathPatterns, String serviceId, String path) {
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        if (serviceId == null || routePathPatterns == null) {
+            return normalizedPath;
+        }
+        String pattern = routePathPatterns.get(serviceId);
+        if (pattern == null) {
+            return normalizedPath;
+        }
+        return pattern.replace("/**", normalizedPath);
     }
 
     /**
@@ -97,12 +133,13 @@ public class DynamicResourceLocator extends DynamicResourceService {
         try {
             resources = baseAuthorityService.findAuthorityResource();
             if (resources != null) {
+                Map<String, String> routePathPatterns = loadRoutePathPatterns();
                 for (AuthorityResource item : resources) {
                     String path = item.getPath();
                     if (path == null) {
                         continue;
                     }
-                    String fullPath = getFullPath(item.getServiceId(), path);
+                    String fullPath = getFullPath(routePathPatterns, item.getServiceId(), path);
                     item.setPath(fullPath);
                 }
                 log.info("=============加载动态权限:{}==============", resources.size());
@@ -121,8 +158,9 @@ public class DynamicResourceLocator extends DynamicResourceService {
         try {
             list = gatewayIpLimitService.findBlackList();
             if (list != null) {
+                Map<String, String> routePathPatterns = loadRoutePathPatterns();
                 for (IpLimitApi item : list) {
-                    item.setPath(getFullPath(item.getServiceId(), item.getPath()));
+                    item.setPath(getFullPath(routePathPatterns, item.getServiceId(), item.getPath()));
                 }
                 log.info("=============加载IP黑名单:{}==============", list.size());
             }
@@ -140,8 +178,9 @@ public class DynamicResourceLocator extends DynamicResourceService {
         try {
             list = gatewayIpLimitService.findWhiteList();
             if (list != null) {
+                Map<String, String> routePathPatterns = loadRoutePathPatterns();
                 for (IpLimitApi item : list) {
-                    item.setPath(getFullPath(item.getServiceId(), item.getPath()));
+                    item.setPath(getFullPath(routePathPatterns, item.getServiceId(), item.getPath()));
                 }
                 log.info("=============加载IP白名单:{}==============", list.size());
             }

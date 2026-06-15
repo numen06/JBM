@@ -22,3 +22,8 @@ jbm:
       - /get/**
       - /ws
       - /ws/**
+
+integrations:
+  rabbitmq:
+    business-event-queue: businessEvent-in-0.jbm-cluster-platform-push
+    business-event-resource-queue: businessEventResource-in-0.jbm-cluster-platform-push

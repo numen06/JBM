@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,6 +15,8 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Transient;
+import java.util.List;
 
 /**
  * 系统资源-菜单信息
@@ -123,4 +126,13 @@ public class BaseMenu extends MasterDataEntity {
     @ApiModelProperty(value = "是否显示 0-不显示 1-显示")
     @Column(columnDefinition = "int default 1")
     private Integer hidden = 1;
+
+    /**
+     * 菜单下的按钮权限，仅用于菜单导入导出兼容旧系统 JSON。
+     */
+    @Transient
+    @TableField(exist = false)
+    @JSONField(name = "actionList")
+    @ApiModelProperty(value = "菜单按钮列表")
+    private List<BaseAction> importActionList;
 }

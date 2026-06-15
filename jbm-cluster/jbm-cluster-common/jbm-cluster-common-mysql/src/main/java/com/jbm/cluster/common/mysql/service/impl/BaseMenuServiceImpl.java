@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
+import com.jbm.cluster.api.entitys.basic.BaseAction;
 import com.jbm.cluster.api.entitys.basic.BaseMenu;
 import com.jbm.cluster.common.mysql.mapper.BaseMenuMapper;
 import com.jbm.cluster.common.mysql.service.BaseActionService;
@@ -349,18 +350,21 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
         if (CollUtil.isEmpty(menus)) {
             return 0;
         }
-        
+
         int successCount = 0;
         int updateCount = 0;
         int insertCount = 0;
-        
+        int skippedPersistMenuCount = 0;
+        int actionSuccessCount = 0;
+        int skippedPersistActionCount = 0;
+
         // 先按优先级排序，确保父菜单先处理
         menus.sort((m1, m2) -> {
             int p1 = m1.getPriority() != null ? m1.getPriority() : 0;
             int p2 = m2.getPriority() != null ? m2.getPriority() : 0;
             return Integer.compare(p1, p2);
         });
-        
+
         // 建立旧menuId到menuCode的映射（用于处理parentId）
         // 导入的JSON中parentId是旧的menuId，我们需要找到对应的menuCode
         Map<Long, String> oldMenuIdToCodeMapping = new HashMap<>();
@@ -369,13 +373,13 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 oldMenuIdToCodeMapping.put(menu.getMenuId(), menu.getMenuCode());
             }
         }
-        
+
         // 建立menuCode到新menuId的映射（用于处理parentId）
         Map<String, Long> menuCodeToIdMapping = new HashMap<>();
         // 保存每个导入菜单的最终ID和原始parentId（用于第二遍更新parentId）
         Map<BaseMenu, Long> menuFinalIdMap = new HashMap<>();
         Map<BaseMenu, Long> menuOldParentIdMap = new HashMap<>();
-        
+
         for (BaseMenu importMenu : menus) {
             try {
                 // 验证menuCode不能为空
@@ -399,16 +403,26 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 
                 // 根据menuCode查询是否已存在
                 BaseMenu existingMenu = getMenuByCode(importMenu.getMenuCode());
-                
+
                 Long finalMenuId;
                 if (existingMenu != null) {
-                    // 已存在，使用现有的menuId进行更新
+                    finalMenuId = existingMenu.getMenuId();
+                    if (BooleanUtil.isTrue(existingMenu.getIsPersist())) {
+                        skippedPersistMenuCount++;
+                        menuCodeToIdMapping.put(importMenu.getMenuCode(), finalMenuId);
+                        menuFinalIdMap.put(importMenu, finalMenuId);
+                        if (oldParentId != null && oldParentId > 0) {
+                            menuOldParentIdMap.put(importMenu, oldParentId);
+                        }
+                        log.info("跳过保留菜单覆盖: {} [menuCode: {}]", existingMenu.getMenuName(), existingMenu.getMenuCode());
+                        continue;
+                    }
+                    // 已存在且不是保留菜单，使用现有的menuId进行更新
                     importMenu.setMenuId(existingMenu.getMenuId());
                     // 临时清空parentId，避免引用不存在的ID，后续会重新设置
                     importMenu.setParentId(null);
                     // 使用saveEntity方法，确保业务逻辑完整执行
                     persistMenu(importMenu);
-                    finalMenuId = existingMenu.getMenuId();
                     updateCount++;
                     log.info("更新菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
                 } else {
@@ -422,28 +436,31 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                     insertCount++;
                     log.info("新增菜单: {} [menuCode: {}]", importMenu.getMenuName(), importMenu.getMenuCode());
                 }
-                
+
                 // 建立menuCode到menuId的映射关系
                 menuCodeToIdMapping.put(importMenu.getMenuCode(), finalMenuId);
-                
+
                 // 保存菜单的最终ID和原始parentId
                 menuFinalIdMap.put(importMenu, finalMenuId);
                 if (oldParentId != null && oldParentId > 0) {
                     menuOldParentIdMap.put(importMenu, oldParentId);
                 }
-                
+
+                int[] actionImportResult = importMenuActions(importMenu.getImportActionList(), finalMenuId);
+                actionSuccessCount += actionImportResult[0];
+                skippedPersistActionCount += actionImportResult[1];
                 successCount++;
             } catch (Exception e) {
-                log.error("导入菜单失败: {} [menuCode: {}], 错误: {}", 
+                log.error("导入菜单失败: {} [menuCode: {}], 错误: {}",
                     importMenu.getMenuName(), importMenu.getMenuCode(), e.getMessage(), e);
             }
         }
-        
+
         // 第二遍：更新parentId映射关系（基于menuCode）
         for (Map.Entry<BaseMenu, Long> entry : menuFinalIdMap.entrySet()) {
             BaseMenu importMenu = entry.getKey();
             Long finalMenuId = entry.getValue();
-            
+
             Long oldParentId = menuOldParentIdMap.get(importMenu);
             if (oldParentId != null && oldParentId > 0) {
                 // 通过旧parentId找到对应的menuCode
@@ -455,25 +472,67 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                         // 需要更新parentId
                         BaseMenu menuToUpdate = getMenu(finalMenuId);
                         if (menuToUpdate != null && !newParentId.equals(menuToUpdate.getParentId())) {
+                            if (BooleanUtil.isTrue(menuToUpdate.getIsPersist())) {
+                                log.info("跳过保留菜单parentId覆盖: {} [menuCode: {}]", finalMenuId, importMenu.getMenuCode());
+                                continue;
+                            }
                             menuToUpdate.setParentId(newParentId);
                             persistMenu(menuToUpdate);
-                            log.info("更新菜单parentId: {} [menuCode: {}] -> {} [menuCode: {}]", 
+                            log.info("更新菜单parentId: {} [menuCode: {}] -> {} [menuCode: {}]",
                                 finalMenuId, importMenu.getMenuCode(), newParentId, parentCode);
                         }
                     } else {
-                        log.warn("未找到父菜单menuCode: {}, 菜单: {} [menuCode: {}]", 
+                        log.warn("未找到父菜单menuCode: {}, 菜单: {} [menuCode: {}]",
                             parentCode, importMenu.getMenuName(), importMenu.getMenuCode());
                     }
                 } else {
-                    log.warn("未找到父菜单的menuCode，oldParentId: {}, 菜单: {} [menuCode: {}]", 
+                    log.warn("未找到父菜单的menuCode，oldParentId: {}, 菜单: {} [menuCode: {}]",
                         oldParentId, importMenu.getMenuName(), importMenu.getMenuCode());
                 }
             }
         }
-        
-        log.info("菜单导入完成，成功: {}, 新增: {}, 更新: {}", successCount, insertCount, updateCount);
+
+        log.info("菜单导入完成，成功: {}, 新增: {}, 更新: {}, 跳过保留菜单: {}, 按钮成功: {}, 跳过保留按钮: {}",
+            successCount, insertCount, updateCount, skippedPersistMenuCount, actionSuccessCount, skippedPersistActionCount);
         return successCount;
     }
 
+    private int[] importMenuActions(List<BaseAction> actions, Long menuId) {
+        if (CollUtil.isEmpty(actions) || menuId == null) {
+            return new int[]{0, 0};
+        }
+        int successCount = 0;
+        int skippedPersistCount = 0;
+        for (BaseAction importAction : actions) {
+            try {
+                if (StrUtil.isEmpty(importAction.getActionCode())) {
+                    log.warn("跳过按钮导入，actionCode为空: {}", importAction.getActionName());
+                    continue;
+                }
+                BaseAction existingAction = baseActionService.getActionByCode(importAction.getActionCode());
+                if (existingAction != null) {
+                    if (existingAction.getIsPersist() != null && existingAction.getIsPersist() == 1) {
+                        skippedPersistCount++;
+                        log.info("跳过保留按钮覆盖: {} [actionCode: {}]", existingAction.getActionName(), existingAction.getActionCode());
+                        continue;
+                    }
+                    importAction.setActionId(existingAction.getActionId());
+                    importAction.setMenuId(menuId);
+                    baseActionService.updateAction(importAction);
+                    log.info("更新按钮: {} [actionCode: {}]", importAction.getActionName(), importAction.getActionCode());
+                } else {
+                    importAction.setActionId(null);
+                    importAction.setMenuId(menuId);
+                    baseActionService.addAction(importAction);
+                    log.info("新增按钮: {} [actionCode: {}]", importAction.getActionName(), importAction.getActionCode());
+                }
+                successCount++;
+            } catch (Exception e) {
+                log.error("导入按钮失败: {} [actionCode: {}], 错误: {}",
+                    importAction.getActionName(), importAction.getActionCode(), e.getMessage(), e);
+            }
+        }
+        return new int[]{successCount, skippedPersistCount};
+    }
 
 }

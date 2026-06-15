@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "spring.datasource.driver-class-name=org.h2.Driver",
                 "spring.datasource.username=sa",
                 "spring.datasource.password=",
+                "spring.datasource.hikari.connection-init-sql=",
                 "spring.liquibase.change-log=classpath:db/cluster-rbac/db.changelog-master.yaml",
                 "jbm.cluster.data-init.enabled=false"
         }
@@ -51,6 +52,7 @@ class OAuthClientSecretVerifierH2IT {
 
     @BeforeEach
     void insertSeedApp() {
+        jdbcTemplate.execute("ALTER TABLE base_app ADD COLUMN IF NOT EXISTS extend_data CLOB");
         jdbcTemplate.update("DELETE FROM base_app WHERE app_id = ?", JbmConstants.SEED_DEV_APP_API_KEY.hashCode() & Long.MAX_VALUE);
         com.jbm.cluster.api.entitys.basic.BaseApp app = new com.jbm.cluster.api.entitys.basic.BaseApp();
         app.setAppId(1000L);

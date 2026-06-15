@@ -8,8 +8,11 @@ from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
 from jbm_cluster_py.common.logging import configure_logging
-from jbm_cluster_py.integrations.nacos import NacosRegistrar
+from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient, NacosRegistrar
+from jbm_cluster_py.integrations.rabbitmq import RabbitMQConsumer
+from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.integrations.telemetry import init_telemetry
+from jbm_cluster_py.platform.push.business_events import BusinessEventRepository, BusinessEventService
 from jbm_cluster_py.platform.push.router import build_push_router
 from jbm_cluster_py.platform.push.service import PushService
 
@@ -19,17 +22,28 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     configure_logging()
     init_telemetry(app_config.telemetry)
     push_service = PushService()
+    rabbitmq = RabbitMQConsumer(app_config.rabbitmq)
+    business_event_service = BusinessEventService(
+        BusinessEventRepository(app_config.database),
+        RedisClient(app_config.redis),
+        NacosDiscoveryClient(app_config.nacos_discovery),
+        rabbitmq=rabbitmq,
+        rabbitmq_config=app_config.rabbitmq,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
         nacos = NacosRegistrar(app_config.service_name, app_config.port, app_config.nacos_discovery)
         app.state.config = app_config
         app.state.push_service = push_service
+        app.state.business_event_service = business_event_service
         app.state.nacos = nacos
         await nacos.start()
+        await business_event_service.start()
         try:
             yield
         finally:
+            await business_event_service.stop()
             await nacos.stop()
 
     openapi = app_config.openapi
@@ -44,7 +58,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     )
     install_exception_handlers(app)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
-    app.include_router(build_push_router(push_service))
+    app.include_router(build_push_router(push_service, business_event_service))
     return app
 
 

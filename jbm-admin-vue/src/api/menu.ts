@@ -1,5 +1,5 @@
-import { get, post, put, del, unwrap } from './request'
-import type { BaseMenu, DataPaging } from './types'
+import http, { get, post, put, del, unwrap, withServicePrefix } from './request'
+import type { BaseMenu, DataPaging, ResultBody } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
@@ -60,4 +60,32 @@ export async function updateMenu(menuId: number, data: Partial<BaseMenu>) {
 export async function deleteMenu(menuId: number) {
   const res = await del<void>(`/menu/${menuId}`)
   return unwrap(res)
+}
+
+export async function exportMenus(appId?: number | string) {
+  const { data } = await http.get<Blob>(withServicePrefix('/menu/export'), {
+    params:
+      appId !== undefined && appId !== ''
+        ? {
+            appId: Number(appId),
+          }
+        : undefined,
+    responseType: 'blob',
+  })
+  return data
+}
+
+export async function importMenus(file: File, appId?: number | string) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await http.post<ResultBody<string>>(withServicePrefix('/menu/imports'), form, {
+    params:
+      appId !== undefined && appId !== ''
+        ? {
+            appId: Number(appId),
+          }
+        : undefined,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return unwrap(data)
 }

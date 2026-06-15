@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.mysql.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.jbm.cluster.api.constants.ResourceType;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -84,6 +84,16 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         return baseActionMapper.selectById(actionId);
     }
 
+    @Override
+    public BaseAction getActionByCode(String actionCode) {
+        if (StrUtil.isEmpty(actionCode)) {
+            return null;
+        }
+        QueryWrapper<BaseAction> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(BaseAction::getActionCode, actionCode);
+        List<BaseAction> list = baseActionMapper.selectList(queryWrapper);
+        return list == null || list.isEmpty() ? null : list.get(0);
+    }
 
     /**
      * 检查Action编码是否存在

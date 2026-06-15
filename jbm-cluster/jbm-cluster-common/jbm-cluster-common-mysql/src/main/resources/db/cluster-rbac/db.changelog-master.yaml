@@ -39,3 +39,5 @@ databaseChangeLog:
       file: classpath:db/cluster-rbac/changes/V21__openapi_docs.sql
   - include:
       file: classpath:db/cluster-rbac/changes/V22__openapi_docs_master_columns.sql
+  - include:
+      file: classpath:db/cluster-rbac/changes/V23__base_app_app_type_default.sql

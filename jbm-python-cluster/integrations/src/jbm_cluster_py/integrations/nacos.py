@@ -125,3 +125,65 @@ class NacosRegistrar:
 
     def _metadata(self) -> dict[str, str]:
         return {"app": self.service_name, "runtime": "python"}
+
+
+class NacosDiscoveryClient:
+    def __init__(self, config: Mapping[str, Any]) -> None:
+        self.config = dict(config)
+        self.enabled = bool(self.config.get("enabled", True))
+        self.client: Optional[Any] = None
+
+    async def start(self) -> None:
+        if not self.enabled:
+            return
+        server_addr = self.config.get("server-addr")
+        if not server_addr:
+            logger.warning("Nacos discovery enabled but server-addr is empty")
+            return
+        try:
+            import nacos
+        except ImportError:
+            logger.warning("nacos-sdk-python is not installed; skip discovery client")
+            return
+        try:
+            self.client = nacos.NacosClient(
+                server_addresses=str(server_addr),
+                namespace=str(self.config.get("namespace") or "public"),
+            )
+        except Exception as exc:
+            logger.warning("Nacos discovery client creation failed: %s", exc)
+            self.client = None
+
+    async def stop(self) -> None:
+        self.client = None
+
+    async def choose_instance(self, service_name: str) -> Optional[dict[str, Any]]:
+        if self.client is None:
+            return None
+        loop = asyncio.get_running_loop()
+        try:
+            return await loop.run_in_executor(None, self._choose_instance_sync, service_name)
+        except Exception as exc:
+            logger.warning("Nacos instance lookup failed for %s: %s", service_name, exc)
+            return None
+
+    def _choose_instance_sync(self, service_name: str) -> Optional[dict[str, Any]]:
+        assert self.client is not None
+        response = self.client.list_naming_instance(
+            service_name=service_name,
+            group_name=self._group_name(),
+        )
+        hosts = []
+        if isinstance(response, Mapping):
+            hosts = list(response.get("hosts") or [])
+        healthy_hosts = [
+            dict(host)
+            for host in hosts
+            if host.get("healthy", True) and host.get("enabled", True) and float(host.get("weight") or 1) > 0
+        ]
+        if healthy_hosts:
+            return healthy_hosts[0]
+        return dict(hosts[0]) if hosts else None
+
+    def _group_name(self) -> str:
+        return str(self.config.get("group") or "DEFAULT_GROUP")

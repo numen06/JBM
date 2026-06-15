@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Plus, Pencil, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { Download, Plus, Pencil, RefreshCw, Trash2, Upload } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -17,7 +17,15 @@ import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { usePermission } from '@/composables/usePermission'
 import { useFeedback } from '@/composables/useFeedback'
-import { listMenus, deleteMenu, createMenu, updateMenu, type MenuScope } from '@/api/menu'
+import {
+  listMenus,
+  deleteMenu,
+  createMenu,
+  updateMenu,
+  exportMenus,
+  importMenus,
+  type MenuScope,
+} from '@/api/menu'
 import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listApps } from '@/api/app'
 import type { BaseAction, BaseApp, BaseMenu } from '@/api/types'
@@ -35,6 +43,10 @@ const selectedMenu = ref<BaseMenu | null>(null)
 const menuActions = ref<BaseAction[]>([])
 const actionsLoading = ref(false)
 const actionsError = ref('')
+const menuFileInput = ref<HTMLInputElement | null>(null)
+const importAppId = ref<number | string>('')
+const importing = ref(false)
+const exporting = ref(false)
 
 const {
   dialogOpen: actionDialogOpen,
@@ -121,6 +133,79 @@ function appLabel(row: BaseMenu) {
   const id = row.appId
   if (id == null) return '—'
   return appNameMap.value.get(id) ?? String(id)
+}
+
+function selectedImportAppName() {
+  if (importAppId.value === '' || importAppId.value == null) return ''
+  const appId = Number(importAppId.value)
+  return appNameMap.value.get(appId) ?? String(importAppId.value)
+}
+
+function currentExportAppId() {
+  if (
+    (scopeFilter.value === 'app' || scopeFilter.value === 'visible') &&
+    appIdFilter.value !== '' &&
+    appIdFilter.value != null
+  ) {
+    return appIdFilter.value
+  }
+  return undefined
+}
+
+function triggerMenuImport() {
+  menuFileInput.value?.click()
+}
+
+async function handleMenuImportChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    feedback.toast.warning('请选择 JSON 菜单文件', '无法导入菜单')
+    return
+  }
+  const appName = selectedImportAppName()
+  const confirmed = await feedback.confirm({
+    title: '确认导入菜单',
+    message: appName
+      ? `将菜单导入到应用 ${appName}，保留菜单不会被覆盖。`
+      : '按文件中的应用归属导入菜单，保留菜单不会被覆盖。',
+    confirmText: '导入',
+  })
+  if (!confirmed) return
+  importing.value = true
+  try {
+    const message = await importMenus(file, importAppId.value || undefined)
+    feedback.toast.success(message || '菜单导入完成', '导入成功')
+    await load(1)
+    await loadMenuActions(selectedMenu.value?.menuId)
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '导入失败', '导入失败')
+  } finally {
+    importing.value = false
+  }
+}
+
+async function handleMenuExport() {
+  exporting.value = true
+  try {
+    const appId = currentExportAppId()
+    const blob = await exportMenus(appId)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = appId ? `menus-${appId}.json` : 'menus-platform.json'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    feedback.toast.success('菜单文件已生成', '导出成功')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '导出失败', '导出失败')
+  } finally {
+    exporting.value = false
+  }
 }
 
 function search() {
@@ -351,6 +436,27 @@ onMounted(async () => {
           class="w-44"
           @keyup.enter="search"
         />
+        <Select v-model="importAppId" class="w-40">
+          <option value="">按文件应用</option>
+          <option v-for="app in apps" :key="`import-${app.appId}`" :value="app.appId">
+            导入到 {{ app.appName }}
+          </option>
+        </Select>
+        <input
+          ref="menuFileInput"
+          class="hidden"
+          type="file"
+          accept="application/json,.json"
+          @change="handleMenuImportChange"
+        />
+        <Button variant="outline" :disabled="exporting" @click="handleMenuExport">
+          <Download class="mr-1 h-4 w-4" />
+          {{ exporting ? '导出中' : '导出' }}
+        </Button>
+        <Button variant="outline" :disabled="importing" @click="triggerMenuImport">
+          <Upload class="mr-1 h-4 w-4" />
+          {{ importing ? '导入中' : '导入' }}
+        </Button>
         <Button variant="outline" @click="search">
           <RefreshCw class="mr-1 h-4 w-4" />
           搜索

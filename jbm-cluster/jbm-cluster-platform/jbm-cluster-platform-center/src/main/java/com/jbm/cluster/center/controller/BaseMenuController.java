@@ -78,9 +78,10 @@ public class BaseMenuController extends BaseController {
 
     @ApiOperation(value = "导入菜单")
     @PostMapping(value = "/imports", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResultBody<String> importMenus(@RequestParam("file") MultipartFile file) {
+    public ResultBody<String> importMenus(@RequestParam("file") MultipartFile file,
+                                          @RequestParam(required = false) Long appId) {
         return ResultBody.callback(() -> {
-            int count = baseMenuBusiness.importMenusWithGatewayRefresh(file);
+            int count = baseMenuBusiness.importMenusWithGatewayRefresh(file, appId);
             return String.format("成功导入 %d 个菜单", count);
         });
     }

@@ -1,6 +1,5 @@
 package com.jbm.cluster.center.controller;
 
-import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.form.BaseAppForm;
 import com.jbm.cluster.center.business.BaseAppBusiness;
@@ -12,6 +11,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 系统应用管理
@@ -46,10 +48,15 @@ public class BaseAppController extends BaseController {
 
     @ApiOperation(value = "创建应用")
     @PostMapping
-    public ResultBody<String> createApp(@RequestBody BaseAppForm form) {
+    public ResultBody<Map<String, Object>> createApp(@RequestBody BaseAppForm form) {
         return ResultBody.callback(() -> {
             BaseApp result = baseAppBusiness.addAppWithGatewayRefresh(form);
-            return StrUtil.toString(result != null ? result.getAppId() : null);
+            String clientSecret = baseAppBusiness.resetSecretWithGatewayRefresh(result.getAppId());
+            Map<String, Object> credentials = new LinkedHashMap<>();
+            credentials.put("appId", result.getAppId());
+            credentials.put("clientId", result.getApiKey());
+            credentials.put("clientSecret", clientSecret);
+            return credentials;
         });
     }
 

@@ -1,9 +1,13 @@
 import copy
+import json
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 def deep_merge(base: Mapping[str, Any], override: Mapping[str, Any]) -> Dict[str, Any]:
@@ -25,11 +29,84 @@ def nested_get(data: Mapping[str, Any], keys: Iterable[str], default: Any = None
     return current
 
 
+def nested_set(data: Dict[str, Any], dotted_key: str, value: Any) -> None:
+    keys = [key for key in dotted_key.split(".") if key]
+    if not keys:
+        return
+    current: Dict[str, Any] = data
+    for key in keys[:-1]:
+        child = current.get(key)
+        if not isinstance(child, dict):
+            child = {}
+            current[key] = child
+        current = child
+    current[keys[-1]] = value
+
+
+def parse_properties(content: str) -> Dict[str, Any]:
+    result: Dict[str, Any] = {}
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or stripped.startswith("!"):
+            continue
+        separator = "=" if "=" in stripped else ":"
+        if separator not in stripped:
+            continue
+        key, value = stripped.split(separator, 1)
+        nested_set(result, key.strip(), _coerce_scalar(value.strip()))
+    return result
+
+
 def load_yaml_file(path: Path) -> Dict[str, Any]:
     if not path.exists():
         return {}
     with path.open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle) or {}
+
+
+def _coerce_scalar(value: str) -> Any:
+    lowered = value.lower()
+    if lowered == "true":
+        return True
+    if lowered == "false":
+        return False
+    if lowered in {"null", "none"}:
+        return None
+    try:
+        if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
+            return int(value)
+    except Exception:
+        pass
+    return value
+
+
+def _load_config_content(data_id: str, content: str) -> Dict[str, Any]:
+    if data_id.endswith((".yml", ".yaml")):
+        return yaml.safe_load(content) or {}
+    return parse_properties(content)
+
+
+def _env_overrides() -> Dict[str, Any]:
+    overrides: Dict[str, Any] = {}
+    json_override = os.getenv("JBM_CONFIG_JSON")
+    if json_override:
+        try:
+            loaded = json.loads(json_override)
+            if isinstance(loaded, Mapping):
+                overrides = deep_merge(overrides, loaded)
+        except json.JSONDecodeError as exc:
+            logger.warning("Ignoring invalid JBM_CONFIG_JSON: %s", exc)
+    env_map = {
+        "JBM_DATABASE_URL": "integrations.database.url",
+        "JBM_REDIS_URL": "integrations.redis.url",
+        "JBM_RABBITMQ_URL": "integrations.rabbitmq.url",
+        "JBM_NACOS_SERVER_ADDR": "spring.cloud.nacos.discovery.server-addr",
+    }
+    for env_name, dotted_key in env_map.items():
+        value = os.getenv(env_name)
+        if value:
+            nested_set(overrides, dotted_key, value)
+    return overrides
 
 
 class AppConfig:
@@ -75,7 +152,50 @@ class AppConfig:
                 merged,
                 load_yaml_file(current_dir / ("application-%s.yml" % selected_profile)),
             )
+        merged = cls._merge_nacos_shared_config(merged)
+        merged = deep_merge(merged, _env_overrides())
         return cls(merged, selected_profile, base_dir, selected_app, app_resource_dir, resource_dirs)
+
+    @staticmethod
+    def _merge_nacos_shared_config(config: Mapping[str, Any]) -> Dict[str, Any]:
+        nacos_config = dict(nested_get(config, ["spring", "cloud", "nacos", "config"], {}) or {})
+        if nacos_config.get("enabled") is False:
+            return dict(config)
+        shared_data_ids = nacos_config.get("shared-dataids") or nacos_config.get("sharedDataids")
+        if not shared_data_ids:
+            return dict(config)
+        server_addr = nacos_config.get("server-addr") or nacos_config.get("serverAddr")
+        if not server_addr:
+            return dict(config)
+        try:
+            import nacos
+        except ImportError:
+            logger.warning("nacos-sdk-python is not installed; skip shared config loading")
+            return dict(config)
+
+        namespace = str(nacos_config.get("namespace") or "public")
+        group = str(nacos_config.get("group") or "DEFAULT_GROUP")
+        data_ids = [item.strip() for item in str(shared_data_ids).split(",") if item.strip()]
+        try:
+            client = nacos.NacosClient(server_addresses=str(server_addr), namespace=namespace)
+        except Exception as exc:
+            logger.warning("Nacos config client creation failed; skip shared config loading: %s", exc)
+            return dict(config)
+
+        merged = dict(config)
+        for data_id in data_ids:
+            try:
+                content = client.get_config(data_id, group)
+            except Exception as exc:
+                logger.warning("Failed to load Nacos config %s/%s: %s", group, data_id, exc)
+                continue
+            if not content:
+                continue
+            try:
+                merged = deep_merge(merged, _load_config_content(data_id, str(content)))
+            except Exception as exc:
+                logger.warning("Failed to parse Nacos config %s: %s", data_id, exc)
+        return merged
 
     @staticmethod
     def project_root() -> Path:
@@ -151,7 +271,11 @@ class AppConfig:
 
     @property
     def database(self) -> Dict[str, Any]:
-        return dict(self.get("integrations.database", {}) or {})
+        config = dict(self.get("integrations.database", {}) or {})
+        spring_datasource = dict(self.get("spring.datasource", {}) or {})
+        if spring_datasource:
+            config = deep_merge(config, spring_datasource)
+        return config
 
     @property
     def minio(self) -> Dict[str, Any]:
@@ -159,7 +283,11 @@ class AppConfig:
         spring_minio = dict(self.get("spring.minio", {}) or {})
         if spring_minio:
             mapped = {
-                "endpoint-url": spring_minio.get("endpoint-url") or spring_minio.get("endpointUrl") or spring_minio.get("url"),
+                "endpoint-url": (
+                    spring_minio.get("endpoint-url")
+                    or spring_minio.get("endpointUrl")
+                    or spring_minio.get("url")
+                ),
                 "bucket": spring_minio.get("bucket"),
                 "access-key": spring_minio.get("access-key") or spring_minio.get("accessKey"),
                 "secret-key": spring_minio.get("secret-key") or spring_minio.get("secretKey"),
@@ -187,11 +315,42 @@ class AppConfig:
 
     @property
     def rabbitmq(self) -> Dict[str, Any]:
-        return dict(self.get("integrations.rabbitmq", {}) or {})
+        config = dict(self.get("integrations.rabbitmq", {}) or {})
+        spring_rabbit = dict(self.get("spring.rabbitmq", {}) or {})
+        if spring_rabbit:
+            host = spring_rabbit.get("host")
+            port = spring_rabbit.get("port") or 5672
+            username = spring_rabbit.get("username") or "guest"
+            password = spring_rabbit.get("password") or "guest"
+            virtual_host = str(spring_rabbit.get("virtual-host") or spring_rabbit.get("virtualHost") or "/")
+            if host and not config.get("url"):
+                from urllib.parse import quote
+
+                vhost = "" if virtual_host == "/" else quote(virtual_host.strip("/"), safe="")
+                config["url"] = "amqp://%s:%s@%s:%s/%s" % (
+                    quote(str(username)),
+                    quote(str(password)),
+                    host,
+                    port,
+                    vhost,
+                )
+            config["enabled"] = config.get("enabled", True)
+        return config
 
     @property
     def redis(self) -> Dict[str, Any]:
-        return dict(self.get("integrations.redis", {}) or {})
+        config = dict(self.get("integrations.redis", {}) or {})
+        spring_redis = dict(self.get("spring.redis", {}) or self.get("spring.data.redis", {}) or {})
+        if spring_redis:
+            host = spring_redis.get("host")
+            port = spring_redis.get("port") or 6379
+            database = spring_redis.get("database") or 0
+            password = spring_redis.get("password")
+            if host:
+                auth = ":%s@" % password if password else ""
+                config["url"] = "redis://%s%s:%s/%s" % (auth, host, port, database)
+            config["enabled"] = spring_redis.get("enabled", True)
+        return config
 
     @property
     def telemetry(self) -> Dict[str, Any]:

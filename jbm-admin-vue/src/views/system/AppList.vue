@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Pencil } from 'lucide-vue-next'
+import { Copy, KeyRound, Plus, Pencil, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -16,7 +16,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
-import { listApps, deleteApp, createApp, updateApp } from '@/api/app'
+import { listApps, deleteApp, createApp, updateApp, resetAppSecret, type AppCredentials } from '@/api/app'
 import type { BaseApp } from '@/api/types'
 
 const { orgLabel, loadOrgs } = useOrgTree()
@@ -27,6 +27,10 @@ onMounted(loadOrgs)
 const keyword = ref('')
 const statusFilter = ref('')
 const orgIdFilter = ref<number | string | null>(null)
+const secretDialogOpen = ref(false)
+const secretAppName = ref('')
+const secretClientId = ref('')
+const secretValue = ref('')
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(
   (p, s) =>
@@ -74,7 +78,8 @@ async function handleSave() {
     if (editing.value && form.value.appId) {
       await updateApp(form.value.appId, payload)
     } else {
-      await createApp(payload)
+      const created = await createApp(payload)
+      showCredentials(created, form.value.appName)
     }
     closeDialog()
     load(page.value)
@@ -95,6 +100,41 @@ async function handleDelete(row: BaseApp) {
   if (!confirmed) return
   await deleteApp(row.appId)
   load(page.value)
+}
+
+function clientIdOf(row: BaseApp) {
+  return row.apiKey || row.clientId || ''
+}
+
+function showCredentials(credentials: AppCredentials, appName?: string) {
+  if (!credentials?.clientSecret) {
+    feedback.toast.warning('应用已创建，但未返回 Client Secret，请在列表中重置密钥。')
+    return
+  }
+  secretAppName.value = appName || `应用 #${credentials.appId ?? ''}`
+  secretClientId.value = credentials.clientId || ''
+  secretValue.value = credentials.clientSecret
+  secretDialogOpen.value = true
+}
+
+async function handleResetSecret(row: BaseApp) {
+  if (!row.appId) return
+  const confirmed = await feedback.confirm({
+    title: '重置 Client Secret',
+    message: `确认重置 ${row.appName} 的 Client Secret？旧密钥会立即失效。`,
+    variant: 'destructive',
+  })
+  if (!confirmed) return
+  const secret = await resetAppSecret(row.appId)
+  secretAppName.value = row.appName || `应用 #${row.appId}`
+  secretClientId.value = clientIdOf(row)
+  secretValue.value = secret
+  secretDialogOpen.value = true
+}
+
+async function copyText(text: string) {
+  await navigator.clipboard.writeText(text)
+  feedback.toast.success('已复制')
 }
 </script>
 
@@ -143,7 +183,7 @@ async function handleDelete(row: BaseApp) {
             <td class="p-4">{{ row.appId }}</td>
             <td class="p-4">{{ row.appName }}</td>
             <td class="p-4">{{ row.appCode }}</td>
-            <td class="p-4 font-mono text-xs">{{ row.clientId }}</td>
+            <td class="p-4 font-mono text-xs">{{ clientIdOf(row) }}</td>
             <td class="p-4">{{ orgLabel(row.orgId) }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
@@ -153,6 +193,14 @@ async function handleDelete(row: BaseApp) {
             <td class="p-4 text-right space-x-1">
               <Button variant="outline" size="sm" @click="openEdit(row)">
                 <Pencil class="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                title="重置 Client Secret"
+                @click="handleResetSecret(row)"
+              >
+                <RefreshCw class="h-3.5 w-3.5" />
               </Button>
               <Button variant="destructive" size="sm" @click="handleDelete(row)">删除</Button>
             </td>
@@ -187,6 +235,39 @@ async function handleDelete(row: BaseApp) {
           <option :value="0">停用</option>
         </Select>
       </FormField>
+    </CrudDialog>
+
+    <CrudDialog
+      v-model:open="secretDialogOpen"
+      title="请妥善保存 Client Secret"
+      :saving="false"
+      @save="secretDialogOpen = false"
+    >
+      <p class="text-sm text-muted-foreground">
+        {{ secretAppName }} 的 Client Secret 仅显示一次：
+      </p>
+      <div class="space-y-3 rounded border bg-muted/50 p-3">
+        <div class="grid gap-1">
+          <span class="text-xs text-muted-foreground">Client ID</span>
+          <div class="flex items-center gap-2 font-mono text-sm break-all">
+            <KeyRound class="h-4 w-4 shrink-0" />
+            <span class="flex-1">{{ secretClientId }}</span>
+            <Button variant="ghost" size="sm" title="复制 Client ID" @click="copyText(secretClientId)">
+              <Copy class="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div class="grid gap-1">
+          <span class="text-xs text-muted-foreground">Client Secret</span>
+          <div class="flex items-center gap-2 font-mono text-sm break-all">
+            <KeyRound class="h-4 w-4 shrink-0" />
+            <span class="flex-1">{{ secretValue }}</span>
+            <Button variant="ghost" size="sm" title="复制 Client Secret" @click="copyText(secretValue)">
+              <Copy class="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </CrudDialog>
   </div>
 </template>
