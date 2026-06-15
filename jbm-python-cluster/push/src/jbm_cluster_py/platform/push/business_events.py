@@ -5,10 +5,9 @@ import json
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
-from urllib.parse import unquote, urlparse
 
 import httpx
 from pydantic import Field
@@ -24,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 WEBHOOK_EVENT_CONFIG_TABLE = "webhook_event_config"
 WEBHOOK_TASK_TABLE = "webhook_task"
-EVENT_QUEUE_KEY_PREFIX = "jbm:bevent:"
 MAX_RETRY = 3
 
 
@@ -310,6 +308,9 @@ class BusinessEventRepository:
         if task.get("httpStatus") is not None:
             where.append("wt.http_status=:http_status")
             params["http_status"] = task["httpStatus"]
+        if task.get("status"):
+            where.append("wt.status=:status")
+            params["status"] = task["status"]
         if config.get("eventId"):
             where.append("wec.event_id=:event_id")
             params["event_id"] = config["eventId"]
@@ -359,6 +360,62 @@ class BusinessEventRepository:
                 )
             ).mappings().all()
         return java_page([self._task_result_from_db(dict(row)) for row in rows], int(total or 0), page_form)
+
+    async def page_webhook_event_configs(self, body: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
+        payload = body or {}
+        config = dict(payload.get("webhookEventConfig") or payload)
+        page_form = page_form_from_body(payload)
+        where = []
+        params: Dict[str, Any] = {}
+        for key, column in {
+            "eventId": "event_id",
+            "businessEventCode": "business_event_code",
+            "eventName": "event_name",
+            "eventGroup": "event_group",
+            "serviceName": "service_name",
+            "url": "url",
+        }.items():
+            if config.get(key):
+                if key in {"eventName", "eventGroup", "businessEventCode", "url"}:
+                    where.append(f"{column} LIKE :{key}")
+                    params[key] = f"%{config[key]}%"
+                else:
+                    where.append(f"{column}=:{key}")
+                    params[key] = config[key]
+        if config.get("enable") is not None:
+            where.append("enable=:enable")
+            params["enable"] = int(as_bool(config.get("enable"), True))
+        keyword = str(payload.get("keyword") or page_form.model_dump(by_alias=True).get("keyword") or "").strip()
+        if keyword:
+            where.append(
+                "(business_event_code LIKE :keyword OR event_name LIKE :keyword OR event_group LIKE :keyword "
+                "OR service_name LIKE :keyword OR url LIKE :keyword)"
+            )
+            params["keyword"] = f"%{keyword}%"
+        where_sql = " WHERE " + " AND ".join(where) if where else ""
+        limit = max(int(page_form.page_size or 10), 1)
+        offset = (max(int(page_form.curr_page or 1), 1) - 1) * limit
+        async with self.engine.begin() as conn:
+            total = (
+                await conn.execute(
+                    text(f"SELECT COUNT(*) FROM {WEBHOOK_EVENT_CONFIG_TABLE}{where_sql}"),
+                    params,
+                )
+            ).scalar()
+            rows = (
+                await conn.execute(
+                    text(
+                        f"""
+                        SELECT * FROM {WEBHOOK_EVENT_CONFIG_TABLE}
+                        {where_sql}
+                        ORDER BY update_time DESC
+                        LIMIT :limit OFFSET :offset
+                        """
+                    ),
+                    {**params, "limit": limit, "offset": offset},
+                )
+            ).mappings().all()
+        return java_page([self._config_from_db(dict(row)) for row in rows], int(total or 0), page_form)
 
     async def _insert(self, table: str, row: Mapping[str, Any]) -> None:
         cleaned = clean_dict(row)
@@ -461,40 +518,6 @@ class BusinessEventRepository:
         return result
 
 
-class EventStorageService:
-    def __init__(self, redis_client: RedisClient) -> None:
-        self.redis_client = redis_client
-
-    async def enqueue_task(self, target: str, task: Mapping[str, Any]) -> None:
-        client = self._client()
-        key = self._queue_key(target)
-        await client.rpush(key, json.dumps(task, ensure_ascii=False, separators=(",", ":")))
-        await client.expire(key, int(timedelta(days=3).total_seconds()))
-
-    async def get_pending_tasks(self, target: str, count: int = 10) -> List[Dict[str, Any]]:
-        client = self._client()
-        values = await client.lrange(self._queue_key(target), 0, count - 1)
-        return [json.loads(value) for value in values or []]
-
-    async def ack_task(self, target: str, count: int = 1) -> None:
-        await self._client().ltrim(self._queue_key(target), count, -1)
-
-    async def queue_targets(self) -> List[str]:
-        client = self._client()
-        keys: List[str] = []
-        async for key in client.scan_iter(f"{EVENT_QUEUE_KEY_PREFIX}*"):
-            keys.append(str(key).replace(EVENT_QUEUE_KEY_PREFIX, "", 1))
-        return keys
-
-    def _queue_key(self, target: str) -> str:
-        return EVENT_QUEUE_KEY_PREFIX + unquote(target)
-
-    def _client(self) -> Any:
-        if self.redis_client.client is None:
-            raise RuntimeError("Redis is not available for business event delivery")
-        return self.redis_client.client
-
-
 class WebhookConfigSelectionStrategy:
     def __init__(self) -> None:
         self.last_success_config: Dict[str, str] = {}
@@ -586,6 +609,77 @@ class WebhookHttpClient:
         return "http://%s:%s/%s" % (ip, port, path)
 
 
+class WebhookDeliveryConsumer:
+    """Consumes RabbitMQ delivery tasks and performs HTTP webhook calls."""
+
+    def __init__(
+        self,
+        repository: BusinessEventRepository,
+        http_client: WebhookHttpClient,
+        selection: Optional[WebhookConfigSelectionStrategy] = None,
+    ) -> None:
+        self.repository = repository
+        self.http_client = http_client
+        self.selection = selection
+
+    async def handle(self, body: bytes) -> None:
+        task = json.loads(body.decode("utf-8"))
+        if not task.get("taskUrl"):
+            raise ValueError("taskUrl is empty")
+        task.setdefault("taskId", object_id())
+        task.setdefault("retryNumber", 0)
+        task["status"] = "PENDING"
+        saved = await self.repository.save_task(task)
+        response = await self.http_client.request(
+            str(saved["taskUrl"]),
+            saved.get("taskMethod"),
+            saved.get("request"),
+        )
+        updated = dict(saved)
+        updated["httpStatus"] = response.status_code
+        updated["response"] = response.text
+        if 200 <= response.status_code < 300:
+            updated["status"] = "SUCCESS"
+            await self.repository.save_task(updated)
+            await self._mark_success(updated)
+            return
+        updated["errorMsg"] = self._append_error(updated.get("errorMsg"), "HTTP %s" % response.status_code)
+        updated["status"] = "RETRYING"
+        await self.repository.save_task(updated)
+        raise RuntimeError("HTTP %s" % response.status_code)
+
+    async def handle_dlt(self, body: bytes) -> None:
+        task = json.loads(body.decode("utf-8"))
+        task_id = str(task.get("taskId") or "")
+        current = await self.repository.select_task(task_id) if task_id else None
+        updated = dict(current or task)
+        updated["status"] = "FAILED"
+        updated["retryNumber"] = int(updated.get("retryNumber") or 0)
+        updated["errorMsg"] = self._append_error(
+            updated.get("errorMsg"),
+            "已达最大重试次数 %s" % MAX_RETRY,
+        )
+        await self.repository.save_task(updated)
+
+    async def _mark_success(self, task: Mapping[str, Any]) -> None:
+        if self.selection is None:
+            return
+        event_id = task.get("eventId")
+        if not event_id:
+            return
+        config = await self.repository.select_config_by_event_id(str(event_id))
+        if not config:
+            return
+        group = str(config.get("eventGroup") or "")
+        if group:
+            self.selection.handle_success(group, config)
+
+    def _append_error(self, current: Optional[str], message: str) -> str:
+        prefix = (current or "").strip()
+        line = "%s : %s" % (now_text(), message or "无")
+        return (prefix + "\r\n" + line).strip() if prefix else line
+
+
 class BusinessEventService:
     def __init__(
         self,
@@ -595,6 +689,7 @@ class BusinessEventService:
         http_client: Optional[WebhookHttpClient] = None,
         rabbitmq: Optional[Any] = None,
         rabbitmq_config: Optional[Mapping[str, Any]] = None,
+        delivery_consumer: Optional[WebhookDeliveryConsumer] = None,
     ) -> None:
         self.repository = repository
         self.redis_client = redis_client
@@ -602,9 +697,12 @@ class BusinessEventService:
         self.http_client = http_client or WebhookHttpClient(discovery)
         self.rabbitmq = rabbitmq
         self.rabbitmq_config = dict(rabbitmq_config or {})
-        self.storage = EventStorageService(redis_client)
         self.selection = WebhookConfigSelectionStrategy()
-        self._locks: Dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self.delivery_consumer = delivery_consumer or WebhookDeliveryConsumer(
+            repository,
+            self.http_client,
+            self.selection,
+        )
 
     async def start(self) -> None:
         await self.repository.start()
@@ -612,11 +710,8 @@ class BusinessEventService:
         await self.discovery.start()
         await self.http_client.start()
         await self._subscribe_rabbitmq()
-        await self.deliver_startup_queues()
 
     async def stop(self) -> None:
-        if self.rabbitmq is not None:
-            await self.rabbitmq.stop()
         await self.http_client.stop()
         await self.discovery.stop()
         await self.redis_client.stop()
@@ -625,7 +720,8 @@ class BusinessEventService:
     async def _subscribe_rabbitmq(self) -> None:
         if self.rabbitmq is None:
             return
-        await self.rabbitmq.start()
+        if self.rabbitmq.channel is None:
+            await self.rabbitmq.start()
         event_queue = str(
             self.rabbitmq_config.get("business-event-queue")
             or "businessEvent-in-0.jbm-cluster-platform-push"
@@ -664,7 +760,7 @@ class BusinessEventService:
         if not config:
             raise ValueError("事件为空")
         task = WebhookTask(eventId=event_id)
-        return await self._send_config(config, task.model_dump(by_alias=True, exclude_none=True))
+        return await self._enqueue_config(config, task.model_dump(by_alias=True, exclude_none=True))
 
     async def send_task(self, task_payload: Mapping[str, Any]) -> Dict[str, Any]:
         task = WebhookTask(**dict(task_payload))
@@ -693,18 +789,8 @@ class BusinessEventService:
             selected = self.selection.select_config(group, group_configs)
             if selected is None:
                 continue
-            attempted = [selected, *[item for item in group_configs if item.get("eventId") != selected.get("eventId")]]
-            delivered = None
-            for candidate in attempted:
-                try:
-                    delivered = await self._send_config(candidate, task.model_dump(by_alias=True, exclude_none=True))
-                    self.selection.handle_success(group, candidate)
-                    break
-                except Exception:
-                    logger.exception("Business event delivery failed with config %s", candidate.get("eventId"))
-                    self.selection.handle_failure(group, candidate)
-            if delivered:
-                results.append(delivered)
+            delivery = await self._enqueue_config(selected, task.model_dump(by_alias=True, exclude_none=True))
+            results.append(delivery)
         return {"sent": len(results), "tasks": results}
 
     async def _enable_event_configs(self, config: WebhookEventConfig) -> List[Dict[str, Any]]:
@@ -720,113 +806,43 @@ class BusinessEventService:
             raise ValueError("不存在可用的发送配置")
         return enabled
 
-    async def _send_config(self, config: Mapping[str, Any], source_task: Mapping[str, Any]) -> Dict[str, Any]:
-        task = dict(source_task or {})
-        if task.get("eventId") != config.get("eventId"):
-            task = {"request": task.get("request")}
-        task["request"] = task.get("request") or config.get("eventBody")
-        task["taskUrl"] = config.get("url")
-        task["taskMethod"] = config.get("methodType") or "POST"
-        task["eventId"] = config.get("eventId")
-        task.setdefault("retryNumber", 0)
+    async def _enqueue_config(self, config: Mapping[str, Any], source_task: Mapping[str, Any]) -> Dict[str, Any]:
+        delivery = self._build_delivery_task(config, source_task)
         if not as_bool(config.get("enable"), True):
-            task["errorMsg"] = self._append_error(task.get("errorMsg"), "事件未启用")
-            return await self.repository.save_task(task)
-        saved = await self.repository.save_task(task)
-        await self.process_event(saved)
+            delivery["errorMsg"] = self._append_error(delivery.get("errorMsg"), "事件未启用")
+            delivery["status"] = "FAILED"
+            return await self.repository.save_task(delivery)
+        saved = await self.repository.save_task({**delivery, "status": "PENDING"})
+        await self._publish_delivery_task(saved)
         latest = await self.repository.select_task(str(saved["taskId"]))
         return latest or saved
 
-    async def process_event(self, task: Mapping[str, Any]) -> None:
-        if not task.get("taskUrl"):
-            raise ValueError("taskUrl is empty")
-        try:
-            response = await self.http_client.request(str(task["taskUrl"]), task.get("taskMethod"), task.get("request"))
-            updated = dict(task)
-            updated["httpStatus"] = response.status_code
-            updated["response"] = response.text
-            if 200 <= response.status_code < 300:
-                updated["status"] = "SUCCESS"
-                await self.repository.save_task(updated)
-                return
-            raise RuntimeError("HTTP %s" % response.status_code)
-        except Exception as exc:
-            logger.warning("Direct business event delivery failed; enqueue task: %s", exc)
-            target = enqueue_name(str(task["taskUrl"]))
-            await self.storage.enqueue_task(target, task)
-            await self.deliver_pending_tasks(target)
+    def _build_delivery_task(self, config: Mapping[str, Any], source_task: Mapping[str, Any]) -> Dict[str, Any]:
+        task = dict(source_task or {})
+        if task.get("eventId") != config.get("eventId"):
+            task = {"request": task.get("request")}
+        return {
+            "taskId": object_id(),
+            "eventId": config.get("eventId"),
+            "taskUrl": config.get("url"),
+            "taskMethod": config.get("methodType") or "POST",
+            "request": task.get("request") or config.get("eventBody"),
+            "retryNumber": int(task.get("retryNumber") or 0),
+            "createTime": now_text(),
+        }
 
-    async def deliver_startup_queues(self) -> None:
-        if self.redis_client.client is None:
+    async def _publish_delivery_task(self, task: Mapping[str, Any]) -> None:
+        if self.rabbitmq is None:
+            await self.delivery_consumer.handle(
+                json.dumps(task, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            )
             return
-        for target in await self.storage.queue_targets():
-            asyncio.create_task(self.deliver_pending_tasks(target))
-
-    async def deliver_pending_tasks(self, target: str) -> None:
-        lock = self._locks[target]
-        if lock.locked():
-            return
-        async with lock:
-            try:
-                tasks = await self.storage.get_pending_tasks(target, 10)
-            except Exception:
-                logger.exception("Failed to read business event retry queue %s", target)
-                return
-            for task in tasks:
-                updated = await self._send_task_with_retry(task)
-                await self.repository.save_task(updated)
-                await self.storage.ack_task(target)
-
-    async def _send_task_with_retry(self, task: Mapping[str, Any]) -> Dict[str, Any]:
-        updated = dict(task)
-        base_retry = int(updated.get("retryNumber") or 0)
-        attempt_count = 0
-        while True:
-            attempt_count += 1
-            current_retry = base_retry + attempt_count
-            try:
-                response = await self.http_client.request(
-                    str(updated["taskUrl"]),
-                    updated.get("taskMethod"),
-                    updated.get("request"),
-                )
-                updated["httpStatus"] = response.status_code
-                updated["response"] = response.text
-                updated["retryNumber"] = current_retry
-                if response.status_code != 404:
-                    updated["status"] = "SUCCESS"
-                    return updated
-                raise RuntimeError("HTTP 404")
-            except Exception as exc:
-                updated["retryNumber"] = current_retry
-                message = "第%s次失败: %s" % (current_retry, exc)
-                updated["errorMsg"] = self._append_error(updated.get("errorMsg"), message)
-                if attempt_count > MAX_RETRY:
-                    updated["status"] = "FAILED"
-                    return updated
-                updated["status"] = "RETRYING"
-                await asyncio.sleep(1)
+        await self.rabbitmq.publish_delivery_task(task)
 
     def _append_error(self, current: Optional[str], message: str) -> str:
         prefix = (current or "").strip()
         line = "%s : %s" % (now_text(), message or "无")
         return (prefix + "\r\n" + line).strip() if prefix else line
-
-
-def extract_service_name(url: Optional[str]) -> Optional[str]:
-    if not url or not url.startswith("feign://"):
-        return None
-    value = url[len("feign://") :]
-    service_name, _, _ = value.partition("/")
-    return service_name or None
-
-
-def enqueue_name(url: str) -> str:
-    service_name = extract_service_name(url)
-    if service_name:
-        return service_name
-    parsed = urlparse(url)
-    return url if parsed.scheme else url
 
 
 def quote_column(column: str) -> str:

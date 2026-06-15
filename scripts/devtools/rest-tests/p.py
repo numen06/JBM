@@ -1,4 +1,5 @@
 import shutil
 from pathlib import Path
-shutil.copyfile(Path(r"d:/workspaces/JBM7/scripts/run_center_rest_tests.py"), Path(r"d:/workspaces/JBM7/scripts/run_user_perm_rest_tests.py"))
+SCRIPTS = Path(__file__).resolve().parents[2]
+shutil.copyfile(SCRIPTS / "run_center_rest_tests.py", SCRIPTS / "run_user_perm_rest_tests.py")
 print("ok")

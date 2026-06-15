@@ -127,6 +127,30 @@ def test_doc_sync_storage_imports_existing_files_once(tmp_path: Path) -> None:
         assert repeated["skipped"] == 1
 
 
+def test_doc_text_get_missing_storage_returns_business_error(tmp_path: Path) -> None:
+    with TestClient(create_app(doc_config(tmp_path))) as client:
+        saved = client.post(
+            "/baseDoc/save",
+            json={
+                "baseDoc": {
+                    "docId": "missing123",
+                    "docName": "ghost.txt",
+                    "docPath": "missing/ghost.txt",
+                    "contentType": "text/plain",
+                    "state": "ACTIVE",
+                }
+            },
+        )
+        assert saved.status_code == 200
+
+        loaded = client.post("/baseDoc/text/get", json={"baseDoc": {"docPath": "missing/ghost.txt"}})
+        assert loaded.status_code == 200
+        body = loaded.json()
+        assert body["success"] is False
+        assert body["code"] == 400
+        assert "文件不存在" in body["message"]
+
+
 def test_doc_text_file_can_be_edited(tmp_path: Path) -> None:
     with TestClient(create_app(doc_config(tmp_path))) as client:
         uploaded = client.post("/upload?group=text", files={"file": ("notes.txt", b"old text", "text/plain")})

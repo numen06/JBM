@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def install_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(ValueError)
+    async def handle_value_error(request: Request, exc: ValueError) -> JSONResponse:
+        message = str(exc).strip() or "参数错误"
+        return JSONResponse(status_code=200, content=fail(None, message, 400))
+
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         logger.exception("Unhandled request error: %s %s", request.method, request.url.path)

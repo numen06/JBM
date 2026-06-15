@@ -12,4 +12,6 @@ public interface BaseAppBusiness {
     void removeAppWithGatewayRefresh(Long appId);
 
     String resetSecretWithGatewayRefresh(Long appId);
+
+    String getPlainSecret(Long appId);
 }

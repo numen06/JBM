@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
 
-src = Path(__file__).resolve().parent / "run_center_rest_tests.py"
-dst = Path(__file__).resolve().parent / "run_auth_rest_tests.py"
+SCRIPTS = Path(__file__).resolve().parents[2]
+src = SCRIPTS / "run_center_rest_tests.py"
+dst = SCRIPTS / "run_auth_rest_tests.py"
 t = src.read_text(encoding="utf-8")
 for a, b in [
     ("Center \u4e1a\u52a1\u573a\u666f REST \u6d4b\u8bd5", "Auth OAuth2 REST \u6d4b\u8bd5"),
@@ -204,6 +205,6 @@ cfg = {
         ]},
     ],
 }
-json_path = Path(__file__).resolve().parent / "auth_rest_modules.json"
+json_path = SCRIPTS / "auth_rest_modules.json"
 json_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 print("json ok", json_path.stat().st_size)

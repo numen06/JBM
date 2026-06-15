@@ -217,6 +217,12 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
             return fail(None, "业务事件服务未启用", 503)
         return ok(await business_events.repository.page_webhook_tasks(body or {}), "查询成功")
 
+    @router.post("/webhookEventConfig/selectWebhookEventConfigs")
+    async def webhook_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
+        if business_events is None:
+            return fail(None, "业务事件服务未启用", 503)
+        return ok(await business_events.repository.page_webhook_event_configs(body or {}), "查询成功")
+
     @router.post("/webhookEventConfig/saveConfig")
     async def webhook_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:

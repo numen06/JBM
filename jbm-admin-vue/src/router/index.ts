@@ -64,6 +64,12 @@ const router = createRouter({
           meta: { title: '消息中心' },
         },
         {
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/profile/ProfilePage.vue'),
+          meta: { title: '个人中心' },
+        },
+        {
           path: 'messages/push-test',
           redirect: { name: 'message-send-test' },
         },
@@ -78,6 +84,18 @@ const router = createRouter({
           name: 'message-channels',
           component: () => import('@/views/messages/ChannelSettings.vue'),
           meta: { title: '渠道设置' },
+        },
+        {
+          path: 'messages/webhook-configs',
+          name: 'webhook-event-configs',
+          component: () => import('@/views/messages/WebhookEventConfigList.vue'),
+          meta: { title: '事件订阅配置' },
+        },
+        {
+          path: 'messages/webhook-tasks',
+          name: 'webhook-tasks',
+          component: () => import('@/views/messages/WebhookTaskList.vue'),
+          meta: { title: '投递任务' },
         },
         {
           path: 'jobs',
@@ -359,7 +377,16 @@ router.beforeEach(async (to) => {
   if (!auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  if ((to.path === '/messages/send-test' || to.path === '/messages/channels') && isMessageAdminToolAllowed(auth.user)) {
+  if (
+    (to.path === '/messages/send-test' ||
+      to.path === '/messages/channels' ||
+      to.path === '/messages/webhook-configs' ||
+      to.path === '/messages/webhook-tasks') &&
+    isMessageAdminToolAllowed(auth.user)
+  ) {
+    return true
+  }
+  if (to.name === 'profile') {
     return true
   }
   if (!menuStore.isRouteAllowed(to.path)) {
@@ -384,6 +411,12 @@ function isMessageAdminToolAllowed(user: ReturnType<typeof useAuthStore>['user']
       'MENU_push_test',
       'push_config',
       'MENU_push_config',
+      'webhook_event_config',
+      'MENU_webhook_event_config',
+      'webhook_tasks',
+      'MENU_webhook_tasks',
+      'push_webhook',
+      'MENU_push_webhook',
       'ACTION_push:test',
       'MENU_push',
     ].includes(item),

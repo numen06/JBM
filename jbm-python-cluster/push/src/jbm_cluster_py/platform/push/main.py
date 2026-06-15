@@ -9,10 +9,15 @@ from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
 from jbm_cluster_py.common.logging import configure_logging
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient, NacosRegistrar
-from jbm_cluster_py.integrations.rabbitmq import RabbitMQConsumer
+from jbm_cluster_py.integrations.rabbitmq import RabbitMQClient
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.integrations.telemetry import init_telemetry
-from jbm_cluster_py.platform.push.business_events import BusinessEventRepository, BusinessEventService
+from jbm_cluster_py.platform.push.business_events import (
+    BusinessEventRepository,
+    BusinessEventService,
+    WebhookDeliveryConsumer,
+    WebhookHttpClient,
+)
 from jbm_cluster_py.platform.push.router import build_push_router
 from jbm_cluster_py.platform.push.service import PushService
 
@@ -22,14 +27,19 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     configure_logging()
     init_telemetry(app_config.telemetry)
     push_service = PushService()
-    rabbitmq = RabbitMQConsumer(app_config.rabbitmq)
+    rabbitmq = RabbitMQClient(app_config.rabbitmq)
+    repository = BusinessEventRepository(app_config.database)
+    discovery = NacosDiscoveryClient(app_config.nacos_discovery)
+    http_client = WebhookHttpClient(discovery)
     business_event_service = BusinessEventService(
-        BusinessEventRepository(app_config.database),
+        repository,
         RedisClient(app_config.redis),
-        NacosDiscoveryClient(app_config.nacos_discovery),
+        discovery,
+        http_client=http_client,
         rabbitmq=rabbitmq,
         rabbitmq_config=app_config.rabbitmq,
     )
+    delivery_consumer = business_event_service.delivery_consumer
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
@@ -39,11 +49,20 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app.state.business_event_service = business_event_service
         app.state.nacos = nacos
         await nacos.start()
-        await business_event_service.start()
+        if rabbitmq.enabled:
+            await rabbitmq.start()
+            await rabbitmq.declare_delivery_topology()
+            await business_event_service.start()
+            await rabbitmq.consume_delivery(delivery_consumer.handle)
+            await rabbitmq.consume_dlt(delivery_consumer.handle_dlt)
+        else:
+            await business_event_service.start()
         try:
             yield
         finally:
             await business_event_service.stop()
+            if rabbitmq.enabled:
+                await rabbitmq.stop()
             await nacos.stop()
 
     openapi = app_config.openapi

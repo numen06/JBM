@@ -1,0 +1,4 @@
+# Redis
+spring.redis.host=10.100.10.121
+spring.redis.port=6379
+spring.redis.password=

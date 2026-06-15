@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import java.util.List;
 
 /**
  * 组织结构
@@ -100,4 +101,11 @@ public class BaseOrg extends MasterDataEntity {
     @ApiModelProperty("组织地址")
     @Column(columnDefinition = "TEXT")
     private String orgAddress;
+
+    /**
+     * 子组织（树形接口返回，非持久化字段）
+     */
+    @TableField(exist = false)
+    @ApiModelProperty("子组织")
+    private List<BaseOrg> children;
 }

@@ -17,6 +17,18 @@ export interface UpdatePasswordParams {
   confirmPassword: string
 }
 
+export interface UpdateCurrentUserParams {
+  nickName?: string
+  realName?: string
+  userDesc?: string
+  avatar?: string
+}
+
+export async function updateCurrentUser(params: UpdateCurrentUserParams): Promise<void> {
+  const res = await put<void>('/current/user', params)
+  unwrap(res)
+}
+
 export async function updatePassword(params: UpdatePasswordParams): Promise<void> {
   const res = await put<void>('/current/user/password', params)
   unwrap(res)

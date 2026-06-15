@@ -34,6 +34,9 @@ export interface BaseUser {
   userId?: number
   userName?: string
   nickName?: string
+  realName?: string
+  avatar?: string
+  userDesc?: string
   mobile?: string
   email?: string
   status?: number
@@ -116,6 +119,7 @@ export interface BaseApp {
   secretKey?: string
   orgId?: number
   status?: number
+  isPersist?: number
 }
 
 export interface BaseDic {
@@ -406,7 +410,11 @@ export interface CurrentUser {
   userId?: number
   userName?: string
   nickName?: string
+  realName?: string
+  userDesc?: string
   avatar?: string
+  mobile?: string
+  email?: string
   companyId?: number
   departmentId?: number
   roles?: BaseRole[]
@@ -732,4 +740,61 @@ export type OpenApiOperationQuery = {
   syncState?: string
   linked?: boolean
   tag?: string
+}
+
+export interface WebhookEventConfig {
+  eventId?: string
+  businessEventCode?: string
+  eventName?: string
+  eventGroup?: string
+  eventBody?: string
+  internal?: boolean
+  serviceName?: string
+  enable?: boolean
+  global?: boolean
+  url?: string
+  authHeader?: string
+  methodType?: string
+  batchTime?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface WebhookTask {
+  taskId?: string
+  eventId?: string
+  taskUrl?: string
+  taskMethod?: string
+  request?: string
+  response?: string
+  httpStatus?: number
+  retryNumber?: number
+  errorMsg?: string
+  status?: string
+  createTime?: string
+  updateTime?: string
+  eventName?: string
+  eventGroup?: string
+  businessEventCode?: string
+  url?: string
+}
+
+export interface WebhookEventConfigQuery {
+  keyword?: string
+  businessEventCode?: string
+  eventName?: string
+  eventGroup?: string
+  serviceName?: string
+  enable?: boolean | ''
+}
+
+export interface WebhookTaskQuery {
+  keyword?: string
+  status?: string
+  httpStatus?: number | ''
+  businessEventCode?: string
+  eventName?: string
+  eventGroup?: string
+  beginTime?: string
+  endTime?: string
 }

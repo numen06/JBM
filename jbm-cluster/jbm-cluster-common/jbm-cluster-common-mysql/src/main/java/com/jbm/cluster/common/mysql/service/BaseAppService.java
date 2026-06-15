@@ -72,6 +72,14 @@ public interface BaseAppService extends IMasterDataService<BaseApp> {
     String restSecret(Long appId);
 
     /**
+     * 获取应用明文密钥（管理端查看）
+     *
+     * @param appId 应用 ID
+     * @return 明文 Client Secret
+     */
+    String getPlainSecret(Long appId);
+
+    /**
      * 删除应用
      *
      * @param appId

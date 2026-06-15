@@ -13,10 +13,12 @@ import {
   Settings,
   Trash2,
   Upload,
+  X,
 } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
+import DocTextEditor from '@/components/doc/DocTextEditor.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
@@ -39,6 +41,7 @@ import {
   type BaseDoc,
   type DocListQuery,
 } from '@/api/doc'
+import { canPreviewEdit, contentLabel, guessDocLanguage, isOfficeDoc, isTextEditable } from '@/utils/docContent'
 
 const router = useRouter()
 const feedback = useFeedback()
@@ -53,7 +56,9 @@ const metadataForm = ref<Partial<BaseDoc>>(emptyMetadataForm())
 const previewDoc = ref<BaseDoc | null>(null)
 const previewUrl = ref('')
 const previewText = ref('')
+const previewTextOriginal = ref('')
 const previewTextDirty = ref(false)
+const previewMode = ref<'view' | 'edit'>('view')
 const previewLoading = ref(false)
 const previewSaving = ref(false)
 const wpsLoading = ref(false)
@@ -157,7 +162,9 @@ function clearPreview() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   previewUrl.value = ''
   previewText.value = ''
+  previewTextOriginal.value = ''
   previewTextDirty.value = false
+  previewMode.value = 'view'
 }
 
 async function openPreview(row: BaseDoc) {
@@ -169,7 +176,9 @@ async function openPreview(row: BaseDoc) {
     if (isTextEditable(row)) {
       const result = await getDocText(row.docPath)
       previewText.value = result.content || ''
+      previewTextOriginal.value = previewText.value
       previewDoc.value = result.doc || row
+      previewMode.value = 'view'
     } else {
       const blob = await getDocBlob(row.docPath)
       previewUrl.value = URL.createObjectURL(blob)
@@ -181,9 +190,63 @@ async function openPreview(row: BaseDoc) {
   }
 }
 
-function closePreview() {
+async function confirmDiscardPreviewChanges() {
+  if (!previewTextDirty.value || previewMode.value !== 'edit') return true
+  return feedback.confirm({
+    title: '放弃未保存的修改',
+    message: '当前正文有未保存的修改，确认放弃吗？',
+    confirmText: '放弃修改',
+    variant: 'destructive',
+  })
+}
+
+async function closePreview() {
+  const canClose = await confirmDiscardPreviewChanges()
+  if (!canClose) return
   previewDoc.value = null
   clearPreview()
+}
+
+async function handlePreviewDialogOpen(open: boolean) {
+  if (open) return
+  await closePreview()
+}
+
+function enterPreviewEdit() {
+  previewTextOriginal.value = previewText.value
+  previewTextDirty.value = false
+  previewMode.value = 'edit'
+}
+
+async function cancelPreviewEdit() {
+  if (previewTextDirty.value) {
+    const confirmed = await feedback.confirm({
+      title: '放弃未保存的修改',
+      message: '当前正文有未保存的修改，确认取消编辑吗？',
+      confirmText: '放弃修改',
+      variant: 'destructive',
+    })
+    if (!confirmed) return
+  }
+  previewText.value = previewTextOriginal.value
+  previewTextDirty.value = false
+  previewMode.value = 'view'
+}
+
+async function handlePreviewEdit() {
+  if (!previewDoc.value) return
+  if (isTextEditable(previewDoc.value)) {
+    enterPreviewEdit()
+    return
+  }
+  if (isOfficeDoc(previewDoc.value)) {
+    await openWps(previewDoc.value)
+  }
+}
+
+function onPreviewTextUpdate(value: string) {
+  previewText.value = value
+  previewTextDirty.value = value !== previewTextOriginal.value
 }
 
 async function removeDoc(row: BaseDoc) {
@@ -246,7 +309,9 @@ async function savePreviewText() {
   try {
     const updated = await saveDocText(docPath, previewText.value)
     previewDoc.value = updated
+    previewTextOriginal.value = previewText.value
     previewTextDirty.value = false
+    previewMode.value = 'view'
     feedback.toast.success('文本内容已保存')
     await docs.load(docs.page.value)
   } catch (e) {
@@ -268,26 +333,6 @@ function formatTime(value?: string) {
   const time = new Date(value)
   if (Number.isNaN(time.getTime())) return value.replace('T', ' ').slice(0, 19)
   return time.toLocaleString()
-}
-
-function contentLabel(row: BaseDoc) {
-  const value = row.contentType || ''
-  if (value.includes('pdf')) return 'PDF'
-  if (value.includes('image')) return '图片'
-  if (value.includes('text')) return '文本'
-  if (/word|document|officedocument/.test(value)) return '文档'
-  if (/excel|spreadsheet/.test(value)) return '表格'
-  return value || '文件'
-}
-
-function isTextEditable(row: BaseDoc) {
-  const type = (row.contentType || '').split(';')[0].trim().toLowerCase()
-  const path = (row.docPath || row.docName || '').toLowerCase()
-  return (
-    type.startsWith('text/') ||
-    ['application/json', 'application/xml', 'application/x-ndjson', 'application/yaml', 'text/yaml'].includes(type) ||
-    /\.(bat|conf|csv|css|env|html?|ini|java|js|json|log|md|properties|py|sql|text|toml|ts|txt|vue|xml|ya?ml)$/.test(path)
-  )
 }
 
 function docKey(row: BaseDoc, index: number) {
@@ -418,22 +463,38 @@ onUnmounted(clearPreview)
       </DataTableShell>
     </section>
 
-    <Dialog :open="!!previewDoc" :title="previewDoc?.docName || previewDoc?.docPath || '文档预览'" class="max-w-6xl" @update:open="closePreview">
+    <Dialog
+      :open="!!previewDoc"
+      :title="previewDoc?.docName || previewDoc?.docPath || '文档预览'"
+      class="max-w-6xl"
+      @update:open="handlePreviewDialogOpen"
+    >
       <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="min-w-0 break-all font-mono text-xs text-muted-foreground">{{ previewDoc?.docPath }}</div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
+            <template v-if="previewDoc && isTextEditable(previewDoc) && previewMode === 'edit'">
+              <Button :disabled="previewSaving || !previewTextDirty" @click="savePreviewText">
+                <Save class="h-4 w-4" />
+                保存
+              </Button>
+              <Button variant="outline" :disabled="previewSaving" @click="cancelPreviewEdit">
+                <X class="h-4 w-4" />
+                取消
+              </Button>
+            </template>
+            <Button
+              v-else-if="previewDoc && canPreviewEdit(previewDoc)"
+              variant="outline"
+              :disabled="wpsLoading || previewLoading"
+              @click="handlePreviewEdit"
+            >
+              <Pencil class="h-4 w-4" />
+              编辑
+            </Button>
             <Button v-if="previewDoc" variant="outline" @click="openEditMetadata(previewDoc)">
               <Pencil class="h-4 w-4" />
               编辑元数据
-            </Button>
-            <Button
-              v-if="previewDoc && isTextEditable(previewDoc)"
-              :disabled="previewSaving || !previewTextDirty"
-              @click="savePreviewText"
-            >
-              <Save class="h-4 w-4" />
-              保存正文
             </Button>
             <Button v-if="previewDoc" variant="outline" @click="openDownload(previewDoc)">
               <Download class="h-4 w-4" />
@@ -441,12 +502,13 @@ onUnmounted(clearPreview)
             </Button>
           </div>
         </div>
-        <textarea
-          v-if="previewDoc && isTextEditable(previewDoc) && !previewLoading"
-          v-model="previewText"
-          class="h-[68vh] w-full resize-none rounded-md border bg-background p-3 font-mono text-sm leading-6 outline-none focus:border-primary"
-          spellcheck="false"
-          @input="previewTextDirty = true"
+        <DocTextEditor
+          v-if="previewDoc && isTextEditable(previewDoc)"
+          :model-value="previewText"
+          :readonly="previewMode === 'view'"
+          :language="guessDocLanguage(previewDoc.docPath)"
+          :loading="previewLoading"
+          @update:model-value="onPreviewTextUpdate"
         />
         <iframe
           v-else-if="previewUrl"

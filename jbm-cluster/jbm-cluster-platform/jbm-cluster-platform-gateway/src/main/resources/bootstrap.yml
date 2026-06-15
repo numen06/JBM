@@ -153,6 +153,8 @@ jbm:
       - /push/ws/**
       - /**/push/ws
       - /**/push/ws/**
+      - /**/doc/get/**
+      - /**/doc/download/**
 
 
 # Sa-Token配置

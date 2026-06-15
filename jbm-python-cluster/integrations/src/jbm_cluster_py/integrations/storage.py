@@ -84,6 +84,8 @@ class FilesystemStorage(StorageBackend):
 
     async def get_object(self, key: str) -> StorageObject:
         path = self._path(key)
+        if not path.exists():
+            raise ValueError("文件不存在")
         body = await asyncio.to_thread(path.read_bytes)
         content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         return StorageObject(key=safe_object_key(key), body=body, content_type=content_type)
@@ -158,7 +160,15 @@ class S3Storage(StorageBackend):
         )
 
     async def get_object(self, key: str) -> StorageObject:
-        response = await self._client.get_object(Bucket=self.bucket, Key=safe_object_key(key))
+        from botocore.exceptions import ClientError
+
+        try:
+            response = await self._client.get_object(Bucket=self.bucket, Key=safe_object_key(key))
+        except ClientError as exc:
+            error_code = str(exc.response.get("Error", {}).get("Code") or "")
+            if error_code in {"NoSuchKey", "404", "NotFound"}:
+                raise ValueError("文件不存在") from exc
+            raise
         async with response["Body"] as stream:
             body = await stream.read()
         content_type = response.get("ContentType") or "application/octet-stream"

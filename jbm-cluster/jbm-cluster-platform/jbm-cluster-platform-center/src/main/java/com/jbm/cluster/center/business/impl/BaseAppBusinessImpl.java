@@ -47,4 +47,9 @@ public class BaseAppBusinessImpl implements BaseAppBusiness {
         jbmClusterTemplate.refreshGateway();
         return secret;
     }
+
+    @Override
+    public String getPlainSecret(Long appId) {
+        return baseAppService.getPlainSecret(appId);
+    }
 }

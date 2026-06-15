@@ -13,7 +13,7 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 DOCS = ROOT / "docs/testing/center-rest-jaja7"
 CONFIG = ROOT / "scripts/center_rest_modules.json"
 CENTER_MODULE = "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-center"

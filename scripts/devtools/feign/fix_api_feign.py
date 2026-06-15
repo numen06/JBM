@@ -5,7 +5,7 @@ def w(path, content):
     Path(path).write_text(content, encoding="utf-8", newline="\n")
     print("ok", path)
 
-ROOT = Path(r"d:/workspaces/JBM7/jbm-cluster/jbm-cluster-api/jbm-cluster-api-basic/src/main/java")
+ROOT = Path(__file__).resolve().parents[3] / "jbm-cluster/jbm-cluster-api/jbm-cluster-api-basic/src/main/java"
 
 w(ROOT / "jbm-framework/jbm-framework-autoconfigure/jbm-framework-autoconfigure-fegin/src/main/java/jbm/framework/boot/autoconfigure/feign/RemoteServiceException.java", """package jbm.framework.boot.autoconfigure.feign;
 

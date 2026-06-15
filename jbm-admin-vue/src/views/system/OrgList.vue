@@ -51,6 +51,7 @@ const parentLocked = ref(false)
 
 const {
   orgTree,
+  orgTotal,
   loading: treeLoading,
   orgLabel,
   loadOrgs,
@@ -273,7 +274,7 @@ onMounted(async () => {
   <div>
     <PageHeader
       title="组织管理"
-      description="默认以组织树管理；列表视图用于搜索与分页维护全部组织"
+      :description="`共 ${orgTotal} 个组织；默认以组织树管理，列表视图用于搜索与分页维护`"
     >
       <template #actions>
         <div class="inline-flex rounded-md border bg-muted/30 p-0.5">
@@ -336,8 +337,9 @@ onMounted(async () => {
     <!-- 组织树视图 -->
     <div v-if="viewMode === 'tree'" class="flex gap-4 min-h-[520px]">
       <aside class="w-72 shrink-0 rounded-lg border bg-card">
-        <div class="border-b px-3 py-2 text-sm font-medium text-muted-foreground">
-          组织树
+        <div class="border-b px-3 py-2 text-sm font-medium text-muted-foreground flex items-center justify-between">
+          <span>组织树</span>
+          <span class="text-xs tabular-nums">{{ orgTotal }} 个</span>
         </div>
         <div v-if="treeLoading" class="p-4 text-sm text-muted-foreground">加载中…</div>
         <div v-else-if="!treeRows.length" class="p-4 text-sm text-muted-foreground">

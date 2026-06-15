@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-src = Path(r"D:\workspaces\JBM7\scripts\run_center_rest_tests.py")
-dst = Path(r"D:\workspaces\JBM7\scripts\run_feign_trust_rest_tests.py")
+SCRIPTS = Path(__file__).resolve().parents[2]
+src = SCRIPTS / "run_center_rest_tests.py"
+dst = SCRIPTS / "run_feign_trust_rest_tests.py"
 t = src.read_text(encoding="utf-8")
 for a, b in [
     ("Center 业务场景 REST 测试", "Feign 互信 REST 测试"),

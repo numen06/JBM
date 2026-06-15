@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
-import { Bell, ChevronRight, LogOut, Mail, MailOpen, PanelLeft } from '@lucide/vue'
+import { Bell, ChevronRight, LogOut, Mail, MailOpen, Moon, PanelLeft, Sun } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
 import { useMessageStore } from '@/stores/messages'
 import Button from '@/components/ui/Button.vue'
 import JbmLogo from '@/components/JbmLogo.vue'
+import { useDocImageSrc } from '@/composables/useDocImageSrc'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
@@ -18,6 +19,8 @@ const menuStore = useMenuStore()
 const messageStore = useMessageStore()
 const messagesOpen = ref(false)
 const NAV_GROUP_STATE_KEY = 'jbm_admin_expanded_nav_groups'
+const THEME_STORAGE_KEY = 'jbm_admin_theme'
+type ThemeMode = 'light' | 'dark'
 
 const navGroups = computed(() => menuStore.navGroups)
 const activeNavPath = computed(() => {
@@ -35,6 +38,13 @@ const unreadLabel = computed(() =>
 )
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
+const themeMode = ref<ThemeMode>(readInitialTheme())
+const isDarkTheme = computed(() => themeMode.value === 'dark')
+const avatarSrc = useDocImageSrc(computed(() => auth.user?.avatar))
+const userInitial = computed(() => {
+  const name = auth.user?.nickName || auth.user?.userName || '管'
+  return name.slice(0, 1).toUpperCase()
+})
 
 const roleHint = computed(() => {
   const roles = auth.user?.roles
@@ -47,6 +57,29 @@ async function handleLogout() {
   await auth.logout()
   messageStore.clear()
   router.push({ name: 'login' })
+}
+
+function readInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') return 'light'
+  const stored = localStorage.getItem(THEME_STORAGE_KEY)
+  if (stored === 'light' || stored === 'dark') return stored
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function applyTheme(mode: ThemeMode) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle('dark', mode === 'dark')
+  document.documentElement.dataset.theme = mode
+}
+
+function toggleTheme() {
+  themeMode.value = isDarkTheme.value ? 'light' : 'dark'
+  localStorage.setItem(THEME_STORAGE_KEY, themeMode.value)
+  applyTheme(themeMode.value)
+}
+
+function openProfile() {
+  router.push({ name: 'profile' })
 }
 
 function formatTime(value?: string) {
@@ -132,6 +165,7 @@ function loadExpandedGroups() {
 }
 
 onMounted(() => {
+  applyTheme(themeMode.value)
   loadExpandedGroups()
   messageStore.refreshSummary()
   messageStore.connectRealtime()
@@ -240,6 +274,15 @@ watch(
           <span class="text-sm font-medium">{{ pageTitle }}</span>
         </div>
         <div class="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            :title="isDarkTheme ? '切换白色皮肤' : '切换黑色皮肤'"
+            @click="toggleTheme"
+          >
+            <Sun v-if="isDarkTheme" class="h-4 w-4" />
+            <Moon v-else class="h-4 w-4" />
+          </Button>
           <div class="relative">
             <Button
               variant="ghost"
@@ -313,10 +356,29 @@ watch(
               </div>
             </section>
           </div>
-          <div class="text-right text-sm">
-            <p>{{ auth.user?.nickName || auth.user?.userName || '管理员' }}</p>
-            <p v-if="roleHint" class="text-xs text-muted-foreground">{{ roleHint }}</p>
-          </div>
+          <button
+            type="button"
+            class="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent hover:text-accent-foreground"
+            title="个人中心"
+            @click="openProfile"
+          >
+            <img
+              v-if="avatarSrc"
+              :src="avatarSrc"
+              alt="头像"
+              class="h-8 w-8 shrink-0 rounded-full border object-cover"
+            />
+            <span
+              v-else
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-muted text-xs font-semibold"
+            >
+              {{ userInitial }}
+            </span>
+            <span class="hidden min-w-0 text-right text-sm sm:block">
+              <span class="block truncate">{{ auth.user?.nickName || auth.user?.userName || '管理员' }}</span>
+              <span v-if="roleHint" class="block truncate text-xs text-muted-foreground">{{ roleHint }}</span>
+            </span>
+          </button>
           <Button variant="outline" size="sm" @click="handleLogout">
             <LogOut class="h-4 w-4" />
             退出

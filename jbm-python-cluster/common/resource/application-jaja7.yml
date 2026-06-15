@@ -10,14 +10,17 @@ spring:
         namespace: jbm7
         group: DEFAULT_GROUP
       config:
+        enabled: true
         server-addr: 10.100.10.62:8848
         namespace: jbm7
         group: DEFAULT_GROUP
+        shared-dataids: openobserve.yml
 
 integrations:
   openobserve:
-    url: http://127.0.0.1:5080
+    url: http://10.100.10.65:5080
     org: default
+    stream: gateway_logs
   rabbitmq:
     enabled: true
     url: amqp://admin:admin@10.100.10.121:5672/

@@ -28,6 +28,7 @@ import {
   ClipboardList,
   LogIn,
   Files,
+  Webhook,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -63,6 +64,8 @@ export const MENU_PATH_ALIASES: Record<string, string> = {
   '/baseAccountLogs': '/log/account',
   '/accountLogs': '/log/account',
   '/messages/push-test': '/messages/send-test',
+  '/messages/webhook-config': '/messages/webhook-configs',
+  '/messages/webhook-task': '/messages/webhook-tasks',
 }
 
 export function normalizeMenuPath(path?: string): string {
@@ -200,6 +203,20 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         icon: KeyRound,
         to: '/messages/channels',
         menuCodes: ['message_channels', 'push_config', 'push'],
+      },
+      {
+        name: 'webhook-event-configs',
+        title: '事件订阅配置',
+        icon: Webhook,
+        to: '/messages/webhook-configs',
+        menuCodes: ['webhook_event_config', 'push_webhook', 'push', 'messages'],
+      },
+      {
+        name: 'webhook-tasks',
+        title: '投递任务',
+        icon: ClipboardList,
+        to: '/messages/webhook-tasks',
+        menuCodes: ['webhook_tasks', 'push_webhook', 'push', 'messages'],
       },
     ],
   },

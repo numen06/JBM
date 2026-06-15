@@ -44,6 +44,7 @@ Usage:
 Examples:
   scripts/rebuild_service_container.sh jbm-cluster-platform-push
   scripts/rebuild_service_container.sh push --logs
+  scripts/rebuild_service_container.sh admin --logs
   scripts/rebuild_service_container.sh all --full
   MODE=full WAIT_SECONDS=90 scripts/rebuild_service_container.sh gateway
 
@@ -128,6 +129,27 @@ build_full_image() {
     -t "$image" .)
 }
 
+build_admin_overlay_image() {
+  local image
+  image="$(image_for jbm-admin)"
+  local dist="$ROOT_DIR/jbm-admin-vue/dist"
+  echo "==> npm build: jbm-admin-vue"
+  (cd "$ROOT_DIR/jbm-admin-vue" && npm run build)
+  [[ -d "$dist" ]] || {
+    echo "Missing dist: $dist" >&2
+    exit 1
+  }
+  echo "==> Docker overlay image: $image"
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+  cp -r "$dist" "$tmp_dir/dist"
+  docker build -t "$image" -f - "$tmp_dir" <<EOF
+FROM $image
+COPY dist /usr/share/nginx/html
+EOF
+  rm -rf "$tmp_dir"
+}
+
 build_admin_image() {
   local image
   image="$(image_for jbm-admin)"
@@ -176,7 +198,11 @@ rebuild_one() {
   }
 
   if [[ "$service" == "jbm-admin" ]]; then
-    build_admin_image
+    if [[ "$MODE" == "full" ]]; then
+      build_admin_image
+    else
+      build_admin_overlay_image
+    fi
   elif [[ "$MODE" == "full" ]]; then
     build_full_image "$service"
   else

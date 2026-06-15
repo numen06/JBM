@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { Eye, RefreshCw } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { Eye, Pause, Play, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -24,6 +24,9 @@ const statsLoading = ref(false)
 const statsError = ref('')
 const selectedGatewayLog = ref<GatewayLog | null>(null)
 const filters = ref<GatewayLogQuery>(defaultFilters())
+const autoRefreshEnabled = ref(true)
+const AUTO_REFRESH_MS = 10_000
+let autoRefreshTimer: ReturnType<typeof setInterval> | undefined
 
 const gatewayList = usePagedList<GatewayLog>((p, s) => listGatewayLogs(p, s, cleanQuery()))
 const isLoginLogs = computed(() => props.category === 'login')
@@ -48,22 +51,57 @@ function cleanQuery(): GatewayLogQuery {
   ) as GatewayLogQuery
 }
 
-async function loadStats() {
+async function loadStats(silent = false) {
   if (isLoginLogs.value) return
-  statsLoading.value = true
-  statsError.value = ''
+  if (!silent) {
+    statsLoading.value = true
+    statsError.value = ''
+  }
   try {
     stats.value = await getClusterAccessInfo()
+    if (silent) {
+      statsError.value = ''
+    }
   } catch (e) {
-    statsError.value = e instanceof Error ? e.message : '统计加载失败'
+    if (!silent) {
+      statsError.value = e instanceof Error ? e.message : '统计加载失败'
+    }
   } finally {
-    statsLoading.value = false
+    if (!silent) {
+      statsLoading.value = false
+    }
   }
 }
 
-function refresh() {
-  loadStats()
-  gatewayList.load(gatewayList.page.value)
+function refresh(silent = false) {
+  loadStats(silent)
+  gatewayList.load(gatewayList.page.value, gatewayList.pageSize.value, { silent })
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = undefined
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh()
+  if (!autoRefreshEnabled.value) return
+  autoRefreshTimer = setInterval(() => {
+    if (selectedGatewayLog.value || gatewayList.loading.value || statsLoading.value) return
+    refresh(true)
+  }, AUTO_REFRESH_MS)
+}
+
+function toggleAutoRefresh() {
+  autoRefreshEnabled.value = !autoRefreshEnabled.value
+  if (autoRefreshEnabled.value) {
+    startAutoRefresh()
+    refresh(true)
+  } else {
+    stopAutoRefresh()
+  }
 }
 
 function search() {
@@ -143,14 +181,28 @@ watch(
   },
 )
 
-onMounted(refresh)
+onMounted(() => {
+  refresh()
+  startAutoRefresh()
+})
+
+onUnmounted(stopAutoRefresh)
 </script>
 
 <template>
   <div class="space-y-4">
     <PageHeader :title="pageTitle" :description="pageDescription">
       <template #actions>
-        <Button variant="outline" :disabled="statsLoading || gatewayList.loading.value" @click="refresh">
+        <Button
+          variant="outline"
+          :class="autoRefreshEnabled ? 'border-primary/40 text-primary' : ''"
+          @click="toggleAutoRefresh"
+        >
+          <Pause v-if="autoRefreshEnabled" class="h-4 w-4" />
+          <Play v-else class="h-4 w-4" />
+          {{ autoRefreshEnabled ? '自动刷新中' : '开启自动刷新' }}
+        </Button>
+        <Button variant="outline" :disabled="statsLoading || gatewayList.loading.value" @click="refresh()">
           <RefreshCw class="h-4 w-4" />
           刷新
         </Button>
@@ -190,7 +242,7 @@ onMounted(refresh)
         <div class="text-sm text-muted-foreground">采集状态</div>
         <div class="mt-3">
           <Badge :variant="statsError ? 'destructive' : 'secondary'">
-            {{ statsError || 'RabbitMQ 消费中' }}
+            {{ statsError || (autoRefreshEnabled ? 'RabbitMQ 消费中 · 每 10 秒刷新' : 'RabbitMQ 消费中') }}
           </Badge>
         </div>
       </div>

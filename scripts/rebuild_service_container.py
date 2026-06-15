@@ -131,6 +131,22 @@ def build_backend_full_image(args, service):
     )
 
 
+def build_admin_overlay_image(args):
+    image = image_for("jbm-admin", args.image_prefix, args.image_tag)
+    dist = ROOT_DIR / "jbm-admin-vue" / "dist"
+    print("==> npm build: jbm-admin-vue", flush=True)
+    run(["npm", "run", "build"], cwd=ROOT_DIR / "jbm-admin-vue")
+    if not dist.is_dir():
+        raise SystemExit(f"Missing dist: {dist}")
+
+    print(f"==> Docker overlay image: {image}", flush=True)
+    with tempfile.TemporaryDirectory(prefix="jbm-admin-") as tmp:
+        tmp_path = Path(tmp)
+        shutil.copytree(dist, tmp_path / "dist")
+        dockerfile = f"FROM {image}\nCOPY dist /usr/share/nginx/html\n"
+        run(["docker", "build", "-t", image, "-f", "-", tmp_path], input_text=dockerfile)
+
+
 def build_admin_image(args):
     image = image_for("jbm-admin", args.image_prefix, args.image_tag)
     print(f"==> Docker image: {image}", flush=True)
@@ -183,7 +199,10 @@ def rebuild_one(args, service):
         raise SystemExit(f"Unknown service: {service}\nKnown: {known}")
 
     if service == "jbm-admin":
-        build_admin_image(args)
+        if args.mode == "full":
+            build_admin_image(args)
+        else:
+            build_admin_overlay_image(args)
     elif args.mode == "full":
         build_backend_full_image(args, service)
     else:

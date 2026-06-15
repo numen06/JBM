@@ -1,4 +1,5 @@
 import asyncio
+import json
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
@@ -6,37 +7,51 @@ import httpx
 
 from jbm_cluster_py.common.config import AppConfig, parse_properties
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
+from jbm_cluster_py.integrations.rabbitmq import MAX_DELIVERY_RETRY, RabbitMQClient
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.platform.push.business_events import (
     BusinessEventRepository,
     BusinessEventService,
+    WebhookDeliveryConsumer,
     WebhookHttpClient,
 )
 
 
-class FakeRedis:
+class FakeRabbitMQClient:
     def __init__(self) -> None:
-        self.values: dict[str, list[str]] = {}
+        self.enabled = True
+        self.channel = object()
+        self.delivery_tasks: list[dict[str, Any]] = []
+        self.retry_tasks: list[tuple[int, dict[str, Any]]] = []
+        self.dlt_tasks: list[dict[str, Any]] = []
 
-    async def rpush(self, key: str, value: str) -> None:
-        self.values.setdefault(key, []).append(value)
-
-    async def expire(self, key: str, seconds: int) -> None:
+    async def start(self) -> None:
         return None
 
-    async def lrange(self, key: str, start: int, end: int) -> list[str]:
-        values = self.values.get(key, [])
-        return values[start : end + 1]
+    async def stop(self) -> None:
+        return None
 
-    async def ltrim(self, key: str, start: int, end: int) -> None:
-        values = self.values.get(key, [])
-        self.values[key] = values[start:] if end == -1 else values[start : end + 1]
+    async def declare_delivery_topology(self) -> None:
+        return None
 
-    async def scan_iter(self, pattern: str):
-        prefix = pattern.rstrip("*")
-        for key in list(self.values):
-            if key.startswith(prefix):
-                yield key
+    async def consume_json(self, queue_name: str, handler) -> None:
+        return None
+
+    async def publish_delivery_task(self, payload: Mapping[str, Any], retry_count: int = 0) -> None:
+        self.delivery_tasks.append({"payload": dict(payload), "retry_count": retry_count})
+
+    async def consume_delivery(self, handler) -> None:
+        return None
+
+    async def consume_dlt(self, handler) -> None:
+        return None
+
+    async def route_failure(self, payload: Mapping[str, Any], retry_count: int) -> None:
+        next_retry = retry_count + 1
+        if next_retry <= MAX_DELIVERY_RETRY:
+            self.retry_tasks.append((next_retry, dict(payload)))
+            return
+        self.dlt_tasks.append(dict(payload))
 
 
 class FakeHttpClient:
@@ -62,15 +77,41 @@ def repository(tmp_path: Path) -> BusinessEventRepository:
 
 def service(
     repo: BusinessEventRepository,
-    redis_client: RedisClient,
     http_client: FakeHttpClient,
+    rabbitmq: Optional[FakeRabbitMQClient] = None,
 ) -> BusinessEventService:
+    fake_rabbit = rabbitmq or FakeRabbitMQClient()
+    redis = RedisClient({"enabled": False})
     return BusinessEventService(
         repo,
-        redis_client,
+        redis,
         NacosDiscoveryClient({"enabled": False}),
         http_client=http_client,
+        rabbitmq=fake_rabbit,
     )
+
+
+async def process_delivery_queue(
+    svc: BusinessEventService,
+    fake_rabbit: FakeRabbitMQClient,
+    http_client: FakeHttpClient,
+) -> None:
+    while fake_rabbit.delivery_tasks:
+        item = fake_rabbit.delivery_tasks.pop(0)
+        payload = item["payload"]
+        try:
+            await svc.delivery_consumer.handle(
+                json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            )
+        except Exception:
+            retry_count = int(payload.get("retryNumber") or 0)
+            await fake_rabbit.route_failure(payload, retry_count)
+            if fake_rabbit.retry_tasks:
+                retry_num, retry_payload = fake_rabbit.retry_tasks.pop(0)
+                retry_payload["retryNumber"] = retry_num
+                fake_rabbit.delivery_tasks.append({"payload": retry_payload, "retry_count": retry_num})
+                if http_client.statuses:
+                    await process_delivery_queue(svc, fake_rabbit, http_client)
 
 
 def test_parse_properties_builds_nested_spring_config() -> None:
@@ -117,9 +158,8 @@ def test_business_event_resource_registration_preserves_event_id(tmp_path: Path)
     async def run() -> None:
         repo = repository(tmp_path)
         await repo.start()
-        redis = RedisClient({"enabled": False})
-        redis.client = FakeRedis()
-        svc = service(repo, redis, FakeHttpClient([200]))
+        fake_http = FakeHttpClient([200])
+        svc = service(repo, fake_http)
 
         payload = {
             "serviceId": "demo-service",
@@ -149,14 +189,47 @@ def test_business_event_resource_registration_preserves_event_id(tmp_path: Path)
     asyncio.run(run())
 
 
+def test_delivery_task_produced_to_rabbitmq_queue(tmp_path: Path) -> None:
+    async def run() -> None:
+        repo = repository(tmp_path)
+        await repo.start()
+        fake_rabbit = FakeRabbitMQClient()
+        fake_http = FakeHttpClient([200])
+        svc = service(repo, fake_http, fake_rabbit)
+        await svc.receive_resource_payload(
+            {
+                "serviceId": "demo-service",
+                "jbmClusterBusinessEventBeans": [
+                    {
+                        "eventCode": "TestBusinessEvent",
+                        "eventName": "测试事件",
+                        "eventGroup": "demo",
+                        "eventBody": "{}",
+                        "url": "http://receiver/businessEventListener",
+                        "methodType": "POST",
+                    }
+                ],
+            }
+        )
+
+        await svc.send_business_event_payload({"eventCode": "TestBusinessEvent", "eventBody": "{\"hello\":\"world\"}"})
+
+        assert len(fake_rabbit.delivery_tasks) == 1
+        payload = fake_rabbit.delivery_tasks[0]["payload"]
+        assert payload["taskUrl"] == "http://receiver/businessEventListener"
+        assert payload["request"] == "{\"hello\":\"world\"}"
+        await repo.stop()
+
+    asyncio.run(run())
+
+
 def test_business_event_dispatch_writes_successful_task(tmp_path: Path) -> None:
     async def run() -> None:
         repo = repository(tmp_path)
         await repo.start()
-        redis = RedisClient({"enabled": False})
-        redis.client = FakeRedis()
+        fake_rabbit = FakeRabbitMQClient()
         fake_http = FakeHttpClient([200])
-        svc = service(repo, redis, fake_http)
+        svc = service(repo, fake_http, fake_rabbit)
         await svc.receive_resource_payload(
             {
                 "serviceId": "demo-service",
@@ -177,9 +250,12 @@ def test_business_event_dispatch_writes_successful_task(tmp_path: Path) -> None:
         result = await svc.send_business_event_payload(
             {"eventCode": "TestBusinessEvent", "eventBody": "{\"hello\":\"world\"}"}
         )
+        await process_delivery_queue(svc, fake_rabbit, fake_http)
 
         assert result["sent"] == 1
-        task = result["tasks"][0]
+        task_id = result["tasks"][0]["taskId"]
+        task = await repo.select_task(task_id)
+        assert task is not None
         assert task["status"] == "SUCCESS"
         assert task["httpStatus"] == 200
         assert fake_http.requests[0][2] == "{\"hello\":\"world\"}"
@@ -188,14 +264,13 @@ def test_business_event_dispatch_writes_successful_task(tmp_path: Path) -> None:
     asyncio.run(run())
 
 
-def test_failed_direct_delivery_uses_redis_retry_semantics(tmp_path: Path) -> None:
+def test_delivery_retry_on_http_failure(tmp_path: Path) -> None:
     async def run() -> None:
         repo = repository(tmp_path)
         await repo.start()
-        redis = RedisClient({"enabled": False})
-        fake_redis = FakeRedis()
-        redis.client = fake_redis
-        svc = service(repo, redis, FakeHttpClient([500, 202]))
+        fake_rabbit = FakeRabbitMQClient()
+        fake_http = FakeHttpClient([500, 202])
+        svc = service(repo, fake_http, fake_rabbit)
         await svc.receive_resource_payload(
             {
                 "serviceId": "demo-service",
@@ -213,11 +288,95 @@ def test_failed_direct_delivery_uses_redis_retry_semantics(tmp_path: Path) -> No
         )
 
         result = await svc.send_business_event_payload({"eventCode": "RetryEvent", "eventBody": "{}"})
+        await process_delivery_queue(svc, fake_rabbit, fake_http)
 
-        task = result["tasks"][0]
+        task = await repo.select_task(result["tasks"][0]["taskId"])
+        assert task is not None
         assert task["status"] == "SUCCESS"
         assert task["retryNumber"] == 1
-        assert fake_redis.values["jbm:bevent:http://receiver/retry"] == []
+        assert len(fake_http.requests) == 2
+        await repo.stop()
+
+    asyncio.run(run())
+
+
+def test_delivery_dlt_after_max_retry(tmp_path: Path) -> None:
+    async def run() -> None:
+        repo = repository(tmp_path)
+        await repo.start()
+        fake_rabbit = FakeRabbitMQClient()
+        fake_http = FakeHttpClient([500, 500, 500, 500])
+        svc = service(repo, fake_http, fake_rabbit)
+        await svc.receive_resource_payload(
+            {
+                "serviceId": "demo-service",
+                "jbmClusterBusinessEventBeans": [
+                    {
+                        "eventCode": "FailEvent",
+                        "eventName": "失败事件",
+                        "eventGroup": "demo",
+                        "eventBody": "{}",
+                        "url": "http://receiver/fail",
+                        "methodType": "POST",
+                    }
+                ],
+            }
+        )
+
+        result = await svc.send_business_event_payload({"eventCode": "FailEvent", "eventBody": "{}"})
+        await process_delivery_queue(svc, fake_rabbit, fake_http)
+        while fake_rabbit.delivery_tasks:
+            await process_delivery_queue(svc, fake_rabbit, fake_http)
+
+        assert fake_rabbit.dlt_tasks
+        dlt_payload = fake_rabbit.dlt_tasks[0]
+        await svc.delivery_consumer.handle_dlt(
+            json.dumps(dlt_payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        )
+        task = await repo.select_task(result["tasks"][0]["taskId"])
+        assert task is not None
+        assert task["status"] == "FAILED"
+        assert "最大重试次数" in (task.get("errorMsg") or "")
+        await repo.stop()
+
+    asyncio.run(run())
+
+
+def test_group_selection_strategy_picks_enabled_config(tmp_path: Path) -> None:
+    async def run() -> None:
+        repo = repository(tmp_path)
+        await repo.start()
+        fake_rabbit = FakeRabbitMQClient()
+        fake_http = FakeHttpClient([200, 200])
+        svc = service(repo, fake_http, fake_rabbit)
+        await svc.receive_resource_payload(
+            {
+                "serviceId": "demo-service",
+                "jbmClusterBusinessEventBeans": [
+                    {
+                        "eventCode": "GroupEvent",
+                        "eventName": "分组1",
+                        "eventGroup": "group-a",
+                        "eventBody": "{}",
+                        "url": "http://receiver/a",
+                        "methodType": "POST",
+                    },
+                    {
+                        "eventCode": "GroupEvent",
+                        "eventName": "分组2",
+                        "eventGroup": "group-b",
+                        "eventBody": "{}",
+                        "url": "http://receiver/b",
+                        "methodType": "POST",
+                    },
+                ],
+            }
+        )
+
+        result = await svc.send_business_event_payload({"eventCode": "GroupEvent", "eventBody": "{}"})
+        assert result["sent"] == 2
+        urls = {item["payload"]["taskUrl"] for item in fake_rabbit.delivery_tasks}
+        assert urls == {"http://receiver/a", "http://receiver/b"}
         await repo.stop()
 
     asyncio.run(run())
@@ -234,3 +393,29 @@ def test_feign_url_resolves_with_nacos_instance() -> None:
         assert await client._resolve_url("feign://demo-service/api/test") == "http://127.0.0.1:8080/api/test"
 
     asyncio.run(run())
+
+
+def test_page_webhook_event_configs_supports_keyword_filter(tmp_path: Path) -> None:
+    async def run() -> None:
+        repo = repository(tmp_path)
+        await repo.start()
+        await repo.save_config(
+            {
+                "businessEventCode": "OrderCreatedEvent",
+                "eventName": "订单创建",
+                "eventGroup": "order",
+                "url": "http://receiver/order",
+                "enable": True,
+            }
+        )
+        page = await repo.page_webhook_event_configs({"keyword": "OrderCreated"})
+        assert page["total"] == 1
+        assert page["contents"][0]["businessEventCode"] == "OrderCreatedEvent"
+        await repo.stop()
+
+    asyncio.run(run())
+
+
+def test_rabbitmq_client_retry_routing_constants() -> None:
+    assert RabbitMQClient.DELIVERY_QUEUE == "jbm.webhook.delivery"
+    assert MAX_DELIVERY_RETRY == 3

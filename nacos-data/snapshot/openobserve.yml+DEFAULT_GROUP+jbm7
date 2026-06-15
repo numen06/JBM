@@ -1,0 +1,6 @@
+open-observe:
+  url: http://10.100.10.65:5080
+  organization: default
+  stream: test
+  username: admin@example.com
+  password: Admin@123

@@ -1,3 +1,5 @@
+import { adminDebugEnabled, isRuntimeFlagDisabled, isRuntimeFlagEnabled, runtimeConfig } from '@/runtimeConfig'
+
 /** 与后端 com.jbm.cluster.api.constants.LoginType 对齐 */
 export type OAuthLoginType = 'PASSWORD' | 'SMS' | 'FACE' | 'WECHAT' | 'MINIAPP'
 
@@ -40,9 +42,95 @@ export const JBM_SEED_PASSWORD = 'admin'
 /** jaja7 登录页默认：优先 .env；未配置时 demo 与当前库一致 */
 export const JBM_DEFAULT_USERNAME = 'admin'
 export const JBM_DEFAULT_PASSWORD =
-  import.meta.env.VITE_LOGIN_PASSWORD?.trim() || (import.meta.env.DEV ? 'Admin@123' : JBM_SEED_PASSWORD)
+  runtimeConfig.loginPassword?.trim() ||
+  import.meta.env.VITE_LOGIN_PASSWORD?.trim() ||
+  (import.meta.env.DEV ? 'Admin@123' : JBM_SEED_PASSWORD)
 export const JBM_DEFAULT_CLIENT_ID =
-  import.meta.env.VITE_OAUTH_CLIENT_ID?.trim() || (import.meta.env.DEV ? 'demo' : JBM_SEED_CLIENT_ID)
+  runtimeConfig.oauthClientId?.trim() ||
+  import.meta.env.VITE_OAUTH_CLIENT_ID?.trim() ||
+  (import.meta.env.DEV ? 'demo' : JBM_SEED_CLIENT_ID)
 export const JBM_DEFAULT_CLIENT_SECRET =
-  import.meta.env.VITE_OAUTH_CLIENT_SECRET?.trim() || (import.meta.env.DEV ? 'demo123' : JBM_SEED_CLIENT_SECRET)
+  runtimeConfig.oauthClientSecret?.trim() ||
+  import.meta.env.VITE_OAUTH_CLIENT_SECRET?.trim() ||
+  (import.meta.env.DEV ? 'demo123' : JBM_SEED_CLIENT_SECRET)
 export const JBM_DEFAULT_OAUTH_SCOPE = 'all'
+
+export interface LocalDevLoginAccount {
+  id: string
+  label: string
+  role: string
+  username: string
+  password: string
+  clientId: string
+  clientSecret: string
+  description: string
+}
+
+export const LOCAL_DEV_LOGIN_ENABLED =
+  (import.meta.env.DEV || adminDebugEnabled || isRuntimeFlagEnabled(runtimeConfig.localDevLogin)) &&
+  !isRuntimeFlagDisabled(runtimeConfig.localDevLogin ?? import.meta.env.VITE_LOCAL_DEV_LOGIN)
+
+function localDevAccountId(username: string, index: number) {
+  return `${username || 'account'}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-')
+}
+
+function parseLocalDevLoginAccounts(raw: string | undefined): LocalDevLoginAccount[] {
+  return (raw ?? '')
+    .split(';')
+    .map((item, index) => {
+      const [label, role, username, password, clientId, clientSecret, description] = item
+        .split('|')
+        .map((part) => part.trim())
+      if (!label || !username) return null
+      return {
+        id: localDevAccountId(username, index),
+        label,
+        role: role || label,
+        username,
+        password: password || runtimeConfig.localDevPassword?.trim() || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD,
+        clientId: clientId || JBM_DEFAULT_CLIENT_ID,
+        clientSecret: clientSecret || JBM_DEFAULT_CLIENT_SECRET,
+        description: description || role || label,
+      }
+    })
+    .filter((item): item is LocalDevLoginAccount => !!item)
+}
+
+const LOCAL_DEV_SHARED_PASSWORD =
+  runtimeConfig.localDevPassword?.trim() || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD
+
+export const LOCAL_DEV_LOGIN_ACCOUNTS: LocalDevLoginAccount[] =
+  parseLocalDevLoginAccounts(runtimeConfig.localDevUsers || import.meta.env.VITE_LOCAL_DEV_USERS).length > 0
+    ? parseLocalDevLoginAccounts(runtimeConfig.localDevUsers || import.meta.env.VITE_LOCAL_DEV_USERS)
+    : [
+        {
+          id: 'admin',
+          label: '管理员',
+          role: 'super_admin',
+          username: JBM_DEFAULT_USERNAME,
+          password: LOCAL_DEV_SHARED_PASSWORD,
+          clientId: JBM_DEFAULT_CLIENT_ID,
+          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
+          description: '全量管理权限',
+        },
+        {
+          id: 'operator',
+          label: '运营人员',
+          role: 'operator',
+          username: 'demo',
+          password: LOCAL_DEV_SHARED_PASSWORD,
+          clientId: JBM_DEFAULT_CLIENT_ID,
+          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
+          description: '字典与登录日志',
+        },
+        {
+          id: 'editor',
+          label: '业务编辑',
+          role: 'editor',
+          username: 'viewer',
+          password: LOCAL_DEV_SHARED_PASSWORD,
+          clientId: JBM_DEFAULT_CLIENT_ID,
+          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
+          description: '用户查看与编辑',
+        },
+      ]

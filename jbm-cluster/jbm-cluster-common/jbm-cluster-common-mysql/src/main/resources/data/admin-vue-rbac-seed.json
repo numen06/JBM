@@ -1,0 +1,66 @@
+{
+  "menus": [
+    { "id": 100, "code": "platform", "name": "平台管理", "path": "/", "priority": 0 },
+    { "id": 110, "parentId": 100, "code": "dashboard", "name": "仪表盘", "path": "/dashboard", "priority": 0, "grantToSuperAdmin": true },
+
+    { "id": 101, "parentId": 100, "code": "system", "name": "系统管理", "path": "/system", "priority": 1 },
+    { "id": 102, "parentId": 101, "code": "users", "name": "用户管理", "path": "/system/users", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 114, "parentId": 101, "code": "onlineUsers", "name": "在线用户", "path": "/system/online-users", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 103, "parentId": 101, "code": "roles", "name": "角色管理", "path": "/system/roles", "priority": 3, "grantToSuperAdmin": true },
+    { "id": 106, "parentId": 101, "code": "menus", "name": "菜单管理", "path": "/system/menus", "priority": 4, "grantToSuperAdmin": true },
+    { "id": 112, "parentId": 101, "code": "actions", "name": "按钮管理", "path": "/system/actions", "priority": 5, "grantToSuperAdmin": true },
+    { "id": 107, "parentId": 101, "code": "orgs", "name": "组织管理", "path": "/system/orgs", "priority": 6, "grantToSuperAdmin": true },
+    { "id": 104, "parentId": 101, "code": "authority", "name": "权限管理", "path": "/authority/catalog", "priority": 7, "grantToSuperAdmin": true },
+    { "id": 108, "parentId": 101, "code": "apps", "name": "应用管理", "path": "/system/apps", "priority": 8, "grantToSuperAdmin": true },
+    { "id": 109, "parentId": 101, "code": "dicts", "name": "字典管理", "path": "/system/dicts", "priority": 9, "grantToSuperAdmin": true },
+    { "id": 111, "parentId": 101, "code": "extend_fields", "name": "扩展字段", "path": "/system/extend-fields", "priority": 10, "grantToSuperAdmin": true },
+    { "id": 105, "parentId": 101, "code": "developer_mgmt", "name": "开发者管理", "path": "/developer", "priority": 11, "grantToSuperAdmin": true },
+    { "id": 113, "parentId": 101, "code": "api_key_mgmt", "name": "API Key 管理", "path": "/developer/api-keys", "priority": 12, "grantToSuperAdmin": true },
+
+    { "id": 120, "parentId": 100, "code": "gateway", "name": "网关管理", "path": "/gateway", "priority": 2 },
+    { "id": 121, "parentId": 120, "code": "gw_routes", "name": "路由管理", "path": "/gateway/routes", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 122, "parentId": 120, "code": "gw_rate", "name": "限流管理", "path": "/gateway/rate-limit", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 123, "parentId": 120, "code": "gw_ip", "name": "IP 限制", "path": "/gateway/ip-limit", "priority": 3, "grantToSuperAdmin": true },
+
+    { "id": 140, "parentId": 100, "code": "api_mgmt", "name": "API 管理", "path": "/api", "priority": 4 },
+    { "id": 141, "parentId": 140, "code": "api_registry", "name": "API 资源管理", "path": "/api/registry", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 142, "parentId": 140, "code": "api_docs", "name": "API 文档与调试", "path": "/api/docs", "priority": 2, "grantToSuperAdmin": true },
+
+    { "id": 150, "parentId": 100, "code": "messages", "name": "消息管理", "path": "/messages", "priority": 3 },
+    { "id": 151, "parentId": 150, "code": "message_records", "name": "消息记录", "path": "/messages", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 152, "parentId": 150, "code": "message_send_test", "name": "发送测试", "path": "/messages/send-test", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 153, "parentId": 150, "code": "message_channels", "name": "渠道设置", "path": "/messages/channels", "priority": 3, "grantToSuperAdmin": true },
+    { "id": 154, "parentId": 150, "code": "webhook_event_config", "name": "事件订阅配置", "path": "/messages/webhook-configs", "priority": 4, "grantToSuperAdmin": true },
+    { "id": 155, "parentId": 150, "code": "webhook_tasks", "name": "投递任务", "path": "/messages/webhook-tasks", "priority": 5, "grantToSuperAdmin": true },
+
+    { "id": 160, "parentId": 100, "code": "jobs", "name": "任务调度", "path": "/jobs", "priority": 6 },
+    { "id": 161, "parentId": 160, "code": "task_jobs", "name": "任务管理", "path": "/jobs", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 162, "parentId": 160, "code": "task_job_logs", "name": "调度日志", "path": "/jobs/logs", "priority": 2, "grantToSuperAdmin": true },
+
+    { "id": 170, "parentId": 100, "code": "documents", "name": "文档管理", "path": "/documents", "priority": 7 },
+    { "id": 171, "parentId": 170, "code": "doc_files", "name": "文件管理", "path": "/documents", "priority": 1, "grantToSuperAdmin": true },
+
+    { "id": 130, "parentId": 100, "code": "other", "name": "其他", "path": "/log", "priority": 5 },
+    { "id": 131, "parentId": 130, "code": "account_logs", "name": "审计日志", "path": "/log/account", "priority": 1, "grantToSuperAdmin": true }
+  ],
+  "actions": [
+    { "id": 2001, "menuId": 102, "code": "users_view", "name": "用户-查看", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 2002, "menuId": 102, "code": "users_add", "name": "用户-新增", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 2003, "menuId": 102, "code": "users_edit", "name": "用户-编辑", "priority": 3, "grantToSuperAdmin": true },
+    { "id": 2004, "menuId": 102, "code": "users_delete", "name": "用户-删除", "priority": 4, "grantToSuperAdmin": true },
+    { "id": 2101, "menuId": 109, "code": "dict_view", "name": "字典-查看", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 2102, "menuId": 109, "code": "dict_add", "name": "字典-新增", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 2103, "menuId": 109, "code": "dict_edit", "name": "字典-编辑", "priority": 3, "grantToSuperAdmin": true },
+    { "id": 2104, "menuId": 109, "code": "dict_delete", "name": "字典-删除", "priority": 4, "grantToSuperAdmin": true },
+    { "id": 2201, "menuId": 114, "code": "monitor:online:forceLogout", "name": "在线用户-踢出", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 2202, "menuId": 114, "code": "monitor:online:logout", "name": "在线用户-注销", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 2301, "menuId": 161, "code": "job_add", "name": "任务-新增", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 2302, "menuId": 161, "code": "job_edit", "name": "任务-编辑", "priority": 2, "grantToSuperAdmin": true },
+    { "id": 2303, "menuId": 161, "code": "job_delete", "name": "任务-删除", "priority": 3, "grantToSuperAdmin": true },
+    { "id": 2304, "menuId": 161, "code": "job_status", "name": "任务-启停", "priority": 4, "grantToSuperAdmin": true },
+    { "id": 2305, "menuId": 161, "code": "job_run", "name": "任务-执行", "priority": 5, "grantToSuperAdmin": true },
+    { "id": 2306, "menuId": 161, "code": "job_export", "name": "任务-导出", "priority": 6, "grantToSuperAdmin": true },
+    { "id": 2311, "menuId": 162, "code": "job_log_clean", "name": "调度日志-清空", "priority": 1, "grantToSuperAdmin": true },
+    { "id": 2312, "menuId": 162, "code": "job_log_export", "name": "调度日志-导出", "priority": 2, "grantToSuperAdmin": true }
+  ]
+}

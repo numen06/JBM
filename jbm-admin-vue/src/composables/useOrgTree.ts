@@ -12,6 +12,68 @@ export function orgRowId(row: BaseOrg) {
   return row.id ?? row.orgId
 }
 
+function orgParentId(org: BaseOrg): number | undefined {
+  const raw = org.parentId
+  if (raw == null) return undefined
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (Number.isNaN(n) || n === 0) return undefined
+  return n
+}
+
+/** 将嵌套或扁平的组织列表统一拍平（不含 children） */
+export function flattenOrgNodes(orgs: BaseOrg[]): BaseOrg[] {
+  const out: BaseOrg[] = []
+  function walk(nodes: BaseOrg[]) {
+    for (const node of nodes) {
+      const { children, ...rest } = node
+      out.push(rest)
+      if (children?.length) walk(children)
+    }
+  }
+  walk(orgs)
+  return out
+}
+
+function sortOrgSiblings(nodes: BaseOrg[]) {
+  nodes.sort((a, b) => {
+    const sortDiff = (a.sort ?? 0) - (b.sort ?? 0)
+    if (sortDiff !== 0) return sortDiff
+    const idA = orgRowId(a) ?? 0
+    const idB = orgRowId(b) ?? 0
+    return idA - idB
+  })
+  for (const node of nodes) {
+    if (node.children?.length) sortOrgSiblings(node.children)
+  }
+}
+
+/** 按 parentId 将扁平组织列表组装为树（兼容后端 flat / nested 两种返回） */
+export function buildOrgTree(orgs: BaseOrg[]): BaseOrg[] {
+  if (!orgs.length) return []
+
+  const flat = flattenOrgNodes(orgs)
+  const byId = new Map<number, BaseOrg>()
+  for (const org of flat) {
+    const id = orgRowId(org)
+    if (id == null) continue
+    byId.set(id, { ...org, children: [] })
+  }
+
+  const roots: BaseOrg[] = []
+  for (const org of byId.values()) {
+    const parentId = orgParentId(org)
+    const parent = parentId != null ? byId.get(parentId) : undefined
+    if (parent) {
+      parent.children!.push(org)
+    } else {
+      roots.push(org)
+    }
+  }
+
+  sortOrgSiblings(roots)
+  return roots
+}
+
 export function flattenOrgs(orgs: BaseOrg[], depth = 0): FlatOrg[] {
   const out: FlatOrg[] = []
   for (const o of orgs) {
@@ -109,7 +171,8 @@ export function useOrgTree() {
   async function loadOrgs() {
     loading.value = true
     try {
-      orgTree.value = await listOrgTree()
+      const raw = await listOrgTree()
+      orgTree.value = buildOrgTree(raw ?? [])
       flatOrgs.value = flattenOrgs(orgTree.value)
     } catch {
       orgTree.value = []
@@ -119,9 +182,12 @@ export function useOrgTree() {
     }
   }
 
+  const orgTotal = computed(() => flatOrgs.value.length)
+
   return {
     orgTree,
     flatOrgs,
+    orgTotal,
     loading,
     orgNameMap,
     orgLabel,
@@ -132,5 +198,7 @@ export function useOrgTree() {
     collectDescendantIds,
     collectVisibleOrgIds,
     isDefaultOrg,
+    buildOrgTree,
+    flattenOrgNodes,
   }
 }

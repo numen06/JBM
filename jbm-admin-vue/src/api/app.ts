@@ -44,6 +44,11 @@ export async function resetAppSecret(appId: number) {
   return unwrap(res)
 }
 
+export async function getAppSecret(appId: number) {
+  const res = await get<string>(`/app/${appId}/secret`)
+  return unwrap(res)
+}
+
 export async function deleteApp(appId: number) {
   const res = await del<void>(`/app/${appId}`)
   return unwrap(res)

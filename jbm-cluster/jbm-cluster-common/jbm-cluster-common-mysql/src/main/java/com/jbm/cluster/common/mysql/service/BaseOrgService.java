@@ -32,4 +32,9 @@ public interface BaseOrgService extends IMasterDataTreeService<BaseOrg> {
      * @return
      */
     BaseOrg getBaseOrg(BaseOrg baseOrg);
+
+    /**
+     * 查询组织树（根节点列表，含 children 嵌套）
+     */
+    List<BaseOrg> selectOrgTree(BaseOrg filter);
 }

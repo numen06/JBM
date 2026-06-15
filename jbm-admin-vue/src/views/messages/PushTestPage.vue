@@ -12,7 +12,8 @@ import { useFeedback } from '@/composables/useFeedback'
 import { getPushPerfStatus, sendPushTest, startPushPerfTest } from '@/api/pushTest'
 import { listUsersByFilter } from '@/api/user'
 import { listOrgTree } from '@/api/org'
-import type { BaseOrg, BaseUser, PushTestRequest, PushTestTaskStatus } from '@/api/types'
+import { buildOrgTree, flattenOrgs, orgOptionLabel, orgRowId } from '@/composables/useOrgTree'
+import type { BaseUser, PushTestRequest, PushTestTaskStatus } from '@/api/types'
 
 const auth = useAuthStore()
 const messages = useMessageStore()
@@ -20,14 +21,13 @@ const feedback = useFeedback()
 
 type TargetMode = 'self' | 'users' | 'tags'
 type UserScope = 'all' | 'myOrg' | 'myDept' | 'org' | 'dept'
-type FlatOrg = BaseOrg & { depth: number }
 
 const targetMode = ref<TargetMode>('self')
 const userScope = ref<UserScope>('myOrg')
 const selectedOrgId = ref('')
 const userKeyword = ref('')
 const userPool = ref<BaseUser[]>([])
-const orgOptions = ref<FlatOrg[]>([])
+const orgOptions = ref<ReturnType<typeof flattenOrgs>>([])
 const selectedUserIds = ref<Set<number>>(new Set())
 const userPoolLoading = ref(false)
 const userPoolTotal = ref(0)
@@ -59,19 +59,13 @@ const ackRate = computed(() => {
   return `${Math.round(((task.ackCount ?? 0) / task.sentCount) * 100)}%`
 })
 
-function orgId(org: BaseOrg) {
-  return org.id ?? org.orgId
-}
-
-function flattenOrgs(nodes: BaseOrg[] = [], depth = 0): FlatOrg[] {
-  return nodes.flatMap((org) => {
-    const row = { ...org, depth }
-    return [row, ...flattenOrgs(org.children ?? [], depth + 1)]
-  })
-}
-
-function orgLabel(org: FlatOrg) {
-  return `${org.depth ? `${'　'.repeat(org.depth)}└ ` : ''}${org.orgName ?? org.orgCode ?? orgId(org)}`
+async function loadOrgs() {
+  try {
+    const raw = (await listOrgTree()) ?? []
+    orgOptions.value = flattenOrgs(buildOrgTree(raw))
+  } catch {
+    orgOptions.value = []
+  }
 }
 
 function userLabel(user: BaseUser) {
@@ -139,14 +133,6 @@ function selectVisibleUsers() {
 
 function clearSelectedUsers() {
   selectedUserIds.value = new Set()
-}
-
-async function loadOrgs() {
-  try {
-    orgOptions.value = flattenOrgs((await listOrgTree()) ?? [])
-  } catch {
-    orgOptions.value = []
-  }
 }
 
 function buildRequest(perf = false): PushTestRequest {
@@ -293,8 +279,8 @@ onUnmounted(() => {
               <span class="mb-1 block text-muted-foreground">{{ userScope === 'org' ? '组织' : '部门' }}</span>
               <Select v-model="selectedOrgId" @update:model-value="loadUserPool(1)">
                 <option value="">请选择</option>
-                <option v-for="org in orgOptions" :key="orgId(org)" :value="orgId(org)">
-                  {{ orgLabel(org) }}
+                <option v-for="org in orgOptions" :key="orgRowId(org)" :value="orgRowId(org)">
+                  {{ orgOptionLabel(org) }}
                 </option>
               </Select>
             </label>

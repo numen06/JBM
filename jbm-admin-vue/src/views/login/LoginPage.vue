@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, RefreshCw } from '@lucide/vue'
+import { ArrowLeft, RefreshCw, UserRound } from '@lucide/vue'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
 import { fetchLoginQr, pollQrLogin } from '@/api/qrcode'
@@ -18,9 +18,12 @@ import {
   JBM_SEED_CLIENT_ID,
   JBM_SEED_CLIENT_SECRET,
   JBM_SEED_PASSWORD,
+  LOCAL_DEV_LOGIN_ACCOUNTS,
+  LOCAL_DEV_LOGIN_ENABLED,
   LOGIN_TABS,
   OAUTH2_REDIRECT_STORAGE_KEY,
   OAUTH2_STATE_STORAGE_KEY,
+  type LocalDevLoginAccount,
   type LoginTabId,
 } from '@/constants/loginModes'
 import { useAuthStore } from '@/stores/auth'
@@ -34,6 +37,9 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const isDev = import.meta.env.DEV
+const localDevLoginEnabled = LOCAL_DEV_LOGIN_ENABLED
+const localDevLoginAccounts = LOCAL_DEV_LOGIN_ACCOUNTS
+const useDevLoginDefaults = isDev || localDevLoginEnabled
 
 const activeTab = ref<LoginTabId>('PASSWORD')
 const activeMeta = computed(() => LOGIN_TABS.find((t) => t.id === activeTab.value)!)
@@ -46,7 +52,7 @@ function selectLoginTab(tab: LoginTabId) {
 
 const username = ref(JBM_DEFAULT_USERNAME)
 const password = ref(JBM_DEFAULT_PASSWORD)
-const vcode = ref(isDev ? DEV_CAPTCHA_CODE : '')
+const vcode = ref(useDevLoginDefaults ? DEV_CAPTCHA_CODE : '')
 const phone = ref('')
 const smsCode = ref('')
 const wechatOpenId = ref('')
@@ -68,6 +74,7 @@ const captchaSrc = ref('')
 const captchaLoading = ref(false)
 const smsSending = ref(false)
 const smsCooldown = ref(0)
+const quickLoginPending = ref('')
 
 const qrImage = ref('')
 const qrCode = ref('')
@@ -115,7 +122,7 @@ async function loadCaptcha() {
     captchaLoading.value = false
     return
   }
-  if (!isDev) {
+  if (!useDevLoginDefaults) {
     vcode.value = ''
   }
   try {
@@ -125,7 +132,7 @@ async function loadCaptcha() {
     error.value = extractApiError(e, '验证码加载失败')
   } finally {
     captchaLoading.value = false
-    if (isDev && !vcode.value.trim()) {
+    if (useDevLoginDefaults && !vcode.value.trim()) {
       vcode.value = DEV_CAPTCHA_CODE
     }
   }
@@ -258,6 +265,34 @@ async function finishLogin(action: () => Promise<boolean>) {
     }
   } finally {
     loading.value = false
+  }
+}
+
+function applyLocalDevLoginAccount(account: LocalDevLoginAccount) {
+  activeTab.value = 'PASSWORD'
+  showMoreModes.value = false
+  error.value = ''
+  username.value = account.username
+  password.value = account.password
+  vcode.value = DEV_CAPTCHA_CODE
+  clientId.value = account.clientId
+  clientSecret.value = account.clientSecret
+  auth.clientId = account.clientId
+  auth.clientSecret = account.clientSecret
+  localStorage.setItem('jbm_client_id', account.clientId)
+  localStorage.setItem('jbm_client_secret', account.clientSecret)
+}
+
+async function onLocalDevQuickLogin(account: LocalDevLoginAccount) {
+  if (loading.value) return
+  quickLoginPending.value = account.id
+  applyLocalDevLoginAccount(account)
+  try {
+    await finishLogin(() =>
+      auth.login(account.username, account.password, { vcode: DEV_CAPTCHA_CODE, loginType: 'PASSWORD' }),
+    )
+  } finally {
+    quickLoginPending.value = ''
   }
 }
 
@@ -468,7 +503,7 @@ async function onResetJaja7Seed() {
 function applyJaja7LoginDefaults() {
   username.value = JBM_DEFAULT_USERNAME
   password.value = JBM_DEFAULT_PASSWORD
-  if (isDev) {
+  if (useDevLoginDefaults) {
     vcode.value = DEV_CAPTCHA_CODE
   }
   clientId.value = JBM_DEFAULT_CLIENT_ID
@@ -546,6 +581,36 @@ onUnmounted(() => {
 
         <div v-else class="mt-6">
           <p class="text-sm text-muted-foreground">使用用户名和密码登录</p>
+        </div>
+
+        <div v-if="localDevLoginEnabled" class="mt-4 rounded-md border bg-muted/20 p-3">
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-medium">本地开发模式</p>
+              <p class="text-xs text-muted-foreground">使用运行时 OAuth 客户端与开发验证码</p>
+            </div>
+            <span class="rounded bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700">DEV</span>
+          </div>
+          <div class="grid gap-2 sm:grid-cols-3">
+            <Button
+              v-for="account in localDevLoginAccounts"
+              :key="account.id"
+              type="button"
+              variant="outline"
+              class="h-auto min-h-16 flex-col items-start gap-1 whitespace-normal px-3 py-2 text-left"
+              :disabled="loading"
+              :title="`${account.username} / ${account.role}`"
+              @click="onLocalDevQuickLogin(account)"
+            >
+              <span class="flex w-full items-center gap-2">
+                <UserRound class="size-4 shrink-0" />
+                <span class="truncate text-sm font-medium">
+                  {{ quickLoginPending === account.id ? '登录中…' : account.label }}
+                </span>
+              </span>
+              <span class="text-xs font-normal text-muted-foreground">{{ account.username }} · {{ account.description }}</span>
+            </Button>
+          </div>
         </div>
 
         <form

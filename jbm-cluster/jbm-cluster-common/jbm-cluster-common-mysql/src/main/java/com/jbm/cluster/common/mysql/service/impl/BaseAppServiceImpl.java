@@ -12,6 +12,7 @@ import com.jbm.cluster.api.entitys.basic.BaseDeveloper;
 import com.jbm.cluster.common.mysql.mapper.BaseAppMapper;
 import com.jbm.cluster.common.mysql.service.BaseAppService;
 import com.jbm.cluster.common.mysql.service.BaseAuthorityService;
+import com.jbm.cluster.common.satoken.utils.AppSecretCodec;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
@@ -181,7 +182,7 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         String apiKey = RandomValueUtils.randomAlphanumeric(24);
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
         app.setApiKey(apiKey);
-        app.setSecretKey(SecurityUtils.encryptPassword(secretKey));
+        app.setSecretKey(AppSecretCodec.encrypt(secretKey));
         app.setCreateTime(new Date());
         app.setUpdateTime(app.getCreateTime());
         if (app.getIsPersist() == null) {
@@ -249,11 +250,27 @@ public class BaseAppServiceImpl extends MasterDataServiceImpl<BaseApp> implement
         }
         // 生成新的密钥
         String secretKey = RandomValueUtils.randomAlphanumeric(32);
-        appInfo.setSecretKey(SecurityUtils.encryptPassword(secretKey));
+        appInfo.setSecretKey(AppSecretCodec.encrypt(secretKey));
         appInfo.setUpdateTime(new Date());
         baseAppMapper.updateById(appInfo);
 //        jdbcClientDetailsService.updateClientSecret(appInfo.getApiKey(), secretKey);
         return secretKey;
+    }
+
+    @Override
+    public String getPlainSecret(Long appId) {
+        BaseApp appInfo = getAppInfo(appId);
+        if (appInfo == null) {
+            throw new ServiceException(appId + "应用不存在!");
+        }
+        String plain = AppSecretCodec.decrypt(appInfo.getSecretKey());
+        if (StrUtil.isNotBlank(plain)) {
+            return plain;
+        }
+        if (JbmConstants.JBM_APP_API_KEY.equals(appInfo.getApiKey())) {
+            return JbmConstants.JBM_APP_SECRET;
+        }
+        throw new ServiceException("密钥为旧格式无法查看，请重置密钥");
     }
 
     /**

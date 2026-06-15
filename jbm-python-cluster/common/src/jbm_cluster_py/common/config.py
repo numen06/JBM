@@ -311,7 +311,18 @@ class AppConfig:
 
     @property
     def openobserve(self) -> Dict[str, Any]:
-        return dict(self.get("integrations.openobserve", {}) or {})
+        config = dict(self.get("integrations.openobserve", {}) or {})
+        legacy = dict(self.get("open-observe", {}) or {})
+        if legacy:
+            mapped = {
+                "url": legacy.get("url"),
+                "org": legacy.get("organization") or legacy.get("org"),
+                "stream": legacy.get("stream"),
+                "username": legacy.get("username"),
+                "password": legacy.get("password"),
+            }
+            config = deep_merge(config, {key: value for key, value in mapped.items() if value is not None})
+        return config
 
     @property
     def rabbitmq(self) -> Dict[str, Any]:

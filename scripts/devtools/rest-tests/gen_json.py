@@ -39,5 +39,6 @@ cfg["modules"] = [
     ]},
   ]},
 ]
-Path(r"d:/workspaces/JBM7/scripts/auth_rest_modules.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+SCRIPTS = Path(__file__).resolve().parents[2]
+(SCRIPTS / "auth_rest_modules.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 print("json ok")

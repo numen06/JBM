@@ -1,8 +1,9 @@
 import shutil
 from pathlib import Path
 
-src = Path(r"d:/workspaces/JBM7/scripts/run_center_rest_tests.py")
-dst = Path(r"d:/workspaces/JBM7/scripts/run_user_perm_rest_tests.py")
+SCRIPTS = Path(__file__).resolve().parents[2]
+src = SCRIPTS / "run_center_rest_tests.py"
+dst = SCRIPTS / "run_user_perm_rest_tests.py"
 shutil.copyfile(src, dst)
 t = dst.read_text(encoding="utf-8")
 repls = [

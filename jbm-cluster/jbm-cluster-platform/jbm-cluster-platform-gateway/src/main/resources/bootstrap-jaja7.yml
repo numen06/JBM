@@ -50,6 +50,8 @@ jbm:
       - /push/ws/**
       - /**/push/ws
       - /**/push/ws/**
+      - /**/doc/get/**
+      - /**/doc/download/**
     auth-ignores:
       - /oauth2/**
       - /**/oauth2/**

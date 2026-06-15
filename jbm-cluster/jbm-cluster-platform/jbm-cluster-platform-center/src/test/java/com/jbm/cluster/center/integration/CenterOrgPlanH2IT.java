@@ -44,6 +44,17 @@ class CenterOrgPlanH2IT extends CenterH2ApiTestSupport {
         assertThat(saved.getResult().getId()).isNotNull();
         assertThat(saved.getResult().getOrgName()).isEqualTo("计划IT子组织");
 
+        ResultBody<List<BaseOrg>> tree = baseOrgController.tree(new MasterDataRequsetBody());
+        assertSuccess(tree);
+        BaseOrg defaultInTree = tree.getResult().stream()
+                .filter(o -> Long.valueOf(1L).equals(o.getId()))
+                .findFirst()
+                .orElse(null);
+        assertThat(defaultInTree).isNotNull();
+        assertThat(defaultInTree.getChildren()).isNotEmpty();
+        assertThat(defaultInTree.getChildren().stream()
+                .anyMatch(o -> "计划IT子组织".equals(o.getOrgName()))).isTrue();
+
         ResultBody<List<BaseUserOrg>> orgs = baseUserController.getUserOrgs(1L);
         assertSuccess(orgs);
         assertThat(orgs.getResult()).isNotNull();

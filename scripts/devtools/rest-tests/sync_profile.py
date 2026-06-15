@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
 
-ROOT = Path(r"d:/workspaces/JBM7/scripts")
+SCRIPTS = Path(__file__).resolve().parents[2]
 IMPORT_BLOCK = """
 from jbm_rest_profile import REST_PROFILE, apply_rest_profile, docs_dir, spring_boot_profile_arg
 """
@@ -14,7 +14,7 @@ RUNNERS = [
 ]
 
 for name, slug, _ in RUNNERS:
-    path = ROOT / name
+    path = SCRIPTS / name
     if path.read_bytes()[:4] != b"#!/u":
         raise SystemExit(f"bad encoding: {name}")
     t = path.read_text(encoding="utf-8")
@@ -41,7 +41,7 @@ for name, slug, _ in RUNNERS:
     print("patched", name)
 
 # satoken verify
-sv = ROOT / "run_satoken_verify_tests.py"
+sv = SCRIPTS / "run_satoken_verify_tests.py"
 content = '''#!/usr/bin/env python3
 """Sa-Token verify: JUnit + REST (profile jaja7)."""
 import argparse
@@ -114,7 +114,7 @@ sv.write_text(content, encoding="utf-8")
 print("patched run_satoken_verify_tests.py")
 
 # run all
-all_py = ROOT / "run_all_rest_tests.py"
+all_py = SCRIPTS / "run_all_rest_tests.py"
 all_py.write_text('''#!/usr/bin/env python3
 """Run all REST suites with profile jaja7."""
 import subprocess

@@ -2,7 +2,7 @@ package com.jbm.cluster.common.mysql.service.impl;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.mysql.mapper.BaseAppMapper;
-import com.jbm.cluster.common.satoken.utils.SecurityUtils;
+import com.jbm.cluster.common.satoken.utils.AppSecretCodec;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +41,7 @@ class BaseAppServiceImplTest {
     }
 
     @Test
-    void restSecretStoresBcryptAndReturnsPlainSecretOnce() {
+    void restSecretStoresEncryptedSecretAndReturnsPlainSecretOnce() {
         BaseAppServiceImpl service = new BaseAppServiceImpl();
         ReflectionTestUtils.setField(service, "baseAppMapper", baseAppMapper);
 
@@ -57,8 +57,9 @@ class BaseAppServiceImplTest {
         verify(baseAppMapper).updateById(captor.capture());
         String storedSecret = captor.getValue().getSecretKey();
         assertThat(plainSecret).isNotBlank();
-        assertThat(storedSecret).startsWith("$2a$");
+        assertThat(storedSecret).startsWith(AppSecretCodec.ENC_PREFIX);
         assertThat(storedSecret).isNotEqualTo(plainSecret);
-        assertThat(SecurityUtils.matchesPassword(plainSecret, storedSecret)).isTrue();
+        assertThat(AppSecretCodec.verify(plainSecret, storedSecret)).isTrue();
+        assertThat(AppSecretCodec.decrypt(storedSecret)).isEqualTo(plainSecret);
     }
 }

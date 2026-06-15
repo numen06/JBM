@@ -80,6 +80,12 @@ public class BaseAppController extends BaseController {
         return ResultBody.callback(() -> baseAppBusiness.resetSecretWithGatewayRefresh(appId));
     }
 
+    @ApiOperation(value = "查看应用密钥")
+    @GetMapping("/{appId}/secret")
+    public ResultBody<String> getAppSecret(@PathVariable Long appId) {
+        return ResultBody.callback(() -> baseAppBusiness.getPlainSecret(appId));
+    }
+
     @ApiOperation(value = "删除应用")
     @DeleteMapping("/{appId}")
     public ResultBody<Void> deleteApp(@PathVariable Long appId) {

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.OAuthClientSecretVerifier;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.common.mysql.mapper.BaseAppMapper;
+import com.jbm.cluster.common.satoken.utils.AppSecretCodec;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -34,9 +35,6 @@ public class OAuthClientSecretVerifierImpl implements OAuthClientSecretVerifier 
             return false;
         }
         String stored = app.getSecretKey();
-        if (stored.startsWith("$2a$") || stored.startsWith("$2b$")) {
-            return SecurityUtils.matchesPassword(clientSecret, stored);
-        }
-        return stored.equals(clientSecret);
+        return AppSecretCodec.verify(clientSecret, stored);
     }
 }
