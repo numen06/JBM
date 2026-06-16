@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @Profile("jaja7")
 @RequestMapping("/internal/dev")
-@ConditionalOnProperty(name = "jbm.cluster.data-init.force-reset-default-password", havingValue = "true")
+@ConditionalOnProperty(name = "jbm.cluster.data-init.manual-reset-enabled", havingValue = "true")
 public class DevJaja7SeedController {
 
     @Autowired

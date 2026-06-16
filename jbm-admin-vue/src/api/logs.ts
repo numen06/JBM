@@ -10,10 +10,24 @@ import type {
 } from './types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
-export async function listAccountLogs(page = 1, size = DEFAULT_PAGE_SIZE) {
-  const res = await post<DataPaging<BaseAccountLog>>('/baseAccountLogs/pageList', {
+export interface AccountLogQuery {
+  account?: string
+  loginIp?: string
+  accountType?: string
+  loginStatus?: boolean | string
+}
+
+export async function listAccountLogs(page = 1, size = DEFAULT_PAGE_SIZE, query: AccountLogQuery = {}) {
+  const body: Record<string, unknown> = {
     pageForm: { currPage: page, pageSize: size },
-  })
+  }
+  const filters = Object.fromEntries(
+    Object.entries(query).filter(([, value]) => value !== undefined && String(value).trim() !== ''),
+  )
+  if (Object.keys(filters).length) {
+    body.baseAccountLogs = filters
+  }
+  const res = await post<DataPaging<BaseAccountLog>>('/baseAccountLogs/pageList', body)
   return unwrap(res)
 }
 
@@ -31,6 +45,11 @@ export interface GatewayLogQuery {
   appKey?: string
   accessId?: string
   keyword?: string
+}
+
+export async function getGatewayLogDetail(accessId: string) {
+  const res = await post<GatewayLog>('/logs/GatewayLogs/getByAccessId', { accessId })
+  return unwrap(res)
 }
 
 export async function listGatewayLogs(page = 1, size = DEFAULT_PAGE_SIZE, query: GatewayLogQuery = {}) {

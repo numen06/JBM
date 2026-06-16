@@ -13,7 +13,8 @@ import { getPushPerfStatus, sendPushTest, startPushPerfTest } from '@/api/pushTe
 import { listUsersByFilter } from '@/api/user'
 import { listOrgTree } from '@/api/org'
 import { buildOrgTree, flattenOrgs, orgOptionLabel, orgRowId } from '@/composables/useOrgTree'
-import type { BaseUser, PushTestRequest, PushTestTaskStatus } from '@/api/types'
+import type { BaseUser, PushTestRequest, PushTestTaskStatus, SnowflakeId } from '@/api/types'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
 
 const auth = useAuthStore()
 const messages = useMessageStore()
@@ -28,7 +29,7 @@ const selectedOrgId = ref('')
 const userKeyword = ref('')
 const userPool = ref<BaseUser[]>([])
 const orgOptions = ref<ReturnType<typeof flattenOrgs>>([])
-const selectedUserIds = ref<Set<number>>(new Set())
+const selectedUserIds = ref<Set<SnowflakeId>>(new Set())
 const userPoolLoading = ref(false)
 const userPoolTotal = ref(0)
 const userPoolPage = ref(1)
@@ -73,12 +74,16 @@ function userLabel(user: BaseUser) {
 }
 
 function scopeFilters() {
-  const filters: { companyId?: number; departmentId?: number; keyword?: string; status: number } = { status: 1 }
+  const filters: { companyId?: SnowflakeId; departmentId?: SnowflakeId; keyword?: string; status: number } = { status: 1 }
   if (userKeyword.value.trim()) filters.keyword = userKeyword.value.trim()
   if (userScope.value === 'myOrg' && auth.user?.companyId) filters.companyId = auth.user.companyId
   if (userScope.value === 'myDept' && auth.user?.departmentId) filters.departmentId = auth.user.departmentId
-  if (userScope.value === 'org' && selectedOrgId.value) filters.companyId = Number(selectedOrgId.value)
-  if (userScope.value === 'dept' && selectedOrgId.value) filters.departmentId = Number(selectedOrgId.value)
+  if (userScope.value === 'org' && selectedOrgId.value) {
+    filters.companyId = optionalSnowflakeIdParam(selectedOrgId.value)
+  }
+  if (userScope.value === 'dept' && selectedOrgId.value) {
+    filters.departmentId = optionalSnowflakeIdParam(selectedOrgId.value)
+  }
   return filters
 }
 

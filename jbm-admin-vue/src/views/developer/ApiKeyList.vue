@@ -26,7 +26,8 @@ import {
 import { listGrantableApis, listResources, type AuthorityResource } from '@/api/authority'
 import { listApps } from '@/api/app'
 import { getDeveloper } from '@/api/developer'
-import type { BaseApiKey, BaseApp, OpenAuthority } from '@/api/types'
+import type { BaseApiKey, BaseApp, OpenAuthority, SnowflakeId } from '@/api/types'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
 import { useAuthStore } from '@/stores/auth'
 import { useFeedback } from '@/composables/useFeedback'
 
@@ -74,7 +75,7 @@ const {
 const authDialogOpen = ref(false)
 const authSaving = ref(false)
 const authError = ref('')
-const authKeyId = ref<number>()
+const authKeyId = ref<SnowflakeId>()
 const authKeyName = ref('')
 const grantableApis = ref<OpenAuthority[]>([])
 const authorityResources = ref<AuthorityResource[]>([])
@@ -421,7 +422,7 @@ onMounted(() => {
       <FormField label="所属业务应用（可选）">
         <Select
           :model-value="form.bizAppId ?? ''"
-          @update:model-value="(v) => { form.bizAppId = v ? Number(v) : undefined }"
+          @update:model-value="(v) => { form.bizAppId = v ? optionalSnowflakeIdParam(v) : undefined }"
         >
           <option value="">个人 Key</option>
           <option v-for="app in apps" :key="app.appId" :value="String(app.appId)">

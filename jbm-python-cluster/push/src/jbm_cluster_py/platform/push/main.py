@@ -20,14 +20,15 @@ from jbm_cluster_py.platform.push.business_events import (
 )
 from jbm_cluster_py.platform.push.router import build_push_router
 from jbm_cluster_py.platform.push.service import PushService
+from jbm_cluster_py.platform.push.worker import PushWorker
 
 
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app_config = config or AppConfig.load(app="push")
     configure_logging()
     init_telemetry(app_config.telemetry)
-    push_service = PushService()
     rabbitmq = RabbitMQClient(app_config.rabbitmq)
+    push_service = PushService(rabbitmq, app_config.rabbitmq)
     repository = BusinessEventRepository(app_config.database)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     http_client = WebhookHttpClient(discovery)
@@ -44,13 +45,16 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
         nacos = NacosRegistrar(app_config.service_name, app_config.port, app_config.nacos_discovery)
+        push_worker = PushWorker(push_service, rabbitmq, app_config.rabbitmq)
         app.state.config = app_config
         app.state.push_service = push_service
         app.state.business_event_service = business_event_service
+        app.state.push_worker = push_worker
         app.state.nacos = nacos
         await nacos.start()
         if rabbitmq.enabled:
             await rabbitmq.start()
+            await push_worker.start()
             await rabbitmq.declare_delivery_topology()
             await business_event_service.start()
             await rabbitmq.consume_delivery(delivery_consumer.handle)

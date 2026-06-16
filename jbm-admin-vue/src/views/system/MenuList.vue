@@ -28,7 +28,8 @@ import {
 } from '@/api/menu'
 import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listApps } from '@/api/app'
-import type { BaseAction, BaseApp, BaseMenu } from '@/api/types'
+import type { BaseAction, BaseApp, BaseMenu, SnowflakeId } from '@/api/types'
+import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 
 const { isSuperAdmin } = usePermission()
 const feedback = useFeedback()
@@ -65,9 +66,9 @@ const {
   status: 1,
 }))
 const appNameMap = computed(() => {
-  const map = new Map<number, string>()
+  const map = new Map<string, string>()
   for (const app of apps.value) {
-    if (app.appId != null) map.set(app.appId, app.appName ?? String(app.appId))
+    if (app.appId != null) map.set(toSnowflakeIdString(app.appId), app.appName ?? toSnowflakeIdString(app.appId))
   }
   return map
 })
@@ -132,13 +133,12 @@ function appLabel(row: BaseMenu) {
   if (isPlatformMenu(row)) return '—'
   const id = row.appId
   if (id == null) return '—'
-  return appNameMap.value.get(id) ?? String(id)
+  return appNameMap.value.get(toSnowflakeIdString(id)) ?? String(id)
 }
 
 function selectedImportAppName() {
   if (importAppId.value === '' || importAppId.value == null) return ''
-  const appId = Number(importAppId.value)
-  return appNameMap.value.get(appId) ?? String(importAppId.value)
+  return appNameMap.value.get(toSnowflakeIdString(importAppId.value)) ?? String(importAppId.value)
 }
 
 function currentExportAppId() {
@@ -244,7 +244,7 @@ function onFormScopeChange() {
   }
 }
 
-async function loadMenuActions(menuId?: number) {
+async function loadMenuActions(menuId?: SnowflakeId) {
   if (!menuId) {
     menuActions.value = []
     return
@@ -287,7 +287,7 @@ async function handleActionSave() {
   try {
     const payload = {
       ...actionForm.value,
-      menuId: Number(actionForm.value.menuId),
+      menuId: optionalSnowflakeIdParam(actionForm.value.menuId!),
       priority: actionForm.value.priority != null ? Number(actionForm.value.priority) : 0,
     }
     if (actionEditing.value && actionForm.value.actionId) {
@@ -343,14 +343,17 @@ async function handleSave() {
   try {
     const payload: Partial<BaseMenu> = {
       ...form.value,
-      parentId: form.value.parentId ? Number(form.value.parentId) : undefined,
+      parentId: optionalSnowflakeIdParam(form.value.parentId),
       priority:
         form.value.priority != null
           ? Number(form.value.priority)
           : form.value.sort != null
             ? Number(form.value.sort)
             : 0,
-      appId: formMenuScope.value === 'platform' ? undefined : Number(form.value.appId),
+      appId:
+        formMenuScope.value === 'platform'
+          ? undefined
+          : optionalSnowflakeIdParam(form.value.appId!),
     }
     if (editing.value && form.value.menuId) {
       await updateMenu(form.value.menuId, payload)

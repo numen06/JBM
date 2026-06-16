@@ -1,11 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 
 /** jaja7 本地：默认经本机 Gateway 6060；也可用 VITE_PROXY_TARGET 指向已发布后台。 */
-const gateway = process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:6060'
+function resolveGatewayTarget(mode: string) {
+  const env = loadEnv(mode, process.cwd(), '')
+  return env.VITE_PROXY_TARGET || 'http://127.0.0.1:6060'
+}
 
 const gatewayPrefixes = [
   '/v3/api',
@@ -34,7 +37,7 @@ function proxyMap(target: string, prefixes: string[]) {
   )
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
@@ -45,6 +48,6 @@ export default defineConfig({
     port: 5173,
     // 同时监听 127.0.0.1 与 ::1，避免仅 IPv6 localhost 导致 127.0.0.1 无法访问
     host: true,
-    proxy: proxyMap(gateway, gatewayPrefixes),
+    proxy: proxyMap(resolveGatewayTarget(mode), gatewayPrefixes),
   },
-})
+}))

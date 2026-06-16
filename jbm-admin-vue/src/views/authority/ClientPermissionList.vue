@@ -21,6 +21,7 @@ import {
 } from '@/api/authority'
 import type { BaseApp } from '@/api/types'
 import { useFeedback } from '@/composables/useFeedback'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
 
 const feedback = useFeedback()
 const apps = ref<BaseApp[]>([])
@@ -104,8 +105,8 @@ async function loadApps() {
 }
 
 async function loadAppPermissions() {
-  const appId = Number(selectedAppId.value)
-  if (!appId) return
+  const appId = optionalSnowflakeIdParam(selectedAppId.value)
+  if (appId == null) return
   loading.value = true
   error.value = ''
   serviceFilter.value = ''
@@ -163,8 +164,8 @@ function setVisibleAuthorities(checked: boolean) {
 }
 
 async function savePermissions() {
-  const appId = Number(selectedAppId.value)
-  if (!appId) return
+  const appId = optionalSnowflakeIdParam(selectedAppId.value)
+  if (appId == null) return
   saving.value = true
   error.value = ''
   try {

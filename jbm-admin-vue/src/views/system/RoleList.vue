@@ -15,6 +15,7 @@ import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useFeedback } from '@/composables/useFeedback'
 import { useMenuActionPermissions } from '@/composables/useMenuActionPermissions'
+import { toSnowflakeIdString } from '@/lib/snowflakeId'
 import { listRoles, deleteRole, createRole, updateRole } from '@/api/role'
 import {
   listAuthorityMenus,
@@ -62,7 +63,7 @@ const {
 const permDialogOpen = ref(false)
 const permRole = ref<BaseRole | null>(null)
 const allMenus = ref<AuthorityMenu[]>([])
-const menuActions = ref<Record<number, BaseAction[]>>({})
+const menuActions = ref<Record<string, BaseAction[]>>({})
 const authorityCatalog = ref<OpenAuthority[]>([])
 const permSaving = ref(false)
 const permError = ref('')
@@ -100,11 +101,12 @@ async function openPermissions(row: BaseRole) {
     ])
     authorityCatalog.value = catalog ?? []
     allMenus.value = menus.filter((m) => m.menuId && m.path && m.path !== '/')
-    const byMenu: Record<number, BaseAction[]> = {}
+    const byMenu: Record<string, BaseAction[]> = {}
     for (const a of allActions.contents ?? []) {
       if (a.menuId == null) continue
-      if (!byMenu[a.menuId]) byMenu[a.menuId] = []
-      byMenu[a.menuId].push(a)
+      const key = toSnowflakeIdString(a.menuId)
+      if (!byMenu[key]) byMenu[key] = []
+      byMenu[key].push(a)
     }
     menuActions.value = byMenu
     resetSelected(granted.map((g) => String(g.authorityId)).filter(Boolean))
@@ -273,7 +275,7 @@ async function handleDelete(row: BaseRole) {
               {{ m.menuName }}
               <span class="font-mono text-xs font-normal text-muted-foreground">{{ m.path }}</span>
             </label>
-            <div v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0" class="flex gap-1">
+            <div v-if="m.menuId && (menuActions[toSnowflakeIdString(m.menuId)]?.length ?? 0) > 0" class="flex gap-1">
               <Button variant="outline" size="sm" type="button" @click="selectAllActionsForMenu(m.menuId)">
                 全选按钮
               </Button>
@@ -283,11 +285,11 @@ async function handleDelete(row: BaseRole) {
             </div>
           </div>
           <div
-            v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0"
+            v-if="m.menuId && (menuActions[toSnowflakeIdString(m.menuId)]?.length ?? 0) > 0"
             class="mt-2 ml-6 flex flex-wrap gap-2"
           >
             <label
-              v-for="act in menuActions[m.menuId]"
+              v-for="act in menuActions[toSnowflakeIdString(m.menuId)]"
               :key="act.actionId"
               class="flex cursor-pointer items-center gap-1 rounded bg-muted/40 px-2 py-1 text-xs"
             >

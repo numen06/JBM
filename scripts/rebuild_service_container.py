@@ -138,6 +138,8 @@ def build_admin_overlay_image(args):
     run(["npm", "run", "build"], cwd=ROOT_DIR / "jbm-admin-vue")
     if not dist.is_dir():
         raise SystemExit(f"Missing dist: {dist}")
+    for path in dist.rglob("*"):
+        path.chmod(0o755 if path.is_dir() else 0o644)
 
     print(f"==> Docker overlay image: {image}", flush=True)
     with tempfile.TemporaryDirectory(prefix="jbm-admin-") as tmp:

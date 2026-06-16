@@ -23,6 +23,7 @@ import {
   type OpenAuthority,
 } from '@/api/authority'
 import { listActions } from '@/api/action'
+import { toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { BaseAction } from '@/api/types'
 
 type TabId = 'apis' | 'pages'
@@ -74,11 +75,12 @@ async function load() {
 }
 
 const actionsByMenu = computed(() => {
-  const map = new Map<number, BaseAction[]>()
+  const map = new Map<string, BaseAction[]>()
   for (const action of actions.value) {
     if (action.menuId == null) continue
-    if (!map.has(action.menuId)) map.set(action.menuId, [])
-    map.get(action.menuId)!.push(action)
+    const key = toSnowflakeIdString(action.menuId)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(action)
   }
   return map
 })
@@ -92,7 +94,7 @@ const filteredPageMenus = computed(() => {
       m.menuCode?.toLowerCase().includes(kw) ||
       m.path?.toLowerCase().includes(kw)
     if (menuHit) return true
-    const menuActs = m.menuId ? actionsByMenu.value.get(m.menuId) ?? [] : []
+    const menuActs = m.menuId ? actionsByMenu.value.get(toSnowflakeIdString(m.menuId)) ?? [] : []
     return menuActs.some(
       (a) =>
         a.actionName?.toLowerCase().includes(kw) ||
@@ -293,11 +295,11 @@ onMounted(load)
                 <Badge variant="outline" class="font-mono text-xs">MENU_{{ menu.menuCode }}</Badge>
               </div>
               <div
-                v-if="menu.menuId && (actionsByMenu.get(menu.menuId)?.length ?? 0) > 0"
+                v-if="menu.menuId && (actionsByMenu.get(toSnowflakeIdString(menu.menuId))?.length ?? 0) > 0"
                 class="mt-2 ml-2 flex flex-wrap gap-2"
               >
                 <Badge
-                  v-for="act in actionsByMenu.get(menu.menuId)"
+                  v-for="act in actionsByMenu.get(toSnowflakeIdString(menu.menuId))"
                   :key="act.actionId"
                   variant="secondary"
                   class="font-normal"

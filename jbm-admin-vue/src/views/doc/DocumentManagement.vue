@@ -18,6 +18,7 @@ import {
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
+import DocImagePreview from '@/components/doc/DocImagePreview.vue'
 import DocTextEditor from '@/components/doc/DocTextEditor.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
@@ -41,7 +42,14 @@ import {
   type BaseDoc,
   type DocListQuery,
 } from '@/api/doc'
-import { canPreviewEdit, contentLabel, guessDocLanguage, isOfficeDoc, isTextEditable } from '@/utils/docContent'
+import {
+  canPreviewEdit,
+  contentLabel,
+  guessDocLanguage,
+  isImageDoc,
+  isOfficeDoc,
+  isTextEditable,
+} from '@/utils/docContent'
 
 const router = useRouter()
 const feedback = useFeedback()
@@ -509,6 +517,12 @@ onUnmounted(clearPreview)
           :language="guessDocLanguage(previewDoc.docPath)"
           :loading="previewLoading"
           @update:model-value="onPreviewTextUpdate"
+        />
+        <DocImagePreview
+          v-else-if="previewDoc && isImageDoc(previewDoc) && previewUrl"
+          :src="previewUrl"
+          :alt="previewDoc.docName || previewDoc.docPath || '图片预览'"
+          :loading="previewLoading"
         />
         <iframe
           v-else-if="previewUrl"

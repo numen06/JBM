@@ -11,32 +11,52 @@ import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
 import Dialog from '@/components/ui/Dialog.vue'
 import { usePagedList } from '@/composables/usePagedList'
+import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 import {
   getClusterAccessInfo,
+  getGatewayLogDetail,
+  listAccountLogs,
   listGatewayLogs,
+  type AccountLogQuery,
   type GatewayLogQuery,
 } from '@/api/logs'
-import type { ClusterAccessInfo, GatewayLog } from '@/api/types'
+import type { BaseAccountLog, ClusterAccessInfo, GatewayLog } from '@/api/types'
 
 const props = withDefaults(defineProps<{ category?: 'access' | 'login' }>(), { category: 'access' })
 const stats = ref<ClusterAccessInfo>({})
 const statsLoading = ref(false)
 const statsError = ref('')
 const selectedGatewayLog = ref<GatewayLog | null>(null)
-const filters = ref<GatewayLogQuery>(defaultFilters())
+const gatewayDetailLoading = ref(false)
+const filters = ref<GatewayLogQuery>(defaultGatewayFilters())
+const loginFilters = ref<AccountLogQuery>(defaultLoginFilters())
 const autoRefreshEnabled = ref(true)
 const AUTO_REFRESH_MS = 10_000
 let autoRefreshTimer: ReturnType<typeof setInterval> | undefined
 
-const gatewayList = usePagedList<GatewayLog>((p, s) => listGatewayLogs(p, s, cleanQuery()))
+const gatewayList = usePagedList<GatewayLog>(
+  (p, s) => listGatewayLogs(p, s, cleanGatewayQuery()),
+  DEFAULT_PAGE_SIZE,
+  false,
+)
 const isLoginLogs = computed(() => props.category === 'login')
+const loginList = usePagedList<BaseAccountLog>((p, s) => listAccountLogs(p, s, cleanLoginQuery()), DEFAULT_PAGE_SIZE, false)
+const activeList = computed(() => (isLoginLogs.value ? loginList : gatewayList))
 const pageTitle = computed(() => (isLoginLogs.value ? '登录日志' : '访问日志'))
-const pageDescription = computed(() => (isLoginLogs.value ? '认证登录访问记录' : '网关访问记录'))
-const detailTitle = computed(() => selectedGatewayLog.value?.path || `${pageTitle.value}详情`)
+const pageDescription = computed(() =>
+  isLoginLogs.value ? '用户登录成功记录（账号、IP、终端）' : '网关访问记录',
+)
+const detailTitle = computed(() => {
+  if (isLoginLogs.value) {
+    return selectedAccountLog.value?.account || `${pageTitle.value}详情`
+  }
+  return selectedGatewayLog.value?.path || `${pageTitle.value}详情`
+})
+const selectedAccountLog = ref<BaseAccountLog | null>(null)
 
-function defaultFilters(): GatewayLogQuery {
+function defaultGatewayFilters(): GatewayLogQuery {
   return {
-    path: props.category === 'login' ? '/auth' : '',
+    path: '',
     serviceId: '',
     method: '',
     status: '',
@@ -45,10 +65,24 @@ function defaultFilters(): GatewayLogQuery {
   }
 }
 
-function cleanQuery(): GatewayLogQuery {
+function defaultLoginFilters(): AccountLogQuery {
+  return {
+    account: '',
+    loginIp: '',
+    accountType: '',
+  }
+}
+
+function cleanGatewayQuery(): GatewayLogQuery {
   return Object.fromEntries(
     Object.entries(filters.value).filter(([, value]) => String(value ?? '').trim() !== ''),
   ) as GatewayLogQuery
+}
+
+function cleanLoginQuery(): AccountLogQuery {
+  return Object.fromEntries(
+    Object.entries(loginFilters.value).filter(([, value]) => String(value ?? '').trim() !== ''),
+  ) as AccountLogQuery
 }
 
 async function loadStats(silent = false) {
@@ -75,6 +109,10 @@ async function loadStats(silent = false) {
 
 function refresh(silent = false) {
   loadStats(silent)
+  if (isLoginLogs.value) {
+    loginList.load(loginList.page.value, loginList.pageSize.value, { silent })
+    return
+  }
   gatewayList.load(gatewayList.page.value, gatewayList.pageSize.value, { silent })
 }
 
@@ -89,7 +127,9 @@ function startAutoRefresh() {
   stopAutoRefresh()
   if (!autoRefreshEnabled.value) return
   autoRefreshTimer = setInterval(() => {
-    if (selectedGatewayLog.value || gatewayList.loading.value || statsLoading.value) return
+    const detailOpen = isLoginLogs.value ? selectedAccountLog.value : selectedGatewayLog.value
+    const listLoading = isLoginLogs.value ? loginList.loading.value : gatewayList.loading.value
+    if (detailOpen || listLoading || statsLoading.value) return
     refresh(true)
   }, AUTO_REFRESH_MS)
 }
@@ -106,11 +146,19 @@ function toggleAutoRefresh() {
 
 function search() {
   loadStats()
+  if (isLoginLogs.value) {
+    loginList.load(1)
+    return
+  }
   gatewayList.load(1)
 }
 
 function resetFilters() {
-  filters.value = defaultFilters()
+  if (isLoginLogs.value) {
+    loginFilters.value = defaultLoginFilters()
+  } else {
+    filters.value = defaultGatewayFilters()
+  }
   search()
 }
 
@@ -122,8 +170,22 @@ function formatTime(value?: string | number) {
   return time.toLocaleString()
 }
 
-function gatewayId(row: GatewayLog, index: number) {
-  return row.id ?? row.logId ?? row.accessId ?? row.requestId ?? row.traceId ?? index
+function gatewayRowAccessId(row: GatewayLog, index: number) {
+  return String(row.accessId ?? row.logId ?? row.id ?? row.requestId ?? row.traceId ?? index)
+}
+
+async function openGatewayLogDetail(row: GatewayLog, index: number) {
+  selectedGatewayLog.value = row
+  const accessId = gatewayRowAccessId(row, index)
+  if (!accessId) return
+  gatewayDetailLoading.value = true
+  try {
+    selectedGatewayLog.value = await getGatewayLogDetail(accessId)
+  } catch {
+    selectedGatewayLog.value = row
+  } finally {
+    gatewayDetailLoading.value = false
+  }
 }
 
 function gatewayMethod(row: GatewayLog) {
@@ -172,11 +234,30 @@ function pretty(value: unknown) {
   return JSON.stringify(redactSensitive(value), null, 2)
 }
 
+function accountLogId(row: BaseAccountLog, index: number) {
+  return row.id ?? row.logId ?? index
+}
+
+function accountLoginTime(row: BaseAccountLog) {
+  return formatTime(row.loginTime || row.createTime)
+}
+
+function accountLoginIp(row: BaseAccountLog) {
+  return row.loginIp || row.ip || '-'
+}
+
+function accountLoginStatus(row: BaseAccountLog) {
+  if (row.loginStatus == null) return '-'
+  return row.loginStatus ? '成功' : '失败'
+}
+
 watch(
   () => props.category,
   () => {
     selectedGatewayLog.value = null
-    filters.value = defaultFilters()
+    selectedAccountLog.value = null
+    filters.value = defaultGatewayFilters()
+    loginFilters.value = defaultLoginFilters()
     refresh()
   },
 )
@@ -202,14 +283,24 @@ onUnmounted(stopAutoRefresh)
           <Play v-else class="h-4 w-4" />
           {{ autoRefreshEnabled ? '自动刷新中' : '开启自动刷新' }}
         </Button>
-        <Button variant="outline" :disabled="statsLoading || gatewayList.loading.value" @click="refresh()">
+        <Button variant="outline" :disabled="statsLoading || activeList.loading.value" @click="refresh()">
           <RefreshCw class="h-4 w-4" />
           刷新
         </Button>
       </template>
     </PageHeader>
 
-    <div class="grid gap-3 rounded-lg border p-3 md:grid-cols-6">
+    <div v-if="isLoginLogs" class="grid gap-3 rounded-lg border p-3 md:grid-cols-4">
+      <Input v-model="loginFilters.account" placeholder="登录账号" @keyup.enter="search" />
+      <Input v-model="loginFilters.loginIp" placeholder="登录 IP" @keyup.enter="search" />
+      <Input v-model="loginFilters.accountType" placeholder="登录方式" @keyup.enter="search" />
+      <div class="flex gap-2 md:col-span-4">
+        <Button size="sm" @click="search">搜索</Button>
+        <Button size="sm" variant="outline" @click="resetFilters">重置</Button>
+      </div>
+    </div>
+
+    <div v-else class="grid gap-3 rounded-lg border p-3 md:grid-cols-6">
       <Input v-model="filters.path" placeholder="请求路径" @keyup.enter="search" />
       <Input v-model="filters.serviceId" placeholder="服务名" @keyup.enter="search" />
       <Select v-model="filters.method">
@@ -249,6 +340,60 @@ onUnmounted(stopAutoRefresh)
     </div>
 
     <DataTableShell
+      v-if="isLoginLogs"
+      :loading="loginList.loading.value"
+      :error="loginList.error.value"
+      :empty="!loginList.items.value.length"
+    >
+      <Table>
+        <thead>
+          <tr class="border-b bg-muted/50">
+            <th class="h-10 px-4 text-left font-medium">登录时间</th>
+            <th class="h-10 px-4 text-left font-medium">账号</th>
+            <th class="h-10 px-4 text-left font-medium">登录方式</th>
+            <th class="h-10 px-4 text-left font-medium">状态</th>
+            <th class="h-10 px-4 text-left font-medium">来源 IP</th>
+            <th class="h-10 px-4 text-left font-medium">浏览器</th>
+            <th class="h-10 px-4 text-left font-medium">操作系统</th>
+            <th class="h-10 px-4 text-right font-medium">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(row, index) in loginList.items.value"
+            :key="accountLogId(row, index)"
+            class="border-b"
+          >
+            <td class="p-4 text-sm text-muted-foreground">{{ accountLoginTime(row) }}</td>
+            <td class="p-4">{{ row.account || row.userName || '-' }}</td>
+            <td class="p-4">{{ row.accountType || '-' }}</td>
+            <td class="p-4">
+              <Badge :variant="row.loginStatus === false ? 'destructive' : 'secondary'">
+                {{ accountLoginStatus(row) }}
+              </Badge>
+            </td>
+            <td class="p-4 font-mono text-sm">{{ accountLoginIp(row) }}</td>
+            <td class="max-w-[180px] truncate p-4 text-sm">{{ row.browser || '-' }}</td>
+            <td class="max-w-[160px] truncate p-4 text-sm">{{ row.os || '-' }}</td>
+            <td class="p-4 text-right">
+              <Button size="sm" variant="outline" @click="selectedAccountLog = row">
+                <Eye class="h-4 w-4" />
+                详情
+              </Button>
+            </td>
+          </tr>
+        </tbody>
+      </Table>
+      <PaginationBar
+        :page="loginList.page.value"
+        :total="loginList.total.value"
+        :page-size="loginList.pageSize.value"
+        @change="loginList.load"
+      />
+    </DataTableShell>
+
+    <DataTableShell
+      v-else
       :loading="gatewayList.loading.value"
       :error="gatewayList.error.value"
       :empty="!gatewayList.items.value.length"
@@ -267,7 +412,7 @@ onUnmounted(stopAutoRefresh)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in gatewayList.items.value" :key="gatewayId(row, index)" class="border-b">
+          <tr v-for="(row, index) in gatewayList.items.value" :key="gatewayRowAccessId(row, index)" class="border-b">
             <td class="p-4 text-sm text-muted-foreground">{{ gatewayTime(row) }}</td>
             <td class="p-4">
               <Badge variant="outline">{{ gatewayMethod(row) }}</Badge>
@@ -278,7 +423,7 @@ onUnmounted(stopAutoRefresh)
             <td class="p-4 font-mono text-sm">{{ gatewayIp(row) }}</td>
             <td class="max-w-[220px] truncate p-4 text-sm">{{ row.serviceId || row.appName || '-' }}</td>
             <td class="p-4 text-right">
-              <Button size="sm" variant="outline" @click="selectedGatewayLog = row">
+              <Button size="sm" variant="outline" :disabled="gatewayDetailLoading" @click="openGatewayLogDetail(row, index)">
                 <Eye class="h-4 w-4" />
                 详情
               </Button>
@@ -293,6 +438,56 @@ onUnmounted(stopAutoRefresh)
         @change="gatewayList.load"
       />
     </DataTableShell>
+
+    <Dialog
+      :open="!!selectedAccountLog"
+      :title="detailTitle"
+      class="max-w-3xl"
+      @update:open="selectedAccountLog = null"
+    >
+      <div v-if="selectedAccountLog" class="grid gap-3 text-sm md:grid-cols-2">
+        <div>
+          <div class="text-muted-foreground">账号</div>
+          <div>{{ selectedAccountLog.account || selectedAccountLog.userName || '-' }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">登录时间</div>
+          <div>{{ accountLoginTime(selectedAccountLog) }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">登录方式</div>
+          <div>{{ selectedAccountLog.accountType || '-' }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">状态</div>
+          <div>{{ accountLoginStatus(selectedAccountLog) }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">来源 IP</div>
+          <div class="font-mono">{{ accountLoginIp(selectedAccountLog) }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">登录地点</div>
+          <div>{{ selectedAccountLog.loginLocation || '-' }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">浏览器</div>
+          <div>{{ selectedAccountLog.browser || '-' }}</div>
+        </div>
+        <div>
+          <div class="text-muted-foreground">操作系统</div>
+          <div>{{ selectedAccountLog.os || '-' }}</div>
+        </div>
+        <div class="md:col-span-2">
+          <div class="text-muted-foreground">User-Agent</div>
+          <div class="break-all font-mono text-xs">{{ selectedAccountLog.loginAgent || '-' }}</div>
+        </div>
+        <div v-if="selectedAccountLog.message" class="md:col-span-2">
+          <div class="text-muted-foreground">备注</div>
+          <div>{{ selectedAccountLog.message }}</div>
+        </div>
+      </div>
+    </Dialog>
 
     <Dialog
       :open="!!selectedGatewayLog"

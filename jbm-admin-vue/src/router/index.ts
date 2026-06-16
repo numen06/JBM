@@ -6,6 +6,14 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/__dev/:pathMatch(.*)*',
+      redirect: (to) => {
+        const rest = to.params.pathMatch
+        const path = Array.isArray(rest) ? rest.join('/') : String(rest ?? '')
+        return path ? `/${path}` : '/'
+      },
+    },
+    {
       path: '/',
       name: 'landing',
       component: () => import('@/views/landing/LandingPage.vue'),
@@ -114,6 +122,18 @@ const router = createRouter({
           name: 'users',
           component: () => import('@/views/system/UserList.vue'),
           meta: { title: '用户管理' },
+        },
+        {
+          path: 'system/users/new',
+          name: 'user-new',
+          component: () => import('@/views/system/UserEditPage.vue'),
+          meta: { title: '新建用户' },
+        },
+        {
+          path: 'system/users/:userId/edit',
+          name: 'user-edit',
+          component: () => import('@/views/system/UserEditPage.vue'),
+          meta: { title: '编辑用户' },
         },
         {
           path: 'system/online-users',

@@ -83,7 +83,9 @@ public class LoginDatabaseHook {
         String errorKey = JbmCacheConstants.LOGIN_ERROR + username;
         Integer errorNumber = redisService.getCacheObject(errorKey);
         if (errorNumber != null && errorNumber >= JbmCacheConstants.LOGIN_ERROR_NUMBER) {
-            throw new UserException("登录错误次数超限，请{}分钟后再试", JbmCacheConstants.LOGIN_ERROR_LIMIT_TIME);
+            throw new UserException("user.password.retry.limit.exceed",
+                    new Object[]{JbmCacheConstants.LOGIN_ERROR_LIMIT_TIME},
+                    StrUtil.format("密码错误次数过多，账户锁定{}分钟", JbmCacheConstants.LOGIN_ERROR_LIMIT_TIME));
         }
     }
 

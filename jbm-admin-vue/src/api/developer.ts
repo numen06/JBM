@@ -2,6 +2,7 @@ import { get, post, put, unwrap } from './request'
 import type { BaseDeveloper, DataPaging } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export type DeveloperListQuery = {
   keyword?: string
@@ -26,13 +27,13 @@ export async function createDeveloper(data: Partial<BaseDeveloper>) {
   return unwrap(res)
 }
 
-export async function updateDeveloper(userId: number, data: Partial<BaseDeveloper>) {
-  const res = await put<void>(`/developer/${userId}`, data)
+export async function updateDeveloper(userId: SnowflakeId, data: Partial<BaseDeveloper>) {
+  const res = await put<void>(`/developer/${toSnowflakeIdString(userId)}`, data)
   return unwrap(res)
 }
 
-export async function getDeveloper(userId: number) {
-  const res = await get<BaseDeveloper>(`/developer/${userId}`)
+export async function getDeveloper(userId: SnowflakeId) {
+  const res = await get<BaseDeveloper>(`/developer/${toSnowflakeIdString(userId)}`)
   return unwrap(res)
 }
 
@@ -46,7 +47,7 @@ export async function listPendingDevelopers() {
   return unwrap(res)
 }
 
-export async function approveDeveloper(userId: number) {
-  const res = await put<void>(`/developer/${userId}/approve`)
+export async function approveDeveloper(userId: SnowflakeId) {
+  const res = await put<void>(`/developer/${toSnowflakeIdString(userId)}/approve`)
   return unwrap(res)
 }

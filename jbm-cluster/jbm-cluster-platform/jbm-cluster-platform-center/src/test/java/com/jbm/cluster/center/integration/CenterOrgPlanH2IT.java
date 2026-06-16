@@ -55,6 +55,37 @@ class CenterOrgPlanH2IT extends CenterH2ApiTestSupport {
         assertThat(defaultInTree.getChildren().stream()
                 .anyMatch(o -> "计划IT子组织".equals(o.getOrgName()))).isTrue();
 
+        MasterDataRequsetBody subtreeBody = new MasterDataRequsetBody();
+        BaseOrg filter = new BaseOrg();
+        filter.setId(1L);
+        subtreeBody.put("baseOrg", filter);
+        ResultBody<List<BaseOrg>> subtree = baseOrgController.tree(subtreeBody);
+        assertSuccess(subtree);
+        assertThat(subtree.getResult().stream().anyMatch(o -> Long.valueOf(1L).equals(o.getId())))
+                .as("子树过滤不应包含根节点自身")
+                .isFalse();
+        assertThat(subtree.getResult().stream()
+                .anyMatch(o -> "计划IT子组织".equals(o.getOrgName()))).isTrue();
+
+        // 三级部门：根 -> 二级 -> 三级
+        Long level2Id = saved.getResult().getId();
+        BaseOrg level3 = new BaseOrg();
+        level3.setOrgName("计划三级部门");
+        level3.setParentId(level2Id);
+        MasterDataRequsetBody level3Body = new MasterDataRequsetBody();
+        level3Body.put("baseOrg", level3);
+        ResultBody<BaseOrg> savedLevel3 = baseOrgController.save(level3Body);
+        assertSuccess(savedLevel3);
+        assertThat(savedLevel3.getResult().getParentId()).isEqualTo(level2Id);
+
+        ResultBody<List<BaseOrg>> subtreeAfterL3 = baseOrgController.tree(subtreeBody);
+        assertSuccess(subtreeAfterL3);
+        BaseOrg level2InTree = findOrgByName(subtreeAfterL3.getResult(), "计划IT子组织");
+        assertThat(level2InTree).isNotNull();
+        assertThat(level2InTree.getChildren()).isNotEmpty();
+        assertThat(level2InTree.getChildren().stream()
+                .anyMatch(o -> "计划三级部门".equals(o.getOrgName()))).isTrue();
+
         ResultBody<List<BaseUserOrg>> orgs = baseUserController.getUserOrgs(1L);
         assertSuccess(orgs);
         assertThat(orgs.getResult()).isNotNull();
@@ -63,5 +94,21 @@ class CenterOrgPlanH2IT extends CenterH2ApiTestSupport {
     private static void assertSuccess(ResultBody<?> body) {
         assertThat(body).isNotNull();
         assertThat(body.getSuccess()).isTrue();
+    }
+
+    private static BaseOrg findOrgByName(List<BaseOrg> nodes, String name) {
+        if (nodes == null) {
+            return null;
+        }
+        for (BaseOrg node : nodes) {
+            if (name.equals(node.getOrgName())) {
+                return node;
+            }
+            BaseOrg found = findOrgByName(node.getChildren(), name);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
     }
 }

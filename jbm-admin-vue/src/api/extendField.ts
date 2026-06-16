@@ -8,6 +8,7 @@ import type {
 } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { toSnowflakeIdParam } from '@/lib/snowflakeId'
 
 const BASE = '/extend-field/forms'
 const CUSTOM_FORMS_BASE = '/customForms'
@@ -60,7 +61,7 @@ export async function listFieldDefinitions(formCode: string) {
 export async function getCustomFormDesignDetail(codeOrId: string | number) {
   const body =
     typeof codeOrId === 'number' || /^\d+$/.test(String(codeOrId))
-      ? { id: Number(codeOrId) }
+      ? { id: toSnowflakeIdParam(codeOrId) }
       : { code: String(codeOrId) }
   const res = await post<CustomFormDesign>(`${CUSTOM_FORMS_BASE}/getDetail`, body)
   return unwrap(res)

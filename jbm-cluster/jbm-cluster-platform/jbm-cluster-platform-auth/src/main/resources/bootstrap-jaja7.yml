@@ -18,8 +18,9 @@ jbm:
   cluster:
     data-init:
       enabled: false
-      # 启动时恢复 admin 默认密码并标记须改密（本地联调用，生产勿开）
-      force-reset-default-password: true
+      # 手动恢复 admin 默认密码时再调用重置接口，避免每次重启覆盖已修改的密码
+      force-reset-default-password: false
+      manual-reset-enabled: true
       root-password: admin
   extend-field:
     enabled: true

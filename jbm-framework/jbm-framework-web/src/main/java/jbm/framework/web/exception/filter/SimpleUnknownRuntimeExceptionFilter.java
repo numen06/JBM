@@ -52,7 +52,11 @@ public abstract class SimpleUnknownRuntimeExceptionFilter implements UnknownRunt
         }
         if (runtimeExceptionMap.containsKey(runtimeException.getClass().getName())) {
             //默认将错误引入消息
-            resultBody.msg(runtimeException.getMessage());
+            String error = runtimeException.getMessage();
+            if (runtimeException instanceof BaseException) {
+                error = getBaseExceptionMessage((BaseException) runtimeException);
+            }
+            resultBody.msg(error);
             //擦除报错信息
             resultBody.exception(null);
             //

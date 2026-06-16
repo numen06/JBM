@@ -1,10 +1,11 @@
 import { ref, type Ref } from 'vue'
 import type { OpenAuthority } from '@/api/types'
 import type { BaseAction } from '@/api/types'
+import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export function useMenuActionPermissions(
   authorityCatalog: Ref<OpenAuthority[]>,
-  menuActions: Ref<Record<number, BaseAction[]>>,
+  menuActions: Ref<Record<string, BaseAction[]>>,
 ) {
   const selectedAuthorityIds = ref<Set<string>>(new Set())
 
@@ -14,18 +15,18 @@ export function useMenuActionPermissions(
     return hit?.authorityId ? String(hit.authorityId) : null
   }
 
-  function menuActionAuthorityIds(menuId: number) {
-    return (menuActions.value[menuId] ?? [])
+  function menuActionAuthorityIds(menuId: SnowflakeId) {
+    return (menuActions.value[toSnowflakeIdString(menuId)] ?? [])
       .map((a) => (a.actionCode ? authorityIdForActionCode(a.actionCode) : null))
       .filter((id): id is string => !!id)
   }
 
-  function isMenuFullyChecked(menuId?: number) {
+  function isMenuFullyChecked(menuId?: SnowflakeId) {
     if (!menuId) return false
     return selectedAuthorityIds.value.has(String(menuId))
   }
 
-  function isMenuIndeterminate(menuId?: number) {
+  function isMenuIndeterminate(menuId?: SnowflakeId) {
     if (!menuId) return false
     if (isMenuFullyChecked(menuId)) return false
     const actionIds = menuActionAuthorityIds(menuId)
@@ -34,7 +35,7 @@ export function useMenuActionPermissions(
     return selectedCount > 0
   }
 
-  function toggleMenu(menuId?: number) {
+  function toggleMenu(menuId?: SnowflakeId) {
     if (!menuId) return
     const menuKey = String(menuId)
     const next = new Set(selectedAuthorityIds.value)
@@ -49,7 +50,7 @@ export function useMenuActionPermissions(
     selectedAuthorityIds.value = next
   }
 
-  function toggleAction(actionCode?: string, menuId?: number) {
+  function toggleAction(actionCode?: string, menuId?: SnowflakeId) {
     if (!actionCode) return
     const actionId = authorityIdForActionCode(actionCode)
     if (!actionId) return
@@ -63,7 +64,7 @@ export function useMenuActionPermissions(
     selectedAuthorityIds.value = next
   }
 
-  function selectAllActionsForMenu(menuId?: number) {
+  function selectAllActionsForMenu(menuId?: SnowflakeId) {
     if (!menuId) return
     const next = new Set(selectedAuthorityIds.value)
     next.add(String(menuId))
@@ -73,7 +74,7 @@ export function useMenuActionPermissions(
     selectedAuthorityIds.value = next
   }
 
-  function clearAllActionsForMenu(menuId?: number) {
+  function clearAllActionsForMenu(menuId?: SnowflakeId) {
     if (!menuId) return
     const next = new Set(selectedAuthorityIds.value)
     next.delete(String(menuId))
@@ -86,12 +87,11 @@ export function useMenuActionPermissions(
   function ensureMenuPermissionsBeforeSave() {
     const next = new Set(selectedAuthorityIds.value)
     for (const [menuIdStr, actions] of Object.entries(menuActions.value)) {
-      const menuId = Number(menuIdStr)
       const hasSelectedAction = actions.some((a) => {
         const id = a.actionCode ? authorityIdForActionCode(a.actionCode) : null
         return id != null && next.has(id)
       })
-      if (hasSelectedAction) next.add(String(menuId))
+      if (hasSelectedAction) next.add(menuIdStr)
     }
     selectedAuthorityIds.value = next
     return Array.from(next)

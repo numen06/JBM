@@ -1,4 +1,5 @@
 import { get, put, unwrap } from './request'
+import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export interface AuthorityResource {
   authorityId?: string | number
@@ -69,36 +70,36 @@ export interface OpenAuthority {
   authority?: string
 }
 
-export async function getRoleAuthorities(roleId: number) {
-  const res = await get<OpenAuthority[]>(`/authority/roles/${roleId}`)
+export async function getRoleAuthorities(roleId: SnowflakeId) {
+  const res = await get<OpenAuthority[]>(`/authority/roles/${toSnowflakeIdString(roleId)}`)
   return unwrap(res)
 }
 
-export async function putRoleAuthorities(roleId: number, authorityIds: string[]) {
-  const res = await put<void>(`/authority/roles/${roleId}`, { authorityIds })
+export async function putRoleAuthorities(roleId: SnowflakeId, authorityIds: string[]) {
+  const res = await put<void>(`/authority/roles/${toSnowflakeIdString(roleId)}`, { authorityIds })
   return unwrap(res)
 }
 
-export async function getUserAuthorities(userId: number) {
-  const res = await get<OpenAuthority[]>(`/authority/users/${userId}`)
+export async function getUserAuthorities(userId: SnowflakeId) {
+  const res = await get<OpenAuthority[]>(`/authority/users/${toSnowflakeIdString(userId)}`)
   return unwrap(res)
 }
 
-export async function putUserAuthorities(userId: number, authorityIds: string[]) {
-  const res = await put<void>(`/authority/users/${userId}`, { authorityIds })
+export async function putUserAuthorities(userId: SnowflakeId, authorityIds: string[]) {
+  const res = await put<void>(`/authority/users/${toSnowflakeIdString(userId)}`, { authorityIds })
   return unwrap(res)
 }
 
-export async function getAppAuthorities(appId: number) {
-  const res = await get<OpenAuthority[]>(`/authority/apps/${appId}`)
+export async function getAppAuthorities(appId: SnowflakeId) {
+  const res = await get<OpenAuthority[]>(`/authority/apps/${toSnowflakeIdString(appId)}`)
   return unwrap(res)
 }
 
 export async function putAppAuthorities(
-  appId: number,
+  appId: SnowflakeId,
   authorityIds: string[],
   expireTime?: string,
 ) {
-  const res = await put<void>(`/authority/apps/${appId}`, { authorityIds, expireTime })
+  const res = await put<void>(`/authority/apps/${toSnowflakeIdString(appId)}`, { authorityIds, expireTime })
   return unwrap(res)
 }

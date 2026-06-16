@@ -1,6 +1,7 @@
 import { get, post, put, unwrap } from './request'
 import type { BaseAccount, BaseRole, BaseUser, BaseUserOrg, DataPaging, UserInfoStatistics } from './types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { optionalSnowflakeIdParam, toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export function pageParams(page = 1, size = DEFAULT_PAGE_SIZE) {
   return { 'pageForm.currPage': page, 'pageForm.pageSize': size }
@@ -36,15 +37,17 @@ export async function listUsersByFilter(page = 1, size = DEFAULT_PAGE_SIZE, filt
   }
   const keyword = filters.keyword?.trim()
   if (keyword) params.userName = keyword
-  if (filters.companyId != null && filters.companyId !== '') params.companyId = Number(filters.companyId)
-  if (filters.departmentId != null && filters.departmentId !== '') params.departmentId = Number(filters.departmentId)
+  const companyId = optionalSnowflakeIdParam(filters.companyId)
+  if (companyId != null) params.companyId = companyId
+  const departmentId = optionalSnowflakeIdParam(filters.departmentId)
+  if (departmentId != null) params.departmentId = departmentId
   if (filters.status != null) params.status = filters.status
   const res = await get<DataPaging<BaseUser>>('/user', { params })
   return unwrap(res)
 }
 
-export async function getUser(userId: number) {
-  const res = await get<BaseUser>(`/user/${userId}`)
+export async function getUser(userId: SnowflakeId) {
+  const res = await get<BaseUser>(`/user/${toSnowflakeIdString(userId)}`)
   return unwrap(res)
 }
 
@@ -61,21 +64,21 @@ export async function createUser(data: Partial<BaseUser> & { orgIds?: string[] }
 /**
  * PUT /user/{id} — 保存用户并可带 roleIds（与角色授权一并提交）
  */
-export async function getUserOrgs(userId: number) {
-  const res = await get<BaseUserOrg[]>(`/user/${userId}/orgs`)
+export async function getUserOrgs(userId: SnowflakeId) {
+  const res = await get<BaseUserOrg[]>(`/user/${toSnowflakeIdString(userId)}/orgs`)
   return unwrap(res) ?? []
 }
 
 export async function updateUser(
-  userId: number,
+  userId: SnowflakeId,
   data: Partial<BaseUser> & { roleIds?: string[]; orgIds?: string[] },
 ) {
-  const res = await put<BaseUser>(`/user/${userId}`, data)
+  const res = await put<BaseUser>(`/user/${toSnowflakeIdString(userId)}`, data)
   return unwrap(res)
 }
 
-export async function closeUser(userId: number) {
-  const res = await post<boolean>(`/user/${userId}/closure`, {})
+export async function closeUser(userId: SnowflakeId) {
+  const res = await post<boolean>(`/user/${toSnowflakeIdString(userId)}/closure`, {})
   return unwrap(res)
 }
 
@@ -84,27 +87,27 @@ export async function getUserStatistics() {
   return unwrap(res)
 }
 
-export async function getUserRoles(userId: number) {
-  const res = await get<BaseRole[]>(`/user/${userId}/roles`)
+export async function getUserRoles(userId: SnowflakeId) {
+  const res = await get<BaseRole[]>(`/user/${toSnowflakeIdString(userId)}/roles`)
   return unwrap(res)
 }
 
-export async function putUserRoles(userId: number, roleIds: string[]) {
-  const res = await put<void>(`/user/${userId}/roles`, { roleIds })
+export async function putUserRoles(userId: SnowflakeId, roleIds: string[]) {
+  const res = await put<void>(`/user/${toSnowflakeIdString(userId)}/roles`, { roleIds })
   return unwrap(res)
 }
 
-export async function getUserAccounts(userId: number) {
-  const res = await get<BaseAccount[]>(`/user/${userId}/accounts`)
+export async function getUserAccounts(userId: SnowflakeId) {
+  const res = await get<BaseAccount[]>(`/user/${toSnowflakeIdString(userId)}/accounts`)
   return unwrap(res) ?? []
 }
 
-export async function activateUserEmail(userId: number) {
-  const res = await put<void>(`/user/${userId}/activations/email`, {})
+export async function activateUserEmail(userId: SnowflakeId) {
+  const res = await put<void>(`/user/${toSnowflakeIdString(userId)}/activations/email`, {})
   return unwrap(res)
 }
 
-export async function activateUserMobile(userId: number) {
-  const res = await put<void>(`/user/${userId}/activations/mobile`, {})
+export async function activateUserMobile(userId: SnowflakeId) {
+  const res = await put<void>(`/user/${toSnowflakeIdString(userId)}/activations/mobile`, {})
   return unwrap(res)
 }

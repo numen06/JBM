@@ -23,6 +23,7 @@ import {
   logoutUser,
 } from '@/api/online'
 import type { BaseApp, SysUserOnline } from '@/api/types'
+import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 
 const { hasAction, isSuperAdmin } = usePermission()
 const feedback = useFeedback()
@@ -39,20 +40,23 @@ const actionLoading = ref(false)
 const currentToken = computed(() => auth.accessToken.replace(/^Bearer\s+/i, ''))
 
 const appNameMap = computed(() => {
-  const map = new Map<number, string>()
+  const map = new Map<string, string>()
   for (const app of apps.value) {
-    if (app.appId != null && !map.has(app.appId)) {
-      map.set(app.appId, app.appName ?? String(app.appId))
+    if (app.appId != null) {
+      const key = toSnowflakeIdString(app.appId)
+      if (!map.has(key)) map.set(key, app.appName ?? key)
     }
   }
   return map
 })
 
 const appOptions = computed(() => {
-  const seen = new Set<number>()
+  const seen = new Set<string>()
   return apps.value.filter((app) => {
-    if (app.appId == null || seen.has(app.appId)) return false
-    seen.add(app.appId)
+    if (app.appId == null) return false
+    const key = toSnowflakeIdString(app.appId)
+    if (seen.has(key)) return false
+    seen.add(key)
     return true
   })
 })
@@ -70,13 +74,10 @@ function buildSearch() {
   return {
     userName: userName.value.trim() || undefined,
     ipaddr: ipaddr.value.trim() || undefined,
-    appId:
-      appIdFilter.value !== '' && appIdFilter.value != null
-        ? Number(appIdFilter.value)
-        : undefined,
+    appId: optionalSnowflakeIdParam(appIdFilter.value),
     companyId:
-      isSuperAdmin.value && companyIdFilter.value !== '' && companyIdFilter.value != null
-        ? Number(companyIdFilter.value)
+      isSuperAdmin.value
+        ? optionalSnowflakeIdParam(companyIdFilter.value)
         : undefined,
   }
 }
@@ -89,7 +90,9 @@ const activeFilters = computed(() => {
   const filters: string[] = []
   if (userName.value.trim()) filters.push(`用户：${userName.value.trim()}`)
   if (ipaddr.value.trim()) filters.push(`IP：${ipaddr.value.trim()}`)
-  if (appIdFilter.value) filters.push(`应用：${appNameMap.value.get(Number(appIdFilter.value)) ?? appIdFilter.value}`)
+  if (appIdFilter.value) {
+    filters.push(`应用：${appNameMap.value.get(toSnowflakeIdString(appIdFilter.value)) ?? appIdFilter.value}`)
+  }
   if (companyIdFilter.value) filters.push('已筛组织')
   return filters
 })
@@ -103,7 +106,7 @@ const pageStats = computed(() => {
 function appLabel(row: SysUserOnline) {
   if (row.appName) return row.appName
   if (row.appId == null) return '-'
-  return appNameMap.value.get(row.appId) ?? String(row.appId)
+  return appNameMap.value.get(toSnowflakeIdString(row.appId)) ?? String(row.appId)
 }
 
 function search() {

@@ -27,6 +27,7 @@ integrations:
   rabbitmq:
     business-event-queue: businessEvent-in-0.jbm-cluster-platform-push
     business-event-resource-queue: businessEventResource-in-0.jbm-cluster-platform-push
+    push-message-queue: pushMessage-in-0.jbm-cluster-platform-push
     delivery-queue: jbm.webhook.delivery
     delivery-dlt-queue: jbm.webhook.delivery.dlt
     delivery-dlx-exchange: jbm.webhook.delivery.dlx

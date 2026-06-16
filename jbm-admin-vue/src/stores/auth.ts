@@ -54,19 +54,15 @@ export const useAuthStore = defineStore('auth', () => {
       clientSecret: clientSecret.value,
     })
     applyToken(token)
-    if (!mustChangePassword.value) {
-      await fetchUser()
-      await useMenuStore().fetchMenus()
-    }
+    await fetchUser()
+    await useMenuStore().fetchMenus()
     return mustChangePassword.value
   }
 
   async function loginWithToken(token: OAuth2TokenResult) {
     applyToken(token)
-    if (!mustChangePassword.value) {
-      await fetchUser()
-      await useMenuStore().fetchMenus()
-    }
+    await fetchUser()
+    await useMenuStore().fetchMenus()
     return mustChangePassword.value
   }
 

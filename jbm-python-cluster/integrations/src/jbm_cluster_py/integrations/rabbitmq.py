@@ -93,6 +93,18 @@ class RabbitMQClient:
         await queue.consume(on_message)
         logger.info("Consuming RabbitMQ queue %s", queue_name)
 
+    async def publish_json(self, queue_name: str, payload: Mapping[str, Any]) -> None:
+        if self.channel is None:
+            raise RuntimeError("RabbitMQ channel is not available")
+        import aio_pika
+
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        await self.channel.declare_queue(queue_name, durable=True)
+        await self.channel.default_exchange.publish(
+            aio_pika.Message(body=body, delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
+            routing_key=queue_name,
+        )
+
     async def publish_delivery_task(self, payload: Mapping[str, Any], retry_count: int = 0) -> None:
         if self.channel is None:
             raise RuntimeError("RabbitMQ channel is not available")

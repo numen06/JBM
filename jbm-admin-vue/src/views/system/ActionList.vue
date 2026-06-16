@@ -16,6 +16,7 @@ import { useFeedback } from '@/composables/useFeedback'
 import { listActions, createAction, updateAction, deleteAction } from '@/api/action'
 import { listAllMenus } from '@/api/menu'
 import type { BaseAction, BaseMenu } from '@/api/types'
+import { optionalSnowflakeIdParam, sameSnowflakeId } from '@/lib/snowflakeId'
 
 const filterMenuId = ref<string>('')
 const menus = ref<BaseMenu[]>([])
@@ -23,7 +24,7 @@ const feedback = useFeedback()
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseAction>(
   (p, size) => {
-    const mid = filterMenuId.value ? Number(filterMenuId.value) : undefined
+    const mid = optionalSnowflakeIdParam(filterMenuId.value)
     return listActions(mid, p, size)
   },
 )
@@ -53,16 +54,16 @@ async function loadMenus() {
   }
 }
 
-function menuLabel(menuId?: number) {
+function menuLabel(menuId?: string | number) {
   if (!menuId) return '—'
-  const m = menus.value.find((x) => x.menuId === menuId)
+  const m = menus.value.find((x) => sameSnowflakeId(x.menuId, menuId))
   return m ? `${m.menuName} (${m.menuCode})` : String(menuId)
 }
 
 function openCreateAction() {
   openCreate()
   if (filterMenuId.value) {
-    form.value.menuId = Number(filterMenuId.value)
+    form.value.menuId = optionalSnowflakeIdParam(filterMenuId.value)
   }
 }
 
@@ -80,7 +81,7 @@ async function handleSave() {
   try {
     const payload = {
       ...form.value,
-      menuId: Number(form.value.menuId),
+      menuId: optionalSnowflakeIdParam(form.value.menuId!),
       priority: form.value.priority != null ? Number(form.value.priority) : 0,
     }
     if (editing.value && form.value.actionId) {

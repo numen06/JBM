@@ -2,6 +2,7 @@ import { get, post, put, del, unwrap } from './request'
 import type { BaseRole, DataPaging } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export type RoleListQuery = {
   keyword?: string
@@ -29,12 +30,12 @@ export async function createRole(data: Partial<BaseRole>) {
   return unwrap(res)
 }
 
-export async function updateRole(roleId: number, data: Partial<BaseRole>) {
-  const res = await put<void>(`/role/${roleId}`, data)
+export async function updateRole(roleId: SnowflakeId, data: Partial<BaseRole>) {
+  const res = await put<void>(`/role/${toSnowflakeIdString(roleId)}`, data)
   return unwrap(res)
 }
 
-export async function deleteRole(roleId: number) {
-  const res = await del<void>(`/role/${roleId}`)
+export async function deleteRole(roleId: SnowflakeId) {
+  const res = await del<void>(`/role/${toSnowflakeIdString(roleId)}`)
   return unwrap(res)
 }

@@ -9,6 +9,7 @@ export interface PagedListLoadOptions {
 export function usePagedList<T>(
   fetcher: (page: number, size: number) => Promise<DataPaging<T>>,
   pageSize = DEFAULT_PAGE_SIZE,
+  autoLoad = true,
 ) {
   const items: Ref<T[]> = ref([])
   const total = ref(0)
@@ -48,7 +49,9 @@ export function usePagedList<T>(
     }
   }
 
-  onMounted(() => load(1))
+  onMounted(() => {
+    if (autoLoad) load(1)
+  })
 
   return { items, total, page, loading, error, load, pageSize: currentPageSize }
 }

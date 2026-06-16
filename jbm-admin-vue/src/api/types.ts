@@ -1,3 +1,5 @@
+import type { SnowflakeId } from '@/lib/snowflakeId'
+
 export interface ResultBody<T = unknown> {
   code?: number
   message?: string
@@ -5,6 +7,9 @@ export interface ResultBody<T = unknown> {
   success?: boolean
   httpStatus?: number
 }
+
+/** 后端 Long / 雪花 ID；禁止 Number()，请用 @/lib/snowflakeId */
+export type { SnowflakeId } from '@/lib/snowflakeId'
 
 export interface PageForm {
   currPage?: number
@@ -31,7 +36,7 @@ export interface OAuth2TokenResult {
 }
 
 export interface BaseUser {
-  userId?: number
+  userId?: SnowflakeId
   userName?: string
   nickName?: string
   realName?: string
@@ -43,12 +48,12 @@ export interface BaseUser {
   createTime?: string
   password?: string
   userType?: string
-  companyId?: number
-  departmentId?: number
+  companyId?: SnowflakeId
+  departmentId?: SnowflakeId
 }
 
 export interface BaseRole {
-  roleId?: number
+  roleId?: SnowflakeId
   roleCode?: string
   roleName?: string
   status?: number
@@ -56,34 +61,34 @@ export interface BaseRole {
 }
 
 export interface BaseMenu {
-  menuId?: number
+  menuId?: SnowflakeId
   menuCode?: string
   menuName?: string
-  parentId?: number
+  parentId?: SnowflakeId
   path?: string
-  authorityId?: number
+  authorityId?: SnowflakeId
   icon?: string
   sort?: number
   priority?: number
   status?: number
-  appId?: number
+  appId?: SnowflakeId
   isPersist?: boolean
   hidden?: number
   children?: BaseMenu[]
 }
 
 export interface BaseAction {
-  actionId?: number
+  actionId?: SnowflakeId
   actionCode?: string
   actionName?: string
-  menuId?: number
+  menuId?: SnowflakeId
   priority?: number
   status?: number
 }
 
 export interface BaseAccount {
-  accountId?: number
-  userId?: number
+  accountId?: SnowflakeId
+  userId?: SnowflakeId
   account?: string
   accountType?: string
   status?: number
@@ -91,33 +96,34 @@ export interface BaseAccount {
 }
 
 export interface BaseOrg {
-  id?: number
-  orgId?: number
+  id?: SnowflakeId
+  orgId?: SnowflakeId
   orgName?: string
   orgCode?: string
   orgType?: string
-  managerId?: number
-  parentId?: number
+  managerId?: SnowflakeId
+  parentId?: SnowflakeId
+  groupId?: string
   sort?: number
   status?: number
   children?: BaseOrg[]
 }
 
 export interface BaseUserOrg {
-  id?: number
-  userId?: number
-  orgId?: number
+  id?: SnowflakeId
+  userId?: SnowflakeId
+  orgId?: SnowflakeId
   expireTime?: string
 }
 
 export interface BaseApp {
-  appId?: number
+  appId?: SnowflakeId
   appName?: string
   appCode?: string
   clientId?: string
   apiKey?: string
   secretKey?: string
-  orgId?: number
+  orgId?: SnowflakeId
   status?: number
   isPersist?: number
 }
@@ -250,8 +256,22 @@ export interface GatewayIpLimit {
 }
 
 export interface BaseAccountLog {
-  logId?: number
+  id?: number | string
+  logId?: number | string
+  userId?: number | string
+  account?: string
   userName?: string
+  accountType?: string
+  loginTime?: string | number
+  loginIp?: string
+  loginLocation?: string
+  browser?: string
+  os?: string
+  loginAgent?: string
+  loginStatus?: boolean
+  loginNums?: number
+  domain?: string
+  message?: string
   operation?: string
   createTime?: string
   ip?: string
@@ -352,9 +372,9 @@ export interface BaseDeveloper {
 }
 
 export interface BaseApiKey {
-  keyId?: number
-  developerId?: number
-  bizAppId?: number | null
+  keyId?: SnowflakeId
+  developerId?: SnowflakeId
+  bizAppId?: SnowflakeId | null
   apiKey?: string
   secretKey?: string
   keyName?: string
@@ -381,12 +401,12 @@ export interface UserInfoStatistics {
 /** 在线会话（对齐后端 SysUserOnline） */
 export interface SysUserOnline {
   tokenId?: string
-  userId?: number
-  deptId?: number
+  userId?: SnowflakeId
+  deptId?: SnowflakeId
   deptName?: string
-  companyId?: number
+  companyId?: SnowflakeId
   companyName?: string
-  appId?: number
+  appId?: SnowflakeId
   appName?: string
   userName?: string
   ipaddr?: string
@@ -401,13 +421,13 @@ export interface SysUserOnline {
 export interface OnlineUserSearchForm {
   ipaddr?: string
   userName?: string
-  appId?: number
-  companyId?: number
+  appId?: SnowflakeId
+  companyId?: SnowflakeId
   pageForm?: PageForm
 }
 
 export interface CurrentUser {
-  userId?: number
+  userId?: SnowflakeId
   userName?: string
   nickName?: string
   realName?: string
@@ -415,8 +435,8 @@ export interface CurrentUser {
   avatar?: string
   mobile?: string
   email?: string
-  companyId?: number
-  departmentId?: number
+  companyId?: SnowflakeId
+  departmentId?: SnowflakeId
   roles?: BaseRole[]
   authorities?: { authorityId?: string; authority?: string }[]
 }
@@ -434,9 +454,9 @@ export type PushMessageWay =
 
 export interface PushMessage {
   msgId?: string
-  msgBodyId?: number
-  recUserId?: number
-  sendUserId?: number
+  msgBodyId?: SnowflakeId
+  recUserId?: SnowflakeId
+  sendUserId?: SnowflakeId
   sysMsg?: boolean
   pushStatus?: string
   pushWay?: PushMessageWay
@@ -459,7 +479,7 @@ export interface PushMessageQuery {
   sourceType?: 'system' | 'user'
   pushWay?: PushMessageWay
   pushStatus?: string
-  recUserId?: number
+  recUserId?: SnowflakeId
   pageForm?: PageForm
 }
 
@@ -483,7 +503,7 @@ export interface EmailPushConfig {
 }
 
 export interface PushTestRequest {
-  recUserIds?: number[]
+  recUserIds?: SnowflakeId[]
   tags?: string
   title?: string
   content?: string
@@ -514,7 +534,7 @@ export interface PushTestTaskStatus {
 export interface PushTestAck {
   testRunId?: string
   msgId?: string
-  recUserId?: number
+  recUserId?: SnowflakeId
   receivedAt?: number
   latencyMs?: number
 }

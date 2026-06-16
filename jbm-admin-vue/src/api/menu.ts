@@ -2,6 +2,7 @@ import http, { get, post, put, del, unwrap, withServicePrefix } from './request'
 import type { BaseMenu, DataPaging, ResultBody } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { isBlankSnowflakeId, optionalSnowflakeIdParam, toSnowflakeIdParam, toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export type MenuScope = 'platform' | 'app' | 'visible' | 'all'
 
@@ -25,9 +26,8 @@ function buildMenuQueryParams(query?: MenuListQuery): Record<string, unknown> {
   if (query?.status !== undefined && query.status !== '') {
     params.status = Number(query.status)
   }
-  if (query?.appId !== undefined && query.appId !== '') {
-    params.appId = Number(query.appId)
-  }
+  const appId = optionalSnowflakeIdParam(query?.appId)
+  if (appId != null) params.appId = appId
   if (query?.scope) params.scope = query.scope
   return params
 }
@@ -42,8 +42,10 @@ export async function listMenus(
   return unwrap(res)
 }
 
-export async function listAllMenus(appId?: number) {
-  const res = await get<BaseMenu[]>('/menu/all', { params: appId ? { appId } : {} })
+export async function listAllMenus(appId?: SnowflakeId) {
+  const res = await get<BaseMenu[]>('/menu/all', {
+    params: appId != null ? { appId: toSnowflakeIdParam(appId) } : {},
+  })
   return unwrap(res)
 }
 
@@ -52,22 +54,22 @@ export async function createMenu(data: Partial<BaseMenu>) {
   return unwrap(res)
 }
 
-export async function updateMenu(menuId: number, data: Partial<BaseMenu>) {
-  const res = await put<void>(`/menu/${menuId}`, data)
+export async function updateMenu(menuId: SnowflakeId, data: Partial<BaseMenu>) {
+  const res = await put<void>(`/menu/${toSnowflakeIdString(menuId)}`, data)
   return unwrap(res)
 }
 
-export async function deleteMenu(menuId: number) {
-  const res = await del<void>(`/menu/${menuId}`)
+export async function deleteMenu(menuId: SnowflakeId) {
+  const res = await del<void>(`/menu/${toSnowflakeIdString(menuId)}`)
   return unwrap(res)
 }
 
-export async function exportMenus(appId?: number | string) {
+export async function exportMenus(appId?: SnowflakeId) {
   const { data } = await http.get<Blob>(withServicePrefix('/menu/export'), {
     params:
-      appId !== undefined && appId !== ''
+      appId != null && !isBlankSnowflakeId(appId)
         ? {
-            appId: Number(appId),
+            appId: toSnowflakeIdParam(appId),
           }
         : undefined,
     responseType: 'blob',
@@ -75,14 +77,14 @@ export async function exportMenus(appId?: number | string) {
   return data
 }
 
-export async function importMenus(file: File, appId?: number | string) {
+export async function importMenus(file: File, appId?: SnowflakeId) {
   const form = new FormData()
   form.append('file', file)
   const { data } = await http.post<ResultBody<string>>(withServicePrefix('/menu/imports'), form, {
     params:
-      appId !== undefined && appId !== ''
+      appId != null && !isBlankSnowflakeId(appId)
         ? {
-            appId: Number(appId),
+            appId: toSnowflakeIdParam(appId),
           }
         : undefined,
     headers: { 'Content-Type': 'multipart/form-data' },

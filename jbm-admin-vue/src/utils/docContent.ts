@@ -22,6 +22,8 @@ const TEXT_EDITABLE_EXTENSION = /\.(bat|conf|csv|css|env|html?|ini|java|js|json|
 
 const OFFICE_EXTENSION = /\.(docx?|xlsx?|pptx?|ppsx?|potx?)$/i
 
+const IMAGE_EXTENSION = /\.(avif|bmp|gif|heic|heif|ico|jpe?g|png|svg|tiff?|webp)$/i
+
 export function isTextEditable(doc: Pick<BaseDoc, 'contentType' | 'docPath' | 'docName'>) {
   const type = (doc.contentType || '').split(';')[0].trim().toLowerCase()
   const path = (doc.docPath || doc.docName || '').toLowerCase()
@@ -30,6 +32,12 @@ export function isTextEditable(doc: Pick<BaseDoc, 'contentType' | 'docPath' | 'd
     TEXT_EDITABLE_TYPES.has(type) ||
     TEXT_EDITABLE_EXTENSION.test(path)
   )
+}
+
+export function isImageDoc(doc: Pick<BaseDoc, 'contentType' | 'docPath' | 'docName'>) {
+  const type = (doc.contentType || '').split(';')[0].trim().toLowerCase()
+  const path = (doc.docPath || doc.docName || '').toLowerCase()
+  return type.startsWith('image/') || IMAGE_EXTENSION.test(path)
 }
 
 export function isOfficeDoc(doc: Pick<BaseDoc, 'contentType' | 'docPath' | 'docName'>) {

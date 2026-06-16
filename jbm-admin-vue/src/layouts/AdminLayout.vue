@@ -6,10 +6,16 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
 import { useMessageStore } from '@/stores/messages'
+import { updatePassword } from '@/api/current'
 import Button from '@/components/ui/Button.vue'
+import Dialog from '@/components/ui/Dialog.vue'
+import Input from '@/components/ui/Input.vue'
+import Label from '@/components/ui/Label.vue'
 import JbmLogo from '@/components/JbmLogo.vue'
 import { useDocImageSrc } from '@/composables/useDocImageSrc'
+import { extractApiError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
+import type { SnowflakeId } from '@/api/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,6 +24,14 @@ const app = useAppStore()
 const menuStore = useMenuStore()
 const messageStore = useMessageStore()
 const messagesOpen = ref(false)
+const passwordReminderDismissed = ref(false)
+const passwordForm = ref({
+  originPassword: '',
+  currentPassword: '',
+  confirmPassword: '',
+})
+const passwordSaving = ref(false)
+const passwordError = ref('')
 const NAV_GROUP_STATE_KEY = 'jbm_admin_expanded_nav_groups'
 const THEME_STORAGE_KEY = 'jbm_admin_theme'
 type ThemeMode = 'light' | 'dark'
@@ -35,6 +49,9 @@ const activeGroupLabel = computed(() =>
 const expandedGroupLabels = ref<string[]>([])
 const unreadLabel = computed(() =>
   messageStore.unreadCount > 99 ? '99+' : String(messageStore.unreadCount),
+)
+const showPasswordReminder = computed(
+  () => auth.mustChangePassword && !passwordReminderDismissed.value,
 )
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
@@ -57,6 +74,38 @@ async function handleLogout() {
   await auth.logout()
   messageStore.clear()
   router.push({ name: 'login' })
+}
+
+function dismissPasswordReminder() {
+  passwordReminderDismissed.value = true
+  passwordError.value = ''
+}
+
+async function submitPasswordChange() {
+  passwordError.value = ''
+  if (!passwordForm.value.originPassword || !passwordForm.value.currentPassword || !passwordForm.value.confirmPassword) {
+    passwordError.value = '请填写当前密码、新密码和确认密码'
+    return
+  }
+  if (passwordForm.value.currentPassword.length < 6) {
+    passwordError.value = '新密码至少 6 位'
+    return
+  }
+  passwordSaving.value = true
+  try {
+    await updatePassword(passwordForm.value)
+    auth.clearMustChangePassword()
+    passwordReminderDismissed.value = true
+    passwordForm.value = {
+      originPassword: '',
+      currentPassword: '',
+      confirmPassword: '',
+    }
+  } catch (e) {
+    passwordError.value = extractApiError(e, '修改密码失败')
+  } finally {
+    passwordSaving.value = false
+  }
 }
 
 function readInitialTheme(): ThemeMode {
@@ -99,7 +148,7 @@ function contentText(value: unknown) {
   }
 }
 
-function messageSource(message: { sysMsg?: boolean; sendUserId?: number }) {
+function messageSource(message: { sysMsg?: boolean; sendUserId?: SnowflakeId }) {
   return message.sysMsg || !message.sendUserId ? '系统通知' : '用户消息'
 }
 
@@ -188,8 +237,10 @@ watch(
   () => auth.accessToken,
   (token) => {
     if (token) {
+      passwordReminderDismissed.value = false
       messageStore.connectRealtime()
     } else {
+      passwordReminderDismissed.value = false
       messageStore.disconnectRealtime()
       messageStore.clear()
       if (!route.meta.public) {
@@ -389,5 +440,45 @@ watch(
         <RouterView />
       </main>
     </div>
+
+    <Dialog
+      :open="showPasswordReminder"
+      title="建议修改初始密码"
+      class="max-w-md"
+      @update:open="(v) => { if (!v) dismissPasswordReminder() }"
+    >
+      <p class="mb-4 text-sm text-muted-foreground">
+        当前账号仍在使用默认或重置后的密码。可以现在修改，也可以稍后在个人中心处理。
+      </p>
+      <form class="space-y-4" @submit.prevent="submitPasswordChange">
+        <div class="space-y-2">
+          <Label>当前密码</Label>
+          <Input v-model="passwordForm.originPassword" type="password" autocomplete="current-password" />
+        </div>
+        <div class="space-y-2">
+          <Label>新密码</Label>
+          <Input v-model="passwordForm.currentPassword" type="password" autocomplete="new-password" />
+        </div>
+        <div class="space-y-2">
+          <Label>确认新密码</Label>
+          <Input v-model="passwordForm.confirmPassword" type="password" autocomplete="new-password" />
+        </div>
+        <div
+          v-if="passwordError"
+          role="alert"
+          class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {{ passwordError }}
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button type="button" variant="outline" :disabled="passwordSaving" @click="dismissPasswordReminder">
+            稍后修改
+          </Button>
+          <Button type="submit" :disabled="passwordSaving">
+            {{ passwordSaving ? '提交中...' : '确认修改' }}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   </div>
 </template>

@@ -19,6 +19,8 @@ import { useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
 import { listApps, deleteApp, createApp, updateApp, resetAppSecret, getAppSecret, type AppCredentials } from '@/api/app'
 import type { BaseApp } from '@/api/types'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
+import type { SnowflakeId } from '@/api/types'
 
 const { orgLabel, loadOrgs } = useOrgTree()
 const feedback = useFeedback()
@@ -30,7 +32,7 @@ const statusFilter = ref('')
 const orgIdFilter = ref<number | string | null>(null)
 const secretDialogOpen = ref(false)
 const secretViewMode = ref<'view' | 'reveal'>('view')
-const secretAppId = ref<number>()
+const secretAppId = ref<SnowflakeId>()
 const secretIsPersist = ref(false)
 const secretAppName = ref('')
 const secretClientId = ref('')
@@ -81,7 +83,7 @@ async function handleSave() {
   }
   saving.value = true
   formError.value = ''
-  const payload = { ...form.value, orgId: Number(form.value.orgId) }
+  const payload = { ...form.value, orgId: optionalSnowflakeIdParam(form.value.orgId!) }
   try {
     if (editing.value && form.value.appId) {
       await updateApp(form.value.appId, payload)

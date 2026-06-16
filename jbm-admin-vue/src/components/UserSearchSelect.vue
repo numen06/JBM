@@ -6,10 +6,11 @@ import Input from '@/components/ui/Input.vue'
 import { cn } from '@/lib/utils'
 import { getUser, listUsers } from '@/api/user'
 import type { BaseUser } from '@/api/types'
+import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: number | null
+    modelValue?: SnowflakeId | null
     includeBroadcast?: boolean
     placeholder?: string
   }>(),
@@ -21,7 +22,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number | null]
+  'update:modelValue': [value: SnowflakeId | null]
 }>()
 
 const keyword = ref('')
@@ -69,7 +70,7 @@ function selectUser(user: BaseUser) {
   selectedUser.value = user
   keyword.value = ''
   open.value = false
-  emit('update:modelValue', Number(user.userId))
+  emit('update:modelValue', toSnowflakeIdString(user.userId))
 }
 
 function clear() {
@@ -101,7 +102,7 @@ watch(
     }
     if (selectedUser.value?.userId === value) return
     try {
-      selectedUser.value = await getUser(Number(value))
+      selectedUser.value = await getUser(value)
     } catch {
       selectedUser.value = { userId: value }
     }

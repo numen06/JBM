@@ -14,7 +14,7 @@ spring:
         server-addr: 10.100.10.62:8848
         namespace: jbm7
         group: DEFAULT_GROUP
-        shared-dataids: openobserve.yml
+        shared-dataids: openobserve.yml,redis.properties
 
 integrations:
   openobserve:
@@ -27,5 +27,5 @@ integrations:
     access-logs-queue: accessLogs-in-0.jbm-cluster-platform-logs
     business-log-queue: businessLog-in-0.jbm-cluster-platform-logs
   redis:
-    enabled: false
+    enabled: true
     url: redis://127.0.0.1:6379/0

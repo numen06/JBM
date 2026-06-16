@@ -31,11 +31,15 @@ import { useFeedback } from '@/composables/useFeedback'
 import {
   useOrgTree,
   orgRowId,
+  sameOrgId,
   collectVisibleOrgIds,
   collectDescendantIds,
-  findOrgInTree,
+  collectNodesWithChildren,
+  findOrgInNodes,
+  orgMatchesKeyword,
   isDefaultOrg,
 } from '@/composables/useOrgTree'
+import type { OrgIdValue } from '@/composables/useOrgTree'
 import { pageOrgs, saveOrg, deleteOrg } from '@/api/org'
 import type { BaseOrg } from '@/api/types'
 
@@ -44,16 +48,22 @@ type ViewMode = 'tree' | 'list'
 const viewMode = ref<ViewMode>('tree')
 const feedback = useFeedback()
 const keyword = ref('')
+const rootKeyword = ref('')
 const treeKeyword = ref('')
-const selectedOrgId = ref<number | undefined>()
-const expandedIds = ref<Set<number>>(new Set())
+const selectedOrgId = ref<string | undefined>()
+const expandedIds = ref<Set<string>>(new Set())
 const parentLocked = ref(false)
 
 const {
-  orgTree,
+  rootOrgs,
+  selectedRootId,
+  subTree,
   orgTotal,
   loading: treeLoading,
+  subTreeLoading,
   orgLabel,
+  loadRootOrgs,
+  loadSubTree,
   loadOrgs,
 } = useOrgTree()
 
@@ -61,7 +71,24 @@ const { items, total, page, loading, error, load, pageSize } = usePagedList<Base
   (p, s) => pageOrgs(p, s, keyword.value || undefined),
 )
 
-const visibleOrgIds = computed(() => collectVisibleOrgIds(orgTree.value, treeKeyword.value))
+const filteredRootOrgs = computed(() => {
+  const kw = rootKeyword.value.trim()
+  if (!kw) return rootOrgs.value
+  return rootOrgs.value.filter((o) => orgMatchesKeyword(o, kw))
+})
+
+/** 根组织 + 全部后代，用于右侧完整组织树 */
+const displayTree = computed((): BaseOrg[] => {
+  const root = rootOrgs.value.find((o) => sameOrgId(orgRowId(o), selectedRootId.value))
+  if (!root) return []
+  return [{ ...root, children: subTree.value }]
+})
+
+function findInDisplayTree(id: OrgIdValue) {
+  return findOrgInNodes(id, displayTree.value)
+}
+
+const visibleOrgIds = computed(() => collectVisibleOrgIds(displayTree.value, treeKeyword.value))
 
 type TreeRow = { org: BaseOrg; depth: number; hasChildren: boolean; expanded: boolean }
 
@@ -84,15 +111,21 @@ const treeRows = computed((): TreeRow[] => {
     }
   }
 
-  walk(orgTree.value, 0)
+  walk(displayTree.value, 0)
   return rows
 })
 
 const selectedOrg = computed(() =>
-  selectedOrgId.value != null ? findOrgInTree(selectedOrgId.value) : undefined,
+  selectedOrgId.value != null ? findInDisplayTree(selectedOrgId.value) : undefined,
 )
 
-const childOrgs = computed(() => selectedOrg.value?.children ?? [])
+const selectedRootOrg = computed(() =>
+  selectedRootId.value != null
+    ? rootOrgs.value.find((o) => sameOrgId(orgRowId(o), selectedRootId.value))
+    : undefined,
+)
+
+const directChildCount = computed(() => selectedOrg.value?.children?.length ?? 0)
 
 const selectedOrgForEdit = ref<BaseOrg | null>(null)
 
@@ -114,42 +147,66 @@ const {
 
 const parentExcludeIds = computed(() => {
   if (!editing.value || selectedOrgForEdit.value == null) return []
-  const org = selectedOrgForEdit.value
-  return collectDescendantIds(org)
+  const id = orgRowId(selectedOrgForEdit.value)
+  if (id == null) return []
+  const full = findInDisplayTree(id) ?? selectedOrgForEdit.value
+  return collectDescendantIds(full)
 })
 
 function search() {
   load(1)
 }
 
-function ensureTreeSelection() {
-  if (selectedOrgId.value != null && findOrgInTree(selectedOrgId.value)) return
-  const first = orgTree.value[0]
+function ensureRootSelection() {
+  if (selectedRootId.value != null && rootOrgs.value.some((o) => sameOrgId(orgRowId(o), selectedRootId.value))) {
+    return
+  }
+  const first = rootOrgs.value[0]
   if (first) {
-    selectOrg(first)
+    void selectRoot(first)
   } else {
+    selectedRootId.value = undefined
     selectedOrgId.value = undefined
   }
 }
 
-function expandAncestors(id: number) {
+function expandAncestors(id: OrgIdValue) {
   const next = new Set(expandedIds.value)
-  let current = findOrgInTree(id)
-  while (current?.parentId != null) {
-    next.add(current.parentId)
-    current = findOrgInTree(current.parentId)
+  let current = findInDisplayTree(id)
+  while (current) {
+    const currentId = orgRowId(current)
+    if (currentId == null) break
+    next.add(currentId)
+    if (current.parentId == null) break
+    current = findInDisplayTree(current.parentId)
   }
   expandedIds.value = next
 }
 
-function selectOrg(org: BaseOrg) {
+function expandAllBranches() {
+  expandedIds.value = collectNodesWithChildren(displayTree.value)
+  const rootId = selectedRootId.value
+  if (rootId != null) expandedIds.value.add(rootId)
+}
+
+async function selectRoot(org: BaseOrg) {
+  const id = orgRowId(org)
+  if (id == null) return
+  selectedOrgId.value = id
+  if (selectedRootId.value !== id) {
+    await loadSubTree(id)
+  }
+  expandAllBranches()
+}
+
+function selectTreeNode(org: BaseOrg) {
   const id = orgRowId(org)
   if (id == null) return
   selectedOrgId.value = id
   expandAncestors(id)
 }
 
-function toggleExpand(id: number, event?: Event) {
+function toggleExpand(id: string, event?: Event) {
   event?.stopPropagation()
   const next = new Set(expandedIds.value)
   if (next.has(id)) next.delete(id)
@@ -157,18 +214,19 @@ function toggleExpand(id: number, event?: Event) {
   expandedIds.value = next
 }
 
-function expandAllRoots() {
-  const next = new Set<number>()
-  for (const org of orgTree.value) {
-    const id = orgRowId(org)
-    if (id != null) next.add(id)
-  }
-  expandedIds.value = next
-}
-
 async function refreshTree() {
-  await loadOrgs()
-  ensureTreeSelection()
+  const keepRootId = selectedRootId.value
+  const keepOrgId = selectedOrgId.value
+  await Promise.all([loadRootOrgs(keepRootId), loadOrgs()])
+  if (keepOrgId != null && findInDisplayTree(keepOrgId)) {
+    selectedOrgId.value = keepOrgId
+    expandAncestors(keepOrgId)
+  } else if (selectedRootId.value != null) {
+    selectedOrgId.value = selectedRootId.value
+    expandAllBranches()
+  } else {
+    ensureRootSelection()
+  }
 }
 
 async function refreshAll() {
@@ -186,7 +244,7 @@ function openCreateRoot() {
 }
 
 function openCreateChild(parent?: BaseOrg) {
-  const target = parent ?? selectedOrg.value
+  const target = parent ?? selectedOrg.value ?? selectedRootOrg.value
   parentLocked.value = !!target
   selectedOrgForEdit.value = null
   openCreate()
@@ -195,8 +253,9 @@ function openCreateChild(parent?: BaseOrg) {
 
 function openEditOrg(row: BaseOrg) {
   parentLocked.value = false
-  selectedOrgForEdit.value = row
-  openEdit(row)
+  const id = orgRowId(row)
+  selectedOrgForEdit.value = (id != null ? findInDisplayTree(id) : undefined) ?? row
+  openEdit(selectedOrgForEdit.value)
 }
 
 async function handleSave() {
@@ -206,20 +265,27 @@ async function handleSave() {
   }
   saving.value = true
   formError.value = ''
+  const parentId = form.value.parentId ?? undefined
   try {
     const saved = await saveOrg({
       id: editing.value ? (form.value.id ?? form.value.orgId) : undefined,
       orgName: form.value.orgName,
-      parentId: form.value.parentId ?? undefined,
+      parentId,
       sort: form.value.sort,
       status: form.value.status,
     })
     closeDialog()
+    const savedIdRaw = orgRowId(saved) ?? form.value.id ?? form.value.orgId
+    const savedId = savedIdRaw != null ? String(savedIdRaw) : undefined
     await refreshTree()
-    const savedId = orgRowId(saved) ?? form.value.id ?? form.value.orgId
     if (savedId != null) {
       selectedOrgId.value = savedId
+      if (parentId == null) {
+        selectedRootId.value = savedId
+        await loadSubTree(savedId)
+      }
       expandAncestors(savedId)
+      expandAllBranches()
     }
     if (viewMode.value === 'list') {
       await load(page.value)
@@ -233,7 +299,9 @@ async function handleSave() {
 
 function deleteBlockedReason(org: BaseOrg) {
   if (isDefaultOrg(org)) return '默认组织为系统保留数据，不允许删除'
-  if (org.children?.length) return '该组织下仍有子组织，请先删除或迁移子组织'
+  const id = orgRowId(org)
+  const full = id != null ? findInDisplayTree(id) ?? org : org
+  if (full.children?.length) return '该组织下仍有子组织，请先删除或迁移子组织'
   return null
 }
 
@@ -252,8 +320,8 @@ async function handleDelete(row: BaseOrg) {
   })
   if (!confirmed) return
   await deleteOrg({ id })
-  if (selectedOrgId.value === id) {
-    selectedOrgId.value = undefined
+  if (selectedOrgId.value != null && sameOrgId(selectedOrgId.value, id)) {
+    selectedOrgId.value = selectedRootId.value
   }
   await refreshAll()
 }
@@ -266,7 +334,6 @@ watch(viewMode, (mode) => {
 
 onMounted(async () => {
   await refreshTree()
-  expandAllRoots()
 })
 </script>
 
@@ -274,7 +341,7 @@ onMounted(async () => {
   <div>
     <PageHeader
       title="组织管理"
-      :description="`共 ${orgTotal} 个组织；默认以组织树管理，列表视图用于搜索与分页维护`"
+      :description="`共 ${orgTotal} 个组织；左侧选择根组织，右侧维护完整组织树（支持多级子部门）`"
     >
       <template #actions>
         <div class="inline-flex rounded-md border bg-muted/30 p-0.5">
@@ -299,11 +366,6 @@ onMounted(async () => {
         </div>
 
         <template v-if="viewMode === 'tree'">
-          <Input
-            v-model="treeKeyword"
-            placeholder="搜索组织"
-            class="w-40"
-          />
           <Button variant="outline" @click="refreshTree">
             <RefreshCw class="mr-1 h-4 w-4" />
             刷新
@@ -334,41 +396,33 @@ onMounted(async () => {
       </template>
     </PageHeader>
 
-    <!-- 组织树视图 -->
     <div v-if="viewMode === 'tree'" class="flex gap-4 min-h-[520px]">
-      <aside class="w-72 shrink-0 rounded-lg border bg-card">
-        <div class="border-b px-3 py-2 text-sm font-medium text-muted-foreground flex items-center justify-between">
-          <span>组织树</span>
-          <span class="text-xs tabular-nums">{{ orgTotal }} 个</span>
+      <aside class="w-72 shrink-0 flex flex-col rounded-lg border bg-card">
+        <div class="border-b px-3 py-2 text-sm font-medium text-muted-foreground">
+          根组织
         </div>
-        <div v-if="treeLoading" class="p-4 text-sm text-muted-foreground">加载中…</div>
-        <div v-else-if="!treeRows.length" class="p-4 text-sm text-muted-foreground">
-          {{ treeKeyword ? '未找到匹配组织' : '暂无组织数据' }}
+        <div class="border-b p-2">
+          <Input v-model="rootKeyword" placeholder="搜索根组织" class="h-8" />
         </div>
-        <ul v-else class="max-h-[560px] overflow-y-auto py-1">
+        <div v-if="treeLoading && !rootOrgs.length" class="p-4 text-sm text-muted-foreground">
+          加载中…
+        </div>
+        <div v-else-if="!filteredRootOrgs.length" class="p-4 text-sm text-muted-foreground">
+          {{ rootKeyword ? '未找到匹配根组织' : '暂无根组织' }}
+        </div>
+        <ul v-else class="flex-1 max-h-[560px] overflow-y-auto py-1">
           <li
-            v-for="row in treeRows"
-            :key="orgRowId(row.org)"
-            class="flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1.5 text-sm hover:bg-muted/60"
-            :class="orgRowId(row.org) === selectedOrgId ? 'bg-primary/10 text-primary font-medium' : ''"
-            :style="{ paddingLeft: `${row.depth * 16 + 8}px` }"
-            @click="selectOrg(row.org)"
+            v-for="root in filteredRootOrgs"
+            :key="orgRowId(root)"
+            class="flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-muted/60"
+            :class="sameOrgId(orgRowId(root), selectedRootId) ? 'bg-primary/10 text-primary font-medium' : ''"
+            @click="selectRoot(root)"
           >
-            <button
-              v-if="row.hasChildren"
-              type="button"
-              class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-muted"
-              @click="toggleExpand(orgRowId(row.org)!, $event)"
-            >
-              <ChevronDown v-if="row.expanded" class="h-3.5 w-3.5" />
-              <ChevronRight v-else class="h-3.5 w-3.5" />
-            </button>
-            <span v-else class="inline-block w-5 shrink-0" />
-            <span class="truncate flex-1">{{ row.org.orgName }}</span>
+            <span class="truncate flex-1">{{ root.orgName }}</span>
             <Badge
-              v-if="row.org.status !== 1"
+              v-if="root.status !== 1"
               variant="secondary"
-              class="ml-1 shrink-0 text-xs"
+              class="shrink-0 text-xs"
             >
               停用
             </Badge>
@@ -424,7 +478,7 @@ onMounted(async () => {
               </div>
               <div>
                 <dt class="text-muted-foreground">直属子组织</dt>
-                <dd>{{ childOrgs.length }} 个</dd>
+                <dd>{{ directChildCount }} 个</dd>
               </div>
             </dl>
             <p
@@ -438,59 +492,102 @@ onMounted(async () => {
 
         <Card v-else>
           <CardContent class="py-10 text-center text-sm text-muted-foreground">
-            请从左侧选择组织，或新建根组织
+            请从左侧选择根组织，或新建根组织
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader class="pb-3">
-            <CardTitle class="text-base">直属子组织</CardTitle>
+          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle class="text-base">组织树</CardTitle>
+            <div class="flex items-center gap-2">
+              <Input
+                v-model="treeKeyword"
+                placeholder="搜索组织"
+                class="h-8 w-40"
+              />
+              <Button variant="outline" size="sm" class="h-8" @click="expandAllBranches">
+                全部展开
+              </Button>
+              <span v-if="subTreeLoading" class="text-xs text-muted-foreground">加载中…</span>
+            </div>
           </CardHeader>
           <CardContent class="p-0">
-            <DataTableShell :loading="treeLoading" :empty="!childOrgs.length">
-              <Table>
-                <thead>
-                  <tr class="border-b bg-muted/50">
-                    <th class="h-10 px-4 text-left font-medium">名称</th>
-                    <th class="h-10 px-4 text-left font-medium">编码</th>
-                    <th class="h-10 px-4 text-left font-medium">排序</th>
-                    <th class="h-10 px-4 text-left font-medium">状态</th>
-                    <th class="h-10 px-4 text-right font-medium">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="child in childOrgs"
-                    :key="orgRowId(child)"
-                    class="border-b cursor-pointer hover:bg-muted/30"
-                    @click="selectOrg(child)"
+            <div v-if="!selectedRootId" class="px-4 py-8 text-center text-sm text-muted-foreground">
+              请先选择根组织
+            </div>
+            <div
+              v-else-if="!subTreeLoading && !treeRows.length"
+              class="px-4 py-8 text-center text-sm text-muted-foreground"
+            >
+              {{ treeKeyword ? '未找到匹配组织' : '该根组织下暂无子组织' }}
+            </div>
+            <ul v-else class="max-h-[480px] overflow-y-auto border-t py-1">
+              <li
+                v-for="row in treeRows"
+                :key="orgRowId(row.org)"
+                class="group flex cursor-pointer items-center gap-1 rounded-sm px-3 py-1.5 text-sm hover:bg-muted/60"
+                :class="sameOrgId(orgRowId(row.org), selectedOrgId) ? 'bg-primary/10 text-primary font-medium' : ''"
+                :style="{ paddingLeft: `${row.depth * 16 + 12}px` }"
+                @click="selectTreeNode(row.org)"
+              >
+                <button
+                  v-if="row.hasChildren"
+                  type="button"
+                  class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-muted"
+                  @click="toggleExpand(orgRowId(row.org)!, $event)"
+                >
+                  <ChevronDown v-if="row.expanded" class="h-3.5 w-3.5" />
+                  <ChevronRight v-else class="h-3.5 w-3.5" />
+                </button>
+                <span v-else class="inline-block w-5 shrink-0" />
+                <span class="truncate flex-1">{{ row.org.orgName }}</span>
+                <div
+                  class="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                  @click.stop
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="h-7 w-7 p-0"
+                    title="新建子组织"
+                    @click="openCreateChild(row.org)"
                   >
-                    <td class="p-4">{{ child.orgName }}</td>
-                    <td class="p-4">{{ child.orgCode || '—' }}</td>
-                    <td class="p-4">{{ child.sort ?? 0 }}</td>
-                    <td class="p-4">
-                      <Badge :variant="child.status === 1 ? 'default' : 'secondary'">
-                        {{ child.status === 1 ? '正常' : '停用' }}
-                      </Badge>
-                    </td>
-                    <td class="p-4 text-right space-x-1" @click.stop>
-                      <Button variant="outline" size="sm" @click="openEditOrg(child)">
-                        <Pencil class="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="destructive" size="sm" @click="handleDelete(child)">
-                        <Trash2 class="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
-            </DataTableShell>
+                    <Plus class="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="h-7 w-7 p-0"
+                    title="编辑"
+                    @click="openEditOrg(row.org)"
+                  >
+                    <Pencil class="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                    title="删除"
+                    :disabled="!!deleteBlockedReason(row.org)"
+                    @click="handleDelete(row.org)"
+                  >
+                    <Trash2 class="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <Badge
+                  v-if="row.org.status !== 1"
+                  variant="secondary"
+                  class="ml-1 shrink-0 text-xs"
+                >
+                  停用
+                </Badge>
+              </li>
+            </ul>
           </CardContent>
         </Card>
       </main>
     </div>
 
-    <!-- 列表视图 -->
     <DataTableShell v-else :loading="loading" :error="error" :empty="!items.length">
       <Table>
         <thead>
@@ -515,6 +612,9 @@ onMounted(async () => {
               </Badge>
             </td>
             <td class="p-4 text-right space-x-1">
+              <Button variant="outline" size="sm" title="新建子组织" @click="openCreateChild(row)">
+                <Plus class="h-3.5 w-3.5" />
+              </Button>
               <Button variant="outline" size="sm" @click="openEditOrg(row)">
                 <Pencil class="h-3.5 w-3.5" />
               </Button>

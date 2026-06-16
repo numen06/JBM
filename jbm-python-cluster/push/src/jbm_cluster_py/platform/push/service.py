@@ -3,12 +3,17 @@ from __future__ import annotations
 import base64
 import asyncio
 import json
+import logging
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
+from jbm_cluster_py.common.masterdata import model_dump_compat
 from jbm_cluster_py.common.result import page_result
+from jbm_cluster_py.platform.push.push_events import PushMessageEvent
+
+logger = logging.getLogger(__name__)
 
 
 def utc_now_iso() -> str:
@@ -47,7 +52,9 @@ def parse_user_id(authorization: Optional[str]) -> int:
 
 
 class PushService:
-    def __init__(self) -> None:
+    def __init__(self, rabbitmq: Any = None, rabbitmq_config: Optional[Mapping[str, Any]] = None) -> None:
+        self.rabbitmq = rabbitmq
+        self.rabbitmq_config = dict(rabbitmq_config or {})
         self.messages: List[Dict[str, Any]] = []
         self.tasks: Dict[str, Dict[str, Any]] = {}
         self.push_configs: List[Dict[str, Any]] = []
@@ -121,6 +128,96 @@ class PushService:
         id_set = {str(item) for item in ids}
         self.messages = [row for row in self.messages if str(row.get("msgId")) not in id_set]
 
+    def push_queue_name(self) -> str:
+        return str(
+            self.rabbitmq_config.get("push-message-queue") or "pushMessage-in-0.jbm-cluster-platform-push"
+        )
+
+    def _rabbitmq_ready(self) -> bool:
+        return self.rabbitmq is not None and bool(getattr(self.rabbitmq, "enabled", False))
+
+    async def publish_message(self, request: Dict[str, Any], current_user_id: int) -> Dict[str, Any]:
+        users = self._resolve_users(request, current_user_id)
+        sent = 0
+        for rec_user_id in users:
+            event = self._build_event(request, rec_user_id, current_user_id)
+            await self._publish_or_deliver(event)
+            sent += 1
+        return {"sent": sent}
+
+    async def _publish_or_deliver(self, event: Dict[str, Any]) -> None:
+        if self._rabbitmq_ready():
+            await self.rabbitmq.publish_json(self.push_queue_name(), event)
+            return
+        await self.handle_push_event(event)
+
+    async def handle_push_event(self, payload: Mapping[str, Any]) -> None:
+        push_way = str(payload.get("pushWay") or payload.get("push_way") or "internal").lower()
+        if push_way == "internal":
+            await self._deliver_websocket(payload)
+        elif push_way == "sms":
+            await self._deliver_sms(payload)
+        elif push_way == "email":
+            await self._deliver_email(payload)
+        elif push_way == "mqtt":
+            await self._deliver_mqtt(payload)
+        else:
+            logger.warning("Unknown pushWay: %s", push_way)
+
+    async def _deliver_websocket(self, payload: Mapping[str, Any]) -> None:
+        rec_user_id = self._event_rec_user_id(payload)
+        if rec_user_id is None:
+            logger.warning("Push event missing recUserId: %s", payload)
+            return
+        send_user_id = self._int_or_none(payload.get("sendUserId")) or rec_user_id
+        task_id = str(payload.get("testRunId") or payload.get("taskId") or uuid.uuid4().hex)
+        index = max(int(payload.get("messageIndex") or payload.get("index") or 1), 1)
+        show_in_center = self._show_in_message_center(dict(payload), True)
+        request = dict(payload)
+        message = self._build_message(request, rec_user_id, send_user_id, task_id, index, show_in_center)
+        push_way = str(payload.get("pushWay") or payload.get("push_way") or "internal")
+        message["pushWay"] = push_way
+        if show_in_center:
+            self.messages.insert(0, message)
+        await self.broadcast(message)
+
+    async def _deliver_sms(self, payload: Mapping[str, Any]) -> None:
+        logger.info("SMS push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+
+    async def _deliver_email(self, payload: Mapping[str, Any]) -> None:
+        logger.info("Email push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+
+    async def _deliver_mqtt(self, payload: Mapping[str, Any]) -> None:
+        logger.info("MQTT push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+
+    def _event_rec_user_id(self, payload: Mapping[str, Any]) -> Optional[int]:
+        rec_user_id = self._int_or_none(payload.get("recUserId"))
+        if rec_user_id is not None:
+            return rec_user_id
+        raw_ids = payload.get("recUserIds") or payload.get("rec_user_ids") or []
+        if isinstance(raw_ids, list) and raw_ids:
+            return self._int_or_none(raw_ids[0])
+        return None
+
+    def _build_event(self, request: Dict[str, Any], rec_user_id: int, current_user_id: int) -> Dict[str, Any]:
+        event = PushMessageEvent(
+            eventType=str(request.get("eventType") or "PUSH_MESSAGE"),
+            pushWay=str(request.get("pushWay") or "internal"),
+            recUserId=rec_user_id,
+            sendUserId=self._int_or_none(request.get("sendUserId")) or current_user_id,
+            sysMsg=bool(request.get("sysMsg", False)),
+            title=request.get("title"),
+            content=request.get("content"),
+            level=int(request.get("level") or 0),
+            pushMsgType=str(request.get("pushMsgType") or "notification"),
+            url=request.get("url"),
+            extend=dict(request.get("extend") or {}),
+            showInMessageCenter=self._show_in_message_center(request, True),
+            testRunId=request.get("testRunId"),
+            messageIndex=int(request.get("messageIndex") or request.get("index") or 1),
+        )
+        return model_dump_compat(event)
+
     async def send_test(self, request: Dict[str, Any], current_user_id: int) -> Dict[str, Any]:
         task_id = uuid.uuid4().hex
         users = self._resolve_users(request, current_user_id)
@@ -129,12 +226,17 @@ class PushService:
         show_in_center = self._show_in_message_center(request, True)
         count = requested if requested > 1 else len(users)
         targets = users if requested <= len(users) else [users[index % len(users)] for index in range(count)]
+        publish_request = dict(request)
+        publish_request["testRunId"] = task_id
         for index, rec_user_id in enumerate(targets, start=1):
-            message = self._build_message(request, rec_user_id, current_user_id, task_id, index, show_in_center)
-            if show_in_center:
-                self.messages.insert(0, message)
+            single_request = dict(publish_request)
+            single_request["recUserId"] = rec_user_id
+            single_request["messageIndex"] = index
+            if not show_in_center:
+                single_request["showInMessageCenter"] = False
+            event = self._build_event(single_request, rec_user_id, current_user_id)
+            await self._publish_or_deliver(event)
             status["sentCount"] += 1
-            await self.broadcast(message)
         status["status"] = "FINISHED"
         status["finishedAt"] = current_millis()
         return dict(status)
@@ -282,6 +384,7 @@ class PushService:
         content = request.get("content") or "这是一条测试消息"
         if index > 1:
             title = "%s #%s" % (title, index)
+        push_way = str(request.get("pushWay") or "internal")
         return {
             "msgId": msg_id,
             "msgBodyId": body_id,
@@ -289,7 +392,7 @@ class PushService:
             "sendUserId": request.get("sendUserId") or send_user_id,
             "sysMsg": bool(request.get("sysMsg", False)),
             "pushStatus": "success",
-            "pushWay": "internal",
+            "pushWay": push_way,
             "readFlag": False,
             "content": content,
             "title": title,

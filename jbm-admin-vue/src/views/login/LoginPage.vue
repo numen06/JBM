@@ -5,7 +5,6 @@ import { ArrowLeft, RefreshCw, UserRound } from '@lucide/vue'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
 import { fetchLoginQr, pollQrLogin } from '@/api/qrcode'
-import { updatePassword } from '@/api/current'
 import { extractApiError } from '@/lib/errors'
 import {
   DEV_CAPTCHA_CODE,
@@ -30,7 +29,6 @@ import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
-import Dialog from '@/components/ui/Dialog.vue'
 import AuthBrandPanel from '@/components/landing/AuthBrandPanel.vue'
 
 const router = useRouter()
@@ -108,13 +106,6 @@ const authorizeUrlPreview = computed(() => {
 function initOAuthRedirectUri() {
   oauthRedirectUri.value = buildCallbackUrl()
 }
-
-const showChangePassword = ref(false)
-const originPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-const changePwdLoading = ref(false)
-const changePwdError = ref('')
 
 async function loadCaptcha() {
   captchaLoading.value = true
@@ -244,15 +235,7 @@ async function finishLogin(action: () => Promise<boolean>) {
   auth.clientId = clientId.value
   auth.clientSecret = clientSecret.value
   try {
-    const needChange = await action()
-    if (needChange) {
-      originPassword.value = password.value || smsCode.value
-      newPassword.value = ''
-      confirmPassword.value = ''
-      changePwdError.value = ''
-      showChangePassword.value = true
-      return
-    }
+    await action()
     const redirect = (route.query.redirect as string) || '/dashboard'
     router.push(redirect)
   } catch (e) {
@@ -429,35 +412,6 @@ async function onAuthCodeExchange() {
     })
     return auth.loginWithToken(token)
   })
-}
-
-async function onChangePassword() {
-  changePwdError.value = ''
-  if (!newPassword.value || !confirmPassword.value) {
-    changePwdError.value = '请填写新密码'
-    return
-  }
-  if (newPassword.value.length < 6) {
-    changePwdError.value = '新密码至少 6 位'
-    return
-  }
-  changePwdLoading.value = true
-  try {
-    await updatePassword({
-      originPassword: originPassword.value,
-      currentPassword: newPassword.value,
-      confirmPassword: confirmPassword.value,
-    })
-    auth.clearMustChangePassword()
-    showChangePassword.value = false
-    await auth.fetchUser()
-    const redirect = (route.query.redirect as string) || '/dashboard'
-    router.push(redirect)
-  } catch (e) {
-    changePwdError.value = extractApiError(e, '修改密码失败')
-  } finally {
-    changePwdLoading.value = false
-  }
 }
 
 watch(activeTab, (tab) => {
@@ -923,40 +877,5 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-
-    <Dialog
-      :open="showChangePassword"
-      title="密码已过期，请修改"
-      class="max-w-md"
-      @update:open="(v) => { if (!v) showChangePassword = v }"
-    >
-      <p class="mb-4 text-sm text-muted-foreground">
-        您正在使用系统默认密码登录，为保障安全请立即设置新密码（至少 6 位，建议包含大小写字母与数字）。
-      </p>
-      <form class="space-y-4" @submit.prevent="onChangePassword">
-        <div class="space-y-2">
-          <Label>当前密码</Label>
-          <Input v-model="originPassword" type="password" autocomplete="current-password" />
-        </div>
-        <div class="space-y-2">
-          <Label>新密码</Label>
-          <Input v-model="newPassword" type="password" autocomplete="new-password" />
-        </div>
-        <div class="space-y-2">
-          <Label>确认新密码</Label>
-          <Input v-model="confirmPassword" type="password" autocomplete="new-password" />
-        </div>
-        <div
-          v-if="changePwdError"
-          role="alert"
-          class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-        >
-          {{ changePwdError }}
-        </div>
-        <Button type="submit" class="w-full" :disabled="changePwdLoading">
-          {{ changePwdLoading ? '提交中…' : '确认修改' }}
-        </Button>
-      </form>
-    </Dialog>
   </div>
 </template>

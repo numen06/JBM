@@ -14,4 +14,8 @@ public class UserException extends BaseException {
         super("user", code, args, null);
     }
 
+    public UserException(String code, Object[] args, String defaultMessage) {
+        super("user", code, args, defaultMessage);
+    }
+
 }

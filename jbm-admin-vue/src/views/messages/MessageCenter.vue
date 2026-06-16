@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import { AlertTriangle, BarChart3, CheckCircle2, Mail, MailOpen, RefreshCw, Search, Users } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -14,9 +13,11 @@ import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import UserSearchSelect from '@/components/UserSearchSelect.vue'
 import MessageContentCell from '@/components/MessageContentCell.vue'
+import UserViewDialog from '@/components/UserViewDialog.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { getMessageRecordStats, listMessageRecords } from '@/api/messages'
 import { getUser } from '@/api/user'
+import { toSnowflakeIdString, isBlankSnowflakeId, type SnowflakeId } from '@/lib/snowflakeId'
 import type { BaseUser, PushMessage } from '@/api/types'
 
 const statusFilter = ref<'all' | 'unread'>('all')
@@ -24,10 +25,12 @@ const typeFilter = ref<'all' | 'notification' | 'alarm' | 'alert'>('all')
 const sourceFilter = ref<'all' | 'system' | 'user'>('all')
 const wayFilter = ref<'all' | 'internal' | 'email' | 'sms' | 'wechat' | 'mqtt' | 'app'>('all')
 const deliveryFilter = ref<'all' | 'unsent' | 'wait' | 'issued' | 'fail'>('all')
-const recUserId = ref<number | null>(null)
+const recUserId = ref<SnowflakeId | null>(null)
 const keyword = ref('')
 const statsLoading = ref(false)
-const userCache = ref<Record<number, BaseUser | null>>({})
+const userCache = ref<Record<string, BaseUser | null>>({})
+const userViewOpen = ref(false)
+const userViewId = ref<SnowflakeId | null>(null)
 const stats = ref({
   total: 0,
   unread: 0,
@@ -102,25 +105,25 @@ function pushStatusLabel(status?: string) {
   return status || '-'
 }
 
-function userIdLabel(value?: number) {
+function userIdLabel(value?: SnowflakeId) {
   const userId = normalizeUserId(value)
-  if (userId === 0) return '全局/广播'
+  if (userId === '0') return '全局/广播'
   if (userId == null) return '-'
   const user = userCache.value[userId]
   const name = user?.nickName || user?.userName
   return name ? `${name} (${userId})` : `用户 ${userId}`
 }
 
-function normalizeUserId(value?: number) {
-  if (value == null) return null
-  const id = Number(value)
-  return Number.isFinite(id) ? id : null
+function normalizeUserId(value?: SnowflakeId) {
+  if (isBlankSnowflakeId(value)) return null
+  return toSnowflakeIdString(value!)
 }
 
-function userLink(value?: number) {
+function openUserView(value?: SnowflakeId) {
   const userId = normalizeUserId(value)
-  if (userId == null || userId === 0) return null
-  return { name: 'users', query: { userId: String(userId) } }
+  if (userId == null || userId === '0') return
+  userViewId.value = userId
+  userViewOpen.value = true
 }
 
 function formatNumber(value: number) {
@@ -145,7 +148,7 @@ watch(
   async (rows) => {
     const userIds = [...new Set(rows
       .map((message) => normalizeUserId(message.recUserId))
-      .filter((id): id is number => id != null && id !== 0 && userCache.value[id] === undefined))]
+      .filter((id): id is string => id != null && id !== '0' && userCache.value[id] === undefined))]
     if (!userIds.length) return
     const users = await Promise.all(userIds.map(async (id) => {
       try {
@@ -324,13 +327,14 @@ watch(
               <MessageContentCell :message="message" />
             </td>
             <td class="p-4 text-sm">
-              <RouterLink
-                v-if="userLink(message.recUserId)"
-                :to="userLink(message.recUserId)!"
+              <button
+                v-if="normalizeUserId(message.recUserId) && normalizeUserId(message.recUserId) !== '0'"
+                type="button"
                 class="font-medium text-primary hover:underline"
+                @click="openUserView(message.recUserId)"
               >
                 {{ userIdLabel(message.recUserId) }}
-              </RouterLink>
+              </button>
               <span v-else class="text-muted-foreground">{{ userIdLabel(message.recUserId) }}</span>
             </td>
             <td class="p-4">
@@ -346,5 +350,7 @@ watch(
       </Table>
       <PaginationBar :page="page" :total="total" :page-size="pageSize" @change="load" />
     </DataTableShell>
+
+    <UserViewDialog v-model:open="userViewOpen" :user-id="userViewId" />
   </div>
 </template>

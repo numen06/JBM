@@ -20,7 +20,8 @@ jbm:
       enabled: false
       # 仍补全 Vue 标准菜单+按钮元数据（幂等 upsert，不创建测试用户）
       vue-rbac-metadata-enabled: true
-      force-reset-default-password: true
+      force-reset-default-password: false
+      manual-reset-enabled: true
       root-password: admin
   extend-field:
     enabled: true

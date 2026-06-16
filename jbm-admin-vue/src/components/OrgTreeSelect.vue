@@ -2,14 +2,15 @@
 import { computed, onMounted } from 'vue'
 import Select from '@/components/ui/Select.vue'
 import { orgOptionLabel, orgRowId, useOrgTree } from '@/composables/useOrgTree'
+import type { OrgIdValue } from '@/composables/useOrgTree'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: number | string | null
+    modelValue?: OrgIdValue | null
     placeholder?: string
     required?: boolean
     disabled?: boolean
-    excludeIds?: number[]
+    excludeIds?: OrgIdValue[]
   }>(),
   {
     placeholder: '请选择组织',
@@ -20,14 +21,14 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number | string | null]
+  'update:modelValue': [value: string | null]
 }>()
 
 const { flatOrgs, loadOrgs } = useOrgTree()
 
 const selectableOrgs = computed(() => {
   if (!props.excludeIds.length) return flatOrgs.value
-  const excluded = new Set(props.excludeIds)
+  const excluded = new Set(props.excludeIds.map(String))
   return flatOrgs.value.filter((o) => {
     const id = orgRowId(o)
     return id == null || !excluded.has(id)
@@ -41,8 +42,7 @@ function onChange(raw: string) {
     emit('update:modelValue', null)
     return
   }
-  const n = Number(raw)
-  emit('update:modelValue', Number.isNaN(n) ? raw : n)
+  emit('update:modelValue', raw)
 }
 </script>
 

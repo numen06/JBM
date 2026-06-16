@@ -1,0 +1,12 @@
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+#spring.datasource.url=jdbc:mysql://10.100.10.62:3306/jbm-7.3?useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+spring.datasource.url=jdbc:mysql://10.100.10.62:3306/jbm-7.3?useSSL=false&useUnicode=true&allowPublicKeyRetrieval=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+spring.datasource.username=root
+spring.datasource.password=1az2wsx3edc
+#spring.datasource.password=
+#\u4F7F\u7528springboot\u9ED8\u8BA4HikariCP\u8FDE\u63A5\u6C60
+#spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+
+#oracle
+#spring.datasource.driver-class-name=oracle.jdbc.driver.OracleDriver
+#spring.datasource.url=jdbc:oracle:thin:@localhost:1521:open-platform

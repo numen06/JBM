@@ -21,6 +21,7 @@ import { listActions } from '@/api/action'
 import type { BaseAction, BaseUser } from '@/api/types'
 import { useFeedback } from '@/composables/useFeedback'
 import { useMenuActionPermissions } from '@/composables/useMenuActionPermissions'
+import { toSnowflakeIdString } from '@/lib/snowflakeId'
 
 const feedback = useFeedback()
 const keyword = ref('')
@@ -30,7 +31,7 @@ const userResults = ref<BaseUser[]>([])
 const selectedUser = ref<BaseUser | null>(null)
 
 const allMenus = ref<AuthorityMenu[]>([])
-const menuActions = ref<Record<number, BaseAction[]>>({})
+const menuActions = ref<Record<string, BaseAction[]>>({})
 const authorityCatalog = ref<OpenAuthority[]>([])
 const permLoading = ref(false)
 const permSaving = ref(false)
@@ -89,11 +90,12 @@ async function selectUser(user: BaseUser) {
     ])
     authorityCatalog.value = catalog ?? []
     allMenus.value = menus.filter((m) => m.menuId && m.path && m.path !== '/')
-    const byMenu: Record<number, BaseAction[]> = {}
+    const byMenu: Record<string, BaseAction[]> = {}
     for (const a of allActions.contents ?? []) {
       if (a.menuId == null) continue
-      if (!byMenu[a.menuId]) byMenu[a.menuId] = []
-      byMenu[a.menuId].push(a)
+      const key = toSnowflakeIdString(a.menuId)
+      if (!byMenu[key]) byMenu[key] = []
+      byMenu[key].push(a)
     }
     menuActions.value = byMenu
     resetSelected(granted.map((g) => String(g.authorityId)).filter(Boolean))
@@ -196,7 +198,7 @@ async function savePermissions() {
               {{ m.menuName }}
               <span class="font-mono text-xs font-normal text-muted-foreground">{{ m.path }}</span>
             </label>
-            <div v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0" class="flex gap-1">
+            <div v-if="m.menuId && (menuActions[toSnowflakeIdString(m.menuId)]?.length ?? 0) > 0" class="flex gap-1">
               <Button variant="outline" size="sm" type="button" @click="selectAllActionsForMenu(m.menuId)">
                 全选按钮
               </Button>
@@ -206,11 +208,11 @@ async function savePermissions() {
             </div>
           </div>
           <div
-            v-if="m.menuId && (menuActions[m.menuId]?.length ?? 0) > 0"
+            v-if="m.menuId && (menuActions[toSnowflakeIdString(m.menuId)]?.length ?? 0) > 0"
             class="mt-2 ml-6 flex flex-wrap gap-2"
           >
             <label
-              v-for="act in menuActions[m.menuId]"
+              v-for="act in menuActions[toSnowflakeIdString(m.menuId)]"
               :key="act.actionId"
               class="flex cursor-pointer items-center gap-1 rounded bg-muted/40 px-2 py-1 text-xs"
             >

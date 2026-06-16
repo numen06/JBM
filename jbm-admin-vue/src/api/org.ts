@@ -1,6 +1,7 @@
 import { post, unwrap } from './request'
 import type { BaseOrg, DataPaging } from './types'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
 
 export async function pageOrgs(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
   const body: Record<string, unknown> = {
@@ -14,8 +15,9 @@ export async function pageOrgs(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: str
   return unwrap(res)
 }
 
-export async function listOrgTree() {
-  const res = await post<BaseOrg[]>('/baseOrg/tree', {})
+export async function listOrgTree(rootId?: string | number) {
+  const body = rootId != null ? { baseOrg: { id: String(rootId) } } : {}
+  const res = await post<BaseOrg[]>('/baseOrg/tree', body)
   return unwrap(res)
 }
 
@@ -27,10 +29,10 @@ export async function listOrgRoots() {
 function toOrgModel(data: Partial<BaseOrg>) {
   const model: Record<string, unknown> = {}
   const id = data.id ?? data.orgId
-  if (id != null) model.id = id
+  if (id != null && id !== '') model.id = String(id)
   if (data.orgName != null) model.orgName = data.orgName.trim()
-  if (data.parentId != null && String(data.parentId) !== '') {
-    model.parentId = Number(data.parentId)
+  if (data.parentId != null && String(data.parentId) !== '' && String(data.parentId) !== '0') {
+    model.parentId = String(data.parentId)
   }
   if (data.sort != null && String(data.sort) !== '') {
     model.sort = Number(data.sort)
@@ -42,7 +44,7 @@ function toOrgModel(data: Partial<BaseOrg>) {
   }
   if (data.orgCode != null) model.orgCode = data.orgCode
   if (data.orgType != null) model.orgType = data.orgType
-  if (data.managerId != null) model.managerId = Number(data.managerId)
+  if (data.managerId != null) model.managerId = optionalSnowflakeIdParam(data.managerId)
   return model
 }
 

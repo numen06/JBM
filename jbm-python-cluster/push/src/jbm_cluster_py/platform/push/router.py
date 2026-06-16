@@ -170,10 +170,31 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
         return ok(service.delete_configs(service.email_configs, _ids(body)), "批量成功删除")
 
     @router.post("/notification/send/sms")
+    async def notification_send_sms(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "sms")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
+
     @router.post("/notification/send/email")
+    async def notification_send_email(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "email")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
+
     @router.post("/notification/send/mqtt")
-    async def notification_send(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok({"accepted": True, "payload": body or {}}, "发送通知成功")
+    async def notification_send_mqtt(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "mqtt")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
 
     @router.post("/webhookTask/businessEventListener")
     async def business_event_listener(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:

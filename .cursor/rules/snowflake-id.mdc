@@ -1,0 +1,38 @@
+---
+description: 前端处理 Java Long/雪花 ID 的规范，避免 Number 精度丢失
+globs: jbm-admin-vue/**/*.{ts,vue}
+alwaysApply: false
+---
+
+# 雪花 ID / Long 前端规范
+
+后端实体主键（`id`、`userId`、`orgId`、`parentId`、`companyId`、`menuId`、`appId` 等）常为 Java `Long`，JSON 可能以字符串返回。
+
+JavaScript `Number` 安全整数上限为 `9007199254740991`。更大的 ID 经 `Number()`、`parseInt()`、`+id` 会丢精度，导致树组装、查重、API 路由失败。
+
+## 禁止
+
+- 对实体主键使用 `Number(id)`、`parseInt(id, 10)`、`+id`
+- 用 `Map<number, T>` 存雪花 ID 实体（键会失真）
+- 用 `===` 比较经 `Number()` 转换后的雪花 ID
+
+## 必须
+
+- 使用 `@/lib/snowflakeId`：
+  - `toSnowflakeIdString()` — 比较、Map 键、树节点
+  - `toSnowflakeIdParam()` / `optionalSnowflakeIdParam()` — API 参数与请求体
+  - `sameSnowflakeId()` — 相等判断
+  - `parseSnowflakeIdFromQuery()` — 路由 query
+- 类型使用 `SnowflakeId`（`string | number`），消费侧优先当字符串处理
+- `status`、`sort`、`priority` 等小整数枚举/排序字段仍可用 `Number()`
+
+## 示例
+
+```ts
+import { optionalSnowflakeIdParam, sameSnowflakeId, toSnowflakeIdString } from '@/lib/snowflakeId'
+
+params.companyId = optionalSnowflakeIdParam(filters.companyId)
+const byId = new Map<string, BaseOrg>()
+byId.set(toSnowflakeIdString(org.id), org)
+if (sameSnowflakeId(node.parentId, parentId)) { /* ... */ }
+```
