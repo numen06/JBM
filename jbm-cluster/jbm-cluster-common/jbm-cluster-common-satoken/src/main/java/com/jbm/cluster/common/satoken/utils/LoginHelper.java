@@ -53,12 +53,24 @@ public class LoginHelper {
      * 获取当前OAuthToken,登出
      */
     public static void loginout() {
-        StpUtil.logout(SaOAuth2Util.getLoginIdByAccessToken(StpUtil.getTokenValue()));
+        String tokenValue = StpUtil.getTokenValue();
+        if (StrUtil.isNotBlank(tokenValue)) {
+            SaOAuth2Util.revokeAccessToken(tokenValue);
+            StpUtil.logoutByTokenValue(tokenValue);
+        }
         clearCache();
     }
 
     public static void loginout(Object loginId) {
-        StpUtil.logout(loginId);
+        if (loginId != null) {
+            String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+            if (StrUtil.isNotBlank(tokenValue)) {
+                SaOAuth2Util.revokeAccessToken(tokenValue);
+                StpUtil.logoutByTokenValue(tokenValue);
+            } else {
+                StpUtil.logout(loginId);
+            }
+        }
         clearCache();
     }
 

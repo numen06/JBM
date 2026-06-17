@@ -118,6 +118,31 @@ public class JbmConstants {
     public static final String SYS_CONFIG_KEY = "sys_config:";
 
     /**
+     * 系统调试模式 Redis key：sys_config:debug_mode_enabled
+     */
+    public static final String SYS_CONFIG_DEBUG_MODE_KEY = SYS_CONFIG_KEY + "debug_mode_enabled";
+
+    /**
+     * 调试验证码万能码（图形）
+     */
+    public static final String DEBUG_CAPTCHA_CODE = "9999";
+
+    /**
+     * 调试验证码万能码（手机）
+     */
+    public static final String DEBUG_PHONE_CAPTCHA_CODE = "99999";
+
+    /**
+     * 非调试模式下登录失败模糊提示（账号密码）
+     */
+    public static final String LOGIN_FAIL_VAGUE_MSG = "登录失败，请检查用户名和密码";
+
+    /**
+     * 非调试模式下登录失败模糊提示（短信/手机号）
+     */
+    public static final String LOGIN_FAIL_VAGUE_MSG_SMS = "登录失败，请稍后重试";
+
+    /**
      * 字典管理 cache key
      */
     public static final String SYS_DICT_KEY = "sys_dict:";

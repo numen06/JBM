@@ -34,6 +34,7 @@ import com.jbm.cluster.api.service.ILoginAuthenticate;
 import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.common.basic.module.JbmClusterStreamTemplate;
+import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
@@ -83,6 +84,8 @@ public class SysLoginService {
     private VCoderService vCoderService;
     @Autowired
     private DynamicLoginFeignClient dynamicLoginFeignClient;
+    @Autowired
+    private LoginErrorMessageService loginErrorMessageService;
 
     public JbmLoginUser conventJbmLoginUser(BaseUser baseUser) {
         JbmLoginUser jbmLoginUser = new JbmLoginUser();
@@ -193,9 +196,8 @@ public class SysLoginService {
 
     public ResultBody<JbmLoginUser> login(String username, String password, LoginType loginType) {
         ILoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(loginType);
-        //将密码加密传入服务
-//        String encryptPassword = LoginHelper.encryptPassword(password);
-        return loginAuthenticate.login(username, password, loginType.toString());
+        ResultBody<JbmLoginUser> result = loginAuthenticate.login(username, password, loginType.toString());
+        return maskLoginFailure(username, result);
     }
 
     /**
@@ -204,10 +206,18 @@ public class SysLoginService {
      */
     public ResultBody<JbmLoginUser> thirdPartyLogin(ThirdPartyUser thirdPartyUser) {
         ILoginAuthenticate loginAuthenticate = dynamicLoginFeignClient.getFeginLoginAuthenticate(LoginType.THIRD_PARTY);
-        //将密码加密传入服务
-//        String encryptPassword = LoginHelper.encryptPassword(password);
         String json = JSON.toJSONString(thirdPartyUser);
-        return loginAuthenticate.login(json, null, LoginType.THIRD_PARTY.toString());
+        ResultBody<JbmLoginUser> result = loginAuthenticate.login(json, null, LoginType.THIRD_PARTY.toString());
+        return maskLoginFailure(StrUtil.blankToDefault(thirdPartyUser.getSubjectId(), "third-party"), result);
+    }
+
+    private ResultBody<JbmLoginUser> maskLoginFailure(String username, ResultBody<JbmLoginUser> result) {
+        if (result.getSuccess()) {
+            return result;
+        }
+        log.warn("登录失败 username={}, detail={}", username, result.getMessage());
+        return ResultBody.failed(result.getResult())
+                .msg(loginErrorMessageService.resolve(result.getMessage()));
     }
 
     /**

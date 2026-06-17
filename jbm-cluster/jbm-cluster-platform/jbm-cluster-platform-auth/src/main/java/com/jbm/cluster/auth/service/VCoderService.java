@@ -5,7 +5,8 @@ import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import io.netty.util.internal.StringUtil;
+import com.jbm.cluster.common.basic.service.SysDebugModeService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class VCoderService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private SysDebugModeService sysDebugModeService;
 
     public String getVcodePath(String scope, String vcode) {
         String codeKey = vcode.toLowerCase();
@@ -35,7 +38,7 @@ public class VCoderService {
     }
 
     public Boolean verify(String vcode, String scope) {
-        if ("9999".equals(vcode)) {
+        if (JbmConstants.DEBUG_CAPTCHA_CODE.equals(vcode) && sysDebugModeService.isDebugModeEnabled()) {
             return true;
         }
         String key = this.getVcodePath(scope, vcode);

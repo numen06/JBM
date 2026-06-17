@@ -10,6 +10,8 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.util.PasswordUtils;
@@ -25,6 +27,8 @@ public class UserService {
 
     @Autowired
     private IBaseUserServiceClient baseUserServiceClient;
+    @Autowired
+    private LoginErrorMessageService loginErrorMessageService;
 
     public JbmLoginUser findUserByUsername(String userName) {
         return baseUserServiceClient.userLogin(userName).action(new Function<UserAccount, JbmLoginUser>() {
@@ -43,7 +47,8 @@ public class UserService {
         thirdPartyUserForm.setNickName(userName);
         ResultBody<UserAccount> resultBody = baseUserServiceClient.loginAndRegisterMobileUser(thirdPartyUserForm);
         if (!resultBody.getSuccess()) {
-            throw new ServiceException(StrUtil.emptyToDefault(resultBody.getMessage(), "手机号登录失败，请稍后重试"));
+            String detail = StrUtil.emptyToDefault(resultBody.getMessage(), JbmConstants.LOGIN_FAIL_VAGUE_MSG_SMS);
+            throw new ServiceException(loginErrorMessageService.resolve(detail, JbmConstants.LOGIN_FAIL_VAGUE_MSG_SMS));
         }
         return resultBody.action(userAccount -> {
             return userAccountToLoginUser(userAccount);

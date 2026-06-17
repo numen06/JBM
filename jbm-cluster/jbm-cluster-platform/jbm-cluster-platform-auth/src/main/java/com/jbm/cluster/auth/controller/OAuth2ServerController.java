@@ -28,6 +28,7 @@ import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.ThirdPartyAuthService;
+import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -58,6 +59,8 @@ public class OAuth2ServerController {
     private ConfirmService confirmService;
     @Autowired
     private BaseAppPreprocessing baseAppPreprocessing;
+    @Autowired
+    private LoginErrorMessageService loginErrorMessageService;
 
     // 处理所有OAuth相关请求
     public Object oauth2() {
@@ -193,7 +196,7 @@ public class OAuth2ServerController {
             return ResultBody.<String>ok(callbackUrl).msg("登录成功");
         } catch (Exception e) {
             log.error("OAuth2 登录失败", e);
-            return ResultBody.<String>failed().msg("登录失败：" + e.getMessage());
+            return ResultBody.<String>failed().msg(loginErrorMessageService.resolve(e.getMessage()));
         }
     }
 
@@ -459,7 +462,7 @@ public class OAuth2ServerController {
             log.error("[第三方回调] 异常信息: {}", e.getMessage());
             log.error("[第三方回调] 详细堆栈信息:", e);
 //            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Login failed");
-            return ResultBody.failed().msg("第三方登录失败: " + e.getMessage()).exception(e);
+            return ResultBody.failed().msg(loginErrorMessageService.resolve(e.getMessage())).exception(e);
 
         }
     }

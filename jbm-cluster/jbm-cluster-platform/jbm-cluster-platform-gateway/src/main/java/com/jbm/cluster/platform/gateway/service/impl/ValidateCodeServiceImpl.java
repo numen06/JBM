@@ -10,6 +10,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.platform.gateway.config.properties.CaptchaProperties;
 import com.jbm.cluster.platform.gateway.enums.CaptchaType;
+import com.jbm.cluster.platform.gateway.service.SysDebugModeService;
 import com.jbm.cluster.platform.gateway.service.ValidateCodeService;
 import com.jbm.framework.exceptions.CaptchaException;
 import com.jbm.framework.exceptions.user.CaptchaExpireException;
@@ -34,6 +35,8 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
     private CaptchaProperties captchaProperties;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private SysDebugModeService sysDebugModeService;
 
     /**
      * 生成验证码
@@ -87,6 +90,9 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
      */
     @Override
     public void checkCaptcha(String code, String uuid) throws CaptchaException {
+        if (JbmConstants.DEBUG_CAPTCHA_CODE.equals(code) && sysDebugModeService.isDebugModeEnabled()) {
+            return;
+        }
         if (StrUtil.isEmpty(code)) {
             throw new CaptchaException("user.jcaptcha.not.blank");
         }

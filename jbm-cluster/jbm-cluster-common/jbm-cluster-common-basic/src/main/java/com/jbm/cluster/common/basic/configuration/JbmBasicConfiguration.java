@@ -11,6 +11,8 @@ import com.jbm.cluster.common.basic.module.*;
 import com.jbm.cluster.common.basic.module.request.JbmHttpRequest;
 import com.jbm.cluster.common.basic.module.request.JbmHttpsRequest;
 import com.jbm.cluster.common.basic.runtime.BasicUnknownRuntimeExceptionFilter;
+import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
+import com.jbm.cluster.common.basic.service.SysDebugModeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -108,6 +110,16 @@ public class JbmBasicConfiguration {
     @Bean
     public JbmHttpsRequest jbmHttpsRequest() {
         return new JbmHttpsRequest();
+    }
+
+    @Bean
+    public SysDebugModeService sysDebugModeService() {
+        return new SysDebugModeService();
+    }
+
+    @Bean
+    public LoginErrorMessageService loginErrorMessageService() {
+        return new LoginErrorMessageService();
     }
 
 

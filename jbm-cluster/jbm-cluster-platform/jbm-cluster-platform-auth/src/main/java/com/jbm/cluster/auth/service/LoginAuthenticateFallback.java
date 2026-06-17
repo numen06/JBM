@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.service.ILoginAuthenticate;
+import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
 import com.jbm.framework.metadata.bean.ResultBody;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
@@ -20,13 +22,16 @@ import java.util.List;
 @Component
 public class LoginAuthenticateFallback implements FallbackFactory<ILoginAuthenticate> {
 
+    @Autowired
+    private LoginErrorMessageService loginErrorMessageService;
+
     @Override
     public ILoginAuthenticate create(Throwable throwable) {
-        log.error("认证服务调用失败:{}", throwable.getMessage());
+        log.error("认证服务调用失败:{}", throwable.getMessage(), throwable);
         return new ILoginAuthenticate() {
             @Override
             public ResultBody<JbmLoginUser> login(String username, String password, String loginType) {
-                return ResultBody.error("获取用户失败:" + throwable.getMessage());
+                return ResultBody.error(loginErrorMessageService.resolve(throwable.getMessage()));
             }
 
             @Override

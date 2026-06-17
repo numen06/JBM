@@ -6,6 +6,8 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
+import com.jbm.cluster.common.basic.service.SysDebugModeService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ public class PCoderService {
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
+    @Autowired
+    private SysDebugModeService sysDebugModeService;
 
     public String getCacheKey(String phone) {
         return "/vcode/" + phone;
@@ -51,7 +55,7 @@ public class PCoderService {
     }
 
     public Boolean verify(String pcode, String phone) {
-        if ("99999".equals(pcode)) {
+        if (JbmConstants.DEBUG_PHONE_CAPTCHA_CODE.equals(pcode) && sysDebugModeService.isDebugModeEnabled()) {
             return true;
         }
         String key = this.getCacheKey(phone);
