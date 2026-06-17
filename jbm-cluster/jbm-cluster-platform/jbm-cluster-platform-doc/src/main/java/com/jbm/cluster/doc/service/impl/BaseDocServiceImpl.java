@@ -10,6 +10,7 @@ import com.jbm.cluster.api.entitys.doc.BaseDoc;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.framework.file.FileUploadSecurityUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
@@ -186,6 +187,7 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         if (ObjectUtil.isEmpty(file)) {
             throw new ServiceException("上传文件为空");
         }
+        FileUploadSecurityUtils.assertAllowed(file.getOriginalFilename());
         final String filePath = getExtractPath(request);
         // 扩展名
         String extName = FileUtil.extName(file.getOriginalFilename());
