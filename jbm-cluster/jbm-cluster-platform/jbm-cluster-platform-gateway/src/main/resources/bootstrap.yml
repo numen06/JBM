@@ -86,6 +86,8 @@ management:
         include: health,info,open
 
 jbm:
+  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启
+  debug: ${JBM_DEBUG:false}
   # 开放api
   api:
     # 参数签名验证

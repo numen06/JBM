@@ -33,17 +33,17 @@ public class SystemDebugController {
     @GetMapping
     public ResultBody<Map<String, Boolean>> getDebugMode() {
         requireAdmin();
-        return ResultBody.ok(buildResponse(sysDebugModeService.isDebugModeEnabled()));
+        return ResultBody.ok(buildResponse());
     }
 
-    @ApiOperation("设置系统调试模式")
+    @ApiOperation("设置系统调试模式（仅影响 Redis 开关，环境变量 JBM_DEBUG 不受此接口控制）")
     @PostMapping
     public ResultBody<Map<String, Boolean>> setDebugMode(@RequestParam boolean enabled) {
         requireAdmin();
-        boolean previous = sysDebugModeService.isDebugModeEnabled();
+        boolean previousRedis = sysDebugModeService.isRedisDebugModeEnabled();
         sysDebugModeService.setDebugModeEnabled(enabled);
-        log.info("[系统调试模式] 操作人={}, 变更: {} -> {}", LoginHelper.getUsername(), previous, enabled);
-        return ResultBody.ok(buildResponse(enabled));
+        log.info("[系统调试模式] 操作人={}, Redis 变更: {} -> {}", LoginHelper.getUsername(), previousRedis, enabled);
+        return ResultBody.ok(buildResponse());
     }
 
     private void requireAdmin() {
@@ -52,9 +52,11 @@ public class SystemDebugController {
         }
     }
 
-    private Map<String, Boolean> buildResponse(boolean enabled) {
-        Map<String, Boolean> body = new LinkedHashMap<>(1);
-        body.put("enabled", enabled);
+    private Map<String, Boolean> buildResponse() {
+        Map<String, Boolean> body = new LinkedHashMap<>(3);
+        body.put("enabled", sysDebugModeService.isDebugModeEnabled());
+        body.put("envEnabled", sysDebugModeService.isEnvDebugModeEnabled());
+        body.put("redisEnabled", sysDebugModeService.isRedisDebugModeEnabled());
         return body;
     }
 }

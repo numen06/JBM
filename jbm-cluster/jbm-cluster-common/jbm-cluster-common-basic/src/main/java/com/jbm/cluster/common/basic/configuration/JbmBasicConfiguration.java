@@ -3,6 +3,7 @@ package com.jbm.cluster.common.basic.configuration;
 import com.jbm.autoconfig.dic.DictionaryTemplate;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
+import com.jbm.cluster.common.basic.configuration.config.JbmDebugProperties;
 import com.jbm.cluster.common.basic.configuration.resources.JbmApiResourceScan;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterBusinessEventScan;
 import com.jbm.cluster.common.basic.configuration.resources.JbmClusterDicScan;
@@ -26,7 +27,7 @@ import org.springframework.context.annotation.Bean;
  * @Description TODO
  */
 @Slf4j
-@EnableConfigurationProperties({JbmClusterProperties.class})
+@EnableConfigurationProperties({JbmClusterProperties.class, JbmDebugProperties.class})
 public class JbmBasicConfiguration {
     @Autowired
     private JbmClusterProperties jbmClusterProperties;

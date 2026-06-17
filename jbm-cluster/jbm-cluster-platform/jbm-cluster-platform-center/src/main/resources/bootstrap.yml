@@ -37,6 +37,8 @@ management:
       exposure:
         include: '*'
 jbm:
+  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启（与 Redis 超管开关取并集）
+  debug: ${JBM_DEBUG:false}
   cluster:
     token-type: redis
     permit-all:
