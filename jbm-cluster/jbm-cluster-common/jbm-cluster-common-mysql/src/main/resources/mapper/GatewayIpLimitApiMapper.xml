@@ -60,4 +60,16 @@
             </if>
         </where>
     </select>
+
+    <select id="countIpLimitByApiIds" resultType="com.jbm.cluster.api.model.api.ApiControlCount">
+        SELECT i.api_id AS apiId,
+               COUNT(DISTINCT i.policy_id) AS count
+        FROM gateway_ip_limit_api AS i
+                 INNER JOIN gateway_ip_limit AS p ON i.policy_id = p.policy_id
+        WHERE i.api_id IN
+          <foreach collection="apiIds" item="apiId" open="(" separator="," close=")">
+              #{apiId}
+          </foreach>
+        GROUP BY i.api_id
+    </select>
 </mapper>

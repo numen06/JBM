@@ -30,6 +30,11 @@ public interface BaseActionService extends IMasterDataService<BaseAction> {
      */
     BaseAction getActionByCode(String actionCode);
 
+    /**
+     * 根据菜单与按钮编码查询
+     */
+    BaseAction getActionByMenuIdAndCode(Long menuId, String actionCode);
+
     DataPaging<BaseAction> findListPage(BaseActionForm form);
 
     /**

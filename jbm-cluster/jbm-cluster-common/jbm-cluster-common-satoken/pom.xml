@@ -30,29 +30,17 @@
 <!--            <groupId>cn.dev33</groupId>-->
 <!--            <artifactId>sa-token-core</artifactId>-->
 <!--        </dependency>-->
-        <!-- Sa-Token 整合 jwt -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-jwt</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>cn.hutool</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <!-- Sa-Token 权限认证, 在线文档：http://sa-token.dev33.cn/ -->
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-spring-boot-starter</artifactId>
             <version>${satoken.version}</version>
         </dependency>
-        <!-- Sa-Token-OAuth2.0 模块（optional：仅 Auth 等显式依赖方传递引入） -->
+        <!-- Sa-Token-OAuth2.0 模块：统一由 common-satoken 透传给需要认证拦截的业务模块 -->
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-oauth2</artifactId>
             <version>${satoken.version}</version>
-            <optional>true</optional>
         </dependency>
 
     </dependencies>

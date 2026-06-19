@@ -67,6 +67,7 @@ class BaseMenuServiceImplTest {
         importMenu.setMenuId(100L);
         importMenu.setMenuCode("system");
         importMenu.setMenuName("旧系统管理");
+        importMenu.setAppId(2000L);
         importMenu.setImportActionList(Collections.singletonList(importAction));
 
         int count = service.importMenus(Collections.singletonList(importMenu));

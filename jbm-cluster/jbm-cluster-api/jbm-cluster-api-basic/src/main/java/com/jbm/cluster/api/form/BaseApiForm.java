@@ -13,4 +13,7 @@ import lombok.EqualsAndHashCode;
 public class BaseApiForm extends BaseApi {
     @ApiModelProperty("分页参数")
     private PageForm pageForm;
+
+    @ApiModelProperty("关键字，匹配编码、名称、路径、服务")
+    private String keyword;
 }

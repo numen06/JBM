@@ -76,9 +76,6 @@ public class TokenDiagnoseController {
         map.put("sa-token.is-read-cookie", cfg.getIsReadCookie());
         map.put("sa-token.token-prefix", cfg.getTokenPrefix());
         map.put("sa-token.token-name", cfg.getTokenName());
-        map.put("sa-token.check-id-token", cfg.getCheckIdToken());
-        map.put("sa-token.id-token-timeout(秒)", cfg.getIdTokenTimeout());
-        map.put("sa-token.id-token-timeout(天)", cfg.getIdTokenTimeout() / 86400.0);
 
         Map<String, Object> oauth2Map = new LinkedHashMap<>();
         if (tokenConfig != null) {

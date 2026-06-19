@@ -1,0 +1,31 @@
+server:
+  host: 0.0.0.0
+  port: 5555
+
+spring:
+  application:
+    name: jbm-cluster-platform-auth
+
+jbm:
+  python:
+    app: auth
+    module: jbm-cluster-platform-auth
+    openapi:
+      title: JBM Python Auth Service
+      description: OAuth2/OIDC compatible Python auth service.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json
+  auth:
+    account-domain: "@admin.com"
+    login-error-number: 5
+    login-error-limit-minutes: 10
+    cache-prefix: jbm:auth
+    jwt:
+      issuer: http://localhost:5555
+      audience: jbm-api
+      key-id: jbm-auth-rs256
+      access-token-seconds: 7200
+      refresh-token-seconds: 604800
+      private-key: ""

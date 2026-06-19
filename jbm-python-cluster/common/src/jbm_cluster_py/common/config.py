@@ -101,6 +101,15 @@ def _env_overrides() -> Dict[str, Any]:
         "JBM_REDIS_URL": "integrations.redis.url",
         "JBM_RABBITMQ_URL": "integrations.rabbitmq.url",
         "JBM_NACOS_SERVER_ADDR": "spring.cloud.nacos.discovery.server-addr",
+        "JBM_AUTH_JWT_PRIVATE_KEY": "jbm.auth.jwt.private-key",
+        "JBM_AUTH_JWT_ISSUER": "jbm.auth.jwt.issuer",
+        "JBM_AUTH_JWT_AUDIENCE": "jbm.auth.jwt.audience",
+        "JBM_AUTH_JWT_KEY_ID": "jbm.auth.jwt.key-id",
+        "JBM_GATEWAY_SERVICE_TOKEN_SERVICE": "jbm.gateway.service-token.service",
+        "JBM_GATEWAY_SERVICE_TOKEN_PATH": "jbm.gateway.service-token.path",
+        "JBM_GATEWAY_SERVICE_TOKEN_CLIENT_ID": "jbm.gateway.service-token.client-id",
+        "JBM_GATEWAY_SERVICE_TOKEN_CLIENT_SECRET": "jbm.gateway.service-token.client-secret",
+        "JBM_GATEWAY_SERVICE_TOKEN_SCOPE": "jbm.gateway.service-token.scope",
     }
     for env_name, dotted_key in env_map.items():
         value = os.getenv(env_name)

@@ -9,6 +9,8 @@ dependencies = [
     "aio-pika>=9.4.3",
     "aiosqlite>=0.20.0",
     "fastapi>=0.115.0",
+    "bcrypt>=4.1.0",
+    "cryptography>=42.0.0",
     "httpx>=0.27.0",
     "nacos-sdk-python==0.1.14",
     "opentelemetry-exporter-otlp-proto-http>=1.25.0",
@@ -36,6 +38,7 @@ telemetry = [
 ]
 
 [project.scripts]
+jbm-python-auth = "jbm_cluster_py.platform.auth.main:run"
 jbm-python-doc = "jbm_cluster_py.platform.doc.main:run"
 jbm-python-logs = "jbm_cluster_py.platform.logs.main:run"
 jbm-python-push = "jbm_cluster_py.platform.push.main:run"
@@ -50,6 +53,7 @@ build-backend = "hatchling.build"
 packages = [
     "common/src/jbm_cluster_py",
     "integrations/src/jbm_cluster_py",
+    "auth/src/jbm_cluster_py",
     "logs/src/jbm_cluster_py",
     "doc/src/jbm_cluster_py",
     "push/src/jbm_cluster_py",
@@ -61,8 +65,8 @@ packages = [
 package = true
 
 [tool.pytest.ini_options]
-pythonpath = ["common/src", "integrations/src", "logs/src", "doc/src", "push/src", "job/src", "gateway/src"]
-testpaths = ["common/tests", "logs/tests", "doc/tests", "push/tests", "job/tests", "gateway/tests"]
+pythonpath = ["common/src", "integrations/src", "auth/src", "logs/src", "doc/src", "push/src", "job/src", "gateway/src"]
+testpaths = ["common/tests", "auth/tests", "logs/tests", "doc/tests", "push/tests", "job/tests", "gateway/tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]

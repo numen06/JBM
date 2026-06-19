@@ -26,4 +26,20 @@
         WHERE ak.key_id = #{keyId}
           AND (ak.auth_status IS NULL OR ak.auth_status = 1)
     </select>
+
+    <select id="countApiKeyGrantByApiIds" resultType="com.jbm.cluster.api.model.api.ApiControlCount">
+        SELECT a.api_id AS apiId,
+               COUNT(DISTINCT ak.key_id) AS count
+        FROM base_authority_apikey AS ak
+                 INNER JOIN base_authority AS a ON ak.authority_id = a.authority_id
+        WHERE a.api_id IS NOT NULL
+          AND a.status = 1
+          AND (ak.auth_status IS NULL OR ak.auth_status = 1)
+          AND (ak.expire_time IS NULL OR ak.expire_time > CURRENT_TIMESTAMP)
+          AND a.api_id IN
+          <foreach collection="apiIds" item="apiId" open="(" separator="," close=")">
+              #{apiId}
+          </foreach>
+        GROUP BY a.api_id
+    </select>
 </mapper>

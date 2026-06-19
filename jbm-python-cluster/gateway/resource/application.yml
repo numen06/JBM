@@ -20,9 +20,12 @@ jbm:
     refresh-interval-seconds: 30
     request-timeout-seconds: 60
     max-body-bytes: 104857600
-    trust-token:
-      service: jbm-cluster-platform-center
-      path: /internal/trust/id-token
+    service-token:
+      service: jbm-cluster-platform-auth
+      path: /oauth2/token
+      client-id: ""
+      client-secret: ""
+      scope: internal
     access-log:
       enabled: true
       ingest-enabled: true

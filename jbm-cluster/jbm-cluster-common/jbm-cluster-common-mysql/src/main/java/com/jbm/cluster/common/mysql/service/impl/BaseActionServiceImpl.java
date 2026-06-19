@@ -95,6 +95,19 @@ public class BaseActionServiceImpl extends MasterDataServiceImpl<BaseAction> imp
         return list == null || list.isEmpty() ? null : list.get(0);
     }
 
+    @Override
+    public BaseAction getActionByMenuIdAndCode(Long menuId, String actionCode) {
+        if (menuId == null || StrUtil.isEmpty(actionCode)) {
+            return null;
+        }
+        QueryWrapper<BaseAction> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(BaseAction::getMenuId, menuId)
+                .eq(BaseAction::getActionCode, actionCode);
+        List<BaseAction> list = baseActionMapper.selectList(queryWrapper);
+        return list == null || list.isEmpty() ? null : list.get(0);
+    }
+
     /**
      * 检查Action编码是否存在
      *

@@ -10,6 +10,9 @@ import com.jbm.cluster.api.constants.RequestDeviceType;
 import com.jbm.cluster.api.event.auth.LoginSuccessEvent;
 import com.jbm.cluster.api.event.auth.LogoutEvent;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtContext;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtPrincipal;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtSupport;
 import org.springframework.context.ApplicationEvent;
 import com.jbm.cluster.core.constant.UserConstants;
 import com.jbm.framework.exceptions.UtilException;
@@ -144,7 +147,25 @@ public class LoginHelper {
         if (loginUser != null) {
             return loginUser;
         }
-        return (JbmLoginUser) StpUtil.getTokenSession().get(LOGIN_USER_KEY);
+        RuntimeException failure = null;
+        try {
+            loginUser = (JbmLoginUser) StpUtil.getTokenSession().get(LOGIN_USER_KEY);
+            if (loginUser != null) {
+                return loginUser;
+            }
+        } catch (RuntimeException e) {
+            failure = e;
+        } catch (Exception ignored) {
+        }
+        loginUser = StandardJwtContext.getLoginUser();
+        if (loginUser != null) {
+            LOGIN_CACHE.set(loginUser);
+            return loginUser;
+        }
+        if (failure != null) {
+            throw failure;
+        }
+        return loginUser;
     }
 
     /**
@@ -167,8 +188,22 @@ public class LoginHelper {
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser(Object loginId) {
-        String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
-        return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+        RuntimeException failure = null;
+        try {
+            String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+            return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+        } catch (RuntimeException e) {
+            failure = e;
+        } catch (Exception ignored) {
+        }
+        StandardJwtPrincipal principal = StandardJwtContext.get();
+        if (principal != null && String.valueOf(loginId).equals(principal.getLoginId())) {
+            return principal.getLoginUser();
+        }
+        if (failure != null) {
+            throw failure;
+        }
+        return null;
     }
 
     /**
@@ -179,6 +214,11 @@ public class LoginHelper {
         try {
             // 如果ThreadLocal已有数据，不重复加载
             if (LOGIN_CACHE.get() != null) {
+                return;
+            }
+            JbmLoginUser standardJwtUser = StandardJwtContext.getLoginUser();
+            if (standardJwtUser != null) {
+                LOGIN_CACHE.set(standardJwtUser);
                 return;
             }
             // 从Session中获取用户信息并设置到ThreadLocal
@@ -210,7 +250,25 @@ public class LoginHelper {
      * 获取用户(多级缓存)
      */
     public static JbmLoginUser getLoginUser(String tokenValue) {
-        return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+        RuntimeException failure = null;
+        try {
+            return (JbmLoginUser) StpUtil.getTokenSessionByToken(tokenValue).get(LOGIN_USER_KEY);
+        } catch (RuntimeException e) {
+            failure = e;
+        } catch (Exception ignored) {
+        }
+        StandardJwtPrincipal principal = StandardJwtContext.get();
+        if (principal != null && tokenValue != null && tokenValue.equals(principal.getToken())) {
+            return principal.getLoginUser();
+        }
+        principal = StandardJwtSupport.verify(tokenValue);
+        if (principal != null) {
+            return principal.getLoginUser();
+        }
+        if (failure != null) {
+            throw failure;
+        }
+        return null;
     }
 
     /**

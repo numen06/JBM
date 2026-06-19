@@ -4,6 +4,7 @@ from typing import Any, Optional
 import uvicorn
 from fastapi import FastAPI
 
+from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
@@ -17,6 +18,7 @@ from jbm_cluster_py.platform.job.service import JobService
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app_config = config or AppConfig.load(app="job")
     configure_logging()
+    print_jbm_banner()
     init_telemetry(app_config.telemetry)
     job_service = JobService()
 

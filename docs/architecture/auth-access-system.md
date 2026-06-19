@@ -10,8 +10,8 @@
 | 场景 | 目标 |
 |------|------|
 | **用户访问** | 客户端经 Gateway 携带 `Authorization: Bearer {access_token}` 访问 Center 等，`@SaCheckLogin` 可识别用户 |
-| **内部服务访问** | 无用户 Token 时，用 **Id-Token** 在共享 Redis 上完成服务互信 |
-| **混合转发** | Gateway **保留** 用户 Authorization 并 **追加** Id-Token；下游 **先校验用户 Token**，Bearer 无效时 **禁止** 仅用 Id-Token 冒充登录 |
+| **内部服务访问** | 无用户 Token 时，用 OAuth2 `client_credentials` 签发的标准 JWT 完成服务互信 |
+| **混合转发** | Gateway **保留** 用户 Authorization 并 **追加**服务 JWT；下游 **先校验用户 Token**，Bearer 无效时 **禁止** 仅用服务 JWT 冒充登录 |
 
 ---
 
@@ -22,7 +22,7 @@ flowchart LR
     U[用户] -->|OAuth| A[Auth :5555]
     A --> R[(Redis)]
     U -->|Bearer| G[Gateway :6060]
-    G -->|Auth + Id-Token| C[Center :7777]
+    G -->|Auth + Service JWT| C[Center :7777]
     C --> R
 ```
 
@@ -39,7 +39,7 @@ flowchart LR
 | 类型 | Header | 用途 | Redis 示例（`token-name=Authorization`） |
 |------|--------|------|------------------------------------------|
 | 用户 AccessToken | `Authorization: Bearer {jwt}` | 用户 API | `Authorization:oauth2:access-token:{jwt}`、`Authorization:login:token:{jwt}` |
-| Id-Token | `Satoken-Id-Token` | 无用户态的服务互信 | Sa-Token Id 模块管理 |
+| 服务 AccessToken | `X-Internal-Authorization: Bearer {jwt}` | 无用户态的服务互信 | OAuth2 `client_credentials` 标准 JWT |
 | ClientToken | `Authorization`（可选） | 客户端凭证 | `checkClientToken`；Feign **默认不**自动写入 |
 | RefreshToken | 响应体 | 刷新 | `Authorization:oauth2:refresh-token:*` |
 
@@ -65,7 +65,7 @@ tenantId: 0
 | 行为 | 说明 |
 |------|------|
 | 保留 | 客户端 `Authorization`（不覆盖、不删除） |
-| 追加 | `Satoken-Id-Token`、`X-Internal-Service`、`X-Internal-Instance`、`X-Original-Path` |
+| 追加 | `X-Internal-Authorization`、`X-Internal-Service`、`X-Internal-Instance`、`X-Original-Path` |
 
 本地静态路由：`jbm-cluster-platform-gateway/src/main/resources/bootstrap-jaja7.yml`（Center `7777`、Auth `5555`）。
 
@@ -81,8 +81,8 @@ tenantId: 0
   → StpUtil.checkLogin() 成功 → 通过
   → OAuth2 getAccessToken / checkAccessToken + 绑定用户态 → 通过
   → getLoginIdByToken + LoginHelper 缓存 → 通过
-  → 仍有 Bearer 仍失败 → 401（禁止 Id-Token 顶替）
-  → 无 Bearer → SaIdUtil.checkCurrentRequestToken() → 通过 / 401
+  → 仍有 Bearer 仍失败 → 401（禁止服务 JWT 顶替）
+  → 无 Bearer → 校验 X-Internal-Authorization 标准 JWT → 通过 / 401
 ```
 
 **跨节点要点：** Center 必须通过 `jbm-cluster-node-basic` 引入 `sa-token-oauth2`，否则无法读取 Auth 写入的 `Authorization:oauth2:access-token:*`。
@@ -110,19 +110,18 @@ tenantId: 0
 | 路径 | 行为 |
 |------|------|
 | **FeignRequestInterceptor** | 有入站 `Authorization` 则 **原样透传**；并透传 `user_id`、`username`、`X-Forwarded-For`、`X-Context-*` |
-| **AppPreRequestInterceptor** | **无** `Authorization` 时注入 `Satoken-Id-Token` + `X-Internal-*` |
-| **JbmFeignRequest** | `feign://service/path` 经 LoadBalancer 解析；`buildRequest` 追加 Id-Token 与内部身份 |
-| **Gateway** | 对所有入站请求追加 Gateway 自身 Id-Token（与用户 Bearer 并存） |
+| **AppPreRequestInterceptor** | 注入 `X-Internal-Authorization` + `X-Internal-*`，并保留用户 `Authorization` |
+| **JbmFeignRequest** | `feign://service/path` 经 LoadBalancer 解析；`buildRequest` 追加服务 JWT 与内部身份 |
+| **Gateway** | 对所有入站请求追加 Gateway 自身服务 JWT（与用户 Bearer 并存） |
 
 ### 5.3 被调方
 
-无 Bearer 时：`SaIdUtil.checkCurrentRequestToken()`，并 `recordInternalCaller` 写入 `fromService` / `fromInstance`。
+无 Bearer 时：校验 `X-Internal-Authorization` 标准 JWT，并 `recordInternalCaller` 写入 `fromService` / `fromInstance`。
 
 ### 5.4 测试与诊断
 
 | 接口 | 服务 | 说明 |
 |------|------|------|
-| `POST /internal/trust/id-token` | Center | 签发 Id-Token 供互信脚本 |
 | `GET /token/diagnose/check?tokenValue=` | Auth | 双层 TTL 诊断 |
 | `GET /token/diagnose/config` | Auth | 生效配置 |
 
@@ -130,7 +129,7 @@ tenantId: 0
 
 ### 5.5 与旧文档差异
 
-[`服务间互信认证机制.md`](../../jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-push/docs/服务间互信认证机制.md) 中「Feign 自动把 ClientToken 写入 Authorization」**已变更**；当前默认以 **Id-Token** 为主，ClientToken 仅在显式携带时由 `checkClientToken` 识别。
+[`服务间互信认证机制.md`](../../jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-push/docs/服务间互信认证机制.md) 中「Feign 自动把 ClientToken 写入 Authorization」**已变更**；当前内部服务身份使用 OAuth2 `client_credentials` 服务 JWT，ClientToken 仅在显式携带时由 `checkClientToken` 识别。
 
 ---
 
@@ -139,7 +138,7 @@ tenantId: 0
 | Header | 常量 | 方向 |
 |--------|------|------|
 | `Authorization` | `AUTHORIZATION_HEADER` | 用户 Bearer |
-| `Satoken-Id-Token` | `SaIdUtil.ID_TOKEN` | 内部互信 |
+| `X-Internal-Authorization` | `INTERNAL_AUTHORIZATION_HEADER` | 内部服务 Bearer |
 | `X-Internal-Service` | `INTERNAL_SERVICE` | 调用方服务名 |
 | `X-Internal-Instance` | `INTERNAL_INSTANCE` | `name:port` |
 | `user_id` | `DETAILS_USER_ID` | Feign 可选 |
@@ -187,8 +186,8 @@ python scripts/run_feign_trust_rest_tests.py --wait 20
 | 现象 | 原因 | 处理 |
 |------|------|------|
 | Auth userinfo 200，`/current/user` 401 | Center 无 oauth2 或 Redis 不一致 | 确认 `node-basic` 依赖、重启 Center |
-| 带 Bearer 仍 401 | 旧过滤器 Id-Token 优先 | 使用当前 `SaOAuthFilterAuthStrategy` |
-| Feign 401 | 未带 Id-Token 或 Redis 无记录 | `check-id-token`、调用方 Header |
+| 带 Bearer 仍 401 | 用户 token 无效或未能绑定登录态 | 检查 OAuth2 token、JWKS 与 Redis |
+| Feign 401 | 未带服务 JWT 或服务 JWT 校验失败 | 检查 `X-Internal-Authorization`、调用方 Header |
 | Python 502 | 系统代理 | `NO_PROXY=*` |
 
 ---
@@ -207,7 +206,7 @@ python scripts/run_feign_trust_rest_tests.py --wait 20
 | `AppPreRequestInterceptor.java` | `...common.feign` |
 | `JbmFeignRequest.java` | `...feign.request` |
 | `HeaderContextFilter.java` | `...common.feign` |
-| `InternalTrustTokenController.java` | `...center.controller` |
+| `InternalServiceTokenProvider.java` | `...core.security` |
 | `sa-token.properties` | `common-satoken/resources/configs` |
 
 ---

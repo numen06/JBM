@@ -20,5 +20,6 @@ server:
 
 jbm:
   gateway:
-    trust-token:
-      service: jbm-cluster-platform-center-jbm7
+    service-token:
+      service: jbm-cluster-platform-auth
+      path: /oauth2/token

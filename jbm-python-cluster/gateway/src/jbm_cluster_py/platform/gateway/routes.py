@@ -117,6 +117,7 @@ class RouteRepository:
             else:
                 self.routes = list(self.fallback_routes)
                 self.loaded_from = "fallback"
+            self._ensure_compat_routes()
             self.routes.sort(key=lambda item: len(item.path), reverse=True)
             self.updated_at = time.time()
             logger.info("Loaded %s gateway routes from %s", len(self.routes), self.loaded_from)
@@ -147,6 +148,17 @@ class RouteRepository:
             if _matches(route.path, path):
                 return route
         return None
+
+    def _ensure_compat_routes(self) -> None:
+        if not any(route.path == "/online/**" for route in self.routes):
+            self.routes.append(
+                GatewayRoute(
+                    route_name="auth-online",
+                    path="/online/**",
+                    service_id="jbm-cluster-platform-auth",
+                    strip_prefix=0,
+                )
+            )
 
     def snapshot(self) -> list[dict[str, Any]]:
         return [

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Eye, KeyRound, Plus, Pencil, RefreshCw } from 'lucide-vue-next'
+import { Copy, Eye, KeyRound, ListTree, Plus, Pencil, RefreshCw } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -18,8 +18,10 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
 import { listApps, deleteApp, createApp, updateApp, resetAppSecret, getAppSecret, type AppCredentials } from '@/api/app'
+import { JBM_TEMPLATE_APP_ID, syncMenusFromJbm } from '@/api/menu'
 import type { BaseApp } from '@/api/types'
-import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
+import { APP_TYPE_OPTIONS, appTypeLabel } from '@/constants/appTypes'
+import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { SnowflakeId } from '@/api/types'
 
 const { orgLabel, loadOrgs } = useOrgTree()
@@ -29,6 +31,7 @@ onMounted(loadOrgs)
 
 const keyword = ref('')
 const statusFilter = ref('')
+const appTypeFilter = ref('')
 const orgIdFilter = ref<number | string | null>(null)
 const secretDialogOpen = ref(false)
 const secretViewMode = ref<'view' | 'reveal'>('view')
@@ -37,6 +40,7 @@ const secretIsPersist = ref(false)
 const secretAppName = ref('')
 const secretClientId = ref('')
 const secretValue = ref('')
+const syncingAppId = ref<string>('')
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(
   (p, s) =>
@@ -44,6 +48,7 @@ const { items, total, page, loading, error, load, pageSize } = usePagedList<Base
       keyword: keyword.value || undefined,
       orgId: orgIdFilter.value !== '' && orgIdFilter.value != null ? orgIdFilter.value : undefined,
       status: statusFilter.value !== '' ? statusFilter.value : undefined,
+      appType: appTypeFilter.value || undefined,
     }),
 )
 
@@ -62,18 +67,49 @@ const {
   closeDialog,
 } = useCrudForm<BaseApp>(() => ({
   appName: '',
-  appCode: '',
-  clientId: '',
+  code: '',
+  appType: 'pc',
   orgId: undefined,
   status: 1,
 }))
+
+function appCodeOf(row: BaseApp) {
+  return row.code ?? row.appCode ?? ''
+}
+
+function clientIdOf(row: BaseApp) {
+  return row.apiKey ?? row.clientId ?? ''
+}
 
 function isPersistApp(row: BaseApp) {
   return row.isPersist === 1
 }
 
+function openEditApp(row: BaseApp) {
+  openEdit({
+    appId: row.appId,
+    appName: row.appName,
+    code: appCodeOf(row),
+    appType: row.appType || 'pc',
+    apiKey: clientIdOf(row),
+    orgId: row.orgId,
+    status: row.status ?? 1,
+    isPersist: row.isPersist,
+  })
+}
+
+function buildSavePayload() {
+  return {
+    appName: form.value.appName?.trim(),
+    code: form.value.code?.trim(),
+    appType: form.value.appType || 'pc',
+    orgId: optionalSnowflakeIdParam(form.value.orgId!),
+    status: Number(form.value.status ?? 1),
+  }
+}
+
 async function handleSave() {
-  if (!form.value.appName?.trim() || !form.value.appCode?.trim()) {
+  if (!form.value.appName?.trim() || !form.value.code?.trim()) {
     formError.value = '应用名称和编码不能为空'
     return
   }
@@ -83,10 +119,11 @@ async function handleSave() {
   }
   saving.value = true
   formError.value = ''
-  const payload = { ...form.value, orgId: optionalSnowflakeIdParam(form.value.orgId!) }
+  const payload = buildSavePayload()
   try {
     if (editing.value && form.value.appId) {
       await updateApp(form.value.appId, payload)
+      feedback.toast.success('应用已更新')
     } else {
       const created = await createApp(payload)
       showCredentials(created, form.value.appName)
@@ -101,19 +138,20 @@ async function handleSave() {
 }
 
 async function handleDelete(row: BaseApp) {
-  if (!row.appId) return
+  if (!row.appId || isPersistApp(row)) return
   const confirmed = await feedback.confirm({
     title: '确认删除应用',
     message: `确认删除应用 ${row.appName}？`,
     variant: 'destructive',
   })
   if (!confirmed) return
-  await deleteApp(row.appId)
-  load(page.value)
-}
-
-function clientIdOf(row: BaseApp) {
-  return row.apiKey || row.clientId || ''
+  try {
+    await deleteApp(row.appId)
+    feedback.toast.success('应用已删除')
+    load(page.value)
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '删除失败')
+  }
 }
 
 function openSecretDialog(row: BaseApp, mode: 'view' | 'reveal', secret?: string) {
@@ -167,8 +205,13 @@ async function handleResetSecret(row: BaseApp) {
     variant: 'destructive',
   })
   if (!confirmed) return
-  const secret = await resetAppSecret(row.appId)
-  openSecretDialog(row, 'reveal', secret)
+  try {
+    const secret = await resetAppSecret(row.appId)
+    openSecretDialog(row, 'reveal', secret)
+    feedback.toast.success('密钥已重置')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '重置失败')
+  }
 }
 
 async function handleResetSecretFromDialog() {
@@ -179,9 +222,39 @@ async function handleResetSecretFromDialog() {
     variant: 'destructive',
   })
   if (!confirmed) return
-  const secret = await resetAppSecret(secretAppId.value)
-  secretViewMode.value = 'reveal'
-  secretValue.value = secret
+  try {
+    const secret = await resetAppSecret(secretAppId.value)
+    secretViewMode.value = 'reveal'
+    secretValue.value = secret
+    feedback.toast.success('密钥已重置')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '重置失败')
+  }
+}
+
+function isJbmTemplateApp(row: BaseApp) {
+  if (row.appId == null) return false
+  return toSnowflakeIdString(row.appId) === String(JBM_TEMPLATE_APP_ID)
+}
+
+async function handleSyncMenus(row: BaseApp) {
+  if (!row.appId || isJbmTemplateApp(row)) return
+  const confirmed = await feedback.confirm({
+    title: '从 JBM 同步菜单',
+    message: `将把 JBM 管理台菜单同步到「${row.appName}」，已有同编码菜单将被更新（保留菜单跳过）。`,
+    confirmText: '同步',
+  })
+  if (!confirmed) return
+  const appKey = toSnowflakeIdString(row.appId)
+  syncingAppId.value = appKey
+  try {
+    const message = await syncMenusFromJbm(row.appId)
+    feedback.toast.success(message || '菜单同步完成', '同步成功')
+  } catch (e) {
+    feedback.toast.error(e instanceof Error ? e.message : '同步失败', '同步失败')
+  } finally {
+    syncingAppId.value = ''
+  }
 }
 
 async function copyText(text: string) {
@@ -210,6 +283,12 @@ async function copyText(text: string) {
           <option value="1">启用</option>
           <option value="0">停用</option>
         </Select>
+        <Select v-model="appTypeFilter" class="w-36">
+          <option value="">全部类型</option>
+          <option v-for="item in APP_TYPE_OPTIONS" :key="item.value" :value="item.value">
+            {{ item.label }}
+          </option>
+        </Select>
         <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
@@ -224,6 +303,7 @@ async function copyText(text: string) {
             <th class="h-10 px-4 text-left font-medium">ID</th>
             <th class="h-10 px-4 text-left font-medium">名称</th>
             <th class="h-10 px-4 text-left font-medium">编码</th>
+            <th class="h-10 px-4 text-left font-medium">类型</th>
             <th class="h-10 px-4 text-left font-medium">Client ID</th>
             <th class="h-10 px-4 text-left font-medium">所属组织</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
@@ -234,7 +314,8 @@ async function copyText(text: string) {
           <tr v-for="row in items" :key="row.appId" class="border-b">
             <td class="p-4">{{ row.appId }}</td>
             <td class="p-4">{{ row.appName }}</td>
-            <td class="p-4">{{ row.appCode }}</td>
+            <td class="p-4">{{ appCodeOf(row) }}</td>
+            <td class="p-4">{{ appTypeLabel(row.appType) }}</td>
             <td class="p-4 font-mono text-xs">{{ clientIdOf(row) }}</td>
             <td class="p-4">{{ orgLabel(row.orgId) }}</td>
             <td class="p-4">
@@ -243,7 +324,7 @@ async function copyText(text: string) {
               </Badge>
             </td>
             <td class="p-4 text-right space-x-1">
-              <Button variant="outline" size="sm" @click="openEdit(row)">
+              <Button variant="outline" size="sm" title="编辑" @click="openEditApp(row)">
                 <Pencil class="h-3.5 w-3.5" />
               </Button>
               <Button
@@ -263,7 +344,24 @@ async function copyText(text: string) {
               >
                 <RefreshCw class="h-3.5 w-3.5" />
               </Button>
-              <Button variant="destructive" size="sm" @click="handleDelete(row)">删除</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                title="从 JBM 同步菜单"
+                :disabled="isJbmTemplateApp(row) || (row.appId != null && syncingAppId === toSnowflakeIdString(row.appId))"
+                @click="handleSyncMenus(row)"
+              >
+                <ListTree class="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                title="删除"
+                :disabled="isPersistApp(row)"
+                @click="handleDelete(row)"
+              >
+                删除
+              </Button>
             </td>
           </tr>
         </tbody>
@@ -282,14 +380,24 @@ async function copyText(text: string) {
         <Input v-model="form.appName" />
       </FormField>
       <FormField label="应用编码" required>
-        <Input v-model="form.appCode" />
+        <Input v-model="form.code" :disabled="editing && form.isPersist === 1" />
+      </FormField>
+      <FormField label="应用类型" required>
+        <Select v-model="form.appType">
+          <option v-for="item in APP_TYPE_OPTIONS" :key="item.value" :value="item.value">
+            {{ item.label }}
+          </option>
+        </Select>
       </FormField>
       <FormField label="所属组织" required>
         <OrgTreeSelect v-model="form.orgId" placeholder="请选择组织" required />
       </FormField>
-      <FormField label="Client ID">
-        <Input v-model="form.clientId" class="font-mono text-sm" />
+      <FormField v-if="editing" label="Client ID">
+        <Input :model-value="form.apiKey ?? ''" class="font-mono text-sm" readonly disabled />
       </FormField>
+      <p v-else class="text-xs text-muted-foreground">
+        Client ID 与 Client Secret 将在创建成功后自动生成并展示。
+      </p>
       <FormField label="状态">
         <Select v-model="form.status">
           <option :value="1">启用</option>
@@ -300,7 +408,7 @@ async function copyText(text: string) {
 
     <Dialog
       v-model:open="secretDialogOpen"
-      :title="secretViewMode === 'reveal' ? '请妥善保存 Client Secret' : '查看密钥'"
+      :title="secretViewMode === 'reveal' && secretValue ? '请妥善保存 Client Secret' : '查看密钥'"
     >
       <p class="text-sm text-muted-foreground">
         <template v-if="secretViewMode === 'reveal' && secretValue">
@@ -348,23 +456,16 @@ async function copyText(text: string) {
         系统保留应用，不允许重置密钥。
       </p>
       <div class="mt-6 flex justify-end gap-2 border-t pt-4">
-        <Button variant="outline" type="button" @click="secretDialogOpen = false">
-          {{ secretViewMode === 'reveal' ? '关闭' : '取消' }}
-        </Button>
         <Button
-          v-if="secretViewMode === 'view' && !secretIsPersist"
+          v-if="secretViewMode === 'view' && !secretIsPersist && !secretValue"
           type="button"
           variant="destructive"
           @click="handleResetSecretFromDialog"
         >
           重置密钥
         </Button>
-        <Button
-          v-if="secretViewMode === 'reveal' && secretValue"
-          type="button"
-          @click="secretDialogOpen = false"
-        >
-          关闭
+        <Button variant="outline" type="button" @click="secretDialogOpen = false">
+          {{ secretViewMode === 'view' && !secretValue ? '取消' : '关闭' }}
         </Button>
       </div>
     </Dialog>

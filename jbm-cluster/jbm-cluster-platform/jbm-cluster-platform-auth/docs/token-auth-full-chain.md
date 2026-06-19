@@ -10,23 +10,21 @@
 | 组件 | 技术 | 版本 | 说明 |
 |---|---|---|---|
 | 认证框架 | Sa-Token | 1.32.0 | 统一认证、鉴权、会话管理 |
-| JWT 模式 | StpLogicJwtForSimple (自定义扩展) | - | 自定义实现 `StpLogicJwtForCustom` |
+| 下游认证模式 | Redis / OAuth / Mixed | - | `jbm.security.auth.mode` 控制 Redis 会话、标准 OAuth JWT 或混合认证 |
 | OAuth2 | Sa-Token-OAuth2 | 1.32.0 | 标准 OAuth2.0 协议支持 |
 | Token 存储 | Redis (RedisSaTokenDao) | - | 自定义 DAO，替代默认内存存储 |
 | 在线用户 | Redis (online_tokens:{token}) | - | 自维护的在线用户表 |
-| Token 传递 | Feign Interceptor | - | 服务间自动透传 Authorization / Id-Token |
+| Token 传递 | Feign Interceptor | - | 服务间自动透传 Authorization / 内部 OAuth JWT |
 
-### 1.2 JWT 模式说明
+### 1.2 下游认证模式说明
 
-项目使用 **Simple 简单模式** (自定义 `StpLogicJwtForCustom`):
+项目保留 Sa-Token 登录与注解鉴权，但不再引入 `sa-token-jwt`:
 
-- Token 风格: JWT
-- 登录数据存储: **Redis 中** (非 JWT 内)
-- Session 存储: **Redis 中**
-- 支持踢人下线、timeout 有效期、activity-timeout 有效期、账号封禁
-- JWT 中仅携带 loginId 和过期时间，验证时需回查 Redis
+- `redis`: 共享 Redis 中的 Sa-Token 会话与 Token 映射。
+- `oauth`: 通过 Auth 服务签发的标准 OAuth JWT/JWKS 校验。
+- `mixed`: 同时支持 Redis 会话与标准 OAuth JWT，是当前集群默认模式。
 
-> 注意: 虽然使用了 JWT 格式，但本质是 **JWT + Redis 双验证**，Redis 数据过期则 JWT 也无效。
+> 注意: 标准 JWT 由 JBM bridge 校验并绑定到 Sa-Token 上下文，供 `@SaCheckLogin` 和权限注解继续使用。
 
 ### 1.3 支持的登录方式
 
@@ -83,9 +81,7 @@ Sa-Token 框架内置默认值  (最低优先级)
 | `sa-token.is-read-head` | `true` | - | 从 Header 读取 token |
 | `sa-token.is-read-cookie` | `false` | - | 不从 Cookie 读取 |
 | `sa-token.token-prefix` | `Bearer` | - | Token 前缀 |
-| `sa-token.jwt-secret-key` | `abcdefghijklmnopqrstuvwxyz` | - | JWT 签名密钥 |
-| `sa-token.check-id-token` | `true` | - | 开启内网服务调用鉴权 |
-| `sa-token.id-token-timeout` | `604800` | 7 天 | Id-Token 有效期 (服务间互信) |
+| `jbm.security.auth.mode` | `mixed` | - | 下游认证模式: redis/oauth/mixed |
 | `sa-token.oauth2.access-token-timeout` | `86400` | 24 小时 | OAuth2 访问令牌有效期 |
 | `sa-token.oauth2.client-token-timeout` | `86400` | 24 小时 | OAuth2 客户端令牌有效期 |
 | `sa-token.oauth2.is-code` | `true` | - | 启用授权码模式 |
@@ -299,11 +295,12 @@ public void doLogin(String loginType, Object loginId, String tokenValue, SaLogin
 |---|---|---|---|
 | `online_tokens:{tokenValue}` | `SysUserOnline` | `sa-token.timeout` (24h) | 在线用户信息 (IP、浏览器、OS等) |
 
-### 4.4 服务间互信 (Id-Token)
+### 4.4 服务间互信 (OAuth2 Client Credentials)
 
-| Redis Key | 值 | TTL | 说明 |
+| 凭证 | 值 | TTL | 说明 |
 |---|---|---|---|
-| `satoken:id-token:{serviceId}` | `idTokenValue` | `sa-token.id-token-timeout` (7天) | 服务身份标识 |
+| `X-Internal-Authorization` | `Bearer {access_token}` | `expires_in` | OAuth2 `client_credentials` 签发的标准 JWT |
+| `X-Internal-Service` | 调用方服务名 | - | 调用方身份标识 |
 
 ### 4.5 登录错误锁定
 
@@ -315,16 +312,16 @@ public void doLogin(String loginType, Object loginId, String tokenValue, SaLogin
 
 ## 五、请求认证链路
 
-> **已迁移**：Gateway `ForwardAuthFilter`、下游 `SaOAuthFilterAuthStrategy`（用户 Bearer 优先、OAuth2/JWT 回退、禁止 Bearer 无效时仅用 Id-Token）、Feign 透传规则，见 [auth-access-system.md](../../../docs/architecture/auth-access-system.md)。
+> **已迁移**：Gateway、下游 `SaOAuthFilterAuthStrategy`、Feign 透传规则统一使用 OAuth2 `client_credentials` 标准 JWT；用户 Bearer 优先，用户 Bearer 无效时不允许仅凭内部服务 token 绕过。
 
 ### 5.1 Gateway 层（摘要）
 
 - `SaAuthFilter`：**不**对用户执行 `StpUtil.checkLogin()`，仅白名单 + 路由。
-- `ForwardAuthFilter`：**保留** `Authorization`，**追加** `Satoken-Id-Token`、`X-Internal-Service`、`X-Internal-Instance`。
+- `ForwardAuthFilter`：**保留** `Authorization`，**追加** `X-Internal-Authorization`、`X-Internal-Service`、`X-Internal-Instance`。
 
 ### 5.2 下游 Servlet（摘要）
 
-- `SaServletSuperFilter` + `SaOAuthFilterAuthStrategy`：用户 Token → OAuth2 AccessToken → JWT `loginId`；无用户 Token 时 Id-Token 互信。
+- `SaServletSuperFilter` + `SaOAuthFilterAuthStrategy`：用户 Token → OAuth2 AccessToken → JWT `loginId`；无用户 Token 时校验 `X-Internal-Authorization` 服务 JWT。
 - 业务节点需 **`sa-token-oauth2`**（`jbm-cluster-node-basic`）与 Auth **同一 Redis**。
 
 ### 5.3 SaTokenInfo.tokenTimeout 的计算
@@ -372,13 +369,13 @@ public Object getLoginId() {
 
 ## 六、服务间调用 (Feign)
 
-> 现行 Header 注入与 Id-Token 规则见 [auth-access-system.md §5](../../../docs/architecture/auth-access-system.md#5-内部服务访问体系)。
+> 现行 Header 注入规则：用户 `Authorization` 继续透传；服务身份使用 OAuth2 `client_credentials` 标准 JWT 放入 `X-Internal-Authorization`。
 
 ### 6.1 请求拦截器（摘要）
 
 **FeignRequestInterceptor**：透传用户 `Authorization`、`user_id`、`username`、`X-Context-*`。  
-**AppPreRequestInterceptor**：无用户 `Authorization` 时注入 `Satoken-Id-Token` + `X-Internal-*`。  
-**JbmFeignRequest**（`feign://`）：追加 Id-Token 与内部身份 Header。
+**AppPreRequestInterceptor**：注入 `X-Internal-Authorization` + `X-Internal-*`，并保留用户 `Authorization`。  
+**JbmFeignRequest**（`feign://`）：追加标准服务 JWT 与内部身份 Header。
 
 ### 6.2 ClientToken 生成
 
@@ -387,11 +384,11 @@ public Object getLoginId() {
 - 首次生成时调用 `SaOAuth2Template.generateClientToken()` 写入 Redis
 - 后续从本地缓存获取，不重复生成
 
-### 6.3 Id-Token
+### 6.3 服务 JWT
 
-- `SaIdUtil.getToken()` 获取当前服务的 Id-Token
-- Id-Token 存储在 Redis: `satoken:id-token:{serviceId}`，TTL = `sa-token.id-token-timeout` (7天)
-- 服务启动时自动生成
+- 由 `InternalServiceTokenProvider` 使用 OAuth2 `client_credentials` 获取 `access_token`
+- 请求头使用 `X-Internal-Authorization: Bearer {access_token}`
+- 本地缓存到 `expires_in - 60s`，过期后重新向 Auth 获取
 
 ---
 
@@ -503,9 +500,9 @@ Gateway 的 `SaAuthFilter` 中 `StpUtil.checkLogin()` 被注释，Gateway 不校
 但 Sa-Token 层的 `activity-timeout` 过期时，`online_tokens` 不会同步删除。
 导致在线用户列表可能显示已实际过期的用户。
 
-### 9.5 JWT 密钥硬编码
+### 9.5 标准 JWT 密钥管理
 
-`sa-token.jwt-secret-key=abcdefghijklmnopqrstuvwxyz` 是弱密钥，生产环境需更换。
+已移除 Sa-Token JWT 共享密钥。标准 OAuth JWT 使用 Auth 服务私钥签发，下游通过 JWKS 或公钥校验。
 
 ---
 

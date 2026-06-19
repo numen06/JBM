@@ -58,37 +58,37 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
 
     @router.post("/pushMessage/read")
     async def read_messages(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        service.mark_read(_ids(body), True)
+        await service.mark_read(_ids(body), True)
         return ok("标记已读成功", "标记已读成功")
 
     @router.post("/pushMessage/readAllCurr")
     async def read_all_curr(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
-        service.mark_all_read(parse_user_id(authorization))
+        await service.mark_all_read(parse_user_id(authorization))
         return ok("全部标记已读成功", "全部标记已读成功")
 
     @router.post("/pushMessage/unread")
     async def unread_messages(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        service.mark_read(_ids(body), False)
+        await service.mark_read(_ids(body), False)
         return ok("标记未读成功", "标记未读成功")
 
     @router.post("/pushMessage/pageList")
     async def page_list(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.page_messages(body), "查询消息列表成功")
+        return ok(await service.page_messages(body), "查询消息列表成功")
 
     @router.post("/pushMessage/findCurrMessagePage")
     async def current_page(
         body: Optional[Dict[str, Any]] = Body(default=None),
         authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
-        return ok(service.page_messages(body, parse_user_id(authorization)), "获取登录人的消息列表成功")
+        return ok(await service.page_messages(body, parse_user_id(authorization)), "获取登录人的消息列表成功")
 
     @router.post("/pushMessage/unreadCount")
     async def unread_count(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
-        return ok(service.unread_count(parse_user_id(authorization)), "获取未读消息数成功")
+        return ok(await service.unread_count(parse_user_id(authorization)), "获取未读消息数成功")
 
     @router.post("/pushMessage/deleteByIds")
     async def delete_by_ids(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        service.delete_messages(_ids(body))
+        await service.delete_messages(_ids(body))
         return ok(True, "删除站内信成功")
 
     @router.post("/pushMessage/sendUserMessage")

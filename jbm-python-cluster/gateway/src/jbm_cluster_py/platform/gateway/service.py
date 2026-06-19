@@ -55,14 +55,14 @@ def sanitize_headers(headers: Mapping[str, str]) -> dict[str, str]:
     redacted = {}
     for key, value in headers.items():
         lowered = key.lower()
-        if lowered in {"authorization", "cookie", "set-cookie"}:
+        if lowered in {"authorization", "x-internal-authorization", "cookie", "set-cookie"}:
             redacted[key] = "***"
         else:
             redacted[key] = value
     return redacted
 
 
-class TrustTokenProvider:
+class ServiceTokenProvider:
     def __init__(
         self,
         config: Mapping[str, Any],
@@ -75,42 +75,58 @@ class TrustTokenProvider:
         self.service_name = service_name
         self.http_client = http_client
         self._token: Optional[str] = str(self.config.get("value") or "").strip() or None
+        self._expires_at = int(time.time()) + 3600 if self._token else 0
         self._lock = asyncio.Lock()
 
     async def get_token(self) -> Optional[str]:
-        if self._token:
+        if self._token and int(time.time()) < self._expires_at - 60:
             return self._token
         async with self._lock:
-            if self._token:
+            if self._token and int(time.time()) < self._expires_at - 60:
                 return self._token
-            self._token = await self._fetch_token()
+            self._token, self._expires_at = await self._fetch_token()
             return self._token
 
-    async def _fetch_token(self) -> Optional[str]:
-        service = str(self.config.get("service") or "jbm-cluster-platform-center")
-        path = str(self.config.get("path") or "/internal/trust/id-token")
+    async def _fetch_token(self) -> tuple[Optional[str], int]:
+        service = str(self.config.get("service") or "jbm-cluster-platform-auth")
+        path = str(self.config.get("path") or "/oauth2/token")
+        client_id = str(self.config.get("client-id") or self.config.get("clientId") or "")
+        client_secret = str(self.config.get("client-secret") or self.config.get("clientSecret") or "")
+        scope = str(self.config.get("scope") or "internal")
+        if not client_id or not client_secret:
+            logger.warning("Cannot fetch service token: client-id/client-secret are empty")
+            return None, 0
         instance = await self.discovery.choose_instance(service)
         if not instance:
-            logger.warning("Cannot fetch trust token: no Nacos instance for %s", service)
-            return None
+            logger.warning("Cannot fetch service token: no Nacos instance for %s", service)
+            return None, 0
         host = instance.get("ip") or instance.get("host")
         port = instance.get("port")
         if not host or not port:
-            return None
+            return None, 0
         url = "http://%s:%s%s" % (host, port, path)
         try:
             response = await self.http_client.post(
                 url,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "scope": scope,
+                },
                 headers={"X-Internal-Service": self.service_name},
             )
             response.raise_for_status()
             payload = response.json()
         except Exception as exc:
-            logger.warning("Failed to fetch trust token from %s: %s", url, exc)
-            return None
+            logger.warning("Failed to fetch service token from %s: %s", url, exc)
+            return None, 0
         result = payload.get("result") if isinstance(payload, dict) else None
-        token = result.get("id_token") if isinstance(result, dict) else None
-        return str(token).strip() if token else None
+        if not isinstance(result, dict):
+            result = payload.get("data") if isinstance(payload, dict) else None
+        token = result.get("access_token") if isinstance(result, dict) else None
+        expires_in = int(result.get("expires_in") or 7200) if isinstance(result, dict) else 0
+        return (str(token).strip() if token else None), int(time.time()) + max(expires_in, 300)
 
 
 class AccessLogger:
@@ -167,7 +183,7 @@ class GatewayProxy:
         traffic: TrafficPolicyManager,
         discovery: NacosDiscoveryClient,
         http_client: httpx.AsyncClient,
-        trust_tokens: TrustTokenProvider,
+        service_tokens: ServiceTokenProvider,
         access_logger: AccessLogger,
     ) -> None:
         self.config = config
@@ -177,7 +193,7 @@ class GatewayProxy:
         self.traffic = traffic
         self.discovery = discovery
         self.http_client = http_client
-        self.trust_tokens = trust_tokens
+        self.service_tokens = service_tokens
         self.access_logger = access_logger
         self.security = GatewaySecurityPolicy.from_app_config(config)
 
@@ -291,10 +307,9 @@ class GatewayProxy:
             for key, value in request.headers.items()
             if key.lower() not in HOP_BY_HOP_HEADERS
         }
-        token = await self.trust_tokens.get_token()
+        token = await self.service_tokens.get_token()
         if token:
-            headers["SA_ID_TOKEN"] = token
-            headers["Satoken-Id-Token"] = token
+            headers["X-Internal-Authorization"] = "Bearer " + token
         headers["X-Internal-Service"] = self.config.service_name
         headers["X-Internal-Instance"] = "%s:%s" % (self.config.service_name, self.config.port)
         headers["X-Original-Path"] = original_path
@@ -368,10 +383,9 @@ class GatewayProxy:
             for key, value in websocket.headers.items()
             if key.lower() not in HOP_BY_HOP_HEADERS
         }
-        token = await self.trust_tokens.get_token()
+        token = await self.service_tokens.get_token()
         if token:
-            headers["SA_ID_TOKEN"] = token
-            headers["Satoken-Id-Token"] = token
+            headers["X-Internal-Authorization"] = "Bearer " + token
         headers["X-Internal-Service"] = self.config.service_name
         headers["X-Internal-Instance"] = "%s:%s" % (self.config.service_name, self.config.port)
         headers["X-Original-Path"] = request_path

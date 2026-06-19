@@ -38,6 +38,13 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
 
     route = repo.match("/push/ws")
     assert route == GatewayRoute("push", "/push/**", "jbm-cluster-platform-push", None, 1)
+    assert repo.match("/online/pageList") == GatewayRoute(
+        "auth-online",
+        "/online/**",
+        "jbm-cluster-platform-auth",
+        None,
+        0,
+    )
     assert repo.loaded_from == "fallback"
 
 
@@ -68,7 +75,7 @@ def test_ip_limit_decision_black_and_white_rules() -> None:
 def test_ip_limit_path_is_expanded_with_gateway_route() -> None:
     routes = [GatewayRoute("center", "/center/**", "jbm-cluster-platform-center-jbm7", "lb://jbm-cluster-platform-center-jbm7", 1)]
 
-    assert full_gateway_path(routes, "jbm-cluster-platform-center-jbm7", "/internal/trust/id-token") == "/center/internal/trust/id-token"
+    assert full_gateway_path(routes, "jbm-cluster-platform-center-jbm7", "/internal/oauth/token") == "/center/internal/oauth/token"
 
 
 def test_circuit_breaker_opens_and_recovers_automatically() -> None:

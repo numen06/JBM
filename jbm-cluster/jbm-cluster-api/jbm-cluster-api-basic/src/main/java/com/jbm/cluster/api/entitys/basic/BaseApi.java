@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.jbm.cluster.api.model.api.ApiControlSummary;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -130,5 +131,9 @@ public class BaseApi extends MasterDataEntity {
 
     @ApiModelProperty(value = "业务模块")
     private String businessScope;
+
+    @TableField(exist = false)
+    @ApiModelProperty(value = "受控治理摘要")
+    private ApiControlSummary controlSummary;
 
 }

@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_TRUSTED_HOST=mirrors.aliyun.com \
     JBM_APP=logs \
     JBM_PROFILE=jaja7 \
-    PYTHONPATH=/app/common/src:/app/integrations/src:/app/logs/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src
+    PYTHONPATH=/app/common/src:/app/integrations/src:/app/auth/src:/app/logs/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src
 
 WORKDIR /app
 
@@ -38,6 +38,7 @@ RUN pip install -r requirements.txt
 
 COPY --chown=appuser:appuser common ./common
 COPY --chown=appuser:appuser integrations ./integrations
+COPY --chown=appuser:appuser auth ./auth
 COPY --chown=appuser:appuser logs ./logs
 COPY --chown=appuser:appuser doc ./doc
 COPY --chown=appuser:appuser push ./push
@@ -46,6 +47,6 @@ COPY --chown=appuser:appuser gateway ./gateway
 
 USER appuser
 
-EXPOSE 3312 3313 4444 6060 9999
+EXPOSE 3312 3313 4444 5555 6060 9999
 
 CMD ["sh", "-c", "python -m jbm_cluster_py.platform.${JBM_APP}.main"]

@@ -44,12 +44,9 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
 
 
     /**
-     * 检查菜单编码是否存在
-     *
-     * @param menuCode
-     * @return
+     * 检查菜单编码是否存在（同一应用或平台公共范围内唯一）
      */
-    Boolean isExist(String menuCode);
+    Boolean isExist(String menuCode, Long appId);
 
 
     /**
@@ -86,18 +83,21 @@ public interface BaseMenuService extends IMasterDataService<BaseMenu> {
     BaseMenu getMenuByPathAndAppId(String path, Long appId);
 
     /**
-     * 根据menuCode查询菜单
-     *
-     * @param menuCode
-     * @return
+     * 根据 menuCode 与 appId 查询菜单
      */
-    BaseMenu getMenuByCode(String menuCode);
+    BaseMenu getMenuByCode(String menuCode, Long appId);
 
     /**
      * 批量导入菜单
-     *
-     * @param menus
-     * @return
      */
     int importMenus(List<BaseMenu> menus);
+
+    /**
+     * 从源应用同步菜单到目标应用（含按钮）
+     *
+     * @param sourceAppId 模板应用，通常为 JBM
+     * @param targetAppId 目标应用
+     * @param mode        merge 增量同步；replace 先清空目标非保留菜单再全量复制
+     */
+    int syncMenusFromApp(Long sourceAppId, Long targetAppId, String mode);
 }

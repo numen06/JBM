@@ -11,6 +11,7 @@ import com.jbm.cluster.common.mysql.service.BaseActionService;
 import com.jbm.cluster.common.mysql.service.BaseMenuService;
 import com.jbm.cluster.common.mysql.service.MenuDataScopeHelper;
 import com.jbm.framework.exceptions.ServiceException;
+import com.jbm.cluster.core.constant.JbmConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,10 +112,9 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
                 throw new ServiceException("import file format error");
             }
             if (ObjectUtil.isNotEmpty(appId)) {
+                menuDataScopeHelper.assertCanManageAppId(appId);
                 for (BaseMenu menu : menus) {
-                    if (ObjectUtil.isNotEmpty(menu.getAppId())) {
-                        menu.setAppId(appId);
-                    }
+                    menu.setAppId(appId);
                 }
             }
             int successCount = baseMenuService.importMenus(menus);
@@ -125,5 +125,17 @@ public class BaseMenuBusinessImpl implements BaseMenuBusiness {
         } catch (Exception e) {
             throw ServiceException.of(e, "import menu failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public int syncMenusFromJbmWithGatewayRefresh(Long targetAppId, Long sourceAppId, String mode) {
+        Long resolvedSourceAppId = ObjectUtil.defaultIfNull(sourceAppId, JbmConstants.JBM_SEED_APP_ID);
+        if (resolvedSourceAppId.equals(targetAppId)) {
+            throw new ServiceException("cannot sync menus to the template app itself");
+        }
+        menuDataScopeHelper.assertCanManageAppId(targetAppId);
+        int count = baseMenuService.syncMenusFromApp(resolvedSourceAppId, targetAppId, mode);
+        jbmClusterTemplate.refreshGateway();
+        return count;
     }
 }

@@ -2,24 +2,30 @@ import asyncio
 import base64
 import json
 import time
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.push.main import create_app
+from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
 
-def push_config() -> AppConfig:
-    return AppConfig(
-        {
-            "server": {"host": "127.0.0.1", "port": 3313},
-            "spring": {
-                "application": {"name": "jbm-cluster-platform-push"},
-                "cloud": {"nacos": {"discovery": {"enabled": False}}},
-            },
-            "integrations": {"telemetry": {"enabled": False}},
+def push_config(database_url: str | None = None) -> AppConfig:
+    data = {
+        "server": {"host": "127.0.0.1", "port": 3313},
+        "spring": {
+            "application": {"name": "jbm-cluster-platform-push"},
+            "cloud": {"nacos": {"discovery": {"enabled": False}}},
         },
+        "integrations": {"telemetry": {"enabled": False}},
+    }
+    if database_url:
+        data["spring"]["datasource"] = {"url": database_url}
+    return AppConfig(
+        data,
         profile="test",
         config_dir=None,
         app="push",
@@ -192,3 +198,71 @@ def test_broadcast_only_targets_matching_subscriber_user() -> None:
     assert len(user_one.frames) == 1
     assert "subscription:sub-1" in user_one.frames[0]
     assert user_two.frames == []
+
+
+@pytest.mark.asyncio
+async def test_message_persistence_survives_service_restart(tmp_path: Path) -> None:
+    db_path = tmp_path / "push-messages.db"
+    database_url = f"sqlite+aiosqlite:///{db_path}"
+    config = push_config(database_url)
+
+    with TestClient(create_app(config)) as client:
+        sent = client.post(
+            "/pushTest/send",
+            json={"recUserIds": [42], "title": "persisted", "content": "after restart", "showInMessageCenter": True},
+        )
+        assert sent.status_code == 200
+        assert sent.json()["result"]["sentCount"] == 1
+
+        page = client.post("/pushMessage/pageList", json={"recUserId": 42, "pageForm": {"currPage": 1, "pageSize": 10}})
+        rows = page.json()["result"]["contents"]
+        assert rows[0]["title"] == "persisted"
+        assert rows[0]["pushStatus"] == "issued"
+
+    restarted = create_app(config)
+    with TestClient(restarted) as client:
+        page = client.post("/pushMessage/pageList", json={"recUserId": 42, "pageForm": {"currPage": 1, "pageSize": 10}})
+        rows = page.json()["result"]["contents"]
+        assert len(rows) == 1
+        assert rows[0]["title"] == "persisted"
+
+        msg_id = rows[0]["msgId"]
+        read = client.post("/pushMessage/read", json={"ids": [msg_id]})
+        assert read.json()["success"] is True
+        unread = client.post("/pushMessage/unreadCount", json={})
+        assert unread.json()["result"] == 0
+
+
+@pytest.mark.asyncio
+async def test_push_message_repository_filters_source_type(tmp_path: Path) -> None:
+    repo = PushMessageRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'filters.db'}"})
+    await repo.start()
+    await repo.save_message(
+        {
+            "msgId": "sys-1",
+            "recUserId": 1,
+            "sysMsg": True,
+            "title": "system",
+            "content": "sys",
+            "pushWay": "internal",
+            "pushStatus": "issued",
+            "readFlag": False,
+        }
+    )
+    await repo.save_message(
+        {
+            "msgId": "user-1",
+            "recUserId": 1,
+            "sendUserId": 9,
+            "sysMsg": False,
+            "title": "user",
+            "content": "usr",
+            "pushWay": "internal",
+            "pushStatus": "issued",
+            "readFlag": False,
+        }
+    )
+    system_page = await repo.page_messages({"sourceType": "system", "pageForm": {"currPage": 1, "pageSize": 10}})
+    assert system_page["total"] == 1
+    assert system_page["contents"][0]["msgId"] == "sys-1"
+    await repo.stop()

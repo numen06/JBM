@@ -54,6 +54,9 @@ public class JbmSecurityConstants {
     /** 内部调用：调用方服务名 */
     public static final String INTERNAL_SERVICE = "X-Internal-Service";
 
+    /** 内部调用：OAuth2 Client Credentials Bearer JWT */
+    public static final String INTERNAL_AUTHORIZATION_HEADER = "X-Internal-Authorization";
+
     /** 内部调用：调用方实例 service:port */
     public static final String INTERNAL_INSTANCE = "X-Internal-Instance";
 

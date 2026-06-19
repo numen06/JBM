@@ -17,4 +17,6 @@ public interface BaseMenuBusiness {
     List<BaseMenu> listMenusForExport(Long appId);
 
     int importMenusWithGatewayRefresh(MultipartFile file, Long appId);
+
+    int syncMenusFromJbmWithGatewayRefresh(Long targetAppId, Long sourceAppId, String mode);
 }

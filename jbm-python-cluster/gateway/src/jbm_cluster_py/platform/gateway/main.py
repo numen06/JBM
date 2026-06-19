@@ -7,6 +7,7 @@ import httpx
 import uvicorn
 from fastapi import FastAPI
 
+from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
@@ -18,13 +19,14 @@ from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository
 from jbm_cluster_py.platform.gateway.router import build_gateway_router
 from jbm_cluster_py.platform.gateway.routes import RouteRepository
 from jbm_cluster_py.platform.gateway.security import install_security_middleware
-from jbm_cluster_py.platform.gateway.service import AccessLogger, GatewayProxy, TrustTokenProvider
+from jbm_cluster_py.platform.gateway.service import AccessLogger, GatewayProxy, ServiceTokenProvider
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 
 
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app_config = config or AppConfig.load(app="gateway")
     configure_logging()
+    print_jbm_banner()
     init_telemetry(app_config.telemetry)
 
     gateway_config = dict(app_config.get("jbm.gateway", {}) or {})
@@ -39,8 +41,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         list(gateway_config.get("path-blacklist") or []),
         list(gateway_config.get("gray-routes") or []),
     )
-    trust_tokens = TrustTokenProvider(
-        gateway_config.get("trust-token") or {},
+    service_tokens = ServiceTokenProvider(
+        gateway_config.get("service-token") or {},
         discovery,
         app_config.service_name,
         http_client,
@@ -58,7 +60,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         traffic,
         discovery,
         http_client,
-        trust_tokens,
+        service_tokens,
         access_logger,
     )
 

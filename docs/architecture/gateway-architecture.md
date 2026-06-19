@@ -28,7 +28,7 @@
 | -100 | `XssFilter` | JSON 请求体 XSS 过滤（`security.xss.enabled`） |
 | -50 | `ApiSignatureFilter` | RSA 签名校验（`jbm.api.check-sign`） |
 | -45 | `DeveloperAuthFilter` | API Key 接口授权范围（`jbm.api.check-auth`） |
-| -40 | `ForwardAuthFilter` | 追加 `Satoken-Id-Token`、`X-Internal-Service`、`X-Gateway-Api-Key-Id` 等 |
+| -40 | `ForwardAuthFilter` | 追加 `X-Internal-Authorization`、`X-Internal-Service`、`X-Gateway-Api-Key-Id` 等 |
 
 路由级过滤器（动态路由）：`StripPrefix=1`（去掉路径第一段前缀，如 `/admin/foo` → `/foo`）
 
@@ -85,7 +85,7 @@ flowchart TD
 - 登录/注册/会话：`/**/login/**`、`/user/registrations`、`/user/sessions/**`
 - OAuth：`/oauth2/**`
 - 验证码：`/captcha/**`、`/code`
-- 内部：`/internal/dev/**`、`/internal/trust/**`
+- 内部：`/internal/dev/**`
 - 运维：`/actuator/**`
 
 ## 4. 认证与互信
@@ -94,7 +94,7 @@ flowchart TD
 
 `ForwardAuthFilter` 为每个转发请求追加：
 
-- `Satoken-Id-Token`：服务间互信（`SaIdUtil`）
+- `X-Internal-Authorization`：OAuth2 `client_credentials` 服务 JWT
 - `X-Internal-Service` / `X-Internal-Instance`：调用方身份
 - `X-Gateway-Api-Key-Id`：API Key 场景（由 `DeveloperAuthFilter` 写入 exchange 属性）
 
@@ -106,7 +106,7 @@ flowchart TD
 
 1. 有有效用户 Bearer → `StpUtil` / OAuth2 AccessToken / JWT
 2. 无 Bearer → Gateway 已授权 API Key（`X-Gateway-Api-Key-Id` + `X-Internal-Service`）
-3. 无 Bearer → 有效 Id-Token + 内部 Header
+3. 无 Bearer → 有效服务 JWT + 内部 Header
 4. 否则 401
 
 `isGatewayTrustedRequest`（`JbmSecurityConfiguration`）：无 Authorization 且 Id-Token 有效，或 Gateway API Key Header 齐全时，走快速互信分支。

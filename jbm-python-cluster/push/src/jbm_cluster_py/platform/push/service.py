@@ -12,6 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 from jbm_cluster_py.common.masterdata import model_dump_compat
 from jbm_cluster_py.common.result import page_result
 from jbm_cluster_py.platform.push.push_events import PushMessageEvent
+from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +53,15 @@ def parse_user_id(authorization: Optional[str]) -> int:
 
 
 class PushService:
-    def __init__(self, rabbitmq: Any = None, rabbitmq_config: Optional[Mapping[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        rabbitmq: Any = None,
+        rabbitmq_config: Optional[Mapping[str, Any]] = None,
+        message_repository: Optional[PushMessageRepository] = None,
+    ) -> None:
         self.rabbitmq = rabbitmq
         self.rabbitmq_config = dict(rabbitmq_config or {})
+        self.message_repository = message_repository
         self.messages: List[Dict[str, Any]] = []
         self.tasks: Dict[str, Dict[str, Any]] = {}
         self.push_configs: List[Dict[str, Any]] = []
@@ -87,12 +94,18 @@ class PushService:
         for websocket in stale:
             self.remove_subscriber(websocket)
 
-    def page_messages(self, body: Optional[Dict[str, Any]], current_user_id: Optional[int] = None) -> Dict[str, Any]:
+    async def page_messages(self, body: Optional[Dict[str, Any]], current_user_id: Optional[int] = None) -> Dict[str, Any]:
+        if self.message_repository is not None:
+            return await self.message_repository.page_messages(body, current_user_id)
         payload = body or {}
         page_form = payload.get("pageForm") or {}
         rows = list(self.messages)
         if current_user_id is not None:
-            rows = [row for row in rows if int(row.get("recUserId") or 0) == current_user_id]
+            rows = [
+                row
+                for row in rows
+                if int(row.get("recUserId") or 0) in {current_user_id, 0}
+            ]
         for key in ("recUserId", "readFlag", "type", "pushWay", "pushStatus"):
             if key in payload and payload.get(key) is not None and payload.get(key) != "":
                 rows = [row for row in rows if row.get(key) == payload.get(key)]
@@ -110,21 +123,36 @@ class PushService:
         start = (curr_page - 1) * page_size
         return page_result(rows[start : start + page_size], len(rows), curr_page, page_size)
 
-    def unread_count(self, user_id: int) -> int:
-        return sum(1 for row in self.messages if int(row.get("recUserId") or 0) == user_id and not row.get("readFlag"))
+    async def unread_count(self, user_id: int) -> int:
+        if self.message_repository is not None:
+            return await self.message_repository.count_unread(user_id)
+        return sum(
+            1
+            for row in self.messages
+            if int(row.get("recUserId") or 0) in {user_id, 0} and not row.get("readFlag")
+        )
 
-    def mark_read(self, ids: Iterable[str], read_flag: bool = True) -> None:
+    async def mark_read(self, ids: Iterable[str], read_flag: bool = True) -> None:
+        if self.message_repository is not None:
+            await self.message_repository.update_read_flag([str(item) for item in ids], read_flag)
+            return
         id_set = {str(item) for item in ids}
         for row in self.messages:
             if str(row.get("msgId")) in id_set:
                 row["readFlag"] = read_flag
 
-    def mark_all_read(self, user_id: int) -> None:
+    async def mark_all_read(self, user_id: int) -> None:
+        if self.message_repository is not None:
+            await self.message_repository.mark_all_read(user_id)
+            return
         for row in self.messages:
-            if int(row.get("recUserId") or 0) == user_id:
+            if int(row.get("recUserId") or 0) in {user_id, 0}:
                 row["readFlag"] = True
 
-    def delete_messages(self, ids: Iterable[str]) -> None:
+    async def delete_messages(self, ids: Iterable[str]) -> None:
+        if self.message_repository is not None:
+            await self.message_repository.delete_by_ids([str(item) for item in ids])
+            return
         id_set = {str(item) for item in ids}
         self.messages = [row for row in self.messages if str(row.get("msgId")) not in id_set]
 
@@ -178,7 +206,7 @@ class PushService:
         push_way = str(payload.get("pushWay") or payload.get("push_way") or "internal")
         message["pushWay"] = push_way
         if show_in_center:
-            self.messages.insert(0, message)
+            await self._persist_message(message)
         await self.broadcast(message)
 
     async def _deliver_sms(self, payload: Mapping[str, Any]) -> None:
@@ -268,7 +296,7 @@ class PushService:
             for index, rec_user_id in enumerate(targets, start=1):
                 message = self._build_message(request, rec_user_id, current_user_id, task_id, index, show_in_center)
                 if show_in_center:
-                    self.messages.insert(0, message)
+                    await self._persist_message(message)
                 status["sentCount"] += 1
                 await self.broadcast(message)
                 if index < requested and index % batch_size == 0 and interval_ms > 0:
@@ -391,7 +419,7 @@ class PushService:
             "recUserId": rec_user_id,
             "sendUserId": request.get("sendUserId") or send_user_id,
             "sysMsg": bool(request.get("sysMsg", False)),
-            "pushStatus": "success",
+            "pushStatus": "issued",
             "pushWay": push_way,
             "readFlag": False,
             "content": content,
@@ -404,6 +432,12 @@ class PushService:
             "testRunId": task_id,
             "clientSentAt": current_millis(),
         }
+
+    async def _persist_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        if self.message_repository is not None:
+            return await self.message_repository.save_message(message)
+        self.messages.insert(0, message)
+        return message
 
     def _show_in_message_center(self, request: Dict[str, Any], default: bool) -> bool:
         if "showInMessageCenter" in request:

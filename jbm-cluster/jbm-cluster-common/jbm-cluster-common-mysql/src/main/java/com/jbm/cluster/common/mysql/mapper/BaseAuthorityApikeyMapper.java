@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.mysql.mapper;
 
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityApikey;
+import com.jbm.cluster.api.model.api.ApiControlCount;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import org.apache.ibatis.annotations.Param;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
@@ -14,4 +15,6 @@ public interface BaseAuthorityApikeyMapper extends SuperMapper<BaseAuthorityApik
     List<OpenAuthority> selectAuthorityByKeyId(@Param("keyId") Long keyId);
 
     List<Long> selectAuthorityIdsByKeyId(@Param("keyId") Long keyId);
+
+    List<ApiControlCount> countApiKeyGrantByApiIds(@Param("apiIds") List<Long> apiIds);
 }

@@ -1,16 +1,33 @@
 package com.jbm.cluster.common.satoken.core;
 
-import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
+import cn.dev33.satoken.stp.StpLogic;
+import com.jbm.cluster.common.satoken.config.JbmAuthProperties;
 import com.jbm.cluster.common.satoken.oauth.AccessTokenExpiryAligner;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtSupport;
 import com.jbm.framework.exceptions.auth.NotLoginException;
 
 /**
  * @author fanscat
  * @createTime 2024/6/3 16:18
  */
-public class StpLogicJwtForCustom extends StpLogicJwtForSimple {
+public class StpLogicJwtForCustom extends StpLogic {
+
+    private final JbmAuthProperties authProperties;
+
+    public StpLogicJwtForCustom() {
+        this(new JbmAuthProperties());
+    }
+
+    public StpLogicJwtForCustom(JbmAuthProperties authProperties) {
+        this("login", authProperties);
+    }
+
+    public StpLogicJwtForCustom(String loginType, JbmAuthProperties authProperties) {
+        super(loginType);
+        this.authProperties = authProperties == null ? new JbmAuthProperties() : authProperties;
+    }
 
     @Override
     public Object getLoginId() {
@@ -24,13 +41,24 @@ public class StpLogicJwtForCustom extends StpLogicJwtForSimple {
         if (tokenValue == null) {
             throw NotLoginException.newInstance(loginType, NotLoginException.NOT_TOKEN);
         }
-        // 查找此 token 对应 loginId；JWT 解析失败时回退 OAuth2 AccessToken（Gateway 透传场景）
-        String loginId = getLoginIdNotHandle(tokenValue);
-        if (loginId == null || NotLoginException.INVALID_TOKEN.equals(loginId)) {
+        // 查找此 token 对应 loginId；Redis 模式查 Sa-Token 会话，OAuth 模式查标准 JWT，混合模式两者都支持。
+        String loginId = null;
+        boolean standardJwtLogin = false;
+        if (authProperties.isRedisEnabled()) {
+            loginId = getLoginIdNotHandle(tokenValue);
+        }
+        if (authProperties.isOauthEnabled() && (loginId == null || NotLoginException.INVALID_TOKEN.equals(loginId))) {
+            loginId = StandardJwtSupport.resolveLoginId(tokenValue);
+            standardJwtLogin = loginId != null;
+        }
+        if (authProperties.isRedisEnabled() && (loginId == null || NotLoginException.INVALID_TOKEN.equals(loginId))) {
             loginId = resolveLoginIdFromOAuth2AccessToken(tokenValue);
         }
         if (loginId == null) {
             throw NotLoginException.newInstance(loginType, NotLoginException.INVALID_TOKEN);
+        }
+        if (standardJwtLogin) {
+            return loginId;
         }
         // 如果是已经过期，则抛出：已经过期
         if (loginId.equals(NotLoginException.TOKEN_TIMEOUT)) {

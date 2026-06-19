@@ -4,6 +4,7 @@ from typing import Any, Optional
 import uvicorn
 from fastapi import FastAPI
 
+from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
@@ -18,6 +19,7 @@ from jbm_cluster_py.platform.push.business_events import (
     WebhookDeliveryConsumer,
     WebhookHttpClient,
 )
+from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
 from jbm_cluster_py.platform.push.router import build_push_router
 from jbm_cluster_py.platform.push.service import PushService
 from jbm_cluster_py.platform.push.worker import PushWorker
@@ -26,9 +28,11 @@ from jbm_cluster_py.platform.push.worker import PushWorker
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app_config = config or AppConfig.load(app="push")
     configure_logging()
+    print_jbm_banner()
     init_telemetry(app_config.telemetry)
     rabbitmq = RabbitMQClient(app_config.rabbitmq)
-    push_service = PushService(rabbitmq, app_config.rabbitmq)
+    message_repository = PushMessageRepository(app_config.database)
+    push_service = PushService(rabbitmq, app_config.rabbitmq, message_repository)
     repository = BusinessEventRepository(app_config.database)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     http_client = WebhookHttpClient(discovery)
@@ -48,10 +52,12 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         push_worker = PushWorker(push_service, rabbitmq, app_config.rabbitmq)
         app.state.config = app_config
         app.state.push_service = push_service
+        app.state.message_repository = message_repository
         app.state.business_event_service = business_event_service
         app.state.push_worker = push_worker
         app.state.nacos = nacos
         await nacos.start()
+        await message_repository.start()
         if rabbitmq.enabled:
             await rabbitmq.start()
             await push_worker.start()
@@ -65,6 +71,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             yield
         finally:
             await business_event_service.stop()
+            await message_repository.stop()
             if rabbitmq.enabled:
                 await rabbitmq.stop()
             await nacos.stop()

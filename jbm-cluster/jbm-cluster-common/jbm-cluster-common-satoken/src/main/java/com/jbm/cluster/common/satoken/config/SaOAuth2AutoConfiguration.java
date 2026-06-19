@@ -9,7 +9,9 @@ import com.jbm.cluster.common.satoken.oauth.NodeClientModelSource;
 import com.jbm.cluster.common.satoken.oauth.OAuth2AccessTokenExpirySyncListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -36,12 +38,16 @@ public class SaOAuth2AutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(RedisSaTokenDao.class)
+    @ConditionalOnExpression("'${jbm.security.auth.mode:mixed}' != 'oauth'")
     public OAuth2AccessTokenExpirySyncListener oauth2AccessTokenExpirySyncListener() {
         return new OAuth2AccessTokenExpirySyncListener();
     }
 
     @Bean
     @Primary
+    @ConditionalOnBean(RedisSaTokenDao.class)
+    @ConditionalOnExpression("'${jbm.security.auth.mode:mixed}' != 'oauth'")
     public SaOAuth2Template jbmNodeOAuth2Template(RedisSaTokenDao redisSaTokenDao) {
         SaManager.setSaTokenDao(redisSaTokenDao);
         return new JbmNodeOAuth2TemplateImpl();

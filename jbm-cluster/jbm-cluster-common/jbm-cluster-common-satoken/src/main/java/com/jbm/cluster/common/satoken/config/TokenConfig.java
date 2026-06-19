@@ -45,15 +45,6 @@ public class TokenConfig {
     @Value("${sa-token.activity-timeout:7200}")
     private int tokenActivityTimeout;
 
-    // ==================== Id-Token 配置 ====================
-    
-    /**
-     * Id-Token 总有效期（秒）
-     * 默认：7天 = 604800秒
-     */
-    @Value("${sa-token.id-token-timeout:604800}")
-    private int idTokenTimeout;
-
     // ==================== Client Token 缓存配置 ====================
     
     /**
@@ -86,10 +77,6 @@ public class TokenConfig {
         return tokenActivityTimeout;
     }
 
-    public int getIdTokenTimeout() {
-        return idTokenTimeout;
-    }
-
     public int getClientTokenCacheHours() {
         return clientTokenCacheHours;
     }
@@ -103,7 +90,6 @@ public class TokenConfig {
     /**
      * 验证SA/OAuth配置是否统一
      * 确保OAuth2和通用token使用相同的过期时间
-     * 注意：Id-Token独立配置，不参与此检查
      */
     public boolean isConfigUnified() {
         return oauth2AccessTokenTimeout == tokenTimeout 

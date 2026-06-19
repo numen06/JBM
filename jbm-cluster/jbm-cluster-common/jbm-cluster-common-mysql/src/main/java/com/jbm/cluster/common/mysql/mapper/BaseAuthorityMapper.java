@@ -5,9 +5,11 @@ import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
 import com.jbm.cluster.api.entitys.basic.BaseAuthority;
+import com.jbm.cluster.api.model.api.ApiControlCount;
 import com.jbm.cluster.api.model.auth.OpenAuthority;
 import com.jbm.framework.masterdata.mapper.SuperMapper;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -66,5 +68,6 @@ public interface BaseAuthorityMapper extends SuperMapper<BaseAuthority> {
      */
     List<AuthorityApi> selectAuthorityApi(Map map);
 
+    List<ApiControlCount> countAuthorityByApiIds(@Param("apiIds") List<Long> apiIds);
 
 }

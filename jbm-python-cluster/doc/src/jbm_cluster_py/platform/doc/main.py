@@ -7,6 +7,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI
 
+from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 def create_app(config: AppConfig | None = None) -> FastAPI:
     app_config = config or AppConfig.load(app="doc")
     configure_logging()
+    print_jbm_banner()
     repository = DocRepository(app_config.database)
     storage = build_storage(app_config.storage, app_config.minio)
     doc_service = DocService(app_config, repository, storage)

@@ -18,10 +18,14 @@
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
         <result column="is_persist" property="isPersist" jdbcType="INTEGER"/>
         <result column="is_open" property="isOpen" jdbcType="INTEGER"/>
+        <result column="is_auth" property="isAuth" jdbcType="INTEGER"/>
         <result column="auth_type" property="authType" jdbcType="INTEGER"/>
+        <result column="request_method" property="requestMethod" jdbcType="VARCHAR"/>
         <result column="content_type" property="contentType" jdbcType="VARCHAR"/>
         <result column="class_name" property="className" jdbcType="VARCHAR"/>
         <result column="method_name" property="methodName" jdbcType="VARCHAR"/>
+        <result column="access_log" property="accessLog" jdbcType="INTEGER"/>
+        <result column="business_scope" property="businessScope" jdbcType="VARCHAR"/>
 
     </resultMap>
 </mapper>

@@ -121,4 +121,15 @@ public class BaseMenuController extends BaseController {
         baseMenuBusiness.removeMenuWithGatewayRefresh(menuId);
         return ResultBody.ok();
     }
+
+    @ApiOperation(value = "从 JBM 模板应用同步菜单")
+    @PostMapping("/sync-from-jbm")
+    public ResultBody<String> syncMenusFromJbm(@RequestParam Long targetAppId,
+                                               @RequestParam(required = false) Long sourceAppId,
+                                               @RequestParam(required = false, defaultValue = "merge") String mode) {
+        return ResultBody.callback(() -> {
+            int count = baseMenuBusiness.syncMenusFromJbmWithGatewayRefresh(targetAppId, sourceAppId, mode);
+            return String.format("成功同步 %d 项菜单资源", count);
+        });
+    }
 }

@@ -8,6 +8,7 @@ export type AppListQuery = {
   keyword?: string
   orgId?: number | string
   status?: number | string
+  appType?: string
 }
 
 export interface AppCredentials {
@@ -24,6 +25,9 @@ export async function listApps(page = 1, size = DEFAULT_PAGE_SIZE, query?: AppLi
   if (orgId != null) params.orgId = orgId
   if (query?.status !== undefined && query.status !== '') {
     params.status = Number(query.status)
+  }
+  if (query?.appType) {
+    params.appType = query.appType
   }
   const res = await get<DataPaging<BaseApp>>('/app', { params })
   return unwrap(res)

@@ -1,6 +1,5 @@
 package com.jbm.cluster.common.feign.request;
 
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
@@ -9,6 +8,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.common.basic.module.request.JbmBaseRequest;
 import com.jbm.cluster.common.feign.AppPreRequestInterceptor;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
+import com.jbm.cluster.core.security.InternalServiceTokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
@@ -33,19 +33,14 @@ public class JbmFeignRequest extends JbmBaseRequest {
 
     @Override
     public Builder buildRequest(Builder httpRequest) {
-        httpRequest.header(SaIdUtil.ID_TOKEN, idToken());
+        String authorization = InternalServiceTokenProvider.authorizationHeader();
+        if (StrUtil.isNotBlank(authorization)) {
+            httpRequest.header(JbmSecurityConstants.INTERNAL_AUTHORIZATION_HEADER, authorization);
+        }
         httpRequest.header(JbmSecurityConstants.INTERNAL_SERVICE, SpringUtil.getApplicationName());
         httpRequest.header(JbmSecurityConstants.INTERNAL_INSTANCE,
                 SpringUtil.getApplicationName() + ":" + SpringUtil.getProperty("server.port", "0"));
         return httpRequest;
-    }
-
-    private static String idToken() {
-        String token = SaIdUtil.getToken();
-        if (StrUtil.isBlank(token)) {
-            token = SaIdUtil.refreshToken();
-        }
-        return token;
     }
 
     @Override

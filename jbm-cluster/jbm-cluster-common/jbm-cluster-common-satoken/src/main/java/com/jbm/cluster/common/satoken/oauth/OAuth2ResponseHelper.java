@@ -21,6 +21,10 @@ public final class OAuth2ResponseHelper {
         if (token == null) {
             return;
         }
+        if (isJwt(token.accessToken)) {
+            AccessTokenExpiryAligner.alignAccessTokenModel(token);
+            return;
+        }
         String currentToken = resolveSaTokenValue();
         if (StrUtil.isNotBlank(currentToken)) {
             token.accessToken = currentToken;
@@ -35,6 +39,10 @@ public final class OAuth2ResponseHelper {
         }
         Object accessToken = data.get("access_token");
         if (accessToken == null) {
+            return;
+        }
+        if (isJwt(String.valueOf(accessToken))) {
+            attachMustChangePasswordFlag(data);
             return;
         }
         String currentToken = resolveSaTokenValue();
@@ -72,5 +80,9 @@ public final class OAuth2ResponseHelper {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    private static boolean isJwt(String token) {
+        return StrUtil.isNotBlank(token) && token.split("\\.").length == 3;
     }
 }

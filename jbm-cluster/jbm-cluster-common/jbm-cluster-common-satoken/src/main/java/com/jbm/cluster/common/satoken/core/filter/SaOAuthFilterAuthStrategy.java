@@ -2,7 +2,6 @@ package com.jbm.cluster.common.satoken.core.filter;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.filter.SaFilterAuthStrategy;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
@@ -10,17 +9,22 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.common.basic.context.SecurityContextHolder;
+import com.jbm.cluster.common.satoken.config.JbmAuthProperties;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtContext;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtPrincipal;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtSupport;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.core.constant.JbmTokenConstants;
+import cn.hutool.extra.spring.SpringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 下游服务 Token 校验：用户 Sa-Token / OAuth2 AccessToken，或 Gateway/Feign Id-Token 内部互信。
- * <p>经 Gateway 转发时同时带用户 Authorization 与 Id-Token，须先绑定 OAuth 用户态，避免仅 Id-Token 通过但 @SaCheckLogin 仍 401。</p>
+ * 下游服务 Token 校验：标准 OAuth2 JWT 优先，兼容历史 Sa-Token / OAuth2 AccessToken。
+ * <p>经 Gateway 转发时同时带用户 Authorization 与内部服务 JWT，须先绑定用户态，避免仅内部服务 JWT 通过但 @SaCheckLogin 仍 401。</p>
  */
 public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
 
@@ -32,14 +36,15 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         if (httpServletRequest == null) {
             return;
         }
+        JbmAuthProperties authProperties = currentAuthProperties();
 
         String userBearer = extractBearerToken(
                 httpServletRequest.getHeader(JbmSecurityConstants.AUTHORIZATION_HEADER));
 
-        log.debug("[认证] requestURI={}, Authorization={}, idToken={}, internal={}",
+        log.debug("[认证] requestURI={}, Authorization={}, internalAuthorization={}, internal={}",
                 httpServletRequest.getRequestURI(),
                 mask(httpServletRequest.getHeader(JbmSecurityConstants.AUTHORIZATION_HEADER)),
-                mask(httpServletRequest.getHeader(SaIdUtil.ID_TOKEN)),
+                mask(httpServletRequest.getHeader(JbmSecurityConstants.INTERNAL_AUTHORIZATION_HEADER)),
                 httpServletRequest.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
 
         if (StrUtil.isNotBlank(userBearer)) {
@@ -52,21 +57,26 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             log.debug("[认证] 通过: 用户 Token 有效");
             return;
         } catch (NotLoginException ignored) {
-            log.debug("[认证] 用户 Token 未登录，尝试 OAuth2 / JWT / Id-Token");
+            log.debug("[认证] 用户 Token 未登录，尝试标准 OAuth JWT / Sa-Token 兼容");
         }
 
-        if (tryBindOAuthAccessToken(httpServletRequest, userBearer)) {
-            log.debug("[认证] 通过: OAuth2 AccessToken 已绑定用户态");
+        if (authProperties.isOauthEnabled() && tryBindStandardJwtToken(userBearer)) {
+            log.debug("[认证] 通过: 标准 OAuth JWT 已解析");
             return;
         }
 
-        if (tryBindJwtToken(userBearer)) {
-            log.debug("[认证] 通过: JWT Token 已解析");
+        if (authProperties.isRedisEnabled() && tryBindRedisToken(userBearer)) {
+            log.debug("[认证] 通过: Sa-Token Redis 会话已解析");
+            return;
+        }
+
+        if (authProperties.isRedisEnabled() && tryBindOAuthAccessToken(httpServletRequest, userBearer)) {
+            log.debug("[认证] 通过: 历史 OAuth2 AccessToken 已绑定用户态");
             return;
         }
 
         if (StrUtil.isNotBlank(userBearer)) {
-            log.debug("[认证] 用户 Bearer 无效，拒绝仅 Id-Token 放行");
+            log.debug("[认证] 用户 Bearer 无效");
             throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
         }
 
@@ -76,10 +86,9 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             return;
         }
 
-        String idToken = httpServletRequest.getHeader(SaIdUtil.ID_TOKEN);
-        if (StrUtil.isNotBlank(idToken) && SaIdUtil.isValid(idToken)) {
+        if (authProperties.isOauthEnabled() && tryBindInternalServiceJwt(httpServletRequest)) {
             recordInternalCaller(httpServletRequest);
-            log.debug("[认证] 通过: Id-Token 内部互信");
+            log.debug("[认证] 通过: OAuth2 Client Credentials 内部互信");
             return;
         }
         throw NotLoginException.newInstance(StpUtil.getLoginType(), NotLoginException.INVALID_TOKEN);
@@ -118,9 +127,9 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
     }
 
     /**
-     * JWT 模式下 token 映射在 Redis 但 session 可能不存在，尝试仅凭 token 解析 loginId。
+     * Redis 模式下 token 映射在 Redis 但 session 可能不存在，尝试仅凭 token 解析 loginId。
      */
-    private static boolean tryBindJwtToken(String token) {
+    private static boolean tryBindRedisToken(String token) {
         if (StrUtil.isBlank(token)) {
             return false;
         }
@@ -134,9 +143,22 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
             hydrateLoginUserCache(loginId);
             return true;
         } catch (Exception e) {
-            log.debug("[认证] JWT 解析失败: {}", e.getMessage());
+            log.debug("[认证] Sa-Token Redis 会话解析失败: {}", e.getMessage());
             return false;
         }
+    }
+
+    private static boolean tryBindStandardJwtToken(String token) {
+        if (StrUtil.isBlank(token)) {
+            return false;
+        }
+        StandardJwtPrincipal principal = StandardJwtSupport.bind(token);
+        if (principal == null) {
+            return false;
+        }
+        LoginHelper.setLoginUserCache(principal.getLoginUser());
+        StpUtil.setTokenValue(token);
+        return true;
     }
 
     private static Object resolveLoginId(String token, AccessTokenModel accessToken) {
@@ -265,5 +287,30 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         return request != null
                 && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.GATEWAY_API_KEY_ID))
                 && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
+    }
+
+    private static boolean tryBindInternalServiceJwt(HttpServletRequest request) {
+        if (request == null || StrUtil.isBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE))) {
+            return false;
+        }
+        String token = extractBearerToken(request.getHeader(JbmSecurityConstants.INTERNAL_AUTHORIZATION_HEADER));
+        StandardJwtPrincipal principal = StandardJwtSupport.bind(token);
+        if (principal == null) {
+            return false;
+        }
+        LoginHelper.setLoginUserCache(principal.getLoginUser());
+        StpUtil.setTokenValue(token);
+        return true;
+    }
+
+    private static JbmAuthProperties currentAuthProperties() {
+        try {
+            JbmAuthProperties properties = SpringUtil.getBean(JbmAuthProperties.class);
+            if (properties != null) {
+                return properties;
+            }
+        } catch (Exception ignored) {
+        }
+        return new JbmAuthProperties();
     }
 }

@@ -32,12 +32,23 @@ public class BaseApiController extends BaseController {
     @ApiOperation(value = "接口列表")
     @GetMapping
     public ResultBody<?> listApis(
-            @RequestParam(required = false) String serviceId,
-            @RequestParam(required = false) String path) {
-        if (serviceId != null && path != null) {
-            return ResultBody.callback(() -> apiService.findApiByPath(serviceId, path));
+            @ModelAttribute BaseApiForm form,
+            @RequestParam(required = false, name = "pageForm.currPage") Integer currPage,
+            @RequestParam(required = false, name = "pageForm.pageSize") Integer pageSize) {
+        BaseApiForm query = form != null ? form : new BaseApiForm();
+        if (query.getServiceId() != null && query.getPath() != null && currPage == null && pageSize == null) {
+            return ResultBody.callback(() -> apiService.findApiByPath(query.getServiceId(), query.getPath()));
         }
-        return ResultBody.callback(() -> apiService.findAllList(serviceId));
+        if (currPage != null || pageSize != null) {
+            return ResultBody.callback(() -> apiService.findListPage(query));
+        }
+        return ResultBody.callback(() -> apiService.findAllList(query.getServiceId()));
+    }
+
+    @ApiOperation(value = "接口服务列表")
+    @GetMapping("/services")
+    public ResultBody<List<String>> listApiServices() {
+        return ResultBody.callback(() -> apiService.findServiceIds());
     }
 
     @OperatorLog

@@ -119,13 +119,19 @@ export interface BaseUserOrg {
 export interface BaseApp {
   appId?: SnowflakeId
   appName?: string
+  /** 业务编码，对应后端 MasterDataEntity.code */
+  code?: string
+  /** @deprecated 旧前端别名，请使用 code */
   appCode?: string
-  clientId?: string
+  /** OAuth Client ID，对应后端 apiKey */
   apiKey?: string
+  /** @deprecated 旧前端别名，请使用 apiKey */
+  clientId?: string
   secretKey?: string
   orgId?: SnowflakeId
   status?: number
   isPersist?: number
+  appType?: string
 }
 
 export interface BaseDic {
@@ -168,6 +174,19 @@ export interface BaseApi {
   priority?: number
   businessScope?: string
   apiDesc?: string
+  controlSummary?: ApiControlSummary
+}
+
+export interface ApiControlSummary {
+  controlMode?: string
+  visibility?: 'internal' | 'external' | string
+  authentication?: 'required' | 'anonymous' | string
+  authorityCount?: number | string
+  apiKeyGrantCount?: number | string
+  rateLimitPolicyCount?: number | string
+  ipLimitPolicyCount?: number | string
+  externallyControlled?: boolean
+  internallyControlled?: boolean
 }
 
 export interface DiscoveryService {

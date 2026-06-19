@@ -196,6 +196,11 @@ public class JbmConstants {
     public static final String JBM_APP_SECRET = SEED_DEV_APP_SECRET;
 
     /**
+     * JBM 种子应用 ID（菜单模板源）
+     */
+    public static final long JBM_SEED_APP_ID = 1000L;
+
+    /**
      * 短信验证码前缀
      */
     public final static String PIN_PREFIX = "PIN:";

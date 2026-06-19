@@ -17,6 +17,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.jbm.cluster.api.constants.OAuthClientSecretVerifier;
 import cn.dev33.satoken.oauth2.model.RequestAuthModel;
 import com.jbm.cluster.common.satoken.config.TokenConfig;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtIssuer;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -170,6 +171,10 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public String randomAccessToken(String clientId, Object loginId, String scope) {
+        String standardToken = issueStandardUserToken(clientId, loginId, scope);
+        if (StrUtil.isNotBlank(standardToken)) {
+            return standardToken;
+        }
         String token = null;
         try {
             String tmp = StpUtil.getTokenValueByLoginId(loginId);
@@ -237,10 +242,36 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public String randomClientToken(String clientId, String scope) {
+        String standardToken = issueStandardClientToken(clientId, scope);
+        if (StrUtil.isNotBlank(standardToken)) {
+            log.debug("[互信诊断] randomClientToken 生成标准 JWT: clientId={}, len={}",
+                    clientId, standardToken.length());
+            return standardToken;
+        }
         String token = super.randomClientToken(clientId, scope);
         log.debug("[互信诊断] randomClientToken 生成 ClientToken(Redis): clientId={}, len={}",
                 clientId, token != null ? token.length() : 0);
         return token;
+    }
+
+    private String issueStandardUserToken(String clientId, Object loginId, String scope) {
+        try {
+            StandardJwtIssuer issuer = SpringUtil.getBean(StandardJwtIssuer.class);
+            return issuer == null ? null : issuer.issueUserToken(clientId, loginId, scope);
+        } catch (Exception e) {
+            log.debug("标准 OAuth JWT 签发不可用，回退 Sa-Token access_token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String issueStandardClientToken(String clientId, String scope) {
+        try {
+            StandardJwtIssuer issuer = SpringUtil.getBean(StandardJwtIssuer.class);
+            return issuer == null ? null : issuer.issueClientToken(clientId, scope);
+        } catch (Exception e) {
+            log.debug("标准 OAuth JWT 签发不可用，回退 Sa-Token client_token: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

@@ -29,10 +29,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Comparator;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author wesley.zhang
@@ -187,12 +191,8 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      * @return
      */
     @Override
-    public Boolean isExist(String menuCode) {
-        QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper();
-        queryWrapper.lambda()
-                .eq(BaseMenu::getMenuCode, menuCode);
-        Long count = baseMenuMapper.selectCount(queryWrapper);
-        return count > 0 ? true : false;
+    public Boolean isExist(String menuCode, Long appId) {
+        return getMenuByCode(menuCode, appId) != null;
     }
 
     @Override
@@ -211,12 +211,12 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
             }
             if (!saved.getMenuCode().equals(menu.getMenuCode())) {
                 // 和原来不一致重新检查唯一性
-                if (isExist(menu.getMenuCode())) {
+                if (isExist(menu.getMenuCode(), menu.getAppId())) {
                     throw new ServiceException(String.format("%s编码已存在!", menu.getMenuCode()));
                 }
             }
         } else {
-            if (isExist(menu.getMenuCode())) {
+            if (isExist(menu.getMenuCode(), menu.getAppId())) {
                 throw new ServiceException(String.format("%s编码已存在!", menu.getMenuCode()));
             }
         }
@@ -328,12 +328,18 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
      * @return
      */
     @Override
-    public BaseMenu getMenuByCode(String menuCode) {
+    public BaseMenu getMenuByCode(String menuCode, Long appId) {
         if (StrUtil.isEmpty(menuCode)) {
             return null;
         }
         QueryWrapper<BaseMenu> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(BaseMenu::getMenuCode, menuCode);
+        LambdaQueryWrapper<BaseMenu> lambda = queryWrapper.lambda();
+        lambda.eq(BaseMenu::getMenuCode, menuCode);
+        if (ObjectUtil.isEmpty(appId)) {
+            lambda.isNull(BaseMenu::getAppId);
+        } else {
+            lambda.eq(BaseMenu::getAppId, appId);
+        }
         List<BaseMenu> list = baseMenuMapper.selectList(queryWrapper);
         return CollUtil.getFirst(list);
     }
@@ -402,7 +408,7 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                 Long oldParentId = importMenu.getParentId();
                 
                 // 根据menuCode查询是否已存在
-                BaseMenu existingMenu = getMenuByCode(importMenu.getMenuCode());
+                BaseMenu existingMenu = getMenuByCode(importMenu.getMenuCode(), importMenu.getAppId());
 
                 Long finalMenuId;
                 if (existingMenu != null) {
@@ -509,7 +515,10 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
                     log.warn("跳过按钮导入，actionCode为空: {}", importAction.getActionName());
                     continue;
                 }
-                BaseAction existingAction = baseActionService.getActionByCode(importAction.getActionCode());
+                BaseAction existingAction = baseActionService.getActionByMenuIdAndCode(menuId, importAction.getActionCode());
+                if (existingAction == null) {
+                    existingAction = baseActionService.getActionByCode(importAction.getActionCode());
+                }
                 if (existingAction != null) {
                     if (existingAction.getIsPersist() != null && existingAction.getIsPersist() == 1) {
                         skippedPersistCount++;
@@ -533,6 +542,176 @@ public class BaseMenuServiceImpl extends MasterDataServiceImpl<BaseMenu> impleme
             }
         }
         return new int[]{successCount, skippedPersistCount};
+    }
+
+    @Override
+    public int syncMenusFromApp(Long sourceAppId, Long targetAppId, String mode) {
+        if (ObjectUtil.isEmpty(sourceAppId) || ObjectUtil.isEmpty(targetAppId)) {
+            throw new ServiceException("sourceAppId and targetAppId are required");
+        }
+        if (sourceAppId.equals(targetAppId)) {
+            throw new ServiceException("source and target app must differ");
+        }
+        if (baseAppService.getAppInfo(sourceAppId) == null) {
+            throw new ServiceException("source app not found: " + sourceAppId);
+        }
+        if (baseAppService.getAppInfo(targetAppId) == null) {
+            throw new ServiceException("target app not found: " + targetAppId);
+        }
+        String syncMode = StrUtil.blankToDefault(mode, "merge").trim().toLowerCase();
+        if ("replace".equals(syncMode)) {
+            removeNonPersistMenusByAppId(targetAppId);
+        }
+        List<BaseMenu> sourceMenus = getMenuByAppId(sourceAppId);
+        if (CollUtil.isEmpty(sourceMenus)) {
+            return 0;
+        }
+        sortMenusByDepth(sourceMenus);
+        Map<Long, Long> sourceToTargetMenuId = new HashMap<>();
+        Map<Long, BaseMenu> sourceById = sourceMenus.stream()
+                .collect(Collectors.toMap(BaseMenu::getMenuId, menu -> menu, (left, right) -> left));
+        int count = 0;
+        for (BaseMenu source : sourceMenus) {
+            Long targetParentId = resolveSyncedParentId(source, sourceById, sourceToTargetMenuId);
+            BaseMenu existing = getMenuByCode(source.getMenuCode(), targetAppId);
+            if (existing != null && BooleanUtil.isTrue(existing.getIsPersist())) {
+                sourceToTargetMenuId.put(source.getMenuId(), existing.getMenuId());
+                count += syncMenuActions(source.getMenuId(), existing.getMenuId());
+                continue;
+            }
+            BaseMenu target = cloneMenuForSync(source, targetAppId, targetParentId);
+            BaseMenu saved;
+            if (existing != null) {
+                target.setMenuId(existing.getMenuId());
+                saved = updateMenu(target);
+            } else {
+                saved = addMenu(target);
+            }
+            sourceToTargetMenuId.put(source.getMenuId(), saved.getMenuId());
+            count++;
+            count += syncMenuActions(source.getMenuId(), saved.getMenuId());
+        }
+        return count;
+    }
+
+    private void removeNonPersistMenusByAppId(Long appId) {
+        List<BaseMenu> menus = getMenuByAppId(appId);
+        if (CollUtil.isEmpty(menus)) {
+            return;
+        }
+        Set<Long> remaining = menus.stream()
+                .filter(menu -> !BooleanUtil.isTrue(menu.getIsPersist()))
+                .map(BaseMenu::getMenuId)
+                .collect(Collectors.toCollection(HashSet::new));
+        if (remaining.isEmpty()) {
+            return;
+        }
+        Map<Long, List<Long>> children = new HashMap<>();
+        for (BaseMenu menu : menus) {
+            if (!remaining.contains(menu.getMenuId())) {
+                continue;
+            }
+            Long parentId = menu.getParentId() == null ? 0L : menu.getParentId();
+            children.computeIfAbsent(parentId, key -> new ArrayList<>()).add(menu.getMenuId());
+        }
+        boolean progressed;
+        do {
+            progressed = false;
+            List<Long> leafMenuIds = remaining.stream()
+                    .filter(menuId -> {
+                        List<Long> childIds = children.get(menuId);
+                        return childIds == null || childIds.stream().noneMatch(remaining::contains);
+                    })
+                    .collect(Collectors.toList());
+            for (Long menuId : leafMenuIds) {
+                removeMenu(menuId);
+                remaining.remove(menuId);
+                progressed = true;
+            }
+        } while (progressed && !remaining.isEmpty());
+    }
+
+    private void sortMenusByDepth(List<BaseMenu> menus) {
+        Map<Long, BaseMenu> byId = menus.stream()
+                .collect(Collectors.toMap(BaseMenu::getMenuId, menu -> menu, (left, right) -> left));
+        menus.sort(Comparator.comparingInt(menu -> menuDepth(menu, byId)));
+    }
+
+    private int menuDepth(BaseMenu menu, Map<Long, BaseMenu> byId) {
+        if (menu == null || menu.getParentId() == null || menu.getParentId() <= 0) {
+            return 0;
+        }
+        BaseMenu parent = byId.get(menu.getParentId());
+        if (parent == null) {
+            return 0;
+        }
+        return 1 + menuDepth(parent, byId);
+    }
+
+    private Long resolveSyncedParentId(BaseMenu source, Map<Long, BaseMenu> sourceById, Map<Long, Long> sourceToTargetMenuId) {
+        Long parentId = source.getParentId();
+        if (parentId == null || parentId <= 0) {
+            return 0L;
+        }
+        Long mappedParentId = sourceToTargetMenuId.get(parentId);
+        if (mappedParentId != null) {
+            return mappedParentId;
+        }
+        if (sourceById.containsKey(parentId)) {
+            return 0L;
+        }
+        return 0L;
+    }
+
+    private BaseMenu cloneMenuForSync(BaseMenu source, Long targetAppId, Long parentId) {
+        BaseMenu target = new BaseMenu();
+        target.setMenuCode(source.getMenuCode());
+        target.setMenuName(source.getMenuName());
+        target.setIcon(source.getIcon());
+        target.setParentId(parentId);
+        target.setScheme(source.getScheme());
+        target.setPath(source.getPath());
+        target.setTarget(source.getTarget());
+        target.setPriority(source.getPriority());
+        target.setMenuDesc(source.getMenuDesc());
+        target.setStatus(source.getStatus());
+        target.setHidden(source.getHidden());
+        target.setServiceId(source.getServiceId());
+        target.setAppId(targetAppId);
+        target.setIsPersist(false);
+        return target;
+    }
+
+    private int syncMenuActions(Long sourceMenuId, Long targetMenuId) {
+        List<BaseAction> actions = baseActionService.findListByMenuId(sourceMenuId);
+        if (CollUtil.isEmpty(actions)) {
+            return 0;
+        }
+        int successCount = 0;
+        for (BaseAction sourceAction : actions) {
+            if (StrUtil.isEmpty(sourceAction.getActionCode())) {
+                continue;
+            }
+            BaseAction existingAction = baseActionService.getActionByMenuIdAndCode(targetMenuId, sourceAction.getActionCode());
+            if (existingAction != null && existingAction.getIsPersist() != null && existingAction.getIsPersist() == 1) {
+                continue;
+            }
+            BaseAction targetAction = new BaseAction();
+            targetAction.setActionCode(sourceAction.getActionCode());
+            targetAction.setActionName(sourceAction.getActionName());
+            targetAction.setMenuId(targetMenuId);
+            targetAction.setPriority(sourceAction.getPriority());
+            targetAction.setStatus(sourceAction.getStatus());
+            targetAction.setIsPersist(0);
+            if (existingAction != null) {
+                targetAction.setActionId(existingAction.getActionId());
+                baseActionService.updateAction(targetAction);
+            } else {
+                baseActionService.addAction(targetAction);
+            }
+            successCount++;
+        }
+        return successCount;
     }
 
 }

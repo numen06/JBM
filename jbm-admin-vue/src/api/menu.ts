@@ -91,3 +91,22 @@ export async function importMenus(file: File, appId?: SnowflakeId) {
   })
   return unwrap(data)
 }
+
+export const JBM_TEMPLATE_APP_ID = 1000
+
+export type MenuSyncMode = 'merge' | 'replace'
+
+export async function syncMenusFromJbm(
+  targetAppId: SnowflakeId,
+  options?: { sourceAppId?: SnowflakeId; mode?: MenuSyncMode },
+) {
+  const params: Record<string, unknown> = {
+    targetAppId: toSnowflakeIdParam(targetAppId),
+    mode: options?.mode ?? 'merge',
+  }
+  if (options?.sourceAppId != null && !isBlankSnowflakeId(options.sourceAppId)) {
+    params.sourceAppId = toSnowflakeIdParam(options.sourceAppId)
+  }
+  const res = await post<string>('/menu/sync-from-jbm', undefined, { params })
+  return unwrap(res)
+}

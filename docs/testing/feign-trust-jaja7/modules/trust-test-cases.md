@@ -26,13 +26,13 @@
 |------|------|------|------|----------|
 | bad | bad | GET | /role/all | 接口 success=true |
 
-## TC-TRUST-04 id token only invalid
+## TC-TRUST-04 service token only invalid
 
 **前置条件**：-
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| id only fake | id only fake | GET | /role/all | 接口 success=true |
+| service token fake | service token fake | GET | /role/all | 接口 success=true |
 
 ## TC-TRUST-05 user token current user
 
@@ -42,11 +42,10 @@
 |------|------|------|------|----------|
 | current user | current user | GET | /current/user | isTrue:success; notNull:result.userId |
 
-## TC-TRUST-06 valid id token internal
+## TC-TRUST-06 valid service token internal
 
 **前置条件**：-
 
 | 步骤 | 操作 | 方法 | 路径 | 业务断言 |
 |------|------|------|------|----------|
-| routes id-token | routes id-token | GET | /role/all | isTrue:success |
-
+| routes service-token | routes service-token | GET | /role/all | isTrue:success |

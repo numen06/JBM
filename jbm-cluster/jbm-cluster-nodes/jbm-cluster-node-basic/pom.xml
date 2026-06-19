@@ -29,12 +29,6 @@
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-satoken</artifactId>
         </dependency>
-        <!-- OAuth2 校验：common-satoken 中 sa-token-oauth2 为 optional，节点需显式引入以校验 Auth 签发的 AccessToken -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-oauth2</artifactId>
-            <version>${satoken.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-common-fegin</artifactId>

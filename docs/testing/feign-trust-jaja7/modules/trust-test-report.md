@@ -10,6 +10,6 @@
 | TC-TRUST-01 | routes | GET | 200 | PASS | 0.055 | isTrue:success |  |
 | TC-TRUST-02 | no auth | GET | 400 | PASS | 0.027 | - | HTTP Error 400: Bad Request |
 | TC-TRUST-03 | bad | GET | 401 | PASS | 0.044 | - | HTTP Error 401: Unauthorized |
-| TC-TRUST-04 | id only fake | GET | 400 | PASS | 0.018 | - | HTTP Error 400: Bad Request |
+| TC-TRUST-04 | service token fake | GET | 400 | PASS | 0.018 | - | HTTP Error 400: Bad Request |
 | TC-TRUST-05 | current user | GET | 200 | PASS | 0.328 | isTrue:success; notNull:result.userId |  |
-| TC-TRUST-06 | routes id-token | GET | 200 | PASS | 0.048 | isTrue:success |  |
+| TC-TRUST-06 | routes service-token | GET | 200 | PASS | 0.048 | isTrue:success |  |

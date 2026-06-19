@@ -33,10 +33,6 @@ public class TokenConfigValidator {
         log.info("Token 活动超时时间: {}秒 ({}小时)",
                 tokenConfig.getTokenActivityTimeout(),
                 tokenConfig.getTokenActivityTimeout() / 3600);
-        log.info("Id-Token 超时时间: {}秒 ({}天)",
-                tokenConfig.getIdTokenTimeout(),
-                tokenConfig.getIdTokenTimeout() / 86400);
-
         boolean unified = tokenConfig.isConfigUnified();
         log.info("SA/OAuth Token统一性检查: {}", unified ? "通过" : "失败");
 

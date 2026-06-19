@@ -129,6 +129,19 @@
         order by api.create_time desc
     </select>
 
+    <select id="countAuthorityByApiIds" resultType="com.jbm.cluster.api.model.api.ApiControlCount">
+        SELECT api_id AS apiId,
+               COUNT(1) AS count
+        FROM base_authority
+        WHERE api_id IS NOT NULL
+          AND status = 1
+          AND api_id IN
+          <foreach collection="apiIds" item="apiId" open="(" separator="," close=")">
+              #{apiId}
+          </foreach>
+        GROUP BY api_id
+    </select>
+
     <select id="selectAuthorityAll"
             resultMap="Authority">
         select

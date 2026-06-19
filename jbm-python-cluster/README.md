@@ -15,6 +15,10 @@ jbm-python-cluster
 ├── integrations
 │   ├── resource
 │   └── src/jbm_cluster_py/integrations
+├── auth
+│   ├── resource
+│   ├── src/jbm_cluster_py/platform/auth
+│   └── tests
 ├── logs
 │   ├── resource
 │   ├── src/jbm_cluster_py/platform/logs
@@ -40,6 +44,7 @@ Use Python 3.11 or newer. `uv` is preferred:
 ```bash
 cd /opt/JBM/jbm-python-cluster
 uv sync --extra dev
+JBM_APP=auth JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.auth.main
 JBM_APP=logs JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.logs.main
 JBM_APP=doc JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.doc.main
 JBM_APP=push JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.push.main
@@ -52,12 +57,16 @@ Without `uv`:
 python -m venv .venv
 . .venv/bin/activate
 pip install -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r requirements.txt
-PYTHONPATH=common/src:integrations/src:logs/src:doc/src:push/src:job/src \
+PYTHONPATH=common/src:integrations/src:auth/src:logs/src:doc/src:push/src:job/src \
   JBM_APP=doc JBM_PROFILE=jaja7 python -m jbm_cluster_py.platform.doc.main
 ```
 
 ## Services
 
+- `auth`: OAuth2/OIDC compatible replacement for `jbm-cluster-platform-auth`,
+  port `5555`, paths `/oauth2/token`, `/oauth2/refresh`,
+  `/oauth2/userinfo`, `/oauth2/logout`, `/.well-known/openid-configuration`,
+  and `/jwks.json`.
 - `logs`: compatible replacement for `jbm-cluster-platform-logs`, port `3312`,
   paths `/GatewayLogs/**`, `/clusterAccess/**`, `/businessLog/**`.
 - `doc`: compatible replacement for `jbm-cluster-platform-doc`, port `9999`,
@@ -82,7 +91,7 @@ Configuration keeps a Spring Boot YAML profile shape and is loaded in order:
 5. `{app}/resource/application.yml`
 6. `{app}/resource/application-{profile}.yml`
 
-`JBM_APP=logs|doc|push|job` selects the application. `JBM_PROFILE=jaja7` selects the
+`JBM_APP=auth|logs|doc|push|job` selects the application. `JBM_PROFILE=jaja7` selects the
 profile. Nacos shared dataids such as `common.properties`, `db.properties`,
 `redis.properties`, `rabbitmq.properties`, and `doc.properties` are preserved in
 the profile configuration for cluster alignment.
@@ -101,6 +110,8 @@ docker run --rm -e JBM_APP=doc -e JBM_PROFILE=jaja7 -p 9999:9999 jbm-cluster-pla
 
 - This project is intentionally not added to the root Maven `pom.xml`.
 - Java services can keep running while Python images are tested service by service.
+- The auth implementation issues standard RS256 JWT access tokens and exposes
+  JWKS for downstream Java Sa-Token standard-JWT verification.
 - The doc implementation stores metadata with Java-compatible field names and
   uses S3/MinIO by default in cluster profiles, with filesystem fallback for
   local development and tests.

@@ -1,16 +1,21 @@
 package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.router.SaRouter;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
+import com.jbm.cluster.common.satoken.config.JbmAuthProperties;
 import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtContext;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtPrincipal;
+import com.jbm.cluster.common.satoken.standardjwt.StandardJwtSupport;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -75,6 +80,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
             public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
                 // 请求结束后清除ThreadLocal缓存，防止内存泄漏
                 LoginHelper.clearCache();
+                StandardJwtContext.clear();
             }
         }).addPathPatterns("/**");
         // 注解拦截器
@@ -100,7 +106,6 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
                     }
                     new SaOAuthFilterAuthStrategy().run(obj);
                 });
-//                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 
     private Set<String> getPermitAllAnn(RequestMappingHandlerMapping requestMappingHandlerMapping) {
@@ -127,12 +132,39 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         if (StrUtil.isNotBlank(authorization)) {
             return false;
         }
-        String idToken = request.getHeader(SaIdUtil.ID_TOKEN);
-        if (StrUtil.isNotBlank(idToken) && SaIdUtil.isValid(idToken)) {
+        String internalBearer = extractBearerToken(request.getHeader(JbmSecurityConstants.INTERNAL_AUTHORIZATION_HEADER));
+        StandardJwtPrincipal principal = currentAuthProperties().isOauthEnabled()
+                ? StandardJwtSupport.bind(internalBearer) : null;
+        if (StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE))
+                && principal != null) {
+            StpUtil.setTokenValue(internalBearer);
+            LoginHelper.setLoginUserCache(principal.getLoginUser());
             return true;
         }
         return StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.GATEWAY_API_KEY_ID))
                 && StrUtil.isNotBlank(request.getHeader(JbmSecurityConstants.INTERNAL_SERVICE));
+    }
+
+    private static JbmAuthProperties currentAuthProperties() {
+        try {
+            JbmAuthProperties properties = SpringUtil.getBean(JbmAuthProperties.class);
+            if (properties != null) {
+                return properties;
+            }
+        } catch (Exception ignored) {
+        }
+        return new JbmAuthProperties();
+    }
+
+    private static String extractBearerToken(String value) {
+        if (StrUtil.isBlank(value)) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (StrUtil.startWithIgnoreCase(trimmed, "Bearer ")) {
+            return trimmed.substring("Bearer ".length()).trim();
+        }
+        return trimmed;
     }
 
 
