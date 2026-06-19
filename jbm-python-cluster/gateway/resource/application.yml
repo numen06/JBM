@@ -29,6 +29,56 @@ jbm:
       service: jbm-cluster-platform-logs
       path: /GatewayLogs/ingest
       recent-size: 200
+    security:
+      enabled: true
+      max-body-bytes: 104857600
+      host-whitelist: []
+      headers:
+        enabled: true
+        x-content-type-options: nosniff
+        x-frame-options: SAMEORIGIN
+        x-xss-protection: "1; mode=block"
+        referrer-policy: no-referrer
+        permissions-policy: "geolocation=(), microphone=(), camera=(), payment=()"
+        content-security-policy: ""
+      cors:
+        enabled: false
+        allow-origins: []
+        allow-methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        allow-headers:
+          - "*"
+        allow-credentials: true
+      management:
+        enabled: true
+        path-prefix: /__gateway
+        allow-local: true
+        allowed-ips:
+          - 127.0.0.1/32
+          - "::1/128"
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16
+        token-header: X-Gateway-Admin-Token
+        token: ""
+      xss:
+        enabled: true
+        inspect-query: true
+        inspect-headers: true
+        inspect-body: true
+        max-inspect-bytes: 65536
+        exclude-paths: []
+        exclude-headers:
+          - Authorization
+          - Cookie
+          - Set-Cookie
+          - Sec-WebSocket-Key
+          - Sec-WebSocket-Accept
     circuit-breaker:
       enabled: true
       failure-threshold: 5

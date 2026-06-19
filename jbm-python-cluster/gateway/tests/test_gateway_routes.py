@@ -1,8 +1,13 @@
 import asyncio
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository, IpLimitRule, full_gateway_path, ip_matches
 from jbm_cluster_py.platform.gateway.routes import GatewayRoute, RouteRepository, join_target_url, strip_prefix
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry, HALF_OPEN, OPEN
+from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy, install_security_middleware
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 
 
@@ -162,3 +167,88 @@ def test_gray_route_can_target_nacos_metadata() -> None:
 
     assert chosen is not None
     assert chosen["ip"] == "10.0.0.2"
+
+
+def test_security_policy_blocks_xss_query_and_body() -> None:
+    policy = GatewaySecurityPolicy({"enabled": True, "max-body-bytes": 1024})
+
+    query_decision = policy.inspect_request_meta(
+        "/center/users",
+        "name=%3Cscript%3Ealert(1)%3C/script%3E",
+        {"host": "jbm.example"},
+        "10.0.0.2",
+    )
+    body_decision = policy.inspect_body(
+        b'{"name":"<img src=x onerror=alert(1)>"}',
+        "application/json",
+    )
+
+    assert query_decision.allowed is False
+    assert query_decision.reason == "请求参数包含疑似XSS内容"
+    assert body_decision.allowed is False
+    assert body_decision.reason == "请求体包含疑似XSS内容"
+
+
+def test_security_policy_limits_body_size_and_host() -> None:
+    policy = GatewaySecurityPolicy(
+        {
+            "enabled": True,
+            "max-body-bytes": 4,
+            "host-whitelist": ["api.example.com"],
+        }
+    )
+
+    host_decision = policy.inspect_request_meta(
+        "/center/users",
+        "",
+        {"host": "evil.example.com"},
+        "10.0.0.2",
+    )
+    size_decision = policy.inspect_body(b"12345", "text/plain")
+
+    assert host_decision.allowed is False
+    assert host_decision.status_code == 403
+    assert size_decision.allowed is False
+    assert size_decision.status_code == 413
+
+
+def test_security_middleware_protects_management_endpoint_and_adds_headers() -> None:
+    config = AppConfig(
+        {
+            "spring": {"application": {"name": "gateway"}},
+            "server": {"port": 6060},
+            "jbm": {
+                "gateway": {
+                    "security": {
+                        "enabled": True,
+                        "management": {
+                            "allowed-ips": ["10.0.0.0/8"],
+                            "allow-local": False,
+                        },
+                    }
+                }
+            },
+        },
+        "test",
+        None,
+        app="gateway",
+    )
+    app = FastAPI()
+    install_security_middleware(app, config)
+
+    @app.get("/__gateway/routes")
+    async def management_route() -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.get("/center/health")
+    async def health_route() -> dict[str, bool]:
+        return {"ok": True}
+
+    with TestClient(app) as client:
+        denied = client.get("/__gateway/routes")
+        allowed = client.get("/center/health")
+
+    assert denied.status_code == 403
+    assert denied.json()["message"] == "网关管理接口禁止访问"
+    assert allowed.status_code == 200
+    assert allowed.headers["x-content-type-options"] == "nosniff"

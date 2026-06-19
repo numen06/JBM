@@ -19,6 +19,7 @@ from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry
 from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository
 from jbm_cluster_py.platform.gateway.routes import GatewayRoute, RouteRepository, join_target_url, strip_prefix
+from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 
 logger = logging.getLogger(__name__)
@@ -178,6 +179,7 @@ class GatewayProxy:
         self.http_client = http_client
         self.trust_tokens = trust_tokens
         self.access_logger = access_logger
+        self.security = GatewaySecurityPolicy.from_app_config(config)
 
     async def proxy_http(self, request: Request, path: str) -> Response:
         request_path = "/" + path if path else "/"
@@ -205,6 +207,13 @@ class GatewayProxy:
             return JSONResponse(status_code=503, content=fail(None, message, 503))
         started = time.perf_counter()
         body = await request.body()
+        body_decision = self.security.inspect_body(body, request.headers.get("content-type"))
+        if not body_decision.allowed:
+            await self._log_http(request, request_path, route, body_decision.status_code, 0, body_decision.reason)
+            return JSONResponse(
+                status_code=body_decision.status_code,
+                content=fail(None, body_decision.reason, body_decision.status_code),
+            )
         try:
             target = await self._target_url(
                 route,
@@ -332,6 +341,15 @@ class GatewayProxy:
         import websockets
 
         request_path = "/" + path if path else "/"
+        security_decision = self.security.inspect_request_meta(
+            request_path,
+            str(websocket.url.query),
+            websocket.headers,
+            websocket.client.host if websocket.client else "",
+        )
+        if not security_decision.allowed:
+            await websocket.close(code=1008)
+            return
         route = self.routes.match(request_path)
         if route is None:
             await websocket.close(code=1008)

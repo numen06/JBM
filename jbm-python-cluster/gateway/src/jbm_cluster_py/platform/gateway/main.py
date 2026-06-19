@@ -17,6 +17,7 @@ from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegist
 from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository
 from jbm_cluster_py.platform.gateway.router import build_gateway_router
 from jbm_cluster_py.platform.gateway.routes import RouteRepository
+from jbm_cluster_py.platform.gateway.security import install_security_middleware
 from jbm_cluster_py.platform.gateway.service import AccessLogger, GatewayProxy, TrustTokenProvider
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 
@@ -96,6 +97,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    install_security_middleware(app, app_config)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_gateway_router(proxy, routes, ip_limits, circuit_breakers, traffic, access_logger))
     return app
