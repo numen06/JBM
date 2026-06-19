@@ -158,16 +158,20 @@ class NacosDiscoveryClient:
         self.client = None
 
     async def choose_instance(self, service_name: str) -> Optional[dict[str, Any]]:
+        instances = await self.list_instances(service_name)
+        return instances[0] if instances else None
+
+    async def list_instances(self, service_name: str) -> list[dict[str, Any]]:
         if self.client is None:
-            return None
+            return []
         loop = asyncio.get_running_loop()
         try:
-            return await loop.run_in_executor(None, self._choose_instance_sync, service_name)
+            return await loop.run_in_executor(None, self._list_instances_sync, service_name)
         except Exception as exc:
             logger.warning("Nacos instance lookup failed for %s: %s", service_name, exc)
-            return None
+            return []
 
-    def _choose_instance_sync(self, service_name: str) -> Optional[dict[str, Any]]:
+    def _list_instances_sync(self, service_name: str) -> list[dict[str, Any]]:
         assert self.client is not None
         response = self.client.list_naming_instance(
             service_name=service_name,
@@ -182,8 +186,8 @@ class NacosDiscoveryClient:
             if host.get("healthy", True) and host.get("enabled", True) and float(host.get("weight") or 1) > 0
         ]
         if healthy_hosts:
-            return healthy_hosts[0]
-        return dict(hosts[0]) if hosts else None
+            return healthy_hosts
+        return [dict(host) for host in hosts]
 
     def _group_name(self) -> str:
         return str(self.config.get("group") or "DEFAULT_GROUP")

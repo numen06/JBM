@@ -1,0 +1,81 @@
+server:
+  port: 6060
+
+spring:
+  application:
+    name: jbm-cluster-platform-gateway
+
+jbm:
+  python:
+    app: gateway
+    module: jbm-cluster-platform-gateway
+    openapi:
+      title: JBM Python Gateway
+      description: Lightweight Python gateway for side-by-side validation.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json
+  gateway:
+    refresh-interval-seconds: 30
+    request-timeout-seconds: 60
+    max-body-bytes: 104857600
+    trust-token:
+      service: jbm-cluster-platform-center
+      path: /internal/trust/id-token
+    access-log:
+      enabled: true
+      ingest-enabled: true
+      service: jbm-cluster-platform-logs
+      path: /GatewayLogs/ingest
+      recent-size: 200
+    circuit-breaker:
+      enabled: true
+      failure-threshold: 5
+      recovery-seconds: 30
+      half-open-max-requests: 2
+      half-open-success-threshold: 2
+      failure-status-threshold: 500
+    path-blacklist: []
+    gray-routes: []
+    fallback-routes:
+      - routeName: center-user
+        path: /user/**
+        serviceId: jbm-cluster-platform-center
+        stripPrefix: 0
+      - routeName: center-gateway
+        path: /gateway/**
+        serviceId: jbm-cluster-platform-center
+        stripPrefix: 0
+      - routeName: center-base
+        path: /base/**
+        serviceId: jbm-cluster-platform-center
+        stripPrefix: 0
+      - routeName: center-internal
+        path: /internal/**
+        serviceId: jbm-cluster-platform-center
+        stripPrefix: 0
+      - routeName: auth-oauth2
+        path: /oauth2/**
+        serviceId: jbm-cluster-platform-auth
+        stripPrefix: 0
+      - routeName: auth-captcha
+        path: /captcha/**
+        serviceId: jbm-cluster-platform-auth
+        stripPrefix: 0
+      - routeName: push
+        path: /push/**
+        serviceId: jbm-cluster-platform-push
+        stripPrefix: 1
+      - routeName: doc
+        path: /doc/**
+        serviceId: jbm-cluster-platform-doc
+        stripPrefix: 1
+      - routeName: logs
+        path: /logs/**
+        serviceId: jbm-cluster-platform-logs
+        stripPrefix: 1
+      - routeName: job
+        path: /job/**
+        serviceId: jbm-cluster-platform-job
+        stripPrefix: 1

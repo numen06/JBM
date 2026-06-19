@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: jbm-cluster-platform-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.100.10.62:8848
+        namespace: jbm7
+        group: DEFAULT_GROUP
+      config:
+        enabled: true
+        server-addr: 10.100.10.62:8848
+        namespace: jbm7
+        group: DEFAULT_GROUP
+        shared-dataids: common.properties,db.properties,redis.properties,openobserve.yml
+
+server:
+  host: 0.0.0.0
+  port: 6060
+
+jbm:
+  gateway:
+    trust-token:
+      service: jbm-cluster-platform-center-jbm7
