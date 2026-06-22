@@ -8,6 +8,7 @@ declare global {
       localDevUsers?: string
       oauthClientId?: string
       oauthClientSecret?: string
+      oauthAuthorizeBaseUrl?: string
       loginPassword?: string
     }
   }

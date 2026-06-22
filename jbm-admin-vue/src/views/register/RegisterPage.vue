@@ -4,7 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { ArrowLeft, RefreshCw } from '@lucide/vue'
 import { register } from '@/api/auth'
 import { fetchCaptchaBase64 } from '@/api/captcha'
-import { DEV_CAPTCHA_CODE, JBM_DEFAULT_CLIENT_ID, JBM_DEFAULT_CLIENT_SECRET } from '@/constants/loginModes'
+import { DEV_CAPTCHA_CODE, JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
 import { extractApiError } from '@/lib/errors'
 import AuthBrandPanel from '@/components/landing/AuthBrandPanel.vue'
 import Button from '@/components/ui/Button.vue'
@@ -79,7 +79,6 @@ async function onSubmit() {
       mobile: mobile.value.trim() || undefined,
       vcode: vcode.value.trim(),
       clientId: JBM_DEFAULT_CLIENT_ID,
-      clientSecret: JBM_DEFAULT_CLIENT_SECRET,
     })
     success.value = '注册成功，即将跳转到登录页…'
     setTimeout(() => {

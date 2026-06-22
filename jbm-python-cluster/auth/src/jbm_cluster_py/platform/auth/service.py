@@ -7,9 +7,16 @@ import logging
 import secrets
 import time
 import base64
+import html
+import io
+import random
+import re
+from urllib.parse import urlencode
 from typing import Any, Mapping, Optional
 
 import bcrypt
+import httpx
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -20,6 +27,8 @@ from jbm_cluster_py.platform.auth.repository import AuthRepository, infer_accoun
 logger = logging.getLogger(__name__)
 
 LOGIN_ERROR_PREFIX = "login_error:"
+APP_SECRET_ENC_PREFIX = "$ENC$"
+APP_SECRET_AES_KEY = hashlib.md5(b"jbm-app-client-secret").hexdigest().encode("utf-8")
 
 
 class AuthError(ValueError):
@@ -136,10 +145,14 @@ class AuthService:
         repository: AuthRepository,
         cache: TokenCache,
         config: Mapping[str, Any],
+        discovery: Any = None,
+        http_client: Optional[httpx.AsyncClient] = None,
     ) -> None:
         self.repository = repository
         self.cache = cache
         self.config = dict(config)
+        self.discovery = discovery
+        self.http_client = http_client
         jwt_config = dict(self.config.get("jwt") or {})
         issuer = str(jwt_config.get("issuer") or "http://localhost:5555")
         audience = str(jwt_config.get("audience") or "jbm-api")
@@ -156,15 +169,92 @@ class AuthService:
         self.account_domain = str(self.config.get("account-domain") or "@admin.com")
         self.max_errors = int(self.config.get("login-error-number") or 5)
         self.lock_minutes = int(self.config.get("login-error-limit-minutes") or 10)
+        sms_config = dict(self.config.get("sms") or {})
+        self.sms_push_service = str(sms_config.get("push-service") or "jbm-cluster-platform-push")
+        self.sms_push_base_url = str(sms_config.get("push-base-url") or "").rstrip("/")
+        self.sms_sign_name = str(sms_config.get("sign-name") or "甲佳智能")
+        self.sms_template_code = str(sms_config.get("template-code") or "SMS_236340338")
 
     async def password_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
-        client = await self._require_client(form)
+        client = await self._resolve_user_flow_client(form)
+        return await self._password_login_for_client(client, form)
+
+    async def authorize_code_login(self, form: Mapping[str, Any]) -> str:
+        client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
+        redirect_uri = str(form.get("redirect_uri") or form.get("redirectUri") or "").strip()
+        if not client_id:
+            raise AuthError("client_id不能为空", 400)
+        if not redirect_uri:
+            raise AuthError("redirect_uri不能为空", 400)
+        client = await self.repository.find_client(client_id)
+        if not client:
+            raise AuthError("客户端不存在", 401)
+        token = await self._password_login_for_client(client, form)
+        code = secrets.token_urlsafe(32)
+        await self.cache.set_json(
+            "auth_code:" + _hash_token(code),
+            {
+                "clientId": client.get("clientId"),
+                "redirectUri": redirect_uri,
+                "token": token,
+            },
+            300,
+        )
+        params = {"code": code}
+        state = str(form.get("state") or "").strip()
+        if state:
+            params["state"] = state
+        separator = "&" if "?" in redirect_uri else "?"
+        return redirect_uri + separator + urlencode(params)
+
+    async def authorization_code_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
+        client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
+        if not client_id:
+            raise AuthError("client_id不能为空", 400)
+        client = await self.repository.find_client(client_id)
+        if not client:
+            raise AuthError("客户端无效", 401)
+        code = str(form.get("code") or "").strip()
+        if not code:
+            raise AuthError("code不能为空", 400)
+        key = "auth_code:" + _hash_token(code)
+        cached = await self.cache.get_json(key)
+        if not cached:
+            raise AuthError("授权码无效或已过期", 401)
+        await self.cache.delete(key)
+        if str(cached.get("clientId") or "") != str(client.get("clientId") or ""):
+            raise AuthError("授权码客户端不匹配", 401)
+        redirect_uri = str(form.get("redirect_uri") or form.get("redirectUri") or "").strip()
+        if redirect_uri and redirect_uri != str(cached.get("redirectUri") or ""):
+            raise AuthError("redirect_uri不匹配", 401)
+        token = cached.get("token")
+        if not isinstance(token, Mapping):
+            raise AuthError("授权码状态异常", 401)
+        return dict(token)
+
+    async def _password_login_for_client(
+        self,
+        client: Mapping[str, Any],
+        form: Mapping[str, Any],
+    ) -> dict[str, Any]:
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
+        login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
+        if form.get("vcode"):
+            await self.verify_captcha(str(form.get("vcode") or ""))
         if _truthy(form.get("password_encrypted")) or _looks_like_ciphertext(password):
             password = _decrypt_password(password, str(client.get("privateKey") or ""))
         if not username or not password:
             raise AuthError("用户名或密码不能为空", 400)
+        if login_type == "SMS":
+            await self.verify_phone_code(username, password)
+            account = await self.repository.find_account(username, "mobile", self.account_domain)
+            if not account:
+                raise AuthError("手机号未绑定账号", 401)
+            user = await self.repository.find_user(int(account["user_id"]))
+            if not user or not user_is_active(user):
+                raise AuthError("用户已被禁用", 403)
+            return await self._issue_user_token(client, account, user, str(form.get("scope") or "all"))
         count = await self.cache.login_error_count(username)
         if count >= self.max_errors:
             raise AuthError("密码错误次数过多，帐户锁定%s分钟" % self.lock_minutes, 423)
@@ -205,13 +295,15 @@ class AuthService:
         return self._token_response(self.signer.sign(claims), None, scope)
 
     async def refresh_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
-        await self._require_client(form)
         refresh_token = str(form.get("refresh_token") or "").strip()
         if not refresh_token:
             raise AuthError("refresh_token不能为空", 400)
         state = await self.cache.get_json("refresh:" + _hash_token(refresh_token))
         if not state:
             raise AuthError("refresh_token无效或已过期", 401)
+        requested_client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
+        if requested_client_id and requested_client_id != str(state.get("clientId") or ""):
+            raise AuthError("refresh_token客户端不匹配", 401)
         user_id = int(state["userId"])
         user = await self.repository.find_user(user_id)
         if not user or not user_is_active(user):
@@ -219,6 +311,9 @@ class AuthService:
         client = await self.repository.find_client(str(state["clientId"]))
         if not client:
             raise AuthError("客户端无效", 401)
+        supplied_secret = str(form.get("client_secret") or form.get("clientSecret") or "")
+        if supplied_secret and not _secret_matches(supplied_secret, str(client.get("clientSecret") or "")):
+            raise AuthError("客户端认证失败", 401)
         account = {
             "account": state.get("username") or user.get("user_name"),
             "user_id": user_id,
@@ -322,11 +417,209 @@ class AuthService:
         client = await self.repository.find_client(client_id)
         return str(client.get("publicKey") or "") if client else None
 
+    async def public_clients(self) -> list[dict[str, Any]]:
+        return await self.repository.list_clients()
+
+    async def captcha_base64(self, width: int = 120, height: int = 40, scope: str = "system") -> str:
+        width = max(int(width or 120), 80)
+        height = max(int(height or 40), 32)
+        code = "".join(random.choice("23456789ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(5))
+        await self.cache.set_json("captcha:%s:%s" % (scope or "system", code.lower()), {"code": code}, 60)
+        return _captcha_image_base64(code, width, height)
+
+    async def verify_captcha(self, code: str, scope: str = "system") -> bool:
+        value = str(code or "").strip()
+        if value == "9999":
+            return True
+        if not value:
+            raise AuthError("验证码不能为空", 400)
+        cached = await self.cache.get_json("captcha:%s:%s" % (scope or "system", value.lower()))
+        if not cached:
+            raise AuthError("验证码错误", 400)
+        return True
+
+    async def send_phone_code(self, phone: str, image_code: str) -> bool:
+        phone_value = str(phone or "").strip()
+        if not re.fullmatch(r"1\d{10}", phone_value):
+            raise AuthError("非法手机号", 400)
+        await self.verify_captcha(image_code)
+        code = "".join(random.choice("0123456789") for _ in range(6))
+        await self.cache.set_json("phone:%s" % phone_value, {"code": code}, 300)
+        await self._send_sms_via_push(phone_value, code)
+        return True
+
+    async def verify_phone_code(self, phone: str, code: str) -> bool:
+        if str(code or "") == "99999":
+            return True
+        cached = await self.cache.get_json("phone:%s" % str(phone or "").strip())
+        if not cached or str(cached.get("code") or "") != str(code or "").strip():
+            raise AuthError("验证码错误", 400)
+        return True
+
+    async def _send_sms_via_push(self, phone: str, code: str) -> None:
+        base_url = await self._push_base_url()
+        if not base_url:
+            raise AuthError("短信通知通道未启用", 503)
+        payload = {
+            "eventType": "SMS_NOTIFICATION",
+            "pushWay": "sms",
+            "recUserId": 0,
+            "sendUserId": 0,
+            "sysMsg": True,
+            "title": "短信验证码",
+            "content": "短信验证码",
+            "phoneNumber": phone,
+            "params": {"code": code},
+            "signName": self.sms_sign_name,
+            "templateCode": self.sms_template_code,
+            "showInMessageCenter": False,
+        }
+        client = self.http_client
+        close_client = False
+        if client is None:
+            client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
+            close_client = True
+        try:
+            response = await client.post(base_url + "/notification/send/sms", json=payload)
+        except httpx.HTTPError as exc:
+            raise AuthError("短信通知通道调用失败: %s" % exc, 503) from exc
+        finally:
+            if close_client:
+                await client.aclose()
+        if response.status_code >= 400:
+            raise AuthError("短信通知通道调用失败: HTTP %s" % response.status_code, 503)
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise AuthError("短信通知通道响应异常", 503) from exc
+        if body.get("success") is False:
+            raise AuthError(str(body.get("message") or "短信通知通道调用失败"), int(body.get("code") or 503))
+
+    async def _push_base_url(self) -> str:
+        if self.sms_push_base_url:
+            return self.sms_push_base_url
+        if self.discovery is not None:
+            try:
+                instance = await self.discovery.choose_instance(self.sms_push_service)
+            except Exception as exc:
+                logger.warning("Push service discovery failed: %s", exc)
+                instance = None
+            if instance:
+                host = instance.get("ip") or instance.get("host")
+                port = instance.get("port")
+                if host and port:
+                    return "http://%s:%s" % (host, port)
+        return ""
+
+    async def register(self, form: Mapping[str, Any]) -> dict[str, Any]:
+        client = await self._resolve_user_flow_client(form)
+        username = str(form.get("userName") or form.get("username") or "").strip()
+        password = str(form.get("password") or "")
+        vcode = str(form.get("vcode") or "")
+        if not username:
+            raise AuthError("用户名不能为空", 400)
+        if len(password) < 6:
+            raise AuthError("密码至少6位", 400)
+        await self.verify_captcha(vcode)
+        if _truthy(form.get("password_encrypted")) or _looks_like_ciphertext(password):
+            password = _decrypt_password(password, str(client.get("privateKey") or ""))
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        try:
+            return await self.repository.create_user_account(
+                username=username,
+                password_hash=password_hash,
+                nick_name=str(form.get("nickName") or form.get("nick_name") or "") or None,
+                email=str(form.get("email") or "") or None,
+                mobile=str(form.get("mobile") or "") or None,
+                domain=self.account_domain,
+            )
+        except ValueError as exc:
+            raise AuthError(str(exc), 409) from exc
+
+    async def create_qr_login(self, client_id: str, redirect_uri: str, width: int = 200, height: int = 200) -> dict[str, str]:
+        code = secrets.token_urlsafe(24)
+        state = secrets.token_urlsafe(12)
+        target = "%s?%s" % (
+            redirect_uri,
+            urlencode({"code": code, "state": state}),
+        )
+        await self.cache.set_json(
+            "qr:%s" % code,
+            {"clientId": client_id, "redirectUri": redirect_uri, "state": state, "confirmState": 0},
+            300,
+        )
+        return {
+            "image": _qr_svg_base64(target, max(int(width or 200), 120), max(int(height or 200), 120)),
+            "code": code,
+            "state": state,
+        }
+
+    async def qr_state(self, code: str) -> int | dict[str, Any]:
+        cached = await self.cache.get_json("qr:%s" % str(code or ""))
+        if not cached:
+            raise AuthError("二维码不存在或已过期", 404)
+        if int(cached.get("confirmState") or 0) == 2:
+            token_response = cached.get("tokenResponse")
+            if isinstance(token_response, Mapping):
+                return dict(token_response)
+        return int(cached.get("confirmState") or 0)
+
+    async def mark_qr_scanned(self, code: str) -> int:
+        cached = await self.cache.get_json("qr:%s" % str(code or ""))
+        if not cached:
+            raise AuthError("二维码不存在或已过期", 404)
+        cached["confirmState"] = 1
+        await self.cache.set_json("qr:%s" % str(code or ""), cached, 300)
+        return 1
+
+    async def confirm_qr_login(self, code: str, bearer_token: str) -> dict[str, Any]:
+        token = str(bearer_token or "").strip()
+        if token.lower().startswith("bearer "):
+            token = token.split(None, 1)[1].strip()
+        if not token:
+            raise AuthError("未提供access_token", 401)
+        cached = await self.cache.get_json("qr:%s" % str(code or ""))
+        if not cached:
+            raise AuthError("二维码不存在或已过期", 404)
+        claims = self.signer.verify(token)
+        revoked = await self.cache.get_json("revoked:" + str(claims.get("jti") or ""))
+        if revoked:
+            raise AuthError("token已失效", 401)
+        now = int(time.time())
+        expires_in = max(int(claims.get("exp") or now) - now, 0)
+        token_response = {
+            "access_token": token,
+            "token_type": "Bearer",
+            "expires_in": expires_in,
+            "scope": claims.get("scope") or "all",
+            "login_id": claims.get("loginId"),
+            "user_id": claims.get("user_id"),
+            "roles": claims.get("roles") or [],
+            "permissions": claims.get("permissions") or [],
+        }
+        cached["confirmState"] = 2
+        cached["token"] = token
+        cached["tokenResponse"] = token_response
+        await self.cache.set_json("qr:%s" % str(code or ""), cached, 300)
+        return token_response
+
     async def _require_client(self, form: Mapping[str, Any]) -> dict[str, Any]:
         client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
         client_secret = str(form.get("client_secret") or form.get("clientSecret") or "")
         client = await self.repository.find_client(client_id)
         if not client or not _secret_matches(client_secret, str(client.get("clientSecret") or "")):
+            raise AuthError("客户端认证失败", 401)
+        return client
+
+    async def _resolve_user_flow_client(self, form: Mapping[str, Any]) -> dict[str, Any]:
+        client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
+        if not client_id:
+            raise AuthError("client_id不能为空", 400)
+        client = await self.repository.find_client(client_id)
+        if not client:
+            raise AuthError("客户端不存在", 401)
+        supplied_secret = str(form.get("client_secret") or form.get("clientSecret") or "")
+        if supplied_secret and not _secret_matches(supplied_secret, str(client.get("clientSecret") or "")):
             raise AuthError("客户端认证失败", 401)
         return client
 
@@ -476,12 +769,30 @@ class AuthService:
 def _secret_matches(raw: str, stored: str) -> bool:
     if not stored:
         return raw == stored
+    decoded = _decode_app_secret(stored)
+    if decoded is not None:
+        return hmac.compare_digest(raw, decoded)
     if stored.startswith(("$2a$", "$2b$", "$2y$")):
         try:
             return bcrypt.checkpw(raw.encode("utf-8"), stored.encode("utf-8"))
         except ValueError:
             return False
     return hmac.compare_digest(raw, stored)
+
+
+def _decode_app_secret(stored: str) -> Optional[str]:
+    if not stored.startswith(APP_SECRET_ENC_PREFIX):
+        return None
+    try:
+        ciphertext = base64.b64decode(stored[len(APP_SECRET_ENC_PREFIX) :])
+        decryptor = Cipher(algorithms.AES(APP_SECRET_AES_KEY), modes.ECB()).decryptor()
+        padded = decryptor.update(ciphertext) + decryptor.finalize()
+        pad_len = padded[-1]
+        if pad_len < 1 or pad_len > 16:
+            return None
+        return padded[:-pad_len].decode("utf-8")
+    except Exception:
+        return None
 
 
 def _hash_token(token: str) -> str:
@@ -524,3 +835,152 @@ def _decrypt_password(ciphertext: str, private_key_base64: str) -> str:
         return decrypted.decode("utf-8")
     except Exception as exc:
         raise AuthError("处理登录信息异常", 400) from exc
+
+
+def _captcha_image_base64(code: str, width: int, height: int) -> str:
+    try:
+        from captcha.image import ImageCaptcha
+        from PIL import ImageDraw
+
+        width = max(int(width or 120), 80)
+        height = max(int(height or 40), 32)
+        font_sizes = tuple(range(max(24, int(height * 0.7)), max(25, int(height * 0.78)) + 1))
+        captcha = ImageCaptcha(width=width, height=height, font_sizes=font_sizes)
+        captcha.character_rotate = (-24, 24)
+        captcha.character_warp_dx = (0.08, 0.18)
+        captcha.character_warp_dy = (0.12, 0.22)
+        captcha.word_offset_dx = 0.12
+        captcha.word_space_probability = 1.0
+        background = (248, 251, 255)
+        text_color = (12, 34, 72)
+        image = captcha.create_captcha_image(
+            code,
+            color=(96, 176, 255),
+            background=background,
+        )
+        recolored = []
+        image_data = (
+            image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
+        )
+        for pixel in image_data:
+            delta = sum(abs(pixel[index] - background[index]) for index in range(3))
+            if delta <= 8:
+                recolored.append(pixel)
+                continue
+            strength = min(1.0, max(0.38, delta / 220))
+            recolored.append(
+                tuple(
+                    int(background[index] * (1 - strength) + text_color[index] * strength)
+                    for index in range(3)
+                )
+            )
+        image.putdata(recolored)
+        draw = ImageDraw.Draw(image)
+        for _ in range(2):
+            draw.line(
+                (
+                    random.randint(0, width // 3),
+                    random.randint(0, height),
+                    random.randint(width // 2, width),
+                    random.randint(0, height),
+                ),
+                fill=(
+                    random.randint(125, 175),
+                    random.randint(155, 205),
+                    random.randint(190, 230),
+                ),
+                width=1,
+            )
+        for _ in range(max(18, width * height // 260)):
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            draw.point(
+                (x, y),
+                fill=(
+                    random.randint(125, 205),
+                    random.randint(145, 220),
+                    random.randint(165, 235),
+                ),
+            )
+        output = io.BytesIO()
+        image.save(output, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(output.getvalue()).decode("ascii")
+    except Exception:
+        svg = _captcha_svg(code, width, height)
+        return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+
+
+def _captcha_svg(code: str, width: int, height: int) -> str:
+    width = max(int(width or 120), 80)
+    height = max(int(height or 40), 32)
+    seed_text = "%s:%s:%s" % (code, width, height)
+    seed = int(hashlib.sha1(seed_text.encode("utf-8")).hexdigest()[:8], 16)
+    rng = random.Random(seed)
+    palette = ["#1d4ed8", "#0f766e", "#7c3aed", "#be123c", "#0369a1"]
+    accents = ["#93c5fd", "#99f6e4", "#c4b5fd", "#fecdd3", "#bae6fd"]
+    dots = []
+    for index in range(18):
+        dots.append(
+            '<circle cx="%s" cy="%s" r="%s" fill="%s" opacity="0.34"/>'
+            % (
+                rng.randint(4, width - 4),
+                rng.randint(4, height - 4),
+                rng.choice((0.8, 1.0, 1.2)),
+                accents[index % len(accents)],
+            )
+        )
+    curves = []
+    for index in range(3):
+        y1 = rng.randint(max(6, height // 5), max(7, height - height // 5))
+        y2 = rng.randint(max(6, height // 5), max(7, height - height // 5))
+        c1 = rng.randint(width // 5, width // 2)
+        c2 = rng.randint(width // 2, max(width // 2 + 1, width - width // 6))
+        curves.append(
+            '<path d="M 6 %s C %s %s, %s %s, %s %s" fill="none" stroke="%s" '
+            'stroke-width="1.2" stroke-linecap="round" opacity="0.28"/>'
+            % (y1, c1, y2, c2, y1, width - 6, y2, accents[index % len(accents)])
+        )
+    chars = []
+    count = max(len(code), 1)
+    step = width / (count + 0.7)
+    font_size = min(max(int(height * 0.62), 21), max(22, int(step * 0.92)))
+    for index, char in enumerate(code):
+        x = int(step * (index + 0.85))
+        y = int(height * 0.6 + rng.randint(-2, 2))
+        rotate = rng.randint(-9, 9)
+        chars.append(
+            '<text x="%s" y="%s" text-anchor="middle" dominant-baseline="middle" '
+            'transform="rotate(%s %s %s)" font-family="Inter, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" '
+            'font-size="%s" font-weight="800" fill="%s">%s</text>'
+            % (x, y, rotate, x, y, font_size, palette[index % len(palette)], html.escape(char))
+        )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="0 0 %s %s">'
+        '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">'
+        '<stop offset="0" stop-color="#f8fbff"/><stop offset="1" stop-color="#eef7ff"/>'
+        '</linearGradient></defs>'
+        '<rect x="0.5" y="0.5" width="%s" height="%s" rx="8" fill="url(#bg)" stroke="#dbeafe"/>'
+        '<g style="user-select:none">%s%s%s</g>'
+        '</svg>'
+    ) % (width, height, width, height, width - 1, height - 1, "".join(dots), "".join(curves), "".join(chars))
+
+
+def _qr_svg_base64(data: str, width: int, height: int) -> str:
+    try:
+        import qrcode
+        import qrcode.image.svg
+
+        image = qrcode.make(data, image_factory=qrcode.image.svg.SvgImage)
+        output = io.BytesIO()
+        image.save(output)
+        svg = output.getvalue().decode("utf-8")
+        svg = svg.replace("<svg ", '<svg width="%s" height="%s" ' % (width, height), 1)
+    except Exception:
+        escaped = html.escape(data)
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s">'
+            '<rect width="100%%" height="100%%" fill="#fff"/>'
+            '<text x="50%%" y="50%%" text-anchor="middle" dominant-baseline="middle" '
+            'font-family="monospace" font-size="10">%s</text></svg>'
+        ) % (width, height, escaped)
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")

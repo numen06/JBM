@@ -521,6 +521,40 @@ export interface EmailPushConfig {
   updateTime?: string
 }
 
+export interface SmsNotificationRequest {
+  phoneNumber: string
+  templateCode: string
+  signName: string
+  params: Record<string, string | number>
+  title?: string
+  content?: string
+  recUserId?: SnowflakeId
+  sendUserId?: SnowflakeId
+  sysMsg?: boolean
+  showInMessageCenter?: boolean
+}
+
+export type ChannelPushWay = 'internal' | 'email' | 'sms' | 'mqtt' | 'wechat' | 'miniapp' | 'app'
+
+export interface ChannelNotificationRequest {
+  pushWay: ChannelPushWay
+  title?: string
+  content?: string
+  recUserId?: SnowflakeId
+  recUserIds?: SnowflakeId[]
+  sendUserId?: SnowflakeId
+  sysMsg?: boolean
+  showInMessageCenter?: boolean
+  phoneNumber?: string
+  receiver?: string
+  templateCode?: string
+  signName?: string
+  params?: Record<string, string | number>
+  topic?: string
+  body?: unknown
+  qos?: number
+}
+
 export interface PushTestRequest {
   recUserIds?: SnowflakeId[]
   tags?: string

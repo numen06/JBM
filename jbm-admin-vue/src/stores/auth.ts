@@ -5,18 +5,16 @@ import type { OAuth2TokenResult } from '@/api/types'
 import { getCurrentUser } from '@/api/current'
 import type { CurrentUser } from '@/api/types'
 import { useMenuStore } from '@/stores/menu'
-import { JBM_DEFAULT_CLIENT_ID, JBM_DEFAULT_CLIENT_SECRET } from '@/constants/loginModes'
+import { JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
 
 const TOKEN_KEY = 'jbm_access_token'
 const REFRESH_KEY = 'jbm_refresh_token'
 const CLIENT_ID_KEY = 'jbm_client_id'
-const CLIENT_SECRET_KEY = 'jbm_client_secret'
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(localStorage.getItem(TOKEN_KEY) || '')
   const refreshToken = ref(localStorage.getItem(REFRESH_KEY) || '')
   const clientId = ref(localStorage.getItem(CLIENT_ID_KEY) || JBM_DEFAULT_CLIENT_ID)
-  const clientSecret = ref(localStorage.getItem(CLIENT_SECRET_KEY) || JBM_DEFAULT_CLIENT_SECRET)
   const tenantId = ref('0')
   const user = ref<CurrentUser | null>(null)
   const mustChangePassword = ref(false)
@@ -30,7 +28,6 @@ export const useAuthStore = defineStore('auth', () => {
     if (refreshToken.value) localStorage.setItem(REFRESH_KEY, refreshToken.value)
     else localStorage.removeItem(REFRESH_KEY)
     localStorage.setItem(CLIENT_ID_KEY, clientId.value)
-    localStorage.setItem(CLIENT_SECRET_KEY, clientSecret.value)
   }
 
   function applyToken(token: OAuth2TokenResult) {
@@ -51,7 +48,6 @@ export const useAuthStore = defineStore('auth', () => {
       vcode: options?.vcode,
       loginType: options?.loginType ?? 'PASSWORD',
       clientId: clientId.value,
-      clientSecret: clientSecret.value,
     })
     applyToken(token)
     await fetchUser()
@@ -71,7 +67,6 @@ export const useAuthStore = defineStore('auth', () => {
     const token = await authApi.refreshToken(
       refreshToken.value,
       clientId.value,
-      clientSecret.value,
     )
     accessToken.value = token.access_token
     if (token.refresh_token) refreshToken.value = token.refresh_token
@@ -162,7 +157,6 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken,
     refreshToken,
     clientId,
-    clientSecret,
     tenantId,
     user,
     mustChangePassword,

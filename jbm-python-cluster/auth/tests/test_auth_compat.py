@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
+import httpx
 from fastapi.testclient import TestClient
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from jbm_cluster_py.common.config import AppConfig
+from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.platform.auth.main import create_app
 from jbm_cluster_py.platform.auth.repository import SQLITE_DDL
+from jbm_cluster_py.platform.auth.service import AuthService, TokenCache, _secret_matches
 
 
 def auth_config(database_url: str) -> AppConfig:
@@ -54,6 +60,29 @@ def rsa_pair_base64() -> tuple[str, str]:
         serialization.PublicFormat.SubjectPublicKeyInfo,
     )
     return base64.b64encode(public_der).decode("ascii"), base64.b64encode(private_der).decode("ascii")
+
+
+def test_image_captcha_verify_is_case_insensitive_like_java() -> None:
+    async def run() -> None:
+        cache = TokenCache(RedisClient({"enabled": False}))
+        service = AuthService(None, cache, {})  # type: ignore[arg-type]
+        await cache.set_json("captcha:system:ab12c", {"code": "AB12C"}, 60)
+        assert await service.verify_captcha("aB12c") is True
+
+    import asyncio
+
+    asyncio.run(run())
+
+
+def test_java_app_secret_codec_encrypted_secret_is_supported() -> None:
+    plain = b"plain-client-secret"
+    aes_key = __import__("hashlib").md5(b"jbm-app-client-secret").hexdigest().encode("utf-8")
+    pad_len = 16 - (len(plain) % 16)
+    encryptor = Cipher(algorithms.AES(aes_key), modes.ECB()).encryptor()
+    encrypted = encryptor.update(plain + bytes([pad_len]) * pad_len) + encryptor.finalize()
+    stored = "$ENC$" + base64.b64encode(encrypted).decode("ascii")
+    assert _secret_matches("plain-client-secret", stored) is True
+    assert _secret_matches("wrong", stored) is False
 
 
 async def seed_database(database_url: str, public_key: str = "PUBLIC-KEY", private_key: str = "") -> None:
@@ -175,6 +204,28 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
         assert refreshed.json()["success"] is True
         assert refreshed.json()["result"]["access_token"].count(".") == 2
 
+        public_login = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "password",
+                "client_id": "JBM",
+                "username": "admin",
+                "password": "admin123",
+                "scope": "all",
+            },
+        ).json()
+        assert public_login["success"] is True
+        public_token = public_login["result"]
+        public_refresh = client.post(
+            "/oauth2/refresh",
+            data={
+                "client_id": "JBM",
+                "refresh_token": public_token["refresh_token"],
+            },
+        ).json()
+        assert public_refresh["success"] is True
+        assert public_refresh["result"]["access_token"].count(".") == 2
+
         client_token = client.post(
             "/oauth2/token",
             data={
@@ -186,6 +237,17 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
         )
         assert client_token.json()["success"] is True
         assert "refresh_token" not in client_token.json()["result"]
+
+        missing_secret_client_token = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": "JBM",
+                "scope": "all",
+            },
+        ).json()
+        assert missing_secret_client_token["success"] is False
+        assert missing_secret_client_token["code"] == 401
 
         denied = client.delete(
             "/online/kickout/not-a-real-token",
@@ -236,6 +298,105 @@ def test_rsa_encrypted_password_is_supported(tmp_path: Path) -> None:
         assert token_response["result"]["access_token"].count(".") == 2
 
 
+def test_authorization_code_page_login_and_exchange(tmp_path: Path) -> None:
+    database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "auth-code.db")
+    import asyncio
+
+    asyncio.run(seed_database(database_url))
+
+    with TestClient(create_app(auth_config(database_url))) as client:
+        authorize_page = client.get(
+            "/oauth2/authorize",
+            params={
+                "response_type": "code",
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "scope": "all",
+                "state": "state-1",
+            },
+        )
+        assert authorize_page.status_code == 200
+        assert "JBM 认证中心" in authorize_page.text
+        assert 'name="client_id" value="JBM"' in authorize_page.text
+
+        apps = client.get("/oauth2/apps").json()
+        assert apps["success"] is True
+        assert apps["result"][0]["clientId"] == "JBM"
+        assert "apiKey" not in apps["result"][0]
+        assert "clientSecret" not in apps["result"][0]
+
+        login = client.post(
+            "/oauth2/doLogin",
+            data={
+                "response_type": "code",
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "scope": "all",
+                "state": "state-1",
+                "username": "admin",
+                "password": "admin123",
+            },
+        ).json()
+        assert login["success"] is True
+        parsed = urlparse(login["result"])
+        assert parsed.scheme == "http"
+        assert parsed.netloc == "admin.test"
+        query = parse_qs(parsed.query)
+        assert query["state"] == ["state-1"]
+        code = query["code"][0]
+
+        token_response = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": "JBM",
+                "client_secret": "demo-secret",
+                "redirect_uri": "http://admin.test/login/callback",
+                "code": code,
+            },
+        ).json()
+        assert token_response["success"] is True
+        assert token_response["result"]["access_token"].count(".") == 2
+        assert token_response["result"]["login_id"] == "normal:1000:2057849052900044802"
+
+        reused = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": "JBM",
+                "client_secret": "demo-secret",
+                "redirect_uri": "http://admin.test/login/callback",
+                "code": code,
+            },
+        ).json()
+        assert reused["success"] is False
+        assert reused["code"] == 401
+
+        second_login = client.post(
+            "/oauth2/doLogin",
+            data={
+                "response_type": "code",
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "scope": "all",
+                "username": "admin",
+                "password": "admin123",
+            },
+        ).json()
+        second_code = parse_qs(urlparse(second_login["result"]).query)["code"][0]
+        public_client_exchange = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "code": second_code,
+            },
+        ).json()
+        assert public_client_exchange["success"] is True
+        assert public_client_exchange["result"]["access_token"].count(".") == 2
+
+
 def test_password_error_lockout_message(tmp_path: Path) -> None:
     database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "auth-lock.db")
     import asyncio
@@ -269,3 +430,135 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
         ).json()
         assert locked["success"] is False
         assert locked["message"] == "密码错误次数过多，帐户锁定10分钟"
+
+
+def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:
+    database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "auth-register.db")
+    import asyncio
+
+    public_key, private_key = rsa_pair_base64()
+    asyncio.run(seed_database(database_url, public_key, private_key))
+    loaded_public = serialization.load_der_public_key(base64.b64decode(public_key))
+    encrypted_password = base64.b64encode(loaded_public.encrypt(b"newpass123", padding.PKCS1v15())).decode("ascii")
+
+    with TestClient(create_app(auth_config(database_url))) as client:
+        captcha = client.get("/captcha/vcode64", params={"width": 120, "height": 40}).json()
+        assert captcha["success"] is True
+        assert captcha["result"].startswith("data:image/png;base64,")
+
+        registered = client.post(
+            "/oauth2/register",
+            headers={"X-Password-Encrypted": "true"},
+            data={
+                "client_id": "JBM",
+                "client_secret": "demo-secret",
+                "userName": "newuser",
+                "password": encrypted_password,
+                "nickName": "New User",
+                "vcode": "9999",
+            },
+        ).json()
+        assert registered["success"] is True
+        assert registered["result"]["userName"] == "newuser"
+
+        logged_in = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "password",
+                "client_id": "JBM",
+                "client_secret": "demo-secret",
+                "username": "newuser",
+                "password": "newpass123",
+                "vcode": "9999",
+            },
+        ).json()
+        assert logged_in["success"] is True
+        assert logged_in["result"]["access_token"].count(".") == 2
+
+        qr = client.get(
+            "/qrcode/login",
+            params={"client_id": "JBM", "redirect_uri": "http://admin.test/login/callback", "width": 180, "height": 180},
+        ).json()
+        assert qr["success"] is True
+        assert qr["result"]["image"].startswith("data:image/svg+xml;base64,")
+        waiting = client.get("/qrcode/check", params={"code": qr["result"]["code"]}).json()
+        assert waiting["success"] is False
+        assert waiting["result"] == 0
+
+
+def test_qrcode_confirm_returns_login_token(tmp_path: Path) -> None:
+    database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "auth-qr.db")
+    import asyncio
+
+    asyncio.run(seed_database(database_url))
+
+    with TestClient(create_app(auth_config(database_url))) as client:
+        token_response = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "password",
+                "client_id": "JBM",
+                "client_secret": "demo-secret",
+                "username": "admin",
+                "password": "admin123",
+                "scope": "all",
+            },
+        ).json()
+        access_token = token_response["result"]["access_token"]
+
+        qr = client.get(
+            "/qrcode/login",
+            params={"client_id": "JBM", "redirect_uri": "http://admin.test/login/callback"},
+        ).json()["result"]
+        code = qr["code"]
+
+        scanned = client.get("/qrcode/scanned", params={"code": code}).json()
+        assert scanned["success"] is True
+        assert scanned["result"] == 1
+
+        waiting = client.get("/qrcode/check", params={"code": code}).json()
+        assert waiting["success"] is False
+        assert waiting["result"] == 1
+
+        confirmed = client.post(
+            "/qrcode/confirm",
+            params={"code": code},
+            headers={"Authorization": "Bearer " + access_token},
+        ).json()
+        assert confirmed["success"] is True
+        assert confirmed["result"]["access_token"] == access_token
+
+        checked = client.get("/qrcode/check", params={"code": code}).json()
+        assert checked["success"] is True
+        assert checked["result"]["access_token"] == access_token
+
+
+def test_phone_code_is_sent_through_push_notification() -> None:
+    import asyncio
+
+    requests: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content.decode("utf-8"))
+        requests.append(payload)
+        return httpx.Response(200, json={"success": True, "result": {"sent": 1}})
+
+    async def run() -> bool:
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://push.test")
+        service = AuthService(
+            repository=None,  # type: ignore[arg-type]
+            cache=TokenCache(RedisClient({"enabled": False})),
+            config={"sms": {"push-base-url": "http://push.test"}},
+            http_client=client,
+        )
+        try:
+            return await service.send_phone_code("13585658904", "9999")
+        finally:
+            await client.aclose()
+
+    assert asyncio.run(run()) is True
+    assert requests[0]["phoneNumber"] == "13585658904"
+    assert requests[0]["templateCode"] == "SMS_236340338"
+    assert requests[0]["signName"] == "甲佳智能"
+    assert requests[0]["params"]["code"]
+    assert requests[0]["showInMessageCenter"] is False

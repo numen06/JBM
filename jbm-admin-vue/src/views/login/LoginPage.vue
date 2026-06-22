@@ -3,19 +3,19 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, RefreshCw, UserRound } from '@lucide/vue'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
+import { listApps } from '@/api/app'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
 import { fetchLoginQr, pollQrLogin } from '@/api/qrcode'
+import type { BaseApp } from '@/api/types'
 import { extractApiError } from '@/lib/errors'
 import {
   DEV_CAPTCHA_CODE,
   DEV_SMS_CODE,
   JBM_DEFAULT_CLIENT_ID,
-  JBM_DEFAULT_CLIENT_SECRET,
   JBM_DEFAULT_OAUTH_SCOPE,
   JBM_DEFAULT_PASSWORD,
   JBM_DEFAULT_USERNAME,
   JBM_SEED_CLIENT_ID,
-  JBM_SEED_CLIENT_SECRET,
   JBM_SEED_PASSWORD,
   LOCAL_DEV_LOGIN_ACCOUNTS,
   LOCAL_DEV_LOGIN_ENABLED,
@@ -25,6 +25,7 @@ import {
   type LocalDevLoginAccount,
   type LoginTabId,
 } from '@/constants/loginModes'
+import { apiBaseUrl, runtimeConfig } from '@/runtimeConfig'
 import { useAuthStore } from '@/stores/auth'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
@@ -38,15 +39,14 @@ const isDev = import.meta.env.DEV
 const localDevLoginEnabled = LOCAL_DEV_LOGIN_ENABLED
 const localDevLoginAccounts = LOCAL_DEV_LOGIN_ACCOUNTS
 const useDevLoginDefaults = isDev || localDevLoginEnabled
+const debugAuthAppPickerEnabled = isDev || localDevLoginEnabled
+const authCodeDebugEnabled = isDev
 
 const activeTab = ref<LoginTabId>('PASSWORD')
-const activeMeta = computed(() => LOGIN_TABS.find((t) => t.id === activeTab.value)!)
-const moreLoginTabs = computed(() => LOGIN_TABS.filter((t) => t.id !== 'PASSWORD'))
-
-function selectLoginTab(tab: LoginTabId) {
-  activeTab.value = tab
-  showMoreModes.value = true
-}
+const visibleLoginTabs = computed(() =>
+  LOGIN_TABS.filter((tab) => tab.id !== 'AUTH_CODE' || authCodeDebugEnabled),
+)
+const activeMeta = computed(() => visibleLoginTabs.value.find((t) => t.id === activeTab.value) ?? visibleLoginTabs.value[0])
 
 const username = ref(JBM_DEFAULT_USERNAME)
 const password = ref(JBM_DEFAULT_PASSWORD)
@@ -61,10 +61,6 @@ const facePhone = ref('')
 const faceImage = ref('')
 
 const clientId = ref(JBM_DEFAULT_CLIENT_ID)
-const clientSecret = ref(JBM_DEFAULT_CLIENT_SECRET)
-const showMoreModes = ref(false)
-/** 生产环境默认收起 OAuth 客户端配置 */
-const showAdvanced = ref(isDev)
 
 const loading = ref(false)
 const error = ref('')
@@ -90,17 +86,19 @@ const oauthRedirectUri = ref('')
 const oauthScope = ref(JBM_DEFAULT_OAUTH_SCOPE)
 const oauthState = ref('')
 const authCode = ref('')
+const authApps = ref<BaseApp[]>([])
+const authAppsLoading = ref(false)
+const authAppError = ref('')
+const selectedAuthAppId = ref('')
+
+const authAppOptions = computed(() =>
+  authApps.value.filter((app) => !!resolveAppClientId(app)),
+)
 
 const authorizeUrlPreview = computed(() => {
   if (!oauthRedirectUri.value) return ''
   const state = oauthState.value || '（点击跳转时自动生成）'
-  return (
-    `/oauth2/authorize?response_type=code` +
-    `&client_id=${encodeURIComponent(clientId.value)}` +
-    `&redirect_uri=${encodeURIComponent(oauthRedirectUri.value)}` +
-    `&scope=${encodeURIComponent(oauthScope.value || 'all')}` +
-    `&state=${encodeURIComponent(String(state))}`
-  )
+  return buildAuthorizeUrl(oauthRedirectUri.value, String(state))
 })
 
 function initOAuthRedirectUri() {
@@ -222,18 +220,15 @@ function syncFormFromDom(form: HTMLFormElement) {
   const p = read('login-password')
   const v = read('login-vcode')
   const cid = read('login-client-id')
-  const cs = read('login-client-secret')
   if (u) username.value = u
   if (p) password.value = p
   if (v) vcode.value = v
   if (cid) clientId.value = cid
-  if (cs) clientSecret.value = cs
 }
 
 async function finishLogin(action: () => Promise<boolean>) {
   loading.value = true
   auth.clientId = clientId.value
-  auth.clientSecret = clientSecret.value
   try {
     await action()
     const redirect = (route.query.redirect as string) || '/dashboard'
@@ -253,17 +248,13 @@ async function finishLogin(action: () => Promise<boolean>) {
 
 function applyLocalDevLoginAccount(account: LocalDevLoginAccount) {
   activeTab.value = 'PASSWORD'
-  showMoreModes.value = false
   error.value = ''
   username.value = account.username
   password.value = account.password
   vcode.value = DEV_CAPTCHA_CODE
   clientId.value = account.clientId
-  clientSecret.value = account.clientSecret
   auth.clientId = account.clientId
-  auth.clientSecret = account.clientSecret
   localStorage.setItem('jbm_client_id', account.clientId)
-  localStorage.setItem('jbm_client_secret', account.clientSecret)
 }
 
 async function onLocalDevQuickLogin(account: LocalDevLoginAccount) {
@@ -359,6 +350,85 @@ function buildCallbackUrl(provider?: string) {
   return `${window.location.origin}${resolved.href}`
 }
 
+function resolveAppClientId(app: BaseApp) {
+  return app.apiKey?.trim() || app.clientId?.trim() || ''
+}
+
+function authAppLabel(app: BaseApp) {
+  const name = app.appName || app.appCode || app.code || '未命名应用'
+  const code = app.appCode || app.code
+  return code && code !== name ? `${name}（${code}）` : name
+}
+
+function browserAuthUrl(pathWithQuery: string) {
+  const configuredAuthorizeBase = runtimeConfig.oauthAuthorizeBaseUrl?.trim()
+  if (configuredAuthorizeBase) {
+    return `${configuredAuthorizeBase.replace(/\/+$/, '')}${pathWithQuery}`
+  }
+  const base = apiBaseUrl.replace(/\/+$/, '')
+  if (base) return `${base}/auth${pathWithQuery}`
+  return `/auth${pathWithQuery}`
+}
+
+function buildAuthorizeUrl(redirect: string, state: string) {
+  const query = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId.value,
+    redirect_uri: redirect,
+    scope: oauthScope.value || 'all',
+    state,
+  })
+  return browserAuthUrl(`/oauth2/authorize?${query.toString()}`)
+}
+
+async function loadAuthApps() {
+  if (!debugAuthAppPickerEnabled || authAppsLoading.value || authApps.value.length > 0) return
+  authAppsLoading.value = true
+  authAppError.value = ''
+  try {
+    const page = await listApps(1, 100, { status: 1 })
+    authApps.value = page.contents ?? []
+  } catch (e) {
+    try {
+      authApps.value = await fetchPublicAuthApps()
+    } catch {
+      authAppError.value = extractApiError(e, '应用列表加载失败')
+    }
+  } finally {
+    const matched = authApps.value.find((app) => resolveAppClientId(app) === clientId.value)
+    if (matched?.appId != null) {
+      selectedAuthAppId.value = String(matched.appId)
+    }
+    authAppsLoading.value = false
+  }
+}
+
+async function fetchPublicAuthApps(): Promise<BaseApp[]> {
+  const response = await fetch(browserAuthUrl('/oauth2/apps'), {
+    headers: { Accept: 'application/json' },
+  })
+  const body = (await response.json()) as {
+    success?: boolean
+    code?: number
+    message?: string
+    result?: BaseApp[]
+  }
+  if (!response.ok || !(body.success === true || body.code === 200)) {
+    throw new Error(body.message || '应用列表加载失败')
+  }
+  return body.result ?? []
+}
+
+async function applySelectedAuthApp() {
+  const selected = authApps.value.find((app) => String(app.appId ?? '') === selectedAuthAppId.value)
+  if (!selected) return
+  const nextClientId = resolveAppClientId(selected)
+  if (!nextClientId) return
+  clientId.value = nextClientId
+  auth.clientId = nextClientId
+  localStorage.setItem('jbm_client_id', nextClientId)
+}
+
 async function onThirdPartyManual() {
   error.value = ''
   if (!tpCode.value.trim()) {
@@ -370,7 +440,6 @@ async function onThirdPartyManual() {
       provider: tpProvider.value,
       code: tpCode.value.trim(),
       clientId: clientId.value,
-      clientSecret: clientSecret.value,
       redirectUri: buildCallbackUrl(tpProvider.value),
       state: undefined,
     })
@@ -381,19 +450,13 @@ async function onThirdPartyManual() {
 function startOAuthCodeLogin() {
   error.value = ''
   auth.clientId = clientId.value
-  auth.clientSecret = clientSecret.value
   const redirect = oauthRedirectUri.value.trim() || buildCallbackUrl()
   oauthRedirectUri.value = redirect
   const state = crypto.randomUUID?.() ?? `state_${Date.now()}`
   oauthState.value = state
   sessionStorage.setItem(OAUTH2_STATE_STORAGE_KEY, state)
   sessionStorage.setItem(OAUTH2_REDIRECT_STORAGE_KEY, redirect)
-  window.location.href =
-    `/oauth2/authorize?response_type=code` +
-    `&client_id=${encodeURIComponent(clientId.value)}` +
-    `&redirect_uri=${encodeURIComponent(redirect)}` +
-    `&scope=${encodeURIComponent(oauthScope.value || 'all')}` +
-    `&state=${encodeURIComponent(state)}`
+  window.location.href = buildAuthorizeUrl(redirect, state)
 }
 
 async function onAuthCodeExchange() {
@@ -408,7 +471,6 @@ async function onAuthCodeExchange() {
       code: authCode.value.trim(),
       redirectUri: redirect,
       clientId: clientId.value,
-      clientSecret: clientSecret.value,
     })
     return auth.loginWithToken(token)
   })
@@ -420,7 +482,12 @@ watch(activeTab, (tab) => {
     loadCaptcha()
   }
   if (tab === 'AUTH_CODE') {
+    if (!authCodeDebugEnabled) {
+      activeTab.value = 'PASSWORD'
+      return
+    }
     initOAuthRedirectUri()
+    loadAuthApps()
   }
   if (tab === 'SCAN') {
     loadQrSession()
@@ -437,17 +504,14 @@ async function onResetJaja7Seed() {
   try {
     const r = await resetJaja7Seed()
     clientId.value = JBM_SEED_CLIENT_ID
-    clientSecret.value = JBM_SEED_CLIENT_SECRET
     password.value = JBM_SEED_PASSWORD
     auth.clientId = JBM_SEED_CLIENT_ID
-    auth.clientSecret = JBM_SEED_CLIENT_SECRET
     localStorage.setItem('jbm_client_id', JBM_SEED_CLIENT_ID)
-    localStorage.setItem('jbm_client_secret', JBM_SEED_CLIENT_SECRET)
-    error.value = `已恢复种子凭证（appId=${r.jbmAppCredentialsReset}），请用密码 ${JBM_SEED_PASSWORD} 登录`
+    error.value = `已恢复种子应用（appId=${r.jbmAppCredentialsReset}），请用密码 ${JBM_SEED_PASSWORD} 登录`
   } catch (e) {
     error.value = extractApiError(
       e,
-      '恢复失败：请重启 Auth（jaja7）后重试，或暂用 demo / demo123 + Admin@123',
+      '恢复失败：请重启 Auth（jaja7）后重试，或确认默认开发账号与种子应用一致',
     )
   } finally {
     seedResetLoading.value = false
@@ -461,14 +525,10 @@ function applyJaja7LoginDefaults() {
     vcode.value = DEV_CAPTCHA_CODE
   }
   clientId.value = JBM_DEFAULT_CLIENT_ID
-  clientSecret.value = JBM_DEFAULT_CLIENT_SECRET
   oauthScope.value = JBM_DEFAULT_OAUTH_SCOPE
   auth.clientId = JBM_DEFAULT_CLIENT_ID
-  auth.clientSecret = JBM_DEFAULT_CLIENT_SECRET
   localStorage.setItem('jbm_client_id', JBM_DEFAULT_CLIENT_ID)
-  localStorage.setItem('jbm_client_secret', JBM_DEFAULT_CLIENT_SECRET)
   // 密码框在部分浏览器自动化下不触发 input，确保提交前有值
-  if (!clientSecret.value) clientSecret.value = JBM_DEFAULT_CLIENT_SECRET
   if (!password.value) password.value = JBM_DEFAULT_PASSWORD
 }
 
@@ -479,6 +539,9 @@ onMounted(() => {
   }
   applyJaja7LoginDefaults()
   loadCaptcha()
+  if (debugAuthAppPickerEnabled) {
+    loadAuthApps()
+  }
 })
 
 onUnmounted(() => {
@@ -510,13 +573,12 @@ onUnmounted(() => {
         </div>
 
         <div
-          v-if="showMoreModes"
           class="mb-4 mt-6 flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1"
           role="tablist"
           aria-label="登录方式"
         >
           <button
-            v-for="tab in LOGIN_TABS"
+            v-for="tab in visibleLoginTabs"
             :key="tab.id"
             type="button"
             role="tab"
@@ -533,10 +595,6 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <div v-else class="mt-6">
-          <p class="text-sm text-muted-foreground">使用用户名和密码登录</p>
-        </div>
-
         <div v-if="localDevLoginEnabled" class="mt-4 rounded-md border bg-muted/20 p-3">
           <div class="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -544,6 +602,29 @@ onUnmounted(() => {
               <p class="text-xs text-muted-foreground">使用运行时 OAuth 客户端与开发验证码</p>
             </div>
             <span class="rounded bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700">DEV</span>
+          </div>
+          <div class="mb-3 rounded-md border bg-background p-2">
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <span class="text-xs font-medium text-muted-foreground">应用认证</span>
+              <Button type="button" variant="outline" size="sm" :disabled="authAppsLoading" @click="loadAuthApps">
+                {{ authAppsLoading ? '加载中…' : '刷新应用' }}
+              </Button>
+            </div>
+            <div class="flex flex-col gap-2">
+              <select
+                v-model="selectedAuthAppId"
+                class="flex h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm"
+                :disabled="authAppsLoading || authAppOptions.length === 0"
+                @change="applySelectedAuthApp"
+              >
+                <option value="">选择认证应用</option>
+                <option v-for="app in authAppOptions" :key="app.appId" :value="String(app.appId)">
+                  {{ authAppLabel(app) }}
+                </option>
+              </select>
+            </div>
+            <p v-if="authAppError" class="mt-2 text-xs text-destructive">{{ authAppError }}</p>
+            <p v-else class="mt-2 text-xs text-muted-foreground">登录后按所选应用加载菜单与权限。</p>
           </div>
           <div class="grid gap-2 sm:grid-cols-3">
             <Button
@@ -681,25 +762,6 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <details class="rounded-md border px-3 py-2 text-sm" :open="showAdvanced" @toggle="showAdvanced = ($event.target as HTMLDetailsElement).open">
-            <summary class="cursor-pointer font-medium text-muted-foreground">OAuth2 客户端（高级）</summary>
-            <div class="mt-3 grid grid-cols-2 gap-3">
-              <div class="space-y-2">
-                <Label>Client ID</Label>
-                <Input v-model="clientId" data-testid="login-client-id" :placeholder="JBM_DEFAULT_CLIENT_ID" />
-              </div>
-              <div class="space-y-2">
-                <Label>Client Secret</Label>
-                <Input
-                  v-model="clientSecret"
-                  data-testid="login-client-secret"
-                  type="password"
-                  :placeholder="JBM_DEFAULT_CLIENT_SECRET"
-                />
-              </div>
-            </div>
-          </details>
-
           <div
             v-if="error"
             role="alert"
@@ -713,7 +775,7 @@ onUnmounted(() => {
           </Button>
           <p v-if="isDev" class="text-xs text-muted-foreground">
             当前默认 Client：<code class="rounded bg-muted px-1">{{ clientId }}</code>。
-            若提示无效 client_secret，先点下方恢复种子或确认 .env 与库一致。
+            若提示客户端不存在，先点下方恢复种子或确认 .env 与库一致。
           </p>
           <Button
             v-if="isDev"
@@ -726,28 +788,13 @@ onUnmounted(() => {
             {{ seedResetLoading ? '恢复中…' : '恢复 JBM 种子应用凭证（需 Auth 已重启加载新代码）' }}
           </Button>
 
-          <details v-if="!showMoreModes" class="rounded-md border px-3 py-2 text-sm">
-            <summary class="cursor-pointer font-medium text-muted-foreground">更多登录方式</summary>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                v-for="tab in moreLoginTabs"
-                :key="tab.id"
-                type="button"
-                class="rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
-                @click="selectLoginTab(tab.id)"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-          </details>
-
           <p class="text-center text-sm text-muted-foreground">
             没有账号？
             <RouterLink to="/register" class="font-medium text-primary hover:underline">立即注册</RouterLink>
           </p>
         </form>
 
-        <div v-else-if="activeTab === 'AUTH_CODE'" class="mt-4 space-y-4">
+        <div v-else-if="activeTab === 'AUTH_CODE' && authCodeDebugEnabled" class="mt-4 space-y-4">
           <p class="text-sm text-muted-foreground">
             标准 OAuth2 授权码流程：跳转授权页登录并确认 → 回调携带
             <code class="rounded bg-muted px-1 text-xs">code</code>
@@ -755,14 +802,33 @@ onUnmounted(() => {
             <code class="rounded bg-muted px-1 text-xs">grant_type=authorization_code</code>
             换取 Token。
           </p>
+          <div v-if="debugAuthAppPickerEnabled" class="rounded-md border bg-muted/20 p-3">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-medium">调试应用</p>
+                <p class="text-xs text-muted-foreground">选择应用后会带对应 Client ID 跳转认证中心</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" :disabled="authAppsLoading" @click="loadAuthApps">
+                {{ authAppsLoading ? '加载中…' : '刷新' }}
+              </Button>
+            </div>
+            <select
+              v-model="selectedAuthAppId"
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              :disabled="authAppsLoading || authAppOptions.length === 0"
+              @change="applySelectedAuthApp"
+            >
+              <option value="">手动填写 OAuth 客户端</option>
+              <option v-for="app in authAppOptions" :key="app.appId" :value="String(app.appId)">
+                {{ authAppLabel(app) }}
+              </option>
+            </select>
+            <p v-if="authAppError" class="mt-2 text-xs text-destructive">{{ authAppError }}</p>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div class="col-span-2 space-y-2">
               <Label>Client ID</Label>
               <Input v-model="clientId" data-testid="login-client-id" />
-            </div>
-            <div class="col-span-2 space-y-2">
-              <Label>Client Secret</Label>
-              <Input v-model="clientSecret" data-testid="login-client-secret" type="password" />
             </div>
             <div class="col-span-2 space-y-2">
               <Label>redirect_uri（须与应用中登记一致）</Label>
@@ -778,7 +844,7 @@ onUnmounted(() => {
             </div>
           </div>
           <Button type="button" class="w-full" @click="startOAuthCodeLogin">
-            1. 跳转 OAuth2 授权页（/oauth2/authorize）
+            1. 跳转认证中心授权页
           </Button>
           <details class="rounded-md border px-3 py-2 text-xs text-muted-foreground">
             <summary class="cursor-pointer font-medium">预览授权 URL</summary>
@@ -824,13 +890,6 @@ onUnmounted(() => {
           <Button type="button" class="w-full" variant="outline" :disabled="loading" @click="loadQrSession">
             刷新二维码
           </Button>
-          <details class="rounded-md border px-3 py-2 text-sm">
-            <summary class="cursor-pointer font-medium text-muted-foreground">OAuth2 客户端</summary>
-            <div class="mt-3 space-y-2">
-              <Label>Client ID</Label>
-              <Input v-model="clientId" />
-            </div>
-          </details>
           <div
             v-if="error"
             role="alert"
@@ -844,10 +903,6 @@ onUnmounted(() => {
           <p class="text-sm text-muted-foreground">
             使用已在 bootstrap 中配置的第三方 IdP（如 local），将回调中的 code 交给 Auth 服务映射为系统用户。
           </p>
-          <div class="space-y-2">
-            <Label>Client ID</Label>
-            <Input v-model="clientId" />
-          </div>
           <div class="relative py-2 text-center text-xs text-muted-foreground">
             <span class="bg-card px-2">第三方授权码</span>
           </div>

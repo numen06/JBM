@@ -123,7 +123,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 | 管理员 | `admin` |
 | 默认密码 | `Admin@123` |
 | 默认 Client ID | `demo` |
-| 默认 Client Secret | `demo123` |
+| 默认 Client Secret | 仅服务端调用或本地调试使用，浏览器登录不需要 |
 | 开发验证码 | `9999` |
 
 ## OpenAPI 接入流程
@@ -143,7 +143,7 @@ POST http://127.0.0.1:6060/oauth2/register
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo&client_secret=demo123
+userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo
 ```
 
 ```http
@@ -186,6 +186,7 @@ python scripts\run_api_key_flow_tests.py
 ## 文档入口
 
 - [项目架构](docs/项目架构.md)
+- [登录接入指南](docs/登录接入指南.md)
 - [Maven 构建与测试规范](docs/Maven构建与测试规范.md)
 - [应用-菜单-权限关系梳理](docs/应用-菜单-权限关系梳理.md)
 - [动态字段使用方案](docs/动态字段使用方案.md)

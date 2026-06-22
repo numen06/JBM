@@ -36,7 +36,6 @@ export const DEV_SMS_CODE = '99999'
 
 /** 种子应用（Auth 重启或 POST /internal/dev/reset-jaja7-seed 后与库一致） */
 export const JBM_SEED_CLIENT_ID = 'jbmSeedDevAppKey00000001'
-export const JBM_SEED_CLIENT_SECRET = 'jbmSeedDevSecret0000000001'
 export const JBM_SEED_PASSWORD = 'admin'
 
 /** jaja7 登录页默认：优先 .env；未配置时 demo 与当前库一致 */
@@ -49,10 +48,6 @@ export const JBM_DEFAULT_CLIENT_ID =
   runtimeConfig.oauthClientId?.trim() ||
   import.meta.env.VITE_OAUTH_CLIENT_ID?.trim() ||
   (import.meta.env.DEV ? 'demo' : JBM_SEED_CLIENT_ID)
-export const JBM_DEFAULT_CLIENT_SECRET =
-  runtimeConfig.oauthClientSecret?.trim() ||
-  import.meta.env.VITE_OAUTH_CLIENT_SECRET?.trim() ||
-  (import.meta.env.DEV ? 'demo123' : JBM_SEED_CLIENT_SECRET)
 export const JBM_DEFAULT_OAUTH_SCOPE = 'all'
 
 export interface LocalDevLoginAccount {
@@ -62,7 +57,6 @@ export interface LocalDevLoginAccount {
   username: string
   password: string
   clientId: string
-  clientSecret: string
   description: string
 }
 
@@ -78,7 +72,7 @@ function parseLocalDevLoginAccounts(raw: string | undefined): LocalDevLoginAccou
   return (raw ?? '')
     .split(';')
     .map((item, index) => {
-      const [label, role, username, password, clientId, clientSecret, description] = item
+      const [label, role, username, password, clientId, , description] = item
         .split('|')
         .map((part) => part.trim())
       if (!label || !username) return null
@@ -89,7 +83,6 @@ function parseLocalDevLoginAccounts(raw: string | undefined): LocalDevLoginAccou
         username,
         password: password || runtimeConfig.localDevPassword?.trim() || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD,
         clientId: clientId || JBM_DEFAULT_CLIENT_ID,
-        clientSecret: clientSecret || JBM_DEFAULT_CLIENT_SECRET,
         description: description || role || label,
       }
     })
@@ -110,7 +103,6 @@ export const LOCAL_DEV_LOGIN_ACCOUNTS: LocalDevLoginAccount[] =
           username: JBM_DEFAULT_USERNAME,
           password: LOCAL_DEV_SHARED_PASSWORD,
           clientId: JBM_DEFAULT_CLIENT_ID,
-          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
           description: '全量管理权限',
         },
         {
@@ -120,7 +112,6 @@ export const LOCAL_DEV_LOGIN_ACCOUNTS: LocalDevLoginAccount[] =
           username: 'demo',
           password: LOCAL_DEV_SHARED_PASSWORD,
           clientId: JBM_DEFAULT_CLIENT_ID,
-          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
           description: '字典与登录日志',
         },
         {
@@ -130,7 +121,6 @@ export const LOCAL_DEV_LOGIN_ACCOUNTS: LocalDevLoginAccount[] =
           username: 'viewer',
           password: LOCAL_DEV_SHARED_PASSWORD,
           clientId: JBM_DEFAULT_CLIENT_ID,
-          clientSecret: JBM_DEFAULT_CLIENT_SECRET,
           description: '用户查看与编辑',
         },
       ]

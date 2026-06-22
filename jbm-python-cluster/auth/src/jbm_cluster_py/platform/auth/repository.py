@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional
@@ -111,6 +112,41 @@ class AuthRepository:
                         "source": "base_api_key",
                     }
         return None
+
+    async def list_clients(self) -> list[dict[str, Any]]:
+        async with self.engine.connect() as conn:
+            if not await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table("base_app")):
+                return []
+            columns = {
+                col["name"]
+                for col in await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_columns("base_app"))
+            }
+            app_name_expr = "app_name" if "app_name" in columns else "NULL AS app_name"
+            code_expr = "code" if "code" in columns else "NULL AS code"
+            rows = (
+                await conn.execute(
+                    text(
+                        f"""
+                        SELECT app_id, api_key, {app_name_expr}, {code_expr}, app_type, status
+                        FROM base_app
+                        WHERE api_key IS NOT NULL AND api_key != '' AND (status IS NULL OR status = 1)
+                        ORDER BY app_id DESC
+                        LIMIT 200
+                        """
+                    )
+                )
+            ).mappings().all()
+        return [
+            {
+                "appId": _int_or_none(row.get("app_id")),
+                "appName": row.get("app_name") or row.get("code") or row.get("api_key"),
+                "code": row.get("code"),
+                "clientId": row.get("api_key"),
+                "appType": row.get("app_type"),
+                "status": _int_or_none(row.get("status")),
+            }
+            for row in rows
+        ]
 
     async def find_account(self, username: str, account_type: str, domain: str) -> Optional[dict[str, Any]]:
         async with self.engine.connect() as conn:
@@ -234,6 +270,83 @@ class AuthRepository:
             ).mappings().all()
             authorities.update(str(row["authority"]) for row in rows if row.get("authority"))
         return sorted(authorities)
+
+    async def create_user_account(
+        self,
+        username: str,
+        password_hash: str,
+        nick_name: str | None = None,
+        email: str | None = None,
+        mobile: str | None = None,
+        domain: str = "@admin.com",
+    ) -> dict[str, Any]:
+        account_type = infer_account_type(username)
+        existing = await self.find_account(username, account_type, domain)
+        if existing:
+            raise ValueError("账号已存在")
+        user_id = int(time.time() * 1000_000)
+        account_id = user_id + 1
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        async with self.engine.begin() as conn:
+            user_columns = {column["name"] for column in await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_columns("base_user"))}
+            account_columns = {
+                column["name"]
+                for column in await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_columns("base_account"))
+            }
+            user_values = {
+                "user_id": user_id,
+                "user_name": username,
+                "user_type": "normal",
+                "nick_name": nick_name or username,
+                "real_name": nick_name or username,
+                "avatar": None,
+                "email": email,
+                "mobile": mobile,
+                "status": 1,
+                "close_time": None,
+                "create_time": now,
+                "update_time": now,
+            }
+            user_values = {key: value for key, value in user_values.items() if key in user_columns}
+            await conn.execute(
+                text(
+                    "INSERT INTO base_user (%s) VALUES (%s)"
+                    % (
+                        ", ".join(user_values),
+                        ", ".join(":" + key for key in user_values),
+                    )
+                ),
+                user_values,
+            )
+            account_values = {
+                "account_id": account_id,
+                "user_id": user_id,
+                "account": username,
+                "password": password_hash,
+                "account_type": account_type,
+                "status": 1,
+                "domain": domain,
+                "must_change_password": 0,
+                "create_time": now,
+                "update_time": now,
+            }
+            account_values = {key: value for key, value in account_values.items() if key in account_columns}
+            await conn.execute(
+                text(
+                    "INSERT INTO base_account (%s) VALUES (%s)"
+                    % (
+                        ", ".join(account_values),
+                        ", ".join(":" + key for key in account_values),
+                    )
+                ),
+                account_values,
+            )
+        return {
+            "userId": user_id,
+            "accountId": account_id,
+            "userName": username,
+            "accountType": account_type,
+        }
 
 
 def infer_account_type(username: str) -> str:

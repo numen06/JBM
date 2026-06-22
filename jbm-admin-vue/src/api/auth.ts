@@ -1,6 +1,5 @@
 import {
   JBM_DEFAULT_CLIENT_ID,
-  JBM_DEFAULT_CLIENT_SECRET,
   JBM_DEFAULT_OAUTH_SCOPE,
 } from '@/constants/loginModes'
 import { encryptPasswordForClient } from '@/lib/rsaEncrypt'
@@ -22,7 +21,6 @@ export interface LoginParams {
 }
 
 const DEFAULT_CLIENT_ID = JBM_DEFAULT_CLIENT_ID
-const DEFAULT_CLIENT_SECRET = JBM_DEFAULT_CLIENT_SECRET
 
 const loginPlaintext =
   import.meta.env.VITE_LOGIN_PLAINTEXT === 'true' ||
@@ -43,12 +41,12 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
   const body = new URLSearchParams({
     grant_type: 'password',
     client_id: clientId,
-    client_secret: params.clientSecret ?? DEFAULT_CLIENT_SECRET,
     username: params.username,
     password,
     scope: params.scope ?? JBM_DEFAULT_OAUTH_SCOPE,
     loginType,
   })
+  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
   if (params.vcode?.trim()) {
     body.set('vcode', params.vcode.trim())
   }
@@ -68,15 +66,14 @@ export async function thirdPartyCallback(params: {
   redirectUri?: string
   state?: string
 }): Promise<OAuth2TokenResult> {
-  const res = await get<Record<string, unknown>>(`/oauth2/thirdparty/${params.provider}/callback`, {
-    params: {
-      code: params.code,
-      client_id: params.clientId ?? DEFAULT_CLIENT_ID,
-      client_secret: params.clientSecret ?? DEFAULT_CLIENT_SECRET,
-      redirect_uri: params.redirectUri,
-      state: params.state,
-    },
-  })
+  const query: Record<string, string | undefined> = {
+    code: params.code,
+    client_id: params.clientId ?? DEFAULT_CLIENT_ID,
+    redirect_uri: params.redirectUri,
+    state: params.state,
+  }
+  if (params.clientSecret?.trim()) query.client_secret = params.clientSecret.trim()
+  const res = await get<Record<string, unknown>>(`/oauth2/thirdparty/${params.provider}/callback`, { params: query })
   const raw = unwrap(res)
   return normalizeTokenPayload(raw)
 }
@@ -99,9 +96,9 @@ export async function exchangeAuthorizationCode(params: {
     grant_type: 'authorization_code',
     code: params.code,
     client_id: params.clientId ?? DEFAULT_CLIENT_ID,
-    client_secret: params.clientSecret ?? DEFAULT_CLIENT_SECRET,
     redirect_uri: params.redirectUri,
   })
+  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
   const res = await postForm<OAuth2TokenResult | Record<string, unknown>>('/oauth2/token', body)
   const raw = unwrap(res)
   if (raw && typeof raw === 'object' && 'access_token' in (raw as object)) {
@@ -130,14 +127,14 @@ export function normalizeTokenPayload(raw: Record<string, unknown>): OAuth2Token
 export async function refreshToken(
   refreshToken: string,
   clientId = DEFAULT_CLIENT_ID,
-  clientSecret = DEFAULT_CLIENT_SECRET,
+  clientSecret?: string,
 ): Promise<OAuth2TokenResult> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     client_id: clientId,
-    client_secret: clientSecret,
     refresh_token: refreshToken,
   })
+  if (clientSecret?.trim()) body.set('client_secret', clientSecret.trim())
   const res = await postForm<OAuth2TokenResult>('/oauth2/refresh', body)
   return unwrap(res)
 }
@@ -176,8 +173,8 @@ export async function register(params: RegisterParams): Promise<void> {
     password,
     vcode: params.vcode.trim(),
     client_id: clientId,
-    client_secret: params.clientSecret ?? DEFAULT_CLIENT_SECRET,
   })
+  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
   if (params.nickName?.trim()) body.set('nickName', params.nickName.trim())
   if (params.email?.trim()) body.set('email', params.email.trim())
   if (params.mobile?.trim()) body.set('mobile', params.mobile.trim())

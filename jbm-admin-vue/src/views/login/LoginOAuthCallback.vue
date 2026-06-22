@@ -48,7 +48,6 @@ onMounted(async () => {
           provider,
           code,
           clientId: auth.clientId,
-          clientSecret: auth.clientSecret,
           redirectUri,
           state: route.query.state as string | undefined,
         })
@@ -56,7 +55,6 @@ onMounted(async () => {
           code,
           redirectUri,
           clientId: auth.clientId,
-          clientSecret: auth.clientSecret,
         }).catch(() => exchangeAuthCode(code))
 
     sessionStorage.removeItem(OAUTH2_STATE_STORAGE_KEY)
