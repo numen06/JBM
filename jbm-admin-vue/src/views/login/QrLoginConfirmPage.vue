@@ -4,6 +4,7 @@ import { RefreshCw } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
 import { confirmQrLogin, markQrScanned } from '@/api/qrcode'
+import JbmLogo from '@/components/JbmLogo.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
@@ -192,12 +193,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-    <section class="w-full max-w-sm space-y-5">
-      <div class="space-y-2 text-center">
-        <h1 class="text-2xl font-semibold tracking-tight">扫码登录确认</h1>
+  <main class="flex min-h-screen items-center justify-center bg-muted/20 px-4 py-8">
+    <section class="w-full max-w-sm space-y-5 rounded-lg border bg-background px-5 py-6 shadow-sm">
+      <div class="space-y-4 text-center">
+        <div class="flex flex-col items-center gap-3">
+          <JbmLogo class="size-14 rounded-xl shadow-sm" alt="JBM" />
+          <div class="space-y-1">
+            <p class="text-sm font-medium text-muted-foreground">JBM 管理后台</p>
+            <h1 class="text-2xl font-semibold tracking-tight">认证中心</h1>
+          </div>
+        </div>
         <p class="text-sm text-muted-foreground">
-          {{ confirmed ? '电脑端正在完成登录' : scanned ? '请确认是否登录电脑端' : '正在读取二维码' }}
+          {{ confirmed ? '电脑端正在完成登录' : scanned ? '扫码登录确认' : '正在读取二维码' }}
         </p>
       </div>
 
