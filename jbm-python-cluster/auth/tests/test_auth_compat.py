@@ -481,6 +481,7 @@ def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:
         ).json()
         assert qr["success"] is True
         assert qr["result"]["image"].startswith("data:image/png;base64,")
+        assert qr["result"]["scanUrl"].startswith("http://admin.test/qr-login?")
         waiting = client.get("/qrcode/check", params={"code": qr["result"]["code"]}).json()
         assert waiting["success"] is False
         assert waiting["result"] == 0

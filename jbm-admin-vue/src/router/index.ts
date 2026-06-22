@@ -32,6 +32,12 @@ const router = createRouter({
       meta: { public: true, authRedirect: true },
     },
     {
+      path: '/qr-login',
+      name: 'qr-login-confirm',
+      component: () => import('@/views/login/QrLoginConfirmPage.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/register',
       name: 'register',
       component: () => import('@/views/register/RegisterPage.vue'),

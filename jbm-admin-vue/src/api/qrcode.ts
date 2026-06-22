@@ -1,4 +1,5 @@
 import { get, isOk, unwrap } from './request'
+import { post } from './request'
 import { normalizeTokenPayload } from './auth'
 import type { OAuth2TokenResult } from './types'
 
@@ -6,6 +7,7 @@ export interface QrLoginSession {
   image: string
   code: string
   state: string
+  scanUrl?: string
 }
 
 /** GET /qrcode/login */
@@ -53,4 +55,25 @@ export async function pollQrLogin(code: string): Promise<{
   }
   const state = typeof body.result === 'number' ? body.result : undefined
   return { done: false, confirmState: state, message: body.message ?? '等待扫码' }
+}
+
+export async function markQrScanned(code: string): Promise<number> {
+  const res = await get<number>('/qrcode/scanned', { params: { code } })
+  return unwrap(res)
+}
+
+export async function confirmQrLogin(code: string): Promise<{
+  code: string
+  redirectUri?: string
+  state?: string
+  location?: string
+}> {
+  const res = await post<Record<string, unknown>>('/qrcode/confirm', null, { params: { code } })
+  const raw = unwrap(res)
+  return {
+    code: String(raw.code || ''),
+    redirectUri: typeof raw.redirectUri === 'string' ? raw.redirectUri : undefined,
+    state: typeof raw.state === 'string' ? raw.state : undefined,
+    location: typeof raw.location === 'string' ? raw.location : undefined,
+  }
 }

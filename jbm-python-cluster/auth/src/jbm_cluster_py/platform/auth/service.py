@@ -544,10 +544,7 @@ class AuthService:
     async def create_qr_login(self, client_id: str, redirect_uri: str, width: int = 200, height: int = 200) -> dict[str, str]:
         code = secrets.token_urlsafe(24)
         state = secrets.token_urlsafe(12)
-        target = "%s?%s" % (
-            redirect_uri,
-            urlencode({"code": code, "state": state}),
-        )
+        target = _qr_scan_url(redirect_uri, code, state)
         await self.cache.set_json(
             "qr:%s" % code,
             {"clientId": client_id, "redirectUri": redirect_uri, "state": state, "confirmState": 0},
@@ -557,6 +554,7 @@ class AuthService:
             "image": _qr_svg_base64(target, max(int(width or 200), 120), max(int(height or 200), 120)),
             "code": code,
             "state": state,
+            "scanUrl": target,
         }
 
     async def qr_state(self, code: str) -> int | dict[str, Any]:
@@ -986,6 +984,14 @@ def _captcha_svg(code: str, width: int, height: int) -> str:
         '<g style="user-select:none">%s%s%s</g>'
         '</svg>'
     ) % (width, height, width, height, width - 1, height - 1, "".join(dots), "".join(curves), "".join(chars))
+
+
+def _qr_scan_url(redirect_uri: str, code: str, state: str) -> str:
+    params = urlencode({"code": code, "state": state})
+    parsed = urlparse(str(redirect_uri or ""))
+    if parsed.scheme and parsed.netloc:
+        return "%s://%s/qr-login?%s" % (parsed.scheme, parsed.netloc, params)
+    return "/qr-login?%s" % params
 
 
 def _qr_svg_base64(data: str, width: int, height: int) -> str:
