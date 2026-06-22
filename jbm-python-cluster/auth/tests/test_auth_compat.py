@@ -480,13 +480,13 @@ def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:
             params={"client_id": "JBM", "redirect_uri": "http://admin.test/login/callback", "width": 180, "height": 180},
         ).json()
         assert qr["success"] is True
-        assert qr["result"]["image"].startswith("data:image/svg+xml;base64,")
+        assert qr["result"]["image"].startswith("data:image/png;base64,")
         waiting = client.get("/qrcode/check", params={"code": qr["result"]["code"]}).json()
         assert waiting["success"] is False
         assert waiting["result"] == 0
 
 
-def test_qrcode_confirm_returns_login_token(tmp_path: Path) -> None:
+def test_qrcode_confirm_returns_authorization_code(tmp_path: Path) -> None:
     database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "auth-qr.db")
     import asyncio
 
@@ -526,11 +526,25 @@ def test_qrcode_confirm_returns_login_token(tmp_path: Path) -> None:
             headers={"Authorization": "Bearer " + access_token},
         ).json()
         assert confirmed["success"] is True
-        assert confirmed["result"]["access_token"] == access_token
+        assert confirmed["result"]["code"]
+        assert confirmed["result"]["redirectUri"] == "http://admin.test/login/callback"
 
         checked = client.get("/qrcode/check", params={"code": code}).json()
         assert checked["success"] is True
-        assert checked["result"]["access_token"] == access_token
+        assert checked["result"]["code"] == confirmed["result"]["code"]
+
+        exchanged = client.post(
+            "/oauth2/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "code": checked["result"]["code"],
+            },
+        ).json()
+        assert exchanged["success"] is True
+        assert exchanged["result"]["access_token"].count(".") == 2
+        assert exchanged["result"]["login_id"] == "normal:1000:2057849052900044802"
 
 
 def test_phone_code_is_sent_through_push_notification() -> None:

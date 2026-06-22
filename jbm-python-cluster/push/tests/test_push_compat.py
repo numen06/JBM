@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+import smtplib
 import time
 from pathlib import Path
 
@@ -8,7 +9,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from jbm_cluster_py.common.config import AppConfig
-from jbm_cluster_py.platform.push.main import create_app
+from jbm_cluster_py.platform.push.config_repository import PushConfigRepository
+from jbm_cluster_py.platform.push.main import _ensure_system_channel_configs, create_app
 from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
@@ -71,6 +73,203 @@ def test_push_config_crud_paths() -> None:
 
         email = client.post("/emailPushConfig/save", json={"entity": {"host": "smtp.local", "username": "demo"}})
         assert email.json()["result"]["host"] == "smtp.local"
+
+
+def test_external_notification_records_failed_status_without_channel_config() -> None:
+    with TestClient(create_app(push_config())) as client:
+        sent = client.post(
+            "/notification/send/email",
+            json={"recUserId": 1, "title": "mail", "content": "body"},
+        )
+        assert sent.json()["success"] is True
+
+        page = client.post("/pushMessage/pageList", json={"pushWay": "email", "pageForm": {"currPage": 1, "pageSize": 10}})
+        rows = page.json()["result"]["contents"]
+        assert rows[0]["title"] == "mail"
+        assert rows[0]["pushStatus"] == "fail"
+        assert rows[0]["extend"]["deliveryStatus"] == "failed"
+
+
+def test_email_notification_uses_smtp_channel_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent_messages = []
+    logins = []
+
+    class FakeSMTP:
+        def __init__(self, host: str, port: int, timeout: int) -> None:
+            self.host = host
+            self.port = port
+            self.timeout = timeout
+
+        def __enter__(self) -> "FakeSMTP":
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        def login(self, username: str, password: str) -> None:
+            logins.append((username, password))
+
+        def send_message(self, message) -> None:
+            sent_messages.append(message)
+
+    monkeypatch.setattr(smtplib, "SMTP_SSL", FakeSMTP)
+    config = AppConfig(
+        {
+            "server": {"host": "127.0.0.1", "port": 3313},
+            "spring": {
+                "application": {"name": "jbm-cluster-platform-push"},
+                "cloud": {"nacos": {"discovery": {"enabled": False}}},
+                "mail": {
+                    "host": "smtp.example.com",
+                    "username": "sender@example.com",
+                    "password": "mail-pass",
+                    "port": 465,
+                },
+            },
+            "integrations": {"telemetry": {"enabled": False}},
+        },
+        profile="test",
+        config_dir=None,
+        app="push",
+    )
+
+    with TestClient(create_app(config)) as client:
+        sent = client.post(
+            "/notification/send/email",
+            json={
+                "recUserId": 1,
+                "receiver": "receiver@example.com",
+                "title": "mail",
+                "content": "body",
+            },
+        )
+        assert sent.json()["success"] is True
+
+        page = client.post("/pushMessage/pageList", json={"pushWay": "email", "pageForm": {"currPage": 1, "pageSize": 10}})
+        rows = page.json()["result"]["contents"]
+
+    assert logins == [("sender@example.com", "mail-pass")]
+    assert len(sent_messages) == 1
+    assert sent_messages[0]["To"] == "receiver@example.com"
+    assert sent_messages[0]["Subject"] == "mail"
+    assert rows[0]["pushStatus"] == "issued"
+    assert rows[0]["extend"]["deliveryStatus"] == "sent"
+    assert rows[0]["extend"]["host"] == "smtp.example.com"
+
+
+def test_sms_notification_uses_jaja7_dry_run_channel() -> None:
+    service = PushService(push_config={"jaja7-dry-run": True})
+
+    asyncio.run(
+        service.handle_push_event(
+            {
+                "pushWay": "sms",
+                "recUserId": 1,
+                "title": "sms",
+                "content": "验证码",
+                "phoneNumber": "13585658904",
+                "templateCode": "SMS_236340338",
+                "params": {"code": "123456"},
+                "signName": "甲佳智能",
+            }
+        )
+    )
+
+    assert service.messages[0]["pushStatus"] == "issued"
+    assert service.messages[0]["extend"]["deliveryStatus"] == "dry-run"
+    assert service.messages[0]["extend"]["phoneNumber"] == "135****8904"
+    assert "123456" not in json.dumps(service.messages[0], ensure_ascii=False)
+
+
+def test_sms_sync_delivery_bypasses_rabbitmq_queue() -> None:
+    class FakeRabbitMQ:
+        enabled = True
+
+        def __init__(self) -> None:
+            self.published = []
+
+        async def publish_json(self, queue: str, payload: dict) -> None:
+            self.published.append((queue, payload))
+
+    rabbitmq = FakeRabbitMQ()
+    service = PushService(rabbitmq=rabbitmq, push_config={"jaja7-dry-run": True})
+
+    queued = asyncio.run(
+        service.publish_message(
+            {
+                "pushWay": "sms",
+                "recUserId": 1,
+                "title": "sms",
+                "content": "验证码",
+                "phoneNumber": "13585658904",
+                "templateCode": "SMS_236340338",
+                "params": {"code": "123456"},
+                "signName": "甲佳智能",
+            },
+            0,
+        )
+    )
+    assert queued["deliveryStatus"] == "queued"
+    assert len(rabbitmq.published) == 1
+
+    synced = asyncio.run(
+        service.publish_message(
+            {
+                "pushWay": "sms",
+                "recUserId": 1,
+                "title": "sms",
+                "content": "验证码",
+                "phoneNumber": "13585658904",
+                "templateCode": "SMS_236340338",
+                "params": {"code": "654321"},
+                "signName": "甲佳智能",
+                "syncDelivery": True,
+            },
+            0,
+        )
+    )
+    assert synced["deliveryStatus"] == "dry-run"
+    assert len(rabbitmq.published) == 1
+    assert service.messages[-1]["extend"]["deliveryStatus"] == "dry-run"
+
+
+@pytest.mark.asyncio
+async def test_nacos_style_system_channel_config_is_seeded_to_database(tmp_path: Path) -> None:
+    repo = PushConfigRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'push-configs.db'}"})
+    await repo.start()
+    app_config = AppConfig(
+        {
+            "aliyun": {
+                "sms": {
+                    "accessKeyId": "ak",
+                    "accessKeySecret": "secret",
+                    "signName": "甲佳智能",
+                }
+            },
+            "spring": {
+                "mail": {"host": "smtp.126.com", "username": "numen_smtp@126.com", "password": "mail-pass", "port": 465},
+                "mqtt": {"url": "tcp://mqtt:1883", "username": "mqttId", "password": "mqtt-pass"},
+            },
+            "jbm": {"push": {"jaja7-dry-run": True}},
+        },
+        profile="test",
+        config_dir=None,
+        app="push",
+    )
+
+    try:
+        await _ensure_system_channel_configs(repo, app_config)
+        push_rows = await repo.list_push_configs({})
+        email_rows = await repo.list_email_configs({})
+    finally:
+        await repo.stop()
+
+    by_type = {row["type"]: row for row in push_rows}
+    assert {2, 3, 6}.issubset(by_type)
+    sms_content = json.loads(by_type[3]["releaseContent"])
+    assert sms_content["accessKeyId"] == "ak"
+    assert sms_content["jaja7-dry-run"] is True
+    assert email_rows[0]["host"] == "smtp.126.com"
 
 
 def test_current_user_id_is_parsed_from_satoken_login_id() -> None:

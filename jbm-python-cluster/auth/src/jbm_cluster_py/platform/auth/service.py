@@ -11,7 +11,7 @@ import html
 import io
 import random
 import re
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlparse
 from typing import Any, Mapping, Optional
 
 import bcrypt
@@ -190,6 +190,15 @@ class AuthService:
         if not client:
             raise AuthError("客户端不存在", 401)
         token = await self._password_login_for_client(client, form)
+        return await self._authorization_redirect(client, redirect_uri, token, str(form.get("state") or "").strip())
+
+    async def _authorization_redirect(
+        self,
+        client: Mapping[str, Any],
+        redirect_uri: str,
+        token: Mapping[str, Any],
+        state: str = "",
+    ) -> str:
         code = secrets.token_urlsafe(32)
         await self.cache.set_json(
             "auth_code:" + _hash_token(code),
@@ -201,7 +210,6 @@ class AuthService:
             300,
         )
         params = {"code": code}
-        state = str(form.get("state") or "").strip()
         if state:
             params["state"] = state
         separator = "&" if "?" in redirect_uri else "?"
@@ -403,9 +411,9 @@ class AuthService:
             "token_endpoint": issuer + "/oauth2/token",
             "userinfo_endpoint": issuer + "/oauth2/userinfo",
             "end_session_endpoint": issuer + "/oauth2/logout",
-            "grant_types_supported": ["password", "client_credentials", "refresh_token"],
+            "grant_types_supported": ["authorization_code", "password", "client_credentials", "refresh_token"],
             "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
-            "response_types_supported": ["token"],
+            "response_types_supported": ["code", "token"],
             "subject_types_supported": ["public"],
             "id_token_signing_alg_values_supported": ["RS256"],
         }
@@ -473,6 +481,7 @@ class AuthService:
             "signName": self.sms_sign_name,
             "templateCode": self.sms_template_code,
             "showInMessageCenter": False,
+            "syncDelivery": True,
         }
         client = self.http_client
         close_client = False
@@ -494,6 +503,19 @@ class AuthService:
             raise AuthError("短信通知通道响应异常", 503) from exc
         if body.get("success") is False:
             raise AuthError(str(body.get("message") or "短信通知通道调用失败"), int(body.get("code") or 503))
+        result = body.get("result") if isinstance(body.get("result"), Mapping) else {}
+        deliveries = result.get("deliveries") if isinstance(result, Mapping) else None
+        if isinstance(deliveries, list) and deliveries:
+            first = deliveries[0] if isinstance(deliveries[0], Mapping) else {}
+            delivery_status = str(first.get("deliveryStatus") or "").lower()
+            if delivery_status != "sent":
+                message = str(first.get("errorMessage") or first.get("message") or delivery_status or "短信未真实发送")
+                raise AuthError("短信发送失败: %s" % message, 503)
+        elif isinstance(result, Mapping):
+            delivery_status = str(result.get("deliveryStatus") or "").lower()
+            if delivery_status and delivery_status != "sent":
+                message = str(result.get("errorMessage") or result.get("message") or delivery_status)
+                raise AuthError("短信发送失败: %s" % message, 503)
 
     async def _push_base_url(self) -> str:
         if self.sms_push_base_url:
@@ -559,6 +581,9 @@ class AuthService:
         if not cached:
             raise AuthError("二维码不存在或已过期", 404)
         if int(cached.get("confirmState") or 0) == 2:
+            code_response = cached.get("codeResponse")
+            if isinstance(code_response, Mapping):
+                return dict(code_response)
             token_response = cached.get("tokenResponse")
             if isinstance(token_response, Mapping):
                 return dict(token_response)
@@ -585,23 +610,38 @@ class AuthService:
         revoked = await self.cache.get_json("revoked:" + str(claims.get("jti") or ""))
         if revoked:
             raise AuthError("token已失效", 401)
-        now = int(time.time())
-        expires_in = max(int(claims.get("exp") or now) - now, 0)
-        token_response = {
-            "access_token": token,
-            "token_type": "Bearer",
-            "expires_in": expires_in,
-            "scope": claims.get("scope") or "all",
-            "login_id": claims.get("loginId"),
-            "user_id": claims.get("user_id"),
-            "roles": claims.get("roles") or [],
-            "permissions": claims.get("permissions") or [],
+        client = await self.repository.find_client(str(cached.get("clientId") or ""))
+        if not client:
+            raise AuthError("客户端无效", 401)
+        user_id = int(claims.get("user_id") or 0)
+        user = await self.repository.find_user(user_id)
+        if not user or not user_is_active(user):
+            raise AuthError("用户已被禁用", 403)
+        account = {
+            "account": claims.get("username") or user.get("user_name"),
+            "user_id": user_id,
+            "must_change_password": False,
         }
+        token_response = await self._issue_user_token(client, account, user, str(claims.get("scope") or "all"))
+        redirect_uri = str(cached.get("redirectUri") or "")
+        if not redirect_uri:
+            raise AuthError("redirect_uri不能为空", 400)
+        redirect_url = await self._authorization_redirect(
+            client,
+            redirect_uri,
+            token_response,
+            str(cached.get("state") or ""),
+        )
+        parsed_code = parse_qs(urlparse(redirect_url).query).get("code", [""])[0]
         cached["confirmState"] = 2
-        cached["token"] = token
-        cached["tokenResponse"] = token_response
+        cached["codeResponse"] = {
+            "code": parsed_code,
+            "redirectUri": redirect_uri,
+            "state": cached.get("state"),
+            "location": redirect_url,
+        }
         await self.cache.set_json("qr:%s" % str(code or ""), cached, 300)
-        return token_response
+        return dict(cached["codeResponse"])
 
     async def _require_client(self, form: Mapping[str, Any]) -> dict[str, Any]:
         client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
@@ -844,7 +884,7 @@ def _captcha_image_base64(code: str, width: int, height: int) -> str:
 
         width = max(int(width or 120), 80)
         height = max(int(height or 40), 32)
-        font_sizes = tuple(range(max(24, int(height * 0.7)), max(25, int(height * 0.78)) + 1))
+        font_sizes = tuple(range(max(20, int(height * 0.56)), max(21, int(height * 0.64)) + 1))
         captcha = ImageCaptcha(width=width, height=height, font_sizes=font_sizes)
         captcha.character_rotate = (-24, 24)
         captcha.character_warp_dx = (0.08, 0.18)
@@ -852,7 +892,7 @@ def _captcha_image_base64(code: str, width: int, height: int) -> str:
         captcha.word_offset_dx = 0.12
         captcha.word_space_probability = 1.0
         background = (248, 251, 255)
-        text_color = (12, 34, 72)
+        text_color = (56, 80, 118)
         image = captcha.create_captcha_image(
             code,
             color=(96, 176, 255),
@@ -867,7 +907,7 @@ def _captcha_image_base64(code: str, width: int, height: int) -> str:
             if delta <= 8:
                 recolored.append(pixel)
                 continue
-            strength = min(1.0, max(0.38, delta / 220))
+            strength = min(0.72, max(0.22, delta / 320))
             recolored.append(
                 tuple(
                     int(background[index] * (1 - strength) + text_color[index] * strength)
@@ -968,13 +1008,12 @@ def _captcha_svg(code: str, width: int, height: int) -> str:
 def _qr_svg_base64(data: str, width: int, height: int) -> str:
     try:
         import qrcode
-        import qrcode.image.svg
 
-        image = qrcode.make(data, image_factory=qrcode.image.svg.SvgImage)
+        image = qrcode.make(data)
+        image = image.resize((width, height))
         output = io.BytesIO()
-        image.save(output)
-        svg = output.getvalue().decode("utf-8")
-        svg = svg.replace("<svg ", '<svg width="%s" height="%s" ' % (width, height), 1)
+        image.save(output, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(output.getvalue()).decode("ascii")
     except Exception:
         escaped = html.escape(data)
         svg = (
@@ -983,4 +1022,4 @@ def _qr_svg_base64(data: str, width: int, height: int) -> str:
             '<text x="50%%" y="50%%" text-anchor="middle" dominant-baseline="middle" '
             'font-family="monospace" font-size="10">%s</text></svg>'
         ) % (width, height, escaped)
-    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+        return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")

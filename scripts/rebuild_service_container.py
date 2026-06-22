@@ -27,20 +27,69 @@ MODULES = {
     "jbm-cluster-platform-weixin": "jbm-cluster/jbm-cluster-platform/jbm-cluster-platform-weixin",
 }
 
-ALIASES = {
-    "center": "jbm-cluster-platform-center",
-    "auth": "jbm-cluster-platform-auth",
-    "doc": "jbm-cluster-platform-doc",
-    "gateway": "jbm-cluster-platform-gateway",
-    "logs": "jbm-cluster-platform-logs",
-    "push": "jbm-cluster-platform-push",
-    "bigscreen": "jbm-cluster-platform-bigscreen",
-    "job": "jbm-cluster-platform-job",
-    "weixin": "jbm-cluster-platform-weixin",
-    "admin": "jbm-admin",
+PYTHON_APPS = {
+    "jbm-python-cluster-auth": "auth",
+    "jbm-python-cluster-doc": "doc",
+    "jbm-python-cluster-gateway": "gateway",
+    "jbm-python-cluster-logs": "logs",
+    "jbm-python-cluster-push": "push",
+    "jbm-python-cluster-job": "job",
+    "jbm-python-cluster-bigscreen": "bigscreen",
 }
 
-KNOWN_SERVICES = sorted(set(MODULES) | {"jbm-admin"})
+PYTHON_RUNTIME_SERVICES = {
+    f"jbm-python-cluster-{app}": f"jbm-cluster-platform-{app}"
+    for app in PYTHON_APPS.values()
+}
+PYTHON_REPLACED_JAVA_SERVICES = set(PYTHON_RUNTIME_SERVICES.values())
+
+ALIASES = {
+    "center": "jbm-cluster-platform-center",
+    "auth": "jbm-python-cluster-auth",
+    "doc": "jbm-python-cluster-doc",
+    "gateway": "jbm-python-cluster-gateway",
+    "logs": "jbm-python-cluster-logs",
+    "push": "jbm-python-cluster-push",
+    "bigscreen": "jbm-python-cluster-bigscreen",
+    "job": "jbm-python-cluster-job",
+    "weixin": "jbm-cluster-platform-weixin",
+    "admin": "jbm-admin",
+    "java-auth": "jbm-cluster-platform-auth",
+    "java-doc": "jbm-cluster-platform-doc",
+    "java-gateway": "jbm-cluster-platform-gateway",
+    "java-logs": "jbm-cluster-platform-logs",
+    "java-push": "jbm-cluster-platform-push",
+    "java-bigscreen": "jbm-cluster-platform-bigscreen",
+    "java-job": "jbm-cluster-platform-job",
+    "py-auth": "jbm-python-cluster-auth",
+    "py-doc": "jbm-python-cluster-doc",
+    "py-gateway": "jbm-python-cluster-gateway",
+    "py-logs": "jbm-python-cluster-logs",
+    "py-push": "jbm-python-cluster-push",
+    "py-job": "jbm-python-cluster-job",
+    "py-bigscreen": "jbm-python-cluster-bigscreen",
+    "python-auth": "jbm-python-cluster-auth",
+    "python-doc": "jbm-python-cluster-doc",
+    "python-gateway": "jbm-python-cluster-gateway",
+    "python-logs": "jbm-python-cluster-logs",
+    "python-push": "jbm-python-cluster-push",
+    "python-job": "jbm-python-cluster-job",
+    "python-bigscreen": "jbm-python-cluster-bigscreen",
+}
+
+KNOWN_SERVICES = sorted(set(MODULES) | set(PYTHON_APPS) | {"jbm-admin"})
+DEFAULT_SERVICES = [
+    "jbm-cluster-platform-center",
+    "jbm-python-cluster-auth",
+    "jbm-python-cluster-doc",
+    "jbm-python-cluster-gateway",
+    "jbm-python-cluster-logs",
+    "jbm-python-cluster-push",
+    "jbm-python-cluster-bigscreen",
+    "jbm-python-cluster-job",
+    "jbm-cluster-platform-weixin",
+    "jbm-admin",
+]
 
 
 def run(cmd, cwd=ROOT_DIR, input_text=None, capture=False):
@@ -88,6 +137,10 @@ def compose_has_service(args, service):
     return service in set(compose_services(args))
 
 
+def runtime_service_for(service):
+    return PYTHON_RUNTIME_SERVICES.get(service, service)
+
+
 def package_backend(service):
     module = MODULES[service]
     print(f"==> Maven package: {service} ({module})", flush=True)
@@ -131,6 +184,26 @@ def build_backend_full_image(args, service):
     )
 
 
+def build_python_image(args, service):
+    image = image_for(service, args.image_prefix, args.image_tag)
+    app = PYTHON_APPS[service]
+    print(f"==> Docker python image: {image} (JBM_APP={app})", flush=True)
+    run(
+        [
+            "docker",
+            "build",
+            "--network=host",
+            "-f",
+            "allinone.Dockerfile",
+            "--target",
+            service,
+            "-t",
+            image,
+            ".",
+        ]
+    )
+
+
 def build_admin_overlay_image(args):
     image = image_for("jbm-admin", args.image_prefix, args.image_tag)
     dist = ROOT_DIR / "jbm-admin-vue" / "dist"
@@ -145,7 +218,7 @@ def build_admin_overlay_image(args):
     with tempfile.TemporaryDirectory(prefix="jbm-admin-") as tmp:
         tmp_path = Path(tmp)
         shutil.copytree(dist, tmp_path / "dist")
-        dockerfile = f"FROM {image}\nCOPY dist /usr/share/nginx/html\n"
+        dockerfile = f"FROM {image}\nRUN rm -rf /usr/share/nginx/html/*\nCOPY dist /usr/share/nginx/html\n"
         run(["docker", "build", "-t", image, "-f", "-", tmp_path], input_text=dockerfile)
 
 
@@ -169,14 +242,24 @@ def build_admin_image(args):
 
 
 def recreate_container(args, service):
-    if not compose_has_service(args, service):
-        print(f"==> Skip compose recreate: {service} is not in {args.compose_file}", flush=True)
+    if service in PYTHON_REPLACED_JAVA_SERVICES:
+        print(
+            f"==> Skip compose recreate: {service} is Java build-only; runtime defaults to Python",
+            flush=True,
+        )
         return
-    print(f"==> Compose recreate: {service}", flush=True)
-    run(compose_cmd(args) + ["up", "-d", "--no-deps", "--force-recreate", service], cwd=Path(args.compose_file).parent)
+    runtime_service = runtime_service_for(service)
+    if not compose_has_service(args, runtime_service):
+        print(f"==> Skip compose recreate: {runtime_service} is not in {args.compose_file}", flush=True)
+        return
+    print(f"==> Compose recreate: {runtime_service}", flush=True)
+    run(compose_cmd(args) + ["up", "-d", "--no-deps", "--force-recreate", runtime_service], cwd=Path(args.compose_file).parent)
 
 
 def show_status(args, service):
+    if service in PYTHON_REPLACED_JAVA_SERVICES:
+        return
+    service = runtime_service_for(service)
     print(f"==> Status: {service}", flush=True)
     try:
         run(compose_cmd(args) + ["ps", service], cwd=Path(args.compose_file).parent)
@@ -185,6 +268,9 @@ def show_status(args, service):
 
 
 def show_logs(args, service):
+    if service in PYTHON_REPLACED_JAVA_SERVICES:
+        return
+    service = runtime_service_for(service)
     if not compose_has_service(args, service):
         return
     print(f"==> Logs: {service}", flush=True)
@@ -205,6 +291,8 @@ def rebuild_one(args, service):
             build_admin_image(args)
         else:
             build_admin_overlay_image(args)
+    elif service in PYTHON_APPS:
+        build_python_image(args, service)
     elif args.mode == "full":
         build_backend_full_image(args, service)
     else:
@@ -249,8 +337,7 @@ def main():
 
     target = normalize_service(args.target)
     if target == "all":
-        services = [service for service in compose_services(args) if service in KNOWN_SERVICES]
-        for service in services:
+        for service in DEFAULT_SERVICES:
             rebuild_one(args, service)
         return
     rebuild_one(args, target)

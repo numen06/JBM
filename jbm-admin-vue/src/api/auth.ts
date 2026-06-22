@@ -3,7 +3,9 @@ import {
   JBM_DEFAULT_OAUTH_SCOPE,
 } from '@/constants/loginModes'
 import { encryptPasswordForClient } from '@/lib/rsaEncrypt'
+import { apiBaseUrl, runtimeConfig } from '@/runtimeConfig'
 import { get, post, postForm, unwrap } from './request'
+import type { ResultBody } from './types'
 import type { OAuth2TokenResult } from './types'
 
 export const PASSWORD_ENCRYPTED_HEADER = 'X-Password-Encrypted'
@@ -18,6 +20,7 @@ export interface LoginParams {
   clientId?: string
   clientSecret?: string
   scope?: string
+  redirectUri?: string
 }
 
 const DEFAULT_CLIENT_ID = JBM_DEFAULT_CLIENT_ID
@@ -39,8 +42,10 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
     ? await encryptPasswordForClient(params.password, clientId)
     : params.password
   const body = new URLSearchParams({
-    grant_type: 'password',
+    response_type: 'code',
     client_id: clientId,
+    redirect_uri: params.redirectUri ?? defaultLoginRedirectUri(),
+    state: crypto.randomUUID?.() ?? `state_${Date.now()}`,
     username: params.username,
     password,
     scope: params.scope ?? JBM_DEFAULT_OAUTH_SCOPE,
@@ -54,8 +59,53 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
   if (shouldEncryptPassword(loginType)) {
     headers[PASSWORD_ENCRYPTED_HEADER] = 'true'
   }
-  const res = await postForm<OAuth2TokenResult>('/oauth2/token', body, { headers })
-  return unwrap(res)
+  const loginResult = await postAuthCenterForm<string>('/oauth2/doLogin', body, headers)
+  const callbackUrl = unwrap(loginResult)
+  const parsed = new URL(callbackUrl, window.location.origin)
+  const returnedState = parsed.searchParams.get('state')
+  if (returnedState && returnedState !== body.get('state')) {
+    throw new Error('state 校验失败，请重新登录')
+  }
+  const code = parsed.searchParams.get('code')
+  if (!code) {
+    throw new Error('授权码缺失，请重新登录')
+  }
+  return exchangeAuthorizationCode({
+    code,
+    redirectUri: body.get('redirect_uri') || defaultLoginRedirectUri(),
+    clientId,
+  })
+}
+
+function defaultLoginRedirectUri(): string {
+  if (typeof window === 'undefined') return '/login/callback'
+  return `${window.location.origin}/login/callback`
+}
+
+function authCenterUrl(pathWithQuery: string) {
+  const configuredAuthorizeBase = runtimeConfig.oauthAuthorizeBaseUrl?.trim()
+  if (configuredAuthorizeBase) {
+    return `${configuredAuthorizeBase.replace(/\/+$/, '')}${pathWithQuery}`
+  }
+  const base = apiBaseUrl.replace(/\/+$/, '')
+  if (base) return `${base}/auth${pathWithQuery}`
+  return `/auth${pathWithQuery}`
+}
+
+async function postAuthCenterForm<T>(
+  path: string,
+  body: URLSearchParams,
+  headers: Record<string, string>,
+): Promise<ResultBody<T>> {
+  const res = await fetch(authCenterUrl(path), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      ...headers,
+    },
+    body,
+  })
+  return (await res.json()) as ResultBody<T>
 }
 
 export async function thirdPartyCallback(params: {

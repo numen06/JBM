@@ -16,7 +16,7 @@ export interface LoginTabMeta {
 }
 
 export const LOGIN_TABS: LoginTabMeta[] = [
-  { id: 'PASSWORD', label: '密码', description: '用户名 + 密码 + 图形验证码（OAuth2 密码模式 grant_type=password）' },
+  { id: 'PASSWORD', label: '密码', description: '用户名 + 密码 + 图形验证码（授权码换 Token）' },
   {
     id: 'AUTH_CODE',
     label: '授权码',

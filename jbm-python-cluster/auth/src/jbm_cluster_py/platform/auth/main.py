@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Optional
 
 import uvicorn
+import httpx
 from fastapi import FastAPI
 
 from jbm_cluster_py.common.banner import print_jbm_banner
@@ -11,7 +12,7 @@ from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
 from jbm_cluster_py.common.logging import configure_logging
-from jbm_cluster_py.integrations.nacos import NacosRegistrar
+from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient, NacosRegistrar
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.auth.repository import AuthRepository
@@ -27,7 +28,9 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     repository = AuthRepository(app_config.database)
     auth_config = dict(app_config.get("jbm.auth", {}) or {})
     cache = TokenCache(RedisClient(app_config.redis), str(auth_config.get("cache-prefix") or "jbm:auth"))
-    auth_service = AuthService(repository, cache, auth_config)
+    discovery = NacosDiscoveryClient(app_config.nacos_discovery)
+    http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
+    auth_service = AuthService(repository, cache, auth_config, discovery=discovery, http_client=http_client)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
@@ -35,14 +38,19 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app.state.config = app_config
         app.state.repository = repository
         app.state.auth_service = auth_service
+        app.state.discovery = discovery
+        app.state.http_client = http_client
         app.state.nacos = nacos
         await repository.start()
         await cache.start()
+        await discovery.start()
         await nacos.start()
         try:
             yield
         finally:
             await nacos.stop()
+            await discovery.stop()
+            await http_client.aclose()
             await cache.stop()
             await repository.stop()
 

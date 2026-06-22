@@ -20,7 +20,7 @@ export const docSections: DocSection[] = [
   { id: 'create-app', title: '2. 创建子应用', group: '入门' },
   { id: 'choose-mode', title: '3. 选择接入方式', group: '入门' },
   { id: 'oauth2-auth-code', title: '授权码模式', group: 'OAuth2' },
-  { id: 'oauth2-password', title: '密码模式', group: 'OAuth2' },
+  { id: 'oauth2-login-code', title: '登录授权码', group: 'OAuth2' },
   { id: 'oauth2-refresh', title: '刷新 Token', group: 'OAuth2' },
   { id: 'openapi-api-key', title: 'API Key 与签名', group: 'OpenAPI' },
   { id: 'openapi-isolation', title: '租户与数据隔离', group: 'OpenAPI' },
@@ -55,19 +55,17 @@ export const authEndpoints: ApiEndpoint[] = [
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo&client_secret=demo123`,
+userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo`,
     response: `{ "success": true, "code": 200, "message": "操作成功" }`,
   },
   {
     method: 'POST',
     path: '/oauth2/token',
-    desc: '获取 Access Token，支持 password、authorization_code、client_credentials 等模式。',
+    desc: '获取 Access Token，用户登录使用 authorization_code，服务端调用使用 client_credentials。',
     params: [
-      { name: 'grant_type', type: 'string', required: true, desc: 'password | authorization_code | client_credentials' },
+      { name: 'grant_type', type: 'string', required: true, desc: 'authorization_code | refresh_token | client_credentials' },
       { name: 'client_id', type: 'string', required: true, desc: '应用 Client ID' },
-      { name: 'client_secret', type: 'string', required: true, desc: '应用 Client Secret' },
-      { name: 'username', type: 'string', desc: '密码模式用户名' },
-      { name: 'password', type: 'string', desc: '密码模式 RSA 加密密码' },
+      { name: 'client_secret', type: 'string', desc: '服务端应用或 client_credentials 使用，浏览器不传' },
       { name: 'code', type: 'string', desc: '授权码模式 code' },
       { name: 'redirect_uri', type: 'string', desc: '授权码模式回调地址' },
     ],
@@ -75,7 +73,7 @@ userName=developer&password=<RSA_ENCRYPTED>&vcode=9999&client_id=demo&client_sec
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-grant_type=password&client_id=demo&client_secret=demo123&username=admin&password=<RSA>&scope=all&loginType=PASSWORD&vcode=9999`,
+grant_type=authorization_code&client_id=demo&code=AUTH_CODE&redirect_uri=https://app.example.com/login/callback`,
     response: `{
   "access_token": "eyJ...",
   "refresh_token": "eyJ...",

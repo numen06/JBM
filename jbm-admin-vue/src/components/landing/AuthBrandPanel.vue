@@ -45,7 +45,7 @@ defineProps<{
       </div>
       <div class="space-y-3">
         <p><span class="text-emerald-300">1.</span> POST /oauth2/register</p>
-        <p><span class="text-sky-300">2.</span> POST /oauth2/token grant_type=password</p>
+        <p><span class="text-sky-300">2.</span> POST /oauth2/doLogin → code</p>
         <p><span class="text-amber-300">3.</span> PUT /apikey/{{ '{id}' }}/authority</p>
         <p><span class="text-violet-300">4.</span> GET /api/open/** + X-JBM-Signature</p>
       </div>

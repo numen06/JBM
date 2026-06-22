@@ -28,7 +28,7 @@ JBM（Java Business Model）是一个面向中大型项目的分布式微服务�
 ## 新功能亮点
 
 - **开源社区平台首页**：新增公开首页、注册入口、登录入口和 OpenAPI Wiki，用户不登录也能了解平台能力。
-- **注册登录全流程**：从注册账号、RSA 加密密码传输、OAuth2 密码模式登录，到进入管理控制台完成闭环。
+- **注册登录全流程**：从注册账号、RSA 加密密码传输、OAuth2 授权码换 Token，到进入管理控制台完成闭环。
 - **JBM OpenAPI Wiki**：提供注册、登录、创建子应用、申请 API Key、授权 API、签名调用和租户隔离说明。
 - **子应用接入**：为业务系统发放 OAuth2 Client，统一管理 `client_id`、`client_secret`、回调地址和 Scope。
 - **API Key 授权访问**：支持个人 API Key、应用 API Key、client_token、签名调用和越权拒绝。

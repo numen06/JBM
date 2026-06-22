@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -19,6 +19,7 @@ from jbm_cluster_py.platform.push.business_events import (
     WebhookDeliveryConsumer,
     WebhookHttpClient,
 )
+from jbm_cluster_py.platform.push.config_repository import PushConfigRepository
 from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
 from jbm_cluster_py.platform.push.router import build_push_router
 from jbm_cluster_py.platform.push.service import PushService
@@ -31,8 +32,18 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     print_jbm_banner()
     init_telemetry(app_config.telemetry)
     rabbitmq = RabbitMQClient(app_config.rabbitmq)
-    message_repository = PushMessageRepository(app_config.database)
-    push_service = PushService(rabbitmq, app_config.rabbitmq, message_repository)
+    database_config = app_config.database
+    message_repository = PushMessageRepository(database_config) if database_config else None
+    config_repository = PushConfigRepository(database_config) if database_config else None
+    push_service = PushService(
+        rabbitmq,
+        app_config.rabbitmq,
+        message_repository,
+        config_repository,
+        sms_config=app_config.get("aliyun.sms", {}) or {},
+        email_config=app_config.get("spring.mail", {}) or {},
+        push_config=app_config.get("jbm.push", {}) or {},
+    )
     repository = BusinessEventRepository(app_config.database)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     http_client = WebhookHttpClient(discovery)
@@ -53,11 +64,16 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app.state.config = app_config
         app.state.push_service = push_service
         app.state.message_repository = message_repository
+        app.state.config_repository = config_repository
         app.state.business_event_service = business_event_service
         app.state.push_worker = push_worker
         app.state.nacos = nacos
         await nacos.start()
-        await message_repository.start()
+        if message_repository is not None:
+            await message_repository.start()
+        if config_repository is not None:
+            await config_repository.start()
+            await _ensure_system_channel_configs(config_repository, app_config)
         if rabbitmq.enabled:
             await rabbitmq.start()
             await push_worker.start()
@@ -71,7 +87,10 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             yield
         finally:
             await business_event_service.stop()
-            await message_repository.stop()
+            if config_repository is not None:
+                await config_repository.stop()
+            if message_repository is not None:
+                await message_repository.stop()
             if rabbitmq.enabled:
                 await rabbitmq.stop()
             await nacos.stop()
@@ -102,3 +121,34 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
+
+
+async def _ensure_system_channel_configs(config_repository: PushConfigRepository, app_config: AppConfig) -> None:
+    sms_config = _compact_mapping(app_config.get("aliyun.sms", {}) or {})
+    if sms_config:
+        push_config = dict(app_config.get("jbm.push", {}) or {})
+        if "jaja7-dry-run" in push_config:
+            sms_config["jaja7-dry-run"] = push_config["jaja7-dry-run"]
+        elif "jaja7DryRun" in push_config:
+            sms_config["jaja7DryRun"] = push_config["jaja7DryRun"]
+        await config_repository.ensure_default_push_config(3, sms_config, True)
+
+    mail_config = _compact_mapping(app_config.get("spring.mail", {}) or {})
+    if mail_config:
+        await config_repository.ensure_default_push_config(2, mail_config, True)
+        await config_repository.ensure_default_email_config(
+            {
+                "host": mail_config.get("host"),
+                "username": mail_config.get("username"),
+                "password": mail_config.get("password"),
+                "port": mail_config.get("port"),
+            }
+        )
+
+    mqtt_config = _compact_mapping(app_config.get("spring.mqtt", {}) or {})
+    if mqtt_config:
+        await config_repository.ensure_default_push_config(6, mqtt_config, True)
+
+
+def _compact_mapping(value: Mapping[str, Any]) -> dict[str, Any]:
+    return {key: item for key, item in dict(value).items() if item not in (None, "")}

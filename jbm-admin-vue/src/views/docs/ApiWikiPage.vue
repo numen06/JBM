@@ -205,7 +205,7 @@ watch(
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-userName=mydev&amp;password=&lt;RSA_ENCRYPTED&gt;&amp;vcode=9999&amp;client_id=demo&amp;client_secret=demo123</code></pre>
+userName=mydev&amp;password=&lt;RSA_ENCRYPTED&gt;&amp;vcode=9999&amp;client_id=demo</code></pre>
         </section>
 
         <section id="create-app" class="scroll-mt-24 border-b py-12">
@@ -256,14 +256,14 @@ userName=mydev&amp;password=&lt;RSA_ENCRYPTED&gt;&amp;vcode=9999&amp;client_id=d
           <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>{{ gatewayBase }}/oauth2/authorize?response_type=code&amp;client_id=YOUR_CLIENT_ID&amp;redirect_uri=YOUR_CALLBACK&amp;scope=all&amp;state=RANDOM_STATE</code></pre>
         </section>
 
-        <section id="oauth2-password" class="scroll-mt-24 border-b py-12">
-          <h2 class="text-2xl font-bold">OAuth2 密码模式</h2>
-          <p class="mt-3 text-muted-foreground">适用于 JBM 管理后台等第一方应用，密码经 RSA 加密传输。</p>
-          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>POST {{ gatewayBase }}/oauth2/token
+        <section id="oauth2-login-code" class="scroll-mt-24 border-b py-12">
+          <h2 class="text-2xl font-bold">登录授权码</h2>
+          <p class="mt-3 text-muted-foreground">第一方应用登录先获取一次性 code，再使用 authorization_code 换取 Token。</p>
+          <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>POST {{ gatewayBase }}/oauth2/doLogin
 Content-Type: application/x-www-form-urlencoded
 X-Password-Encrypted: true
 
-grant_type=password&amp;client_id=demo&amp;client_secret=demo123&amp;username=admin&amp;password=&lt;RSA&gt;&amp;scope=all&amp;loginType=PASSWORD&amp;vcode=9999</code></pre>
+response_type=code&amp;client_id=demo&amp;redirect_uri=YOUR_CALLBACK&amp;state=RANDOM_STATE&amp;username=admin&amp;password=&lt;RSA&gt;&amp;scope=all&amp;loginType=PASSWORD&amp;vcode=9999</code></pre>
         </section>
 
         <section id="oauth2-refresh" class="scroll-mt-24 border-b py-12">
@@ -271,7 +271,7 @@ grant_type=password&amp;client_id=demo&amp;client_secret=demo123&amp;username=ad
           <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-slate-50"><code>POST {{ gatewayBase }}/oauth2/refresh
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=refresh_token&amp;client_id=demo&amp;client_secret=demo123&amp;refresh_token=YOUR_REFRESH_TOKEN</code></pre>
+grant_type=refresh_token&amp;client_id=demo&amp;refresh_token=YOUR_REFRESH_TOKEN</code></pre>
         </section>
 
         <section id="openapi-api-key" class="scroll-mt-24 border-b py-12">

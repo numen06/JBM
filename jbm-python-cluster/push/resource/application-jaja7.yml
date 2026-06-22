@@ -15,4 +15,8 @@ spring:
         server-addr: 10.100.10.62:8848
         namespace: jbm7
         group: DEFAULT_GROUP
-        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties
+        shared-dataids: common.properties,db.properties,redis.properties,rabbitmq.properties,mqtt.properties,sms.properties,mail.properties
+
+jbm:
+  push:
+    jaja7-dry-run: true

@@ -31,12 +31,22 @@ export async function pollQrLogin(code: string): Promise<{
   done: boolean
   confirmState?: number
   token?: OAuth2TokenResult
+  code?: string
+  redirectUri?: string
   message?: string
 }> {
   const body = await get<unknown>('/qrcode/check', { params: { code } })
   if (isOk(body)) {
     const data = body.result
     if (data && typeof data === 'object') {
+      const raw = data as Record<string, unknown>
+      if (typeof raw.code === 'string') {
+        return {
+          done: true,
+          code: raw.code,
+          redirectUri: typeof raw.redirectUri === 'string' ? raw.redirectUri : undefined,
+        }
+      }
       return { done: true, token: normalizeTokenPayload(data as Record<string, unknown>) }
     }
     return { done: false, confirmState: typeof data === 'number' ? data : undefined }

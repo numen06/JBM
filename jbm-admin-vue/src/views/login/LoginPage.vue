@@ -48,6 +48,15 @@ const visibleLoginTabs = computed(() =>
 )
 const activeMeta = computed(() => visibleLoginTabs.value.find((t) => t.id === activeTab.value) ?? visibleLoginTabs.value[0])
 
+function selectLoginTab(tab: LoginTabId) {
+  if (activeTab.value === tab) {
+    if (tab === 'SCAN') loadQrSession()
+    if (tab === 'PASSWORD' || tab === 'SMS') loadCaptcha()
+    return
+  }
+  activeTab.value = tab
+}
+
 const username = ref(JBM_DEFAULT_USERNAME)
 const password = ref(JBM_DEFAULT_PASSWORD)
 const vcode = ref(useDevLoginDefaults ? DEV_CAPTCHA_CODE : '')
@@ -64,6 +73,7 @@ const clientId = ref(JBM_DEFAULT_CLIENT_ID)
 
 const loading = ref(false)
 const error = ref('')
+const notice = ref('')
 const captchaSrc = ref('')
 const captchaLoading = ref(false)
 const smsSending = ref(false)
@@ -138,6 +148,7 @@ function stopQrPoll() {
 async function loadQrSession() {
   stopQrPoll()
   error.value = ''
+  notice.value = ''
   qrImage.value = ''
   const redirectUri = `${window.location.origin}/login/callback`
   try {
@@ -163,7 +174,15 @@ function startQrPoll() {
   qrTimer = setInterval(async () => {
     try {
       const r = await pollQrLogin(qrCode.value)
-      if (r.done && r.token) {
+      if (r.done && r.code) {
+        stopQrPoll()
+        const token = await exchangeAuthorizationCode({
+          code: r.code,
+          redirectUri: r.redirectUri || `${window.location.origin}/login/callback`,
+          clientId: clientId.value,
+        })
+        await finishLogin(() => auth.loginWithToken(token))
+      } else if (r.done && r.token) {
         stopQrPoll()
         await finishLogin(() => auth.loginWithToken(r.token!))
       }
@@ -175,6 +194,7 @@ function startQrPoll() {
 
 async function sendSms() {
   error.value = ''
+  notice.value = ''
   if (!phone.value.trim()) {
     error.value = '请输入手机号'
     return
@@ -186,6 +206,7 @@ async function sendSms() {
   smsSending.value = true
   try {
     await sendSmsCode(phone.value.trim(), vcode.value.trim())
+    notice.value = '短信验证码已发送'
     smsCooldown.value = 60
     smsTimer = setInterval(() => {
       smsCooldown.value -= 1
@@ -478,6 +499,7 @@ async function onAuthCodeExchange() {
 
 watch(activeTab, (tab) => {
   error.value = ''
+  notice.value = ''
   if (tab === 'PASSWORD' || tab === 'SMS') {
     loadCaptcha()
   }
@@ -589,7 +611,7 @@ onUnmounted(() => {
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             "
-            @click="activeTab = tab.id"
+            @click="selectLoginTab(tab.id)"
           >
             {{ tab.label }}
           </button>
@@ -768,6 +790,13 @@ onUnmounted(() => {
             class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {{ error }}
+          </div>
+          <div
+            v-if="notice"
+            role="status"
+            class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700"
+          >
+            {{ notice }}
           </div>
 
           <Button type="submit" class="w-full" :disabled="loading || (captchaLoading && activeTab === 'PASSWORD')">

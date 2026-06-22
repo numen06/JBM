@@ -133,41 +133,41 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
 
     @router.post("/pushConfigInfo/pageList")
     async def push_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.list_configs(service.push_configs, body), "查询分页列表成功")
+        return ok(await service.list_push_configs(body), "查询分页列表成功")
 
     @router.post("/pushConfigInfo/list")
     async def push_config_list(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.list_configs(service.push_configs, body)["contents"], "查询列表成功")
+        return ok(await service.list_push_config_rows(body), "查询列表成功")
 
     @router.post("/pushConfigInfo/save")
     async def push_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.save_config(service.push_configs, body or {}), "保存对象成功")
+        return ok(await service.save_push_config(body or {}), "保存对象成功")
 
     @router.post("/pushConfigInfo/deleteByIds")
     async def push_config_delete(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.delete_configs(service.push_configs, _ids(body)), "批量成功删除")
+        return ok(await service.delete_push_configs(_ids(body)), "批量成功删除")
 
     @router.post("/emailPushConfig/pageList")
     async def email_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.list_configs(service.email_configs, body), "查询分页列表成功")
+        return ok(await service.list_email_configs(body), "查询分页列表成功")
 
     @router.post("/emailPushConfig/list")
     async def email_config_list(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.list_configs(service.email_configs, body)["contents"], "查询列表成功")
+        return ok(await service.list_email_config_rows(body), "查询列表成功")
 
     @router.post("/emailPushConfig/model")
     async def email_config_model(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        rows = service.list_configs(service.email_configs, body)["contents"]
+        rows = await service.list_email_config_rows(body)
         return ok(rows[0] if rows else None, "查询对象成功")
 
     @router.post("/emailPushConfig/save")
     async def email_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         entity = (body or {}).get("entity") or body or {}
-        return ok(service.save_config(service.email_configs, entity), "保存对象成功")
+        return ok(await service.save_email_config(entity), "保存对象成功")
 
     @router.post("/emailPushConfig/deleteByIds")
     async def email_config_delete(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(service.delete_configs(service.email_configs, _ids(body)), "批量成功删除")
+        return ok(await service.delete_email_configs(_ids(body)), "批量成功删除")
 
     @router.post("/notification/send/sms")
     async def notification_send_sms(
@@ -176,7 +176,7 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "sms")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
 
     @router.post("/notification/send/email")
     async def notification_send_email(
@@ -185,7 +185,7 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "email")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
 
     @router.post("/notification/send/mqtt")
     async def notification_send_mqtt(
@@ -194,7 +194,34 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "mqtt")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "发送通知成功")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+
+    @router.post("/notification/send/wechat")
+    async def notification_send_wechat(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "wechat")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+
+    @router.post("/notification/send/miniapp")
+    async def notification_send_miniapp(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "miniapp")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+
+    @router.post("/notification/send/app")
+    async def notification_send_app(
+        body: Optional[Dict[str, Any]] = Body(default=None),
+        authorization: Optional[str] = Header(default=None),
+    ) -> Dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pushWay", "app")
+        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
 
     @router.post("/webhookTask/businessEventListener")
     async def business_event_listener(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:

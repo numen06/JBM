@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import base64
 import asyncio
+import hashlib
+import hmac
 import json
 import logging
+import smtplib
 import time
 import uuid
 from datetime import datetime, timezone
+from email.message import EmailMessage
 from typing import Any, Dict, Iterable, List, Mapping, Optional
+from urllib.parse import quote
 
+import httpx
 from jbm_cluster_py.common.masterdata import model_dump_compat
 from jbm_cluster_py.common.result import page_result
 from jbm_cluster_py.platform.push.push_events import PushMessageEvent
@@ -58,10 +64,18 @@ class PushService:
         rabbitmq: Any = None,
         rabbitmq_config: Optional[Mapping[str, Any]] = None,
         message_repository: Optional[PushMessageRepository] = None,
+        config_repository: Any = None,
+        sms_config: Optional[Mapping[str, Any]] = None,
+        email_config: Optional[Mapping[str, Any]] = None,
+        push_config: Optional[Mapping[str, Any]] = None,
     ) -> None:
         self.rabbitmq = rabbitmq
         self.rabbitmq_config = dict(rabbitmq_config or {})
         self.message_repository = message_repository
+        self.config_repository = config_repository
+        self.sms_config = dict(sms_config or {})
+        self.email_config = dict(email_config or {})
+        self.push_config = dict(push_config or {})
         self.messages: List[Dict[str, Any]] = []
         self.tasks: Dict[str, Dict[str, Any]] = {}
         self.push_configs: List[Dict[str, Any]] = []
@@ -166,31 +180,54 @@ class PushService:
 
     async def publish_message(self, request: Dict[str, Any], current_user_id: int) -> Dict[str, Any]:
         users = self._resolve_users(request, current_user_id)
+        sync_delivery = bool(request.get("syncDelivery") or request.get("sync_delivery"))
         sent = 0
+        deliveries: list[Dict[str, Any]] = []
         for rec_user_id in users:
             event = self._build_event(request, rec_user_id, current_user_id)
-            await self._publish_or_deliver(event)
+            delivery = await self._publish_or_deliver(event, sync_delivery)
+            if delivery:
+                deliveries.append(delivery)
             sent += 1
-        return {"sent": sent}
+        result: Dict[str, Any] = {"sent": sent}
+        if deliveries:
+            result["deliveries"] = deliveries
+            result["deliveryStatus"] = deliveries[0].get("deliveryStatus")
+        return result
 
-    async def _publish_or_deliver(self, event: Dict[str, Any]) -> None:
-        if self._rabbitmq_ready():
+    async def _publish_or_deliver(self, event: Dict[str, Any], sync_delivery: bool = False) -> Optional[Dict[str, Any]]:
+        if self._rabbitmq_ready() and not sync_delivery:
             await self.rabbitmq.publish_json(self.push_queue_name(), event)
-            return
-        await self.handle_push_event(event)
+            return {"deliveryStatus": "queued", "message": "rabbitmq queued"}
+        return await self.handle_push_event(event)
 
-    async def handle_push_event(self, payload: Mapping[str, Any]) -> None:
+    async def handle_push_event(self, payload: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
         push_way = str(payload.get("pushWay") or payload.get("push_way") or "internal").lower()
         if push_way == "internal":
             await self._deliver_websocket(payload)
+            return {"deliveryStatus": "sent", "deliveryChannel": "internal"}
         elif push_way == "sms":
-            await self._deliver_sms(payload)
+            return await self._deliver_sms(payload)
         elif push_way == "email":
             await self._deliver_email(payload)
+            return {"deliveryStatus": "sent", "deliveryChannel": "email"}
         elif push_way == "mqtt":
             await self._deliver_mqtt(payload)
+            return {"deliveryStatus": "sent", "deliveryChannel": "mqtt"}
+        elif push_way in {"wechat", "miniapp", "app"}:
+            await self._record_external_delivery(
+                payload,
+                push_way,
+                error_message="%s真实发送器未接入" % push_way,
+            )
+            return {
+                "deliveryStatus": "failed",
+                "deliveryChannel": push_way,
+                "errorMessage": "%s真实发送器未接入" % push_way,
+            }
         else:
             logger.warning("Unknown pushWay: %s", push_way)
+            return {"deliveryStatus": "failed", "deliveryChannel": push_way, "errorMessage": "Unknown pushWay"}
 
     async def _deliver_websocket(self, payload: Mapping[str, Any]) -> None:
         rec_user_id = self._event_rec_user_id(payload)
@@ -209,14 +246,352 @@ class PushService:
             await self._persist_message(message)
         await self.broadcast(message)
 
-    async def _deliver_sms(self, payload: Mapping[str, Any]) -> None:
-        logger.info("SMS push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+    async def _deliver_sms(self, payload: Mapping[str, Any]) -> Dict[str, Any]:
+        try:
+            sms_config = await self._effective_sms_config()
+            if not sms_config:
+                raise ValueError("短信通知通道未启用")
+            if self._sms_dry_run(sms_config):
+                await self._record_external_delivery(
+                    payload,
+                    "sms",
+                    status="issued",
+                    delivery_status="dry-run",
+                    detail={"message": "jaja7 dry-run: SMS not sent"},
+                )
+                return {
+                    "deliveryStatus": "dry-run",
+                    "deliveryChannel": "sms",
+                    "message": "jaja7 dry-run: SMS not sent",
+                }
+            result = await self._send_aliyun_sms(payload, sms_config)
+            await self._record_external_delivery(
+                payload,
+                "sms",
+                status="issued",
+                delivery_status="sent",
+                detail={"provider": "aliyun", "requestId": result.get("RequestId")},
+            )
+            return {"deliveryStatus": "sent", "deliveryChannel": "sms", "provider": "aliyun", "requestId": result.get("RequestId")}
+        except Exception as exc:
+            logger.warning("SMS delivery failed: %s", exc)
+            await self._record_external_delivery(payload, "sms", error_message=str(exc))
+            return {"deliveryStatus": "failed", "deliveryChannel": "sms", "errorMessage": str(exc)}
 
     async def _deliver_email(self, payload: Mapping[str, Any]) -> None:
-        logger.info("Email push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+        try:
+            email_config = await self._effective_email_config()
+            if not email_config:
+                raise ValueError("邮件通知通道未启用")
+            result = await self._send_smtp_email(payload, email_config)
+            await self._record_external_delivery(
+                payload,
+                "email",
+                status="issued",
+                delivery_status="sent",
+                detail=result,
+            )
+        except Exception as exc:
+            logger.warning("Email delivery failed: %s", exc)
+            await self._record_external_delivery(payload, "email", error_message=str(exc))
 
     async def _deliver_mqtt(self, payload: Mapping[str, Any]) -> None:
-        logger.info("MQTT push (placeholder): %s", payload.get("msgId") or payload.get("title"))
+        await self._record_external_delivery(payload, "mqtt")
+
+    async def _record_external_delivery(
+        self,
+        payload: Mapping[str, Any],
+        channel: str,
+        status: str = "fail",
+        delivery_status: str = "failed",
+        error_message: Optional[str] = None,
+        detail: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        rec_user_id = self._event_rec_user_id(payload) or self._int_or_none(payload.get("sendUserId")) or 0
+        send_user_id = self._int_or_none(payload.get("sendUserId")) or rec_user_id
+        task_id = str(payload.get("testRunId") or payload.get("taskId") or uuid.uuid4().hex)
+        show_in_center = self._show_in_message_center(dict(payload), True)
+        message = self._build_message(dict(payload), rec_user_id, send_user_id, task_id, 1, show_in_center)
+        message["pushWay"] = channel
+        message["pushStatus"] = status
+        safe_extend = {
+            **dict(message.get("extend") or {}),
+            **dict(detail or {}),
+            "deliveryStatus": delivery_status,
+            "deliveryChannel": channel,
+        }
+        phone = self._sms_value(payload, "phoneNumber", "phone_number", "phone")
+        if phone:
+            safe_extend["phoneNumber"] = _mask_phone(phone)
+        if error_message:
+            safe_extend["errorMessage"] = error_message
+        elif status == "fail":
+            safe_extend["errorMessage"] = "%s真实发送器未接入" % channel
+        message["extend"] = safe_extend
+        if show_in_center:
+            await self._persist_message(message)
+        await self.broadcast(message)
+
+    def _sms_dry_run(self, config: Optional[Mapping[str, Any]] = None) -> bool:
+        source = dict(config or {})
+        value = source.get("jaja7-dry-run")
+        if value is None:
+            value = source.get("jaja7DryRun")
+        if value is None:
+            value = self.push_config.get("jaja7-dry-run")
+        if value is None:
+            value = self.push_config.get("jaja7DryRun")
+        if isinstance(value, str):
+            return value.lower() in ("1", "true", "yes", "y")
+        return bool(value)
+
+    async def _send_aliyun_sms(self, payload: Mapping[str, Any], config: Mapping[str, Any]) -> Dict[str, Any]:
+        access_key_id = self._sms_config_value(config, "accessKeyId", "access-key-id", "access_key_id")
+        access_key_secret = self._sms_config_value(config, "accessKeySecret", "access-key-secret", "access_key_secret")
+        phone_number = self._sms_value(payload, "phoneNumber", "phone_number", "phone")
+        template_code = self._sms_value(payload, "templateCode", "template_code") or self._sms_config_value(
+            config,
+            "pinTemplateCode",
+            "pin-template-code",
+            "templateCode",
+            "template-code",
+        )
+        sign_name = self._sms_value(payload, "signName", "sign_name") or self._sms_config_value(
+            config,
+            "signName",
+            "sign-name",
+        )
+        if not access_key_id or not access_key_secret:
+            raise ValueError("短信通道缺少 aliyun.sms.accessKeyId/accessKeySecret 配置")
+        if not phone_number:
+            raise ValueError("短信通知缺少 phoneNumber")
+        if not template_code:
+            raise ValueError("短信通知缺少 templateCode")
+        if not sign_name:
+            raise ValueError("短信通道缺少 signName")
+        template_param = payload.get("params") or payload.get("templateParam") or payload.get("template_param") or {}
+        if not isinstance(template_param, Mapping):
+            template_param = {}
+        params = {
+            "AccessKeyId": access_key_id,
+            "Action": "SendSms",
+            "Format": "JSON",
+            "PhoneNumbers": str(phone_number),
+            "RegionId": str(self._sms_config_value(config, "regionId", "region-id") or "cn-hangzhou"),
+            "SignName": str(sign_name),
+            "SignatureMethod": "HMAC-SHA1",
+            "SignatureNonce": uuid.uuid4().hex,
+            "SignatureVersion": "1.0",
+            "TemplateCode": str(template_code),
+            "TemplateParam": json.dumps(dict(template_param), ensure_ascii=False, separators=(",", ":")),
+            "Timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "Version": "2017-05-25",
+        }
+        params["Signature"] = _aliyun_signature(params, str(access_key_secret))
+        async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0), trust_env=False) as client:
+            response = await client.post("https://dysmsapi.aliyuncs.com/", data=params)
+        response.raise_for_status()
+        result = response.json()
+        if str(result.get("Code") or "").upper() != "OK":
+            raise ValueError(str(result.get("Message") or result.get("Code") or "发送短信错误"))
+        return dict(result)
+
+    async def _effective_sms_config(self) -> Dict[str, Any]:
+        fallback = {
+            **dict(self.sms_config or {}),
+            **{key: value for key, value in self.push_config.items() if key in {"jaja7-dry-run", "jaja7DryRun"}},
+        }
+        if self.config_repository is None:
+            return fallback
+        try:
+            rows = await self.config_repository.list_push_configs({"type": 3})
+        except Exception as exc:
+            logger.warning("Failed to read sms channel config: %s", exc)
+            return fallback
+        if not rows:
+            return fallback
+        enabled_rows = [row for row in rows if row.get("enable") is not False]
+        if not enabled_rows:
+            return {}
+        row = enabled_rows[0]
+        content = row.get("releaseContent") or row.get("release_content") or ""
+        parsed: Dict[str, Any] = {}
+        if isinstance(content, Mapping):
+            parsed = dict(content)
+        elif str(content).strip():
+            try:
+                loaded = json.loads(str(content))
+                if isinstance(loaded, Mapping):
+                    parsed = dict(loaded)
+            except json.JSONDecodeError:
+                logger.warning("SMS channel releaseContent is not valid JSON")
+        return {**fallback, **parsed}
+
+    def _sms_config_value(self, config: Mapping[str, Any], *keys: str) -> Optional[str]:
+        for key in keys:
+            value = config.get(key)
+            if value not in (None, ""):
+                return str(value)
+        return None
+
+    async def _effective_email_config(self) -> Dict[str, Any]:
+        fallback = dict(self.email_config or {})
+        if self.config_repository is None:
+            return fallback
+        channel_config: Dict[str, Any] = {}
+        try:
+            rows = await self.config_repository.list_push_configs({"type": 2})
+        except Exception as exc:
+            logger.warning("Failed to read email channel config: %s", exc)
+            rows = []
+        if rows:
+            enabled_rows = [row for row in rows if row.get("enable") is not False]
+            if not enabled_rows:
+                return {}
+            channel_config = self._parse_release_content(enabled_rows[0].get("releaseContent") or "")
+        try:
+            email_rows = await self.config_repository.list_email_configs({})
+        except Exception as exc:
+            logger.warning("Failed to read smtp email config: %s", exc)
+            email_rows = []
+        email_row = next((row for row in email_rows if row.get("host")), {})
+        return {**fallback, **channel_config, **dict(email_row or {})}
+
+    async def _send_smtp_email(self, payload: Mapping[str, Any], config: Mapping[str, Any]) -> Dict[str, Any]:
+        recipient = self._email_value(payload, "receiver", "mailTo", "to", "email")
+        subject = str(payload.get("title") or "JBM 通知")
+        content = str(payload.get("content") or "")
+        if not recipient:
+            raise ValueError("邮件通知缺少 receiver/mailTo")
+        await asyncio.to_thread(self._send_smtp_email_sync, recipient, subject, content, dict(config), dict(payload))
+        return {"provider": "smtp", "host": str(config.get("host") or "")}
+
+    def _send_smtp_email_sync(
+        self,
+        recipient: str,
+        subject: str,
+        content: str,
+        config: Mapping[str, Any],
+        payload: Mapping[str, Any],
+    ) -> None:
+        host = self._email_config_value(config, "host")
+        port = int(self._email_config_value(config, "port") or 465)
+        username = self._email_config_value(config, "username", "user")
+        password = self._email_config_value(config, "password")
+        sender = self._email_config_value(config, "from", "fromAddress", "from-address") or username
+        if not host:
+            raise ValueError("邮件通道缺少 spring.mail.host 配置")
+        if not sender:
+            raise ValueError("邮件通道缺少发件人配置")
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = sender
+        message["To"] = recipient
+        content_type = str(payload.get("contentType") or payload.get("content_type") or "").lower()
+        if content_type == "html":
+            message.set_content(content, subtype="html")
+        else:
+            message.set_content(content)
+        use_ssl = self._email_bool(config, "ssl", "sslEnable", "ssl-enable", "properties.mail.smtp.ssl.enable")
+        use_starttls = self._email_bool(
+            config,
+            "starttls",
+            "starttlsEnable",
+            "starttls-enable",
+            "properties.mail.smtp.starttls.enable",
+        )
+        if use_ssl or (not use_starttls and port == 465):
+            with smtplib.SMTP_SSL(host, port, timeout=10) as smtp:
+                if username and password:
+                    smtp.login(username, password)
+                smtp.send_message(message)
+            return
+        with smtplib.SMTP(host, port, timeout=10) as smtp:
+            if use_starttls or port == 587:
+                smtp.starttls()
+            if username and password:
+                smtp.login(username, password)
+            smtp.send_message(message)
+
+    def _parse_release_content(self, value: Any) -> Dict[str, Any]:
+        if isinstance(value, Mapping):
+            return dict(value)
+        if not str(value or "").strip():
+            return {}
+        try:
+            loaded = json.loads(str(value))
+        except json.JSONDecodeError:
+            logger.warning("Push channel releaseContent is not valid JSON")
+            return {}
+        return dict(loaded) if isinstance(loaded, Mapping) else {}
+
+    def _email_config_value(self, config: Mapping[str, Any], *keys: str) -> Optional[str]:
+        for key in keys:
+            value = config.get(key)
+            if value not in (None, ""):
+                return str(value)
+        return None
+
+    def _email_value(self, payload: Mapping[str, Any], *keys: str) -> Optional[str]:
+        for key in keys:
+            value = payload.get(key)
+            if value not in (None, ""):
+                return str(value)
+        extend = payload.get("extend")
+        if isinstance(extend, Mapping):
+            for key in keys:
+                value = extend.get(key)
+                if value not in (None, ""):
+                    return str(value)
+        return None
+
+    def _email_bool(self, config: Mapping[str, Any], *keys: str) -> bool:
+        value: Any = None
+        for key in keys:
+            if key in config:
+                value = config.get(key)
+                break
+        if isinstance(value, bool):
+            return value
+        return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+    def _sms_value(self, payload: Mapping[str, Any], *keys: str) -> Optional[str]:
+        for key in keys:
+            value = payload.get(key)
+            if value not in (None, ""):
+                return str(value)
+        extend = payload.get("extend")
+        if isinstance(extend, Mapping):
+            for key in keys:
+                value = extend.get(key)
+                if value not in (None, ""):
+                    return str(value)
+        return None
+
+    async def _channel_configured(self, channel: str) -> bool:
+        if channel == "sms":
+            sms_config = await self._effective_sms_config()
+            return bool(
+                sms_config
+                and (
+                    self._sms_dry_run(sms_config)
+                    or (
+                        self._sms_config_value(sms_config, "accessKeyId", "access-key-id", "access_key_id")
+                        and self._sms_config_value(sms_config, "accessKeySecret", "access-key-secret", "access_key_secret")
+                    )
+                )
+            )
+        if self.config_repository is None:
+            return False
+        try:
+            if channel == "email":
+                rows = await self.config_repository.list_email_configs({})
+                return any(row.get("host") for row in rows)
+            rows = await self.config_repository.list_push_configs({"enable": True})
+            return bool(rows)
+        except Exception as exc:
+            logger.warning("Failed to read %s push channel config: %s", channel, exc)
+            return False
 
     def _event_rec_user_id(self, payload: Mapping[str, Any]) -> Optional[int]:
         rec_user_id = self._int_or_none(payload.get("recUserId"))
@@ -244,7 +619,22 @@ class PushService:
             testRunId=request.get("testRunId"),
             messageIndex=int(request.get("messageIndex") or request.get("index") or 1),
         )
-        return model_dump_compat(event)
+        event_data = model_dump_compat(event)
+        for key in (
+            "phoneNumber",
+            "templateCode",
+            "params",
+            "signName",
+            "templateParam",
+            "receiver",
+            "mailTo",
+            "topic",
+            "body",
+            "qos",
+        ):
+            if key in request:
+                event_data[key] = request[key]
+        return event_data
 
     async def send_test(self, request: Dict[str, Any], current_user_id: int) -> Dict[str, Any]:
         task_id = uuid.uuid4().hex
@@ -376,6 +766,46 @@ class PushService:
         rows[:] = [row for row in rows if int(row.get("id") or 0) not in id_set]
         return len(rows) != before
 
+    async def list_push_configs(self, body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if self.config_repository is not None:
+            return await self.config_repository.page_push_configs(body)
+        return self.list_configs(self.push_configs, body)
+
+    async def list_push_config_rows(self, body: Optional[Dict[str, Any]]) -> list[Dict[str, Any]]:
+        if self.config_repository is not None:
+            return await self.config_repository.list_push_configs(body)
+        return self.list_configs(self.push_configs, body)["contents"]
+
+    async def save_push_config(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        if self.config_repository is not None:
+            return await self.config_repository.save_push_config(body)
+        return self.save_config(self.push_configs, body)
+
+    async def delete_push_configs(self, ids: Iterable[Any]) -> bool:
+        if self.config_repository is not None:
+            return await self.config_repository.delete_push_configs(ids)
+        return self.delete_configs(self.push_configs, ids)
+
+    async def list_email_configs(self, body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if self.config_repository is not None:
+            return await self.config_repository.page_email_configs(body)
+        return self.list_configs(self.email_configs, body)
+
+    async def list_email_config_rows(self, body: Optional[Dict[str, Any]]) -> list[Dict[str, Any]]:
+        if self.config_repository is not None:
+            return await self.config_repository.list_email_configs(body)
+        return self.list_configs(self.email_configs, body)["contents"]
+
+    async def save_email_config(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        if self.config_repository is not None:
+            return await self.config_repository.save_email_config(body)
+        return self.save_config(self.email_configs, body)
+
+    async def delete_email_configs(self, ids: Iterable[Any]) -> bool:
+        if self.config_repository is not None:
+            return await self.config_repository.delete_email_configs(ids)
+        return self.delete_configs(self.email_configs, ids)
+
     def _resolve_users(self, request: Dict[str, Any], current_user_id: int) -> List[int]:
         raw = request.get("recUserIds") or request.get("recUserId") or []
         if isinstance(raw, str) and "," in raw:
@@ -483,3 +913,28 @@ class PushService:
         }
         header_text = "\n".join("%s:%s" % (key, value) for key, value in headers.items())
         return "MESSAGE\n%s\n\n%s\x00" % (header_text, body)
+
+
+def _percent_encode(value: Any) -> str:
+    return quote(str(value), safe="~")
+
+
+def _aliyun_signature(params: Mapping[str, Any], access_key_secret: str) -> str:
+    canonicalized = "&".join(
+        "%s=%s" % (_percent_encode(key), _percent_encode(params[key]))
+        for key in sorted(params)
+    )
+    string_to_sign = "POST&%2F&" + _percent_encode(canonicalized)
+    digest = hmac.new(
+        (access_key_secret + "&").encode("utf-8"),
+        string_to_sign.encode("utf-8"),
+        hashlib.sha1,
+    ).digest()
+    return base64.b64encode(digest).decode("ascii")
+
+
+def _mask_phone(phone: str) -> str:
+    value = str(phone or "")
+    if len(value) < 7:
+        return value
+    return value[:3] + "****" + value[-4:]
