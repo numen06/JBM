@@ -576,3 +576,40 @@ def test_phone_code_is_sent_through_push_notification() -> None:
     assert requests[0]["signName"] == "甲佳智能"
     assert requests[0]["params"]["code"]
     assert requests[0]["showInMessageCenter"] is False
+
+
+def test_phone_code_accepts_jaja7_dry_run_sms_delivery() -> None:
+    import asyncio
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "success": True,
+                "result": {
+                    "sent": 1,
+                    "deliveryStatus": "dry-run",
+                    "deliveries": [
+                        {
+                            "deliveryStatus": "dry-run",
+                            "message": "jaja7 dry-run: SMS not sent",
+                        }
+                    ],
+                },
+            },
+        )
+
+    async def run() -> bool:
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://push.test")
+        service = AuthService(
+            repository=None,  # type: ignore[arg-type]
+            cache=TokenCache(RedisClient({"enabled": False})),
+            config={"sms": {"push-base-url": "http://push.test"}},
+            http_client=client,
+        )
+        try:
+            return await service.send_phone_code("13585658904", "9999")
+        finally:
+            await client.aclose()
+
+    assert asyncio.run(run()) is True

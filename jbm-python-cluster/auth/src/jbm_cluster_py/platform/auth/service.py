@@ -508,12 +508,12 @@ class AuthService:
         if isinstance(deliveries, list) and deliveries:
             first = deliveries[0] if isinstance(deliveries[0], Mapping) else {}
             delivery_status = str(first.get("deliveryStatus") or "").lower()
-            if delivery_status != "sent":
+            if delivery_status not in {"sent", "dry-run", "queued"}:
                 message = str(first.get("errorMessage") or first.get("message") or delivery_status or "短信未真实发送")
                 raise AuthError("短信发送失败: %s" % message, 503)
         elif isinstance(result, Mapping):
             delivery_status = str(result.get("deliveryStatus") or "").lower()
-            if delivery_status and delivery_status != "sent":
+            if delivery_status and delivery_status not in {"sent", "dry-run", "queued"}:
                 message = str(result.get("errorMessage") or result.get("message") or delivery_status)
                 raise AuthError("短信发送失败: %s" % message, 503)
 
