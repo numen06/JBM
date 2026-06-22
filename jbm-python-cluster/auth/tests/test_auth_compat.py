@@ -553,9 +553,8 @@ def test_phone_code_is_sent_through_push_notification() -> None:
     requests: list[dict[str, object]] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
-        payload = json.loads(request.content.decode("utf-8"))
-        requests.append(payload)
-        return httpx.Response(200, json={"success": True, "result": {"sent": 1}})
+        requests.append(dict(request.url.params))
+        return httpx.Response(200, json={"success": True, "result": {"Code": "OK", "pin": request.url.params["code"]}})
 
     async def run() -> bool:
         client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://push.test")
@@ -574,8 +573,7 @@ def test_phone_code_is_sent_through_push_notification() -> None:
     assert requests[0]["phoneNumber"] == "13585658904"
     assert requests[0]["templateCode"] == "SMS_236340338"
     assert requests[0]["signName"] == "甲佳智能"
-    assert requests[0]["params"]["code"]
-    assert requests[0]["showInMessageCenter"] is False
+    assert requests[0]["code"]
 
 
 def test_phone_code_accepts_jaja7_dry_run_sms_delivery() -> None:
@@ -587,14 +585,9 @@ def test_phone_code_accepts_jaja7_dry_run_sms_delivery() -> None:
             json={
                 "success": True,
                 "result": {
-                    "sent": 1,
-                    "deliveryStatus": "dry-run",
-                    "deliveries": [
-                        {
-                            "deliveryStatus": "dry-run",
-                            "message": "jaja7 dry-run: SMS not sent",
-                        }
-                    ],
+                    "Code": "OK",
+                    "Message": "jaja7 dry-run: SMS not sent",
+                    "pin": request.url.params["code"],
                 },
             },
         )

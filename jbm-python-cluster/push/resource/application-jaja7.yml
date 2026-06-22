@@ -19,4 +19,4 @@ spring:
 
 jbm:
   push:
-    jaja7-dry-run: true
+    jaja7-dry-run: false

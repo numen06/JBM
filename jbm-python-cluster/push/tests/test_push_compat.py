@@ -233,6 +233,56 @@ def test_sms_sync_delivery_bypasses_rabbitmq_queue() -> None:
     assert service.messages[-1]["extend"]["deliveryStatus"] == "dry-run"
 
 
+def test_pin_send_calls_sms_provider_when_dry_run_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent_payloads = []
+
+    async def fake_send_aliyun_sms(self, payload, config):  # type: ignore[no-untyped-def]
+        sent_payloads.append((dict(payload), dict(config)))
+        return {"Code": "OK", "RequestId": "req-pin"}
+
+    monkeypatch.setattr(PushService, "_send_aliyun_sms", fake_send_aliyun_sms)
+    config = AppConfig(
+        {
+            "server": {"host": "127.0.0.1", "port": 3313},
+            "spring": {
+                "application": {"name": "jbm-cluster-platform-push"},
+                "cloud": {"nacos": {"discovery": {"enabled": False}}},
+            },
+            "aliyun": {
+                "sms": {
+                    "accessKeyId": "ak",
+                    "accessKeySecret": "secret",
+                    "signName": "甲佳智能",
+                }
+            },
+            "jbm": {"push": {"jaja7-dry-run": False}},
+            "integrations": {"telemetry": {"enabled": False}},
+        },
+        profile="test",
+        config_dir=None,
+        app="push",
+    )
+
+    with TestClient(create_app(config)) as client:
+        response = client.post(
+            "/pin/send",
+            params={
+                "phoneNumber": "13585658904",
+                "code": "123456",
+                "templateCode": "SMS_236340338",
+                "signName": "甲佳智能",
+            },
+        )
+
+    assert response.json()["success"] is True
+    assert response.json()["message"] == "短信验证码发送成功"
+    assert response.json()["result"]["Code"] == "OK"
+    assert response.json()["result"]["pin"] == "123456"
+    assert sent_payloads[0][0]["phoneNumber"] == "13585658904"
+    assert sent_payloads[0][0]["templateCode"] == "SMS_236340338"
+    assert sent_payloads[0][0]["params"]["code"] == "123456"
+
+
 @pytest.mark.asyncio
 async def test_nacos_style_system_channel_config_is_seeded_to_database(tmp_path: Path) -> None:
     repo = PushConfigRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'push-configs.db'}"})

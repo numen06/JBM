@@ -345,6 +345,49 @@ class PushService:
             return value.lower() in ("1", "true", "yes", "y")
         return bool(value)
 
+    async def send_pin_code(
+        self,
+        phone_number: str,
+        code: Optional[str] = None,
+        template_code: Optional[str] = None,
+        sign_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        pin = str(code or "").strip() or ("%04d" % (uuid.uuid4().int % 10000))
+        payload = {
+            "pushWay": "sms",
+            "recUserId": 0,
+            "sendUserId": 0,
+            "sysMsg": True,
+            "title": "短信验证码",
+            "content": "短信验证码",
+            "phoneNumber": phone_number,
+            "params": {"code": pin},
+            "templateCode": template_code,
+            "signName": sign_name,
+            "showInMessageCenter": False,
+        }
+        sms_config = await self._effective_sms_config()
+        if not sms_config:
+            raise ValueError("短信通知通道未启用")
+        if self._sms_dry_run(sms_config):
+            await self._record_external_delivery(
+                payload,
+                "sms",
+                status="issued",
+                delivery_status="dry-run",
+                detail={"message": "jaja7 dry-run: SMS not sent"},
+            )
+            return {"Code": "OK", "Message": "jaja7 dry-run: SMS not sent", "pin": pin}
+        result = await self._send_aliyun_sms(payload, sms_config)
+        await self._record_external_delivery(
+            payload,
+            "sms",
+            status="issued",
+            delivery_status="sent",
+            detail={"provider": "aliyun", "requestId": result.get("RequestId")},
+        )
+        return {**result, "pin": pin}
+
     async def _send_aliyun_sms(self, payload: Mapping[str, Any], config: Mapping[str, Any]) -> Dict[str, Any]:
         access_key_id = self._sms_config_value(config, "accessKeyId", "access-key-id", "access_key_id")
         access_key_secret = self._sms_config_value(config, "accessKeySecret", "access-key-secret", "access_key_secret")
@@ -425,7 +468,11 @@ class PushService:
                     parsed = dict(loaded)
             except json.JSONDecodeError:
                 logger.warning("SMS channel releaseContent is not valid JSON")
-        return {**fallback, **parsed}
+        merged = {**fallback, **parsed}
+        for key in ("jaja7-dry-run", "jaja7DryRun"):
+            if key in fallback:
+                merged[key] = fallback[key]
+        return merged
 
     def _sms_config_value(self, config: Mapping[str, Any], *keys: str) -> Optional[str]:
         for key in keys:

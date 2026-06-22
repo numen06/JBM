@@ -468,20 +468,11 @@ class AuthService:
         base_url = await self._push_base_url()
         if not base_url:
             raise AuthError("短信通知通道未启用", 503)
-        payload = {
-            "eventType": "SMS_NOTIFICATION",
-            "pushWay": "sms",
-            "recUserId": 0,
-            "sendUserId": 0,
-            "sysMsg": True,
-            "title": "短信验证码",
-            "content": "短信验证码",
+        params = {
             "phoneNumber": phone,
-            "params": {"code": code},
+            "code": code,
             "signName": self.sms_sign_name,
             "templateCode": self.sms_template_code,
-            "showInMessageCenter": False,
-            "syncDelivery": True,
         }
         client = self.http_client
         close_client = False
@@ -489,7 +480,7 @@ class AuthService:
             client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
             close_client = True
         try:
-            response = await client.post(base_url + "/notification/send/sms", json=payload)
+            response = await client.post(base_url + "/pin/send", params=params)
         except httpx.HTTPError as exc:
             raise AuthError("短信通知通道调用失败: %s" % exc, 503) from exc
         finally:
@@ -504,18 +495,10 @@ class AuthService:
         if body.get("success") is False:
             raise AuthError(str(body.get("message") or "短信通知通道调用失败"), int(body.get("code") or 503))
         result = body.get("result") if isinstance(body.get("result"), Mapping) else {}
-        deliveries = result.get("deliveries") if isinstance(result, Mapping) else None
-        if isinstance(deliveries, list) and deliveries:
-            first = deliveries[0] if isinstance(deliveries[0], Mapping) else {}
-            delivery_status = str(first.get("deliveryStatus") or "").lower()
-            if delivery_status not in {"sent", "dry-run", "queued"}:
-                message = str(first.get("errorMessage") or first.get("message") or delivery_status or "短信未真实发送")
-                raise AuthError("短信发送失败: %s" % message, 503)
-        elif isinstance(result, Mapping):
-            delivery_status = str(result.get("deliveryStatus") or "").lower()
-            if delivery_status and delivery_status not in {"sent", "dry-run", "queued"}:
-                message = str(result.get("errorMessage") or result.get("message") or delivery_status)
-                raise AuthError("短信发送失败: %s" % message, 503)
+        sms_code = str(result.get("Code") or result.get("code") or "").upper()
+        if sms_code and sms_code != "OK":
+            message = str(result.get("Message") or result.get("message") or sms_code)
+            raise AuthError("短信发送失败: %s" % message, 503)
 
     async def _push_base_url(self) -> str:
         if self.sms_push_base_url:

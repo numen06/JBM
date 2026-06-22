@@ -131,6 +131,30 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     async def push_test_ack(body: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any]:
         return ok(service.ack(body), "ACK成功")
 
+    @router.get("/pin/send")
+    @router.post("/pin/send")
+    async def pin_send(
+        phoneNumber: str = "",
+        phone: str = "",
+        code: str = "",
+        templateCode: str = "",
+        signName: str = "",
+    ) -> Dict[str, Any]:
+        phone_number = (phoneNumber or phone or "").strip()
+        if not phone_number.startswith("1") or len(phone_number) != 11 or not phone_number.isdigit():
+            return fail(None, "手机号码错误", 400)
+        try:
+            result = await service.send_pin_code(
+                phone_number,
+                code=code,
+                template_code=templateCode,
+                sign_name=signName,
+            )
+        except Exception as exc:
+            logger.warning("Pin SMS delivery failed: %s", exc)
+            return fail(None, str(exc) or "发送失败", 500)
+        return ok(result, "短信验证码发送成功")
+
     @router.post("/pushConfigInfo/pageList")
     async def push_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         return ok(await service.list_push_configs(body), "查询分页列表成功")
