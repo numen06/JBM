@@ -2,7 +2,7 @@ package com.jbm.cluster.center.controller;
 
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.center.service.BaseAccountLogsService;
-import com.jbm.framework.mvc.web.MasterDataCollection;
+import com.jbm.framework.mvc.web.AuditReadOnlyCollection;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,5 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "登陆日志")
 @RestController
 @RequestMapping("/baseAccountLogs")
-public class BaseAccountLogsController extends MasterDataCollection<BaseAccountLogs, BaseAccountLogsService> {
+public class BaseAccountLogsController extends AuditReadOnlyCollection<BaseAccountLogs, BaseAccountLogsService> {
 }

@@ -14,6 +14,10 @@
     <dependencies>
         <dependency>
             <groupId>com.jbm</groupId>
+            <artifactId>jbm-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jbm</groupId>
             <artifactId>jbm-cluster-core</artifactId>
             <version>${project.version}</version>
         </dependency>

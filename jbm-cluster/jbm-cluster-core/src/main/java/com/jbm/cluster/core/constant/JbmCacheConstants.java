@@ -50,7 +50,7 @@ public class JbmCacheConstants {
     /**
      * 登录错误限制时间(分钟)
      */
-    public final static Integer LOGIN_ERROR_LIMIT_TIME = 10;
+    public final static Integer LOGIN_ERROR_LIMIT_TIME = 5;
 
     public final static String APP_CACHE_NAMESPACE = "apps";
 

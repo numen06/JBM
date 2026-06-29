@@ -1,0 +1,122 @@
+version: '3.8'
+services:
+  jbm-cluster-platform-center:
+    restart: always
+    hostname: jbm-cluster-platform-center
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-center:7.2
+    command: --spring.profiles.active=jbm
+    environment:
+      JBM_DEBUG: "true"
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    networks:
+      - emc
+
+  jbm-cluster-platform-auth:
+    restart: always
+    hostname: jbm-cluster-platform-auth
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-auth:7.2
+    command: --spring.profiles.active=jbm
+    environment:
+      JBM_DEBUG: "true"
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-center
+    networks:
+      - emc
+
+  jbm-cluster-platform-doc:
+    restart: always
+    hostname: jbm-cluster-platform-doc
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-doc:7.2
+    command: --spring.profiles.active=jbm
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-center
+    networks:
+      - emc
+
+  jbm-cluster-platform-gateway:
+    restart: always
+    hostname: jbm-cluster-platform-gateway
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-gateway:7.2
+    command: --spring.profiles.active=jbm
+    environment:
+      JBM_DEBUG: "true"
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-center
+    networks:
+      - emc
+
+  jbm-cluster-platform-logs:
+    restart: always
+    hostname: jbm-cluster-platform-logs
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-logs:7.2
+    command: --spring.profiles.active=jbm
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-gateway
+    networks:
+      - emc
+
+  jbm-cluster-platform-push:
+    restart: always
+    hostname: jbm-cluster-platform-push
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-push:7.2
+    command: --spring.profiles.active=jbm
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-gateway
+    networks:
+      - emc
+
+  jbm-cluster-platform-bigscreen:
+    restart: always
+    hostname: jbm-cluster-platform-bigscreen
+    image: registry.cn-hangzhou.aliyuncs.com/51jbm/jbm-cluster-platform-bigscreen:7.2
+    command: --spring.profiles.active=jbm
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - jbm-cluster-platform-gateway
+    networks:
+      - emc
+
+networks:
+  emc:
+    external:
+      name: emc

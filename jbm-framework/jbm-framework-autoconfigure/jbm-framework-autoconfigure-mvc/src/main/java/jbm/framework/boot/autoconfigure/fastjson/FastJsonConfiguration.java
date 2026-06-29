@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.serializer.ValueFilter;
 import com.alibaba.fastjson.serializer.ToStringSerializer;
 import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
@@ -102,10 +103,9 @@ public class FastJsonConfiguration {
         //WriteMapNullValue：是否输出值为null的字段,默认为false
         fastJsonConfig.setSerializerFeatures(
                 SerializerFeature.DisableCircularReferenceDetect
-//                SerializerFeature.WriteMapNullValue,
-//                SerializerFeature.WriteNullStringAsEmpty,
-//                SerializerFeature.WriteNonStringValueAsString
         );
+        ValueFilter[] filters = new ValueFilter[]{new SensitiveJsonValueFilter()};
+        fastJsonConfig.setSerializeFilters(filters);
         //反序列化
         fastJsonConfig.setParserConfig(parserConfig);
         //序列化

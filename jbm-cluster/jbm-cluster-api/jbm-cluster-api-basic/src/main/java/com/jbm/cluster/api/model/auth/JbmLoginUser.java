@@ -2,6 +2,8 @@ package com.jbm.cluster.api.model.auth;
 
 
 import cn.hutool.core.util.StrUtil;
+import com.jbm.util.sensitive.SensitiveField;
+import com.jbm.util.sensitive.SensitiveType;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -36,11 +38,13 @@ public class JbmLoginUser implements Serializable {
     /**
      * 手机号
      */
+    @SensitiveField(SensitiveType.MOBILE)
     private String mobile;
 
     /**
      * 真实姓名
      */
+    @SensitiveField(SensitiveType.NAME)
     private String realName;
 
 

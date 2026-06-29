@@ -2,10 +2,14 @@ package com.jbm.cluster.auth.controller;
 
 import cn.hutool.captcha.LineCaptcha;
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.auth.form.PhoneCaptchaForm;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.PCoderService;
+import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.auth.service.VCoderService;
+import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -27,6 +31,23 @@ public class CaptchaController {
     private PCoderService pCoderService;
     @Autowired
     private BaseAppPreprocessing baseAppPreprocessing;
+    @Autowired
+    private SysLoginService sysLoginService;
+
+    private String resolvePhone(String phone, String appKey) {
+        if (StrUtil.isBlank(phone)) {
+            throw new ServiceException("手机号不能为空");
+        }
+        if (Validator.isMobile(phone)) {
+            return phone;
+        }
+        if (StrUtil.isBlank(appKey)) {
+            throw new ServiceException("非法手机号");
+        }
+        String decrypted = sysLoginService.decryptPassword(appKey, phone);
+        Validator.validateMobile(decrypted, "非法手机号");
+        return decrypted;
+    }
 
     @ApiOperation(value = "获取应用公钥", notes = "")
     @GetMapping(value = "/pkey")
@@ -75,6 +96,7 @@ public class CaptchaController {
 
     @ApiOperation(value = "发送验证码")
     @GetMapping(value = "/pcode")
+    @Deprecated
     public ResultBody<Boolean> pcode(@RequestParam(required = true) String phone, @RequestParam(required = true) String vcode) throws IOException {
         vCoderService.verify(vcode);
         Validator.validateMobile(phone, "非法手机号");
@@ -82,11 +104,29 @@ public class CaptchaController {
         return ResultBody.success("验证码发送成功");
     }
 
+    @ApiOperation(value = "发送验证码（POST，推荐）")
+    @PostMapping(value = "/pcode")
+    public ResultBody<Boolean> pcodePost(@RequestBody PhoneCaptchaForm form) throws IOException {
+        vCoderService.verify(form.getVcode());
+        String phone = resolvePhone(form.getPhone(), form.getAppKey());
+        pCoderService.send(phone);
+        return ResultBody.success("验证码发送成功");
+    }
+
     @ApiOperation(value = "对比手机验证码")
     @GetMapping(value = "/pcode/verify")
+    @Deprecated
     public ResultBody<Boolean> pcodeVerify(@RequestParam(required = true) String phone, @RequestParam(required = true) String vcode) throws IOException {
         Validator.validateMobile(phone, "非法手机号");
         pCoderService.verify(vcode, phone);
+        return ResultBody.success("手机验证码验证成功");
+    }
+
+    @ApiOperation(value = "对比手机验证码（POST，推荐）")
+    @PostMapping(value = "/pcode/verify")
+    public ResultBody<Boolean> pcodeVerifyPost(@RequestBody PhoneCaptchaForm form) throws IOException {
+        String phone = resolvePhone(form.getPhone(), form.getAppKey());
+        pCoderService.verify(form.getVcode(), phone);
         return ResultBody.success("手机验证码验证成功");
     }
 

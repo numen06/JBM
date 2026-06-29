@@ -110,12 +110,8 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         }
         BaseAccount baseAccount = this.getAccount(account, accountType, domain);
         if (ObjectUtil.isNotEmpty(baseAccount)) {
-//            // 账号已被注册
-//            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
             if (!ObjectUtil.equals(userId, baseAccount.getUserId())) {
-                baseAccount.setUserId(userId);
-                baseAccount.setPassword(SecurityUtils.encryptPassword(password));
-                baseAccountMapper.updateById(baseAccount);
+                throw new ServiceException("账号 [" + account + "] 已存在，不可重复添加");
             }
             return baseAccount;
         }
@@ -128,6 +124,7 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         baseAccount = new BaseAccount(userId, account, encodePassword, accountType, domain, registerIp);
         baseAccount.setCreateTime(new Date());
         baseAccount.setUpdateTime(baseAccount.getCreateTime());
+        baseAccount.setPasswordUpdateTime(baseAccount.getCreateTime());
         if (ObjectUtil.isEmpty(status)) {
             status = AccountStatus.NORMAL.getKey();
         }
@@ -141,12 +138,8 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
     public BaseAccount register(BaseAccount baseAccount) {
         BaseAccount account = this.getAccount(baseAccount.getAccount(), baseAccount.getAccountType(), baseAccount.getDomain());
         if (ObjectUtil.isNotEmpty(account)) {
-            // 账号已被注册
-//            throw new RuntimeException(String.format("account=[%s],domain=[%s]", baseAccount.getAccount(), baseAccount.getDomain()));
             if (!ObjectUtil.equals(baseAccount.getUserId(), account.getUserId())) {
-                account.setUserId(baseAccount.getUserId());
-                account.setPassword(baseAccount.getPassword());
-                baseAccountMapper.updateById(account);
+                throw new ServiceException("账号 [" + baseAccount.getAccount() + "] 已存在，不可重复添加");
             }
             return account;
         }
@@ -154,6 +147,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 //        baseAccount.setCreateTime(new Date());
 //        baseAccount.setUpdateTime(baseAccount.getCreateTime());
         baseAccount.setStatus(1);
+        if (ObjectUtil.isEmpty(baseAccount.getPasswordUpdateTime())) {
+            baseAccount.setPasswordUpdateTime(new Date());
+        }
         baseAccountMapper.insert(baseAccount);
         return baseAccount;
     }
@@ -246,7 +242,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
             throw new ServiceException("密码强度不够,请重新设置");
         }
         BaseAccount baseAccount = new BaseAccount();
+        Date now = new Date();
 //        baseAccount.setUpdateTime(new Date());
+        baseAccount.setPasswordUpdateTime(now);
         baseAccount.setPassword(SecurityUtils.encryptPassword(password));
         QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
         wrapper.lambda()

@@ -224,4 +224,14 @@ public class JbmConstants {
      */
     public static final String ACCOUNT_DOMAIN_ADMIN = "@admin.com";
     public static final String ACCOUNT_DOMAIN_PORTAL = "@portal.com";
+
+    /**
+     * 密码过期天数
+     */
+    public static final int PASSWORD_EXPIRE_DAYS = 90;
+
+    /**
+     * 密码到期前提醒天数阈值（距上次改密天数）
+     */
+    public static final int PASSWORD_WARN_DAYS = 80;
 }

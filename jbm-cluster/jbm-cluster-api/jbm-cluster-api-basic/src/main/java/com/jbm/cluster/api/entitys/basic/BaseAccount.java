@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.util.Date;
 
 /**
  * 系统用户-登录账号
@@ -64,6 +66,12 @@ public class BaseAccount extends MasterDataEntity {
      * 账号域
      */
     private String domain;
+
+    /**
+     * 密码最后修改时间
+     */
+    @ApiModelProperty("密码最后修改时间")
+    private Date passwordUpdateTime;
 
     public BaseAccount(Long userId, String account, String password, String accountType, String domain, String registerIp) {
         this.userId = userId;

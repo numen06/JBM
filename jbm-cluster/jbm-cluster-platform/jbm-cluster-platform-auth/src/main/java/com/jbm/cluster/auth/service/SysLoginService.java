@@ -22,6 +22,9 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.api.constants.RequestDeviceType;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
+import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseAccountLogs;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
@@ -50,6 +53,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +152,7 @@ public class SysLoginService {
         if (resultBody.getSuccess()) {
             log.info("获取到了用户信息,触发登录");
             checkLogin(loginProcessModel.getLoginType(), loginProcessModel.getUsername(), () -> true);
+            applyPasswordExpiryPolicy(loginProcessModel.getLoginType(), resultBody);
             //获取当前登录APPID
             // TODO: 2022/10/8 临时使用ClientID作为APPID
             BaseApp baseApp = baseAppPreprocessing.getAppByKey(loginProcessModel.getClientId());
@@ -335,14 +340,6 @@ public class SysLoginService {
     }
 
     /**
-     * 校验短信验证码
-     */
-    private boolean validateSmsCode(String phonenumber, String smsCode) {
-        // todo 此处使用手机号查询redis验证码与参数验证码是否一致 用户自行实现
-        return true;
-    }
-
-    /**
      * 登录校验
      */
     private void checkLogin(LoginType loginType, String username, Supplier<Boolean> supplier) {
@@ -352,8 +349,7 @@ public class SysLoginService {
         String loginFail = JbmConstants.LOGIN_FAIL;
 
         // 获取用户登录错误次数(可自定义限制策略 例如: key + username + ip)
-//        Integer errorNumber = redisService.getCacheObject(errorKey);
-        Integer errorNumber = 0;
+        Integer errorNumber = redisService.getCacheObject(errorKey);
         // 锁定时间内登录 则踢出
         if (ObjectUtil.isNotNull(errorNumber) && errorNumber.equals(setErrorNumber)) {
 //            recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitExceed(), errorLimitTime));
@@ -371,13 +367,57 @@ public class SysLoginService {
             } else {
                 // 未达到规定错误次数 则递增
                 redisService.setCacheObject(errorKey, errorNumber);
-//                recordLogininfor(username, loginFail, MessageUtils.message(loginType.getRetryLimitCount(), errorNumber));
-//                throw new UserException(loginType.getRetryLimitCount(), errorNumber);
+                if (StrUtil.isNotBlank(loginType.getRetryLimitCount())) {
+                    throw new UserException(loginType.getRetryLimitCount(), errorNumber);
+                }
             }
         } else {
             // 登录成功 清空错误次数
             redisService.deleteObject(errorKey);
         }
+    }
+
+    /**
+     * 密码过期策略：满90天强制改密；80天后登录提醒剩余天数
+     */
+    private void applyPasswordExpiryPolicy(LoginType loginType, ResultBody<JbmLoginUser> resultBody) {
+        if (!LoginType.PASSWORD.equals(loginType) || ObjectUtil.isEmpty(resultBody.getResult())) {
+            return;
+        }
+        JbmLoginUser user = resultBody.getResult();
+        ResultBody<List<BaseAccount>> accountsResult = baseUserServiceClient.getUserAccounts(user.getUserId());
+        if (!accountsResult.getSuccess() || CollUtil.isEmpty(accountsResult.getResult())) {
+            return;
+        }
+        Date latestUpdate = null;
+        for (BaseAccount account : accountsResult.getResult()) {
+            if (StrUtil.isBlank(account.getPassword())) {
+                continue;
+            }
+            Date pwdTime = ObjectUtil.defaultIfNull(account.getPasswordUpdateTime(), account.getUpdateTime());
+            if (pwdTime != null && (latestUpdate == null || pwdTime.after(latestUpdate))) {
+                latestUpdate = pwdTime;
+            }
+        }
+        if (latestUpdate == null) {
+            return;
+        }
+        long days = DateUtil.betweenDay(latestUpdate, DateTime.now(), false);
+        if (days >= JbmConstants.PASSWORD_EXPIRE_DAYS) {
+            throw new ServiceException("密码已过期，请先修改密码后再登录");
+        }
+        if (days >= JbmConstants.PASSWORD_WARN_DAYS) {
+            resultBody.put("passwordExpireDays", JbmConstants.PASSWORD_EXPIRE_DAYS - days);
+            resultBody.put("passwordNeedChange", false);
+        }
+    }
+
+    /**
+     * 校验短信验证码
+     */
+    private boolean validateSmsCode(String phonenumber, String smsCode) {
+        // todo 此处使用手机号查询redis验证码与参数验证码是否一致 用户自行实现
+        return true;
     }
 
 

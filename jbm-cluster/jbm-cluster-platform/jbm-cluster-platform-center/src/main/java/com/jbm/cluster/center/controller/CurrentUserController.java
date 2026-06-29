@@ -21,6 +21,7 @@ import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
+import com.jbm.util.sensitive.SensitiveContext;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,8 +75,13 @@ public class CurrentUserController {
     @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
     @GetMapping("/user/account")
     public ResultBody<UserAccount> userAccount() {
-        UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
-        return ResultBody.callback(() -> userAccount);
+        try {
+            SensitiveContext.skipMask();
+            UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
+            return ResultBody.callback(() -> userAccount);
+        } finally {
+            SensitiveContext.clear();
+        }
     }
 
     /**

@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jbm.framework.masterdata.annotation.TableAlias;
 import com.jbm.framework.masterdata.usage.entity.MasterDataEntity;
+import com.jbm.util.sensitive.SensitiveField;
+import com.jbm.util.sensitive.SensitiveType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -72,6 +74,7 @@ public class BaseUser extends MasterDataEntity {
      * 登陆名
      */
     @ApiModelProperty("真实姓名")
+    @SensitiveField(SensitiveType.NAME)
     private String realName;
 
     /**
@@ -84,12 +87,14 @@ public class BaseUser extends MasterDataEntity {
      * 邮箱
      */
     @ApiModelProperty("邮箱")
+    @SensitiveField(SensitiveType.EMAIL)
     private String email;
 
     /**
      * 手机号
      */
     @ApiModelProperty("手机号")
+    @SensitiveField(SensitiveType.MOBILE)
     private String mobile;
 
 

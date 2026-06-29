@@ -80,11 +80,20 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
      */
     @Override
     public BaseDoc uploadDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        if (ObjectUtil.isEmpty(file) || file.isEmpty()) {
+            throw new ServiceException("上传文件为空");
+        }
         baseDoc = this.createDoc(file, baseDoc, request);
         try {
             minioService.upload(Paths.get(baseDoc.getDocPath()), file.getInputStream());
+        } catch (MinioException e) {
+            throw new ServiceException("文件存储服务异常，上传失败");
+        } catch (java.net.SocketTimeoutException e) {
+            throw new ServiceException("文件上传超时，请稍后重试");
+        } catch (java.io.IOException e) {
+            throw new ServiceException("文件读取失败，请重试");
         } catch (Exception e) {
-            throw new ServiceException("上传文件发生错误");
+            throw new ServiceException("上传文件发生错误：" + StrUtil.emptyToDefault(e.getMessage(), "请稍后重试"));
         }
         this.saveEntity(baseDoc);
         return baseDoc;

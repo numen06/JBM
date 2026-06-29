@@ -5,6 +5,8 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.framework.exceptions.DemoModeException;
 import com.jbm.framework.exceptions.InnerAuthException;
 import com.jbm.framework.exceptions.auth.NotPermissionException;
+import com.jbm.framework.exceptions.file.FileSizeLimitExceededException;
+import com.jbm.framework.exceptions.file.ForbiddenExtensionException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import jbm.framework.web.WebExceptionResolve;
 import jbm.framework.web.exception.UnknownRuntimeExceptionFilter;
@@ -18,9 +20,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -168,6 +174,52 @@ public class GlobalDefaultExceptionHandler {
     public ResultBody handleDemoModeException(DemoModeException e, HttpServletResponse response) {
         ResultBody resultBody = ResultBody.failed().msg("演示模式，不允许操作");
         return returnResult(resultBody, response);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResultBody handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, HttpServletResponse response) {
+        long maxSize = e.getMaxUploadSize();
+        String limit = maxSize > 0 ? formatFileSize(maxSize) : "系统限制";
+        ResultBody resultBody = ResultBody.failed().msg("文件大小超过限制（" + limit + "），请压缩后重试");
+        return returnResult(resultBody, response);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResultBody handleMultipartException(MultipartException e, HttpServletResponse response) {
+        ResultBody resultBody = ResultBody.failed().msg("文件上传失败，请检查网络连接或文件大小后重试");
+        return returnResult(resultBody, response);
+    }
+
+    @ExceptionHandler(FileSizeLimitExceededException.class)
+    public ResultBody handleFileSizeLimitExceededException(FileSizeLimitExceededException e, HttpServletResponse response) {
+        ResultBody resultBody = ResultBody.failed().msg("文件大小超过系统限制，请压缩后重试");
+        return returnResult(resultBody, response);
+    }
+
+    @ExceptionHandler(ForbiddenExtensionException.class)
+    public ResultBody handleForbiddenExtensionException(ForbiddenExtensionException e, HttpServletResponse response) {
+        ResultBody resultBody = ResultBody.failed().msg("不允许上传该类型文件");
+        return returnResult(resultBody, response);
+    }
+
+    @ExceptionHandler({SocketTimeoutException.class, IOException.class})
+    public ResultBody handleUploadIoException(Exception e, HttpServletRequest request, HttpServletResponse response) {
+        String uri = request.getRequestURI();
+        if (uri != null && (uri.contains("/put") || uri.contains("/upload") || uri.contains("/baseDoc"))) {
+            ResultBody resultBody = ResultBody.failed().msg("文件上传超时或中断，请稍后重试");
+            return returnResult(resultBody, response);
+        }
+        return handleException(e, request, response);
+    }
+
+    private static String formatFileSize(long bytes) {
+        if (bytes >= 1024 * 1024) {
+            return (bytes / (1024 * 1024)) + "MB";
+        }
+        if (bytes >= 1024) {
+            return (bytes / 1024) + "KB";
+        }
+        return bytes + "B";
     }
 
 
