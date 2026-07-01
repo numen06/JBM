@@ -1,0 +1,556 @@
+# 自动生成代码记录（扫描包时建立的实体与生成文件对应关系）
+!!com.jbm.framework.masterdata.code.model.AutocodeYaml
+generatedAt: '2026-07-01 17:04:34'
+items:
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityApp
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAuthorityAppMapper.xml
+    timestamp: '2026-06-04 15:59:39.049'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAuthorityAppMapper.java
+    timestamp: '2026-06-04 15:59:39.017'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAuthorityAppService.java
+    timestamp: '2026-06-04 15:59:39.026'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityAppController.java
+    timestamp: '2026-06-04 15:59:39.004'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAppConfig
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAppConfigMapper.xml
+    timestamp: '2026-06-04 15:59:39.048'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAppConfigMapper.java
+    timestamp: '2026-06-04 15:59:39.016'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAppConfigService.java
+    timestamp: '2026-06-04 15:59:39.025'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppConfigServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAppConfigController.java
+    timestamp: '2026-06-04 15:59:39.003'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityUser
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAuthorityUserMapper.xml
+    timestamp: '2026-06-04 15:59:39.049'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAuthorityUserMapper.java
+    timestamp: '2026-06-04 15:59:39.018'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAuthorityUserService.java
+    timestamp: '2026-06-04 15:59:39.027'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityUserController.java
+    timestamp: '2026-06-04 15:59:39.005'
+- entity: com.jbm.cluster.api.entitys.basic.BaseOpenUser
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseOpenUserMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseOpenUserMapper.java
+    timestamp: '2026-06-04 15:59:39.019'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseOpenUserService.java
+    timestamp: '2026-06-04 15:59:39.028'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOpenUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseOpenUserController.java
+    timestamp: '2026-06-04 15:59:39.006'
+- entity: com.jbm.cluster.api.entitys.basic.BaseDeveloper
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseDeveloperMapper.xml
+    timestamp: '2026-06-04 15:59:39.050'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseDeveloperMapper.java
+    timestamp: '2026-06-04 15:59:39.018'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseDeveloperService.java
+    timestamp: '2026-06-04 15:59:39.027'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDeveloperServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseDeveloperController.java
+    timestamp: '2026-06-04 15:59:39.005'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityAction
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAuthorityActionMapper.xml
+    timestamp: '2026-06-04 15:59:39.048'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAuthorityActionMapper.java
+    timestamp: '2026-06-04 15:59:39.017'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAuthorityActionService.java
+    timestamp: '2026-06-04 15:59:39.026'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityActionController.java
+    timestamp: '2026-06-04 15:59:39.004'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthorityRole
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAuthorityRoleMapper.xml
+    timestamp: '2026-06-04 15:59:39.049'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAuthorityRoleMapper.java
+    timestamp: '2026-06-04 15:59:39.018'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAuthorityRoleService.java
+    timestamp: '2026-06-04 15:59:39.026'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityRoleController.java
+    timestamp: '2026-06-04 15:59:39.005'
+- entity: com.jbm.cluster.api.entitys.basic.BaseRole
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseRoleMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseRoleMapper.java
+    timestamp: '2026-06-04 15:59:39.019'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseRoleService.java
+    timestamp: '2026-06-04 15:59:39.029'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseRoleController.java
+    timestamp: '2026-06-04 15:59:39.007'
+- entity: com.jbm.cluster.api.entitys.basic.Feedback
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/FeedbackMapper.xml
+    timestamp: '2026-06-04 15:59:39.053'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/FeedbackMapper.java
+    timestamp: '2026-06-04 15:59:39.021'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/FeedbackService.java
+    timestamp: '2026-06-04 15:59:39.031'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.041'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.041'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/FeedbackServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.041'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/FeedbackController.java
+    timestamp: '2026-06-04 15:59:39.009'
+- entity: com.jbm.cluster.api.entitys.basic.BaseRoleUser
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseRoleUserMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseRoleUserMapper.java
+    timestamp: '2026-06-04 15:59:39.020'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseRoleUserService.java
+    timestamp: '2026-06-04 15:59:39.029'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseRoleUserServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseRoleUserController.java
+    timestamp: '2026-06-04 15:59:39.007'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAccount
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAccountMapper.xml
+    timestamp: '2026-06-04 15:59:39.047'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAccountMapper.java
+    timestamp: '2026-06-04 15:59:39.015'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAccountService.java
+    timestamp: '2026-06-04 15:59:39.022'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountServiceImpl.java
+    timestamp: '2026-06-29 16:01:12.404'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountServiceImpl.java
+    timestamp: '2026-06-29 16:01:12.404'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountServiceImpl.java
+    timestamp: '2026-06-29 16:01:12.404'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAccountController.java
+    timestamp: '2026-06-04 15:59:39.002'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAuthority
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAuthorityMapper.xml
+    timestamp: '2026-06-04 15:59:39.049'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAuthorityMapper.java
+    timestamp: '2026-06-04 15:59:39.017'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAuthorityService.java
+    timestamp: '2026-06-04 15:59:39.027'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAuthorityServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.036'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAuthorityController.java
+    timestamp: '2026-06-04 15:59:39.004'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUserConfig
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseUserConfigMapper.xml
+    timestamp: '2026-06-04 15:59:39.052'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseUserConfigMapper.java
+    timestamp: '2026-06-04 15:59:39.020'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseUserConfigService.java
+    timestamp: '2026-07-01 16:22:08.258'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-07-01 17:03:05.275'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-07-01 17:03:05.275'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserConfigServiceImpl.java
+    timestamp: '2026-07-01 17:03:05.275'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserConfigController.java
+    timestamp: '2026-07-01 17:03:21.849'
+- entity: com.jbm.cluster.api.entitys.basic.BaseMenu
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseMenuMapper.xml
+    timestamp: '2026-06-04 15:59:39.050'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseMenuMapper.java
+    timestamp: '2026-06-04 15:59:39.019'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseMenuService.java
+    timestamp: '2026-06-04 15:59:39.028'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseMenuServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseMenuController.java
+    timestamp: '2026-06-04 15:59:39.006'
+- entity: com.jbm.cluster.api.entitys.basic.BaseDic
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseDicMapper.xml
+    timestamp: '2026-06-04 15:59:39.050'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseDicMapper.java
+    timestamp: '2026-06-04 15:59:39.018'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseDicService.java
+    timestamp: '2026-06-04 15:59:39.027'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseDicServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.037'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseDicController.java
+    timestamp: '2026-06-04 15:59:39.005'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAction
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseActionMapper.xml
+    timestamp: '2026-06-04 15:59:39.047'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseActionMapper.java
+    timestamp: '2026-06-04 15:59:39.016'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseActionService.java
+    timestamp: '2026-06-04 15:59:39.024'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseActionServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseActionController.java
+    timestamp: '2026-06-04 15:59:39.002'
+- entity: com.jbm.cluster.api.entitys.basic.BaseApi
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseApiMapper.xml
+    timestamp: '2026-06-04 15:59:39.047'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseApiMapper.java
+    timestamp: '2026-06-04 15:59:39.016'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseApiService.java
+    timestamp: '2026-06-04 15:59:39.024'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseApiServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.034'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseApiController.java
+    timestamp: '2026-06-04 15:59:39.003'
+- entity: com.jbm.cluster.api.entitys.basic.BaseApp
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAppMapper.xml
+    timestamp: '2026-06-04 15:59:39.048'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAppMapper.java
+    timestamp: '2026-06-04 15:59:39.016'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAppService.java
+    timestamp: '2026-06-04 15:59:39.025'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAppServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAppController.java
+    timestamp: '2026-06-04 15:59:39.003'
+- entity: com.jbm.cluster.api.entitys.basic.BaseOrg
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseOrgMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseOrgMapper.java
+    timestamp: '2026-06-04 15:59:39.019'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseOrgService.java
+    timestamp: '2026-06-04 15:59:39.028'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseOrgServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseOrgController.java
+    timestamp: '2026-06-04 15:59:39.006'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUserCertification
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseUserCertificationMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseUserCertificationMapper.java
+    timestamp: '2026-06-04 15:59:39.020'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseUserCertificationService.java
+    timestamp: '2026-06-04 15:59:39.029'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserCertificationServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.039'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserCertificationController.java
+    timestamp: '2026-06-04 15:59:39.007'
+- entity: com.jbm.cluster.api.entitys.basic.BaseUser
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseUserMapper.xml
+    timestamp: '2026-06-12 14:33:46.080'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseUserMapper.java
+    timestamp: '2026-06-12 14:33:43.735'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseUserService.java
+    timestamp: '2026-06-17 14:46:18.650'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserServiceImpl.java
+    timestamp: '2026-06-17 14:46:18.650'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserServiceImpl.java
+    timestamp: '2026-06-17 14:46:18.650'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseUserServiceImpl.java
+    timestamp: '2026-06-17 14:46:18.650'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseUserController.java
+    timestamp: '2026-06-04 15:59:39.008'
+- entity: com.jbm.cluster.api.entitys.basic.BaseAccountLogs
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAccountLogsMapper.xml
+    timestamp: '2026-06-04 15:59:39.046'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAccountLogsMapper.java
+    timestamp: '2026-06-04 15:59:39.015'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAccountLogsService.java
+    timestamp: '2026-06-04 15:59:39.022'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.033'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.033'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAccountLogsServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.033'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAccountLogsController.java
+    timestamp: '2026-06-29 15:59:58.846'
+- entity: com.jbm.cluster.api.entitys.basic.BaseArea
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseAreaMapper.xml
+    timestamp: '2026-06-04 15:59:39.048'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseAreaMapper.java
+    timestamp: '2026-06-04 15:59:39.017'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseAreaService.java
+    timestamp: '2026-06-04 15:59:39.026'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseAreaServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.035'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseAreaController.java
+    timestamp: '2026-06-04 15:59:39.004'
+- entity: com.jbm.cluster.api.entitys.basic.BaseReleaseInfo
+  generated:
+  - codeType: mapperXml
+    path: src/main/resources/mapper/BaseReleaseInfoMapper.xml
+    timestamp: '2026-06-04 15:59:39.051'
+  - codeType: mapper
+    path: src/main/java/com/jbm/cluster/center/mapper/BaseReleaseInfoMapper.java
+    timestamp: '2026-06-04 15:59:39.019'
+  - codeType: service
+    path: src/main/java/com/jbm/cluster/center/service/BaseReleaseInfoService.java
+    timestamp: '2026-06-04 15:59:39.028'
+  - codeType: serviceImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: business
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: businessImpl
+    path: src/main/java/com/jbm/cluster/center/service/impl/BaseReleaseInfoServiceImpl.java
+    timestamp: '2026-06-04 15:59:39.038'
+  - codeType: controller
+    path: src/main/java/com/jbm/cluster/center/controller/BaseReleaseInfoController.java
+    timestamp: '2026-06-04 15:59:39.006'

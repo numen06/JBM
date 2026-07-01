@@ -1,5 +1,6 @@
 package com.jbm.cluster.push.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
@@ -70,14 +71,15 @@ public class PushMessageController {
         return ResultBody.success(dataPaging, "获取登录人的消息列表成功");
     }
 
-    @ApiOperation("发送用户站内信")
+    @SaCheckLogin
+    @ApiOperation(value = "发送用户站内信", notes = "当前用户发送，sendUserId 可省略，服务端按 token 自动填充")
     @PostMapping("/sendUserMessage")
     public ResultBody<String> sendUserMessage(@RequestBody PushMsg pushMsg) {
         return ResultBody.callback(() -> {
-                    this.pushMessageBodyService.sendPushMsg(pushMsg);
-                    return "发送用户站内信成功";
-                }
-        );
+            pushMessageBodyService.prepareUserPushMsg(pushMsg);
+            this.pushMessageBodyService.sendPushMsg(pushMsg);
+            return "发送用户站内信成功";
+        });
     }
 
     @ApiOperation("发送系统站内信")
@@ -101,9 +103,11 @@ public class PushMessageController {
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
 
-    @ApiOperation("发送推送消息")
+    @SaCheckLogin
+    @ApiOperation(value = "发送推送消息", notes = "当前用户发送，sendUserId 可省略，服务端按 token 自动填充")
     @PostMapping("/sendPushMsg")
     public ResultBody<String> sendPushMsg(@RequestBody PushMsg pushMsg) {
+        pushMessageBodyService.prepareUserPushMsg(pushMsg);
         jbmClusterNotification.pushMsg(pushMsg);
         return ResultBody.ok("发送推送消息成功");
     }

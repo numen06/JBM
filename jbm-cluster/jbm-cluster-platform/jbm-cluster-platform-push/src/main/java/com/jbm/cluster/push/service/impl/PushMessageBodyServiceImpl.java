@@ -101,6 +101,22 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
     private PushMessageBodyService self;
 
     @Override
+    public void prepareUserPushMsg(PushMsg pushMsg) {
+        if (BooleanUtil.isTrue(pushMsg.getSysMsg())) {
+            return;
+        }
+        Long currentUserId = LoginHelper.getUserId();
+        if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
+            pushMsg.setSendUserId(currentUserId);
+        } else if (!ObjectUtil.equal(pushMsg.getSendUserId(), currentUserId) && !LoginHelper.isAdmin()) {
+            throw new ServiceException("无权以其他用户身份发送消息");
+        }
+        if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
+            throw new ServiceException("请先登录后再发送消息");
+        }
+    }
+
+    @Override
     public void sendPushMsg(PushMsg pushMsg) {
         if (ObjectUtil.isEmpty(pushMsg.getPushWays())) {
             pushMsg.setPushWays(Lists.newArrayList(PushWay.internal));
@@ -114,9 +130,9 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         if (ObjectUtil.isAllEmpty(pushMsg.getRecUserIds(), pushMsg.getTags())) {
             throw new ServiceException("用户站内信请指定接收者，标签组");
         }
-        if (BooleanUtil.isFalse(pushMsg.getSysMsg())) {
+        if (!BooleanUtil.isTrue(pushMsg.getSysMsg())) {
             if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
-                pushMsg.setSendUserId(LoginHelper.getUserId());
+                prepareUserPushMsg(pushMsg);
             }
             if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
                 throw new ServiceException("请指定发送者");

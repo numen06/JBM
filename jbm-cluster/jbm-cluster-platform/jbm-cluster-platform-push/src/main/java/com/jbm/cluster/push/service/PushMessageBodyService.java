@@ -21,6 +21,12 @@ public interface PushMessageBodyService extends IMasterDataService<PushMessageBo
 
     DataPaging<PushMessageResult> findUserPushMessage(PushMessageForm pushMessageform);
 
+    /**
+     * 非系统消息时解析发送者：未传 sendUserId 则取当前登录用户。
+     * 须在 HTTP 请求线程调用（sendPushMsg 走 MQ 前需先执行）。
+     */
+    void prepareUserPushMsg(PushMsg pushMsg);
+
     void sendPushMsg(PushMsg pushMsg);
 
     void sendSysMessage(PushMessageBody pushMessageBody);

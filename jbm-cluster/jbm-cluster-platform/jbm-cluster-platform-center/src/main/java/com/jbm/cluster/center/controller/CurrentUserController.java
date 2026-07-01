@@ -3,7 +3,6 @@ package com.jbm.cluster.center.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.OrgUserScope;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
@@ -130,11 +129,7 @@ public class CurrentUserController {
     public ResultBody<BaseUserConfig> currentUserConfig() {
         return ResultBody.callback(() -> {
             JbmLoginUser loginUser = LoginHelper.getLoginUser();
-            QueryWrapper<BaseUserConfig> wrapper = new QueryWrapper<>();
-            wrapper.lambda()
-                    .eq(BaseUserConfig::getUserId, LoginHelper.getUserId())
-                    .eq(BaseUserConfig::getAppId, loginUser.getAppId());
-            return baseUserConfigService.selectEntityByWapper(wrapper);
+            return baseUserConfigService.findByUserIdAndAppId(LoginHelper.getUserId(), loginUser.getAppId());
         });
     }
 
@@ -144,7 +139,6 @@ public class CurrentUserController {
     public ResultBody<BaseUserConfig> saveCurrentUserConfig(@RequestBody BaseUserConfig config) {
         return ResultBody.callback("保存用户配置成功", () -> {
             BaseUserConfig entity = ObjectUtil.defaultIfNull(config, new BaseUserConfig());
-            entity.setUserId(LoginHelper.getUserId());
             if (ObjectUtil.isNotEmpty(config) && ObjectUtil.isNotEmpty(config.getId())) {
                 entity.setId(config.getId());
             }
