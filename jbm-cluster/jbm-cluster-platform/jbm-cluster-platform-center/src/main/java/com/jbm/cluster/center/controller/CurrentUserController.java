@@ -3,14 +3,19 @@ package com.jbm.cluster.center.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.constants.OrgUserScope;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
+import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
+import com.jbm.cluster.api.entitys.basic.BaseUserConfig;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.api.model.basic.CurrentUserSubscribeAddress;
 import com.jbm.cluster.api.model.basic.OrgUserQueryResult;
 import com.jbm.cluster.center.service.BaseAuthorityService;
+import com.jbm.cluster.center.service.BaseUserConfigService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
@@ -25,6 +30,7 @@ import com.jbm.util.sensitive.SensitiveContext;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +49,14 @@ public class CurrentUserController {
     private BaseUserService baseUserService;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
+    @Autowired
+    private BaseUserConfigService baseUserConfigService;
+
+    /**
+     * trade 服务 MQTT topic 前缀，与前端 VUE_APP_MICRO_SERVICE_TRADE_PATH 对齐，未配置则不下发续费相关 topic
+     */
+    @Value("${jbm.cluster.mqtt.trade-path-prefix:}")
+    private String tradeMqttPathPrefix;
 
     /**
      * 修改当前登录用户密码
@@ -101,6 +115,87 @@ public class CurrentUserController {
         } finally {
             SensitiveContext.clear();
         }
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取当前登录用户角色", notes = "无需传 userId，替代 POST /user/userRoles")
+    @GetMapping("/user/roles")
+    public ResultBody<List<BaseRole>> currentUserRoles() {
+        return ResultBody.callback(() -> baseUserService.getUserRoles(LoginHelper.getUserId()));
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取当前登录用户配置", notes = "按 token 身份与当前 appId 查询，替代 POST /baseUserConfig/model")
+    @GetMapping("/user/config")
+    public ResultBody<BaseUserConfig> currentUserConfig() {
+        return ResultBody.callback(() -> {
+            JbmLoginUser loginUser = LoginHelper.getLoginUser();
+            QueryWrapper<BaseUserConfig> wrapper = new QueryWrapper<>();
+            wrapper.lambda()
+                    .eq(BaseUserConfig::getUserId, LoginHelper.getUserId())
+                    .eq(BaseUserConfig::getAppId, loginUser.getAppId());
+            return baseUserConfigService.selectEntityByWapper(wrapper);
+        });
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "保存当前登录用户配置", notes = "忽略请求体中的 userId，替代 POST /baseUserConfig/save")
+    @PostMapping("/user/config")
+    public ResultBody<BaseUserConfig> saveCurrentUserConfig(@RequestBody BaseUserConfig config) {
+        return ResultBody.callback("保存用户配置成功", () -> {
+            BaseUserConfig entity = ObjectUtil.defaultIfNull(config, new BaseUserConfig());
+            entity.setUserId(LoginHelper.getUserId());
+            if (ObjectUtil.isNotEmpty(config) && ObjectUtil.isNotEmpty(config.getId())) {
+                entity.setId(config.getId());
+            }
+            return baseUserConfigService.saveEntity(entity);
+        });
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "修改当前登录用户个人资料", notes = "JSON Body，替代 POST /user/save 个人资料分支")
+    @PostMapping("/user/profile")
+    public ResultBody updateCurrentUserProfile(@RequestBody BaseUser profile) {
+        BaseUser user = new BaseUser();
+        user.setUserId(LoginHelper.getUserId());
+        if (StrUtil.isNotBlank(profile.getNickName())) {
+            user.setNickName(profile.getNickName());
+        }
+        if (StrUtil.isNotBlank(profile.getRealName())) {
+            user.setRealName(profile.getRealName());
+        }
+        if (StrUtil.isNotBlank(profile.getEmail())) {
+            user.setEmail(profile.getEmail());
+        }
+        if (StrUtil.isNotBlank(profile.getMobile())) {
+            user.setMobile(profile.getMobile());
+        }
+        if (StrUtil.isNotBlank(profile.getUserDesc())) {
+            user.setUserDesc(profile.getUserDesc());
+        }
+        if (StrUtil.isNotBlank(profile.getAvatar())) {
+            user.setAvatar(profile.getAvatar());
+        }
+        baseUserService.updateUser(user);
+        return ResultBody.ok();
+    }
+
+    @SaCheckLogin
+    @ApiOperation(value = "获取当前用户 MQTT 订阅地址", notes = "供前端订阅用户通知 topic，替代从 account 解析 userId 拼装 topic")
+    @GetMapping("/user/subscribe")
+    public ResultBody<CurrentUserSubscribeAddress> currentUserSubscribeAddress() {
+        return ResultBody.callback(() -> {
+            Long userId = LoginHelper.getUserId();
+            CurrentUserSubscribeAddress address = new CurrentUserSubscribeAddress();
+            address.setUserId(userId);
+            address.setUserNotify("user/" + userId);
+            if (StrUtil.isNotBlank(tradeMqttPathPrefix)) {
+                String prefix = StrUtil.removeSuffix(tradeMqttPathPrefix, "/");
+                address.setAccountExpiringNotify(prefix + "/platform/notify/expiring/" + userId);
+                address.setAccountExpiredNotify(prefix + "/platform/notify/expired/" + userId);
+            }
+            return address;
+        });
     }
 
     /**

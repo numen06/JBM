@@ -10,6 +10,7 @@ import com.jbm.cluster.api.entitys.message.PushMessageBody;
 import com.jbm.cluster.api.entitys.message.PushMessageItem;
 import com.jbm.cluster.api.model.push.PushMessageResult;
 import com.jbm.cluster.api.model.push.PushMsg;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.push.form.PushMessageForm;
 import com.jbm.cluster.push.handler.NotificationDispatcher;
 import com.jbm.cluster.push.service.PushMessageBodyService;
@@ -115,7 +116,10 @@ public class PushMessageBodyServiceImpl extends MasterDataServiceImpl<PushMessag
         }
         if (BooleanUtil.isFalse(pushMsg.getSysMsg())) {
             if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
-                throw new ServiceException("请指定接收者");
+                pushMsg.setSendUserId(LoginHelper.getUserId());
+            }
+            if (ObjectUtil.isEmpty(pushMsg.getSendUserId())) {
+                throw new ServiceException("请指定发送者");
             }
         }
         PushMessageBody pushMessageBody = new PushMessageBody();

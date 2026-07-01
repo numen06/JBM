@@ -41,6 +41,9 @@ jbm:
   debug: ${JBM_DEBUG:false}
   cluster:
     token-type: redis
+    # trade 服务 MQTT topic 前缀，供 GET /current/user/subscribe 下发续费通知 topic（与前端 VUE_APP_MICRO_SERVICE_TRADE_PATH 一致）
+    # mqtt:
+    #   trade-path-prefix: /trade
     permit-all:
       #      - /authority/access
       #      - /authority/app
