@@ -1,6 +1,7 @@
 package com.jbm.cluster.doc.service;
 
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
+import com.jbm.cluster.doc.common.file.UploadCategory;
 import com.jbm.framework.masterdata.service.IMasterDataService;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,14 @@ import java.util.List;
  */
 public interface BaseDocService extends IMasterDataService<BaseDoc> {
 
+    BaseDoc uploadImage(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request);
+
+    BaseDoc uploadDocument(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request);
+
+    /**
+     * @deprecated 请使用 {@link #uploadDocument(MultipartFile, BaseDoc, HttpServletRequest)}
+     */
+    @Deprecated
     BaseDoc uploadDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request);
 
     void removeDoc(String docId);
@@ -25,7 +34,9 @@ public interface BaseDocService extends IMasterDataService<BaseDoc> {
 
     BaseDoc createDoc(File file);
 
-    BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc,  HttpServletRequest request);
+    BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request);
+
+    BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request, UploadCategory category);
 
     List<BaseDoc> findGroupItemsByPath(String groupPath);
 }

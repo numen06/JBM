@@ -115,7 +115,7 @@ public class BaseDocGroupController extends MasterDataCollection<BaseDocGroup, B
             BaseDoc baseDoc = new BaseDoc();
             baseDoc.setDocGroupId(group.getGroupId());
             baseDoc.setDocGroup(group.getGroupPath());
-            return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
+            return baseDocService.uploadDocument(file, baseDoc, request).getDocPath();
         });
     }
 

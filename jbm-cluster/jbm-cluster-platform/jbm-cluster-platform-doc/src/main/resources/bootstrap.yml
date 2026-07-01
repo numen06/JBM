@@ -44,8 +44,103 @@ jbm:
       - /v1/3rd/file/**
       - /health/file
       - /actuator/health
+  # 上传扩展名白名单（也可写入 Nacos doc.properties）
+  # 覆盖：image/document-allowed-extensions 非空时完全替换内置默认列表
+  # 追加：未配置覆盖列表时，用 additional-*-extensions 在默认办公/图片类型上追加
+  doc:
+    upload:
+      # 图片：内置默认 jpg/jpeg/png/gif/webp/bmp/ico，以下为常见追加类型
+      additional-image-extensions:
+        - svg
+        - tif
+        - tiff
+        - heic
+        - heif
+        - avif
+        - jfif
+        - jpe
+        - apng
+        - psd
+        - wbmp
+      # 文档：内置默认办公类型（pdf/doc/xls/ppt 等），以下为常见追加类型
+      additional-document-extensions:
+        # 日志与文本
+        - log
+        - rtf
+        - ini
+        - cfg
+        - conf
+        - env
+        - bak
+        - dat
+        # 数据与配置
+        - json
+        - xml
+        - yaml
+        - yml
+        - md
+        - sql
+        - properties
+        # 压缩包
+        - zip
+        - rar
+        - 7z
+        - tar
+        - gz
+        - tgz
+        - bz2
+        - xz
+        - cab
+        # OpenDocument / 其他办公
+        - odt
+        - ods
+        - odp
+        - ott
+        - ots
+        - otp
+        - vsd
+        - vsdx
+        # 邮件与证书
+        - eml
+        - msg
+        - cer
+        - pem
+        - crt
+        - der
+        - p12
+        - pfx
+        # 音视频附件
+        - mp4
+        - m4v
+        - avi
+        - mov
+        - mkv
+        - webm
+        - wmv
+        - flv
+        - 3gp
+        - mp3
+        - wav
+        - wma
+        - m4a
+        - aac
+        - flac
+        - ogg
+        - amr
+        # 电子书 / 设计 / 字体
+        - epub
+        - mobi
+        - dwg
+        - dxf
+        - ttf
+        - otf
+        - woff
+        - woff2
+        - drawio
+        # 网页导出（仍受黑名单拦截 jsp/php 等）
+        - html
+        - htm
 swagger2:
   enabled: true
   description: 平台文档服务器
   title: 平台文档服务器
-

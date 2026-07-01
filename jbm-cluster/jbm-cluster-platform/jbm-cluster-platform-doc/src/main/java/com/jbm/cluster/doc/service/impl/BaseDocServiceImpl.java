@@ -8,9 +8,10 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.doc.BaseDoc;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.doc.common.file.UploadCategory;
+import com.jbm.cluster.doc.config.DocUploadSecurityService;
 import com.jbm.cluster.doc.service.BaseDocService;
 import com.jbm.framework.exceptions.ServiceException;
-import com.jbm.framework.file.FileUploadSecurityUtils;
 import com.jbm.framework.service.mybatis.MasterDataServiceImpl;
 import com.jbm.util.bean.Version;
 import jbm.framework.boot.autoconfigure.minio.MinioException;
@@ -42,6 +43,9 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
     @Autowired
     private MinioService minioService;
 
+    @Autowired
+    private DocUploadSecurityService docUploadSecurityService;
+
     private static String getExtractPath(final HttpServletRequest request) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
@@ -70,6 +74,16 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
         return super.removeByIds(list);
     }
 
+    @Override
+    public BaseDoc uploadImage(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        return uploadFile(file, baseDoc, request, UploadCategory.IMAGE);
+    }
+
+    @Override
+    public BaseDoc uploadDocument(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        return uploadFile(file, baseDoc, request, UploadCategory.DOCUMENT);
+    }
+
     /**
      * 上传文档
      *
@@ -77,13 +91,19 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
      * @param baseDoc 基础文档对象
      * @param request HTTP请求对象
      * @return 上传的文档对象
+     * @deprecated 请使用 {@link #uploadDocument(MultipartFile, BaseDoc, HttpServletRequest)}
      */
+    @Deprecated
     @Override
     public BaseDoc uploadDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        return uploadDocument(file, baseDoc, request);
+    }
+
+    private BaseDoc uploadFile(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request, UploadCategory category) {
         if (ObjectUtil.isEmpty(file) || file.isEmpty()) {
             throw new ServiceException("上传文件为空");
         }
-        baseDoc = this.createDoc(file, baseDoc, request);
+        baseDoc = this.createDoc(file, baseDoc, request, category);
         try {
             minioService.upload(Paths.get(baseDoc.getDocPath()), file.getInputStream());
         } catch (MinioException e) {
@@ -193,10 +213,16 @@ public class BaseDocServiceImpl extends MasterDataServiceImpl<BaseDoc> implement
      */
     @Override
     public BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request) {
+        return createDoc(file, baseDoc, request, UploadCategory.DOCUMENT);
+    }
+
+    @Override
+    public BaseDoc createDoc(MultipartFile file, BaseDoc baseDoc, HttpServletRequest request, UploadCategory category) {
         if (ObjectUtil.isEmpty(file)) {
             throw new ServiceException("上传文件为空");
         }
-        FileUploadSecurityUtils.assertAllowed(file.getOriginalFilename());
+        String originalFilename = file.getOriginalFilename();
+        docUploadSecurityService.assertAllowed(originalFilename, category);
         final String filePath = getExtractPath(request);
         // 扩展名
         String extName = FileUtil.extName(file.getOriginalFilename());

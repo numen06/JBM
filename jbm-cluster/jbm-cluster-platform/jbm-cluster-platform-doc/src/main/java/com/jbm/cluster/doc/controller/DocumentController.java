@@ -40,35 +40,55 @@ public class DocumentController {
     private WpsFileService wpsFileService;
 
     /**
-     * 上传随机文档
+     * 上传随机文档（仅办公文档类型，图片请使用 /upload/image）
      *
      * @param file    上传的文件
      * @param request 请求对象
      * @return 上传结果
      */
-    @ApiOperation(value = "上传随机文档")
+    @ApiOperation(value = "上传随机文档", notes = "仅允许办公文档类型（pdf/doc/xls 等），图片请使用 POST /upload/image")
     @PostMapping("/put")
     public ResultBody<String> put(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request) {
         return ResultBody.callback("上传文档成功", () -> {
-            return baseDocService.uploadDoc(file, null, request).getDocPath();
+            return baseDocService.uploadDocument(file, null, request).getDocPath();
         });
     }
 
 
     /**
-     * 上传特定文档
+     * 上传特定文档（仅办公文档类型，图片请使用 /upload/image）
      *
      * @param file    上传的文件
      * @param request 请求对象
      * @return 上传结果
      */
-    @ApiOperation(value = "上传特定文档")
+    @ApiOperation(value = "上传特定文档", notes = "仅允许办公文档类型（pdf/doc/xls 等），图片请使用 POST /upload/image")
     @PostMapping("/upload")
     public ResultBody<String> upload(@RequestParam(value = "file", required = false) MultipartFile file, @RequestParam(value = "group", required = false) String group, HttpServletRequest request) {
         return ResultBody.callback("上传文档成功", () -> {
             BaseDoc baseDoc = new BaseDoc();
             baseDoc.setDocGroup(group);
-            return baseDocService.uploadDoc(file, baseDoc, request).getDocPath();
+            return baseDocService.uploadDocument(file, baseDoc, request).getDocPath();
+        });
+    }
+
+    /**
+     * 上传图片
+     *
+     * @param file    上传的图片文件
+     * @param group   可选分组
+     * @param request 请求对象
+     * @return 上传结果
+     */
+    @ApiOperation(value = "上传图片", notes = "扩展名白名单由 jbm.doc.upload.image-allowed-extensions / additional-image-extensions 配置")
+    @PostMapping("/upload/image")
+    public ResultBody<String> uploadImage(@RequestParam(value = "file", required = false) MultipartFile file,
+                                          @RequestParam(value = "group", required = false) String group,
+                                          HttpServletRequest request) {
+        return ResultBody.callback("上传图片成功", () -> {
+            BaseDoc baseDoc = new BaseDoc();
+            baseDoc.setDocGroup(group);
+            return baseDocService.uploadImage(file, baseDoc, request).getDocPath();
         });
     }
 

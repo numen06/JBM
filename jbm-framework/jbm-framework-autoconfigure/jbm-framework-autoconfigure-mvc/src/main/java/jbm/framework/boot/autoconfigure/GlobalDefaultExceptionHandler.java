@@ -205,11 +205,18 @@ public class GlobalDefaultExceptionHandler {
     @ExceptionHandler({SocketTimeoutException.class, IOException.class})
     public ResultBody handleUploadIoException(Exception e, HttpServletRequest request, HttpServletResponse response) {
         String uri = request.getRequestURI();
-        if (uri != null && (uri.contains("/put") || uri.contains("/upload") || uri.contains("/baseDoc"))) {
+        if (isDocUploadUri(uri)) {
             ResultBody resultBody = ResultBody.failed().msg("文件上传超时或中断，请稍后重试");
             return returnResult(resultBody, response);
         }
         return handleException(e, request, response);
+    }
+
+    private static boolean isDocUploadUri(String uri) {
+        return uri != null && (uri.contains("/put")
+                || uri.contains("/upload/image")
+                || uri.contains("/upload")
+                || uri.contains("/baseDoc"));
     }
 
     private static String formatFileSize(long bytes) {

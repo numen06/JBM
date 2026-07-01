@@ -49,4 +49,53 @@ class FileUploadSecurityUtilsTest {
     void assertAllowedShouldPassForAllowedExtension() {
         assertDoesNotThrow(() -> FileUploadSecurityUtils.assertAllowed("report.pdf"));
     }
+
+    @Test
+    void imageWhitelistShouldAllowCommonImageTypes() {
+        assertDoesNotThrow(() -> FileUploadSecurityUtils.assertImageAllowed("photo.jpg"));
+        assertDoesNotThrow(() -> FileUploadSecurityUtils.assertImageAllowed("photo.PNG"));
+    }
+
+    @Test
+    void imageWhitelistShouldRejectNonImageTypes() {
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertImageAllowed("report.pdf"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertImageAllowed("archive.zip"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertImageAllowed("shell.jsp"));
+    }
+
+    @Test
+    void documentWhitelistShouldAllowOfficeTypes() {
+        assertDoesNotThrow(() -> FileUploadSecurityUtils.assertDocumentAllowed("report.pdf"));
+        assertDoesNotThrow(() -> FileUploadSecurityUtils.assertDocumentAllowed("report.docx"));
+        assertDoesNotThrow(() -> FileUploadSecurityUtils.assertDocumentAllowed("sheet.xlsx"));
+    }
+
+    @Test
+    void documentWhitelistShouldRejectImageAndArchiveTypes() {
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertDocumentAllowed("photo.jpg"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertDocumentAllowed("archive.zip"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertDocumentAllowed("shell.jsp"));
+    }
+
+    @Test
+    void whitelistShouldRejectDoubleExtensionBypass() {
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertImageAllowed("a.jsp.jpg"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertDocumentAllowed("a.jsp.pdf"));
+    }
+
+    @Test
+    void whitelistShouldRejectFilesWithoutExtension() {
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertImageAllowed("README"));
+        assertThrows(ForbiddenExtensionException.class,
+                () -> FileUploadSecurityUtils.assertDocumentAllowed(""));
+    }
 }
