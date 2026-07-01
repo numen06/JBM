@@ -84,6 +84,18 @@ public class CurrentUserController {
         }
     }
 
+    @SaCheckLogin
+    @ApiOperation(value = "获取当前登录用户信息", notes = "返回与 /user/model 一致的 BaseUser，无需传参")
+    @GetMapping("/user/model")
+    public ResultBody<BaseUser> currentUserModel() {
+        try {
+            SensitiveContext.skipMask();
+            return ResultBody.callback(() -> baseUserService.getUserById(LoginHelper.getUserId()));
+        } finally {
+            SensitiveContext.clear();
+        }
+    }
+
     /**
      * 修改当前登录用户基本信息
      *
