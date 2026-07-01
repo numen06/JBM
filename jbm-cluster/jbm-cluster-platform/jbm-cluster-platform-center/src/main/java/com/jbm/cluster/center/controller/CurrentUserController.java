@@ -72,25 +72,32 @@ public class CurrentUserController {
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
+    @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息，不返回 userId")
     @GetMapping("/user/account")
     public ResultBody<UserAccount> userAccount() {
         try {
             SensitiveContext.skipMask();
-            UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
-            return ResultBody.callback(() -> userAccount);
+            return ResultBody.callback(() -> {
+                UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
+                userAccount.setUserId(null);
+                return userAccount;
+            });
         } finally {
             SensitiveContext.clear();
         }
     }
 
     @SaCheckLogin
-    @ApiOperation(value = "获取当前登录用户信息", notes = "返回与 /user/model 一致的 BaseUser，无需传参")
+    @ApiOperation(value = "获取当前登录用户信息", notes = "返回与 /user/model 一致的 BaseUser，无需传参，不返回 userId")
     @GetMapping("/user/model")
     public ResultBody<BaseUser> currentUserModel() {
         try {
             SensitiveContext.skipMask();
-            return ResultBody.callback(() -> baseUserService.getUserById(LoginHelper.getUserId()));
+            return ResultBody.callback(() -> {
+                BaseUser user = baseUserService.getUserById(LoginHelper.getUserId());
+                user.setUserId(null);
+                return user;
+            });
         } finally {
             SensitiveContext.clear();
         }
