@@ -27,6 +27,7 @@ import com.jbm.framework.usage.paging.DataPaging;
 import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
+import com.jbm.util.sensitive.SensitiveContext;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -85,11 +86,16 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
-    @ApiOperation(value = "通过id获取用户信息", notes = "仅限系统内部调用")
+    @ApiOperation(value = "通过id获取用户信息", notes = "仅限系统内部调用，返回完整姓名等字段（不脱敏）")
     @GetMapping("/getUserInfoById")
     @Override
     public ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId) {
-        return ResultBody.callback(() -> this.service.selectById(userId));
+        try {
+            SensitiveContext.skipMask();
+            return ResultBody.callback(() -> this.service.selectById(userId));
+        } finally {
+            SensitiveContext.clear();
+        }
     }
 
     /**
