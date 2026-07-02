@@ -90,12 +90,8 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @GetMapping("/getUserInfoById")
     @Override
     public ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId) {
-        try {
-            SensitiveContext.skipMask();
-            return ResultBody.callback(() -> this.service.selectById(userId));
-        } finally {
-            SensitiveContext.clear();
-        }
+        SensitiveContext.skipMask();
+        return ResultBody.callback(() -> this.service.selectById(userId));
     }
 
     /**

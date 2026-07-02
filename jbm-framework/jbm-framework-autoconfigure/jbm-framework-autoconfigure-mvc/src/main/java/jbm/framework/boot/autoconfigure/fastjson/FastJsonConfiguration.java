@@ -14,8 +14,11 @@ import com.jbm.util.bean.Version;
 import com.jbm.util.version.VersionDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 
 import java.math.BigInteger;
@@ -120,6 +123,15 @@ public class FastJsonConfiguration {
     @Primary
     public FastJsonHttpMessageConverter getFastJsonConverter() {
         return FastJsonConfiguration.getFastJsonHttpMessageConverter(true);
+    }
+
+    @Bean
+    @ConditionalOnWebApplication
+    public FilterRegistrationBean<SensitiveContextFilter> sensitiveContextFilter() {
+        FilterRegistrationBean<SensitiveContextFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new SensitiveContextFilter());
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 
 //    public static void main(String[] args) throws IOException {

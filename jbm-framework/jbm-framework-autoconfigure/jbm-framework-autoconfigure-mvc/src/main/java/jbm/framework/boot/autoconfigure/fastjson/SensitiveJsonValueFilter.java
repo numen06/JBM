@@ -3,7 +3,6 @@ package jbm.framework.boot.autoconfigure.fastjson;
 import cn.hutool.core.util.ReflectUtil;
 import com.jbm.util.sensitive.SensitiveContext;
 import com.alibaba.fastjson.serializer.ValueFilter;
-import com.jbm.util.sensitive.SensitiveContext;
 import com.jbm.util.sensitive.SensitiveDataUtils;
 import com.jbm.util.sensitive.SensitiveField;
 import com.jbm.util.sensitive.SensitiveType;
