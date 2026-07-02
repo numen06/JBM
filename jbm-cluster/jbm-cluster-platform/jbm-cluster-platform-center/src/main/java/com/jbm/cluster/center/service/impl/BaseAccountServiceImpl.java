@@ -61,7 +61,9 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         QueryWrapper<BaseAccount> wrapper = new QueryWrapper();
         wrapper.lambda()
                 .eq(BaseAccount::getUserId, userId);
-        return baseAccountMapper.selectList(wrapper);
+        List<BaseAccount> accounts = baseAccountMapper.selectList(wrapper);
+        ensurePasswordUpdateTime(accounts);
+        return accounts;
     }
 
     /**
@@ -147,8 +149,15 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
 //        baseAccount.setCreateTime(new Date());
 //        baseAccount.setUpdateTime(baseAccount.getCreateTime());
         baseAccount.setStatus(1);
+        Date now = new Date();
+        if (ObjectUtil.isEmpty(baseAccount.getCreateTime())) {
+            baseAccount.setCreateTime(now);
+        }
+        if (ObjectUtil.isEmpty(baseAccount.getUpdateTime())) {
+            baseAccount.setUpdateTime(baseAccount.getCreateTime());
+        }
         if (ObjectUtil.isEmpty(baseAccount.getPasswordUpdateTime())) {
-            baseAccount.setPasswordUpdateTime(new Date());
+            baseAccount.setPasswordUpdateTime(baseAccount.getCreateTime());
         }
         baseAccountMapper.insert(baseAccount);
         return baseAccount;
@@ -286,6 +295,25 @@ public class BaseAccountServiceImpl extends MasterDataServiceImpl<BaseAccount> i
         log.setLoginTime(DateTime.now());
         log.setLoginNums(count.intValue() + 1);
         baseAccountLogsMapper.insert(log);
+    }
+
+    private void ensurePasswordUpdateTime(List<BaseAccount> accounts) {
+        if (ObjectUtil.isEmpty(accounts)) {
+            return;
+        }
+        Date now = new Date();
+        for (BaseAccount account : accounts) {
+            if (StrUtil.isBlank(account.getPassword()) || ObjectUtil.isNotEmpty(account.getPasswordUpdateTime())) {
+                continue;
+            }
+            Date backfillTime = ObjectUtil.defaultIfNull(account.getUpdateTime(),
+                    ObjectUtil.defaultIfNull(account.getCreateTime(), now));
+            BaseAccount update = new BaseAccount();
+            update.setAccountId(account.getAccountId());
+            update.setPasswordUpdateTime(backfillTime);
+            baseAccountMapper.updateById(update);
+            account.setPasswordUpdateTime(backfillTime);
+        }
     }
 
     @Override

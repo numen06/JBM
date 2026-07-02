@@ -13,11 +13,13 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.model.basic.CurrentUserSubscribeAddress;
 import com.jbm.cluster.api.model.basic.OrgUserQueryResult;
+import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseAuthorityService;
 import com.jbm.cluster.center.service.BaseUserConfigService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.util.PasswordExpiryUtils;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
@@ -46,6 +48,8 @@ public class CurrentUserController {
 
     @Autowired
     private BaseUserService baseUserService;
+    @Autowired
+    private BaseAccountService baseAccountService;
     @Autowired
     private BaseAuthorityService baseAuthorityService;
     @Autowired
@@ -90,8 +94,11 @@ public class CurrentUserController {
     public ResultBody<UserAccount> userAccount() {
         try {
             SensitiveContext.skipMask();
-            UserAccount userAccount = baseUserService.getUserAccount(LoginHelper.getUserId());
-            return ResultBody.callback(() -> userAccount);
+            Long userId = LoginHelper.getUserId();
+            UserAccount userAccount = baseUserService.getUserAccount(userId);
+            ResultBody<UserAccount> resultBody = ResultBody.ok(userAccount);
+            PasswordExpiryUtils.applyExpiryExtra(resultBody, baseAccountService.getUserAccounts(userId));
+            return resultBody;
         } finally {
             SensitiveContext.clear();
         }

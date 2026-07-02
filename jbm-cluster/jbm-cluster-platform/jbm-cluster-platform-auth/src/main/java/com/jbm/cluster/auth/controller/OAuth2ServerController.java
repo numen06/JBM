@@ -24,6 +24,7 @@ import com.jbm.cluster.api.form.auth.RegisterForm;
 import com.jbm.cluster.api.form.user.ThirdPartyUser;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.form.AuthorizeForm;
+import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.cluster.auth.service.BaseAppPreprocessing;
 import com.jbm.cluster.auth.service.ConfirmService;
 import com.jbm.cluster.auth.service.SysLoginService;
@@ -32,6 +33,7 @@ import com.jbm.cluster.common.basic.service.LoginErrorMessageService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -137,31 +139,17 @@ public class OAuth2ServerController {
     @PostMapping("/doLogin")
     public ResultBody<?> doLogin(AuthorizeForm authorizeForm) {
         try {
-            // 先进行用户登录
-            ResultBody<JbmLoginUser> loginResult = sysLoginService.login(
-                    authorizeForm.getUsername(),
-                    authorizeForm.getPassword(),
-                    LoginType.PASSWORD
-            );
+            LoginProcessModel loginProcessModel = new LoginProcessModel();
+            loginProcessModel.setUsername(authorizeForm.getUsername());
+            loginProcessModel.setOriginalPassword(authorizeForm.getPassword());
+            loginProcessModel.setDecryptPassword(authorizeForm.getPassword());
+            loginProcessModel.setLoginType(LoginType.PASSWORD);
+            loginProcessModel.setClientId(authorizeForm.getClient_id());
+            loginProcessModel.setLoginDevice(RequestDeviceType.PC.getDevice());
 
-            if (!loginResult.getSuccess()) {
-                return ResultBody.<String>failed().msg(loginResult.getMessage());
-            }
-
-            // 获取登录用户并设置必要信息
+            ResultBody<JbmLoginUser> loginResult = sysLoginService.checkLoginIdentity(loginProcessModel);
             JbmLoginUser jbmLoginUser = loginResult.getResult();
-            // 设置 AppId (通过 clientId 获取)
-            BaseApp baseApp = baseAppPreprocessing.getAppByKey(authorizeForm.getClient_id());
-            jbmLoginUser.setAppId(baseApp.getAppId());
-            jbmLoginUser.setClientId(authorizeForm.getClient_id());
-            // 设置设备类型
-            if (StrUtil.isBlank(jbmLoginUser.getDevice())) {
-                jbmLoginUser.setDevice(RequestDeviceType.PC.getDevice());
-            }
 
-            LoginHelper.login(jbmLoginUser);
-
-            // 登录成功后，直接生成授权码
             RequestAuthModel ra = new RequestAuthModel();
             ra.clientId = authorizeForm.getClient_id();
             ra.responseType = authorizeForm.getResponse_type();
@@ -170,22 +158,17 @@ public class OAuth2ServerController {
             ra.scope = StrUtil.isNotBlank(authorizeForm.getScope()) ? authorizeForm.getScope() : "";
             ra.loginId = jbmLoginUser.getLoginId();
 
-
-            // 生成授权码
             Object codeModel = SaOAuth2Util.generateCode(ra);
             String code = String.valueOf(codeModel);
 
-            // 如果 codeModel 有 code 属性，尝试获取
             if (codeModel != null && codeModel.getClass().getName().contains("CodeModel")) {
                 try {
                     code = (String) codeModel.getClass().getMethod("getCode").invoke(codeModel);
                 } catch (Exception e) {
-                    // 如果获取失败，使用 toString
                     code = codeModel.toString();
                 }
             }
 
-            // 构建回调 URL
             String callbackUrl = SaOAuth2Util.buildRedirectUri(
                     authorizeForm.getRedirect_uri(),
                     code,
@@ -193,7 +176,17 @@ public class OAuth2ServerController {
             );
 
             log.info("OAuth2 登录成功，用户: {}, 授权码已生成，回调地址: {}", authorizeForm.getUsername(), callbackUrl);
-            return ResultBody.<String>ok(callbackUrl).msg("登录成功");
+            ResultBody<String> response = ResultBody.ok(callbackUrl);
+            if (loginResult.getExtra() != null) {
+                loginResult.getExtra().forEach(response::put);
+            }
+            if (StrUtil.isNotBlank(loginResult.getMessage())
+                    && !ErrorCode.OK.getMessage().equals(loginResult.getMessage())) {
+                response.msg(loginResult.getMessage());
+            } else {
+                response.msg("登录成功");
+            }
+            return response;
         } catch (Exception e) {
             log.error("OAuth2 登录失败", e);
             return ResultBody.<String>failed().msg(loginErrorMessageService.resolve(e.getMessage()));

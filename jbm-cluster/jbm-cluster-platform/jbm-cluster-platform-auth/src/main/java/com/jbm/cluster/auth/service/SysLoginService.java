@@ -42,6 +42,7 @@ import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.util.PasswordExpiryUtils;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.exceptions.user.UserException;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -378,7 +379,7 @@ public class SysLoginService {
     }
 
     /**
-     * 密码过期策略：满90天强制改密；80天后登录提醒剩余天数
+     * 密码过期策略：满90天登录后提示改密；80天后登录提醒剩余天数
      */
     private void applyPasswordExpiryPolicy(LoginType loginType, ResultBody<JbmLoginUser> resultBody) {
         if (!LoginType.PASSWORD.equals(loginType) || ObjectUtil.isEmpty(resultBody.getResult())) {
@@ -389,27 +390,7 @@ public class SysLoginService {
         if (!accountsResult.getSuccess() || CollUtil.isEmpty(accountsResult.getResult())) {
             return;
         }
-        Date latestUpdate = null;
-        for (BaseAccount account : accountsResult.getResult()) {
-            if (StrUtil.isBlank(account.getPassword())) {
-                continue;
-            }
-            Date pwdTime = ObjectUtil.defaultIfNull(account.getPasswordUpdateTime(), account.getUpdateTime());
-            if (pwdTime != null && (latestUpdate == null || pwdTime.after(latestUpdate))) {
-                latestUpdate = pwdTime;
-            }
-        }
-        if (latestUpdate == null) {
-            return;
-        }
-        long days = DateUtil.betweenDay(latestUpdate, DateTime.now(), false);
-        if (days >= JbmConstants.PASSWORD_EXPIRE_DAYS) {
-            throw new ServiceException("密码已过期，请先修改密码后再登录");
-        }
-        if (days >= JbmConstants.PASSWORD_WARN_DAYS) {
-            resultBody.put("passwordExpireDays", JbmConstants.PASSWORD_EXPIRE_DAYS - days);
-            resultBody.put("passwordNeedChange", false);
-        }
+        PasswordExpiryUtils.applyExpiryExtra(resultBody, accountsResult.getResult());
     }
 
     /**

@@ -13,6 +13,7 @@ import cn.hutool.http.useragent.UserAgentUtil;
 import com.jbm.cluster.api.constants.LoginType;
 import com.jbm.cluster.auth.model.LoginProcessModel;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.framework.metadata.enumerate.ErrorCode;
 import jbm.framework.web.ServletUtils;
 
 import java.util.function.BiFunction;
@@ -37,7 +38,7 @@ public abstract class SaOAuthLoginHandler implements BiFunction<String, String, 
         loginProcessModel.setDecryptPassword(password);
         this.preLogin(this.request, loginProcessModel);
         this.preCheck(loginProcessModel);
-        this.doCheck(loginProcessModel);
+        ResultBody<?> checkResult = this.doCheck(loginProcessModel);
         //生成登录CODE
         RequestAuthModel ra = new RequestAuthModel();
         ra.clientId = loginProcessModel.getClientId();
@@ -46,7 +47,17 @@ public abstract class SaOAuthLoginHandler implements BiFunction<String, String, 
         ra.state = request.getParam(SaOAuth2Consts.Param.state);
         ra.scope = request.getParam(SaOAuth2Consts.Param.scope, "");
         ra.loginId = StpUtil.getLoginId();
-        return ResultBody.ok(SaOAuth2Util.generateCode(ra));
+        ResultBody<?> response = ResultBody.ok(SaOAuth2Util.generateCode(ra));
+        if (checkResult != null) {
+            if (checkResult.getExtra() != null) {
+                checkResult.getExtra().forEach(response::put);
+            }
+            if (StrUtil.isNotBlank(checkResult.getMessage())
+                    && !ErrorCode.OK.getMessage().equals(checkResult.getMessage())) {
+                response.msg(checkResult.getMessage());
+            }
+        }
+        return response;
     }
 
     /**
