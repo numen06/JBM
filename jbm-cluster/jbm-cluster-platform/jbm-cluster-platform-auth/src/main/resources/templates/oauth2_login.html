@@ -104,6 +104,24 @@
             border-color: #8b949e;
         }
 
+        .captcha-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .captcha-row .form-control {
+            flex: 1;
+        }
+
+        .captcha-img {
+            height: 32px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #0d1117;
+        }
+
         .btn {
             width: 100%;
             padding: 5px 16px;
@@ -292,6 +310,28 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label" for="vcode">
+                    验证码
+                </label>
+                <div class="captcha-row">
+                    <input
+                            type="text"
+                            class="form-control"
+                            id="vcode"
+                            name="vcode"
+                            autocomplete="off"
+                            placeholder="请输入验证码"
+                            required>
+                    <img
+                            class="captcha-img"
+                            id="captchaImg"
+                            src=""
+                            alt="验证码"
+                            title="点击刷新验证码">
+                </div>
+            </div>
+
+            <div class="form-group">
                 <button type="submit" class="btn btn-primary" id="submitBtn">
                     登录
                 </button>
@@ -331,6 +371,14 @@
     const submitBtn = document.getElementById('submitBtn');
     const loading = document.getElementById('loading');
     const registerLink = document.getElementById('registerLink');
+    const captchaImg = document.getElementById('captchaImg');
+
+    function refreshCaptcha() {
+        captchaImg.src = basePath + '/captcha/vcode.png?t=' + Date.now();
+    }
+
+    captchaImg.addEventListener('click', refreshCaptcha);
+    refreshCaptcha();
 
     // 设置表单action和注册链接
     loginForm.action = basePath + '/oauth2/doLogin';
@@ -349,11 +397,16 @@
         loading.style.display = 'block';
 
         const formData = new FormData(loginForm);
+        const params = new URLSearchParams();
+        formData.forEach((value, key) => params.append(key, value));
 
         try {
             const response = await fetch(basePath + '/oauth2/doLogin', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params.toString()
             });
 
             // 如果是重定向响应
@@ -391,10 +444,12 @@
             } else {
                 // 登录失败
                 showError(result.msg || result.message || '登录失败，请检查用户名和密码');
+                refreshCaptcha();
             }
         } catch (error) {
             console.error('Login error:', error);
             showError('网络错误，请稍后重试');
+            refreshCaptcha();
         } finally {
             // 恢复按钮状态
             submitBtn.disabled = false;

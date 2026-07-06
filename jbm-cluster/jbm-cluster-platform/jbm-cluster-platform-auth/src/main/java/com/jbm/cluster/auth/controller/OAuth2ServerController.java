@@ -146,7 +146,9 @@ public class OAuth2ServerController {
             loginProcessModel.setLoginType(LoginType.PASSWORD);
             loginProcessModel.setClientId(authorizeForm.getClient_id());
             loginProcessModel.setLoginDevice(RequestDeviceType.PC.getDevice());
+            loginProcessModel.setVcode(authorizeForm.getVcode());
 
+            sysLoginService.verifyLoginCaptcha(loginProcessModel.getLoginType(), loginProcessModel.getVcode());
             ResultBody<JbmLoginUser> loginResult = sysLoginService.checkLoginIdentity(loginProcessModel);
             JbmLoginUser jbmLoginUser = loginResult.getResult();
 

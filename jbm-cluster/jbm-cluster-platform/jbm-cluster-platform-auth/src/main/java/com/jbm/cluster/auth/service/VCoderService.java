@@ -41,6 +41,9 @@ public class VCoderService {
         if (JbmConstants.DEBUG_CAPTCHA_CODE.equals(vcode) && sysDebugModeService.isDebugModeEnabled()) {
             return true;
         }
+        if (StrUtil.isBlank(vcode)) {
+            throw new ValidateException("验证码不能为空");
+        }
         String key = this.getVcodePath(scope, vcode);
         boolean has = stringRedisTemplate.hasKey(key);
         if (!has) {

@@ -66,8 +66,14 @@ spring:
   #          predicates:
   #            - Path=/auth/**
   #          filters:
-  #            # 验证码处理
-  #            - CacheRequestFilter
+  #            - ValidateCodeFilter
+  #            - StripPrefix=1
+  #        # OAuth2 登录（ValidateCodeFilter 已支持 /oauth2/doLogin、/oauth2/token 的 vcode 校验）
+  #        - id: jbm-cluster-platform-auth-oauth2
+  #          uri: lb://jbm-cluster-platform-auth
+  #          predicates:
+  #            - Path=/auth/oauth2/doLogin,/auth/oauth2/token
+  #          filters:
   #            - ValidateCodeFilter
   #            - StripPrefix=1
   profiles:
@@ -86,7 +92,7 @@ management:
         include: health,info,open
 
 jbm:
-  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启
+  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启（生产环境须保持 false，否则验证码 9999 可绕过）
   debug: ${JBM_DEBUG:false}
   # 开放api
   api:

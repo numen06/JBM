@@ -2,6 +2,7 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.net.URLDecoder;
 import com.alibaba.fastjson.JSON;
 import com.jbm.cluster.platform.gateway.config.properties.CaptchaProperties;
 import com.jbm.cluster.platform.gateway.service.ValidateCodeService;
@@ -14,12 +15,11 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 验证码过滤器
@@ -29,10 +29,13 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @Component
 public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
-    private final static String[] VALIDATE_URL = new String[]{
+    private static final String[] OAUTH_VALIDATE_URL = new String[]{
+            "/oauth2/doLogin", "/oauth2/token"};
+    private static final String[] LEGACY_VALIDATE_URL = new String[]{
             "/auth/login", "/auth/register"};
     private static final String CODE = "code";
     private static final String UUID = "uuid";
+    private static final String VCODE = "vcode";
     @Autowired
     private ValidateCodeService validateCodeService;
     @Autowired
@@ -42,34 +45,70 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
     public GatewayFilter apply(Object config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
+            String path = request.getURI().getPath();
 
-            // 非登录/注册请求或验证码关闭，不处理
-            if (!StrUtil.containsAnyIgnoreCase(request.getURI().getPath(), VALIDATE_URL) || !captchaProperties.getEnabled()) {
+            if (!captchaProperties.getEnabled()) {
                 return chain.filter(exchange);
             }
 
-            try {
-                String rspStr = resolveBodyFromRequest(request);
-                Dict obj = JSON.parseObject(rspStr, Dict.class);
-                validateCodeService.checkCaptcha(obj.getStr(CODE), obj.getStr(UUID));
-            } catch (Exception e) {
-                log.warn("[验证码]验证码校验失败, uri:{}", request.getURI().getPath());
-                return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), HttpStatus.BAD_REQUEST,
-                        "验证码错误,请重试", null, HttpStatus.BAD_REQUEST.value());
+            boolean oauthPath = StrUtil.containsAnyIgnoreCase(path, OAUTH_VALIDATE_URL);
+            boolean legacyPath = StrUtil.containsAnyIgnoreCase(path, LEGACY_VALIDATE_URL);
+            if (!oauthPath && !legacyPath) {
+                return chain.filter(exchange);
             }
-            return chain.filter(exchange);
+
+            return DataBufferUtils.join(request.getBody())
+                    .flatMap(dataBuffer -> {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        DataBufferUtils.release(dataBuffer);
+                        String body = new String(bytes, StandardCharsets.UTF_8);
+
+                        try {
+                            String contentType = request.getHeaders().getFirst("Content-Type");
+                            Dict obj = parseRequestBody(body, contentType);
+                            if (oauthPath) {
+                                validateCodeService.verifyVcode(obj.getStr(VCODE));
+                            } else {
+                                validateCodeService.checkCaptcha(obj.getStr(CODE), obj.getStr(UUID));
+                            }
+                        } catch (Exception e) {
+                            log.warn("[验证码]验证码校验失败, uri:{}", path);
+                            return WebFluxUtils.webFluxResponseWriter(exchange.getResponse(), HttpStatus.BAD_REQUEST,
+                                    "验证码错误,请重试", null, HttpStatus.BAD_REQUEST.value());
+                        }
+
+                        ServerHttpRequestDecorator decorator = new ServerHttpRequestDecorator(request) {
+                            @Override
+                            public Flux<DataBuffer> getBody() {
+                                DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+                                return Flux.just(buffer);
+                            }
+                        };
+                        return chain.filter(exchange.mutate().request(decorator).build());
+                    })
+                    .switchIfEmpty(chain.filter(exchange));
         };
     }
 
-    private String resolveBodyFromRequest(ServerHttpRequest serverHttpRequest) {
-        // 获取请求体
-        Flux<DataBuffer> body = serverHttpRequest.getBody();
-        AtomicReference<String> bodyRef = new AtomicReference<>();
-        body.subscribe(buffer -> {
-            CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer.asByteBuffer());
-            DataBufferUtils.release(buffer);
-            bodyRef.set(charBuffer.toString());
-        });
-        return bodyRef.get();
+    private Dict parseRequestBody(String body, String contentType) {
+        if (StrUtil.isBlank(body)) {
+            return Dict.create();
+        }
+        if (StrUtil.containsIgnoreCase(contentType, "application/json")) {
+            return JSON.parseObject(body, Dict.class);
+        }
+        Dict dict = Dict.create();
+        String[] pairs = body.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf('=');
+            if (idx <= 0) {
+                continue;
+            }
+            String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+            String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
+            dict.set(key, value);
+        }
+        return dict;
     }
 }

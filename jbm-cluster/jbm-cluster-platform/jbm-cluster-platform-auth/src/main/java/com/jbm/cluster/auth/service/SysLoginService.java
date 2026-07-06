@@ -121,10 +121,7 @@ public class SysLoginService {
 
                     @Override
                     public void preCheck(LoginProcessModel loginProcessModel) {
-                        List<LoginType> verifyTypes = Lists.newArrayList(LoginType.PASSWORD, LoginType.SMS);
-                        if (verifyTypes.contains(loginProcessModel.getLoginType()) && StrUtil.isNotBlank(loginProcessModel.getVcode())) {
-                            vCoderService.verify(loginProcessModel.getVcode(), null);
-                        }
+                        verifyLoginCaptcha(loginProcessModel.getLoginType(), loginProcessModel.getVcode());
                         SaOAuth2Util.checkClientModel(loginProcessModel.getClientId());
                     }
 
@@ -140,6 +137,16 @@ public class SysLoginService {
                     map.put("scope", scope);
                     return ResultBody.error("确认登录");
                 });
+    }
+
+    /**
+     * 密码/短信登录强制校验图形验证码
+     */
+    public void verifyLoginCaptcha(LoginType loginType, String vcode) {
+        List<LoginType> verifyTypes = Lists.newArrayList(LoginType.PASSWORD, LoginType.SMS);
+        if (verifyTypes.contains(loginType)) {
+            vCoderService.verify(vcode);
+        }
     }
 
     /**

@@ -107,4 +107,21 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
             throw new CaptchaException();
         }
     }
+
+    /**
+     * 校验 Auth 侧图形验证码（Redis key 与 VCoderService 一致）
+     */
+    @Override
+    public void verifyVcode(String vcode) throws CaptchaException {
+        if (JbmConstants.DEBUG_CAPTCHA_CODE.equals(vcode) && sysDebugModeService.isDebugModeEnabled()) {
+            return;
+        }
+        if (StrUtil.isEmpty(vcode)) {
+            throw new CaptchaException("user.jcaptcha.not.blank");
+        }
+        String key = StrUtil.format("/vcode/{}/{}", "system", vcode.toLowerCase());
+        if (!redisService.hasKey(key)) {
+            throw new CaptchaException();
+        }
+    }
 }

@@ -32,4 +32,6 @@ public class AuthorizeForm {
     private String loginType;
     @ApiModelProperty("状态码")
     private String state;
+    @ApiModelProperty("图形验证码")
+    private String vcode;
 }

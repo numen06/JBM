@@ -40,6 +40,8 @@ swagger2:
   description: 平台用户认证服务器
   title: 平台用户认证服务器
 jbm:
+  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启（生产环境须保持 false，否则验证码 9999 可绕过）
+  debug: ${JBM_DEBUG:false}
   #  client:
   #    oauth2:
   #      admin:

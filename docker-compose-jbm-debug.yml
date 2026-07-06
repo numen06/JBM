@@ -1,4 +1,5 @@
 version: '3.8'
+# 仅用于本地/联调：JBM_DEBUG=true 会开启调试验证码万能码 9999，生产环境请勿使用本文件部署
 services:
   jbm-cluster-platform-center:
     restart: always

@@ -21,4 +21,9 @@ public interface ValidateCodeService {
      * 校验验证码
      */
     void checkCaptcha(String key, String value) throws CaptchaException;
+
+    /**
+     * 校验 Auth 侧图形验证码（vcode 字段，与 VCoderService 存储一致）
+     */
+    void verifyVcode(String vcode) throws CaptchaException;
 }
