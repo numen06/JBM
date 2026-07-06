@@ -1560,6 +1560,21 @@
   {
     "actionList": [
       {
+        "actionCode": "monitor:online:list",
+        "actionId": "1534454493880139776",
+        "actionName": "查询",
+        "auth": true,
+        "authority": "ACTION_monitor:online:list",
+        "authorityId": "1534454494119215103",
+        "createTime": 1654677435000,
+        "isPersist": 0,
+        "menuId": "1534447911947616258",
+        "priority": 0,
+        "serviceId": "jbm-cluster-platform-center",
+        "status": 1,
+        "updateTime": 1654677435000
+      },
+      {
         "actionCode": "monitor:online:forceLogout",
         "actionId": "1534454493880139778",
         "actionName": "踢出",
@@ -1570,6 +1585,21 @@
         "isPersist": 0,
         "menuId": "1534447911947616258",
         "priority": 1,
+        "serviceId": "jbm-cluster-platform-center",
+        "status": 1,
+        "updateTime": 1654677435000
+      },
+      {
+        "actionCode": "monitor:online:logout",
+        "actionId": "1534454493880139779",
+        "actionName": "注销",
+        "auth": true,
+        "authority": "ACTION_monitor:online:logout",
+        "authorityId": "1534454494119215106",
+        "createTime": 1654677435000,
+        "isPersist": 0,
+        "menuId": "1534447911947616258",
+        "priority": 2,
         "serviceId": "jbm-cluster-platform-center",
         "status": 1,
         "updateTime": 1654677435000

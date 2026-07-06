@@ -70,7 +70,9 @@ public class SaTokenConfiguration {
 
     @Bean
     public SaPermissionImpl saPermissionImpl() {
-        return new SaPermissionImpl();
+        SaPermissionImpl impl = new SaPermissionImpl();
+        SaManager.setStpInterface(impl);
+        return impl;
     }
 
 

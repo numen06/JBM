@@ -1,6 +1,7 @@
 package com.jbm.cluster.auth.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
@@ -45,7 +46,7 @@ public class OnlineUserController {
     private RedisService redisService;
 
     @ApiOperation("在线用户列表")
-//    @SaCheckPermission("monitor:online:list")
+    @SaCheckPermission("ACTION_monitor:online:list")
     @PostMapping("/pageList")
     public ResultBody<DataPaging<SysUserOnline>> pageList(@RequestBody OnlineUserSearchForm onlineUserSearchForm) {
         List<SysUserOnline> userOnlineList = new ArrayList<SysUserOnline>();
@@ -159,6 +160,7 @@ public class OnlineUserController {
     }
 
     @ApiOperation("刷新Token临时有效期")
+    @SaCheckRole("admin")
     @DeleteMapping("/refresh")
     public ResultBody<Void> refresh() {
         return ResultBody.callback("刷新成功", () -> {

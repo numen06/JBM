@@ -1,5 +1,6 @@
 package com.jbm.cluster.job.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.jbm.cluster.api.entitys.job.SysJob;
@@ -8,7 +9,6 @@ import com.jbm.cluster.api.job.SchedulerJob;
 import com.jbm.cluster.common.basic.annotation.JbmClusterEvent;
 import com.jbm.cluster.common.basic.annotation.JbmClusterScheduled;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
-import com.jbm.cluster.common.security.annotation.RequiresPermissions;
 import com.jbm.cluster.job.service.SysJobService;
 import com.jbm.cluster.job.util.CronUtils;
 import com.jbm.framework.exceptions.job.TaskException;
@@ -46,7 +46,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 导出定时任务列表
      */
     @ApiOperation(value = "导出定时任务列表", notes = "")
-    @RequiresPermissions("monitor:job:export")
+    @SaCheckPermission("ACTION_monitor:job:export")
     @PostMapping("/export")
     public void export(HttpServletResponse response, SysJob sysJob) {
         List<SysJob> list = this.service.selectJobList(sysJob);
@@ -67,7 +67,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
     @JbmClusterEvent(eventTypeClass = SysJob.class)
     @JbmClusterScheduled(cron = "*/5 * * * * ?")
     @ApiOperation(value = "新增定时任务", notes = "")
-    @RequiresPermissions("monitor:job:add")
+    @SaCheckPermission("ACTION_monitor:job:add")
     @PostMapping("/add")
     public ResultBody add(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
@@ -93,7 +93,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 修改定时任务
      */
     @ApiOperation(value = "修改定时任务", notes = "")
-    @RequiresPermissions("monitor:job:edit")
+    @SaCheckPermission("ACTION_monitor:job:edit")
     @PostMapping("/edit")
     public ResultBody edit(@RequestBody SysJob job) throws SchedulerException, TaskException {
         if (!CronUtils.isValid(job.getCronExpression())) {
@@ -119,7 +119,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 定时任务状态修改
      */
     @ApiOperation(value = "定时任务状态修改", notes = "")
-    @RequiresPermissions("monitor:job:changeStatus")
+    @SaCheckPermission("ACTION_monitor:job:changeStatus")
     @PutMapping("/changeStatus")
     public ResultBody changeStatus(@RequestBody SysJob job) {
         SysJob newJob = this.service.selectById(job.getJobId());
@@ -137,7 +137,7 @@ public class SysJobController extends MasterDataCollection<SysJob, SysJobService
      * 定时任务立即执行一次
      */
     @ApiOperation(value = "定时任务立即执行一次", notes = "")
-    @RequiresPermissions("monitor:job:changeStatus")
+    @SaCheckPermission("ACTION_monitor:job:changeStatus")
     @PutMapping("/run")
     public ResultBody run(@RequestBody SysJob job) {
         return ResultBody.callback(() -> {
