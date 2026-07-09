@@ -13,6 +13,7 @@ import jbm.framework.web.ServletUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -29,6 +30,7 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
         String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
         if (StrUtil.isNotEmpty(authentication)) {
+            requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
             return;
         }
 
@@ -50,7 +52,11 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
                 return authorization;
             }
         }
-        return requestTemplate.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).stream().findFirst().orElse(null);
+        Collection<String> authorizationHeaders = requestTemplate.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER);
+        if (ObjectUtil.isEmpty(authorizationHeaders)) {
+            return null;
+        }
+        return authorizationHeaders.stream().findFirst().orElse(null);
     }
 
 }
