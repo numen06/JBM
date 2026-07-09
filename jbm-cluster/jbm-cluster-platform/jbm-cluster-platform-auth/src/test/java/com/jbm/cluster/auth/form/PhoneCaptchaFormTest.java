@@ -1,7 +1,9 @@
 package com.jbm.cluster.auth.form;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class PhoneCaptchaFormTest {
 
@@ -10,26 +12,26 @@ public class PhoneCaptchaFormTest {
         PhoneCaptchaForm form = new PhoneCaptchaForm();
         form.setPcode("123456");
         form.setVcode("9999");
-        Assert.assertEquals("123456", form.resolveSmsCode());
+        assertEquals("123456", form.resolveSmsCode());
     }
 
     @Test
     public void resolveSmsCodeFallsBackToVcode() {
         PhoneCaptchaForm form = new PhoneCaptchaForm();
         form.setVcode("654321");
-        Assert.assertEquals("654321", form.resolveSmsCode());
+        assertEquals("654321", form.resolveSmsCode());
     }
 
     @Test
     public void resolveSmsCodeTrimsWhitespace() {
         PhoneCaptchaForm form = new PhoneCaptchaForm();
         form.setPcode(" 123456 ");
-        Assert.assertEquals("123456", form.resolveSmsCode());
+        assertEquals("123456", form.resolveSmsCode());
     }
 
     @Test
     public void resolveSmsCodeReturnsNullWhenBlank() {
         PhoneCaptchaForm form = new PhoneCaptchaForm();
-        Assert.assertNull(form.resolveSmsCode());
+        assertNull(form.resolveSmsCode());
     }
 }
