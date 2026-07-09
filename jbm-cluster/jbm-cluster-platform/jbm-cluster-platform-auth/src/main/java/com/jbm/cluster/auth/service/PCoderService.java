@@ -8,12 +8,14 @@ import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import com.jbm.cluster.common.basic.service.SysDebugModeService;
 import com.jbm.cluster.core.constant.JbmConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class PCoderService {
     @Autowired
@@ -55,12 +57,17 @@ public class PCoderService {
     }
 
     public Boolean verify(String pcode, String phone) {
+        pcode = StrUtil.trim(pcode);
         if (JbmConstants.DEBUG_PHONE_CAPTCHA_CODE.equals(pcode) && sysDebugModeService.isDebugModeEnabled()) {
             return true;
+        }
+        if (StrUtil.isBlank(pcode)) {
+            throw new ValidateException("验证码不能为空");
         }
         String key = this.getCacheKey(phone);
         boolean has = stringRedisTemplate.hasKey(key);
         if (!has || !StrUtil.equals(pcode, stringRedisTemplate.opsForValue().get(key))) {
+            log.debug("短信验证码校验失败, phoneSuffix={}", StrUtil.subSufByLength(phone, 4));
             throw new ValidateException("验证码错误");
         }
         return true;

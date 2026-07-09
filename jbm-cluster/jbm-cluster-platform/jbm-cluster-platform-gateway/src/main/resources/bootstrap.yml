@@ -92,7 +92,8 @@ management:
         include: health,info,open
 
 jbm:
-  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启（生产环境须保持 false，否则验证码 9999 可绕过）
+  # 系统调试模式，环境变量 JBM_DEBUG=true 时开启（生产环境须保持 false）
+  # 开启后图形码 9999、短信码 99999 可作为替代码通过校验；空/错误码仍会被拒绝
   debug: ${JBM_DEBUG:false}
   # 开放api
   api:

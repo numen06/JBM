@@ -10,6 +10,7 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.Validator;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -109,6 +110,15 @@ public class SysLoginService {
                 // 登录处理函数
                         setDoLoginHandle(new SaOAuthLoginHandler() {
                     @Override
+                    public LoginProcessModel preLogin(SaRequest request, LoginProcessModel loginProcessModel) {
+                        super.preLogin(request, loginProcessModel);
+                        if (LoginType.SMS.equals(loginProcessModel.getLoginType())) {
+                            loginProcessModel.setUsername(resolvePhone(loginProcessModel.getUsername(), loginProcessModel.getClientId()));
+                        }
+                        return loginProcessModel;
+                    }
+
+                    @Override
                     public String doDecryptPassword(LoginProcessModel loginProcessModel) {
                         if (LoginType.MINIAPP.equals(loginProcessModel.getLoginType())) {
                             return loginProcessModel.getOriginalPassword();
@@ -176,6 +186,39 @@ public class SysLoginService {
 //                        recordLogininfor(resultBody.getResult(), false, resultBody.getMessage());
         }
         return resultBody;
+    }
+
+    /**
+     * 解析登录类型
+     */
+    public LoginType parseLoginType(String loginTypeValue) {
+        LoginType loginType = LoginType.PASSWORD;
+        if (StrUtil.isNotEmpty(loginTypeValue)) {
+            try {
+                loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+                loginType = LoginType.PASSWORD;
+            }
+        }
+        return loginType;
+    }
+
+    /**
+     * 解析手机号（明文或 RSA 密文 + appKey/clientId）
+     */
+    public String resolvePhone(String phone, String appKey) {
+        if (StrUtil.isBlank(phone)) {
+            throw new ServiceException("手机号不能为空");
+        }
+        if (Validator.isMobile(phone)) {
+            return phone;
+        }
+        if (StrUtil.isBlank(appKey)) {
+            throw new ServiceException("非法手机号");
+        }
+        String decrypted = decryptPassword(appKey, phone);
+        Validator.validateMobile(decrypted, "非法手机号");
+        return decrypted;
     }
 
     /**

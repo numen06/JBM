@@ -139,14 +139,25 @@ public class OAuth2ServerController {
     @PostMapping("/doLogin")
     public ResultBody<?> doLogin(AuthorizeForm authorizeForm) {
         try {
+            LoginType loginType = sysLoginService.parseLoginType(authorizeForm.getLoginType());
             LoginProcessModel loginProcessModel = new LoginProcessModel();
             loginProcessModel.setUsername(authorizeForm.getUsername());
             loginProcessModel.setOriginalPassword(authorizeForm.getPassword());
-            loginProcessModel.setDecryptPassword(authorizeForm.getPassword());
-            loginProcessModel.setLoginType(LoginType.PASSWORD);
+            loginProcessModel.setLoginType(loginType);
             loginProcessModel.setClientId(authorizeForm.getClient_id());
             loginProcessModel.setLoginDevice(RequestDeviceType.PC.getDevice());
             loginProcessModel.setVcode(authorizeForm.getVcode());
+
+            if (LoginType.PASSWORD.equals(loginType)) {
+                loginProcessModel.setDecryptPassword(
+                        sysLoginService.decryptPassword(authorizeForm.getClient_id(), authorizeForm.getPassword()));
+            } else if (LoginType.SMS.equals(loginType)) {
+                loginProcessModel.setUsername(
+                        sysLoginService.resolvePhone(authorizeForm.getUsername(), authorizeForm.getClient_id()));
+                loginProcessModel.setDecryptPassword(authorizeForm.getPassword());
+            } else {
+                loginProcessModel.setDecryptPassword(authorizeForm.getPassword());
+            }
 
             sysLoginService.verifyLoginCaptcha(loginProcessModel.getLoginType(), loginProcessModel.getVcode());
             ResultBody<JbmLoginUser> loginResult = sysLoginService.checkLoginIdentity(loginProcessModel);
