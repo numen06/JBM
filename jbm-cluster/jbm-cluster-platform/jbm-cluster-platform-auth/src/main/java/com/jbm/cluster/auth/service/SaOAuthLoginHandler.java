@@ -73,12 +73,15 @@ public abstract class SaOAuthLoginHandler implements BiFunction<String, String, 
         String vcode = request.getParam("vcode");
         loginProcessModel.setVcode(vcode);
         loginProcessModel.setClientId(clientId);
-        String loginTypeValue = request.getParam("loginType");
+        String loginTypeValue = StrUtil.blankToDefault(
+                request.getParam("loginType"),
+                request.getParam("login_type"));
         loginProcessModel.setLoginTypeValue(loginTypeValue);
         LoginType loginType = LoginType.PASSWORD;
         if (StrUtil.isNotEmpty(loginTypeValue)) {
-            loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
-            if (loginType == null) {
+            try {
+                loginType = LoginType.valueOf(loginTypeValue.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
                 loginType = LoginType.PASSWORD;
             }
         }

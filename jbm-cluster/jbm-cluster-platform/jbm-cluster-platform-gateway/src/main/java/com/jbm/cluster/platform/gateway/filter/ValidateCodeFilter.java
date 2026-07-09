@@ -37,6 +37,9 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
     private static final String UUID = "uuid";
     private static final String VCODE = "vcode";
     private static final String LOGIN_TYPE = "loginType";
+    private static final String LOGIN_TYPE_ALIAS = "login_type";
+    private static final String GRANT_TYPE = "grant_type";
+    private static final String GRANT_PASSWORD = "password";
     @Autowired
     private ValidateCodeService validateCodeService;
     @Autowired
@@ -69,7 +72,7 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
                             String contentType = request.getHeaders().getFirst("Content-Type");
                             Dict obj = parseRequestBody(body, contentType);
                             if (oauthPath) {
-                                if (!isSmsLogin(obj)) {
+                                if (!shouldSkipOAuthVcode(obj, request, path)) {
                                     validateCodeService.verifyVcode(obj.getStr(VCODE));
                                 }
                             } else {
@@ -115,7 +118,42 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
         return dict;
     }
 
-    private boolean isSmsLogin(Dict obj) {
-        return "SMS".equalsIgnoreCase(obj.getStr(LOGIN_TYPE));
+    /**
+     * 短信登录、授权码/刷新令牌换票等非密码登录场景跳过图形 vcode
+     */
+    private boolean shouldSkipOAuthVcode(Dict obj, ServerHttpRequest request, String path) {
+        if (isSmsLogin(obj, request)) {
+            return true;
+        }
+        if (StrUtil.containsAnyIgnoreCase(path, "/oauth2/token")) {
+            String grantType = readParam(obj, request, GRANT_TYPE);
+            if (StrUtil.isNotBlank(grantType) && !GRANT_PASSWORD.equalsIgnoreCase(grantType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isSmsLogin(Dict obj, ServerHttpRequest request) {
+        String loginType = readParam(obj, request, LOGIN_TYPE, LOGIN_TYPE_ALIAS);
+        return "SMS".equalsIgnoreCase(loginType);
+    }
+
+    private String readParam(Dict obj, ServerHttpRequest request, String... keys) {
+        for (String key : keys) {
+            if (obj != null) {
+                String value = obj.getStr(key);
+                if (StrUtil.isNotBlank(value)) {
+                    return value;
+                }
+            }
+            if (request != null) {
+                String queryValue = request.getQueryParams().getFirst(key);
+                if (StrUtil.isNotBlank(queryValue)) {
+                    return queryValue;
+                }
+            }
+        }
+        return null;
     }
 }

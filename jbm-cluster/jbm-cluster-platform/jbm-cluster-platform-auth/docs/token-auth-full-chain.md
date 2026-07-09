@@ -142,7 +142,7 @@ Gateway 白名单 (`bootstrap.yml` / `IgnoreWhiteProperties`):
     │                │         │ 1. preLogin  │ 解析 clientId, loginType
     │                │         │    提取设备信息│
     │                │         ├──────────────┤
-    │                │         │ 2. preCheck  │ 校验验证码(vcode)
+    │                │         │ 2. preCheck  │ 密码登录校验 vcode；SMS 跳过
     │                │         │    校验客户端 │ SaOAuth2Util.checkClientModel
     │                │         ├──────────────┤
     │                │         │ 3. doDecrypt │ RSA 解密密码
