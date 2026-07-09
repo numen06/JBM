@@ -48,6 +48,7 @@ public class JbmFeignRequest extends JbmBaseRequest {
         log.debug("[互信诊断] JbmFeignRequest.buildRequest 注入Authorization header: {}", authorization.substring(0, Math.min(authorization.length(), 30)) + "...");
         httpRequest.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authorization);
         httpRequest.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
+        httpRequest.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
         return httpRequest;
     }
 

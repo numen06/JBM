@@ -10,13 +10,17 @@ import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.BaseUserForm;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.form.user.UserInfoStatistics;
+import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.api.model.auth.UserAccount;
 import com.jbm.cluster.api.service.IBaseUserServiceClient;
+import com.jbm.cluster.center.controller.authenticate.LoginAuthenticateHelper;
 import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
+import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.cluster.core.constant.JbmConstants;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.form.IdsForm;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
@@ -52,6 +56,31 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     private BaseUserService baseUserService;
     @Autowired
     private BaseRoleService baseRoleService;
+    @Autowired
+    private LoginAuthenticateHelper loginAuthenticateHelper;
+
+    @InnerAuth
+    @ApiOperation(value = "通过用户名查询用户信息", notes = "仅限系统内部 Feign 调用")
+    @GetMapping("/info/{username}")
+    public ResultBody<JbmLoginUser> getUserInfo(@PathVariable("username") String username,
+                                                @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source) {
+        return ResultBody.callback(() -> {
+            UserAccount account = baseUserService.login(username, null);
+            if (account == null) {
+                throw new ServiceException("用户不存在");
+            }
+            return loginAuthenticateHelper.userAccountToLoginUser(account);
+        });
+    }
+
+    @InnerAuth
+    @ApiOperation(value = "注册用户信息", notes = "仅限系统内部 Feign 调用")
+    @PostMapping(value = "/register", consumes = "application/json")
+    public ResultBody<Boolean> registerUserInfo(@RequestBody BaseUser baseUser,
+                                                @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source) {
+        baseUserService.register(baseUser, null);
+        return ResultBody.ok(true);
+    }
 
     @Override
     public ResultBody<List<BaseUser>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {

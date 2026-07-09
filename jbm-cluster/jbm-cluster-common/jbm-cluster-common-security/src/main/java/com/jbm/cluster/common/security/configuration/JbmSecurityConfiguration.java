@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
-import cn.dev33.satoken.interceptor.SaAnnotationInterceptor;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.router.SaRouter;
 import cn.hutool.core.collection.CollUtil;
@@ -13,6 +12,7 @@ import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
 import com.jbm.cluster.common.security.annotation.PermitAll;
+import com.jbm.cluster.common.security.interceptor.JbmSaAnnotationInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -49,6 +49,9 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
     @Autowired
     private JbmClusterProperties jbmClusterProperties;
 
+    @Autowired
+    private SaOAuthFilterAuthStrategy saOAuthFilterAuthStrategy;
+
     /**
      * 注册sa-token的拦截器
      */
@@ -75,8 +78,8 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
                 LoginHelper.clearCache();
             }
         }).addPathPatterns("/**");
-        // 注解拦截器
-        registry.addInterceptor(new SaAnnotationInterceptor()).addPathPatterns("/**");
+        // 注解拦截器：内部服务链可跳过用户权限注解
+        registry.addInterceptor(new JbmSaAnnotationInterceptor()).addPathPatterns("/**");
     }
 
     /**
@@ -91,7 +94,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
         return new SaServletSuperFilter()
                 .addInclude("/**")
                 .addExclude(ArrayUtil.toArray(whiteList, String.class))
-                .setAuth(new SaOAuthFilterAuthStrategy());
+                .setAuth(saOAuthFilterAuthStrategy);
 //                .setAuth(obj -> SaIdUtil.checkCurrentRequestToken());
     }
 

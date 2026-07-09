@@ -12,103 +12,98 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson.JSON;
+import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.utils.IpUtils;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.util.PathMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 
 /**
- * Token过滤
- *
- * @Created wesley.zhang
- * @Date 2022/5/31 10:46
- * @Description TODO
+ * Token 过滤：区分用户 Token 与服务 ClientToken 两条认证轨道。
  */
+@Component
 public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
-    
+
     private static final Logger log = LoggerFactory.getLogger(SaOAuthFilterAuthStrategy.class);
 
-    private PathMatcher pathMatcher = new AntPathMatcher();
+    @Autowired
+    private JbmClusterProperties jbmClusterProperties;
 
     @Override
     public void run(Object r) {
-        try {
-            HttpServletRequest httpServletRequest = getCurrentRequest();
-            if (httpServletRequest == null) return;
-
-            String clientIp =IpUtils.getRequestIp(httpServletRequest);
-            if (isLocalIp(clientIp)) {
-                return;
-            }
-
-            // [互信诊断] 打印接收到的关键 header
-            log.debug("[互信诊断] SaOAuthFilter 收到请求: clientIp={}, requestURI={}, Authorization={}, Satoken-Id-Token={}",
-                    clientIp, httpServletRequest.getRequestURI(),
-                    httpServletRequest.getHeader("Authorization") != null
-                            ? httpServletRequest.getHeader("Authorization").substring(0, Math.min(50, httpServletRequest.getHeader("Authorization").length())) + "..."
-                            : "null",
-                    httpServletRequest.getHeader(SaIdUtil.ID_TOKEN) != null
-                            ? httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).substring(0, Math.min(50, httpServletRequest.getHeader(SaIdUtil.ID_TOKEN).length())) + "..."
-                            : "null");
-
-            final String tokenValue = StpUtil.getTokenValue();
-            log.debug("[互信诊断] StpUtil.getTokenValue()={}", tokenValue != null ? tokenValue.substring(0, Math.min(30, tokenValue.length())) + "..." : "null");
-            if (StrUtil.isBlank(tokenValue)) {
-                throw new SaOAuth2Exception("无效Token");
-            }
-            SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
-            log.debug("[互信诊断] SaTokenInfo: isLogin={}, tokenTimeout={}", saTokenInfo != null ? saTokenInfo.isLogin : "null", saTokenInfo != null ? saTokenInfo.tokenTimeout : "null");
-
-            if (ObjectUtil.isNotEmpty(saTokenInfo)) {
-                if (saTokenInfo.isLogin) {
-                    if (saTokenInfo.tokenTimeout <= 0) {
-                        throw new SaOAuth2Exception("Token已失效");
-                    }
-                    log.debug("[互信诊断] 认证通过路径: StpUtil用户Token有效");
-                    return;
-                } else {
-                    SaRequest req = SaHolder.getRequest();
-                    if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
-                        SaIdUtil.checkCurrentRequestToken();
-                        log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
-                        return;
-                    }
-                    log.debug("[互信诊断] StpUtil未登录且无Satoken-Id-Token header，继续走OAuth2校验");
-                }
-            }
-            SaRequest req = SaHolder.getRequest();
-            String clientId = null;
-            AccessTokenModel accessTokenModel = SaOAuth2Util.getAccessToken(tokenValue);
-            if (ObjectUtil.isNotEmpty(accessTokenModel)) {
-                clientId = accessTokenModel.clientId;
-                SaOAuth2Util.checkAccessToken(tokenValue);
-                log.debug("[互信诊断] 认证通过路径: AccessToken有效, clientId={}", clientId);
-            } else {
-                ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
-                log.debug("[互信诊断] AccessToken未找到, 查找ClientToken结果: {}", clientTokenModel != null ? "找到, clientId=" + clientTokenModel.clientId : "未找到");
-                if (ObjectUtil.isNotEmpty(clientTokenModel)) {
-                    clientId = clientTokenModel.clientId;
-                    log.info("Client Token Info:{}", JSON.toJSONString(clientTokenModel));
-                }
-            }
-            if (ObjectUtil.isEmpty(clientId)) {
-                log.debug("[互信诊断] 认证失败: 所有分支均未匹配, tokenValue={}", tokenValue != null ? tokenValue.substring(0, Math.min(30, tokenValue.length())) + "..." : "null");
-                throw new SaOAuth2Exception(StrUtil.format("无效的访问客户端:{}", clientId));
-            }
-        } catch (Exception e) {
-            throw e;
+        HttpServletRequest httpServletRequest = getCurrentRequest();
+        if (httpServletRequest == null) {
+            return;
         }
+
+        String clientIp = IpUtils.getRequestIp(httpServletRequest);
+        if (Boolean.TRUE.equals(jbmClusterProperties.getAllowLocalBypass()) && isLocalIp(clientIp)) {
+            log.debug("[互信诊断] 本地回环地址跳过认证: clientIp={}", clientIp);
+            return;
+        }
+
+        log.debug("[互信诊断] SaOAuthFilter 收到请求: clientIp={}, requestURI={}, Authorization={}, Satoken-Id-Token={}",
+                clientIp, httpServletRequest.getRequestURI(),
+                maskHeader(httpServletRequest.getHeader("Authorization")),
+                maskHeader(httpServletRequest.getHeader(SaIdUtil.ID_TOKEN)));
+
+        final String tokenValue = StpUtil.getTokenValue();
+        if (StrUtil.isBlank(tokenValue)) {
+            throw new SaOAuth2Exception("无效Token");
+        }
+
+        SaTokenInfo saTokenInfo = StpUtil.getTokenInfo();
+        if (ObjectUtil.isNotEmpty(saTokenInfo) && saTokenInfo.isLogin) {
+            if (saTokenInfo.tokenTimeout <= 0) {
+                throw new SaOAuth2Exception("Token已失效");
+            }
+            log.debug("[互信诊断] 认证通过路径: StpUtil用户Token有效");
+            return;
+        }
+
+        AccessTokenModel accessTokenModel = SaOAuth2Util.getAccessToken(tokenValue);
+        if (ObjectUtil.isNotEmpty(accessTokenModel)) {
+            SaOAuth2Util.checkAccessToken(tokenValue);
+            log.debug("[互信诊断] 认证通过路径: AccessToken有效, clientId={}", accessTokenModel.clientId);
+            return;
+        }
+
+        ClientTokenModel clientTokenModel = SaOAuth2Util.getClientToken(tokenValue);
+        if (ObjectUtil.isNotEmpty(clientTokenModel)) {
+            SaOAuth2Util.checkClientToken(tokenValue);
+            log.debug("[互信诊断] 认证通过路径: ClientToken有效, clientId={}", clientTokenModel.clientId);
+            return;
+        }
+
+        SaRequest req = SaHolder.getRequest();
+        if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
+            SaIdUtil.checkCurrentRequestToken();
+            log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
+            return;
+        }
+
+        log.debug("[互信诊断] 认证失败: tokenValue={}", maskToken(tokenValue));
+        throw new SaOAuth2Exception("无效的访问客户端");
     }
 
-    /**
-     * 获取当前 HttpServletRequest（Spring 环境）
-     */
+    private static String maskHeader(String header) {
+        if (header == null) {
+            return "null";
+        }
+        return header.substring(0, Math.min(50, header.length())) + "...";
+    }
+
+    private static String maskToken(String tokenValue) {
+        if (tokenValue == null) {
+            return "null";
+        }
+        return tokenValue.substring(0, Math.min(30, tokenValue.length())) + "...";
+    }
+
     private static HttpServletRequest getCurrentRequest() {
         try {
             return (HttpServletRequest)
@@ -120,9 +115,6 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         }
     }
 
-    /**
-     * 判断是否为本地回环地址（支持 127.x.x.x 和 ::1）
-     */
     private static boolean isLocalIp(String ip) {
         if (ObjectUtil.isEmpty(ip)) {
             return false;

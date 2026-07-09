@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.entitys.basic.BaseApp;
+import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +18,11 @@ public interface IBaseAppServiceClient {
      * @param appId 应用Id
      * @return
      */
+    @InnerAuth
     @GetMapping("/{appId}/info")
     ResultBody<BaseApp> getApp(@PathVariable("appId") Long appId);
 
+    @InnerAuth
     @GetMapping("/getAppByKey")
     ResultBody<BaseApp> getAppByKey(@RequestParam(name = "appKey", required = true) String appKey);
 

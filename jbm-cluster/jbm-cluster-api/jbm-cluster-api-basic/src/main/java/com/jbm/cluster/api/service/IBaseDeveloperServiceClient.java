@@ -1,6 +1,7 @@
 package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.model.auth.UserAccount;
+import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,18 +17,12 @@ public interface IBaseDeveloperServiceClient {
      * @param username
      * @return
      */
+    @InnerAuth
     @PostMapping("/developer/login")
     ResultBody<UserAccount> developerLogin(@RequestParam(value = "username") String username);
 
 
-    /**
-     * 注册第三方系统登录账号
-     *
-     * @param account
-     * @param password
-     * @param accountType
-     * @return
-     */
+    @InnerAuth
     @PostMapping("/developer/register/thirdParty")
     ResultBody addDeveloperThirdParty(
             @RequestParam(value = "account") String account,

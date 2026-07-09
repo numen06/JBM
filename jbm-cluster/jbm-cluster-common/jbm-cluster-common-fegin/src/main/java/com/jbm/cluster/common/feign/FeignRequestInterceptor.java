@@ -34,6 +34,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         // 获取相关对象
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         HttpServletRequest httpServletRequest = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
+        requestTemplate.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
         if (ObjectUtil.isNotEmpty(httpServletRequest)) {
             // 传递用户信息请求头，防止丢失
             String userId = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.DETAILS_USER_ID);

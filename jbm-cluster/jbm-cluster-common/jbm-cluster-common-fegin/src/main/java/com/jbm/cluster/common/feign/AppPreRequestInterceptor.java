@@ -16,11 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- *
- * 请求追加Token
- * @Created wesley.zhang
- * @Date 2022/5/19 19:13
- * @Description TODO
+ * Feign 出站 Token 注入：用户委托链透传 AccessToken，内部服务链使用 ClientToken。
  */
 public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
@@ -29,19 +25,32 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
     @Override
     public void apply(RequestTemplate requestTemplate, HttpServletRequest httpServletRequest) {
+        appendInnerHeaders(requestTemplate);
+
+        String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
+        if (StrUtil.isNotEmpty(authentication)) {
+            return;
+        }
+
+        ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+        requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER,
+                StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
+    }
+
+    private static void appendInnerHeaders(RequestTemplate requestTemplate) {
+        requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
+        requestTemplate.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
+    }
+
+    private static String resolveAuthorization(HttpServletRequest httpServletRequest, RequestTemplate requestTemplate) {
         if (ObjectUtil.isNotEmpty(httpServletRequest)) {
             Map<String, String> headers = ServletUtils.getHeaders(httpServletRequest);
-            String authentication = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
-            if (StrUtil.isEmpty(authentication)) {
-                ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-                requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
-                requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
+            String authorization = headers.get(JbmSecurityConstants.AUTHORIZATION_HEADER);
+            if (StrUtil.isNotEmpty(authorization)) {
+                return authorization;
             }
-        } else {
-            ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
-            requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
-            requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
         }
+        return requestTemplate.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).stream().findFirst().orElse(null);
     }
 
 }

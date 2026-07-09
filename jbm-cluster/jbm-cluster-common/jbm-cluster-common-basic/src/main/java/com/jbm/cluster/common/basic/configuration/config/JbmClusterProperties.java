@@ -77,4 +77,9 @@ public class JbmClusterProperties {
      */
     private String[] permitAll = new String[]{};
 
+    /**
+     * 是否允许本地回环地址跳过 Token 认证（生产环境建议 false）
+     */
+    private Boolean allowLocalBypass = false;
+
 }
