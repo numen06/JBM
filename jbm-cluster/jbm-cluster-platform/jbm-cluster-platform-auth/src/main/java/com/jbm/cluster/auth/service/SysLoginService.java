@@ -150,11 +150,10 @@ public class SysLoginService {
     }
 
     /**
-     * 密码/短信登录强制校验图形验证码
+     * 密码登录强制校验图形验证码（短信登录在发码环节已验图形码，登录不再重复校验）
      */
     public void verifyLoginCaptcha(LoginType loginType, String vcode) {
-        List<LoginType> verifyTypes = Lists.newArrayList(LoginType.PASSWORD, LoginType.SMS);
-        if (verifyTypes.contains(loginType)) {
+        if (LoginType.PASSWORD.equals(loginType)) {
             vCoderService.verify(vcode);
         }
     }

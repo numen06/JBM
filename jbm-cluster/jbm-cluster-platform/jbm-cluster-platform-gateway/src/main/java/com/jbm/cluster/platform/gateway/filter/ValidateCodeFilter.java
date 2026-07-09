@@ -36,6 +36,7 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
     private static final String CODE = "code";
     private static final String UUID = "uuid";
     private static final String VCODE = "vcode";
+    private static final String LOGIN_TYPE = "loginType";
     @Autowired
     private ValidateCodeService validateCodeService;
     @Autowired
@@ -68,7 +69,9 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
                             String contentType = request.getHeaders().getFirst("Content-Type");
                             Dict obj = parseRequestBody(body, contentType);
                             if (oauthPath) {
-                                validateCodeService.verifyVcode(obj.getStr(VCODE));
+                                if (!isSmsLogin(obj)) {
+                                    validateCodeService.verifyVcode(obj.getStr(VCODE));
+                                }
                             } else {
                                 validateCodeService.checkCaptcha(obj.getStr(CODE), obj.getStr(UUID));
                             }
@@ -110,5 +113,9 @@ public class ValidateCodeFilter extends AbstractGatewayFilterFactory<Object> {
             dict.set(key, value);
         }
         return dict;
+    }
+
+    private boolean isSmsLogin(Dict obj) {
+        return "SMS".equalsIgnoreCase(obj.getStr(LOGIN_TYPE));
     }
 }
