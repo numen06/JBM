@@ -2,6 +2,7 @@ package com.jbm.cluster.common.satoken.config;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.config.SaTokenConfig;
+import cn.dev33.satoken.filter.SaFilterAuthStrategy;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import com.jbm.cluster.common.satoken.core.StpLogicJwtForCustom;
@@ -10,6 +11,8 @@ import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
 import com.jbm.cluster.common.satoken.oauth.NodeClientModelSource;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -90,7 +93,20 @@ public class SaTokenConfiguration {
     }
 
     @Bean
-    public SaOAuthFilterAuthStrategy saOAuthFilterAuthStrategy() {
+    public TokenConfig tokenConfig() {
+        return new TokenConfig();
+    }
+
+    /**
+     * 仅 Servlet 业务服务注册（Gateway 等 WebFlux 应用排除 common-basic，不创建此 Bean）
+     */
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    @ConditionalOnClass(name = {
+            "javax.servlet.http.HttpServletRequest",
+            "com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties"
+    })
+    public SaFilterAuthStrategy saOAuthFilterAuthStrategy() {
         return new SaOAuthFilterAuthStrategy();
     }
 

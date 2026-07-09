@@ -1,13 +1,13 @@
 package com.jbm.cluster.common.security.configuration;
 
 import cn.dev33.satoken.filter.SaServletFilter;
+import cn.dev33.satoken.filter.SaFilterAuthStrategy;
 import cn.dev33.satoken.interceptor.SaRouteInterceptor;
 import cn.dev33.satoken.router.SaRouter;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
-import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.filter.SaServletSuperFilter;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.satoken.utils.SecurityUtils;
@@ -50,7 +50,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
     private JbmClusterProperties jbmClusterProperties;
 
     @Autowired
-    private SaOAuthFilterAuthStrategy saOAuthFilterAuthStrategy;
+    private SaFilterAuthStrategy saOAuthFilterAuthStrategy;
 
     /**
      * 注册sa-token的拦截器

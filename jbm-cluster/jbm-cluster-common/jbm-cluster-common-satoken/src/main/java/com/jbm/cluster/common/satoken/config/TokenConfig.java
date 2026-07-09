@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.satoken.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 /**
  * Token过期时间配置管理类
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
  * @author Wesley.Zhang
  * @Date 2025-12-25
  */
-@Component
 public class TokenConfig {
 
     // ==================== OAuth2 Token 配置 ====================
