@@ -78,7 +78,7 @@ public class JbmSecurityConfiguration implements WebMvcConfigurer {
                 LoginHelper.clearCache();
             }
         }).addPathPatterns("/**");
-        // 注解拦截器：内部服务链可跳过用户权限注解
+        // 注解拦截器：无用户登录态（ClientToken 服务间调用）跳过用户权限注解
         registry.addInterceptor(new JbmSaAnnotationInterceptor()).addPathPatterns("/**");
     }
 

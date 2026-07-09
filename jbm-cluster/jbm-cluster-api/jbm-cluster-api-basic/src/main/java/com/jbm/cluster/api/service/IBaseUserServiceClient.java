@@ -4,7 +4,6 @@ import com.jbm.cluster.api.entitys.basic.BaseAccount;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.form.ThirdPartyUserForm;
 import com.jbm.cluster.api.model.auth.UserAccount;
-import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -26,7 +25,6 @@ public interface IBaseUserServiceClient {
      *
      * @return
      */
-    @InnerAuth
     @GetMapping("/getUserInfoById")
     ResultBody<BaseUser> getUserInfoById(@RequestParam(value = "userId") Long userId);
 
@@ -36,18 +34,15 @@ public interface IBaseUserServiceClient {
      * @param username
      * @return
      */
-    @InnerAuth
     @PostMapping("/login")
     ResultBody<UserAccount> userLogin(@RequestParam(value = "username") String username);
 
 
-    @InnerAuth
     @PostMapping("/loginByType")
     ResultBody<UserAccount> userLoginByType(@RequestParam(value = "username") String username,
                                             @RequestParam(value = "loginType") String loginType);
 
 
-    @InnerAuth
     @ApiOperation(value = "注册账号", notes = "添加系统用户")
     @PostMapping("/register")
     ResultBody register(@RequestParam(value = "registerIp", required = false) String registerIp,
@@ -58,7 +53,6 @@ public interface IBaseUserServiceClient {
                         @RequestParam(value = "confirmPassword") String confirmPassword
     );
 
-    @InnerAuth
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping(value = "/update", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     ResultBody updateUser(BaseUser user);
@@ -71,7 +65,6 @@ public interface IBaseUserServiceClient {
      * @param accountType
      * @return
      */
-    @InnerAuth
     @PostMapping("/register/thirdParty")
     ResultBody addUserThirdParty(
             @RequestParam(value = "account") String account,
@@ -82,12 +75,10 @@ public interface IBaseUserServiceClient {
     );
 
 
-    @InnerAuth
     @ApiOperation(value = "注册并登录第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/loginAndRegisterMobileUser")
     ResultBody<UserAccount> loginAndRegisterMobileUser(@RequestBody ThirdPartyUserForm thirdPartyUserForm);
 
-    @InnerAuth
     @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/add/bindUserThirdPartyByPhone")
     ResultBody bindUserThirdPartyByPhone(
@@ -97,13 +88,11 @@ public interface IBaseUserServiceClient {
             @RequestParam(value = "phone") String phone
     );
 
-    @InnerAuth
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/getUserByPhone")
     ResultBody<BaseUser> getUserByPhone(@RequestParam(value = "phone") String phone);
 
 
-    @InnerAuth
     @ApiOperation(value = "获取用户帐号信息")
     @GetMapping("/getUserAccounts")
     ResultBody<List<BaseAccount>> getUserAccounts(@RequestParam(value = "userId") Long userId);

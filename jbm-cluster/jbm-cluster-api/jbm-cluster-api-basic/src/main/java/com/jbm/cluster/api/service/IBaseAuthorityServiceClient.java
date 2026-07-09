@@ -2,7 +2,6 @@ package com.jbm.cluster.api.service;
 
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
-import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.framework.metadata.bean.ResultBody;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -19,7 +18,6 @@ public interface IBaseAuthorityServiceClient {
      *
      * @return
      */
-    @InnerAuth
     @GetMapping("/access")
     ResultBody<List<AuthorityResource>> findAuthorityResource();
 
@@ -28,7 +26,6 @@ public interface IBaseAuthorityServiceClient {
      *
      * @return
      */
-    @InnerAuth
     @GetMapping("/menu")
     ResultBody<List<AuthorityMenu>> findAuthorityMenu();
 }

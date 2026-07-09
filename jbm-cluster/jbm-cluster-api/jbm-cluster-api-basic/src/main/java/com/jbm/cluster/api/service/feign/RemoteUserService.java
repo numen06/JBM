@@ -3,7 +3,6 @@ package com.jbm.cluster.api.service.feign;
 import com.jbm.cluster.api.entitys.basic.BaseUser;
 import com.jbm.cluster.api.factory.RemoteUserFallbackFactory;
 import com.jbm.cluster.api.model.auth.JbmLoginUser;
-import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.cluster.core.constant.JbmClusterConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -25,7 +24,6 @@ public interface RemoteUserService {
      * @param source   请求来源
      * @return 结果
      */
-    @InnerAuth
     @GetMapping("/user/info/{username}")
     public ResultBody<JbmLoginUser> getUserInfo(@PathVariable("username") String username, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
 
@@ -36,7 +34,6 @@ public interface RemoteUserService {
      * @param source   请求来源
      * @return 结果
      */
-    @InnerAuth
     @PostMapping("/user/register")
     public ResultBody<Boolean> registerUserInfo(@RequestBody BaseUser baseUser, @RequestHeader(JbmSecurityConstants.FROM_SOURCE) String source);
 }

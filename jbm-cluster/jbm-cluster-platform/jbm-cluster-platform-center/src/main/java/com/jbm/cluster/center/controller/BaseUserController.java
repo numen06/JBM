@@ -18,7 +18,6 @@ import com.jbm.cluster.center.service.BaseAccountService;
 import com.jbm.cluster.center.service.BaseRoleService;
 import com.jbm.cluster.center.service.BaseUserService;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
-import com.jbm.cluster.core.annotation.InnerAuth;
 import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.framework.exceptions.ServiceException;
@@ -59,7 +58,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Autowired
     private LoginAuthenticateHelper loginAuthenticateHelper;
 
-    @InnerAuth
     @ApiOperation(value = "通过用户名查询用户信息", notes = "仅限系统内部 Feign 调用")
     @GetMapping("/info/{username}")
     public ResultBody<JbmLoginUser> getUserInfo(@PathVariable("username") String username,
@@ -73,7 +71,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
-    @InnerAuth
     @ApiOperation(value = "注册用户信息", notes = "仅限系统内部 Feign 调用")
     @PostMapping(value = "/register", consumes = "application/json")
     public ResultBody<Boolean> registerUserInfo(@RequestBody BaseUser baseUser,
