@@ -13,6 +13,10 @@ import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -23,6 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @Slf4j
 public class DynamicResourceLocator extends DynamicResourceService {
+
+    private static final long RETRY_DELAY_SECONDS = 10L;
 
 
     @Autowired
@@ -54,6 +60,16 @@ public class DynamicResourceLocator extends DynamicResourceService {
      */
     private Map<String, Object> cache = new ConcurrentHashMap<>();
 
+    private final AtomicBoolean ready = new AtomicBoolean(false);
+
+    private final AtomicBoolean retryScheduled = new AtomicBoolean(false);
+
+    private final ScheduledExecutorService retryExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread thread = new Thread(r, "dynamic-resource-refresh-retry");
+        thread.setDaemon(true);
+        return thread;
+    });
+
 
     @Autowired
     private BaseAuthorityServiceClient baseAuthorityServiceClient;
@@ -77,12 +93,37 @@ public class DynamicResourceLocator extends DynamicResourceService {
     /**
      * 清空缓存并刷新
      */
-    public void refresh() {
-//        this.configAttributes.clear();
-        this.cache.clear();
-        this.authorityResources = loadAuthorityResources();
-        this.ipBlacks = loadIpBlackList();
-        this.ipWhites = loadIpWhiteList();
+    public synchronized void refresh() {
+        try {
+            List<AuthorityResource> nextAuthorityResources = loadAuthorityResources();
+            List<IpLimitApi> nextIpBlacks = loadIpBlackList();
+            List<IpLimitApi> nextIpWhites = loadIpWhiteList();
+//            this.configAttributes.clear();
+            this.cache.clear();
+            this.authorityResources = nextAuthorityResources;
+            this.ipBlacks = nextIpBlacks;
+            this.ipWhites = nextIpWhites;
+            this.ready.set(true);
+            this.retryScheduled.set(false);
+        } catch (Exception e) {
+            log.warn("动态资源刷新失败，将在{}秒后重试: {}", RETRY_DELAY_SECONDS, e.toString());
+            log.debug("动态资源刷新失败详情", e);
+            scheduleRetry();
+        }
+    }
+
+    public boolean isReady() {
+        return ready.get();
+    }
+
+    private void scheduleRetry() {
+        if (!this.retryScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        this.retryExecutor.schedule(() -> {
+            this.retryScheduled.set(false);
+            this.refresh();
+        }, RETRY_DELAY_SECONDS, TimeUnit.SECONDS);
     }
 
     /**
@@ -113,17 +154,18 @@ public class DynamicResourceLocator extends DynamicResourceService {
         List<AuthorityResource> resources = Lists.newArrayList();
 //        Collection<ConfigAttribute> array;
 //        ConfigAttribute cfg;
-        try {
-            // 查询所有接口
-            resources = baseAuthorityServiceClient.findAuthorityResource().getResult();
-            if (resources != null) {
-                for (AuthorityResource item : resources) {
-                    String path = item.getPath();
-                    if (path == null) {
-                        continue;
-                    }
-                    String fullPath = getFullPath(item.getServiceId(), path);
-                    item.setPath(fullPath);
+        // 查询所有接口
+        resources = baseAuthorityServiceClient.findAuthorityResource().getResult();
+        if (resources == null) {
+            resources = Lists.newArrayList();
+        }
+        for (AuthorityResource item : resources) {
+            String path = item.getPath();
+            if (path == null) {
+                continue;
+            }
+            String fullPath = getFullPath(item.getServiceId(), path);
+            item.setPath(fullPath);
 //                    array = configAttributes.get(fullPath);
 //                    if (array == null) {
 //                        array = new ArrayList<>();
@@ -133,12 +175,8 @@ public class DynamicResourceLocator extends DynamicResourceService {
 //                        array.add(cfg);
 //                    }
 //                    configAttributes.put(fullPath, array);
-                }
-                log.info("=============加载动态权限:{}==============", resources.size());
-            }
-        } catch (Exception e) {
-            log.error("加载动态权限错误", e);
         }
+        log.info("=============加载动态权限:{}==============", resources.size());
         return resources;
     }
 
@@ -147,17 +185,14 @@ public class DynamicResourceLocator extends DynamicResourceService {
      */
     public List<IpLimitApi> loadIpBlackList() {
         List<IpLimitApi> list = Lists.newArrayList();
-        try {
-            list = gatewayServiceClient.getApiBlackList().getResult();
-            if (list != null) {
-                for (IpLimitApi item : list) {
-                    item.setPath(getFullPath(item.getServiceId(), item.getPath()));
-                }
-                log.info("=============加载IP黑名单:{}==============", list.size());
-            }
-        } catch (Exception e) {
-            log.error("加载IP黑名单错误", e);
+        list = gatewayServiceClient.getApiBlackList().getResult();
+        if (list == null) {
+            list = Lists.newArrayList();
         }
+        for (IpLimitApi item : list) {
+            item.setPath(getFullPath(item.getServiceId(), item.getPath()));
+        }
+        log.info("=============加载IP黑名单:{}==============", list.size());
         return list;
     }
 
@@ -166,17 +201,14 @@ public class DynamicResourceLocator extends DynamicResourceService {
      */
     public List<IpLimitApi> loadIpWhiteList() {
         List<IpLimitApi> list = Lists.newArrayList();
-        try {
-            list = gatewayServiceClient.getApiWhiteList().getResult();
-            if (list != null) {
-                for (IpLimitApi item : list) {
-                    item.setPath(getFullPath(item.getServiceId(), item.getPath()));
-                }
-                log.info("=============加载IP白名单:{}==============", list.size());
-            }
-        } catch (Exception e) {
-            log.error("加载IP白名单错误", e);
+        list = gatewayServiceClient.getApiWhiteList().getResult();
+        if (list == null) {
+            list = Lists.newArrayList();
         }
+        for (IpLimitApi item : list) {
+            item.setPath(getFullPath(item.getServiceId(), item.getPath()));
+        }
+        log.info("=============加载IP白名单:{}==============", list.size());
         return list;
     }
 

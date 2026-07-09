@@ -1,6 +1,7 @@
 package com.jbm.cluster.platform.gateway.config;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
+import com.jbm.cluster.platform.gateway.filter.DynamicResourceReadyFilter;
 import com.jbm.cluster.platform.gateway.filter.GatewayContextFilter;
 import com.jbm.cluster.platform.gateway.filter.RemoveGatewayContextFilter;
 import com.jbm.cluster.platform.gateway.handler.SentinelFallbackHandler;
@@ -99,6 +100,11 @@ public class GatewayConfig {
         DynamicResourceLocator resourceLocator = new DynamicResourceLocator(routeDefinitionLocator);
         log.info("ResourceLocator [{}]", resourceLocator);
         return resourceLocator;
+    }
+
+    @Bean
+    public DynamicResourceReadyFilter dynamicResourceReadyFilter(DynamicResourceLocator resourceLocator) {
+        return new DynamicResourceReadyFilter(resourceLocator);
     }
 
     @Bean
