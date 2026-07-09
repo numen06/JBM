@@ -6,6 +6,7 @@ import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import com.jbm.cluster.common.satoken.core.StpLogicJwtForCustom;
 import com.jbm.cluster.common.satoken.core.dao.RedisSaTokenDao;
+import com.jbm.cluster.common.satoken.core.filter.SaOAuthFilterAuthStrategy;
 import com.jbm.cluster.common.satoken.core.service.SaPermissionImpl;
 import com.jbm.cluster.common.satoken.oauth.JbmNodeOAuth2TemplateImpl;
 import com.jbm.cluster.common.satoken.oauth.NodeClientModelSource;
@@ -86,6 +87,11 @@ public class SaTokenConfiguration {
     @Bean
     public NodeClientModelSource nodeClientModelSource() {
         return new NodeClientModelSource();
+    }
+
+    @Bean
+    public SaOAuthFilterAuthStrategy saOAuthFilterAuthStrategy() {
+        return new SaOAuthFilterAuthStrategy();
     }
 
 }

@@ -17,7 +17,6 @@ import com.jbm.cluster.common.basic.utils.IpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -25,7 +24,6 @@ import java.net.InetAddress;
 /**
  * Token 过滤：区分用户 Token 与服务 ClientToken 两条认证轨道。
  */
-@Component
 public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
 
     private static final Logger log = LoggerFactory.getLogger(SaOAuthFilterAuthStrategy.class);
