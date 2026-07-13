@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Feign 出站 Token 注入：用户委托链透传 AccessToken，内部服务链使用 ClientToken。
+ * Feign 出站 Token 注入：默认使用 ClientToken 跨权限访问，显式要求用户委托时才透传当前用户 Token。
  */
 public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
@@ -28,13 +28,17 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
     public void apply(RequestTemplate requestTemplate, HttpServletRequest httpServletRequest) {
         appendInnerHeaders(requestTemplate);
 
-        String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
-        if (StrUtil.isNotEmpty(authentication)) {
-            requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
-            return;
+        if (shouldRelayUserToken(requestTemplate)) {
+            String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
+            if (StrUtil.isNotEmpty(authentication)) {
+                requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
+                requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
+                return;
+            }
         }
 
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
+        requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
         requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER,
                 StrUtil.emptyToDefault(SaManager.getConfig().getTokenPrefix(), "Bearer") + " " + clientTokenModel.clientToken);
     }
@@ -42,6 +46,15 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
     private static void appendInnerHeaders(RequestTemplate requestTemplate) {
         requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
         requestTemplate.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
+    }
+
+    private static boolean shouldRelayUserToken(RequestTemplate requestTemplate) {
+        Collection<String> accessModeHeaders = requestTemplate.headers().get(FeignTokenContext.ACCESS_MODE_HEADER);
+        requestTemplate.removeHeader(FeignTokenContext.ACCESS_MODE_HEADER);
+        if (ObjectUtil.isNotEmpty(accessModeHeaders) && accessModeHeaders.stream().anyMatch(FeignTokenContext.ACCESS_MODE_USER::equalsIgnoreCase)) {
+            return true;
+        }
+        return FeignTokenContext.isUserTokenRelay();
     }
 
     private static String resolveAuthorization(HttpServletRequest httpServletRequest, RequestTemplate requestTemplate) {

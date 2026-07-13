@@ -32,6 +32,7 @@ class AppPreRequestInterceptorTest {
 
     @BeforeEach
     void setUp() {
+        FeignTokenContext.clear();
         interceptor = new AppPreRequestInterceptor();
         saOAuth2Template = mock(SaOAuth2Template.class);
         ReflectionTestUtils.setField(interceptor, "saOAuth2Template", saOAuth2Template);
@@ -43,18 +44,24 @@ class AppPreRequestInterceptorTest {
 
     @AfterEach
     void tearDown() {
+        FeignTokenContext.clear();
         springUtilMock.close();
         saIdUtilMock.close();
     }
 
     @Test
-    void shouldKeepUserAuthorization_whenAlreadyPresent() {
+    void shouldOverrideUserAuthorization_whenAlreadyPresent() {
+        ClientTokenModel clientTokenModel = new ClientTokenModel("client-token-value", "test-service", "*");
+        when(saOAuth2Template.generateClientToken(anyString(), anyString())).thenReturn(clientTokenModel);
+        SaManager.getConfig().setTokenPrefix("Bearer");
+
         RequestTemplate template = new RequestTemplate();
         template.header(JbmSecurityConstants.AUTHORIZATION_HEADER, "Bearer user-token");
 
         interceptor.apply(template, null);
 
-        assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
+        assertFalse(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
+        assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer client-token-value"));
         assertTrue(template.headers().containsKey(SaIdUtil.ID_TOKEN));
         assertTrue(template.headers().containsKey(JbmSecurityConstants.FROM_SOURCE));
     }
@@ -86,5 +93,28 @@ class AppPreRequestInterceptorTest {
         interceptor.apply(template, null);
 
         assertFalse(template.headers().getOrDefault(JbmSecurityConstants.AUTHORIZATION_HEADER, Collections.emptyList()).isEmpty());
+    }
+
+    @Test
+    void shouldRelayUserAuthorization_whenContextRequested() {
+        RequestTemplate template = new RequestTemplate();
+        template.header(JbmSecurityConstants.AUTHORIZATION_HEADER, "Bearer user-token");
+
+        FeignTokenContext.withUserToken(() -> interceptor.apply(template, null));
+
+        assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
+        assertFalse(FeignTokenContext.isUserTokenRelay());
+    }
+
+    @Test
+    void shouldRelayUserAuthorization_whenHeaderRequested() {
+        RequestTemplate template = new RequestTemplate();
+        template.header(JbmSecurityConstants.AUTHORIZATION_HEADER, "Bearer user-token");
+        template.header(FeignTokenContext.ACCESS_MODE_HEADER, FeignTokenContext.ACCESS_MODE_USER);
+
+        interceptor.apply(template, null);
+
+        assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
+        assertFalse(template.headers().containsKey(FeignTokenContext.ACCESS_MODE_HEADER));
     }
 }
