@@ -58,7 +58,15 @@ public class TokenConfig {
      * Client Token 缓存过期时间（小时）
      * 默认：24小时，与OAuth2 client token保持一致
      */
-    private int clientTokenCacheHours = 24;
+    @Value("${sa-token.oauth2.client-token-cache-hours:24}")
+    private int clientTokenCacheHours;
+
+    /**
+     * 内部节点 Client Token 提前刷新时间（小时）
+     * 默认：生成20小时后刷新，避免临近24小时有效期时继续返回即将过期的Token
+     */
+    @Value("${sa-token.oauth2.client-token-refresh-after-hours:20}")
+    private int clientTokenRefreshAfterHours;
 
     // ==================== Getter 方法 ====================
 
@@ -84,6 +92,10 @@ public class TokenConfig {
 
     public int getClientTokenCacheHours() {
         return clientTokenCacheHours;
+    }
+
+    public int getClientTokenRefreshAfterHours() {
+        return clientTokenRefreshAfterHours;
     }
 
     // ==================== 配置验证方法 ====================

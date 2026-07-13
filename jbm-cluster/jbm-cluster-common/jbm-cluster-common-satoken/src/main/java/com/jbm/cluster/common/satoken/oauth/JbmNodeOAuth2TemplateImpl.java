@@ -1,7 +1,6 @@
 package com.jbm.cluster.common.satoken.oauth;
 
 
-import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Template;
 import cn.dev33.satoken.oauth2.model.AccessTokenModel;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
@@ -48,20 +47,34 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     public JbmNodeOAuth2TemplateImpl() {
         // 延迟初始化，避免循环依赖
-        this.clientTokenModelLoadingCache = Caffeine.newBuilder()
-                .expireAfterWrite(24, TimeUnit.HOURS) // 默认24小时
-                .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
-                );
+        this.clientTokenModelLoadingCache = createClientTokenCache(24, 20);
     }
 
 
     @Override
     public ClientTokenModel generateClientToken(String clientId, String scope) {
+        if (isCurrentNodeClient(clientId)) {
+            try {
+                return clientTokenModelLoadingCache.get(clientId);
+            } catch (Exception e) {
+                log.warn("取内部节点ClientToken缓存失败，改为直接生成: clientId={}", clientId, e);
+            }
+        }
+        // 应用client_credentials必须使用原始clientId生成独立Token，不可复用内部节点缓存。
+        return generateOAuthClientToken(clientId, scope);
+    }
+
+    protected ClientTokenModel generateOAuthClientToken(String clientId, String scope) {
+        return super.generateClientToken(clientId, scope);
+    }
+
+    private boolean isCurrentNodeClient(String clientId) {
         try {
-            return clientTokenModelLoadingCache.get(clientId);
+            String applicationName = SpringUtil.getApplicationName();
+            return StrUtil.isNotBlank(applicationName) && applicationName.equals(clientId);
         } catch (Exception e) {
-            log.error("取应用程序TOKEN失败", e);
-            throw e;
+            log.debug("无法识别当前节点名称，按标准OAuth ClientToken生成: {}", e.getMessage());
+            return false;
         }
     }
 
@@ -181,9 +194,20 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
 
     @Override
     public String randomClientToken(String clientId, String scope) {
-        final String idToken = SaIdUtil.getToken();
-        log.debug("[互信诊断] randomClientToken 生成: clientId={}, idToken={} (长度:{})", clientId, idToken, idToken != null ? idToken.length() : 0);
-        return idToken;
+        String token = super.randomClientToken(clientId, scope);
+        log.debug("[互信诊断] randomClientToken 生成: clientId={}, tokenLength={}",
+                clientId, token != null ? token.length() : 0);
+        return token;
+    }
+
+    private LoadingCache<String, ClientTokenModel> createClientTokenCache(int cacheHours, int refreshAfterHours) {
+        int safeCacheHours = Math.max(1, cacheHours);
+        int safeRefreshAfterHours = Math.max(1, Math.min(refreshAfterHours, safeCacheHours));
+        return Caffeine.newBuilder()
+                .expireAfterWrite(safeCacheHours, TimeUnit.HOURS)
+                .refreshAfterWrite(safeRefreshAfterHours, TimeUnit.HOURS)
+                .build(key -> super.generateClientToken(
+                        key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*"));
     }
 
     /**
@@ -214,11 +238,10 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
             
             // 重新创建cache，使用配置的时间
             if (this.tokenConfig != null) {
-                this.clientTokenModelLoadingCache = Caffeine.newBuilder()
-                        .expireAfterWrite(tokenConfig.getClientTokenCacheHours(), TimeUnit.HOURS)
-                        .build(key -> super.generateClientToken(key + "-" + DateUtil.format(DateTime.now(), DatePattern.PURE_DATETIME_PATTERN), "*")
-                        );
-                log.info("初始化ClientToken缓存完成，缓存时间: {}小时", tokenConfig.getClientTokenCacheHours());
+                this.clientTokenModelLoadingCache = createClientTokenCache(
+                        tokenConfig.getClientTokenCacheHours(), tokenConfig.getClientTokenRefreshAfterHours());
+                log.info("初始化内部节点ClientToken缓存完成，缓存: {}小时，刷新: {}小时",
+                        tokenConfig.getClientTokenCacheHours(), tokenConfig.getClientTokenRefreshAfterHours());
             } else {
                 log.warn("无法获取TokenConfig，使用默认24小时缓存时间");
             }
