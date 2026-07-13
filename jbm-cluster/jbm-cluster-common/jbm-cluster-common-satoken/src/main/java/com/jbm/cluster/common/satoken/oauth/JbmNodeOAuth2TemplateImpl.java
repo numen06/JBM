@@ -37,6 +37,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements InitializingBean, ApplicationContextAware, ApplicationListener<ApplicationReadyEvent> {
 
+    private static final long MIN_CLIENT_TOKEN_VALIDITY_SECONDS = 60L;
+
     private TokenConfig tokenConfig;
     
     private LoadingCache<String, ClientTokenModel> clientTokenModelLoadingCache;
@@ -55,17 +57,40 @@ public class JbmNodeOAuth2TemplateImpl extends SaOAuth2Template implements Initi
     public ClientTokenModel generateClientToken(String clientId, String scope) {
         if (isCurrentNodeClient(clientId)) {
             try {
-                return clientTokenModelLoadingCache.get(clientId);
+                ClientTokenModel clientToken = clientTokenModelLoadingCache.get(clientId);
+                if (!isClientTokenUsable(clientToken)) {
+                    log.warn("内部节点ClientToken剩余有效期不足，立即重新生成: clientId={}, expiresIn={}",
+                            clientId, getExpiresIn(clientToken));
+                    clientTokenModelLoadingCache.invalidate(clientId);
+                    clientToken = clientTokenModelLoadingCache.get(clientId);
+                }
+                return requireUsableClientToken(clientToken, clientId);
             } catch (Exception e) {
                 log.warn("取内部节点ClientToken缓存失败，改为直接生成: clientId={}", clientId, e);
             }
         }
         // 应用client_credentials必须使用原始clientId生成独立Token，不可复用内部节点缓存。
-        return generateOAuthClientToken(clientId, scope);
+        return requireUsableClientToken(generateOAuthClientToken(clientId, scope), clientId);
     }
 
     protected ClientTokenModel generateOAuthClientToken(String clientId, String scope) {
         return super.generateClientToken(clientId, scope);
+    }
+
+    private ClientTokenModel requireUsableClientToken(ClientTokenModel clientToken, String clientId) {
+        if (!isClientTokenUsable(clientToken)) {
+            throw new IllegalStateException("生成的ClientToken有效期不足: clientId=" + clientId
+                    + ", expiresIn=" + getExpiresIn(clientToken));
+        }
+        return clientToken;
+    }
+
+    private boolean isClientTokenUsable(ClientTokenModel clientToken) {
+        return getExpiresIn(clientToken) >= MIN_CLIENT_TOKEN_VALIDITY_SECONDS;
+    }
+
+    private long getExpiresIn(ClientTokenModel clientToken) {
+        return clientToken == null ? -1L : clientToken.getExpiresIn();
     }
 
     private boolean isCurrentNodeClient(String clientId) {

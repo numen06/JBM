@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JbmNodeOAuth2TemplateImplTest {
 
@@ -20,7 +21,9 @@ class JbmNodeOAuth2TemplateImplTest {
             @Override
             protected ClientTokenModel generateOAuthClientToken(String clientId, String scope) {
                 int sequence = generatedCount.incrementAndGet();
-                return new ClientTokenModel("application-token-" + sequence, clientId, scope);
+                ClientTokenModel clientToken = new ClientTokenModel("application-token-" + sequence, clientId, scope);
+                clientToken.expiresTime = System.currentTimeMillis() + 86_400_000L;
+                return clientToken;
             }
         };
 
@@ -45,5 +48,24 @@ class JbmNodeOAuth2TemplateImplTest {
         String second = template.randomClientToken("external-client", "*");
 
         assertNotEquals(first, second);
+    }
+
+    @Test
+    void applicationClientShouldNeverReturnExpiringToken() {
+        JbmNodeOAuth2TemplateImpl template = new JbmNodeOAuth2TemplateImpl() {
+            @Override
+            protected ClientTokenModel generateOAuthClientToken(String clientId, String scope) {
+                ClientTokenModel clientToken = new ClientTokenModel("expiring-token", clientId, scope);
+                clientToken.expiresTime = System.currentTimeMillis() + 30_000L;
+                return clientToken;
+            }
+        };
+
+        try (MockedStatic<SpringUtil> springUtil = Mockito.mockStatic(SpringUtil.class)) {
+            springUtil.when(SpringUtil::getApplicationName).thenReturn("jbm-auth-service");
+
+            assertThrows(IllegalStateException.class,
+                    () -> template.generateClientToken("external-client", "read"));
+        }
     }
 }
