@@ -3,6 +3,7 @@ package com.jbm.cluster.logs.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.jbm.cluster.api.model.gateway.GatewayLogInfoSanitizer;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.service.GatewayLogsService;
@@ -47,7 +48,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         List<Map<String, Object>> hits = queryResult.getHits();
         List<GatewayLogs> list = hits.stream().map(map -> {
             JSONObject jsonObject = new JSONObject(map);
-            return jsonObject.toJavaObject(GatewayLogs.class);
+            return GatewayLogInfoSanitizer.sanitize(jsonObject.toJavaObject(GatewayLogs.class));
         }).collect(Collectors.toList());
         // 查询
         return new DataPaging<>(list, queryResult.getScanRecords(), page.getPages(), gatewayLogsForm.getPageForm());
@@ -65,7 +66,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
         List<Map<String, Object>> hits = queryResult.getHits();
         List<GatewayLogs> list = hits.stream().map(map -> {
             JSONObject jsonObject = new JSONObject(map);
-            return jsonObject.toJavaObject(GatewayLogs.class);
+            return GatewayLogInfoSanitizer.sanitize(jsonObject.toJavaObject(GatewayLogs.class));
         }).collect(Collectors.toList());
         // 查询
         return new DataPaging<>(list, queryResult.getScanRecords(), page.getPages(), gatewayLogsForm.getPageForm());
@@ -98,7 +99,7 @@ public class GatewayLogsServiceImpl implements GatewayLogsService {
 
     @Override
     public void saveGatewayLogs(GatewayLogs gatewayLogs) {
-        batchTask.offerBlocking(gatewayLogs);
+        batchTask.offerBlocking(GatewayLogInfoSanitizer.sanitize(gatewayLogs));
     }
 
 

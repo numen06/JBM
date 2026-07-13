@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jbm.cluster.api.model.gateway.GatewayLogInfo;
+import com.jbm.cluster.api.model.gateway.GatewayLogInfoSanitizer;
 import com.jbm.cluster.core.constant.QueueConstants;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
 import com.jbm.cluster.platform.gateway.logfilter.AccessLogFilter;
@@ -162,6 +163,7 @@ public class StreamAccessLogService implements AccessLogService {
             }
             //大于0代表记录日志
             if (gatewayLogs.getLoglevel() > 0) {
+                GatewayLogInfoSanitizer.sanitize(gatewayLogs);
                 //发送数据
                 streamBridge.send(QueueConstants.ACCESS_LOGS_STREAM, JSON.toJSONString(gatewayLogs));
             }
