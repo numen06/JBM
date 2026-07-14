@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseApp;
 import com.jbm.cluster.api.service.IBaseAppServiceClient;
 import com.jbm.cluster.center.service.BaseAppService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -37,6 +39,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取分页应用列表", notes = "获取分页应用列表")
     @GetMapping("/")
     public ResultBody<DataPaging<BaseApp>> getAppListPage(@RequestParam(required = false) Map map) {
@@ -49,6 +52,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param appId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取应用详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用ID", defaultValue = "1", required = true, paramType = "path"),
@@ -62,6 +66,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
         return ResultBody.callback(() -> appInfo);
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过appKey获取应用详情")
     @GetMapping("/getAppByKey")
     @Override
@@ -102,6 +107,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param website   官网地址
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "添加应用信息", notes = "添加应用信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appName", value = "应用名称", required = true, paramType = "form"),
@@ -162,6 +168,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @return
      * @
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "编辑应用信息", notes = "编辑应用信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),
@@ -217,6 +224,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param refreshTokenValidity 刷新令牌有效期(秒)
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "完善应用开发信息", notes = "完善应用开发信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),
@@ -256,6 +264,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param appId 应用Id
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "重置应用秘钥", notes = "重置应用秘钥")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),
@@ -274,6 +283,7 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
      * @param appId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "删除应用信息", notes = "删除应用信息")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", required = true, paramType = "form"),

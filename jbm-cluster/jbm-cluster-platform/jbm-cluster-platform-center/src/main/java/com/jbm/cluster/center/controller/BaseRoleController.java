@@ -1,9 +1,11 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.basic.BaseRole;
 import com.jbm.cluster.api.entitys.basic.BaseRoleUser;
 import com.jbm.cluster.center.service.BaseRoleService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -32,6 +34,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取分页角色列表", notes = "获取分页角色列表")
     @PostMapping("")
     public ResultBody<DataPaging<BaseRole>> getRoleListPage(@RequestBody(required = false) PageRequestBody pageRequestBody) {
@@ -43,6 +46,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取所有角色列表", notes = "获取所有角色列表")
     @PostMapping("/all")
     public ResultBody<List<BaseRole>> getRoleAllList() {
@@ -55,6 +59,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      * @param roleId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取角色详情", notes = "获取角色详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "path")
@@ -70,6 +75,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "添加角色", notes = "添加角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleCode", value = "角色编码", defaultValue = "", required = true, paramType = "form"),
@@ -99,6 +105,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "编辑角色", notes = "编辑角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
@@ -132,6 +139,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "删除角色", notes = "删除角色")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
@@ -149,6 +157,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "角色添加成员", notes = "角色添加成员")
     @PostMapping("/users/add")
     public ResultBody addUserRoles(
@@ -167,6 +176,7 @@ public class BaseRoleController extends MasterDataCollection<BaseRole, BaseRoleS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "查询角色成员", notes = "查询角色成员")
     @PostMapping("/users")
     public ResultBody<List<BaseRoleUser>> getRoleUsers(

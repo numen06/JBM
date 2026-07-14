@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jbm.cluster.api.entitys.basic.BaseApi;
@@ -8,6 +9,7 @@ import com.jbm.cluster.center.service.BaseApiService;
 import com.jbm.cluster.center.service.impl.BaseAppServiceImpl;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.basic.log.annotation.OperatorLog;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -53,6 +55,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取单个应用的接口列表")
     @GetMapping("/all")
     @Override
@@ -60,6 +63,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
         return ResultBody.callback(() -> apiService.findAllList(serviceId));
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "根据路径查询API")
     @GetMapping("/findApiByPath")
     @Override
@@ -75,6 +79,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @param apiId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @Override
     @OperatorLog
     @ApiOperation(value = "获取接口资源", notes = "获取接口资源")
@@ -92,6 +97,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @param baseApi 接口编码
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "添加接口资源", notes = "添加接口资源")
     @PostMapping("/add")
     public ResultBody<BaseApi> addApi(BaseApi baseApi) {
@@ -106,6 +112,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @param baseApi 接口ID
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "编辑接口资源", notes = "编辑接口资源")
     @PostMapping("/update")
     public ResultBody updateApi(BaseApi baseApi) {
@@ -133,6 +140,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      * @param apiId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "移除接口资源", notes = "移除接口资源")
     @PostMapping("/remove")
     public ResultBody removeApi(@RequestParam("apiId") Long apiId) {
@@ -148,6 +156,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量删除数据", notes = "批量删除数据")
     @PostMapping("/batch/remove")
     public ResultBody batchRemove(@RequestParam(value = "ids") String ids) {
@@ -165,6 +174,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量修改公开状态", notes = "批量修改公开状态")
     @PostMapping("/batch/update/open")
     public ResultBody<Integer> batchUpdateOpen(@RequestParam(value = "ids") List<String> ids,
@@ -180,6 +190,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量修改日志状态", notes = "批量修改公开状态")
     @PostMapping("/batch/update/log")
     public ResultBody<Integer> batchUpdateAccessLog(@RequestParam(value = "ids")List<String> ids,
@@ -195,6 +206,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量修改状态", notes = "批量修改状态")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
@@ -221,6 +233,7 @@ public class BaseApiController extends MasterDataCollection<BaseApi, BaseApiServ
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量修改身份认证", notes = "批量修改身份认证")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "ids", required = true, value = "多个用,号隔开", paramType = "form"),
