@@ -20,11 +20,13 @@ public class FeignRequestInterceptor implements RequestInterceptor {
     private static final Set<String> INBOUND_HEADER_EXCLUDES = new HashSet<>(Arrays.asList(
             "content-length",
             "connection",
+            "cookie",
             "host",
             "keep-alive",
             "proxy-authenticate",
             "proxy-authorization",
             "proxy-connection",
+            "set-cookie",
             "te",
             "trailer",
             "transfer-encoding",

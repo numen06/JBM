@@ -36,6 +36,7 @@ class FeignRequestInterceptorTest {
         request.addHeader("Transfer-Encoding", "chunked");
         request.addHeader("Connection", "keep-alive");
         request.addHeader("Host", "gateway.example.com");
+        request.addHeader("Cookie", "wms={%22token%22:%22Bearer%20test%22}");
         request.addHeader(JbmSecurityConstants.AUTHORIZATION_HEADER, "Bearer inbound-user-token");
         request.addHeader(SaIdUtil.ID_TOKEN, "inbound-id-token");
         request.addHeader(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
@@ -50,7 +51,7 @@ class FeignRequestInterceptorTest {
         interceptor.apply(template);
 
         assertThat(template.headers().get("X-Tenant-Id")).containsExactly("tenant-a");
-        assertThat(template.headers()).doesNotContainKeys("Transfer-Encoding", "Connection", "Host");
+        assertThat(template.headers()).doesNotContainKeys("Transfer-Encoding", "Connection", "Host", "Cookie");
         assertThat(template.headers()).doesNotContainKey(JbmSecurityConstants.AUTHORIZATION_HEADER);
         assertThat(template.headers()).doesNotContainKey(SaIdUtil.ID_TOKEN);
         assertThat(template.headers()).doesNotContainKey(JbmSecurityConstants.FROM_SOURCE);

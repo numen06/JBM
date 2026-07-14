@@ -31,13 +31,14 @@ class FeignAutoConfigurationTest {
         request.addHeader("Transfer-Encoding", "chunked");
         request.addHeader("Connection", "keep-alive");
         request.addHeader("Host", "gateway.example.com");
+        request.addHeader("Cookie", "wms={%22token%22:%22Bearer%20test%22}");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         RequestTemplate template = new RequestTemplate();
 
         new FeignRequestInterceptor().apply(template);
 
         assertThat(template.headers().get("X-Tenant-Id")).containsExactly("tenant-a");
-        assertThat(template.headers()).doesNotContainKeys("Transfer-Encoding", "Connection", "Host");
+        assertThat(template.headers()).doesNotContainKeys("Transfer-Encoding", "Connection", "Host", "Cookie");
     }
 
     @Test
