@@ -1,5 +1,6 @@
 package com.jbm.cluster.common.satoken.core.filter;
 
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
 import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
@@ -26,6 +27,7 @@ class SaOAuthFilterAuthStrategyTest {
     private SaOAuthFilterAuthStrategy strategy;
     private MockedStatic<StpUtil> stpUtilMock;
     private MockedStatic<SaOAuth2Util> saOAuth2UtilMock;
+    private MockedStatic<SaIdUtil> saIdUtilMock;
 
     @BeforeEach
     void setUp() {
@@ -40,11 +42,13 @@ class SaOAuthFilterAuthStrategyTest {
 
         stpUtilMock = Mockito.mockStatic(StpUtil.class);
         saOAuth2UtilMock = Mockito.mockStatic(SaOAuth2Util.class);
+        saIdUtilMock = Mockito.mockStatic(SaIdUtil.class);
     }
 
     @AfterEach
     void tearDown() {
         RequestContextHolder.resetRequestAttributes();
+        saIdUtilMock.close();
         stpUtilMock.close();
         saOAuth2UtilMock.close();
     }
@@ -66,5 +70,16 @@ class SaOAuthFilterAuthStrategyTest {
         stpUtilMock.when(StpUtil::getTokenValue).thenReturn(null);
 
         assertThrows(SaOAuth2Exception.class, () -> strategy.run(null));
+    }
+
+    @Test
+    void shouldAcceptValidIdToken_withoutAuthorization() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(SaIdUtil.ID_TOKEN, "internal-id-token");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        stpUtilMock.when(StpUtil::getTokenValue).thenReturn(null);
+
+        assertDoesNotThrow(() -> strategy.run(null));
+        saIdUtilMock.verify(SaIdUtil::checkCurrentRequestToken);
     }
 }

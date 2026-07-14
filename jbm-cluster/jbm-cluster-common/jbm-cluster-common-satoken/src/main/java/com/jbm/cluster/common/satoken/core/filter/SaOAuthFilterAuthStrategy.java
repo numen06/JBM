@@ -1,7 +1,5 @@
 package com.jbm.cluster.common.satoken.core.filter;
 
-import cn.dev33.satoken.context.SaHolder;
-import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.filter.SaFilterAuthStrategy;
 import cn.dev33.satoken.id.SaIdUtil;
 import cn.dev33.satoken.oauth2.exception.SaOAuth2Exception;
@@ -49,6 +47,13 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 maskHeader(httpServletRequest.getHeader("Authorization")),
                 maskHeader(httpServletRequest.getHeader(SaIdUtil.ID_TOKEN)));
 
+        String idToken = httpServletRequest.getHeader(SaIdUtil.ID_TOKEN);
+        if (StrUtil.isNotBlank(idToken)) {
+            SaIdUtil.checkCurrentRequestToken();
+            log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
+            return;
+        }
+
         final String tokenValue = StpUtil.getTokenValue();
         if (StrUtil.isBlank(tokenValue)) {
             throw new SaOAuth2Exception("无效Token");
@@ -74,13 +79,6 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
         if (ObjectUtil.isNotEmpty(clientTokenModel)) {
             SaOAuth2Util.checkClientToken(tokenValue);
             log.debug("[互信诊断] 认证通过路径: ClientToken有效, clientId={}", clientTokenModel.clientId);
-            return;
-        }
-
-        SaRequest req = SaHolder.getRequest();
-        if (StrUtil.isNotBlank(req.getHeader(SaIdUtil.ID_TOKEN))) {
-            SaIdUtil.checkCurrentRequestToken();
-            log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
             return;
         }
 
