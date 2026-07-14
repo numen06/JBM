@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AppPreRequestInterceptorTest {
@@ -103,6 +104,8 @@ class AppPreRequestInterceptorTest {
         FeignTokenContext.withUserToken(() -> interceptor.apply(template, null));
 
         assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
+        assertFalse(template.headers().containsKey(SaIdUtil.ID_TOKEN));
+        assertFalse(template.headers().containsKey(JbmSecurityConstants.FROM_SOURCE));
         assertFalse(FeignTokenContext.isUserTokenRelay());
     }
 
@@ -116,5 +119,20 @@ class AppPreRequestInterceptorTest {
 
         assertTrue(template.headers().get(JbmSecurityConstants.AUTHORIZATION_HEADER).contains("Bearer user-token"));
         assertFalse(template.headers().containsKey(FeignTokenContext.ACCESS_MODE_HEADER));
+        assertFalse(template.headers().containsKey(SaIdUtil.ID_TOKEN));
+        assertFalse(template.headers().containsKey(JbmSecurityConstants.FROM_SOURCE));
+    }
+
+    @Test
+    void shouldNotFallbackToInternalToken_whenUserRelayRequestedWithoutAuthorization() {
+        RequestTemplate template = new RequestTemplate();
+        template.header(FeignTokenContext.ACCESS_MODE_HEADER, FeignTokenContext.ACCESS_MODE_USER);
+
+        interceptor.apply(template, null);
+
+        assertFalse(template.headers().containsKey(JbmSecurityConstants.AUTHORIZATION_HEADER));
+        assertFalse(template.headers().containsKey(SaIdUtil.ID_TOKEN));
+        assertFalse(template.headers().containsKey(JbmSecurityConstants.FROM_SOURCE));
+        verifyNoInteractions(saOAuth2Template);
     }
 }

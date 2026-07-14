@@ -26,17 +26,17 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
     @Override
     public void apply(RequestTemplate requestTemplate, HttpServletRequest httpServletRequest) {
-        appendInnerHeaders(requestTemplate);
-
         if (shouldRelayUserToken(requestTemplate)) {
             String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
+            removeInnerHeaders(requestTemplate);
+            requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
             if (StrUtil.isNotEmpty(authentication)) {
-                requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
                 requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
-                return;
             }
+            return;
         }
 
+        appendInnerHeaders(requestTemplate);
         ClientTokenModel clientTokenModel = saOAuth2Template.generateClientToken(SpringUtil.getApplicationName(), "*");
         requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
         requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER,
@@ -44,8 +44,14 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
     }
 
     private static void appendInnerHeaders(RequestTemplate requestTemplate) {
+        removeInnerHeaders(requestTemplate);
         requestTemplate.header(SaIdUtil.ID_TOKEN, SaIdUtil.getToken());
         requestTemplate.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
+    }
+
+    private static void removeInnerHeaders(RequestTemplate requestTemplate) {
+        requestTemplate.removeHeader(SaIdUtil.ID_TOKEN);
+        requestTemplate.removeHeader(JbmSecurityConstants.FROM_SOURCE);
     }
 
     private static boolean shouldRelayUserToken(RequestTemplate requestTemplate) {

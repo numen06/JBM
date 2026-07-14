@@ -2,6 +2,7 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.date.DateUtil;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -24,7 +25,8 @@ public class ForwardAuthFilter implements GlobalFilter {
                 .getRequest()
                 .mutate()
                 .headers(headers -> {
-                    headers.set(SaIdUtil.ID_TOKEN, getIdToken());
+                    headers.remove(SaIdUtil.ID_TOKEN);
+                    headers.remove(JbmSecurityConstants.FROM_SOURCE);
                     headers.set("X-Original-Path", originalPath);
                 })
                 .build();
@@ -32,9 +34,5 @@ public class ForwardAuthFilter implements GlobalFilter {
         // 添加请求时间
         newExchange.getAttributes().put(GatewayContext.REQUEST_TIME_HEAD, DateUtil.now());
         return chain.filter(newExchange);
-    }
-
-    String getIdToken() {
-        return SaIdUtil.getToken();
     }
 }
