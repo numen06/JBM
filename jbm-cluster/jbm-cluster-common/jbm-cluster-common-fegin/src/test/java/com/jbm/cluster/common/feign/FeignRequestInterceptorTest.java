@@ -33,6 +33,9 @@ class FeignRequestInterceptorTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr("10.0.0.8");
         request.addHeader("X-Tenant-Id", "tenant-a");
+        request.addHeader("Transfer-Encoding", "chunked");
+        request.addHeader("Connection", "keep-alive");
+        request.addHeader("Host", "gateway.example.com");
         request.addHeader(JbmSecurityConstants.AUTHORIZATION_HEADER, "Bearer inbound-user-token");
         request.addHeader(SaIdUtil.ID_TOKEN, "inbound-id-token");
         request.addHeader(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
@@ -47,6 +50,7 @@ class FeignRequestInterceptorTest {
         interceptor.apply(template);
 
         assertThat(template.headers().get("X-Tenant-Id")).containsExactly("tenant-a");
+        assertThat(template.headers()).doesNotContainKeys("Transfer-Encoding", "Connection", "Host");
         assertThat(template.headers()).doesNotContainKey(JbmSecurityConstants.AUTHORIZATION_HEADER);
         assertThat(template.headers()).doesNotContainKey(SaIdUtil.ID_TOKEN);
         assertThat(template.headers()).doesNotContainKey(JbmSecurityConstants.FROM_SOURCE);

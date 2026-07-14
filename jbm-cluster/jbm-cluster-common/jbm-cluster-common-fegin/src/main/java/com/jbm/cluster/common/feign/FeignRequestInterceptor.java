@@ -32,6 +32,16 @@ public class FeignRequestInterceptor implements RequestInterceptor {
 
     private static final Set<String> INBOUND_HEADER_EXCLUDES = new HashSet<>(Arrays.asList(
             "content-length",
+            "connection",
+            "host",
+            "keep-alive",
+            "proxy-authenticate",
+            "proxy-authorization",
+            "proxy-connection",
+            "te",
+            "trailer",
+            "transfer-encoding",
+            "upgrade",
             JbmSecurityConstants.AUTHORIZATION_HEADER.toLowerCase(),
             SaIdUtil.ID_TOKEN.toLowerCase(),
             JbmSecurityConstants.FROM_SOURCE.toLowerCase(),

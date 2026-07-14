@@ -17,6 +17,20 @@ import java.util.*;
  */
 @Slf4j
 public class FeignRequestInterceptor implements RequestInterceptor {
+    private static final Set<String> INBOUND_HEADER_EXCLUDES = new HashSet<>(Arrays.asList(
+            "content-length",
+            "connection",
+            "host",
+            "keep-alive",
+            "proxy-authenticate",
+            "proxy-authorization",
+            "proxy-connection",
+            "te",
+            "trailer",
+            "transfer-encoding",
+            "upgrade"
+    ));
+
     /**
      * 微服务之间传递的唯一标识
      */
@@ -31,8 +45,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             Iterator<Map.Entry<String, String>> iterator = headers.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
-                // 跳过 content-length
-                if (entry.getKey().equals("content-length")) {
+                if (INBOUND_HEADER_EXCLUDES.contains(entry.getKey().toLowerCase(Locale.ROOT))) {
                     continue;
                 }
                 template.header(entry.getKey(), entry.getValue());
