@@ -13,12 +13,11 @@ import reactor.core.publisher.Mono;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ForwardAuthFilterTest {
 
     @Test
-    void shouldPreserveAuthorizationAndStripSpoofedInternalSource() {
+    void shouldPreserveForwardedHeadersAndReplaceIdToken() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/base/test")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer user-token")
                 .header(SaIdUtil.ID_TOKEN, "attacker-id-token")
@@ -41,7 +40,7 @@ class ForwardAuthFilterTest {
         HttpHeaders headers = forwarded.get().getRequest().getHeaders();
         assertEquals("Bearer user-token", headers.getFirst(HttpHeaders.AUTHORIZATION));
         assertEquals("gateway-id-token", headers.getFirst(SaIdUtil.ID_TOKEN));
-        assertFalse(headers.containsKey(JbmSecurityConstants.FROM_SOURCE));
+        assertEquals(JbmSecurityConstants.INNER, headers.getFirst(JbmSecurityConstants.FROM_SOURCE));
         assertEquals("/base/test", headers.getFirst("X-Original-Path"));
     }
 }

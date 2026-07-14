@@ -2,7 +2,6 @@ package com.jbm.cluster.platform.gateway.filter;
 
 import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.date.DateUtil;
-import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import com.jbm.cluster.platform.gateway.filter.context.GatewayContext;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -26,7 +25,6 @@ public class ForwardAuthFilter implements GlobalFilter {
                 .mutate()
                 .headers(headers -> {
                     headers.set(SaIdUtil.ID_TOKEN, getIdToken());
-                    headers.remove(JbmSecurityConstants.FROM_SOURCE);
                     headers.set("X-Original-Path", originalPath);
                 })
                 .build();
