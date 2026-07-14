@@ -1,7 +1,7 @@
 package com.jbm.cluster.common.feign;
 
+import cn.dev33.satoken.id.SaIdUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.common.basic.utils.IpUtils;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import feign.RequestInterceptor;
@@ -15,7 +15,11 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 /**
@@ -26,6 +30,15 @@ import java.util.function.BiConsumer;
 @Slf4j
 public class FeignRequestInterceptor implements RequestInterceptor {
 
+    private static final Set<String> INBOUND_HEADER_EXCLUDES = new HashSet<>(Arrays.asList(
+            "content-length",
+            JbmSecurityConstants.AUTHORIZATION_HEADER.toLowerCase(),
+            SaIdUtil.ID_TOKEN.toLowerCase(),
+            JbmSecurityConstants.FROM_SOURCE.toLowerCase(),
+            FeignTokenContext.ACCESS_MODE_HEADER.toLowerCase(),
+            IpUtils.X_FORWARDED_FOR.toLowerCase()
+    ));
+
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -34,22 +47,11 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         // 获取相关对象
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         HttpServletRequest httpServletRequest = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
-        requestTemplate.header(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
+        removeSecurityHeaders(requestTemplate);
         if (ObjectUtil.isNotEmpty(httpServletRequest)) {
-            // 传递用户信息请求头，防止丢失
-            String userId = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.DETAILS_USER_ID);
-            if (StrUtil.isNotEmpty(userId)) {
-                requestTemplate.header(JbmSecurityConstants.DETAILS_USER_ID, userId);
-            }
-            String userName = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.DETAILS_USERNAME);
-            if (StrUtil.isNotEmpty(userName)) {
-                requestTemplate.header(JbmSecurityConstants.DETAILS_USERNAME, userName);
-            }
-            String authentication = ServletUtils.getHeader(httpServletRequest, JbmSecurityConstants.AUTHORIZATION_HEADER);
-            if (StrUtil.isNotEmpty(authentication)) {
-                requestTemplate.header(JbmSecurityConstants.AUTHORIZATION_HEADER, authentication);
-            }
+            copyInboundHeaders(requestTemplate, httpServletRequest);
             // 配置客户端IP
+            requestTemplate.removeHeader(IpUtils.X_FORWARDED_FOR);
             requestTemplate.header(IpUtils.X_FORWARDED_FOR, IpUtils.getRequestIp(ServletUtils.getRequest()));
         }
         //以上标准内容注入完成之后，搜索自定义配置
@@ -66,6 +68,29 @@ public class FeignRequestInterceptor implements RequestInterceptor {
         });
 
 
+    }
+
+    private static void copyInboundHeaders(RequestTemplate requestTemplate, HttpServletRequest request) {
+        Enumeration<String> headerNames = request.getHeaderNames();
+        if (headerNames == null) {
+            return;
+        }
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            if (INBOUND_HEADER_EXCLUDES.contains(headerName.toLowerCase())) {
+                continue;
+            }
+            String headerValue = request.getHeader(headerName);
+            if (headerValue != null) {
+                requestTemplate.header(headerName, headerValue);
+            }
+        }
+    }
+
+    private static void removeSecurityHeaders(RequestTemplate requestTemplate) {
+        requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
+        requestTemplate.removeHeader(SaIdUtil.ID_TOKEN);
+        requestTemplate.removeHeader(JbmSecurityConstants.FROM_SOURCE);
     }
 
 }

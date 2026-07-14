@@ -8,6 +8,7 @@ import feign.codec.Encoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Primary;
  */
 @Slf4j
 @ConditionalOnClass(name = {"feign.codec.Encoder", "javax.servlet.http.HttpServletRequest"})
+@AutoConfigureAfter(name = "com.jbm.cluster.common.feign.FeignAutoConfiguration")
 public class FeignAutoConfiguration {
     public static int connectTimeOutMillis = 12000;
     public static int readTimeOutMillis = 12000;
@@ -45,7 +47,7 @@ public class FeignAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(FeignRequestInterceptor.class)
+    @ConditionalOnMissingBean(name = "appPreRequestInterceptor")
     public RequestInterceptor feignRequestInterceptor() {
         FeignRequestInterceptor interceptor = new FeignRequestInterceptor();
         log.info("FeignRequestInterceptor [{}]", interceptor);

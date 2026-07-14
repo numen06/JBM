@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author wesley.zhang
  **/
-@Configuration
+@Configuration("clusterFeignAutoConfiguration")
 public class FeignAutoConfiguration {
     @Bean
     public RequestInterceptor requestInterceptor() {
