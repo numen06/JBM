@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Feign 出站 Token 注入：默认使用 ClientToken 跨权限访问，显式要求用户委托时才透传当前用户 Token。
+ * Feign 出站 Token 注入：默认使用 ClientToken 跨权限访问，显式标记 relay 时透传当前入站 Token。
  */
 public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
@@ -26,7 +26,7 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
 
     @Override
     public void apply(RequestTemplate requestTemplate, HttpServletRequest httpServletRequest) {
-        if (shouldRelayUserToken(requestTemplate)) {
+        if (shouldRelayToken(requestTemplate)) {
             String authentication = resolveAuthorization(httpServletRequest, requestTemplate);
             removeInnerHeaders(requestTemplate);
             requestTemplate.removeHeader(JbmSecurityConstants.AUTHORIZATION_HEADER);
@@ -54,13 +54,14 @@ public class AppPreRequestInterceptor implements PreRequestInterceptor {
         requestTemplate.removeHeader(JbmSecurityConstants.FROM_SOURCE);
     }
 
-    private static boolean shouldRelayUserToken(RequestTemplate requestTemplate) {
+    private static boolean shouldRelayToken(RequestTemplate requestTemplate) {
         Collection<String> accessModeHeaders = requestTemplate.headers().get(FeignTokenContext.ACCESS_MODE_HEADER);
         requestTemplate.removeHeader(FeignTokenContext.ACCESS_MODE_HEADER);
-        if (ObjectUtil.isNotEmpty(accessModeHeaders) && accessModeHeaders.stream().anyMatch(FeignTokenContext.ACCESS_MODE_USER::equalsIgnoreCase)) {
+        if (ObjectUtil.isNotEmpty(accessModeHeaders)
+                && accessModeHeaders.stream().anyMatch(FeignTokenContext::isTokenRelayMode)) {
             return true;
         }
-        return FeignTokenContext.isUserTokenRelay();
+        return FeignTokenContext.isTokenRelay();
     }
 
     private static String resolveAuthorization(HttpServletRequest httpServletRequest, RequestTemplate requestTemplate) {
