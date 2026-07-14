@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.auth.AuthorityApi;
 import com.jbm.cluster.api.entitys.auth.AuthorityMenu;
 import com.jbm.cluster.api.entitys.auth.AuthorityResource;
@@ -51,6 +52,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取所有访问权限列表", notes = "获取所有访问权限列表")
     @GetMapping("/access")
     @Override
@@ -64,6 +66,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取接口权限列表", notes = "获取接口权限列表")
     @GetMapping("/api")
     public ResultBody<List<AuthorityApi>> findAuthorityApi(
@@ -79,6 +82,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/menu")
     @Override
@@ -92,6 +96,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取菜单权限列表", notes = "获取菜单权限列表")
     @GetMapping("/menu/treeList")
     public ResultBody<List<Map<String, Object>>> findAuthorityMenuTreeList(@RequestParam(value = "appId", required = false) Long appId) {
@@ -107,6 +112,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param actionId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取功能权限列表", notes = "获取功能权限列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form")
@@ -126,6 +132,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param roleId 角色ID
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取角色已分配权限", notes = "获取角色已分配权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form")
@@ -141,6 +148,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取角色已分配权限JSON方式", notes = "获取角色已分配权限")
     @PostMapping("/byRole")
     public ResultBody<List<OpenAuthority>> findAuthorityRoles(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
@@ -154,6 +162,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户已分配权限JSON", notes = "获取用户已分配权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
@@ -171,6 +180,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param userId 用户ID
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户已分配权限", notes = "获取用户已分配权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form")
@@ -191,6 +201,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param appId 角色ID
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
@@ -208,6 +219,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取应用已分配接口权限", notes = "获取应用已分配接口权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form")
@@ -226,6 +238,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param authorityIds 权限ID.多个以,隔开
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "分配角色权限", notes = "分配角色权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "roleId", value = "角色ID", defaultValue = "", required = true, paramType = "form"),
@@ -249,6 +262,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "分配角色权限JSON提交方式", notes = "分配角色权限")
     @PostMapping("/grant/role")
     public ResultBody grantAuthorityRole(@RequestBody(required = false) BaseAuthorityRoleForm baseAuthorityRoleForm) {
@@ -266,6 +280,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param authorityIds 权限ID.多个以,隔开
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "分配用户权限", notes = "分配用户权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "用户ID", defaultValue = "", required = true, paramType = "form"),
@@ -283,6 +298,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
         return ResultBody.ok();
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "分配用户权限JSON提交方式", notes = "分配用户权限")
     @PostMapping("/grant/user")
     public ResultBody grantAuthorityUser(@RequestBody(required = false) BaseAuthorityUserForm baseAuthorityUserForm) {
@@ -300,6 +316,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param authorityIds 权限ID.多个以,隔开
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "分配应用权限", notes = "分配应用权限")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "appId", value = "应用Id", defaultValue = "", required = true, paramType = "form"),
@@ -324,6 +341,7 @@ public class BaseAuthorityController implements IBaseAuthorityServiceClient {
      * @param authorityIds
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "功能按钮授权", notes = "功能按钮授权")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "actionId", required = true, value = "功能按钮ID", paramType = "form"),

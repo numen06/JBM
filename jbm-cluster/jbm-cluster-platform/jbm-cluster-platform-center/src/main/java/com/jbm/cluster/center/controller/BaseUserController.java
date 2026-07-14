@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
@@ -58,6 +59,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Autowired
     private LoginAuthenticateHelper loginAuthenticateHelper;
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过用户名查询用户信息", notes = "仅限系统内部 Feign 调用")
     @GetMapping("/info/{username}")
     public ResultBody<JbmLoginUser> getUserInfo(@PathVariable("username") String username,
@@ -71,6 +73,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "注册用户信息", notes = "仅限系统内部 Feign 调用")
     @PostMapping(value = "/register", consumes = "application/json")
     public ResultBody<Boolean> registerUserInfo(@RequestBody BaseUser baseUser,
@@ -79,6 +82,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.ok(true);
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @Override
     public ResultBody<List<BaseUser>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
         try {
@@ -95,6 +99,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @Override
     public ResultBody<DataPaging<BaseUser>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
         try {
@@ -112,6 +117,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过id获取用户信息", notes = "仅限系统内部调用，返回完整姓名等字段（不脱敏）")
     @GetMapping("/getUserInfoById")
     @Override
@@ -126,6 +132,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param username 登录名
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "path"),
@@ -137,6 +144,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.callback(() -> account);
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "保存用户信息")
     @PostMapping("/save")
     @OperatorLog
@@ -160,6 +168,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param username 登录名
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取账号登录信息", notes = "仅限系统内部调用")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "username", required = true, value = "登录名", paramType = "path"),
@@ -179,6 +188,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "PostMapping系统分页用户列表", notes = "系统分页用户列表")
     @PostMapping("")
     public ResultBody<DataPaging<BaseUser>> getUserList(@RequestParam(required = false) Map map) {
@@ -190,6 +200,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取所有用户列表", notes = "获取所有用户列表")
     @PostMapping("/all")
     public ResultBody<List<BaseUser>> getUserAllList() {
@@ -201,6 +212,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "注册账号", notes = "添加系统用户")
     @PostMapping("/register")
     @Override
@@ -232,6 +244,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "注销账号", notes = "申请注销账号")
     @PostMapping("/close")
     public ResultBody<Boolean> close(@RequestBody BaseUser baseUser) {
@@ -252,6 +265,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param avatar
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "添加系统用户", notes = "添加系统用户")
     @OperatorLog
     @PostMapping("/add")
@@ -285,6 +299,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/update")
     @Override
@@ -310,6 +325,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param password
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "修改用户密码", notes = "修改用户密码")
     @PostMapping("/update/password")
     public ResultBody updatePassword(
@@ -326,6 +342,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "激活用户Email帐号", notes = "用户ID必传")
     @PostMapping("/activationEmailAccount")
     public ResultBody activationEmailAccount(@RequestBody BaseUser baseUser) {
@@ -339,6 +356,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "激活用户手机帐号", notes = "用户ID必传")
     @PostMapping("/activationMobileAccount")
     public ResultBody activationMobileAccount(@RequestBody BaseUser baseUser) {
@@ -353,6 +371,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param roleIds
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户分配角色", notes = "用户分配角色")
     @PostMapping("/roles/add")
     public ResultBody addUserRoles(
@@ -369,6 +388,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户分配角色", notes = "用户分配角色")
     @PostMapping("/addRole")
     public ResultBody addUserRoles(@RequestBody BaseUserForm baseUserForm) {
@@ -382,6 +402,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param userId
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/roles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestParam(value = "userId") Long userId) {
@@ -404,6 +425,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param accountType
      * @return
      */
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "注册第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/add/thirdParty")
     @Override
@@ -423,6 +445,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.ok();
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "注册并登录第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/loginAndRegisterMobileUser")
     @Override
@@ -435,6 +458,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "绑定第三方系统登录账号", notes = "仅限系统内部调用")
     @PostMapping("/add/bindUserThirdPartyByPhone")
     @Override
@@ -451,6 +475,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     }
 
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/retrievalUsers")
     public ResultBody<List<BaseUser>> retrievalUsers(@RequestBody PageForm pageForm) {
@@ -463,6 +488,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/getUserByPhone")
     @Override
@@ -475,6 +501,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户统计")
     @GetMapping("/getUserInfoStatistics")
     public ResultBody<UserInfoStatistics> getUserInfoStatistics() {
@@ -488,14 +515,16 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     }
 
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过Ids获取多个用户")
     @GetMapping("/getUsersByIds")
-    public ResultBody<List<BaseUser>> getUsersByIds( @RequestBody IdsForm ids) {
+    public ResultBody<List<BaseUser>> getUsersByIds(@RequestBody IdsForm ids) {
         return ResultBody.callback(() -> {
             return baseUserService.getUsersByIds(ids.getIds());
         });
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "改变用户状态")
     @GetMapping("/updateUserStatus")
     public ResultBody<BaseUser> updateUserStatus(@RequestParam(value = "userId") Long userId,
@@ -513,6 +542,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Autowired
     private BaseAccountService baseAccountService;
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户帐号信息")
     @GetMapping("/getUserAccounts")
     @Override
@@ -522,6 +552,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "小程序登录-更新用户openId信息")
     @PostMapping("/updateOpenIdByPhone")
     public ResultBody<BaseUser> updateOpenIdByPhone(@RequestParam(value = "openId") String openId,
