@@ -6,6 +6,7 @@ import cn.dev33.satoken.oauth2.logic.SaOAuth2Util;
 import cn.dev33.satoken.oauth2.model.ClientTokenModel;
 import cn.dev33.satoken.stp.StpUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,10 +77,22 @@ class SaOAuthFilterAuthStrategyTest {
     void shouldAcceptValidIdToken_withoutAuthorization() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(SaIdUtil.ID_TOKEN, "internal-id-token");
+        request.addHeader(JbmSecurityConstants.FROM_SOURCE, JbmSecurityConstants.INNER);
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         stpUtilMock.when(StpUtil::getTokenValue).thenReturn(null);
 
         assertDoesNotThrow(() -> strategy.run(null));
         saIdUtilMock.verify(SaIdUtil::checkCurrentRequestToken);
+    }
+
+    @Test
+    void shouldRejectGatewayIdToken_withoutAuthorization() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(SaIdUtil.ID_TOKEN, "gateway-id-token");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        stpUtilMock.when(StpUtil::getTokenValue).thenReturn(null);
+
+        assertThrows(SaOAuth2Exception.class, () -> strategy.run(null));
+        saIdUtilMock.verifyNoInteractions();
     }
 }

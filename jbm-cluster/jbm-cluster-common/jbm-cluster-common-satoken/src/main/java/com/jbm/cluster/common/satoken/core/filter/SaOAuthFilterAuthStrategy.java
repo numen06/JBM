@@ -12,6 +12,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.common.basic.configuration.config.JbmClusterProperties;
 import com.jbm.cluster.common.basic.utils.IpUtils;
+import com.jbm.cluster.core.constant.JbmSecurityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +49,10 @@ public class SaOAuthFilterAuthStrategy implements SaFilterAuthStrategy {
                 maskHeader(httpServletRequest.getHeader(SaIdUtil.ID_TOKEN)));
 
         String idToken = httpServletRequest.getHeader(SaIdUtil.ID_TOKEN);
-        if (StrUtil.isNotBlank(idToken)) {
+        String requestSource = httpServletRequest.getHeader(JbmSecurityConstants.FROM_SOURCE);
+        if (JbmSecurityConstants.INNER.equals(requestSource) && StrUtil.isNotBlank(idToken)) {
             SaIdUtil.checkCurrentRequestToken();
-            log.debug("[互信诊断] 认证通过路径: Id-Token验证通过");
+            log.debug("[互信诊断] 认证通过路径: 内部Id-Token验证通过");
             return;
         }
 
