@@ -1,8 +1,6 @@
 package com.jbm.cluster.logs.controllers;
 
 
-import cn.dev33.satoken.annotation.SaCheckRole;
-import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.cluster.logs.entity.GatewayLogs;
 import com.jbm.cluster.logs.form.GatewayLogsForm;
 import com.jbm.cluster.logs.service.GatewayLogsService;
@@ -27,7 +25,6 @@ public class GatewayLogsController {
     private GatewayLogsService gatewayLogsService;
 
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取多表查询分页列表")
     @PostMapping({"/findOperationLogs"})
     public ResultBody<DataPaging<GatewayLogs>> findOperationLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
@@ -39,7 +36,6 @@ public class GatewayLogsController {
         }
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取多表查询分页列表")
     @PostMapping({"/findLogs"})
     public ResultBody<DataPaging<GatewayLogs>> findLogs(@RequestBody(required = false) GatewayLogsForm gatewayLogsForm) {
