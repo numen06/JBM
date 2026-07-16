@@ -1,6 +1,7 @@
 package com.jbm.cluster.common.security.interceptor;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.dev33.satoken.id.SaIdUtil;
 import com.jbm.cluster.core.constant.JbmSecurityConstants;
@@ -41,6 +42,18 @@ class JbmSaAnnotationInterceptorTest {
                 new MockHttpServletRequest(), new MockHttpServletResponse(), handlerMethod));
     }
 
+    @Test
+    void preHandle_doesNotBypassPermissionForUserWithoutLoginState() throws Exception {
+        TestInterceptor interceptor = new TestInterceptor();
+        Method method = DemoController.class.getDeclaredMethod("permissionEndpoint");
+        HandlerMethod handlerMethod = new HandlerMethod(new DemoController(), method);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer user-token-without-permissions");
+
+        assertThrows(SaTokenException.class, () -> interceptor.preHandle(
+                request, new MockHttpServletResponse(), handlerMethod));
+    }
+
     static class TestInterceptor extends JbmSaAnnotationInterceptor {
         private boolean internalTokenValidated;
 
@@ -58,6 +71,10 @@ class JbmSaAnnotationInterceptorTest {
     static class DemoController {
         @SaCheckLogin
         public void securedEndpoint() {
+        }
+
+        @SaCheckPermission("ACTION_monitor:online:list")
+        public void permissionEndpoint() {
         }
     }
 }

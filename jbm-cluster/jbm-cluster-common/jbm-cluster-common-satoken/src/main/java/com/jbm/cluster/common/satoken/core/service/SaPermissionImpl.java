@@ -17,6 +17,8 @@ import java.util.Set;
  */
 public class SaPermissionImpl implements StpInterface {
 
+    private static final List<String> SUPER_ADMIN_AUTHORITY = Collections.singletonList("*");
+
     /**
      * 获取菜单权限列表
      */
@@ -25,6 +27,9 @@ public class SaPermissionImpl implements StpInterface {
         JbmLoginUser loginUser = resolveLoginUser(loginId);
         if (loginUser == null) {
             return Collections.emptyList();
+        }
+        if (LoginHelper.isAdmin(loginUser.getUserId())) {
+            return SUPER_ADMIN_AUTHORITY;
         }
         Set<String> menuPermission = loginUser.getMenuPermission();
         if (menuPermission == null || menuPermission.isEmpty()) {
@@ -41,6 +46,9 @@ public class SaPermissionImpl implements StpInterface {
         JbmLoginUser loginUser = resolveLoginUser(loginId);
         if (loginUser == null) {
             return Collections.emptyList();
+        }
+        if (LoginHelper.isAdmin(loginUser.getUserId())) {
+            return SUPER_ADMIN_AUTHORITY;
         }
         Set<String> roles = loginUser.getRoles();
         if (roles == null || roles.isEmpty()) {
