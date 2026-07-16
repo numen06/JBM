@@ -15,6 +15,7 @@ import cn.dev33.satoken.oauth2.model.RequestAuthModel;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.constants.LoginType;
@@ -63,6 +64,15 @@ public class OAuth2ServerController {
     private BaseAppPreprocessing baseAppPreprocessing;
     @Autowired
     private LoginErrorMessageService loginErrorMessageService;
+
+    /**
+     * OAuth 密码模式中的验证码校验发生在 Sa-OAuth2 请求处理链内。
+     * 将验证码校验失败作为业务错误返回，避免被全局异常处理器转换为 HTTP 500。
+     */
+    @ExceptionHandler(ValidateException.class)
+    public ResultBody<Void> handleValidateException(ValidateException exception) {
+        return ResultBody.<Void>failed().msg(exception.getMessage());
+    }
 
     // 处理所有OAuth相关请求
     public Object oauth2() {
