@@ -12,6 +12,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.model.auth.SysUserOnline;
 import com.jbm.cluster.auth.form.OnlineUserSearchForm;
+import com.jbm.cluster.auth.result.OnlineUserResult;
+import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.core.constant.JbmCacheConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -48,7 +50,7 @@ public class OnlineUserController {
     @ApiOperation("在线用户列表")
     @SaCheckPermission("ACTION_monitor:online:list")
     @PostMapping("/pageList")
-    public ResultBody<DataPaging<SysUserOnline>> pageList(@RequestBody OnlineUserSearchForm onlineUserSearchForm) {
+    public ResultBody<DataPaging<OnlineUserResult>> pageList(@RequestBody OnlineUserSearchForm onlineUserSearchForm) {
         List<SysUserOnline> userOnlineList = new ArrayList<SysUserOnline>();
         
         // 方法1：直接从Redis获取所有在线用户信息
@@ -132,7 +134,11 @@ public class OnlineUserController {
             pagedList = userOnlineList.subList(fromIndex, toIndex);
         }
         
-        return ResultBody.ok(new DataPaging<SysUserOnline>(pagedList, (long) total, totalPage, pageForm));
+        List<OnlineUserResult> safePagedList = pagedList.stream()
+                .map(OnlineUserResult::from)
+                .collect(Collectors.toList());
+
+        return ResultBody.ok(new DataPaging<OnlineUserResult>(safePagedList, (long) total, totalPage, pageForm));
     }
 
     @ApiOperation("踢出用户")
@@ -152,8 +158,7 @@ public class OnlineUserController {
     @DeleteMapping("/logout/{tokenId}")
     public ResultBody<Void> logout(@PathVariable String tokenId) {
         try {
-            SaOAuth2Util.revokeAccessToken(tokenId);
-            StpUtil.logoutByTokenValue(tokenId);
+            LoginHelper.loginoutByTokenValue(tokenId);
         } catch (NotLoginException e) {
         }
         return ResultBody.ok();

@@ -18,6 +18,8 @@ public class VCoderService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
+    private OneTimeCodeService oneTimeCodeService;
+    @Autowired
     private SysDebugModeService sysDebugModeService;
 
     public String getVcodePath(String scope, String vcode) {
@@ -45,17 +47,10 @@ public class VCoderService {
             throw new ValidateException("验证码不能为空");
         }
         String key = this.getVcodePath(scope, vcode);
-        boolean has = stringRedisTemplate.hasKey(key);
-        if (!has) {
+        String storedCode = oneTimeCodeService.consume(key);
+        if (!StrUtil.equalsIgnoreCase(vcode, storedCode)) {
             throw new ValidateException("验证码错误");
         }
-//        if (has) {
-//            try {
-//                stringRedisTemplate.delete(key);
-//            } catch (Exception e) {
-//
-//            }
-//        }
-        return has;
+        return true;
     }
 }

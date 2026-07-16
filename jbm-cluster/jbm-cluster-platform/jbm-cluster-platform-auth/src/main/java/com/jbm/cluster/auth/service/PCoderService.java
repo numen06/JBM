@@ -21,6 +21,8 @@ public class PCoderService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
+    private OneTimeCodeService oneTimeCodeService;
+    @Autowired
     private JbmClusterNotification jbmClusterNotification;
     @Autowired
     private SysDebugModeService sysDebugModeService;
@@ -65,24 +67,11 @@ public class PCoderService {
             throw new ValidateException("验证码不能为空");
         }
         String key = this.getCacheKey(phone);
-        boolean has = stringRedisTemplate.hasKey(key);
-        if (!has || !StrUtil.equals(pcode, stringRedisTemplate.opsForValue().get(key))) {
+        String storedCode = oneTimeCodeService.consume(key);
+        if (!StrUtil.equals(pcode, storedCode)) {
             log.debug("短信验证码校验失败, phoneSuffix={}", StrUtil.subSufByLength(phone, 4));
             throw new ValidateException("验证码错误");
         }
         return true;
-//        String key = this.getPcodePath(phone, pcode);
-//        boolean has = stringRedisTemplate.hasKey(key);
-//        if (!has) {
-//            throw new ValidateException("验证码错误");
-//        }
-////        if (has) {
-////            try {
-////                stringRedisTemplate.delete(key);
-////            } catch (Exception e) {
-////
-////            }
-////        }
-//        return has;
     }
 }

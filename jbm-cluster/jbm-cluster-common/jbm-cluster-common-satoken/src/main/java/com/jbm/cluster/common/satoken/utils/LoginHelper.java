@@ -53,25 +53,60 @@ public class LoginHelper {
      * 获取当前OAuthToken,登出
      */
     public static void loginout() {
-        String tokenValue = StpUtil.getTokenValue();
-        if (StrUtil.isNotBlank(tokenValue)) {
-            SaOAuth2Util.revokeAccessToken(tokenValue);
-            StpUtil.logoutByTokenValue(tokenValue);
+        loginoutByTokenValue(StpUtil.getTokenValue());
+    }
+
+    /**
+     * 注销指定 Token，并清理当前线程中的登录缓存。
+     */
+    public static void loginoutByTokenValue(String tokenValue) {
+        try {
+            invalidateToken(tokenValue);
+        } finally {
+            clearCache();
         }
-        clearCache();
     }
 
     public static void loginout(Object loginId) {
-        if (loginId != null) {
-            String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
-            if (StrUtil.isNotBlank(tokenValue)) {
-                SaOAuth2Util.revokeAccessToken(tokenValue);
-                StpUtil.logoutByTokenValue(tokenValue);
+        try {
+            if (loginId != null) {
+                String tokenValue = StpUtil.getTokenValueByLoginId(loginId);
+                if (StrUtil.isNotBlank(tokenValue)) {
+                    invalidateToken(tokenValue);
+                } else {
+                    StpUtil.logout(loginId);
+                }
+            }
+        } finally {
+            clearCache();
+        }
+    }
+
+    /**
+     * 同时撤销 OAuth2 凭据和 Sa-Token 登录态。即使其中一层清理失败，另一层仍会执行。
+     */
+    private static void invalidateToken(String tokenValue) {
+        if (StrUtil.isBlank(tokenValue)) {
+            return;
+        }
+        RuntimeException failure = null;
+        try {
+            SaOAuth2Util.revokeAccessToken(tokenValue);
+        } catch (RuntimeException e) {
+            failure = e;
+        }
+        try {
+            StpUtil.logoutByTokenValue(tokenValue);
+        } catch (RuntimeException e) {
+            if (failure == null) {
+                failure = e;
             } else {
-                StpUtil.logout(loginId);
+                failure.addSuppressed(e);
             }
         }
-        clearCache();
+        if (failure != null) {
+            throw failure;
+        }
     }
 
     /**
