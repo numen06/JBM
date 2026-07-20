@@ -1794,4 +1794,3 @@ INSERT INTO prompt_message (code, message_text, locale) VALUES
 ON DUPLICATE KEY UPDATE message_text = VALUES(message_text);
 COMMIT;
 -- END: 1771 English dictionary translations
-
