@@ -1,9 +1,11 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimit;
 import com.jbm.cluster.api.entitys.gateway.GatewayRateLimitApi;
 import com.jbm.cluster.center.service.GatewayRateLimitService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -27,6 +29,7 @@ import java.util.Map;
  */
 @Api(tags = "网关流量控制")
 @RestController
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class GatewayRateLimitController {
 
     @Autowired

@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.jbm.cluster.api.entitys.gateway.GatewayRoute;
 import com.jbm.cluster.api.form.GatewayRoutePageForm;
 import com.jbm.cluster.center.service.GatewayRouteService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.usage.paging.DataPaging;
@@ -27,6 +29,7 @@ import java.util.Map;
  */
 @Api(tags = "网关智能路由")
 @RestController
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class GatewayRouteController {
 
     @Autowired

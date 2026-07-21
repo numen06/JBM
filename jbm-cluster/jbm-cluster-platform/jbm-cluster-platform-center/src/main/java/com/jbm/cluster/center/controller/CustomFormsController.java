@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.center.CustomForms;
 import com.jbm.cluster.api.form.center.CustomFormsForm;
 import com.jbm.cluster.api.result.CustomFormsResult;
 import com.jbm.cluster.center.service.CustomFormsService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -24,6 +26,7 @@ import javax.validation.Valid;
 @Api(tags = "自定义表单开放接口")
 @RestController
 @RequestMapping("/customForms")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class CustomFormsController extends MasterDataCollection<CustomForms, CustomFormsService> {
 
     @Autowired

@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseUserConfig;
 import com.jbm.cluster.center.service.BaseUserConfigService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "用户配置管理")
 @RestController
 @RequestMapping("/baseUserConfig")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseUserConfigController extends MasterDataCollection<BaseUserConfig, BaseUserConfigService> {
 
     @SaCheckLogin

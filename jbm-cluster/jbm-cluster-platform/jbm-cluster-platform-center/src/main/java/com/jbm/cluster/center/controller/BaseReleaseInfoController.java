@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.basic.BaseReleaseInfo;
 import com.jbm.cluster.center.service.BaseReleaseInfoService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "版本发布管理")
 @RestController
 @RequestMapping("/baseReleaseInfo")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseReleaseInfoController extends MasterDataCollection<BaseReleaseInfo, BaseReleaseInfoService> {
 
     @ApiOperation(value = "查询最后一个版本信息", notes = "查询最后一个版本信息")
