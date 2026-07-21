@@ -1,5 +1,6 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import com.alibaba.fastjson.JSON;
@@ -10,6 +11,7 @@ import com.jbm.cluster.center.service.BaseActionService;
 import com.jbm.cluster.center.service.BaseMenuService;
 import com.jbm.cluster.common.basic.JbmClusterTemplate;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.masterdata.usage.form.PageRequestBody;
 import com.jbm.framework.metadata.bean.ResultBody;
@@ -40,6 +42,7 @@ import java.util.Map;
 @Api(tags = "系统菜单资源管理")
 @RestController
 @RequestMapping("/menu")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseMenuController extends MasterDataCollection<BaseMenu, BaseMenuService> {
     @Autowired
     private BaseMenuService baseResourceMenuService;

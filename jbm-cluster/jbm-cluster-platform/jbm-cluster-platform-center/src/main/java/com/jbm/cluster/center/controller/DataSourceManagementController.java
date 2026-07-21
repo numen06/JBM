@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.lang.Assert;
 import com.jbm.cluster.api.constants.center.DataSourceType;
 import com.jbm.cluster.api.entitys.center.DataSourceManagement;
 import com.jbm.cluster.api.form.center.DataSourceManagementForm;
 import com.jbm.cluster.center.service.DataSourceManagementService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import io.swagger.annotations.Api;
@@ -24,6 +26,7 @@ import javax.validation.Valid;
 @Api(tags = "数据源管理开放接口")
 @RestController
 @RequestMapping("/dataSourceManagement")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class DataSourceManagementController extends MasterDataCollection<DataSourceManagement, DataSourceManagementService> {
 
     @Autowired

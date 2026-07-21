@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.basic.BaseAuthorityAction;
 import com.jbm.cluster.center.service.BaseAuthorityActionService;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.mvc.web.MasterDataCollection;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,5 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/baseAuthorityAction")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseAuthorityActionController extends MasterDataCollection<BaseAuthorityAction, BaseAuthorityActionService> {
 }

@@ -1,10 +1,12 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.ObjectUtil;
 import com.jbm.cluster.api.entitys.basic.BaseAppConfig;
 import com.jbm.cluster.center.service.BaseAppConfigService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.cluster.common.security.annotation.PermitAll;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.mvc.web.MasterDataCollection;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "应用配置管理接口")
 @RestController
 @RequestMapping("/baseAppConfig")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseAppConfigController extends MasterDataCollection<BaseAppConfig, BaseAppConfigService> {
     @PermitAll
     @ApiOperation("获取应用配置")

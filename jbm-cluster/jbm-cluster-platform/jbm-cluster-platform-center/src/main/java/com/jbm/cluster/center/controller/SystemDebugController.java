@@ -1,7 +1,9 @@
 package com.jbm.cluster.center.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.common.basic.service.SysDebugModeService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
+import com.jbm.cluster.core.constant.JbmConstants;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import io.swagger.annotations.Api;
@@ -24,6 +26,7 @@ import java.util.Map;
 @Api(tags = "系统调试模式")
 @RestController
 @RequestMapping("/system/debug")
+@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class SystemDebugController {
 
     @Autowired
