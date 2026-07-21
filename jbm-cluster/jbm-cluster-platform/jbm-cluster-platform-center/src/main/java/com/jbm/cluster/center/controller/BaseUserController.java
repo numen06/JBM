@@ -1,5 +1,7 @@
 package com.jbm.cluster.center.controller;
 
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.exceptions.ValidateException;
@@ -561,4 +563,45 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
                                                     @RequestParam(value = "phone") String phone) {
         return ResultBody.callback(() -> baseAccountService.updateOpenIdByPhone(openId, sessionKey, accountType, phone));
     }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
+    @PostMapping("/model")
+    @Override
+    public ResultBody<BaseUser> model(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.model(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "批量保存", notes = "批量保存")
+    @PostMapping("/saveBatch")
+    @Override
+    public ResultBody<List<BaseUser>> saveBatch(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.saveBatch(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "模拟数据", notes = "模拟数据")
+    @PostMapping("/mock")
+    @Override
+    public ResultBody<BaseUser> mock() {
+        return super.mock();
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "删除实体", notes = "删除实体")
+    @PostMapping("/delete")
+    @Override
+    public ResultBody<Boolean> remove(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.remove(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @PostMapping("/deleteByIds")
+    @Override
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
+        return super.deleteByIds(idsForm);
+    }
+
 }

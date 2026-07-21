@@ -1,5 +1,9 @@
 package com.jbm.cluster.center.controller;
 
+import java.util.List;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.form.IdsForm;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.hutool.core.util.ObjectUtil;
@@ -24,9 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "用户配置管理")
 @RestController
 @RequestMapping("/baseUserConfig")
-@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseUserConfigController extends MasterDataCollection<BaseUserConfig, BaseUserConfigService> {
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @SaCheckLogin
     @ApiOperation(value = "保存用户配置", notes = "当前用户保存时可不传 userId，服务端按 token 识别并 upsert；管理员可指定其他用户 userId")
     @PostMapping("/save")
@@ -42,6 +46,7 @@ public class BaseUserConfigController extends MasterDataCollection<BaseUserConfi
         }
     }
 
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @SaCheckLogin
     @ApiOperation(value = "获取用户配置", notes = "当前用户查询时可不传 userId，服务端按 token 与 appId 查询")
     @PostMapping("/model")
@@ -68,4 +73,53 @@ public class BaseUserConfigController extends MasterDataCollection<BaseUserConfi
             return ResultBody.error(e);
         }
     }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
+    @PostMapping("/pageList")
+    @Override
+    public ResultBody<DataPaging<BaseUserConfig>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return super.pageList(pageRequestBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取列表", notes = "获取列表")
+    @PostMapping("/list")
+    @Override
+    public ResultBody<List<BaseUserConfig>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.list(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "批量保存", notes = "批量保存")
+    @PostMapping("/saveBatch")
+    @Override
+    public ResultBody<List<BaseUserConfig>> saveBatch(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.saveBatch(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "模拟数据", notes = "模拟数据")
+    @PostMapping("/mock")
+    @Override
+    public ResultBody<BaseUserConfig> mock() {
+        return super.mock();
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "删除实体", notes = "删除实体")
+    @PostMapping("/delete")
+    @Override
+    public ResultBody<Boolean> remove(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.remove(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @PostMapping("/deleteByIds")
+    @Override
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
+        return super.deleteByIds(idsForm);
+    }
+
 }

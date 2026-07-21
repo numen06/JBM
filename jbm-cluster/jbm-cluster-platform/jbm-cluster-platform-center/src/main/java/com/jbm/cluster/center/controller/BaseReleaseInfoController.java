@@ -1,5 +1,10 @@
 package com.jbm.cluster.center.controller;
 
+import java.util.List;
+import com.jbm.framework.usage.paging.DataPaging;
+import com.jbm.framework.masterdata.usage.form.PageRequestBody;
+import com.jbm.framework.masterdata.usage.form.MasterDataRequsetBody;
+import com.jbm.framework.form.IdsForm;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.jbm.cluster.api.entitys.basic.BaseReleaseInfo;
 import com.jbm.cluster.center.service.BaseReleaseInfoService;
@@ -20,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "版本发布管理")
 @RestController
 @RequestMapping("/baseReleaseInfo")
-@SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
 public class BaseReleaseInfoController extends MasterDataCollection<BaseReleaseInfo, BaseReleaseInfoService> {
 
     @ApiOperation(value = "查询最后一个版本信息", notes = "查询最后一个版本信息")
@@ -33,4 +37,69 @@ public class BaseReleaseInfoController extends MasterDataCollection<BaseReleaseI
             return ResultBody.error(e);
         }
     }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
+    @PostMapping("/pageList")
+    @Override
+    public ResultBody<DataPaging<BaseReleaseInfo>> pageList(@RequestBody(required = false) PageRequestBody pageRequestBody) {
+        return super.pageList(pageRequestBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取列表", notes = "获取列表")
+    @PostMapping("/list")
+    @Override
+    public ResultBody<List<BaseReleaseInfo>> list(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.list(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
+    @PostMapping("/model")
+    @Override
+    public ResultBody<BaseReleaseInfo> model(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.model(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "保存单个实体", notes = "保存单个实体")
+    @PostMapping("/save")
+    @Override
+    public ResultBody<BaseReleaseInfo> save(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.save(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "批量保存", notes = "批量保存")
+    @PostMapping("/saveBatch")
+    @Override
+    public ResultBody<List<BaseReleaseInfo>> saveBatch(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.saveBatch(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "模拟数据", notes = "模拟数据")
+    @PostMapping("/mock")
+    @Override
+    public ResultBody<BaseReleaseInfo> mock() {
+        return super.mock();
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "删除实体", notes = "删除实体")
+    @PostMapping("/delete")
+    @Override
+    public ResultBody<Boolean> remove(@RequestBody(required = false) MasterDataRequsetBody masterDataRequsetBody) {
+        return super.remove(masterDataRequsetBody);
+    }
+
+    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
+    @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
+    @PostMapping("/deleteByIds")
+    @Override
+    public ResultBody<Boolean> deleteByIds(@RequestBody(required = false) IdsForm idsForm) {
+        return super.deleteByIds(idsForm);
+    }
+
 }
