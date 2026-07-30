@@ -318,7 +318,6 @@ public class BaseAppController extends MasterDataCollection<BaseApp, BaseAppServ
         return super.list(masterDataRequsetBody);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
     @PostMapping("/model")
     @Override
