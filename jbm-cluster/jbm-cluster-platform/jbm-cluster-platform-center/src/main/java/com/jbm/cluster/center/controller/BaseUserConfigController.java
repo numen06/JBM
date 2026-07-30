@@ -46,7 +46,6 @@ public class BaseUserConfigController extends MasterDataCollection<BaseUserConfi
         }
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @SaCheckLogin
     @ApiOperation(value = "获取用户配置", notes = "当前用户查询时可不传 userId，服务端按 token 与 appId 查询")
     @PostMapping("/model")
