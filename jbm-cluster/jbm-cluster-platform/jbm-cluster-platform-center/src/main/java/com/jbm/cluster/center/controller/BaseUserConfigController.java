@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/baseUserConfig")
 public class BaseUserConfigController extends MasterDataCollection<BaseUserConfig, BaseUserConfigService> {
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @SaCheckLogin
     @ApiOperation(value = "保存用户配置", notes = "当前用户保存时可不传 userId，服务端按 token 识别并 upsert；管理员可指定其他用户 userId")
     @PostMapping("/save")
