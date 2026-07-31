@@ -92,28 +92,20 @@ public class CurrentUserController {
     @ApiOperation(value = "当前账户权限信息", notes = "当前账户权限信息")
     @GetMapping("/user/account")
     public ResultBody<UserAccount> userAccount() {
-        try {
-            SensitiveContext.skipMask();
-            Long userId = LoginHelper.getUserId();
-            UserAccount userAccount = baseUserService.getUserAccount(userId);
-            ResultBody<UserAccount> resultBody = ResultBody.ok(userAccount);
-            PasswordExpiryUtils.applyExpiryExtra(resultBody, baseAccountService.getUserAccounts(userId));
-            return resultBody;
-        } finally {
-            SensitiveContext.clear();
-        }
+        SensitiveContext.skipMask();
+        Long userId = LoginHelper.getUserId();
+        UserAccount userAccount = baseUserService.getUserAccount(userId);
+        ResultBody<UserAccount> resultBody = ResultBody.ok(userAccount);
+        PasswordExpiryUtils.applyExpiryExtra(resultBody, baseAccountService.getUserAccounts(userId));
+        return resultBody;
     }
 
     @SaCheckLogin
     @ApiOperation(value = "获取当前登录用户信息", notes = "返回与 /user/model 一致的 BaseUser，无需传参")
     @GetMapping("/user/model")
     public ResultBody<BaseUser> currentUserModel() {
-        try {
-            SensitiveContext.skipMask();
-            return ResultBody.callback(() -> baseUserService.getUserById(LoginHelper.getUserId()));
-        } finally {
-            SensitiveContext.clear();
-        }
+        SensitiveContext.skipMask();
+        return ResultBody.callback(() -> baseUserService.getUserById(LoginHelper.getUserId()));
     }
 
     @SaCheckLogin

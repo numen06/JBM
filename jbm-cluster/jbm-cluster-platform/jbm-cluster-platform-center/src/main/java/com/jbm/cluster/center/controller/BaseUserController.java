@@ -34,6 +34,7 @@ import com.jbm.framework.usage.paging.PageForm;
 import com.jbm.util.PasswordUtils;
 import com.jbm.util.StringUtils;
 import com.jbm.util.sensitive.SensitiveContext;
+import com.jbm.util.sensitive.SensitiveType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -482,6 +483,7 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @PostMapping("/retrievalUsers")
     public ResultBody<List<BaseUser>> retrievalUsers(@RequestBody PageForm pageForm) {
         try {
+            SensitiveContext.skipMask(SensitiveType.NAME);
             List<BaseUser> list = Lists.newArrayList();
             list = baseUserService.retrievalUsers(pageForm.getKeyword());
             return ResultBody.success(list, "模糊搜索用户成功");
