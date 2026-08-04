@@ -302,7 +302,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "更新系统用户", notes = "更新系统用户")
     @PostMapping("/update")
     @Override
@@ -492,13 +491,13 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/getUserByPhone")
     @Override
     public ResultBody<BaseUser> getUserByPhone(String phone) {
         try {
             BaseUser user = baseUserService.getUserByPhone(phone);
+            SensitiveContext.skipMask();
             return ResultBody.success(user, "查找用户成功");
         } catch (Exception e) {
             return ResultBody.error(e);
