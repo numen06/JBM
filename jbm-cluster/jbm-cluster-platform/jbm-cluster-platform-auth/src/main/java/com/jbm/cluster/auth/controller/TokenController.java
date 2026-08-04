@@ -4,6 +4,7 @@ import com.jbm.cluster.api.model.auth.JbmLoginUser;
 import com.jbm.cluster.auth.service.SysLoginService;
 import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.metadata.bean.ResultBody;
+import com.jbm.util.sensitive.SensitiveContext;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class TokenController {
     @ApiOperation("获取角色信息")
     @GetMapping("role")
     public ResultBody<JbmLoginUser> testRole() {
+        SensitiveContext.skipMask();
         return ResultBody.callback(LoginHelper::getLoginUser);
     }
 

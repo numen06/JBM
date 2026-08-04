@@ -35,6 +35,7 @@ import com.jbm.cluster.common.satoken.utils.LoginHelper;
 import com.jbm.framework.exceptions.ServiceException;
 import com.jbm.framework.metadata.bean.ResultBody;
 import com.jbm.framework.metadata.enumerate.ErrorCode;
+import com.jbm.util.sensitive.SensitiveContext;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -277,6 +278,7 @@ public class OAuth2ServerController {
     @SaCheckLogin
     @RequestMapping("/userinfo")
     public ResultBody<JbmLoginUser> userinfo() {
+        SensitiveContext.skipMask();
         JbmLoginUser jbmLoginUser = null;
         if (StpUtil.isLogin()) {
             jbmLoginUser = LoginHelper.getLoginUser();

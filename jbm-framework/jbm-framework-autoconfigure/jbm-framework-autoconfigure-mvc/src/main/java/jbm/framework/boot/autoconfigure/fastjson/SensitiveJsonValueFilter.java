@@ -24,6 +24,9 @@ public class SensitiveJsonValueFilter implements ValueFilter {
             return value;
         }
         SensitiveType type = field.getAnnotation(SensitiveField.class).value();
+        if (SensitiveContext.shouldSkipMask(type)) {
+            return value;
+        }
         String str = (String) value;
         switch (type) {
             case NAME:
