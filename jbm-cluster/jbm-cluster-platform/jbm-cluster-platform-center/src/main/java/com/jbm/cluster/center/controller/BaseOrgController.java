@@ -28,7 +28,6 @@ import java.util.List;
 @RequestMapping("/baseOrg")
 public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgService> {
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取顶层公司", notes = "获取顶层公司")
     @PostMapping("/findTopCompany")
     public ResultBody<BaseOrg> findTopCompany(@RequestBody BaseOrg baseOrg) {
