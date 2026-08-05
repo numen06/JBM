@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_TRUSTED_HOST=mirrors.aliyun.com \
     JBM_APP=center \
     JBM_PROFILE=jaja7 \
-    PYTHONPATH=/app/common/src:/app/integrations/src:/app/auth/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src:/app/center/src
+    PYTHONPATH=/app/common/src:/app/integrations/src:/app/auth/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src:/app/center/src:/app/logs/src:/app/bigscreen/src
 
 WORKDIR /app
 
@@ -44,9 +44,11 @@ COPY --chown=appuser:appuser push ./push
 COPY --chown=appuser:appuser job ./job
 COPY --chown=appuser:appuser gateway ./gateway
 COPY --chown=appuser:appuser center ./center
+COPY --chown=appuser:appuser logs ./logs
+COPY --chown=appuser:appuser bigscreen ./bigscreen
 
 USER appuser
 
-EXPOSE 3312 3313 4444 5555 6060 7777 9999
+EXPOSE 3312 3313 3314 4444 5555 6060 7777 9999
 
 CMD ["sh", "-c", "python -m jbm_cluster_py.platform.${JBM_APP}.main"]

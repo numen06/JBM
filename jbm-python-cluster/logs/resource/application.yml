@@ -1,0 +1,19 @@
+server:
+  port: 3312
+
+spring:
+  application:
+    name: jbm-cluster-platform-logs
+
+jbm:
+  logs:
+    signing-secret: jbm-local-business-log
+  python:
+    app: logs
+    openapi:
+      title: JBM Python Logs Service
+      description: Business log persistence, streaming and event ingestion.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json

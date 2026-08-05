@@ -1,8 +1,11 @@
 import asyncio
+import json
 import logging
 import socket
 from contextlib import suppress
 from typing import Any, Mapping, Optional
+from urllib.parse import urlencode
+from urllib.request import ProxyHandler, build_opener
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +163,36 @@ class NacosDiscoveryClient:
     async def choose_instance(self, service_name: str) -> Optional[dict[str, Any]]:
         instances = await self.list_instances(service_name)
         return instances[0] if instances else None
+
+    async def list_services(self) -> list[str]:
+        if self.client is None:
+            return []
+        loop = asyncio.get_running_loop()
+        try:
+            return await loop.run_in_executor(None, self._list_services_sync)
+        except Exception as exc:
+            logger.warning("Nacos service lookup failed: %s", exc)
+            return []
+
+    def _list_services_sync(self) -> list[str]:
+        server = str(self.config.get("server-addr") or "").split(",", 1)[0].strip().rstrip("/")
+        if not server:
+            return []
+        if not server.startswith(("http://", "https://")):
+            server = "http://" + server
+        params = urlencode(
+            {
+                "pageNo": 1,
+                "pageSize": 1000,
+                "groupName": self._group_name(),
+                "namespaceId": str(self.config.get("namespace") or "public"),
+            }
+        )
+        with build_opener(ProxyHandler({})).open(
+            f"{server}/nacos/v1/ns/service/list?{params}", timeout=5
+        ) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        return [str(item) for item in body.get("doms") or []]
 
     async def list_instances(self, service_name: str) -> list[dict[str, Any]]:
         if self.client is None:

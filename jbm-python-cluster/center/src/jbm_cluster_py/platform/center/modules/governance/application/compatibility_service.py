@@ -249,8 +249,8 @@ class CompatibilityService:
             table, owner_column, param_name = authority_links[path]
             return await self._grant(method, table, owner_column, params[param_name], body)
         if path in {"/authority/resources", "/authority/apis", "/authority/apis/grantable", "/authority/catalog"}:
-            rows, total = await self.store.list("authority", query, *_page(query))
-            return ok(page_result(rows, total, *_page(query)))
+            rows, _ = await self.store.list("authority", query, 1, 100)
+            return ok(rows)
         if path in {"/authority/menus", "/authority/menus/tree"}:
             return ok(await self.governance.current_menus(identity))
 
@@ -382,9 +382,26 @@ class CompatibilityService:
         operation = path.rsplit("/", 1)[-1]
         entity = body.get(alias) if isinstance(body.get(alias), Mapping) else body.get("masterData")
         entity = dict(entity) if isinstance(entity, Mapping) else {}
+        if resource == "accountLogs":
+            entity = {
+                {"loginIp": "ip", "accountType": "loginType", "loginStatus": "status"}.get(key, key): value
+                for key, value in entity.items()
+            }
         page, size = _page(body.get("pageForm") or {})
         if operation in {"list", "pageList", "root", "tree"}:
             rows, total = await self.store.list(resource, entity, page, size, operation in {"root", "tree"})
+            if resource == "accountLogs":
+                rows = [
+                    {
+                        **row,
+                        "accountType": row.get("loginType"),
+                        "loginIp": row.get("ip"),
+                        "loginStatus": int(row.get("status") or 0) == 1,
+                        "loginAgent": row.get("userAgent"),
+                        "browser": row.get("userAgent"),
+                    }
+                    for row in rows
+                ]
             if operation == "tree":
                 rows = _tree(rows)
             return ok(page_result(rows, total, page, size) if operation == "pageList" else rows)

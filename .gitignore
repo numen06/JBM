@@ -9,6 +9,8 @@
 /dist/
 /data/
 logs/
+!/jbm-python-cluster/logs/
+!/jbm-python-cluster/logs/**
 settings.gradle
 
 #java files ignore

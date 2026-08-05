@@ -1,0 +1,6 @@
+server:
+  port: 3312
+
+spring:
+  application:
+    name: jbm-cluster-platform-logs

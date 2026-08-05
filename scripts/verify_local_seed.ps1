@@ -4,10 +4,13 @@ param(
     [string]$Password = $env:JBM_LOCAL_ADMIN_PASSWORD,
     [string]$ClientId = 'jbmSeedDevAppKey00000001',
     [string]$CenterHealthUrl = 'http://127.0.0.1:7777/actuator/health',
+    [string]$DocUrl = 'http://127.0.0.1:9999',
+    [string]$BigscreenUrl = 'http://127.0.0.1:3314',
     [int]$TimeoutSeconds = 90
 )
 
 $ErrorActionPreference = 'Stop'
+$repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Password)) { $Password = 'Admin@123' }
 $BaseUrl = $BaseUrl.TrimEnd('/')
 
@@ -110,6 +113,62 @@ $roles = Assert-JbmSuccess (
 $routes = Assert-JbmSuccess (
     Invoke-RestMethod -Method Get -Uri "$BaseUrl/center/gateway/routes?pageForm.currPage=1&pageForm.pageSize=20" -Headers $headers
 ) 'Gateway route seed'
+$filterRules = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/logs/GatewayLogs/filterRules" -Headers $headers
+) 'Gateway access-log integration'
+$demoLog = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Post -Uri "$BaseUrl/logs/businessLog/demo?mode=simple" -Headers $headers `
+        -ContentType 'application/json' -Body '{}'
+) 'Business log creation'
+$demoLines = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/logs/businessLog/get/$($demoLog.logId)" -Headers $headers
+) 'Business log query'
+$bigscreenPage = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Post -Uri "$BaseUrl/bigscreen/bigscreenView/pageList" -Headers $headers `
+        -ContentType 'application/json' -Body '{"pageForm":{"currPage":1,"pageSize":10}}'
+) 'Bigscreen query'
+$gatewayLogPage = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Post -Uri "$BaseUrl/logs/GatewayLogs/findLogs" -Headers $headers `
+        -ContentType 'application/json' -Body '{"pageForm":{"currPage":1,"pageSize":10}}'
+) 'Gateway access-log query'
+
+$smokeRoot = Join-Path $repoRoot ('temp\bigscreen-smoke-' + [guid]::NewGuid().ToString('N'))
+$smokeZip = "$smokeRoot.zip"
+$bigscreenPreview = $null
+try {
+    New-Item -ItemType Directory -Path $smokeRoot | Out-Null
+    Set-Content -LiteralPath (Join-Path $smokeRoot 'index.html') `
+        -Value '<html><body>JBM Bigscreen Python Smoke</body></html>' -Encoding UTF8
+    Compress-Archive -Path (Join-Path $smokeRoot 'index.html') -DestinationPath $smokeZip
+    $upload = curl.exe -sS -F "file=@$smokeZip" "$DocUrl/upload" | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0) { throw 'Bigscreen package upload failed' }
+    $docPath = Assert-JbmSuccess $upload 'Bigscreen package upload'
+    $viewKey = 'python-smoke-' + [guid]::NewGuid().ToString('N')
+    $view = Assert-JbmSuccess (
+        Invoke-RestMethod -Method Post -Uri "$BigscreenUrl/bigscreenView/save" `
+            -ContentType 'application/json' -Body (@{
+                viewName = 'Python Smoke'
+                viewUrl = $viewKey
+                resourcePath = $docPath
+            } | ConvertTo-Json)
+    ) 'Bigscreen package deployment'
+    $bigscreenPreview = Invoke-WebRequest -UseBasicParsing `
+        -Uri "$BigscreenUrl/static/$viewKey/index.html"
+    if ($bigscreenPreview.StatusCode -ne 200 -or $bigscreenPreview.Content -notmatch 'JBM Bigscreen Python Smoke') {
+        throw 'Bigscreen static preview is invalid'
+    }
+}
+finally {
+    $tempRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot 'temp'))
+    $resolvedSmokeRoot = [IO.Path]::GetFullPath($smokeRoot)
+    $resolvedSmokeZip = [IO.Path]::GetFullPath($smokeZip)
+    if ($resolvedSmokeRoot.StartsWith($tempRoot) -and (Test-Path -LiteralPath $resolvedSmokeRoot)) {
+        Remove-Item -LiteralPath $resolvedSmokeRoot -Recurse -Force
+    }
+    if ($resolvedSmokeZip.StartsWith($tempRoot) -and (Test-Path -LiteralPath $resolvedSmokeZip)) {
+        Remove-Item -LiteralPath $resolvedSmokeZip -Force
+    }
+}
 
 $orgCount = @($orgs).Count
 $dictCount = @($dictPage.contents).Count
@@ -129,6 +188,10 @@ if ($appCount -lt 1) { throw 'Seed OAuth application is missing' }
 if ($null -eq $seedApp -or $seedApp.orgId -ne 1) { throw 'Seed OAuth application is not assigned to the default organization' }
 if ($roleCount -lt 2) { throw 'Built-in roles are incomplete' }
 if ($routeCount -lt 1) { throw 'Gateway routes are missing' }
+if (@($filterRules).Count -lt 4) { throw 'Built-in gateway access-log filter rules are incomplete' }
+if ($gatewayLogPage.total -lt 1) { throw 'Gateway access logs were not persisted' }
+if ([string]::IsNullOrWhiteSpace($demoLog.logId) -or @($demoLines).Count -lt 1) { throw 'Business log workflow is incomplete' }
+if ($null -eq $bigscreenPage.contents) { throw 'Bigscreen page contract is invalid' }
 
 [pscustomobject]@{
     Login = 'PASS'
@@ -138,4 +201,8 @@ if ($routeCount -lt 1) { throw 'Gateway routes are missing' }
     Applications = $appCount
     Roles = $roleCount
     GatewayRoutes = $routeCount
+    GatewayLogRules = @($filterRules).Count
+    GatewayAccessLogs = $gatewayLogPage.total
+    BusinessLog = $demoLog.logId
+    Bigscreen = "PASS ($($bigscreenPreview.StatusCode))"
 } | Format-List

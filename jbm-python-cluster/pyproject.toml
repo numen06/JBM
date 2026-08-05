@@ -46,6 +46,8 @@ jbm-python-push = "jbm_cluster_py.platform.push.main:run"
 jbm-python-job = "jbm_cluster_py.platform.job.main:run"
 jbm-python-gateway = "jbm_cluster_py.platform.gateway.main:run"
 jbm-python-center = "jbm_cluster_py.platform.center.main:run"
+jbm-python-logs = "jbm_cluster_py.platform.logs.main:run"
+jbm-python-bigscreen = "jbm_cluster_py.platform.bigscreen.main:run"
 
 [build-system]
 requires = ["hatchling>=1.25.0"]
@@ -61,14 +63,16 @@ packages = [
     "job/src/jbm_cluster_py",
     "gateway/src/jbm_cluster_py",
     "center/src/jbm_cluster_py",
+    "logs/src/jbm_cluster_py",
+    "bigscreen/src/jbm_cluster_py",
 ]
 
 [tool.uv]
 package = true
 
 [tool.pytest.ini_options]
-pythonpath = ["common/src", "integrations/src", "auth/src", "doc/src", "push/src", "job/src", "gateway/src", "center/src"]
-testpaths = ["common/tests", "auth/tests", "doc/tests", "push/tests", "job/tests", "gateway/tests", "center/tests"]
+pythonpath = ["common/src", "integrations/src", "auth/src", "doc/src", "push/src", "job/src", "gateway/src", "center/src", "logs/src", "bigscreen/src"]
+testpaths = ["common/tests", "auth/tests", "doc/tests", "push/tests", "job/tests", "gateway/tests", "center/tests", "logs/tests", "bigscreen/tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]

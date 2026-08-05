@@ -55,6 +55,38 @@ class AuthRepository:
         async with self.engine.begin() as conn:
             return await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table(table_name))
 
+    async def record_login(
+        self,
+        *,
+        user_id: int | None,
+        account: str,
+        login_type: str,
+        ip: str,
+        user_agent: str,
+    ) -> None:
+        if not await self.has_table("base_account_logs"):
+            return
+        now = datetime.now()
+        async with self.engine.begin() as conn:
+            await conn.execute(
+                text(
+                    """
+                    INSERT INTO base_account_logs
+                      (user_id, account, login_type, login_time, ip, user_agent, status, message, create_time, update_time)
+                    VALUES
+                      (:user_id, :account, :login_type, :login_time, :ip, :user_agent, 1, '登录成功', :login_time, :login_time)
+                    """
+                ),
+                {
+                    "user_id": user_id,
+                    "account": account,
+                    "login_type": login_type,
+                    "login_time": now,
+                    "ip": ip[:64],
+                    "user_agent": user_agent[:512],
+                },
+            )
+
     async def find_client(self, client_id: str) -> Optional[dict[str, Any]]:
         client_id = str(client_id or "").strip()
         if not client_id:

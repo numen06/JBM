@@ -7,6 +7,7 @@ import time
 import uuid
 from collections import deque
 from datetime import datetime, timezone
+from fnmatch import fnmatchcase
 from typing import Any, Mapping, Optional
 
 import httpx
@@ -21,6 +22,7 @@ from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository
 from jbm_cluster_py.platform.gateway.routes import GatewayRoute, RouteRepository, join_target_url, strip_prefix
 from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
+from jbm_cluster_py.platform.logs.repository import LogsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +137,7 @@ class AccessLogger:
         config: Mapping[str, Any],
         discovery: NacosDiscoveryClient,
         http_client: httpx.AsyncClient,
+        database_config: Optional[Mapping[str, Any]] = None,
     ) -> None:
         self.config = dict(config)
         self.enabled = bool(self.config.get("enabled", True))
@@ -142,6 +145,15 @@ class AccessLogger:
         self.discovery = discovery
         self.http_client = http_client
         self.recent: deque[dict[str, Any]] = deque(maxlen=int(self.config.get("recent-size") or 200))
+        self.repository = LogsRepository(database_config) if database_config else None
+
+    async def start(self) -> None:
+        if self.repository is not None:
+            await self.repository.start()
+
+    async def stop(self) -> None:
+        if self.repository is not None:
+            await self.repository.stop()
 
     async def record(self, row: Mapping[str, Any]) -> None:
         if not self.enabled:
@@ -149,8 +161,37 @@ class AccessLogger:
         payload = dict(row)
         self.recent.appendleft(payload)
         logger.info("gateway_access %s", json.dumps(payload, ensure_ascii=False, default=str))
+        if self.repository is not None:
+            matched = await self.matching_rules(payload)
+            if matched:
+                await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])
+                return
+            await self.repository.save_gateway_log(payload)
+            return
         if self.ingest_enabled:
             asyncio.create_task(self._ingest(payload))
+
+    async def matching_rules(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+        if self.repository is None:
+            return []
+        matched = []
+        for rule in await self.repository.list_rules():
+            if not rule.get("enabled"):
+                continue
+            path_pattern = str(rule.get("pathPattern") or "")
+            if path_pattern and not fnmatchcase(str(payload.get("path") or ""), path_pattern.replace("**", "*")):
+                continue
+            method = str(rule.get("method") or "").upper()
+            if method and method != str(payload.get("method") or "").upper():
+                continue
+            service_id = str(rule.get("serviceId") or "")
+            if service_id and service_id != str(payload.get("serviceId") or ""):
+                continue
+            status = str(rule.get("statusCode") or "")
+            if status and status != str(payload.get("httpStatus") or ""):
+                continue
+            matched.append(rule)
+        return matched
 
     async def _ingest(self, payload: Mapping[str, Any]) -> None:
         service = str(self.config.get("service") or "jbm-cluster-platform-logs")

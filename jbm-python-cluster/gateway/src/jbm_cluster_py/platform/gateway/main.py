@@ -51,6 +51,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         gateway_config.get("access-log") or {},
         discovery,
         http_client,
+        app_config.database,
     )
     proxy = GatewayProxy(
         app_config,
@@ -78,11 +79,13 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         await discovery.start()
         await routes.start()
         await ip_limits.start(routes.routes)
+        await access_logger.start()
         await registrar.start()
         try:
             yield
         finally:
             await registrar.stop()
+            await access_logger.stop()
             await ip_limits.stop()
             await routes.stop()
             await discovery.stop()
@@ -101,7 +104,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     install_exception_handlers(app)
     install_security_middleware(app, app_config)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
-    app.include_router(build_gateway_router(proxy, routes, ip_limits, circuit_breakers, traffic, access_logger))
+    app.include_router(build_gateway_router(proxy, routes, ip_limits, circuit_breakers, traffic, access_logger, discovery))
     return app
 
 

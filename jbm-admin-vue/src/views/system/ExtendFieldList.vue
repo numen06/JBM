@@ -188,6 +188,10 @@ async function loadFromDb() {
   successMsg.value = ''
   try {
     const def = await getCustomFormDesignDetail(code)
+    if (!def) {
+      startNewForm()
+      return
+    }
     applyDesignDefinition(def)
     try {
       applyRuntimeDefinition(await getExtendFormFromDb(code))

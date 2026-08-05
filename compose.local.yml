@@ -1,7 +1,7 @@
 name: jbm73-python
 
 x-python-config: &python-config >-
-  {"integrations":{"database":{"url":"mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4"},"redis":{"enabled":true,"url":"redis://redis:6379/0"},"rabbitmq":{"enabled":true,"url":"amqp://jbm:jbm-local@rabbitmq:5672/"},"storage":{"backend":"minio","local-dir":"./data/files"},"minio":{"enabled":true,"endpoint-url":"http://minio:9000","bucket":"jbm-docs","access-key":"jbm-local","secret-key":"jbm-local-minio","region":"us-east-1","secure":false}},"spring":{"cloud":{"nacos":{"config":{"enabled":false},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm7","group":"DEFAULT_GROUP"}}}},"jbm":{"auth":{"jwt":{"issuer":"http://jbm-cluster-platform-auth:5555","audience":"jbm-api"}},"gateway":{"access-log":{"enabled":false,"ingest-enabled":false}},"center":{"security":{"enabled":true,"userinfo-url":"http://jbm-cluster-platform-auth:5555/oauth2/userinfo"},"seed":{"enabled":true,"admin-password":"Admin@123","force-reset-password":true}}}}
+  {"integrations":{"database":{"url":"mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4"},"redis":{"enabled":true,"url":"redis://redis:6379/0"},"rabbitmq":{"enabled":true,"url":"amqp://jbm:jbm-local@rabbitmq:5672/"},"storage":{"backend":"minio","local-dir":"./data/files"},"minio":{"enabled":true,"endpoint-url":"http://minio:9000","bucket":"jbm-docs","access-key":"jbm-local","secret-key":"jbm-local-minio","region":"us-east-1","secure":false}},"spring":{"cloud":{"nacos":{"config":{"enabled":false},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm7","group":"DEFAULT_GROUP"}}}},"jbm":{"auth":{"jwt":{"issuer":"http://jbm-cluster-platform-auth:5555","audience":"jbm-api"}},"gateway":{"access-log":{"enabled":true,"ingest-enabled":false}},"logs":{"signing-secret":"jbm-local-business-log-signing-key","rabbitmq":{"queue":"jbm.business.logs"}},"bigscreen":{"views-dir":"/app/data/views","doc-base-url":"http://jbm-cluster-platform-doc:9999"},"center":{"security":{"enabled":true,"userinfo-url":"http://jbm-cluster-platform-auth:5555/oauth2/userinfo"},"seed":{"enabled":true,"admin-password":"Admin@123","force-reset-password":true}}}}
 
 x-python-environment: &python-environment
   JBM_PROFILE: jaja7
@@ -170,6 +170,31 @@ services:
     depends_on:
       jbm-cluster-platform-center: {condition: service_healthy}
 
+  jbm-cluster-platform-logs:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: logs
+      JBM_HEALTH_PORT: "3312"
+    command: ["python", "-m", "jbm_cluster_py.platform.logs.main"]
+    ports: ["127.0.0.1:3312:3312"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  jbm-cluster-platform-bigscreen:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: bigscreen
+      JBM_HEALTH_PORT: "3314"
+    command: ["python", "-m", "jbm_cluster_py.platform.bigscreen.main"]
+    ports: ["127.0.0.1:3314:3314"]
+    volumes: ["bigscreen-data:/app/data"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      jbm-cluster-platform-doc: {condition: service_healthy}
+
   jbm-cluster-platform-gateway:
     <<: *python-service
     environment:
@@ -184,6 +209,8 @@ services:
       jbm-cluster-platform-doc: {condition: service_healthy}
       jbm-cluster-platform-push: {condition: service_healthy}
       jbm-cluster-platform-job: {condition: service_healthy}
+      jbm-cluster-platform-logs: {condition: service_healthy}
+      jbm-cluster-platform-bigscreen: {condition: service_healthy}
 
   jbm-admin:
     build:
@@ -209,3 +236,4 @@ volumes:
   rabbitmq-data:
   rnacos-data:
   minio-data:
+  bigscreen-data:

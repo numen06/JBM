@@ -1,0 +1,20 @@
+server:
+  port: 3314
+
+spring:
+  application:
+    name: jbm-cluster-platform-bigscreen
+
+jbm:
+  bigscreen:
+    views-dir: ./data/views
+    doc-base-url: http://jbm-cluster-platform-doc:9999
+  python:
+    app: bigscreen
+    openapi:
+      title: JBM Python Bigscreen Service
+      description: Bigscreen package deployment and preview service.
+      version: 0.1.0
+      docs-url: /docs
+      redoc-url: /redoc
+      openapi-url: /openapi.json

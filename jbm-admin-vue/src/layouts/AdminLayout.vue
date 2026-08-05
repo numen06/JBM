@@ -452,7 +452,7 @@ watch(
               <span v-if="roleHint" class="block truncate text-xs text-muted-foreground">{{ roleHint }}</span>
             </span>
           </button>
-          <Button variant="outline" size="sm" @click="handleLogout">
+          <Button variant="outline" size="sm" aria-label="退出登录" @click="handleLogout">
             <LogOut class="h-4 w-4" />
             <span class="hidden sm:inline">退出</span>
           </Button>

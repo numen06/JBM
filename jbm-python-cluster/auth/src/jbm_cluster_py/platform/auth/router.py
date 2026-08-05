@@ -18,6 +18,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     @router.post("/oauth2/token")
     async def token(request: Request) -> JSONResponse:
         form = await _request_params(request)
+        _add_login_context(form, request)
         form["password_encrypted"] = _password_encrypted(request)
         try:
             grant_type = str(form.get("grant_type") or "").strip()
@@ -43,6 +44,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     @router.post("/oauth2/doLogin")
     async def oauth_do_login(request: Request) -> JSONResponse:
         form = await _request_params(request)
+        _add_login_context(form, request)
         form["password_encrypted"] = _password_encrypted(request)
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.authorize_code_login(form)))
@@ -382,6 +384,12 @@ async def _request_params(request: Request) -> dict[str, Any]:
         params.update(dict(form))
     params.update(dict(request.query_params))
     return params
+
+
+def _add_login_context(form: dict[str, Any], request: Request) -> None:
+    forwarded = request.headers.get("x-forwarded-for", "").split(",", 1)[0].strip()
+    form["login_ip"] = forwarded or (request.client.host if request.client else "")
+    form["user_agent"] = request.headers.get("user-agent", "")
 
 
 def _bearer_token(request: Request) -> str:

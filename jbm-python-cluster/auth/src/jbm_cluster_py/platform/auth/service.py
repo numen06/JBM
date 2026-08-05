@@ -177,7 +177,9 @@ class AuthService:
 
     async def password_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
         client = await self._resolve_user_flow_client(form)
-        return await self._password_login_for_client(client, form)
+        token = await self._password_login_for_client(client, form)
+        await self._record_login(form)
+        return token
 
     async def authorize_code_login(self, form: Mapping[str, Any]) -> str:
         client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
@@ -190,7 +192,26 @@ class AuthService:
         if not client:
             raise AuthError("客户端不存在", 401)
         token = await self._password_login_for_client(client, form)
+        await self._record_login(form)
         return await self._authorization_redirect(client, redirect_uri, token, str(form.get("state") or "").strip())
+
+    async def _record_login(self, form: Mapping[str, Any]) -> None:
+        username = str(form.get("username") or "").strip()
+        try:
+            account = await self.repository.find_account(
+                username,
+                str(form.get("account_type") or infer_account_type(username)),
+                self.account_domain,
+            )
+            await self.repository.record_login(
+                user_id=int(account["user_id"]) if account and account.get("user_id") is not None else None,
+                account=username,
+                login_type=str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper(),
+                ip=str(form.get("login_ip") or ""),
+                user_agent=str(form.get("user_agent") or ""),
+            )
+        except Exception as exc:
+            logger.warning("Login audit persistence failed: %s", exc)
 
     async def _authorization_redirect(
         self,

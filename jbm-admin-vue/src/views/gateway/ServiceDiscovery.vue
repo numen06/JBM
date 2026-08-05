@@ -189,7 +189,7 @@ onMounted(load)
               <td colspan="6" class="bg-muted/10 px-8 py-4">
                 <p v-if="instanceLoading" class="text-sm text-muted-foreground">加载实例中…</p>
                 <p v-else-if="instanceError" class="text-sm text-destructive">{{ instanceError }}</p>
-                <table v-else-if="instances.length" class="w-full text-sm">
+                <Table v-else-if="instances.length" class="w-full text-sm">
                   <thead>
                     <tr class="border-b">
                       <th class="px-3 py-2 text-left font-medium">Host</th>
@@ -224,7 +224,7 @@ onMounted(load)
                       </td>
                     </tr>
                   </tbody>
-                </table>
+                </Table>
                 <p v-else class="text-sm text-muted-foreground">暂无实例</p>
               </td>
             </tr>
