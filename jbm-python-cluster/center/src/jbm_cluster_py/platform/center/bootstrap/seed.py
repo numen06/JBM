@@ -22,9 +22,18 @@ async def seed_local_baseline(config: AppConfig) -> None:
     if not url:
         raise RuntimeError("Center database is not configured")
     password = str(settings.get("admin-password") or "Admin@123")
+    operator_password = str(settings.get("platform-operator-password") or "Operator@123")
+    tenant_password = str(settings.get("tenant-admin-password") or "Tenant@123")
     password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    operator_password_hash = bcrypt.hashpw(operator_password.encode(), bcrypt.gensalt()).decode()
+    tenant_password_hash = bcrypt.hashpw(tenant_password.encode(), bcrypt.gensalt()).decode()
     seed_file = Path(__file__).parents[5] / "migrations" / "sql" / "local_seed.sql"
-    sql = seed_file.read_text(encoding="utf-8").replace("__ADMIN_PASSWORD_HASH__", password_hash)
+    sql = (
+        seed_file.read_text(encoding="utf-8")
+        .replace("__ADMIN_PASSWORD_HASH__", password_hash)
+        .replace("__OPERATOR_PASSWORD_HASH__", operator_password_hash)
+        .replace("__TENANT_PASSWORD_HASH__", tenant_password_hash)
+    )
     engine = create_async_engine(url, pool_pre_ping=True)
     try:
         async with engine.begin() as connection:
@@ -33,21 +42,26 @@ async def seed_local_baseline(config: AppConfig) -> None:
                     await connection.execute(text(statement))
             if settings.get("force-reset-password", False):
                 await connection.execute(
-                    text("UPDATE base_account SET password=:password WHERE account_id=1"),
-                    {"password": password_hash},
+                    text(
+                        "UPDATE base_account SET password=CASE account_id "
+                        "WHEN 1 THEN :admin WHEN 2001 THEN :operator WHEN 2002 THEN :tenant END "
+                        "WHERE account_id IN (1, 2001, 2002)"
+                    ),
+                    {
+                        "admin": password_hash,
+                        "operator": operator_password_hash,
+                        "tenant": tenant_password_hash,
+                    },
                 )
             row = (
-                await connection.execute(
-                    text("SELECT public_key, private_key FROM base_app WHERE app_id=1000")
-                )
-            ).mappings().first()
+                (await connection.execute(text("SELECT public_key, private_key FROM base_app WHERE app_id=1000")))
+                .mappings()
+                .first()
+            )
             if row and (not row.get("public_key") or not row.get("private_key")):
                 public_key, private_key = _rsa_key_pair()
                 await connection.execute(
-                    text(
-                        "UPDATE base_app SET public_key=:public_key, private_key=:private_key "
-                        "WHERE app_id=1000"
-                    ),
+                    text("UPDATE base_app SET public_key=:public_key, private_key=:private_key WHERE app_id=1000"),
                     {"public_key": public_key, "private_key": private_key},
                 )
     finally:

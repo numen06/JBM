@@ -7,6 +7,18 @@ INSERT IGNORE INTO `base_role_user` VALUES (2084680869984866305,NULL,NULL,NULL,N
 INSERT IGNORE INTO `base_user_org` VALUES (2085035310617464833,1,1,NULL,'2026-08-05 16:08:51','2026-08-05 16:08:51',NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT IGNORE INTO `base_app` (`app_id`,`api_key`,`secret_key`,`app_type`,`app_name`,`app_name_en`,`developer_id`,`website`,`status`,`is_persist`,`create_time`,`update_time`,`org_id`) VALUES (1000,'jbmSeedDevAppKey00000001','$2a$10$1.TC63QNx3tDbkWfL0QUdOuko5R0irZmfogt/2W74Ygdc44.MJu/.','pc','JBM基础应用','jbm-base-app',10,'*',1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1);
 INSERT IGNORE INTO `base_developer` VALUES (10,NULL,NULL,NULL,NULL,NULL,NULL,'seed_developer','dev',NULL,'种子开发者',NULL,NULL,NULL,NULL,1,'2026-08-04 14:20:28','2026-08-04 14:20:28',NULL);
+INSERT IGNORE INTO `base_org` (`id`,`parent_id`,`level`,`leaf_path`,`org_name`,`org_type`,`group_id`,`org_code`,`status`,`create_time`,`update_time`) VALUES (2000,NULL,1,'2000','示例租户','company','2000','tenant-demo',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_user` (`user_id`,`user_name`,`user_type`,`company_id`,`nick_name`,`real_name`,`status`,`create_time`,`update_time`) VALUES (2001,'platform_operator','operator',1,'平台运营员','平台运营员',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_user` (`user_id`,`user_name`,`user_type`,`company_id`,`nick_name`,`real_name`,`status`,`create_time`,`update_time`) VALUES (2002,'tenant_admin','tenant',2000,'租户管理员','租户管理员',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_account` (`account_id`,`user_id`,`account`,`password`,`account_type`,`status`,`domain`,`create_time`,`update_time`,`must_change_password`) VALUES (2001,2001,'platform_operator','__OPERATOR_PASSWORD_HASH__','username',1,'@admin.com',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0);
+INSERT IGNORE INTO `base_account` (`account_id`,`user_id`,`account`,`password`,`account_type`,`status`,`domain`,`create_time`,`update_time`,`must_change_password`) VALUES (2002,2002,'tenant_admin','__TENANT_PASSWORD_HASH__','username',1,'@admin.com',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0);
+INSERT IGNORE INTO `base_role` (`role_id`,`role_code`,`role_name`,`role_desc`,`status`,`is_persist`,`create_time`,`update_time`) VALUES (3,'platform_operator','平台运营','平台侧跨租户运营角色',1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_role` (`role_id`,`role_code`,`role_name`,`role_desc`,`status`,`is_persist`,`create_time`,`update_time`) VALUES (4,'tenant_admin','租户管理员','租户内用户与应用管理角色',1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_role_user` (`id`,`user_id`,`role_id`,`create_time`,`update_time`) VALUES (30001,2001,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_role_user` (`id`,`user_id`,`role_id`,`create_time`,`update_time`) VALUES (30002,2002,4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_user_org` (`id`,`user_id`,`org_id`,`create_time`,`update_time`) VALUES (30003,2001,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_user_org` (`id`,`user_id`,`org_id`,`create_time`,`update_time`) VALUES (30004,2002,2000,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT IGNORE INTO `base_app` (`app_id`,`api_key`,`secret_key`,`app_type`,`app_name`,`app_name_en`,`developer_id`,`website`,`status`,`is_persist`,`create_time`,`update_time`,`org_id`) VALUES (2000,'tenantDemoAppKey0000000001','$2a$10$1.TC63QNx3tDbkWfL0QUdOuko5R0irZmfogt/2W74Ygdc44.MJu/.','pc','示例租户应用','tenant-demo-app',10,'*',1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,2000);
 INSERT IGNORE INTO `base_menu` VALUES (100,NULL,NULL,NULL,NULL,NULL,NULL,'platform','平台管理',NULL,'/','/','_self',0,NULL,1,1,'jbm-cluster-platform-center',1,'2026-08-04 14:20:28','2026-08-05 16:19:21',NULL);
 INSERT IGNORE INTO `base_menu` VALUES (101,NULL,NULL,NULL,100,NULL,NULL,'system','系统管理',NULL,'/','/system','_self',1,NULL,1,1,'jbm-cluster-platform-center',1,'2026-08-04 14:20:28','2026-08-05 16:19:21',NULL);
 INSERT IGNORE INTO `base_menu` VALUES (102,NULL,NULL,NULL,101,NULL,NULL,'users','用户管理',NULL,'/','/system/users','_self',1,NULL,1,1,'jbm-cluster-platform-center',1,'2026-08-04 16:40:26','2026-08-05 16:19:21',NULL);
@@ -104,6 +116,10 @@ INSERT IGNORE INTO `base_authority_role` VALUES (2085037958028595202,NULL,NULL,N
 INSERT IGNORE INTO `base_authority_role` VALUES (2085037958032789506,NULL,NULL,NULL,NULL,NULL,162,1,NULL,'2026-08-05 16:19:22','2026-08-05 16:19:22',NULL);
 INSERT IGNORE INTO `base_authority_role` VALUES (2085037958036983810,NULL,NULL,NULL,NULL,NULL,171,1,NULL,'2026-08-05 16:19:22','2026-08-05 16:19:22',NULL);
 INSERT IGNORE INTO `base_authority_role` VALUES (2085037958045372417,NULL,NULL,NULL,NULL,NULL,131,1,NULL,'2026-08-05 16:19:22','2026-08-05 16:19:22',NULL);
+INSERT IGNORE INTO `base_authority_role` (`id`,`authority_id`,`role_id`,`create_time`,`update_time`)
+SELECT 300000 + `authority_id`,`authority_id`,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM `base_authority` WHERE `status`=1;
+INSERT IGNORE INTO `base_authority_role` (`id`,`authority_id`,`role_id`,`create_time`,`update_time`)
+SELECT 400000 + `authority_id`,`authority_id`,4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM `base_authority` WHERE `authority_id` IN (102,108,110,142,151,171);
 INSERT IGNORE INTO `base_dic` VALUES (900000,'启用状态','sys_status',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,NULL,1,'900000','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);
 INSERT IGNORE INTO `base_dic` VALUES (900001,'启用','1',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,900000,2,'900000,900001','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);
 INSERT IGNORE INTO `base_dic` VALUES (900002,'停用','0',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,900000,2,'900000,900002','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);

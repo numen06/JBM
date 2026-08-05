@@ -22,7 +22,11 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.platform.auth.jwt import JwtError, JwtSigner
-from jbm_cluster_py.platform.auth.repository import AuthRepository, infer_account_type, user_is_active
+from jbm_cluster_py.platform.auth.repository import (
+    AuthRepository,
+    infer_account_type,
+    user_is_active,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +377,9 @@ class AuthService:
             "mobile": claims.get("mobile"),
             "clientId": claims.get("client_id"),
             "appId": claims.get("app_id"),
+            "tenantId": claims.get("tenant_id"),
+            "departmentId": claims.get("department_id"),
+            "userType": claims.get("user_type"),
             "roles": claims.get("roles") or [],
             "permissions": claims.get("permissions") or [],
             "scope": claims.get("scope"),
@@ -432,7 +439,12 @@ class AuthService:
             "token_endpoint": issuer + "/oauth2/token",
             "userinfo_endpoint": issuer + "/oauth2/userinfo",
             "end_session_endpoint": issuer + "/oauth2/logout",
-            "grant_types_supported": ["authorization_code", "password", "client_credentials", "refresh_token"],
+            "grant_types_supported": [
+                "authorization_code",
+                "password",
+                "client_credentials",
+                "refresh_token",
+            ],
             "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
             "response_types_supported": ["code", "token"],
             "subject_types_supported": ["public"],
@@ -562,7 +574,9 @@ class AuthService:
         except ValueError as exc:
             raise AuthError(str(exc), 409) from exc
 
-    async def create_qr_login(self, client_id: str, redirect_uri: str, width: int = 200, height: int = 200) -> dict[str, str]:
+    async def create_qr_login(
+        self, client_id: str, redirect_uri: str, width: int = 200, height: int = 200
+    ) -> dict[str, str]:
         code = secrets.token_urlsafe(24)
         state = secrets.token_urlsafe(12)
         target = _qr_scan_url(redirect_uri, code, state)
@@ -901,9 +915,7 @@ def _captcha_image_base64(code: str, width: int, height: int) -> str:
             background=background,
         )
         recolored = []
-        image_data = (
-            image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
-        )
+        image_data = image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
         for pixel in image_data:
             delta = sum(abs(pixel[index] - background[index]) for index in range(3))
             if delta <= 8:
@@ -911,10 +923,7 @@ def _captcha_image_base64(code: str, width: int, height: int) -> str:
                 continue
             strength = min(0.72, max(0.22, delta / 320))
             recolored.append(
-                tuple(
-                    int(background[index] * (1 - strength) + text_color[index] * strength)
-                    for index in range(3)
-                )
+                tuple(int(background[index] * (1 - strength) + text_color[index] * strength) for index in range(3))
             )
         image.putdata(recolored)
         draw = ImageDraw.Draw(image)
@@ -1000,11 +1009,21 @@ def _captcha_svg(code: str, width: int, height: int) -> str:
         '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="0 0 %s %s">'
         '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">'
         '<stop offset="0" stop-color="#f8fbff"/><stop offset="1" stop-color="#eef7ff"/>'
-        '</linearGradient></defs>'
+        "</linearGradient></defs>"
         '<rect x="0.5" y="0.5" width="%s" height="%s" rx="8" fill="url(#bg)" stroke="#dbeafe"/>'
         '<g style="user-select:none">%s%s%s</g>'
-        '</svg>'
-    ) % (width, height, width, height, width - 1, height - 1, "".join(dots), "".join(curves), "".join(chars))
+        "</svg>"
+    ) % (
+        width,
+        height,
+        width,
+        height,
+        width - 1,
+        height - 1,
+        "".join(dots),
+        "".join(curves),
+        "".join(chars),
+    )
 
 
 def _qr_scan_url(redirect_uri: str, code: str, state: str) -> str:

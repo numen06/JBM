@@ -66,7 +66,8 @@ export interface AggregatedDashboardIdentity {
   appId?: number
   clientId?: string
   visibleMenuCount?: number
-  scope?: 'platform' | 'app'
+  scope?: 'platform' | 'tenant' | 'app'
+  tenantId?: number
 }
 
 export interface AggregatedDashboardSections {

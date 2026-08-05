@@ -34,7 +34,9 @@ class SqlGovernanceRepository:
         where = ["1=1"]
         params: dict[str, Any] = {}
         if keyword:
-            where.append("(u.user_name LIKE :keyword OR u.nick_name LIKE :keyword OR u.mobile LIKE :keyword OR u.email LIKE :keyword)")
+            where.append(
+                "(u.user_name LIKE :keyword OR u.nick_name LIKE :keyword OR u.mobile LIKE :keyword OR u.email LIKE :keyword)"
+            )
             params["keyword"] = f"%{keyword}%"
         for key, column in (("status", "u.status"), ("companyId", "u.company_id")):
             if filters.get(key) not in (None, ""):
@@ -103,9 +105,7 @@ class SqlGovernanceRepository:
             {"user_id": user_id},
         )
 
-    async def user_menus(
-        self, user_id: int, app_id: int | None, is_admin: bool
-    ) -> list[dict[str, Any]]:
+    async def user_menus(self, user_id: int, app_id: int | None, is_admin: bool) -> list[dict[str, Any]]:
         params: dict[str, Any] = {"user_id": user_id}
         app_clause = ""
         if app_id is not None:
@@ -155,23 +155,17 @@ class SqlGovernanceRepository:
         if keyword:
             where = "WHERE org_name LIKE :keyword OR org_code LIKE :keyword"
             params["keyword"] = f"%{keyword}%"
-        return await self._all(
-            f"SELECT * FROM base_org {where} ORDER BY COALESCE(level, 0), id", params
-        )
+        return await self._all(f"SELECT * FROM base_org {where} ORDER BY COALESCE(level, 0), id", params)
 
     async def list_dicts(self, parent_id: int | None = None) -> list[dict[str, Any]]:
         if parent_id is None:
-            return await self._all(
-                "SELECT * FROM base_dic WHERE parent_id IS NULL ORDER BY id"
-            )
+            return await self._all("SELECT * FROM base_dic WHERE parent_id IS NULL ORDER BY id")
         return await self._all(
             "SELECT * FROM base_dic WHERE parent_id = :parent_id ORDER BY id",
             {"parent_id": parent_id},
         )
 
-    async def list_apps(
-        self, page: int, size: int, filters: Mapping[str, Any]
-    ) -> tuple[list[dict[str, Any]], int]:
+    async def list_apps(self, page: int, size: int, filters: Mapping[str, Any]) -> tuple[list[dict[str, Any]], int]:
         where, params = _filters(
             filters,
             {"status": "a.status", "orgId": "a.org_id", "appType": "a.app_type"},
@@ -186,9 +180,7 @@ class SqlGovernanceRepository:
             size,
         )
 
-    async def list_roles(
-        self, page: int, size: int, filters: Mapping[str, Any]
-    ) -> tuple[list[dict[str, Any]], int]:
+    async def list_roles(self, page: int, size: int, filters: Mapping[str, Any]) -> tuple[list[dict[str, Any]], int]:
         where, params = _filters(
             filters,
             {"status": "r.status"},
@@ -203,9 +195,7 @@ class SqlGovernanceRepository:
             size,
         )
 
-    async def list_routes(
-        self, page: int, size: int, filters: Mapping[str, Any]
-    ) -> tuple[list[dict[str, Any]], int]:
+    async def list_routes(self, page: int, size: int, filters: Mapping[str, Any]) -> tuple[list[dict[str, Any]], int]:
         where, params = _filters(
             filters,
             {"status": "g.status", "serviceId": "g.service_id"},
@@ -220,7 +210,29 @@ class SqlGovernanceRepository:
             size,
         )
 
-    async def dashboard_counts(self) -> dict[str, int]:
+    async def dashboard_counts(self, tenant_id: int | None = None) -> dict[str, int]:
+        if tenant_id is not None:
+            return {
+                "userTotal": await self._count(
+                    "SELECT COUNT(*) FROM base_user WHERE company_id=:tenant_id",
+                    {"tenant_id": tenant_id},
+                ),
+                "appTotal": await self._count(
+                    "SELECT COUNT(*) FROM base_app WHERE org_id=:tenant_id",
+                    {"tenant_id": tenant_id},
+                ),
+                "orgTotal": len(
+                    [
+                        row
+                        for row in await self.list_orgs()
+                        if int(row.get("id") or 0) == tenant_id or int(row.get("parentId") or 0) == tenant_id
+                    ]
+                ),
+                "roleTotal": 1,
+                "authorityTotal": 0,
+                "apiTotal": 0,
+                "apiKeyTotal": 0,
+            }
         tables = {
             "userTotal": "base_user",
             "appTotal": "base_app",
@@ -246,16 +258,12 @@ class SqlGovernanceRepository:
         rows = await self._all(select_sql + " LIMIT :limit OFFSET :offset", query_params)
         return rows, await self._count(count_sql, params)
 
-    async def _all(
-        self, sql: str, params: Mapping[str, Any] | None = None
-    ) -> list[dict[str, Any]]:
+    async def _all(self, sql: str, params: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
         async with self.engine.connect() as conn:
             result = await conn.execute(text(sql), dict(params or {}))
             return [_serialize(row) for row in result.mappings().all()]
 
-    async def _one(
-        self, sql: str, params: Mapping[str, Any] | None = None
-    ) -> dict[str, Any] | None:
+    async def _one(self, sql: str, params: Mapping[str, Any] | None = None) -> dict[str, Any] | None:
         rows = await self._all(sql, params)
         return rows[0] if rows else None
 

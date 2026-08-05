@@ -8,9 +8,20 @@ from typing import Any, Mapping
 import bcrypt
 
 from jbm_cluster_py.common.result import ok, page_result
+from jbm_cluster_py.platform.center.modules.governance.application.access import (
+    is_platform,
+    require_platform,
+    require_tenant_record,
+    tenant_id,
+)
 from jbm_cluster_py.platform.center.modules.governance.application.service import GovernanceService
-from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import CrudStore, new_secret
-from jbm_cluster_py.platform.center.modules.governance.infrastructure.openapi_catalog import OpenApiCatalog
+from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import (
+    CrudStore,
+    new_secret,
+)
+from jbm_cluster_py.platform.center.modules.governance.infrastructure.openapi_catalog import (
+    OpenApiCatalog,
+)
 
 
 class CompatibilityService:
@@ -40,6 +51,17 @@ class CompatibilityService:
         "role": "roleId",
         "user": "userId",
     }
+    PLATFORM_ONLY_RESOURCES = {
+        "action",
+        "api",
+        "apikey",
+        "developer",
+        "ipLimit",
+        "rateLimit",
+        "route",
+        "menu",
+        "role",
+    }
 
     def __init__(self, store: CrudStore, governance: GovernanceService, openapi: OpenApiCatalog) -> None:
         self.store = store
@@ -63,23 +85,39 @@ class CompatibilityService:
 
         for base, resource in self.COLLECTIONS.items():
             if path == base:
-                return await self._collection(method, resource, query, payload)
+                return await self._collection(method, resource, query, payload, identity)
             id_name = self.IDS[resource]
             if path == f"{base}/{{{id_name}}}":
-                return await self._item(method, resource, path_params[id_name], payload)
+                return await self._item(method, resource, path_params[id_name], payload, identity)
         raise ValueError(f"Center 路由尚未实现: {method} {path}")
 
     async def _collection(
-        self, method: str, resource: str, query: Mapping[str, Any], payload: Mapping[str, Any]
+        self,
+        method: str,
+        resource: str,
+        query: Mapping[str, Any],
+        payload: Mapping[str, Any],
+        identity: Mapping[str, Any],
     ) -> dict[str, Any]:
+        if resource in self.PLATFORM_ONLY_RESOURCES:
+            require_platform(identity)
+        scoped_query = dict(query)
+        scoped_payload = dict(payload)
+        if not is_platform(identity):
+            if resource == "user":
+                scoped_query["companyId"] = tenant_id(identity)
+                scoped_payload["companyId"] = tenant_id(identity)
+            elif resource == "app":
+                scoped_query["orgId"] = tenant_id(identity)
+                scoped_payload["orgId"] = tenant_id(identity)
         if method == "GET":
-            page, size = _page(query)
-            rows, total = await self.store.list(resource, query, page, size)
+            page, size = _page(scoped_query)
+            rows, total = await self.store.list(resource, scoped_query, page, size)
             return ok(page_result(rows, total, page, size))
         if method == "POST":
             if resource == "user":
-                return ok(await self._create_user(payload))
-            return ok(await self.store.save(resource, payload))
+                return ok(await self._create_user(scoped_payload))
+            return ok(await self.store.save(resource, scoped_payload))
         if method == "PATCH" and resource == "api":
             ids = _ids(query, payload)
             values = {key: value for key, value in payload.items() if key not in {"ids", "apiIds"}}
@@ -93,14 +131,32 @@ class CompatibilityService:
         raise ValueError("不支持的资源操作")
 
     async def _item(
-        self, method: str, resource: str, identity: Any, payload: Mapping[str, Any]
+        self,
+        method: str,
+        resource: str,
+        record_id: Any,
+        payload: Mapping[str, Any],
+        identity: Mapping[str, Any],
     ) -> dict[str, Any]:
+        if resource in self.PLATFORM_ONLY_RESOURCES:
+            require_platform(identity)
+        existing = await self.store.get(resource, record_id)
+        if resource == "user":
+            require_tenant_record(identity, existing, "companyId")
+        elif resource == "app":
+            require_tenant_record(identity, existing, "orgId")
+        scoped_payload = dict(payload)
+        if not is_platform(identity):
+            if resource == "user":
+                scoped_payload["companyId"] = tenant_id(identity)
+            elif resource == "app":
+                scoped_payload["orgId"] = tenant_id(identity)
         if method == "GET":
-            return ok(await self.store.get(resource, identity))
+            return ok(existing)
         if method in {"PUT", "PATCH"}:
-            return ok(await self.store.save(resource, payload, identity))
+            return ok(await self.store.save(resource, scoped_payload, record_id))
         if method == "DELETE":
-            return ok(await self.store.delete(resource, identity))
+            return ok(await self.store.delete(resource, record_id))
         raise ValueError("不支持的资源操作")
 
     async def _special(
@@ -112,54 +168,82 @@ class CompatibilityService:
         body: Mapping[str, Any],
         identity: Mapping[str, Any],
     ) -> dict[str, Any] | None:
+        if not is_platform(identity):
+            platform_prefixes = (
+                "/authority/",
+                "/gateway/",
+                "/apikey/",
+                "/developer/",
+                "/extend-field/",
+            )
+            if path.startswith(platform_prefixes):
+                require_platform(identity)
         if path == "/current/user" and method == "PUT":
             user_id = _user_id(identity)
-            allowed = {key: body[key] for key in ("nickName", "realName", "userDesc", "avatar") if body.get(key) is not None}
+            allowed = {
+                key: body[key] for key in ("nickName", "realName", "userDesc", "avatar") if body.get(key) is not None
+            }
             await self.store.save("user", allowed, user_id)
             return ok()
         if path == "/current/user/password" and method == "PUT":
             password = str(body.get("currentPassword") or body.get("password") or "")
             if password != str(body.get("confirmPassword") or password):
                 raise ValueError("两次输入的新密码不一致")
-            await self._set_password(
-                _user_id(identity), password, str(body.get("originPassword") or "")
-            )
+            await self._set_password(_user_id(identity), password, str(body.get("originPassword") or ""))
             return ok()
 
         if path == "/user/all":
-            rows, _ = await self.store.list("user", {}, 1, 100)
+            filters = {} if is_platform(identity) else {"companyId": tenant_id(identity)}
+            rows, _ = await self.store.list("user", filters, 1, 100)
             return ok(rows)
         if path == "/user/statistics":
-            rows, total = await self.store.list("user", {}, 1, 1)
+            filters = {} if is_platform(identity) else {"companyId": tenant_id(identity)}
+            rows, total = await self.store.list("user", filters, 1, 1)
             return ok({"usersTotal": total, "onlineUser": 0})
         if path == "/user/{userId}/roles" and method == "PUT":
-            await self.store.replace_links("base_role_user", "user_id", params["userId"], "role_id", _values(body, "roleIds"))
+            await self._require_user(identity, params["userId"])
+            role_ids = _values(body, "roleIds")
+            if not is_platform(identity) and {str(value) for value in role_ids} - {"4"}:
+                require_platform(identity)
+            await self.store.replace_links("base_role_user", "user_id", params["userId"], "role_id", role_ids)
             return ok()
         if path == "/user/{userId}/roles" and method == "GET":
-            ids = await self.store.linked_ids(
-                "base_role_user", "user_id", params["userId"], "role_id"
-            )
+            await self._require_user(identity, params["userId"])
+            ids = await self.store.linked_ids("base_role_user", "user_id", params["userId"], "role_id")
             return ok([row for value in ids if (row := await self.store.get("role", value))])
         if path == "/user/{userId}/orgs" and method == "PUT":
-            await self.store.replace_links("base_user_org", "user_id", params["userId"], "org_id", _values(body, "orgIds"))
+            await self._require_user(identity, params["userId"])
+            if not is_platform(identity) and {str(value) for value in _values(body, "orgIds")} - {
+                str(tenant_id(identity))
+            }:
+                require_platform(identity)
+            await self.store.replace_links(
+                "base_user_org", "user_id", params["userId"], "org_id", _values(body, "orgIds")
+            )
             return ok()
         if path == "/user/{userId}/orgs" and method == "GET":
-            ids = await self.store.linked_ids(
-                "base_user_org", "user_id", params["userId"], "org_id"
-            )
+            await self._require_user(identity, params["userId"])
+            ids = await self.store.linked_ids("base_user_org", "user_id", params["userId"], "org_id")
             return ok([row for value in ids if (row := await self.store.get("org", value))])
         if path == "/user/{userId}/accounts" and method == "GET":
+            await self._require_user(identity, params["userId"])
             rows, _ = await self.store.list("account", {"userId": params["userId"]}, 1, 100)
             for row in rows:
                 row.pop("password", None)
             return ok(rows)
         if path == "/user/{userId}/password" and method == "PUT":
-            await self._set_password(int(params["userId"]), str(body.get("password") or body.get("currentPassword") or ""))
+            await self._require_user(identity, params["userId"])
+            await self._set_password(
+                int(params["userId"]),
+                str(body.get("password") or body.get("currentPassword") or ""),
+            )
             return ok()
         if path == "/user/{userId}/closure":
+            await self._require_user(identity, params["userId"])
             await self.store.save("user", {"status": 0}, params["userId"])
             return ok(True)
         if path == "/user/{userId}/status":
+            await self._require_user(identity, params["userId"])
             return ok(await self.store.save("user", {"status": body.get("status")}, params["userId"]))
         if path in {"/user/{userId}/activations/email", "/user/{userId}/activations/mobile"}:
             return ok(True)
@@ -177,7 +261,11 @@ class CompatibilityService:
             return ok(await self.governance.current_user({"userId": exact["userId"]}))
         if path == "/user/registrations":
             return ok(await self._create_user({**query, **body}))
-        if path in {"/user/third-party-accounts", "/user/sessions/mobile", "/user/third-party-account-bindings"}:
+        if path in {
+            "/user/third-party-accounts",
+            "/user/sessions/mobile",
+            "/user/third-party-account-bindings",
+        }:
             return ok(await self._create_user({**query, **body}))
         if path == "/user/accounts/open-id":
             return ok(True)
@@ -185,33 +273,44 @@ class CompatibilityService:
             return await self._special("POST", "/user/sessions", params, query, body, identity)
 
         if path == "/role/all":
-            rows, _ = await self.store.list("role", {}, 1, 100)
+            filters = {} if is_platform(identity) else {"roleCode": "tenant_admin"}
+            rows, _ = await self.store.list("role", filters, 1, 100)
             return ok(rows)
         if path == "/role/{roleId}/users" and method == "GET":
+            require_platform(identity)
             ids = await self.store.linked_ids("base_role_user", "role_id", params["roleId"], "user_id")
             return ok([row for identity in ids if (row := await self.store.get("user", identity))])
         if path == "/role/{roleId}/users" and method == "PUT":
-            await self.store.replace_links("base_role_user", "role_id", params["roleId"], "user_id", _values(body, "userIds"))
+            require_platform(identity)
+            await self.store.replace_links(
+                "base_role_user", "role_id", params["roleId"], "user_id", _values(body, "userIds")
+            )
             return ok()
 
         if path == "/menu/all":
+            require_platform(identity)
             rows, _ = await self.store.list("menu", query, 1, 100)
             return ok(rows)
         if path == "/menu/current":
             return ok(await self.governance.current_menus(identity))
         if path == "/menu/{menuId}/actions":
+            require_platform(identity)
             rows, _ = await self.store.list("action", {"menuId": params["menuId"]}, 1, 100)
             return ok(rows)
         if path == "/menu/export":
+            require_platform(identity)
             rows, _ = await self.store.list("menu", query, 1, 100)
             return ok(rows)
         if path in {"/menu/imports", "/menu/sync-from-jbm"}:
+            require_platform(identity)
             return ok({"imported": 0, "updated": 0})
 
         if path == "/app/{appId}/secret" and method == "GET":
             app = await self.store.get("app", params["appId"])
+            require_tenant_record(identity, app, "orgId")
             return ok({"secretKey": app.get("secretKey") if app else None})
         if path in {"/app/{appId}/secret", "/app/{appId}/client"} and method == "PUT":
+            require_tenant_record(identity, await self.store.get("app", params["appId"]), "orgId")
             values = dict(body)
             if path.endswith("/secret"):
                 values["secretKey"] = new_secret()
@@ -231,13 +330,20 @@ class CompatibilityService:
             rows, _ = await self.store.list("apikey", {"apiKey": query.get("apiKey")}, 1, 10)
             return ok(next((row for row in rows if row.get("apiKey") == query.get("apiKey")), None))
         if path == "/internal/gateway/apikey/{keyId}/check":
-            return await self._special("GET", "/apikey/{keyId}/check", {"keyId": params["keyId"]}, query, body, identity)
+            return await self._special(
+                "GET", "/apikey/{keyId}/check", {"keyId": params["keyId"]}, query, body, identity
+            )
         if path == "/internal/gateway/api":
             rows, _ = await self.store.list(
                 "api", {"serviceId": query.get("serviceId"), "path": query.get("path")}, 1, 100
             )
             requested_path = str(query.get("path") or "")
-            return ok(next((row for row in rows if row.get("path") == requested_path), rows[0] if rows else None))
+            return ok(
+                next(
+                    (row for row in rows if row.get("path") == requested_path),
+                    rows[0] if rows else None,
+                )
+            )
 
         authority_links = {
             "/authority/roles/{roleId}": ("base_authority_role", "role_id", "roleId"),
@@ -248,7 +354,12 @@ class CompatibilityService:
         if path in authority_links:
             table, owner_column, param_name = authority_links[path]
             return await self._grant(method, table, owner_column, params[param_name], body)
-        if path in {"/authority/resources", "/authority/apis", "/authority/apis/grantable", "/authority/catalog"}:
+        if path in {
+            "/authority/resources",
+            "/authority/apis",
+            "/authority/apis/grantable",
+            "/authority/catalog",
+        }:
             rows, _ = await self.store.list("authority", query, 1, 100)
             return ok(rows)
         if path in {"/authority/menus", "/authority/menus/tree"}:
@@ -260,7 +371,11 @@ class CompatibilityService:
 
         policy_links = {
             "/gateway/limit/ip/{policyId}/apis": ("gateway_ip_limit_api", "policy_id", "policyId"),
-            "/gateway/limit/rate/{policyId}/apis": ("gateway_rate_limit_api", "policy_id", "policyId"),
+            "/gateway/limit/rate/{policyId}/apis": (
+                "gateway_rate_limit_api",
+                "policy_id",
+                "policyId",
+            ),
         }
         if path in policy_links:
             table, owner_column, param_name = policy_links[path]
@@ -289,6 +404,23 @@ class CompatibilityService:
         if path.startswith("/baseDic/"):
             return await self._master_data(method, path, "dic", "baseDic", body)
         if path.startswith("/baseOrg/"):
+            operation = path.rsplit("/", 1)[-1]
+            if not is_platform(identity):
+                if operation == "root":
+                    return ok(await self.governance.org_roots(identity))
+                if operation in {"tree", "list", "pageList"}:
+                    page, size = _page(body.get("pageForm") or {})
+                    data = await self.governance.org_page(page, size, None, identity)
+                    rows = data["contents"]
+                    return ok(_tree(rows) if operation == "tree" else data if operation == "pageList" else rows)
+                if operation in {"getBaseOrg", "model"}:
+                    org = await self.store.get(
+                        "org",
+                        body.get("id") or body.get("orgId") or (body.get("baseOrg") or {}).get("id"),
+                    )
+                    require_tenant_record(identity, org, "id")
+                    return ok(org)
+                require_platform(identity)
             if path == "/baseOrg/findTopCompany":
                 org = await self.store.get("org", body.get("id") or body.get("orgId"))
                 while org and org.get("parentId"):
@@ -297,7 +429,13 @@ class CompatibilityService:
             if path == "/baseOrg/findRelegationCompany":
                 rows, _ = await self.store.list("org", {}, 1, 100)
                 root = str(body.get("id") or body.get("orgId"))
-                return ok([row for row in rows if root in str(row.get("leafPath") or "").split(",") or str(row.get("id")) == root])
+                return ok(
+                    [
+                        row
+                        for row in rows
+                        if root in str(row.get("leafPath") or "").split(",") or str(row.get("id")) == root
+                    ]
+                )
             if path == "/baseOrg/getBaseOrg":
                 return ok(await self.store.get("org", body.get("id") or body.get("orgId")))
             return await self._master_data(method, path, "org", "baseOrg", body)
@@ -342,7 +480,14 @@ class CompatibilityService:
             await self._set_password(int(params["userId"]), str(body.get("password") or ""))
             return ok()
         if path in {"/developer/sessions", "/developer/third-party-accounts"}:
-            return await self._special("POST", "/user/sessions" if path.endswith("sessions") else "/user/third-party-accounts", params, query, body, identity)
+            return await self._special(
+                "POST",
+                "/user/sessions" if path.endswith("sessions") else "/user/third-party-accounts",
+                params,
+                query,
+                body,
+                identity,
+            )
 
         if path == "/extend-field/forms":
             rows, total = await self.store.list("extendForm", query, *_page(query))
@@ -356,7 +501,11 @@ class CompatibilityService:
             existing = rows[0] if rows else None
             if method == "GET":
                 return ok(existing)
-            saved = await self.store.save("extendForm", {**body, "formCode": form_code, "version": (existing or {}).get("version", 0) + 1}, (existing or {}).get("id"))
+            saved = await self.store.save(
+                "extendForm",
+                {**body, "formCode": form_code, "version": (existing or {}).get("version", 0) + 1},
+                (existing or {}).get("id"),
+            )
             return ok(saved)
 
         if path == "/customForms/getDetail":
@@ -368,13 +517,18 @@ class CompatibilityService:
             data_source_type = str(body.get("dataSourceType") or "")
             if not body.get("dataSourceCode") or not body.get("dataSourceName") or not data_source_type:
                 raise ValueError("数据源编码、名称和类型不能为空")
-            if data_source_type.lower() == "http" and not all(body.get(key) for key in ("url", "requestMethod", "requestHeader")):
+            if data_source_type.lower() == "http" and not all(
+                body.get(key) for key in ("url", "requestMethod", "requestHeader")
+            ):
                 raise ValueError("HTTP 数据源必须提供 URL、请求方式和请求头")
             return ok(await self.store.save("dataSource", body, body.get("id")))
 
         if path.startswith("/api-docs") or path.startswith("/published-docs"):
             return await self._openapi(method, path, params, query, body)
         return None
+
+    async def _require_user(self, identity: Mapping[str, Any], user_id: Any) -> None:
+        require_tenant_record(identity, await self.store.get("user", user_id), "companyId")
 
     async def _master_data(
         self, method: str, path: str, resource: str, alias: str, body: Mapping[str, Any]
@@ -466,7 +620,9 @@ class CompatibilityService:
             raise ValueError("用户没有可用的登录账号")
         if origin is not None and not _verify(origin, str(rows[0].get("password") or "")):
             raise ValueError("原密码错误")
-        await self.store.update_where("account", {"userId": user_id}, {"password": _hash(password), "mustChangePassword": 0})
+        await self.store.update_where(
+            "account", {"userId": user_id}, {"password": _hash(password), "mustChangePassword": 0}
+        )
 
     async def _openapi(
         self,
@@ -484,7 +640,13 @@ class CompatibilityService:
         if path == "/api-docs/operations/{operationId}":
             return ok(await self.store.get("openApiOperation", params["operationId"]))
         if path == "/api-docs/operations/{operationId}/use-cases":
-            return ok(await self.store.save("openApiOperation", {"examplesJson": json.dumps(body, ensure_ascii=False)}, params["operationId"]))
+            return ok(
+                await self.store.save(
+                    "openApiOperation",
+                    {"examplesJson": json.dumps(body, ensure_ascii=False)},
+                    params["operationId"],
+                )
+            )
         if path == "/api-docs/spec/{serviceId}":
             return ok(await self.openapi.spec(str(params["serviceId"])))
         if path == "/api-docs/sync":
@@ -499,7 +661,11 @@ class CompatibilityService:
             return ok(
                 await self.store.save(
                     "publishedApiDoc",
-                    {**body, "publishedSpec": json.dumps(spec, ensure_ascii=False), "publishedAt": datetime.now()},
+                    {
+                        **body,
+                        "publishedSpec": json.dumps(spec, ensure_ascii=False),
+                        "publishedAt": datetime.now(),
+                    },
                 )
             )
         if path == "/api-docs/export":
@@ -516,8 +682,17 @@ class CompatibilityService:
 
 def _page(values: Mapping[str, Any]) -> tuple[int, int]:
     return (
-        max(int(values.get("pageForm.currPage") or values.get("currPage") or values.get("page") or 1), 1),
-        min(max(int(values.get("pageForm.pageSize") or values.get("pageSize") or values.get("size") or 10), 1), 100),
+        max(
+            int(values.get("pageForm.currPage") or values.get("currPage") or values.get("page") or 1),
+            1,
+        ),
+        min(
+            max(
+                int(values.get("pageForm.pageSize") or values.get("pageSize") or values.get("size") or 10),
+                1,
+            ),
+            100,
+        ),
     )
 
 

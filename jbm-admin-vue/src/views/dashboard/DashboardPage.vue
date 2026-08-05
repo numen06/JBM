@@ -26,6 +26,7 @@ import {
   type DashboardMetric as ApiMetric,
   type DashboardNotice,
   type AggregatedDashboardIdentity,
+  type AggregatedDashboardSections,
 } from '@/api/dashboard'
 
 const auth = useAuthStore()
@@ -36,6 +37,7 @@ const metricsLoading = ref(false)
 const loadedMetricsByKey = ref<Map<string, ApiMetric>>(new Map())
 const dashboardNotices = ref<DashboardNotice[]>([])
 const dashboardIdentity = ref<AggregatedDashboardIdentity | null>(null)
+const dashboardSectionFlags = ref<AggregatedDashboardSections | null>(null)
 
 const permCtx = computed<PermissionContext>(() => ({
   isSuperAdmin: permission.isSuperAdmin.value,
@@ -48,7 +50,11 @@ const permCtx = computed<PermissionContext>(() => ({
 const selfServiceMode = computed(() => isSelfServiceOnly(permCtx.value))
 
 const pageDescription = computed(() =>
-  selfServiceMode.value ? '开放平台工作台' : '平台控制台',
+  dashboardIdentity.value?.scope === 'tenant'
+    ? '租户管理控制台'
+    : selfServiceMode.value
+      ? '开放平台工作台'
+      : '平台控制台',
 )
 
 const roleLabel = computed(() => {
@@ -75,6 +81,7 @@ const displayVisibleMenuCount = computed(
 const scopeLabel = computed(() => {
   const scope = dashboardIdentity.value?.scope
   if (scope === 'platform') return '平台汇总'
+  if (scope === 'tenant') return `租户 ${dashboardIdentity.value?.tenantId ?? ''}`.trim()
   if (scope === 'app') return '当前应用'
   return null
 })
@@ -86,11 +93,28 @@ const menuStatusBadge = computed(() => {
   return { variant: 'default' as const, text: '已加载' }
 })
 
-const visibleMetricDefs = computed(() => filterMetricsByPermission(DASHBOARD_METRICS, permCtx.value))
+const visibleMetricDefs = computed(() => {
+  const flags = dashboardSectionFlags.value
+  return filterMetricsByPermission(DASHBOARD_METRICS, permCtx.value).filter((metric) => {
+    if (!flags) return true
+    if (metric.path.startsWith('/developer/')) return flags.developer !== false
+    if (metric.path.startsWith('/authority/')) return flags.authority !== false
+    if (metric.path.startsWith('/gateway/')) return flags.gateway !== false
+    if (metric.path.startsWith('/api/')) return flags.api !== false
+    if (metric.path.startsWith('/log/')) return flags.audit !== false
+    return true
+  })
+})
 
-const visibleSections = computed(() =>
-  filterSectionsByPermission(DASHBOARD_SECTIONS, permCtx.value),
-)
+const visibleSections = computed(() => {
+  const sections = filterSectionsByPermission(DASHBOARD_SECTIONS, permCtx.value)
+  const flags = dashboardSectionFlags.value
+  if (!flags) return sections
+  return sections.filter((section) => {
+    const value = flags[section.key as keyof AggregatedDashboardSections]
+    return value !== false
+  })
+})
 
 const showApiMonitorMetric = computed(() => menuStore.isRouteAllowed('/api/monitor'))
 
@@ -177,6 +201,7 @@ async function fetchOverview() {
     loadedMetricsByKey.value = new Map()
     dashboardNotices.value = []
     dashboardIdentity.value = null
+    dashboardSectionFlags.value = null
     metricsLoading.value = false
     return
   }
@@ -191,8 +216,10 @@ async function fetchOverview() {
     loadedMetricsByKey.value = map
     dashboardNotices.value = overview.notices
     dashboardIdentity.value = overview.identity ?? null
+    dashboardSectionFlags.value = overview.sectionFlags ?? null
   } catch {
     loadedMetricsByKey.value = new Map()
+    dashboardSectionFlags.value = null
     dashboardNotices.value = [
       {
         key: 'overview-fatal',
@@ -296,7 +323,9 @@ const metricCards = computed(() => {
 
     <!-- 关键指标 -->
     <section v-if="metricCards.length && !selfServiceMode">
-      <h2 class="mb-3 text-sm font-medium text-muted-foreground">平台状态</h2>
+      <h2 class="mb-3 text-sm font-medium text-muted-foreground">
+        {{ dashboardIdentity?.scope === 'tenant' ? '租户状态' : '平台状态' }}
+      </h2>
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card v-for="{ def, display } in metricCards" :key="def.key">
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">

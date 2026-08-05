@@ -12,7 +12,7 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Table from '@/components/ui/Table.vue'
 import Badge from '@/components/ui/Badge.vue'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
@@ -23,9 +23,16 @@ import type { BaseApp } from '@/api/types'
 import { APP_TYPE_OPTIONS, appTypeLabel } from '@/constants/appTypes'
 import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { SnowflakeId } from '@/api/types'
+import { useAuthStore } from '@/stores/auth'
 
 const { orgLabel, loadOrgs } = useOrgTree()
 const feedback = useFeedback()
+const auth = useAuthStore()
+const canSyncPlatformMenus = computed(() =>
+  (auth.user?.roles ?? []).some((role) =>
+    ['super_admin', 'platform_operator'].includes(String(role.roleCode || '')),
+  ),
+)
 
 onMounted(loadOrgs)
 
@@ -345,6 +352,7 @@ async function copyText(text: string) {
                 <RefreshCw class="h-3.5 w-3.5" />
               </Button>
               <Button
+                v-if="canSyncPlatformMenus"
                 variant="outline"
                 size="sm"
                 title="从 JBM 同步菜单"

@@ -2,6 +2,8 @@ param(
     [string]$BaseUrl = 'http://127.0.0.1:5173/v3/api',
     [string]$Username = 'admin',
     [string]$Password = $env:JBM_LOCAL_ADMIN_PASSWORD,
+    [string]$OperatorPassword = $env:JBM_LOCAL_OPERATOR_PASSWORD,
+    [string]$TenantPassword = $env:JBM_LOCAL_TENANT_PASSWORD,
     [string]$ClientId = 'jbmSeedDevAppKey00000001',
     [string]$CenterHealthUrl = 'http://127.0.0.1:7777/actuator/health',
     [string]$DocUrl = 'http://127.0.0.1:9999',
@@ -12,6 +14,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Password)) { $Password = 'Admin@123' }
+if ([string]::IsNullOrWhiteSpace($OperatorPassword)) { $OperatorPassword = 'Operator@123' }
+if ([string]::IsNullOrWhiteSpace($TenantPassword)) { $TenantPassword = 'Tenant@123' }
 $BaseUrl = $BaseUrl.TrimEnd('/')
 
 function Assert-JbmSuccess([object]$Response, [string]$Name) {
@@ -33,7 +37,7 @@ function New-PkcePair {
     return @{ Verifier = $verifier; Challenge = $challenge }
 }
 
-function New-AccessToken {
+function New-AccessToken([string]$LoginUser = $Username, [string]$LoginPassword = $Password) {
     $pkce = New-PkcePair
     $redirect = 'http://127.0.0.1:5173/login/callback'
     $login = Invoke-RestMethod -Method Post -Uri "$BaseUrl/auth/oauth2/doLogin" `
@@ -42,8 +46,8 @@ function New-AccessToken {
             client_id = $ClientId
             redirect_uri = $redirect
             state = 'local-seed-verification'
-            username = $Username
-            password = $Password
+            username = $LoginUser
+            password = $LoginPassword
             scope = 'all'
             loginType = 'PASSWORD'
             vcode = '9999'
@@ -55,14 +59,23 @@ function New-AccessToken {
     $authorizationCode = $query['code']
     if ([string]::IsNullOrWhiteSpace($authorizationCode)) { throw 'OAuth login returned no authorization code' }
 
-    $tokenResponse = Invoke-RestMethod -Method Post -Uri "$BaseUrl/auth/oauth2/token" `
-        -ContentType 'application/x-www-form-urlencoded' -Body @{
-            grant_type = 'authorization_code'
-            code = $authorizationCode
-            client_id = $ClientId
-            redirect_uri = $redirect
-            code_verifier = $pkce.Verifier
+    do {
+        try {
+            $tokenResponse = Invoke-RestMethod -Method Post -Uri "$BaseUrl/auth/oauth2/token" `
+                -ContentType 'application/x-www-form-urlencoded' -Body @{
+                    grant_type = 'authorization_code'
+                    code = $authorizationCode
+                    client_id = $ClientId
+                    redirect_uri = $redirect
+                    code_verifier = $pkce.Verifier
+                }
+            break
         }
+        catch {
+            if ((Get-Date) -ge $deadline) { throw }
+            Start-Sleep -Seconds 2
+        }
+    } while ($true)
     $token = Assert-JbmSuccess $tokenResponse 'OAuth token exchange'
     $accessToken = if ($token.access_token) { $token.access_token } else { $token.accessToken }
     if ([string]::IsNullOrWhiteSpace($accessToken)) { throw 'OAuth token exchange returned no access token' }
@@ -193,6 +206,41 @@ if ($gatewayLogPage.total -lt 1) { throw 'Gateway access logs were not persisted
 if ([string]::IsNullOrWhiteSpace($demoLog.logId) -or @($demoLines).Count -lt 1) { throw 'Business log workflow is incomplete' }
 if ($null -eq $bigscreenPage.contents) { throw 'Bigscreen page contract is invalid' }
 
+$operatorToken = New-AccessToken 'platform_operator' $OperatorPassword
+$tenantToken = New-AccessToken 'tenant_admin' $TenantPassword
+$operatorHeaders = @{ Authorization = "Bearer $operatorToken" }
+$tenantHeaders = @{ Authorization = "Bearer $tenantToken" }
+$operatorUsers = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/center/user?pageForm.currPage=1&pageForm.pageSize=100" -Headers $operatorHeaders
+) 'Platform operator user scope'
+$tenantUsers = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/center/user?pageForm.currPage=1&pageForm.pageSize=100&companyId=1" -Headers $tenantHeaders
+) 'Tenant user scope'
+$tenantApps = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/center/app?pageForm.currPage=1&pageForm.pageSize=100&orgId=1" -Headers $tenantHeaders
+) 'Tenant application scope'
+$tenantDashboard = Assert-JbmSuccess (
+    Invoke-RestMethod -Method Get -Uri "$BaseUrl/center/current/dashboard" -Headers $tenantHeaders
+) 'Tenant dashboard scope'
+
+if ($operatorUsers.total -lt 3) { throw 'Platform operator cannot see the platform user set' }
+if ($tenantUsers.total -ne 1 -or $tenantUsers.contents[0].userName -ne 'tenant_admin') {
+    throw 'Tenant user isolation failed'
+}
+if ($tenantApps.total -ne 1 -or $tenantApps.contents[0].orgId -ne 2000) {
+    throw 'Tenant application isolation failed'
+}
+if ($tenantDashboard.identity.scope -ne 'tenant' -or $tenantDashboard.identity.tenantId -ne 2000) {
+    throw 'Tenant dashboard identity is invalid'
+}
+try {
+    Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/center/user/1" -Headers $tenantHeaders | Out-Null
+    throw 'Cross-tenant user access was not rejected'
+}
+catch {
+    if ($_.Exception.Response.StatusCode -ne 403) { throw }
+}
+
 [pscustomobject]@{
     Login = 'PASS'
     User = $user.userName
@@ -205,4 +253,6 @@ if ($null -eq $bigscreenPage.contents) { throw 'Bigscreen page contract is inval
     GatewayAccessLogs = $gatewayLogPage.total
     BusinessLog = $demoLog.logId
     Bigscreen = "PASS ($($bigscreenPreview.StatusCode))"
+    PlatformOperator = "PASS ($($operatorUsers.total) users)"
+    TenantIsolation = "PASS (tenant 2000)"
 } | Format-List

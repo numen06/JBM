@@ -182,6 +182,8 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
         userinfo = client.get("/oauth2/userinfo", headers={"Authorization": "Bearer " + token["access_token"]})
         assert userinfo.json()["result"]["userId"] == 2057849052900044802
         assert userinfo.json()["result"]["clientId"] == "JBM"
+        assert "tenantId" in userinfo.json()["result"]
+        assert userinfo.json()["result"]["userType"] == "normal"
 
         online = client.post(
             "/online/pageList",
@@ -444,7 +446,7 @@ def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:
     with TestClient(create_app(auth_config(database_url))) as client:
         captcha = client.get("/captcha/vcode64", params={"width": 120, "height": 40}).json()
         assert captcha["success"] is True
-        assert captcha["result"].startswith("data:image/png;base64,")
+        assert captcha["result"].startswith(("data:image/png;base64,", "data:image/svg+xml;base64,"))
 
         registered = client.post(
             "/oauth2/register",
@@ -477,7 +479,12 @@ def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:
 
         qr = client.get(
             "/qrcode/login",
-            params={"client_id": "JBM", "redirect_uri": "http://admin.test/login/callback", "width": 180, "height": 180},
+            params={
+                "client_id": "JBM",
+                "redirect_uri": "http://admin.test/login/callback",
+                "width": 180,
+                "height": 180,
+            },
         ).json()
         assert qr["success"] is True
         assert qr["result"]["image"].startswith("data:image/png;base64,")
