@@ -1,0 +1,1 @@
+export { messagesModule } from './modules'

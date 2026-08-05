@@ -1,10 +1,10 @@
 server:
   host: 0.0.0.0
-  port: 3312
+  port: 7777
 
 spring:
   application:
-    name: jbm-cluster-platform-logs
+    name: jbm-python-cluster
   cloud:
     nacos:
       discovery:

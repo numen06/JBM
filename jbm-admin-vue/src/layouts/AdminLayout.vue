@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
-import { Bell, ChevronRight, LogOut, Mail, MailOpen, Moon, PanelLeft, Sun } from '@lucide/vue'
+import { Bell, ChevronRight, LogOut, Mail, MailOpen, Moon, PanelLeft, Sun, X } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
@@ -24,6 +24,7 @@ const app = useAppStore()
 const menuStore = useMenuStore()
 const messageStore = useMessageStore()
 const messagesOpen = ref(false)
+const mobileSidebarOpen = ref(false)
 const passwordReminderDismissed = ref(false)
 const passwordForm = ref({
   originPassword: '',
@@ -53,6 +54,7 @@ const unreadLabel = computed(() =>
 const showPasswordReminder = computed(
   () => auth.mustChangePassword && !passwordReminderDismissed.value,
 )
+const compactSidebar = computed(() => app.sidebarCollapsed && !mobileSidebarOpen.value)
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
 const themeMode = ref<ThemeMode>(readInitialTheme())
@@ -182,12 +184,20 @@ function isGroupExpanded(label: string) {
 }
 
 function toggleGroup(label: string) {
-  if (app.sidebarCollapsed) return
+  if (compactSidebar.value) return
   if (isGroupExpanded(label)) {
     setExpandedGroups(expandedGroupLabels.value.filter((item) => item !== label))
   } else {
     setExpandedGroups([...expandedGroupLabels.value, label])
   }
+}
+
+function toggleNavigation() {
+  if (window.matchMedia('(min-width: 1024px)').matches) {
+    app.toggleSidebar()
+    return
+  }
+  mobileSidebarOpen.value = !mobileSidebarOpen.value
 }
 
 function expandCurrentGroup() {
@@ -221,6 +231,7 @@ onMounted(() => {
 })
 
 watch(activeGroupLabel, expandCurrentGroup)
+watch(() => route.fullPath, () => { mobileSidebarOpen.value = false })
 
 watch(
   () => navGroups.value.map((group) => group.label).join('|'),
@@ -252,29 +263,40 @@ watch(
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-muted/30">
+  <div class="flex min-h-screen overflow-x-hidden bg-muted/30">
+    <button
+      v-if="mobileSidebarOpen"
+      type="button"
+      class="fixed inset-0 z-40 bg-black/45 lg:hidden"
+      aria-label="关闭导航"
+      @click="mobileSidebarOpen = false"
+    />
     <aside
       :class="
         cn(
-          'flex flex-col border-r bg-card transition-all',
-          app.sidebarCollapsed ? 'w-16' : 'w-56',
+          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r bg-card shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:shrink-0 lg:shadow-none',
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          compactSidebar ? 'lg:w-16' : 'lg:w-56',
         )
       "
     >
       <div class="flex h-14 items-center gap-2 border-b px-4">
         <JbmLogo class="size-8 rounded-md" alt="JBM" />
-        <span v-if="!app.sidebarCollapsed" class="font-semibold">JBM 管理后台</span>
+        <span v-if="!compactSidebar" class="font-semibold">JBM 管理后台</span>
+        <Button class="ml-auto lg:hidden" variant="ghost" size="icon" aria-label="关闭导航" @click="mobileSidebarOpen = false">
+          <X class="h-4 w-4" />
+        </Button>
       </div>
       <nav class="flex-1 overflow-y-auto p-2">
         <p
-          v-if="menuStore.loadError && !app.sidebarCollapsed"
+          v-if="menuStore.loadError && !compactSidebar"
           class="mb-2 px-2 text-xs text-destructive"
         >
           {{ menuStore.loadError }}
         </p>
         <div v-for="group in navGroups" :key="group.label" class="mb-1">
           <button
-            v-if="!app.sidebarCollapsed"
+            v-if="!compactSidebar"
             type="button"
             class="mb-1 flex h-8 w-full items-center justify-between rounded-md px-2 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             :aria-expanded="isGroupExpanded(group.label)"
@@ -294,22 +316,22 @@ watch(
             </span>
           </button>
           <div v-else class="mx-2 my-2 h-px bg-border" :title="group.label" />
-          <div v-show="app.sidebarCollapsed || isGroupExpanded(group.label)" class="space-y-0.5">
+          <div v-show="compactSidebar || isGroupExpanded(group.label)" class="space-y-0.5">
             <RouterLink
               v-for="item in group.items"
               :key="item.name"
               :to="item.to"
               :class="
                 cn(
-                  'flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent',
-                  app.sidebarCollapsed && 'justify-center',
+                  'flex min-h-11 items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent lg:min-h-0 lg:px-2',
+                  compactSidebar && 'justify-center',
                   activeNavPath === item.to && 'bg-accent font-medium text-accent-foreground',
                 )
               "
               :title="item.title"
             >
               <component :is="item.icon" class="h-4 w-4 shrink-0" />
-              <span v-if="!app.sidebarCollapsed" class="truncate">{{ item.title }}</span>
+              <span v-if="!compactSidebar" class="truncate">{{ item.title }}</span>
             </RouterLink>
           </div>
         </div>
@@ -317,14 +339,14 @@ watch(
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="flex h-14 items-center justify-between border-b bg-card px-4">
-        <div class="flex items-center gap-2">
-          <Button variant="ghost" size="icon" @click="app.toggleSidebar">
+      <header class="flex h-14 items-center justify-between gap-2 border-b bg-card px-2 sm:px-4">
+        <div class="flex min-w-0 items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="icon" aria-label="切换导航" @click="toggleNavigation">
             <PanelLeft class="h-4 w-4" />
           </Button>
-          <span class="text-sm font-medium">{{ pageTitle }}</span>
+          <span class="truncate text-sm font-medium">{{ pageTitle }}</span>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex shrink-0 items-center gap-1 sm:gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -352,7 +374,7 @@ watch(
             </Button>
             <section
               v-if="messagesOpen"
-              class="absolute right-0 top-11 z-50 w-80 rounded-lg border bg-card shadow-xl"
+              class="fixed left-2 right-2 top-16 z-50 rounded-lg border bg-card shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80"
             >
               <header class="flex items-center justify-between border-b px-4 py-3">
                 <div>
@@ -432,11 +454,11 @@ watch(
           </button>
           <Button variant="outline" size="sm" @click="handleLogout">
             <LogOut class="h-4 w-4" />
-            退出
+            <span class="hidden sm:inline">退出</span>
           </Button>
         </div>
       </header>
-      <main class="min-w-0 flex-1 overflow-auto p-4 lg:p-6">
+      <main class="min-w-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
         <RouterView />
       </main>
     </div>

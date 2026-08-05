@@ -1,9 +1,0 @@
-# 上传到 Nacos 的 DataId 须为 openobserve.yml（与 bootstrap.yml 中 shared-configs 一致）
-# 将下方占位值替换为实际环境地址与凭据后再发布
-open-observe:
-  url: http://your-openobserve-host:5080
-  grpc: http://your-openobserve-host:5081
-  organization: default
-  stream: your-stream
-  username: your-user@example.com
-  password: your-password

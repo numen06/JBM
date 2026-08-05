@@ -161,8 +161,13 @@ class AppConfig:
                 merged,
                 load_yaml_file(current_dir / ("application-%s.yml" % selected_profile)),
             )
+        env_overrides = _env_overrides()
+        # Environment values must be visible before contacting Nacos so local/container
+        # profiles can disable or redirect config loading. Reapply them afterwards so
+        # deployment-time settings remain authoritative over remote shared config.
+        merged = deep_merge(merged, env_overrides)
         merged = cls._merge_nacos_shared_config(merged)
-        merged = deep_merge(merged, _env_overrides())
+        merged = deep_merge(merged, env_overrides)
         return cls(merged, selected_profile, base_dir, selected_app, app_resource_dir, resource_dirs)
 
     @staticmethod
@@ -264,7 +269,7 @@ class AppConfig:
 
     @property
     def service_name(self) -> str:
-        return str(self.get("spring.application.name", "jbm-cluster-platform-logs"))
+        return str(self.get("spring.application.name", "jbm-python-cluster"))
 
     @property
     def openapi(self) -> Dict[str, Any]:
@@ -280,11 +285,9 @@ class AppConfig:
 
     @property
     def database(self) -> Dict[str, Any]:
-        config = dict(self.get("integrations.database", {}) or {})
         spring_datasource = dict(self.get("spring.datasource", {}) or {})
-        if spring_datasource:
-            config = deep_merge(config, spring_datasource)
-        return config
+        integration_config = dict(self.get("integrations.database", {}) or {})
+        return deep_merge(spring_datasource, integration_config)
 
     @property
     def minio(self) -> Dict[str, Any]:

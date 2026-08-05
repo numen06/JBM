@@ -1,4 +1,0 @@
-modbus:
-  clients:
-    '01':
-      host: 172.31.12.64

@@ -14,6 +14,7 @@ export interface QrLoginSession {
 export async function fetchLoginQr(params: {
   clientId: string
   redirectUri: string
+  codeChallenge?: string
   width?: number
   height?: number
 }): Promise<QrLoginSession> {
@@ -21,6 +22,8 @@ export async function fetchLoginQr(params: {
     params: {
       client_id: params.clientId,
       redirect_uri: params.redirectUri,
+      code_challenge: params.codeChallenge,
+      code_challenge_method: params.codeChallenge ? 'S256' : undefined,
       width: params.width ?? 200,
       height: params.height ?? 200,
     },

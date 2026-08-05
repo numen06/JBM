@@ -14,12 +14,13 @@ def test_deep_merge_keeps_base_and_overrides_nested_values() -> None:
     assert merged["a"] == 1
 
 
-def test_load_jaja7_config_from_project_config() -> None:
+def test_load_jaja7_config_from_project_config(monkeypatch) -> None:
+    monkeypatch.delenv("JBM_APP", raising=False)
     config_dir = Path(__file__).resolve().parents[1] / "resource"
     config = AppConfig.load(profile="jaja7", config_dir=config_dir)
 
-    assert config.service_name == "jbm-cluster-platform-logs"
-    assert config.port == 3312
+    assert config.service_name == "jbm-python-cluster"
+    assert config.port == 7777
     assert config.nacos_discovery["namespace"] == "jbm7"
 
 
@@ -27,12 +28,12 @@ def test_load_app_resource_profile_config() -> None:
     root = Path(__file__).resolve().parents[2]
     config = AppConfig.load(
         profile="jaja7",
-        app="logs",
+        app="auth",
         config_dir=root / "common" / "resource",
-        resource_dir=root / "logs" / "resource",
+        resource_dir=root / "auth" / "resource",
     )
 
-    assert config.app == "logs"
-    assert config.resource_dir == root / "logs" / "resource"
-    assert config.service_name == "jbm-cluster-platform-logs"
-    assert config.openapi["title"] == "JBM Python Logs Service"
+    assert config.app == "auth"
+    assert config.resource_dir == root / "auth" / "resource"
+    assert config.service_name == "jbm-cluster-platform-auth"
+    assert config.openapi["title"] == "JBM Python Auth Service"

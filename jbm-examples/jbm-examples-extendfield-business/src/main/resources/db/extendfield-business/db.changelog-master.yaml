@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/extendfield-business/changes/V1__md_extend_order.yaml

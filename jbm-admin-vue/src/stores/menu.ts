@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { getCurrentMenus } from '@/api/current'
 import type { BaseMenu } from '@/api/types'
+import type { JbmFrontendModule } from '@jbm7/vue-core'
 import {
   buildNavGroups,
   normalizeMenuPath,
@@ -21,6 +22,7 @@ export const useMenuStore = defineStore('menu', () => {
   const superAdmin = ref(false)
   const loaded = ref(false)
   const loadError = ref('')
+  const extensionModules = ref<JbmFrontendModule[]>([])
 
   const allowedPaths = computed(() => {
     const set = new Set<string>()
@@ -43,13 +45,23 @@ export const useMenuStore = defineStore('menu', () => {
   })
 
   const navGroups = computed<NavGroupDef[]>(() => {
-    if (superAdmin.value) return STATIC_NAV_GROUPS
-    if (!loaded.value || rawMenus.value.length === 0) {
-      return authorityMenuCodes.value.length === 0
-        ? SELF_SERVICE_NAV_GROUPS
-        : buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
+    let builtIn = buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
+    if (superAdmin.value) builtIn = STATIC_NAV_GROUPS
+    else if (authorityMenuCodes.value.length === 0 && (!loaded.value || rawMenus.value.length === 0)) {
+      builtIn = SELF_SERVICE_NAV_GROUPS
     }
-    return buildNavGroups(allowedPaths.value, allowedMenuCodes.value)
+    const extensions = extensionModules.value.flatMap((module) =>
+      (module.navigation ?? []).flatMap((group) => {
+        const items = group.items.filter((item) =>
+          superAdmin.value || (
+            (!item.menuCodes?.length || item.menuCodes.some((code) => allowedMenuCodes.value.has(code))) &&
+            (!item.permissions?.length || item.permissions.every((code) => allowedMenuCodes.value.has(code)))
+          ),
+        )
+        return items.length ? [{ ...group, items }] : []
+      }),
+    )
+    return mergeNavGroups([...builtIn, ...extensions])
   })
 
   function isRouteAllowed(path: string): boolean {
@@ -104,6 +116,10 @@ export const useMenuStore = defineStore('menu', () => {
     superAdmin.value = value
   }
 
+  function registerModules(modules: JbmFrontendModule[]) {
+    extensionModules.value = [...modules]
+  }
+
   return {
     rawMenus,
     superAdmin,
@@ -116,9 +132,24 @@ export const useMenuStore = defineStore('menu', () => {
     fetchMenus,
     setAuthorityCodes,
     setSuperAdmin,
+    registerModules,
     clear,
   }
 })
+
+function mergeNavGroups(groups: NavGroupDef[]) {
+  const merged = new Map<string, NavGroupDef>()
+  for (const group of groups) {
+    const current = merged.get(group.label)
+    if (!current) {
+      merged.set(group.label, { ...group, items: [...group.items] })
+      continue
+    }
+    const paths = new Set(current.items.map((item) => item.to))
+    current.items.push(...group.items.filter((item) => !paths.has(item.to)))
+  }
+  return [...merged.values()]
+}
 
 function addMenuCode(set: Set<string>, code: string) {
   if (!code) return

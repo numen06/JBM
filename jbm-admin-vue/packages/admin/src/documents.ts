@@ -1,0 +1,1 @@
+export { documentsModule } from './modules'

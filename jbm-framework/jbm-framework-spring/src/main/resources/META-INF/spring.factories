@@ -1,9 +1,0 @@
-org.springframework.context.ApplicationListener=\
-jbm.framework.spring.config.ApplicationInstanceInfoListener
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-cn.hutool.extra.spring.SpringUtil,\
-jbm.framework.spring.config.SpringContextHolder,\
-jbm.framework.spring.CronTaskManager
-
-
-  

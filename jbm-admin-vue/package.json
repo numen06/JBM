@@ -1,14 +1,24 @@
 {
-  "name": "jbm-admin-vue",
+  "name": "jbm-admin-host",
   "private": true,
-  "version": "0.0.0",
+  "version": "7.3.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "npm run build:packages && npm run build:app",
+    "build:app": "vue-tsc -b && vite build",
+    "build:packages": "npm run build -w @jbm7/sdk && npm run build -w @jbm7/vue-core && npm run build -w @jbm7/admin",
+    "test": "npm run test -w @jbm7/sdk && npm run test -w @jbm7/vue-core",
+    "pack:check": "npm run pack:check --workspaces --if-present",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jbm7/admin": "7.3.0-beta.1",
+    "@jbm7/sdk": "7.3.0-beta.1",
+    "@jbm7/vue-core": "7.3.0-beta.1",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-java": "^6.0.2",
     "@codemirror/lang-javascript": "^6.2.5",

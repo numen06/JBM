@@ -77,7 +77,7 @@ export function normalizeMenuPath(path?: string): string {
 export interface NavItemDef {
   name: string
   title: string
-  icon: Component
+  icon?: Component
   to: string
   menuCodes?: string[]
 }

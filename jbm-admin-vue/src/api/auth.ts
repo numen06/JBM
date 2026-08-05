@@ -2,6 +2,7 @@ import {
   JBM_DEFAULT_CLIENT_ID,
   JBM_DEFAULT_OAUTH_SCOPE,
 } from '@/constants/loginModes'
+import { createJbmPkcePair } from '@jbm7/sdk'
 import { encryptPasswordForClient } from '@/lib/rsaEncrypt'
 import { apiBaseUrl, runtimeConfig } from '@/runtimeConfig'
 import { get, post, postForm, unwrap } from './request'
@@ -18,7 +19,6 @@ export interface LoginParams {
   /** 对应 OAuth2 表单 loginType，默认 PASSWORD */
   loginType?: string
   clientId?: string
-  clientSecret?: string
   scope?: string
   redirectUri?: string
 }
@@ -41,6 +41,7 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
   const password = shouldEncryptPassword(loginType)
     ? await encryptPasswordForClient(params.password, clientId)
     : params.password
+  const pkce = await createJbmPkcePair()
   const body = new URLSearchParams({
     response_type: 'code',
     client_id: clientId,
@@ -50,8 +51,9 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
     password,
     scope: params.scope ?? JBM_DEFAULT_OAUTH_SCOPE,
     loginType,
+    code_challenge: pkce.challenge,
+    code_challenge_method: pkce.method,
   })
-  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
   if (params.vcode?.trim()) {
     body.set('vcode', params.vcode.trim())
   }
@@ -74,6 +76,7 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
     code,
     redirectUri: body.get('redirect_uri') || defaultLoginRedirectUri(),
     clientId,
+    codeVerifier: pkce.verifier,
   })
 }
 
@@ -112,7 +115,6 @@ export async function thirdPartyCallback(params: {
   provider: string
   code: string
   clientId?: string
-  clientSecret?: string
   redirectUri?: string
   state?: string
 }): Promise<OAuth2TokenResult> {
@@ -122,7 +124,6 @@ export async function thirdPartyCallback(params: {
     redirect_uri: params.redirectUri,
     state: params.state,
   }
-  if (params.clientSecret?.trim()) query.client_secret = params.clientSecret.trim()
   const res = await get<Record<string, unknown>>(`/oauth2/thirdparty/${params.provider}/callback`, { params: query })
   const raw = unwrap(res)
   return normalizeTokenPayload(raw)
@@ -140,7 +141,7 @@ export async function exchangeAuthorizationCode(params: {
   code: string
   redirectUri: string
   clientId?: string
-  clientSecret?: string
+  codeVerifier?: string
 }): Promise<OAuth2TokenResult> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -148,7 +149,7 @@ export async function exchangeAuthorizationCode(params: {
     client_id: params.clientId ?? DEFAULT_CLIENT_ID,
     redirect_uri: params.redirectUri,
   })
-  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
+  if (params.codeVerifier?.trim()) body.set('code_verifier', params.codeVerifier.trim())
   const res = await postForm<OAuth2TokenResult | Record<string, unknown>>('/oauth2/token', body)
   const raw = unwrap(res)
   if (raw && typeof raw === 'object' && 'access_token' in (raw as object)) {
@@ -177,14 +178,12 @@ export function normalizeTokenPayload(raw: Record<string, unknown>): OAuth2Token
 export async function refreshToken(
   refreshToken: string,
   clientId = DEFAULT_CLIENT_ID,
-  clientSecret?: string,
 ): Promise<OAuth2TokenResult> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     client_id: clientId,
     refresh_token: refreshToken,
   })
-  if (clientSecret?.trim()) body.set('client_secret', clientSecret.trim())
   const res = await postForm<OAuth2TokenResult>('/oauth2/refresh', body)
   return unwrap(res)
 }
@@ -212,7 +211,6 @@ export interface RegisterParams {
   mobile?: string
   vcode: string
   clientId?: string
-  clientSecret?: string
 }
 
 export async function register(params: RegisterParams): Promise<void> {
@@ -224,7 +222,6 @@ export async function register(params: RegisterParams): Promise<void> {
     vcode: params.vcode.trim(),
     client_id: clientId,
   })
-  if (params.clientSecret?.trim()) body.set('client_secret', params.clientSecret.trim())
   if (params.nickName?.trim()) body.set('nickName', params.nickName.trim())
   if (params.email?.trim()) body.set('email', params.email.trim())
   if (params.mobile?.trim()) body.set('mobile', params.mobile.trim())

@@ -1,0 +1,20 @@
+server:
+  host: 0.0.0.0
+  port: 7777
+
+spring:
+  application:
+    name: jbm-cluster-platform-center-jbm7
+
+jbm:
+  python:
+    app: center
+    module: jbm-cluster-platform-center
+    openapi:
+      title: JBM Python Center Service
+      description: Python replacement for JBM Center using the existing compatibility contract.
+      version: 0.1.0
+  center:
+    security:
+      enabled: true
+      userinfo-url: http://jbm-cluster-platform-auth:5555/oauth2/userinfo

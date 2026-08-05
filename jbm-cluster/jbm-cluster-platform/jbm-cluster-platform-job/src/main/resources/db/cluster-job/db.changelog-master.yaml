@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: classpath:db/cluster-job/changes/V1__job_tables.sql

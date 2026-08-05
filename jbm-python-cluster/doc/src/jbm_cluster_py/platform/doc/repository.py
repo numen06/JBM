@@ -41,7 +41,7 @@ class DocRepository:
                       size BIGINT,
                       doc_group_id VARCHAR(64),
                       doc_group VARCHAR(512),
-                      doc_path VARCHAR(1024) UNIQUE,
+                      doc_path VARCHAR(512) UNIQUE,
                       state VARCHAR(64),
                       content_type VARCHAR(256),
                       effective_time BIGINT,

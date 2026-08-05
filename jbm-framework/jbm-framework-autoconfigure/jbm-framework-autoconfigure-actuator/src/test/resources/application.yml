@@ -1,6 +1,0 @@
-management:
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-        rate: 5

@@ -48,6 +48,31 @@ h2/
 /scripts/__pycache__
 /jbm-admin-vue/.npm-cache
 
+# Legacy Java workspace is intentionally excluded from the 7.3-python branch.
+/.cursor/
+/.mvn/
+/.vscode/
+/docs/
+/jbm-algorithm/
+/jbm-cluster/
+/jbm-examples/
+/jbm-framework/
+/jbm-framework-dependencies/
+/jbm-util/
+nacos-data/
+/Dockerfile
+/allinone.Dockerfile
+/feign_trust_runner_base.py
+/img_1.png
+/mk_feign.py
+/pom.xml
+/docker/local-cluster/Dockerfile.java
+/docker/local-cluster/README.md
+/docker/local-cluster/config/
+/scripts/*
+!/scripts/start_local_docker.ps1
+!/scripts/verify_local_seed.ps1
+
 # python local/runtime artifacts
 .venv/
 __pycache__/

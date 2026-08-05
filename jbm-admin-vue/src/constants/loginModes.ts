@@ -1,4 +1,4 @@
-import { adminDebugEnabled, isRuntimeFlagDisabled, isRuntimeFlagEnabled, runtimeConfig } from '@/runtimeConfig'
+import { isRuntimeFlagDisabled, runtimeConfig } from '@/runtimeConfig'
 
 /** 与后端 com.jbm.cluster.api.constants.LoginType 对齐 */
 export type OAuthLoginType = 'PASSWORD' | 'SMS' | 'FACE' | 'WECHAT' | 'MINIAPP'
@@ -8,6 +8,7 @@ export type LoginTabId = OAuthLoginType | 'SCAN' | 'AUTH_CODE' | 'THIRD_PARTY'
 /** sessionStorage：授权码模式跳转前写入，回调页校验 CSRF */
 export const OAUTH2_STATE_STORAGE_KEY = 'jbm_oauth2_state'
 export const OAUTH2_REDIRECT_STORAGE_KEY = 'jbm_oauth2_redirect_uri'
+export const OAUTH2_PKCE_VERIFIER_STORAGE_KEY = 'jbm_oauth2_pkce_verifier'
 
 export interface LoginTabMeta {
   id: LoginTabId
@@ -41,9 +42,9 @@ export const JBM_SEED_PASSWORD = 'admin'
 /** jaja7 登录页默认：优先 .env；未配置时 demo 与当前库一致 */
 export const JBM_DEFAULT_USERNAME = 'admin'
 export const JBM_DEFAULT_PASSWORD =
-  runtimeConfig.loginPassword?.trim() ||
-  import.meta.env.VITE_LOGIN_PASSWORD?.trim() ||
-  (import.meta.env.DEV ? 'Admin@123' : JBM_SEED_PASSWORD)
+  import.meta.env.DEV
+    ? import.meta.env.VITE_LOGIN_PASSWORD?.trim() || 'Admin@123'
+    : ''
 export const JBM_DEFAULT_CLIENT_ID =
   runtimeConfig.oauthClientId?.trim() ||
   import.meta.env.VITE_OAUTH_CLIENT_ID?.trim() ||
@@ -61,8 +62,7 @@ export interface LocalDevLoginAccount {
 }
 
 export const LOCAL_DEV_LOGIN_ENABLED =
-  (import.meta.env.DEV || adminDebugEnabled || isRuntimeFlagEnabled(runtimeConfig.localDevLogin)) &&
-  !isRuntimeFlagDisabled(runtimeConfig.localDevLogin ?? import.meta.env.VITE_LOCAL_DEV_LOGIN)
+  import.meta.env.DEV && !isRuntimeFlagDisabled(import.meta.env.VITE_LOCAL_DEV_LOGIN)
 
 function localDevAccountId(username: string, index: number) {
   return `${username || 'account'}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-')
@@ -81,7 +81,7 @@ function parseLocalDevLoginAccounts(raw: string | undefined): LocalDevLoginAccou
         label,
         role: role || label,
         username,
-        password: password || runtimeConfig.localDevPassword?.trim() || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD,
+        password: password || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD,
         clientId: clientId || JBM_DEFAULT_CLIENT_ID,
         description: description || role || label,
       }
@@ -90,11 +90,13 @@ function parseLocalDevLoginAccounts(raw: string | undefined): LocalDevLoginAccou
 }
 
 const LOCAL_DEV_SHARED_PASSWORD =
-  runtimeConfig.localDevPassword?.trim() || import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD
+  import.meta.env.VITE_LOCAL_DEV_PASSWORD?.trim() || JBM_DEFAULT_PASSWORD
+
+const LOCAL_DEV_CONFIGURED_ACCOUNTS = parseLocalDevLoginAccounts(import.meta.env.VITE_LOCAL_DEV_USERS)
 
 export const LOCAL_DEV_LOGIN_ACCOUNTS: LocalDevLoginAccount[] =
-  parseLocalDevLoginAccounts(runtimeConfig.localDevUsers || import.meta.env.VITE_LOCAL_DEV_USERS).length > 0
-    ? parseLocalDevLoginAccounts(runtimeConfig.localDevUsers || import.meta.env.VITE_LOCAL_DEV_USERS)
+  LOCAL_DEV_CONFIGURED_ACCOUNTS.length > 0
+    ? LOCAL_DEV_CONFIGURED_ACCOUNTS
     : [
         {
           id: 'admin',

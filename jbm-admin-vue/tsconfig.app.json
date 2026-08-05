@@ -6,7 +6,11 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@jbm7/sdk": ["./packages/sdk/src/index.ts"],
+      "@jbm7/vue-core": ["./packages/vue-core/src/index.ts"],
+      "@jbm7/admin": ["./packages/admin/src/index.ts"],
+      "@jbm7/admin/*": ["./packages/admin/src/*.ts"]
     },
     "strict": true,
     "noUnusedLocals": true,

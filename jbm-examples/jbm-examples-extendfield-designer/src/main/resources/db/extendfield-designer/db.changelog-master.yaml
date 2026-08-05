@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/extendfield-designer/changes/V1__md_extend_form_definition.yaml

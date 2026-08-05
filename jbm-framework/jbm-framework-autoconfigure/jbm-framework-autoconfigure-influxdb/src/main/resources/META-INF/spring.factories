@@ -1,3 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.influx.InfluxSqlAutoConfiguration,\
-jbm.framework.boot.autoconfigure.influx.InfluxAutoConfiguration

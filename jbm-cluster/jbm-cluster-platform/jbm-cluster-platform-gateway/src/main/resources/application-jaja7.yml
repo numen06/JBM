@@ -1,2 +1,0 @@
-# jaja7 发布环境通过 Nacos discovery/loadbalancer 寻址。
-# 本地直连调试如需绕过 Nacos，可显式配置 jbm.local.center-url。

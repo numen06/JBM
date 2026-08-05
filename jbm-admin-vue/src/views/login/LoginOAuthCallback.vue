@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { exchangeAuthCode, exchangeAuthorizationCode, thirdPartyCallback } from '@/api/auth'
-import { OAUTH2_REDIRECT_STORAGE_KEY, OAUTH2_STATE_STORAGE_KEY } from '@/constants/loginModes'
+import { exchangeAuthorizationCode, thirdPartyCallback } from '@/api/auth'
+import {
+  OAUTH2_PKCE_VERIFIER_STORAGE_KEY,
+  OAUTH2_REDIRECT_STORAGE_KEY,
+  OAUTH2_STATE_STORAGE_KEY,
+} from '@/constants/loginModes'
 import { extractApiError } from '@/lib/errors'
 import { useAuthStore } from '@/stores/auth'
 
@@ -38,10 +42,15 @@ onMounted(async () => {
     if (!provider) {
       const returnedState = (route.query.state as string)?.trim()
       const savedState = sessionStorage.getItem(OAUTH2_STATE_STORAGE_KEY)
-      if (savedState && returnedState && savedState !== returnedState) {
+      if (!savedState || !returnedState || savedState !== returnedState) {
         throw new Error('state 校验失败，请重新发起授权')
       }
     }
+
+    const codeVerifier = provider
+      ? undefined
+      : sessionStorage.getItem(OAUTH2_PKCE_VERIFIER_STORAGE_KEY) || undefined
+    if (!provider && !codeVerifier) throw new Error('PKCE 校验信息缺失，请重新发起授权')
 
     const token = provider
       ? await thirdPartyCallback({
@@ -55,10 +64,12 @@ onMounted(async () => {
           code,
           redirectUri,
           clientId: auth.clientId,
-        }).catch(() => exchangeAuthCode(code))
+          codeVerifier,
+        })
 
     sessionStorage.removeItem(OAUTH2_STATE_STORAGE_KEY)
     sessionStorage.removeItem(OAUTH2_REDIRECT_STORAGE_KEY)
+    sessionStorage.removeItem(OAUTH2_PKCE_VERIFIER_STORAGE_KEY)
     const needChange = await auth.loginWithToken(token)
     if (needChange) {
       router.replace({ name: 'login', query: { redirect: (route.query.redirect as string) || '/dashboard' } })

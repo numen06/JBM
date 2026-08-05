@@ -1,0 +1,1 @@
+export { authorityModule } from './modules'

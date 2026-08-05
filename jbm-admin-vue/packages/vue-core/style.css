@@ -1,0 +1,14 @@
+:root {
+  --jbm-color-primary: hsl(221.2 83.2% 53.3%);
+  --jbm-color-background: hsl(0 0% 100%);
+  --jbm-color-foreground: hsl(222.2 84% 4.9%);
+  --jbm-color-border: hsl(214.3 31.8% 91.4%);
+  --jbm-radius: 0.5rem;
+}
+
+.dark {
+  --jbm-color-primary: hsl(217.2 91.2% 59.8%);
+  --jbm-color-background: hsl(222.2 84% 4.9%);
+  --jbm-color-foreground: hsl(210 40% 98%);
+  --jbm-color-border: hsl(217.2 32.6% 17.5%);
+}

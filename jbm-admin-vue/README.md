@@ -2,6 +2,21 @@
 
 JBM7 管理后台与开放平台前端，基于 Vue 3 + Vite + TypeScript + Pinia + Tailwind CSS。当前前端包含管理控制台、开源社区首页、注册登录、JBM OpenAPI Wiki 和 API Key 接入说明。
 
+## 7.3 包结构
+
+本仓库只提供基础技术平台，不包含 IoT、建筑等行业业务。下游按需安装公共包，并以模块形式扩展行业页面：
+
+| 包 | 职责 |
+| --- | --- |
+| `@jbm7/sdk` | 无框架请求、Token/租户适配、刷新与 PKCE |
+| `@jbm7/vue-core` | Vue 插件、模块契约、路由与权限守卫 |
+| `@jbm7/admin` | 基础平台管理模块与标准管理壳 |
+| `jbm-admin-host` | 本仓库开发、集成和验收宿主，不发布 |
+
+所有可发布包均为 ESM，通过 `@jbm7/*` 子路径按需引用。后端仍可采用分布式服务架构，前端只面向稳定的 Gateway/API 契约，不感知服务发现和内部部署拓扑。
+
+私有仓库认证只通过本机或 CI 环境变量 `JBM_NPM_AUTH` 注入；仓库中不保存账号密码。浏览器 OAuth 使用授权码 + PKCE，不配置客户端密钥。
+
 ## 页面预览
 
 ![JBM 首页](../docs/images/jbm-landing.png)
@@ -60,7 +75,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 | 用户名 | `admin` |
 | 密码 | `Admin@123` |
 | Client ID | `demo` |
-| Client Secret | `demo123` |
+| Client Secret | 仅服务端保密客户端使用，浏览器端不配置 |
 | 开发验证码 | `9999` |
 
 ## 构建

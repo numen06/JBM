@@ -1,0 +1,28 @@
+{
+  "name": "@jbm7/sdk",
+  "version": "7.3.0-beta.1",
+  "description": "Framework-neutral browser SDK for the JBM 7.3 technical platform",
+  "type": "module",
+  "files": ["dist/*.js", "dist/*.d.ts", "README.md", "LICENSE"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "axios": "^1.16.1"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://packages.aliyun.com/604f9b79f11bae7ca07da657/npm/npm-registry/"
+  },
+  "license": "Apache-2.0"
+}

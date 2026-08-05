@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@jbm7/sdk': path.resolve(__dirname, './packages/sdk/src/index.ts'),
+      '@jbm7/vue-core': path.resolve(__dirname, './packages/vue-core/src/index.ts'),
+      '@jbm7/admin': path.resolve(__dirname, './packages/admin/src/index.ts'),
     },
   },
   server: {

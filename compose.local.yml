@@ -1,0 +1,211 @@
+name: jbm73-python
+
+x-python-config: &python-config >-
+  {"integrations":{"database":{"url":"mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4"},"redis":{"enabled":true,"url":"redis://redis:6379/0"},"rabbitmq":{"enabled":true,"url":"amqp://jbm:jbm-local@rabbitmq:5672/"},"storage":{"backend":"minio","local-dir":"./data/files"},"minio":{"enabled":true,"endpoint-url":"http://minio:9000","bucket":"jbm-docs","access-key":"jbm-local","secret-key":"jbm-local-minio","region":"us-east-1","secure":false}},"spring":{"cloud":{"nacos":{"config":{"enabled":false},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm7","group":"DEFAULT_GROUP"}}}},"jbm":{"auth":{"jwt":{"issuer":"http://jbm-cluster-platform-auth:5555","audience":"jbm-api"}},"gateway":{"access-log":{"enabled":false,"ingest-enabled":false}},"center":{"security":{"enabled":true,"userinfo-url":"http://jbm-cluster-platform-auth:5555/oauth2/userinfo"},"seed":{"enabled":true,"admin-password":"Admin@123","force-reset-password":true}}}}
+
+x-python-environment: &python-environment
+  JBM_PROFILE: jaja7
+  JBM_CONFIG_JSON: *python-config
+
+x-python-service: &python-service
+  image: jbm73-python-cluster:local
+  restart: unless-stopped
+  networks: [jbm73-python]
+  healthcheck:
+    test: ["CMD", "python", "-c", "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.environ['JBM_HEALTH_PORT']+'/actuator/health',timeout=3)"]
+    interval: 10s
+    timeout: 5s
+    retries: 18
+    start_period: 20s
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: jbm-local
+      MYSQL_DATABASE: jbm-7.3
+      TZ: Asia/Shanghai
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports: ["127.0.0.1:13306:3306"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pjbm-local --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["127.0.0.1:16379:6379"]
+    volumes: ["redis-data:/data"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: jbm
+      RABBITMQ_DEFAULT_PASS: jbm-local
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:5673:5672"
+      - "127.0.0.1:15673:15672"
+    volumes: ["rabbitmq-data:/var/lib/rabbitmq"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: jbm-local
+      MINIO_ROOT_PASSWORD: jbm-local-minio
+    ports:
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
+    volumes: ["minio-data:/data"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  rnacos:
+    image: qingpan/rnacos:v0.6.6
+    restart: unless-stopped
+    environment:
+      RUST_LOG: info
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
+      - "127.0.0.1:10848:10848"
+    volumes: ["rnacos-data:/io"]
+    networks: [jbm73-python]
+
+  rnacos-init:
+    image: curlimages/curl:8.11.1
+    restart: "no"
+    entrypoint: ["/bin/sh", "/init/rnacos-init.sh"]
+    volumes:
+      - ./docker/local-cluster/rnacos-init.sh:/init/rnacos-init.sh:ro
+    networks: [jbm73-python]
+    depends_on:
+      rnacos: {condition: service_started}
+
+  jbm-cluster-platform-center:
+    <<: *python-service
+    build:
+      context: ./jbm-python-cluster
+      dockerfile: Dockerfile
+    environment:
+      <<: *python-environment
+      JBM_APP: center
+      JBM_HEALTH_PORT: "7777"
+    command: ["sh", "-c", "alembic -c center/alembic.ini upgrade head && python -m jbm_cluster_py.platform.center.bootstrap.seed && python -m jbm_cluster_py.platform.center.main"]
+    ports: ["127.0.0.1:7777:7777"]
+    depends_on:
+      mysql: {condition: service_healthy}
+      rnacos-init: {condition: service_completed_successfully}
+
+  jbm-cluster-platform-auth:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: auth
+      JBM_HEALTH_PORT: "5555"
+    command: ["python", "-m", "jbm_cluster_py.platform.auth.main"]
+    ports: ["127.0.0.1:5555:5555"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  jbm-cluster-platform-doc:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: doc
+      JBM_HEALTH_PORT: "9999"
+    command: ["python", "-m", "jbm_cluster_py.platform.doc.main"]
+    ports: ["127.0.0.1:9999:9999"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      minio: {condition: service_healthy}
+
+  jbm-cluster-platform-push:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: push
+      JBM_HEALTH_PORT: "3313"
+    command: ["python", "-m", "jbm_cluster_py.platform.push.main"]
+    ports: ["127.0.0.1:3313:3313"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  jbm-cluster-platform-job:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: job
+      JBM_HEALTH_PORT: "4444"
+    command: ["python", "-m", "jbm_cluster_py.platform.job.main"]
+    ports: ["127.0.0.1:4444:4444"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+
+  jbm-cluster-platform-gateway:
+    <<: *python-service
+    environment:
+      <<: *python-environment
+      JBM_APP: gateway
+      JBM_HEALTH_PORT: "6060"
+    command: ["python", "-m", "jbm_cluster_py.platform.gateway.main"]
+    ports: ["127.0.0.1:6060:6060"]
+    depends_on:
+      jbm-cluster-platform-center: {condition: service_healthy}
+      jbm-cluster-platform-auth: {condition: service_healthy}
+      jbm-cluster-platform-doc: {condition: service_healthy}
+      jbm-cluster-platform-push: {condition: service_healthy}
+      jbm-cluster-platform-job: {condition: service_healthy}
+
+  jbm-admin:
+    build:
+      context: ./jbm-admin-vue
+      dockerfile: Dockerfile.local
+    restart: unless-stopped
+    environment:
+      JBM_ADMIN_DEBUG: "true"
+      JBM_OAUTH_CLIENT_ID: jbmSeedDevAppKey00000001
+      JBM_API_PREFIX: /v3/api/
+    ports: ["127.0.0.1:5173:80"]
+    networks: [jbm73-python]
+    depends_on:
+      jbm-cluster-platform-gateway: {condition: service_healthy}
+
+networks:
+  jbm73-python:
+    name: jbm73-python
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  rnacos-data:
+  minio-data:

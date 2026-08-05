@@ -7,13 +7,8 @@ gateway_upstream="${JBM_GATEWAY_UPSTREAM:-jbm-cluster-platform-gateway:${gateway
 auth_upstream="${JBM_AUTH_UPSTREAM:-jbm-cluster-platform-auth:5555}"
 push_ws_upstream="${JBM_PUSH_WS_UPSTREAM:-jbm-cluster-platform-push:3313}"
 admin_debug="${JBM_ADMIN_DEBUG:-false}"
-local_dev_login="${JBM_LOCAL_DEV_LOGIN:-$admin_debug}"
-local_dev_password="${JBM_LOCAL_DEV_PASSWORD:-Admin@123}"
-local_dev_users="${JBM_LOCAL_DEV_USERS:-}"
 oauth_client_id="${JBM_OAUTH_CLIENT_ID:-}"
-oauth_client_secret="${JBM_OAUTH_CLIENT_SECRET:-}"
 oauth_authorize_base_url="${JBM_OAUTH_AUTHORIZE_BASE_URL:-/auth-center}"
-login_password="${JBM_LOGIN_PASSWORD:-$local_dev_password}"
 
 api_prefix="/$(printf '%s' "$api_prefix" | sed 's#^/*##; s#/*$##')/"
 api_prefix_no_slash="$(printf '%s' "$api_prefix" | sed 's#/$##')"
@@ -38,24 +33,14 @@ json_escape() {
 
 js_api_prefix="$(json_escape "$api_prefix")"
 js_admin_debug="$(json_escape "$admin_debug")"
-js_local_dev_login="$(json_escape "$local_dev_login")"
-js_local_dev_password="$(json_escape "$local_dev_password")"
-js_local_dev_users="$(json_escape "$local_dev_users")"
 js_oauth_client_id="$(json_escape "$oauth_client_id")"
-js_oauth_client_secret="$(json_escape "$oauth_client_secret")"
 js_oauth_authorize_base_url="$(json_escape "$oauth_authorize_base_url")"
-js_login_password="$(json_escape "$login_password")"
 cat > /usr/share/nginx/html/env.js <<EOF
 window.JBM_ADMIN_CONFIG = {
   apiBaseUrl: "$js_api_prefix",
   debug: "$js_admin_debug",
-  localDevLogin: "$js_local_dev_login",
-  localDevPassword: "$js_local_dev_password",
-  localDevUsers: "$js_local_dev_users",
   oauthClientId: "$js_oauth_client_id",
-  oauthClientSecret: "$js_oauth_client_secret",
-  oauthAuthorizeBaseUrl: "$js_oauth_authorize_base_url",
-  loginPassword: "$js_login_password"
+  oauthAuthorizeBaseUrl: "$js_oauth_authorize_base_url"
 }
 EOF
 
@@ -75,7 +60,12 @@ server {
     set \$push_ws_url $push_ws_url;
 
     location / {
+        add_header Cache-Control "no-store" always;
         try_files \$uri \$uri/ /index.html;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-store" always;
     }
 
     location = /env.js {
@@ -83,6 +73,11 @@ server {
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
         try_files /env.js =404;
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files \$uri =404;
     }
 
     location = /auth-center {

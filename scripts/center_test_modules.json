@@ -1,8 +1,0 @@
-[
-  {"id":"rbac-api","title":"RBAC API","classes":["CenterRbacApiH2IT"],"cases":[["TC-RBAC-001","seed data"],["TC-RBAC-002","role crud"],["TC-RBAC-003","menu crud"],["TC-RBAC-004","app dev"],["TC-RBAC-005","user list"]]},
-  {"id":"rbac-h2","title":"RBAC init","classes":["CenterRbacH2IT"],"cases":[["TC-RBAC-H2-001","empty db seed"]]},
-  {"id":"extend-form-api","title":"Extend form API","classes":["ExtendFormDefinitionApiH2IT"],"cases":[["TC-EXT-001","save publish"],["TC-EXT-002","publish refresh"]]},
-  {"id":"custom-forms-openapi","title":"Custom forms OpenAPI","classes":["CustomFormsOpenApiH2IT"],"cases":[["TC-CF-001","f1"],["TC-CF-002","f2"],["TC-CF-003","f3"],["TC-CF-004","f4"],["TC-CF-005","f5"],["TC-CF-006","f6"],["TC-CF-007","f7"],["TC-CF-008","f8"]]},
-  {"id":"custom-forms-extend","title":"Custom forms extend","classes":["CustomFormsExtendFieldH2IT"],"cases":[["TC-CFE-001","auto publish"]]},
-  {"id":"extend-field-consume","title":"Extend field consume","classes":["CenterExtendFieldConsumeH2IT"],"cases":[["TC-CON-001","field service"]]}
-]

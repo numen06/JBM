@@ -1,7 +1,0 @@
-org.springframework.context.ApplicationListener=\
-jbm.framework.boot.autoconfigure.mybatis.event.ApplicationEnvironmentDefaultEvent,\
-jbm.framework.boot.autoconfigure.mybatis.event.DynamicDataSourceHikariPropertyBridgeListener
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-jbm.framework.boot.autoconfigure.mybatis.MybatisPlusConfig,\
-jbm.framework.boot.autoconfigure.mybatis.DynamicDataSourceHikariDefaultConfiguration,\
-jbm.framework.boot.autoconfigure.mybatis.MasterDataTransactionAutoConfiguration

@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, RefreshCw, UserRound } from '@lucide/vue'
+import { createJbmPkcePair } from '@jbm7/sdk'
 import { exchangeAuthorizationCode, resetJaja7Seed, thirdPartyCallback } from '@/api/auth'
 import { listApps } from '@/api/app'
 import { fetchCaptchaBase64, sendSmsCode } from '@/api/captcha'
@@ -20,6 +21,7 @@ import {
   LOCAL_DEV_LOGIN_ACCOUNTS,
   LOCAL_DEV_LOGIN_ENABLED,
   LOGIN_TABS,
+  OAUTH2_PKCE_VERIFIER_STORAGE_KEY,
   OAUTH2_REDIRECT_STORAGE_KEY,
   OAUTH2_STATE_STORAGE_KEY,
   type LocalDevLoginAccount,
@@ -82,6 +84,7 @@ const quickLoginPending = ref('')
 
 const qrImage = ref('')
 const qrCode = ref('')
+const qrCodeVerifier = ref('')
 const qrPolling = ref(false)
 let qrTimer: ReturnType<typeof setInterval> | undefined
 let smsTimer: ReturnType<typeof setInterval> | undefined
@@ -152,9 +155,11 @@ async function loadQrSession() {
   qrImage.value = ''
   const redirectUri = `${window.location.origin}/login/callback`
   try {
+    const pkce = await createJbmPkcePair()
     const session = await fetchLoginQr({
       clientId: clientId.value,
       redirectUri,
+      codeChallenge: pkce.challenge,
       width: 200,
       height: 200,
     })
@@ -162,6 +167,7 @@ async function loadQrSession() {
       ? session.image
       : `data:image/png;base64,${session.image}`
     qrCode.value = session.code
+    qrCodeVerifier.value = pkce.verifier
     startQrPoll()
   } catch (e) {
     error.value = extractApiError(e, '二维码加载失败')
@@ -180,6 +186,7 @@ function startQrPoll() {
           code: r.code,
           redirectUri: r.redirectUri || `${window.location.origin}/login/callback`,
           clientId: clientId.value,
+          codeVerifier: qrCodeVerifier.value,
         })
         await finishLogin(() => auth.loginWithToken(token))
       } else if (r.done && r.token) {
@@ -391,7 +398,7 @@ function browserAuthUrl(pathWithQuery: string) {
   return `/auth${pathWithQuery}`
 }
 
-function buildAuthorizeUrl(redirect: string, state: string) {
+function buildAuthorizeUrl(redirect: string, state: string, challenge?: string) {
   const query = new URLSearchParams({
     response_type: 'code',
     client_id: clientId.value,
@@ -399,6 +406,10 @@ function buildAuthorizeUrl(redirect: string, state: string) {
     scope: oauthScope.value || 'all',
     state,
   })
+  if (challenge) {
+    query.set('code_challenge', challenge)
+    query.set('code_challenge_method', 'S256')
+  }
   return browserAuthUrl(`/oauth2/authorize?${query.toString()}`)
 }
 
@@ -468,16 +479,18 @@ async function onThirdPartyManual() {
   })
 }
 
-function startOAuthCodeLogin() {
+async function startOAuthCodeLogin() {
   error.value = ''
   auth.clientId = clientId.value
   const redirect = oauthRedirectUri.value.trim() || buildCallbackUrl()
   oauthRedirectUri.value = redirect
   const state = crypto.randomUUID?.() ?? `state_${Date.now()}`
+  const pkce = await createJbmPkcePair()
   oauthState.value = state
   sessionStorage.setItem(OAUTH2_STATE_STORAGE_KEY, state)
   sessionStorage.setItem(OAUTH2_REDIRECT_STORAGE_KEY, redirect)
-  window.location.href = buildAuthorizeUrl(redirect, state)
+  sessionStorage.setItem(OAUTH2_PKCE_VERIFIER_STORAGE_KEY, pkce.verifier)
+  window.location.href = buildAuthorizeUrl(redirect, state, pkce.challenge)
 }
 
 async function onAuthCodeExchange() {
@@ -686,7 +699,7 @@ onUnmounted(() => {
                 v-model="password"
                 data-testid="login-password"
                 type="password"
-                :placeholder="JBM_DEFAULT_PASSWORD"
+                placeholder="请输入密码"
                 autocomplete="current-password"
               />
             </div>
