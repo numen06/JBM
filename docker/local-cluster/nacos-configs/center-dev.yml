@@ -1,0 +1,11 @@
+jbm:
+  center:
+    security:
+      enabled: true
+      userinfo-url: http://jbm-cluster-platform-auth:5555/oauth2/userinfo
+    seed:
+      enabled: true
+      admin-password: Admin@123
+      platform-operator-password: Operator@123
+      tenant-admin-password: Tenant@123
+      force-reset-password: true

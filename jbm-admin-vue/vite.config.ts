@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
 
-/** jaja7 本地：默认经本机 Gateway 6060；也可用 VITE_PROXY_TARGET 指向已发布后台。 */
+/** dev 本地：默认经本机 Gateway 6060；也可用 VITE_PROXY_TARGET 指向已发布后台。 */
 function resolveGatewayTarget(mode: string) {
   const env = loadEnv(mode, process.cwd(), '')
   return env.VITE_PROXY_TARGET || 'http://127.0.0.1:6060'

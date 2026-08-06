@@ -1,0 +1,7 @@
+jbm:
+  logs:
+    signing-secret: jbm-local-business-log-signing-key
+    loki:
+      enabled: true
+      url: http://loki:3100/loki/api/v1/push
+      tenant-id: platform

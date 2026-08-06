@@ -40,14 +40,14 @@ Use Python 3.11 or newer. `uv` is preferred:
 ```bash
 cd /opt/JBM/jbm-python-cluster
 uv sync --extra dev
-JBM_APP=auth JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.auth.main
-JBM_APP=gateway JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.gateway.main
-JBM_APP=doc JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.doc.main
-JBM_APP=push JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.push.main
-JBM_APP=job JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.job.main
-JBM_APP=center JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.center.main
-JBM_APP=logs JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.logs.main
-JBM_APP=bigscreen JBM_PROFILE=jaja7 uv run python -m jbm_cluster_py.platform.bigscreen.main
+JBM_APP=auth JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.auth.main
+JBM_APP=gateway JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.gateway.main
+JBM_APP=doc JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.doc.main
+JBM_APP=push JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.push.main
+JBM_APP=job JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.job.main
+JBM_APP=center JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.center.main
+JBM_APP=logs JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.logs.main
+JBM_APP=bigscreen JBM_PROFILE=dev uv run python -m jbm_cluster_py.platform.bigscreen.main
 ```
 
 Without `uv`:
@@ -57,7 +57,7 @@ python -m venv .venv
 . .venv/bin/activate
 pip install -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r requirements.txt
 PYTHONPATH=common/src:integrations/src:auth/src:center/src:gateway/src:doc/src:push/src:job/src \
-  JBM_APP=doc JBM_PROFILE=jaja7 python -m jbm_cluster_py.platform.doc.main
+  JBM_APP=doc JBM_PROFILE=dev python -m jbm_cluster_py.platform.doc.main
 ```
 
 ## Services
@@ -97,10 +97,13 @@ Configuration keeps a Spring Boot YAML profile shape and is loaded in order:
 5. `{app}/resource/application.yml`
 6. `{app}/resource/application-{profile}.yml`
 
-`JBM_APP=auth|center|gateway|doc|push|job|logs|bigscreen` selects the application. `JBM_PROFILE=jaja7` selects the
-profile. Compose disables remote configuration loading and uses r-nacos only for service discovery;
-database, Redis, RabbitMQ, Kafka, Loki, and MinIO settings are supplied through
-environment variables.
+`JBM_APP=auth|center|gateway|doc|push|job|logs|bigscreen` selects the application.
+`JBM_PROFILE=dev|prod` selects the profile. Both profiles use the `jbm-py`
+namespace and load `common-{profile}.yml` followed by `{app}-{profile}.yml` from
+Nacos. Bootstrap settings remain environment variables: `JBM_NACOS_SERVER_ADDR`,
+`JBM_NACOS_NAMESPACE` (default `jbm-py`), and `JBM_NACOS_GROUP`. Local Compose
+publishes only dev Data IDs; production deployment must publish the corresponding
+`common-prod.yml` and service `*-prod.yml` entries before startup.
 
 ## Log pipeline
 
@@ -123,7 +126,7 @@ sources.
 
 ```bash
 docker build -t jbm-cluster-platform-doc:7.3-py .
-docker run --rm -e JBM_APP=doc -e JBM_PROFILE=jaja7 -p 9999:9999 jbm-cluster-platform-doc:7.3-py
+docker run --rm -e JBM_APP=doc -e JBM_PROFILE=dev -p 9999:9999 jbm-cluster-platform-doc:7.3-py
 ```
 
 The auth implementation issues RS256 JWT access tokens and exposes JWKS. Doc

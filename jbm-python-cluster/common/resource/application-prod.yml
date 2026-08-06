@@ -1,0 +1,16 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        server-addr: rnacos:8848
+        namespace: jbm-py
+        group: DEFAULT_GROUP
+        cluster-name: DEFAULT
+      config:
+        enabled: true
+        server-addr: rnacos:8848
+        namespace: jbm-py
+        group: DEFAULT_GROUP
+        file-extension: yml
+        shared-dataids: common-{profile}.yml,{app}-{profile}.yml

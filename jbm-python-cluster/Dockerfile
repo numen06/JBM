@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/ \
     PIP_TRUSTED_HOST=mirrors.aliyun.com \
     JBM_APP=center \
-    JBM_PROFILE=jaja7 \
+    JBM_PROFILE=dev \
     PYTHONPATH=/app/common/src:/app/integrations/src:/app/auth/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src:/app/center/src:/app/logs/src:/app/bigscreen/src
 
 WORKDIR /app

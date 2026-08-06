@@ -546,7 +546,7 @@ async function onResetJaja7Seed() {
   } catch (e) {
     error.value = extractApiError(
       e,
-      '恢复失败：请重启 Auth（jaja7）后重试，或确认默认开发账号与种子应用一致',
+      '恢复失败：请重启 Auth（dev）后重试，或确认默认开发账号与种子应用一致',
     )
   } finally {
     seedResetLoading.value = false

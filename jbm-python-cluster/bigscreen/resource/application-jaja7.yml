@@ -1,6 +1,0 @@
-server:
-  port: 3314
-
-spring:
-  application:
-    name: jbm-cluster-platform-bigscreen

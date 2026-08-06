@@ -196,7 +196,7 @@ export async function logout(): Promise<void> {
   }
 }
 
-/** jaja7：恢复 admin 密码与 JBM/demo 应用 OAuth 凭证（需 Auth 已部署 DevJaja7SeedController） */
+/** dev：通过兼容端点恢复 admin 密码与本地 OAuth 种子凭证。 */
 export async function resetJaja7Seed(): Promise<Record<string, unknown>> {
   const res = await post<Record<string, unknown>>('/internal/dev/reset-jaja7-seed')
   return unwrap(res)

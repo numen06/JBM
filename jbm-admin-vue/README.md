@@ -36,7 +36,7 @@ JBM7 管理后台与开放平台前端，基于 Vue 3 + Vite + TypeScript + Pini
 
 ## 前置服务
 
-前端只访问 Gateway，不直接访问 Auth 或 Center。开发环境建议使用 `jaja7` profile。
+前端只访问 Gateway，不直接访问 Auth 或 Center。开发环境使用 `dev` profile，生产环境使用 `prod`。
 
 | 服务 | 端口 | 说明 |
 | --- | --- | --- |

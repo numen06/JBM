@@ -1,0 +1,5 @@
+jbm:
+  auth:
+    jwt:
+      issuer: http://jbm-cluster-platform-auth:5555
+      audience: jbm-api

@@ -35,11 +35,11 @@ export const LOGIN_TABS: LoginTabMeta[] = [
 export const DEV_CAPTCHA_CODE = '9999'
 export const DEV_SMS_CODE = '99999'
 
-/** 种子应用（Auth 重启或 POST /internal/dev/reset-jaja7-seed 后与库一致） */
+/** dev 种子应用（Auth 重启或调用兼容重置端点后与库一致） */
 export const JBM_SEED_CLIENT_ID = 'jbmSeedDevAppKey00000001'
 export const JBM_SEED_PASSWORD = 'admin'
 
-/** jaja7 登录页默认：优先 .env；未配置时 demo 与当前库一致 */
+/** dev 登录页默认：优先 .env；未配置时 demo 与当前库一致 */
 export const JBM_DEFAULT_USERNAME = 'admin'
 export const JBM_DEFAULT_PASSWORD =
   import.meta.env.DEV

@@ -1,0 +1,6 @@
+jbm:
+  gateway:
+    access-log:
+      enabled: true
+      ingest-enabled: false
+      topic: jbm.logs.access.v1

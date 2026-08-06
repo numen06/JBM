@@ -15,6 +15,9 @@ JBM 7.3 的纯 Python 基础技术平台分支，不包含 Java 服务或 Maven 
 - MySQL、Redis、RabbitMQ、Kafka、Loki、MinIO
 - r-nacos `0.6.6`
 
+运行环境统一使用 `dev`、`prod` 两个 profile，Nacos namespace 固定为 `jbm-py`。
+配置 Data ID 按 `common-{profile}.yml` 和 `{service}-{profile}.yml` 命名。
+
 ## 本地启动
 
 ```powershell

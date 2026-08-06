@@ -102,7 +102,6 @@ def _env_overrides() -> Dict[str, Any]:
         "JBM_RABBITMQ_URL": "integrations.rabbitmq.url",
         "JBM_KAFKA_BOOTSTRAP_SERVERS": "integrations.kafka.bootstrap-servers",
         "JBM_LOKI_URL": "jbm.logs.loki.url",
-        "JBM_NACOS_SERVER_ADDR": "spring.cloud.nacos.discovery.server-addr",
         "JBM_AUTH_JWT_PRIVATE_KEY": "jbm.auth.jwt.private-key",
         "JBM_AUTH_JWT_ISSUER": "jbm.auth.jwt.issuer",
         "JBM_AUTH_JWT_AUDIENCE": "jbm.auth.jwt.audience",
@@ -117,6 +116,14 @@ def _env_overrides() -> Dict[str, Any]:
         value = os.getenv(env_name)
         if value:
             nested_set(overrides, dotted_key, value)
+    for suffix, value in (
+        ("server-addr", os.getenv("JBM_NACOS_SERVER_ADDR")),
+        ("namespace", os.getenv("JBM_NACOS_NAMESPACE")),
+        ("group", os.getenv("JBM_NACOS_GROUP")),
+    ):
+        if value:
+            nested_set(overrides, f"spring.cloud.nacos.discovery.{suffix}", value)
+            nested_set(overrides, f"spring.cloud.nacos.config.{suffix}", value)
     return overrides
 
 
@@ -151,7 +158,7 @@ class AppConfig:
         app: Optional[str] = None,
         resource_dir: Optional[Path] = None,
     ) -> "AppConfig":
-        selected_profile = profile or os.getenv("JBM_PROFILE") or os.getenv("ENV") or "jaja7"
+        selected_profile = profile or os.getenv("JBM_PROFILE") or os.getenv("ENV") or "dev"
         selected_app = app or os.getenv("JBM_APP") or None
         base_dir = config_dir or cls.default_config_dir()
         app_resource_dir = resource_dir or cls.default_resource_dir(selected_app)
@@ -168,12 +175,14 @@ class AppConfig:
         # profiles can disable or redirect config loading. Reapply them afterwards so
         # deployment-time settings remain authoritative over remote shared config.
         merged = deep_merge(merged, env_overrides)
-        merged = cls._merge_nacos_shared_config(merged)
+        merged = cls._merge_nacos_shared_config(merged, selected_profile, selected_app)
         merged = deep_merge(merged, env_overrides)
         return cls(merged, selected_profile, base_dir, selected_app, app_resource_dir, resource_dirs)
 
     @staticmethod
-    def _merge_nacos_shared_config(config: Mapping[str, Any]) -> Dict[str, Any]:
+    def _merge_nacos_shared_config(
+        config: Mapping[str, Any], profile: str, app: Optional[str]
+    ) -> Dict[str, Any]:
         nacos_config = dict(nested_get(config, ["spring", "cloud", "nacos", "config"], {}) or {})
         if nacos_config.get("enabled") is False:
             return dict(config)
@@ -191,7 +200,11 @@ class AppConfig:
 
         namespace = str(nacos_config.get("namespace") or "public")
         group = str(nacos_config.get("group") or "DEFAULT_GROUP")
-        data_ids = [item.strip() for item in str(shared_data_ids).split(",") if item.strip()]
+        data_ids = [
+            item.strip().replace("{profile}", profile).replace("{app}", app or "common")
+            for item in str(shared_data_ids).split(",")
+            if item.strip()
+        ]
         try:
             client = nacos.NacosClient(server_addresses=str(server_addr), namespace=namespace)
         except Exception as exc:

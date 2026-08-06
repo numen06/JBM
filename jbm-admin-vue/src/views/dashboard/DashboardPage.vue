@@ -397,7 +397,7 @@ const metricCards = computed(() => {
         @click="devEnvOpen = !devEnvOpen"
       >
         <component :is="devEnvOpen ? ChevronDown : ChevronRight" class="h-4 w-4" />
-        本地联调提示（jaja7）
+        本地联调提示（dev）
       </button>
       <div v-show="devEnvOpen" class="mt-3 space-y-2 text-sm text-muted-foreground">
         <p>
@@ -405,7 +405,7 @@ const metricCards = computed(() => {
           <code class="rounded bg-muted px-1">Auth:5555</code>、
           <code class="rounded bg-muted px-1">Center:7777</code>、
           <code class="rounded bg-muted px-1">Gateway:6060</code>，Spring profile
-          <code class="rounded bg-muted px-1">jaja7</code>。Center 重启后会自动补全菜单/组织/字典种子数据。
+          <code class="rounded bg-muted px-1">dev</code>。Center 重启后会自动补全菜单/组织/字典种子数据。
         </p>
         <p>
           空库启动后初始化<strong>超级管理员</strong> + <strong>标准菜单/按钮</strong>（与前端路由一致）；之后由超管在

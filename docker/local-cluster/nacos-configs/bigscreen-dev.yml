@@ -1,0 +1,4 @@
+jbm:
+  bigscreen:
+    views-dir: /app/data/views
+    doc-base-url: http://jbm-cluster-platform-doc:9999
