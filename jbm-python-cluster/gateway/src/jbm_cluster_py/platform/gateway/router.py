@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, Body, Request, WebSocket
+from fastapi import APIRouter, Request, WebSocket
 
 from jbm_cluster_py.common.result import ok
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
@@ -61,55 +61,6 @@ def build_gateway_router(
     @router.get("/__gateway/logs/recent")
     async def recent_logs() -> Dict[str, Any]:
         return ok(access_logger.snapshot(), "查询最近网关日志成功")
-
-    @router.post("/logs/GatewayLogs/ingest", tags=["网关日志"])
-    async def ingest_gateway_log(body: Dict[str, Any]) -> Dict[str, Any]:
-        await access_logger.record(body)
-        return ok(True, "采集网关日志成功")
-
-    @router.post("/logs/GatewayLogs/findLogs", tags=["网关日志"])
-    async def find_gateway_logs(body: Dict[str, Any] | None = Body(default=None)) -> Dict[str, Any]:
-        return ok(await access_logger.repository.page_gateway_logs(body or {}), "查询分页列表成功")
-
-    @router.post("/logs/GatewayLogs/findOperationLogs", tags=["网关日志"])
-    async def find_operation_logs(body: Dict[str, Any] | None = Body(default=None)) -> Dict[str, Any]:
-        return ok(await access_logger.repository.page_gateway_logs(body or {}, True), "查询分页列表成功")
-
-    @router.post("/logs/GatewayLogs/getByAccessId", tags=["网关日志"])
-    async def get_gateway_log(body: Dict[str, Any]) -> Dict[str, Any]:
-        return ok(await access_logger.repository.gateway_log(str(body.get("accessId") or "")), "查询日志成功")
-
-    @router.get("/logs/GatewayLogs/filterRules", tags=["网关日志"])
-    async def list_filter_rules() -> Dict[str, Any]:
-        return ok(await access_logger.repository.list_rules(), "查询过滤规则成功")
-
-    @router.post("/logs/GatewayLogs/filterRules", tags=["网关日志"])
-    async def create_filter_rule(body: Dict[str, Any]) -> Dict[str, Any]:
-        return ok(await access_logger.repository.save_rule(body), "保存过滤规则成功")
-
-    @router.put("/logs/GatewayLogs/filterRules/{rule_id}", tags=["网关日志"])
-    async def update_filter_rule(rule_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        return ok(await access_logger.repository.save_rule(body, rule_id), "保存过滤规则成功")
-
-    @router.delete("/logs/GatewayLogs/filterRules/{rule_id}", tags=["网关日志"])
-    async def delete_filter_rule(rule_id: str) -> Dict[str, Any]:
-        return ok(await access_logger.repository.delete_rule(rule_id), "删除过滤规则成功")
-
-    @router.post("/logs/GatewayLogs/filterRules/{rule_id}/toggle", tags=["网关日志"])
-    async def toggle_filter_rule(rule_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
-        current = await access_logger.repository.rule(rule_id)
-        if not current:
-            raise ValueError("过滤规则不存在")
-        return ok(await access_logger.repository.save_rule({**current, "enabled": bool(body.get("enabled"))}, rule_id), "切换过滤规则成功")
-
-    @router.post("/logs/GatewayLogs/filterRules/test", tags=["网关日志"])
-    async def test_filter_rule(body: Dict[str, Any]) -> Dict[str, Any]:
-        rules = await access_logger.matching_rules({"path": body.get("path"), "method": body.get("method"), "serviceId": body.get("serviceId"), "httpStatus": body.get("statusCode")})
-        return ok({"matched": bool(rules), "rules": rules}, "测试过滤规则成功")
-
-    @router.post("/logs/clusterAccess/getClusterAccessInfo", tags=["网关日志"])
-    async def cluster_access() -> Dict[str, Any]:
-        return ok(await access_logger.repository.cluster_access(), "查询访问统计成功")
 
     @router.get("/__gateway/circuit-breakers")
     async def list_circuit_breakers() -> Dict[str, Any]:

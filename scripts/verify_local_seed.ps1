@@ -9,6 +9,8 @@ param(
     [string]$DocUrl = 'http://127.0.0.1:9999',
     [string]$BigscreenUrl = 'http://127.0.0.1:3314',
     [string]$LokiUrl = 'http://127.0.0.1:13100',
+    [string]$LokiUsername = $env:JBM_LOCAL_LOKI_USERNAME,
+    [string]$LokiPassword = $env:JBM_LOCAL_LOKI_PASSWORD,
     [int]$TimeoutSeconds = 90
 )
 
@@ -17,6 +19,8 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Password)) { $Password = 'Admin@123' }
 if ([string]::IsNullOrWhiteSpace($OperatorPassword)) { $OperatorPassword = 'Operator@123' }
 if ([string]::IsNullOrWhiteSpace($TenantPassword)) { $TenantPassword = 'Tenant@123' }
+if ([string]::IsNullOrWhiteSpace($LokiUsername)) { $LokiUsername = 'jbm' }
+if ([string]::IsNullOrWhiteSpace($LokiPassword)) { $LokiPassword = 'jbm-local-loki' }
 $BaseUrl = $BaseUrl.TrimEnd('/')
 
 function Assert-JbmSuccess([object]$Response, [string]$Name) {
@@ -148,9 +152,13 @@ $gatewayLogPage = Assert-JbmSuccess (
 
 $lokiDeadline = (Get-Date).AddSeconds(20)
 $lokiQuery = [uri]::EscapeDataString('{job="jbm-gateway"}')
+$lokiAuth = [Convert]::ToBase64String(
+    [Text.Encoding]::ASCII.GetBytes("${LokiUsername}:${LokiPassword}")
+)
 do {
     $lokiResult = Invoke-RestMethod -Method Get `
-        -Uri "$($LokiUrl.TrimEnd('/'))/loki/api/v1/query_range?query=$lokiQuery&since=5m&limit=1"
+        -Uri "$($LokiUrl.TrimEnd('/'))/loki/api/v1/query_range?query=$lokiQuery&since=5m&limit=1" `
+        -Headers @{ Authorization = "Basic $lokiAuth"; 'X-Scope-OrgID' = 'platform' }
     if ($lokiResult.status -eq 'success' -and @($lokiResult.data.result).Count -gt 0) { break }
     Start-Sleep -Seconds 1
 } while ((Get-Date) -lt $lokiDeadline)

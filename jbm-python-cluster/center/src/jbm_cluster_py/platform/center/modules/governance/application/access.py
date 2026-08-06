@@ -29,6 +29,17 @@ def require_platform(identity: Mapping[str, Any]) -> None:
         raise HTTPException(status_code=403, detail="仅平台运营账号可执行此操作")
 
 
+def require_internal(identity: Mapping[str, Any]) -> None:
+    if is_platform(identity):
+        return
+    scope = identity.get("scope") or ""
+    scopes = {str(item) for item in scope} if isinstance(scope, (list, tuple, set)) else set(
+        str(scope).replace(",", " ").split()
+    )
+    if "internal" not in scopes:
+        raise HTTPException(status_code=403, detail="仅内部服务可执行此操作")
+
+
 def require_tenant_record(identity: Mapping[str, Any], record: Mapping[str, Any] | None, key: str) -> None:
     if is_platform(identity) or (record and int(record.get(key) or 0) == tenant_id(identity)):
         return

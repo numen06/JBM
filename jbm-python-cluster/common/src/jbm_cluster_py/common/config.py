@@ -2,10 +2,13 @@ import copy
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 import yaml
+
+from jbm_cluster_py.common.nacos import create_nacos_client
 
 logger = logging.getLogger(__name__)
 
@@ -206,18 +209,30 @@ class AppConfig:
             if item.strip()
         ]
         try:
-            client = nacos.NacosClient(server_addresses=str(server_addr), namespace=namespace)
+            client = create_nacos_client(nacos, str(server_addr), namespace, nacos_config)
         except Exception as exc:
             logger.warning("Nacos config client creation failed; skip shared config loading: %s", exc)
             return dict(config)
 
         merged = dict(config)
         for data_id in data_ids:
-            try:
-                content = client.get_config(data_id, group)
-            except Exception as exc:
-                logger.warning("Failed to load Nacos config %s/%s: %s", group, data_id, exc)
-                continue
+            content = None
+            for attempt in range(3):
+                try:
+                    content = client.get_config(data_id, group)
+                    break
+                except Exception as exc:
+                    if attempt < 2:
+                        time.sleep(1)
+                        continue
+                    if nacos_config.get("username") and nacos_config.get("password"):
+                        raise RuntimeError(
+                            "Authenticated Nacos config is unavailable: %s/%s"
+                            % (group, data_id)
+                        ) from exc
+                    logger.warning(
+                        "Failed to load Nacos config %s/%s: %s", group, data_id, exc
+                    )
             if not content:
                 continue
             try:

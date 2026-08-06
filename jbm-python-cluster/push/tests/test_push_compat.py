@@ -1,10 +1,10 @@
 import asyncio
-import base64
 import json
 import smtplib
 import time
 from pathlib import Path
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -15,7 +15,11 @@ from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepo
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
 
-def push_config(database_url: str | None = None) -> AppConfig:
+def push_config(
+    database_url: str | None = None,
+    dev_user_id: int = 1,
+    security_enabled: bool = False,
+) -> AppConfig:
     data = {
         "server": {"host": "127.0.0.1", "port": 3313},
         "spring": {
@@ -23,6 +27,14 @@ def push_config(database_url: str | None = None) -> AppConfig:
             "cloud": {"nacos": {"discovery": {"enabled": False}}},
         },
         "integrations": {"telemetry": {"enabled": False}},
+        "jbm": {
+            "push": {
+                "security": {
+                    "enabled": security_enabled,
+                    "dev-user-id": dev_user_id,
+                }
+            }
+        },
     }
     if database_url:
         data["spring"]["datasource"] = {"url": database_url}
@@ -127,6 +139,7 @@ def test_email_notification_uses_smtp_channel_config(monkeypatch: pytest.MonkeyP
                 },
             },
             "integrations": {"telemetry": {"enabled": False}},
+            "jbm": {"push": {"security": {"enabled": False}}},
         },
         profile="test",
         config_dir=None,
@@ -255,7 +268,12 @@ def test_pin_send_calls_sms_provider_when_dry_run_disabled(monkeypatch: pytest.M
                     "signName": "甲佳智能",
                 }
             },
-            "jbm": {"push": {"jaja7-dry-run": False}},
+            "jbm": {
+                "push": {
+                    "jaja7-dry-run": False,
+                    "security": {"enabled": False},
+                }
+            },
             "integrations": {"telemetry": {"enabled": False}},
         },
         profile="test",
@@ -323,21 +341,53 @@ async def test_nacos_style_system_channel_config_is_seeded_to_database(tmp_path:
 
 
 def test_current_user_id_is_parsed_from_satoken_login_id() -> None:
-    payload = {"loginId": "normal:1000:2057849052900044802"}
-    encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8").rstrip("=")
-    assert parse_user_id("Bearer header.%s.signature" % encoded) == 2057849052900044802
+    assert parse_user_id({"userId": 2057849052900044802}) == 2057849052900044802
+    with pytest.raises(PermissionError):
+        parse_user_id("Bearer forged.token.signature")  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_push_rejects_requests_without_a_verified_token() -> None:
+    app = create_app(push_config(security_enabled=True))
+    schema = app.openapi()
+    protected_operation = schema["paths"]["/pushMessage/unreadCount"]["post"]
+    public_operation = schema["paths"]["/pin/send"]["post"]
+    assert protected_operation["security"] == [{"bearerAuth": []}]
+    assert {"401", "403"}.issubset(protected_operation["responses"])
+    assert "security" not in public_operation
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post("/pushMessage/unreadCount")
+
+    assert response.status_code == 401
+    assert response.headers["X-Request-ID"]
+    assert response.headers["Server-Timing"].startswith("app;dur=")
+
+
+@pytest.mark.asyncio
+async def test_message_mutations_are_scoped_to_the_current_recipient() -> None:
+    service = PushService()
+    service.messages = [
+        {"msgId": "mine", "recUserId": 7, "readFlag": False},
+        {"msgId": "other", "recUserId": 8, "readFlag": False},
+        {"msgId": "global", "recUserId": 0, "readFlag": False},
+    ]
+
+    await service.mark_read(["mine", "other", "global"], 7)
+    assert [row["readFlag"] for row in service.messages] == [True, False, False]
+
+    await service.delete_messages(["mine", "other", "global"], 7)
+    assert [row["msgId"] for row in service.messages] == ["other", "global"]
 
 
 def test_self_send_is_visible_to_current_user_from_login_id() -> None:
-    payload = {"loginId": "normal:1000:2057849052900044802"}
-    encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8").rstrip("=")
-    headers = {"Authorization": "Bearer header.%s.signature" % encoded}
-    with TestClient(create_app(push_config())) as client:
+    user_id = 2057849052900044802
+    with TestClient(create_app(push_config(dev_user_id=user_id))) as client:
         sent = client.post(
             "/pushTest/send",
-            headers=headers,
             json={
-                "recUserIds": ["2057849052900044802"],
+                "recUserIds": [str(user_id)],
                 "title": "self message",
                 "content": "visible",
                 "showInMessageCenter": True,
@@ -347,7 +397,6 @@ def test_self_send_is_visible_to_current_user_from_login_id() -> None:
 
         page = client.post(
             "/pushMessage/findCurrMessagePage",
-            headers=headers,
             json={"pageForm": {"currPage": 1, "pageSize": 10}},
         )
         rows = page.json()["result"]["contents"]
@@ -355,7 +404,7 @@ def test_self_send_is_visible_to_current_user_from_login_id() -> None:
 
 
 def test_single_rec_user_id_and_extend_visibility_are_supported() -> None:
-    with TestClient(create_app(push_config())) as client:
+    with TestClient(create_app(push_config(dev_user_id=7))) as client:
         sent = client.post(
             "/pushTest/send",
             json={
@@ -453,7 +502,7 @@ def test_broadcast_only_targets_matching_subscriber_user() -> None:
 async def test_message_persistence_survives_service_restart(tmp_path: Path) -> None:
     db_path = tmp_path / "push-messages.db"
     database_url = f"sqlite+aiosqlite:///{db_path}"
-    config = push_config(database_url)
+    config = push_config(database_url, dev_user_id=42)
 
     with TestClient(create_app(config)) as client:
         sent = client.post(

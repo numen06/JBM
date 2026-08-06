@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, Header, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Body, HTTPException, Request, WebSocket, WebSocketDisconnect
 
-from jbm_cluster_py.common.result import fail, ok
+from jbm_cluster_py.common.auth import UserInfoAuthClient
+from jbm_cluster_py.common.result import ok
 from jbm_cluster_py.platform.push.business_events import BusinessEventService
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
@@ -19,7 +20,11 @@ def _ids(body: Optional[Dict[str, Any]]) -> list[Any]:
     return value if isinstance(value, list) else [value]
 
 
-def build_push_router(service: PushService, business_events: Optional[BusinessEventService] = None) -> APIRouter:
+def build_push_router(
+    service: PushService,
+    business_events: Optional[BusinessEventService] = None,
+    auth: UserInfoAuthClient | None = None,
+) -> APIRouter:
     router = APIRouter()
 
     @router.websocket("/ws")
@@ -35,7 +40,10 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
                     continue
                 command = text.split("\n", 1)[0].strip().upper()
                 if command in {"CONNECT", "STOMP"}:
-                    current_user_id = parse_user_id(_stomp_headers(text).get("Authorization"))
+                    if auth is None:
+                        raise PermissionError("Push WebSocket 未配置认证")
+                    identity = await auth.authenticate(_stomp_headers(text).get("Authorization"))
+                    current_user_id = parse_user_id(identity)
                     await websocket.send_text("CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\x00")
                 elif command == "SUBSCRIBE":
                     service.add_subscriber(websocket, _stomp_headers(text).get("id", "messages"), current_user_id)
@@ -57,74 +65,100 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
                 pass
 
     @router.post("/pushMessage/read")
-    async def read_messages(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        await service.mark_read(_ids(body), True)
+    async def read_messages(
+        request: Request, body: Optional[Dict[str, Any]] = Body(default=None)
+    ) -> Dict[str, Any]:
+        await service.mark_read(_ids(body), parse_user_id(request.state.identity), True)
         return ok("标记已读成功", "标记已读成功")
 
     @router.post("/pushMessage/readAllCurr")
-    async def read_all_curr(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
-        await service.mark_all_read(parse_user_id(authorization))
+    async def read_all_curr(request: Request) -> Dict[str, Any]:
+        await service.mark_all_read(parse_user_id(request.state.identity))
         return ok("全部标记已读成功", "全部标记已读成功")
 
     @router.post("/pushMessage/unread")
-    async def unread_messages(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        await service.mark_read(_ids(body), False)
+    async def unread_messages(
+        request: Request, body: Optional[Dict[str, Any]] = Body(default=None)
+    ) -> Dict[str, Any]:
+        await service.mark_read(_ids(body), parse_user_id(request.state.identity), False)
         return ok("标记未读成功", "标记未读成功")
 
     @router.post("/pushMessage/pageList")
-    async def page_list(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(await service.page_messages(body), "查询消息列表成功")
+    async def page_list(
+        request: Request, body: Optional[Dict[str, Any]] = Body(default=None)
+    ) -> Dict[str, Any]:
+        return ok(
+            await service.page_messages(body, parse_user_id(request.state.identity)),
+            "查询消息列表成功",
+        )
 
     @router.post("/pushMessage/findCurrMessagePage")
     async def current_page(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
-        return ok(await service.page_messages(body, parse_user_id(authorization)), "获取登录人的消息列表成功")
+        return ok(
+            await service.page_messages(body, parse_user_id(request.state.identity)),
+            "获取登录人的消息列表成功",
+        )
 
     @router.post("/pushMessage/unreadCount")
-    async def unread_count(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
-        return ok(await service.unread_count(parse_user_id(authorization)), "获取未读消息数成功")
+    async def unread_count(request: Request) -> Dict[str, Any]:
+        return ok(
+            await service.unread_count(parse_user_id(request.state.identity)),
+            "获取未读消息数成功",
+        )
 
     @router.post("/pushMessage/deleteByIds")
-    async def delete_by_ids(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        await service.delete_messages(_ids(body))
+    async def delete_by_ids(
+        request: Request, body: Optional[Dict[str, Any]] = Body(default=None)
+    ) -> Dict[str, Any]:
+        await service.delete_messages(_ids(body), parse_user_id(request.state.identity))
         return ok(True, "删除站内信成功")
 
     @router.post("/pushMessage/sendUserMessage")
     @router.post("/pushMessage/sendSysMessage")
     @router.post("/pushMessage/sendPushMsg")
     async def send_push_msg(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
-        await service.send_test(body or {}, parse_user_id(authorization))
+        await service.send_test(body or {}, parse_user_id(request.state.identity))
         return ok("发送推送消息成功", "发送推送消息成功")
 
     @router.post("/pushMessage/testSend")
-    async def test_send(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
-        await service.send_test({"title": "管理员测试信息", "content": "Python push test"}, parse_user_id(authorization))
+    async def test_send(request: Request) -> Dict[str, Any]:
+        await service.send_test(
+            {"title": "管理员测试信息", "content": "Python push test"},
+            parse_user_id(request.state.identity),
+        )
         return ok(True)
 
     @router.post("/pushTest/send")
     async def push_test_send(
+        request: Request,
         body: Dict[str, Any] = Body(default_factory=dict),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
-        return ok(await service.send_test(body, parse_user_id(authorization)), "测试消息已发送")
+        return ok(
+            await service.send_test(body, parse_user_id(request.state.identity)),
+            "测试消息已发送",
+        )
 
     @router.post("/pushTest/perf")
     async def push_test_perf(
+        request: Request,
         body: Dict[str, Any] = Body(default_factory=dict),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
-        return ok(await service.start_perf(body, parse_user_id(authorization)), "轻压测任务已启动")
+        return ok(
+            await service.start_perf(body, parse_user_id(request.state.identity)),
+            "轻压测任务已启动",
+        )
 
     @router.get("/pushTest/perf/{task_id}")
     async def push_test_status(task_id: str) -> Dict[str, Any]:
         status = service.get_task(task_id)
         if status is None:
-            return fail(None, "测试任务不存在", 404)
+            raise HTTPException(status_code=404, detail="测试任务不存在")
         return ok(status, "查询测试任务成功")
 
     @router.post("/pushTest/ack")
@@ -142,7 +176,7 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     ) -> Dict[str, Any]:
         phone_number = (phoneNumber or phone or "").strip()
         if not phone_number.startswith("1") or len(phone_number) != 11 or not phone_number.isdigit():
-            return fail(None, "手机号码错误", 400)
+            raise HTTPException(status_code=400, detail="手机号码错误")
         try:
             result = await service.send_pin_code(
                 phone_number,
@@ -152,7 +186,7 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
             )
         except Exception as exc:
             logger.warning("Pin SMS delivery failed: %s", exc)
-            return fail(None, str(exc) or "发送失败", 500)
+            raise HTTPException(status_code=502, detail="短信发送失败") from exc
         return ok(result, "短信验证码发送成功")
 
     @router.post("/pushConfigInfo/pageList")
@@ -195,57 +229,75 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
 
     @router.post("/notification/send/sms")
     async def notification_send_sms(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "sms")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/notification/send/email")
     async def notification_send_email(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "email")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/notification/send/mqtt")
     async def notification_send_mqtt(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "mqtt")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/notification/send/wechat")
     async def notification_send_wechat(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "wechat")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/notification/send/miniapp")
     async def notification_send_miniapp(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "miniapp")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/notification/send/app")
     async def notification_send_app(
+        request: Request,
         body: Optional[Dict[str, Any]] = Body(default=None),
-        authorization: Optional[str] = Header(default=None),
     ) -> Dict[str, Any]:
         payload = dict(body or {})
         payload.setdefault("pushWay", "app")
-        return ok(await service.publish_message(payload, parse_user_id(authorization)), "通知请求已提交")
+        return ok(
+            await service.publish_message(payload, parse_user_id(request.state.identity)),
+            "通知请求已提交",
+        )
 
     @router.post("/webhookTask/businessEventListener")
     async def business_event_listener(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
@@ -258,19 +310,19 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     @router.get("/webhookTask/run")
     async def webhook_task_run(eventId: str) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.send_business_event_by_event_id(eventId), "触发成功")
 
     @router.post("/webhookTask/req")
     async def webhook_task_req(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.send_task(body or {}), "请求成功")
 
     @router.get("/webhookTask/retry")
     async def webhook_task_retry(taskId: str) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.retry_event_task(taskId), "重试成功")
 
     @router.get("/webhookTask/clear")
@@ -280,31 +332,31 @@ def build_push_router(service: PushService, business_events: Optional[BusinessEv
     @router.post("/webhookTask/findTask")
     async def webhook_task_find(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.repository.find_task(body or {}), "查询成功")
 
     @router.post("/webhookTask/selectWebhookTasks")
     async def webhook_task_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.repository.page_webhook_tasks(body or {}), "查询成功")
 
     @router.post("/webhookEventConfig/selectWebhookEventConfigs")
     async def webhook_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.repository.page_webhook_event_configs(body or {}), "查询成功")
 
     @router.post("/webhookEventConfig/saveConfig")
     async def webhook_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         return ok(await business_events.repository.save_config(body or {}), "保存对象成功")
 
     @router.post("/webhookEventConfig/findConfig")
     async def webhook_config_find(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         if business_events is None:
-            return fail(None, "业务事件服务未启用", 503)
+            raise HTTPException(status_code=503, detail="业务事件服务未启用")
         payload = body or {}
         result = None
         if payload.get("eventId"):

@@ -26,7 +26,6 @@ from jbm_cluster_py.platform.gateway.routes import (
 )
 from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
-from jbm_cluster_py.platform.logs.repository import LogsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +140,6 @@ class AccessLogger:
         config: Mapping[str, Any],
         discovery: NacosDiscoveryClient,
         http_client: httpx.AsyncClient,
-        database_config: Optional[Mapping[str, Any]] = None,
         kafka: KafkaClient | None = None,
     ) -> None:
         self.config = dict(config)
@@ -150,7 +148,6 @@ class AccessLogger:
         self.discovery = discovery
         self.http_client = http_client
         self.recent: deque[dict[str, Any]] = deque(maxlen=int(self.config.get("recent-size") or 200))
-        self.repository = LogsRepository(database_config) if database_config else None
         self.kafka = kafka
         self.kafka_topic = str(
             self.config.get("topic")
@@ -159,16 +156,12 @@ class AccessLogger:
         )
 
     async def start(self) -> None:
-        if self.repository is not None:
-            await self.repository.start()
         if self.kafka is not None and self.kafka.enabled:
             await self.kafka.start()
 
     async def stop(self) -> None:
         if self.kafka is not None:
             await self.kafka.stop()
-        if self.repository is not None:
-            await self.repository.stop()
 
     async def record(self, row: Mapping[str, Any]) -> None:
         if not self.enabled:
@@ -176,11 +169,6 @@ class AccessLogger:
         payload = dict(row)
         self.recent.appendleft(payload)
         logger.info("gateway_access %s", json.dumps(payload, ensure_ascii=False, default=str))
-        if self.repository is not None:
-            matched = await self.matching_rules(payload)
-            if matched:
-                await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])
-                return
         if self.kafka is not None and self.kafka.enabled:
             try:
                 await self.kafka.publish_json(
@@ -190,17 +178,9 @@ class AccessLogger:
                 )
                 return
             except Exception:
-                logger.exception("Kafka access-log publish failed; falling back to direct storage")
-        if self.repository is not None:
-            await self.repository.save_gateway_log(payload)
-            return
+                logger.exception("Kafka access-log publish failed; falling back to HTTP ingest")
         if self.ingest_enabled:
             asyncio.create_task(self._ingest(payload))
-
-    async def matching_rules(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
-        if self.repository is None:
-            return []
-        return await self.repository.matching_rules(payload)
 
     async def _ingest(self, payload: Mapping[str, Any]) -> None:
         service = str(self.config.get("service") or "jbm-cluster-platform-logs")
@@ -215,7 +195,8 @@ class AccessLogger:
             return
         url = "http://%s:%s%s" % (host, port, path)
         try:
-            await self.http_client.post(url, json=dict(payload), timeout=5.0)
+            response = await self.http_client.post(url, json=dict(payload), timeout=5.0)
+            response.raise_for_status()
         except Exception as exc:
             logger.debug("Gateway log ingest failed: %s", exc)
 

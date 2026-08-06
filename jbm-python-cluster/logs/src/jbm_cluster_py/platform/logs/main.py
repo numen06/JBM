@@ -70,7 +70,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     )
     install_exception_handlers(app)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
-    app.include_router(build_logs_router(repository, service))
+    app.include_router(build_logs_router(repository, service, access_ingest))
     return app
 
 

@@ -11,7 +11,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from jbm_cluster_py.common.masterdata import java_page, page_form_from_body
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
 logger = logging.getLogger(__name__)
 
@@ -71,19 +71,13 @@ class PushMessageRepository:
         self._extend_column: Optional[str] = None
 
     async def start(self) -> None:
+        if not self._sqlite:
+            await require_tables(self.engine, (BODY_TABLE, ITEM_TABLE))
         async with self.engine.begin() as conn:
             has_body = await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table(BODY_TABLE))
             has_item = await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table(ITEM_TABLE))
             if has_body and has_item:
                 await self._load_columns(conn)
-                return
-            if not self._sqlite:
-                if not has_body or not has_item:
-                    logger.warning(
-                        "Push message tables missing in database (body=%s item=%s); message persistence disabled",
-                        has_body,
-                        has_item,
-                    )
                 return
             await conn.execute(
                 text(
@@ -313,17 +307,19 @@ class PushMessageRepository:
             row = (await conn.execute(text(sql), {"user_id": user_id})).mappings().first()
         return int((row or {}).get("total") or 0)
 
-    async def update_read_flag(self, ids: List[str], read_flag: bool) -> None:
+    async def update_read_flag(self, ids: List[str], read_flag: bool, user_id: int) -> None:
         if not ids:
             return
         placeholders = ", ".join(f":id_{index}" for index, _ in enumerate(ids))
         params = {f"id_{index}": str(item) for index, item in enumerate(ids)}
         params["read_flag"] = 1 if read_flag else 0
         params["update_time"] = now_text()
+        params["user_id"] = user_id
         sql = f"""
             UPDATE {ITEM_TABLE}
             SET read_flag = :read_flag, update_time = :update_time
             WHERE msg_id IN ({placeholders})
+              AND rec_user_id = :user_id
         """
         async with self.engine.begin() as conn:
             await conn.execute(text(sql), params)
@@ -332,18 +328,22 @@ class PushMessageRepository:
         sql = f"""
             UPDATE {ITEM_TABLE}
             SET read_flag = 1, update_time = :update_time
-            WHERE (rec_user_id = :user_id OR rec_user_id = 0)
+            WHERE rec_user_id = :user_id
               AND (read_flag IS NULL OR read_flag = 0)
         """
         async with self.engine.begin() as conn:
             await conn.execute(text(sql), {"user_id": user_id, "update_time": now_text()})
 
-    async def delete_by_ids(self, ids: List[str]) -> None:
+    async def delete_by_ids(self, ids: List[str], user_id: int) -> None:
         if not ids:
             return
         placeholders = ", ".join(f":id_{index}" for index, _ in enumerate(ids))
         params = {f"id_{index}": str(item) for index, item in enumerate(ids)}
-        sql = f"DELETE FROM {ITEM_TABLE} WHERE msg_id IN ({placeholders})"
+        params["user_id"] = user_id
+        sql = (
+            f"DELETE FROM {ITEM_TABLE} WHERE msg_id IN ({placeholders}) "
+            "AND rec_user_id = :user_id"
+        )
         async with self.engine.begin() as conn:
             await conn.execute(text(sql), params)
 

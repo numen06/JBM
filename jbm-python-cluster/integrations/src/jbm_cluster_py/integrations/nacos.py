@@ -7,6 +7,8 @@ from typing import Any, Mapping, Optional
 from urllib.parse import urlencode
 from urllib.request import ProxyHandler, build_opener
 
+from jbm_cluster_py.common.nacos import create_nacos_client
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,9 +48,11 @@ class NacosRegistrar:
             return
 
         try:
-            self.client = nacos.NacosClient(
-                server_addresses=str(server_addr),
-                namespace=str(self.config.get("namespace") or "public"),
+            self.client = create_nacos_client(
+                nacos,
+                str(server_addr),
+                str(self.config.get("namespace") or "public"),
+                self.config,
             )
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._register)
@@ -149,9 +153,11 @@ class NacosDiscoveryClient:
             logger.warning("nacos-sdk-python is not installed; skip discovery client")
             return
         try:
-            self.client = nacos.NacosClient(
-                server_addresses=str(server_addr),
-                namespace=str(self.config.get("namespace") or "public"),
+            self.client = create_nacos_client(
+                nacos,
+                str(server_addr),
+                str(self.config.get("namespace") or "public"),
+                self.config,
             )
         except Exception as exc:
             logger.warning("Nacos discovery client creation failed: %s", exc)
@@ -180,14 +186,15 @@ class NacosDiscoveryClient:
             return []
         if not server.startswith(("http://", "https://")):
             server = "http://" + server
-        params = urlencode(
-            {
-                "pageNo": 1,
-                "pageSize": 1000,
-                "groupName": self._group_name(),
-                "namespaceId": str(self.config.get("namespace") or "public"),
-            }
-        )
+        request_params = {
+            "pageNo": 1,
+            "pageSize": 1000,
+            "groupName": self._group_name(),
+            "namespaceId": str(self.config.get("namespace") or "public"),
+        }
+        assert self.client is not None
+        self.client._inject_auth_info({}, request_params, None, "naming")
+        params = urlencode(request_params)
         with build_opener(ProxyHandler({})).open(
             f"{server}/nacos/v1/ns/service/list?{params}", timeout=5
         ) as response:

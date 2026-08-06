@@ -7,6 +7,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from jbm_cluster_py.common.auth import install_bearer_openapi
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.logging import configure_logging
@@ -65,8 +66,6 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
-    install_exception_handlers(app)
-
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Any):
         if auth.is_public(request.url.path):
@@ -76,7 +75,14 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             request.state.identity = await auth.authenticate(request)
         except PermissionError as exc:
             return JSONResponse(status_code=401, content=fail(None, str(exc), 401))
+        except ConnectionError:
+            return JSONResponse(
+                status_code=503,
+                content=fail(None, "认证服务不可用", 503),
+            )
         return await call_next(request)
+
+    install_exception_handlers(app)
 
     @app.get("/actuator/health")
     async def health() -> dict[str, Any]:
@@ -88,4 +94,5 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     app.include_router(build_governance_router(service))
     app.include_router(build_compatibility_router(compatibility))
+    install_bearer_openapi(app, auth.public_paths)
     return app

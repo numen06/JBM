@@ -172,13 +172,17 @@ class SqlGovernanceRepository:
             ("appName", "code", "apiKey"),
             ("a.app_name", "a.code", "a.api_key"),
         )
-        return await self._page(
+        rows, total = await self._page(
             f"SELECT a.* FROM base_app a WHERE {where} ORDER BY a.app_id DESC",
             f"SELECT COUNT(*) FROM base_app a WHERE {where}",
             params,
             page,
             size,
         )
+        for row in rows:
+            row.pop("secretKey", None)
+            row.pop("privateKey", None)
+        return rows, total
 
     async def list_roles(self, page: int, size: int, filters: Mapping[str, Any]) -> tuple[list[dict[str, Any]], int]:
         where, params = _filters(

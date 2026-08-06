@@ -31,31 +31,10 @@ def current_millis() -> int:
     return int(time.time() * 1000)
 
 
-def parse_user_id(authorization: Optional[str]) -> int:
-    if not authorization:
-        return 1
-    token = authorization.replace("Bearer ", "", 1).strip()
-    parts = token.split(".")
-    if len(parts) < 2:
-        return 1
-    payload = parts[1] + "=" * (-len(parts[1]) % 4)
-    try:
-        data = json.loads(base64.urlsafe_b64decode(payload.encode("utf-8")).decode("utf-8"))
-    except Exception:
-        return 1
-    login_id = str(data.get("loginId") or "")
-    if ":" in login_id:
-        try:
-            return int(login_id.rsplit(":", 1)[-1])
-        except (TypeError, ValueError):
-            pass
-    for key in ("userId", "user_id", "id", "sub"):
-        value = data.get(key)
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            continue
-    return 1
+def parse_user_id(identity: Mapping[str, Any]) -> int:
+    from jbm_cluster_py.common.auth import identity_user_id
+
+    return identity_user_id(identity)
 
 
 class PushService:
@@ -146,13 +125,15 @@ class PushService:
             if int(row.get("recUserId") or 0) in {user_id, 0} and not row.get("readFlag")
         )
 
-    async def mark_read(self, ids: Iterable[str], read_flag: bool = True) -> None:
+    async def mark_read(self, ids: Iterable[str], user_id: int, read_flag: bool = True) -> None:
         if self.message_repository is not None:
-            await self.message_repository.update_read_flag([str(item) for item in ids], read_flag)
+            await self.message_repository.update_read_flag(
+                [str(item) for item in ids], read_flag, user_id
+            )
             return
         id_set = {str(item) for item in ids}
         for row in self.messages:
-            if str(row.get("msgId")) in id_set:
+            if str(row.get("msgId")) in id_set and int(row.get("recUserId") or 0) == user_id:
                 row["readFlag"] = read_flag
 
     async def mark_all_read(self, user_id: int) -> None:
@@ -160,15 +141,20 @@ class PushService:
             await self.message_repository.mark_all_read(user_id)
             return
         for row in self.messages:
-            if int(row.get("recUserId") or 0) in {user_id, 0}:
+            if int(row.get("recUserId") or 0) == user_id:
                 row["readFlag"] = True
 
-    async def delete_messages(self, ids: Iterable[str]) -> None:
+    async def delete_messages(self, ids: Iterable[str], user_id: int) -> None:
         if self.message_repository is not None:
-            await self.message_repository.delete_by_ids([str(item) for item in ids])
+            await self.message_repository.delete_by_ids([str(item) for item in ids], user_id)
             return
         id_set = {str(item) for item in ids}
-        self.messages = [row for row in self.messages if str(row.get("msgId")) not in id_set]
+        self.messages = [
+            row
+            for row in self.messages
+            if str(row.get("msgId")) not in id_set
+            or int(row.get("recUserId") or 0) != user_id
+        ]
 
     def push_queue_name(self) -> str:
         return str(

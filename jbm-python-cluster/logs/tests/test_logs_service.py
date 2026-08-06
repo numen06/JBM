@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import base64
+
 import httpx
 import pytest
+from fastapi import FastAPI
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.platform.gateway.service import AccessLogger
 from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
+from jbm_cluster_py.platform.logs.router import build_logs_router
 from jbm_cluster_py.platform.logs.service import BusinessLogService, GatewayLogIngestService
 
 
@@ -57,34 +61,40 @@ async def test_business_log_lifecycle_and_stages(tmp_path) -> None:
 
 @pytest.mark.asyncio
 async def test_gateway_access_log_is_integrated_and_filterable(tmp_path) -> None:
-    async with httpx.AsyncClient() as client:
-        access_logger = AccessLogger(
-            {"enabled": True, "ingest-enabled": False},
-            NacosDiscoveryClient({"enabled": False}),
-            client,
-            database_config(tmp_path),
-        )
-        await access_logger.start()
-        try:
-            await access_logger.record(
-                {
+    repository = LogsRepository(database_config(tmp_path))
+    await repository.start()
+    ingest = GatewayLogIngestService(repository, LokiSink({"enabled": False}))
+    app = FastAPI()
+    app.include_router(
+        build_logs_router(repository, BusinessLogService(repository, "test"), ingest)
+    )
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.post(
+                "/GatewayLogs/ingest",
+                json={
                     "accessId": "a-1",
                     "path": "/center/current/user",
                     "method": "GET",
                     "httpStatus": 200,
                     "serviceId": "jbm-cluster-platform-center",
-                }
+                },
             )
-            await access_logger.record(
-                {"accessId": "a-2", "path": "/logs/GatewayLogs/findLogs", "method": "POST"}
-            )
+            assert response.status_code == 200
+            page = await client.post("/GatewayLogs/findLogs", json={})
+            assert page.json()["result"]["total"] == 1
+        await ingest.handle(
+            {"accessId": "a-2", "path": "/logs/GatewayLogs/findLogs", "method": "POST"}
+        )
 
-            assert (await access_logger.repository.gateway_log("a-1"))["httpStatus"] == 200
-            assert await access_logger.repository.gateway_log("a-2") is None
-            rules = await access_logger.repository.list_rules()
-            assert next(rule for rule in rules if rule["ruleId"] == "builtin-logs")["hitCount"] == 1
-        finally:
-            await access_logger.stop()
+        assert (await repository.gateway_log("a-1"))["httpStatus"] == 200
+        assert await repository.gateway_log("a-2") is None
+        rules = await repository.list_rules()
+        assert next(rule for rule in rules if rule["ruleId"] == "builtin-logs")["hitCount"] == 1
+    finally:
+        await repository.stop()
 
 
 @pytest.mark.asyncio
@@ -106,12 +116,13 @@ async def test_gateway_access_log_flows_through_kafka_to_loki_sink(tmp_path) -> 
             self.messages.append((topic, dict(payload), key))
 
     kafka = FakeKafka()
+    repository = LogsRepository(database_config(tmp_path))
+    await repository.start()
     async with httpx.AsyncClient() as client:
         access_logger = AccessLogger(
             {"enabled": True},
             NacosDiscoveryClient({"enabled": False}),
             client,
-            database_config(tmp_path),
             kafka,
         )
         await access_logger.start()
@@ -125,14 +136,15 @@ async def test_gateway_access_log_flows_through_kafka_to_loki_sink(tmp_path) -> 
             }
             await access_logger.record(row)
             assert kafka.messages == [("jbm.logs.access.v1", row, "kafka-a-1")]
-            assert await access_logger.repository.gateway_log("kafka-a-1") is None
+            assert await repository.gateway_log("kafka-a-1") is None
 
             await GatewayLogIngestService(
-                access_logger.repository, LokiSink({"enabled": False})
+                repository, LokiSink({"enabled": False})
             ).handle(kafka.messages[0][1])
-            assert (await access_logger.repository.gateway_log("kafka-a-1"))["httpStatus"] == 200
+            assert (await repository.gateway_log("kafka-a-1"))["httpStatus"] == 200
         finally:
             await access_logger.stop()
+            await repository.stop()
 
     payload = LokiSink.gateway_payload(row)
     assert payload["streams"][0]["stream"] == {
@@ -140,3 +152,29 @@ async def test_gateway_access_log_flows_through_kafka_to_loki_sink(tmp_path) -> 
         "service": "jbm-cluster-platform-center",
         "level": "info",
     }
+
+
+@pytest.mark.asyncio
+async def test_loki_sink_requires_and_sends_basic_auth() -> None:
+    with pytest.raises(ValueError, match="username and password"):
+        LokiSink({"enabled": True})
+
+    expected = "Basic " + base64.b64encode(b"jbm:secret").decode()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Authorization"] == expected
+        return httpx.Response(204)
+
+    sink = LokiSink(
+        {
+            "enabled": True,
+            "url": "http://loki/loki/api/v1/push",
+            "username": "jbm",
+            "password": "secret",
+        }
+    )
+    sink.client = httpx.AsyncClient(transport=httpx.MockTransport(handler), auth=sink.auth)
+    try:
+        await sink.send_gateway({"accessId": "auth-check", "httpStatus": 200})
+    finally:
+        await sink.stop()

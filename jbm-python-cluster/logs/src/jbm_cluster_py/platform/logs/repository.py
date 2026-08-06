@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from jbm_cluster_py.common.masterdata import PageForm, java_page
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
@@ -39,13 +39,26 @@ class LogsRepository:
             configured_database_url(database_config)
             or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         )
-        if url.startswith("sqlite+aiosqlite:///"):
+        self._sqlite = url.startswith("sqlite+aiosqlite:///")
+        if self._sqlite:
             db_path = url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.engine: AsyncEngine = create_async_engine(url, pool_pre_ping=True)
 
     async def start(self) -> None:
+        if not self._sqlite:
+            await require_tables(
+                self.engine,
+                (
+                    "gateway_logs",
+                    "gateway_log_filter_rule",
+                    "business_log",
+                    "business_log_line",
+                    "business_log_stage",
+                ),
+            )
+            return
         ddl = (
             """CREATE TABLE IF NOT EXISTS gateway_logs (
                 access_id VARCHAR(64) PRIMARY KEY, loglevel INTEGER, path VARCHAR(1024), api_path VARCHAR(1024),

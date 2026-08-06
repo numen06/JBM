@@ -34,7 +34,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 raise AuthError("不支持的grant_type: %s" % (grant_type or "<empty>"), 400)
             return JSONResponse(status_code=200, content=ok(result))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.get("/oauth2/authorize")
     async def authorize(request: Request) -> HTMLResponse:
@@ -49,7 +49,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.authorize_code_login(form)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.get("/oauth2/apps")
     async def oauth_apps() -> JSONResponse:
@@ -62,7 +62,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.refresh_token(form)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.post("/oauth2/client_token")
     async def client_token(request: Request) -> JSONResponse:
@@ -71,7 +71,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.client_credentials_token(form)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.post("/oauth2/register")
     async def register(request: Request) -> JSONResponse:
@@ -80,7 +80,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.register(form)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.post("/oauth2/renewal")
     async def renewal(request: Request) -> JSONResponse:
@@ -88,7 +88,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             _require_login(request, auth_service)
             return JSONResponse(status_code=200, content=ok(None, "续签成功"))
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     @router.post("/oauth2/doConfirm")
     @router.get("/oauth2/doConfirm")
@@ -100,15 +101,16 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 content=ok(await auth_service.confirm_qr_login(str(params.get("code") or ""), _bearer_token(request))),
             )
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     @router.get("/oauth2/thirdparty/{provider}/callback")
     async def thirdparty_callback(provider: str) -> JSONResponse:
-        return JSONResponse(status_code=200, content=fail(None, "%s第三方登录通道未配置" % provider, 503))
+        return JSONResponse(status_code=503, content=fail(None, "%s第三方登录通道未配置" % provider, 503))
 
     @router.get("/oauth2/callback")
     async def oauth_callback() -> JSONResponse:
-        return JSONResponse(status_code=200, content=fail(None, "授权码登录通道未配置", 503))
+        return JSONResponse(status_code=503, content=fail(None, "授权码登录通道未配置", 503))
 
     @router.get("/oauth2/userinfo")
     async def userinfo_get(request: Request) -> JSONResponse:
@@ -130,14 +132,14 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     async def public_key(app_id: str = "") -> JSONResponse:
         public_key_value = await auth_service.public_key(app_id)
         if not public_key_value:
-            return JSONResponse(status_code=200, content=fail(None, "客户端不存在或未配置公钥", 404))
+            return JSONResponse(status_code=404, content=fail(None, "客户端不存在或未配置公钥", 404))
         return JSONResponse(status_code=200, content=ok(public_key_value))
 
     @router.get("/captcha/pkey")
     async def captcha_public_key(appKey: str = "") -> JSONResponse:
         public_key_value = await auth_service.public_key(appKey)
         if not public_key_value:
-            return JSONResponse(status_code=200, content=fail(None, "客户端不存在或未配置公钥", 404))
+            return JSONResponse(status_code=404, content=fail(None, "客户端不存在或未配置公钥", 404))
         return JSONResponse(status_code=200, content=ok(public_key_value))
 
     @router.get("/captcha/vcode64")
@@ -149,21 +151,21 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.verify_captcha(vcode)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(False, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(False, str(exc), exc.code))
 
     @router.get("/captcha/pcode")
     async def captcha_pcode(phone: str = "", vcode: str = "") -> JSONResponse:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.send_phone_code(phone, vcode)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(False, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(False, str(exc), exc.code))
 
     @router.get("/captcha/pcode/verify")
     async def captcha_pcode_verify(phone: str = "", vcode: str = "") -> JSONResponse:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.verify_phone_code(phone, vcode)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(False, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(False, str(exc), exc.code))
 
     @router.get("/qrcode/login")
     async def qrcode_login(
@@ -178,7 +180,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 content=ok(await auth_service.create_qr_login(client_id, redirect_uri, width, height)),
             )
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.get("/qrcode/check")
     async def qrcode_check(code: str = "") -> JSONResponse:
@@ -186,16 +188,16 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             state = await auth_service.qr_state(code)
             if isinstance(state, Mapping):
                 return JSONResponse(status_code=200, content=ok(dict(state)))
-            return JSONResponse(status_code=200, content=fail(state, "已扫描，待确认" if state == 1 else "请扫描", 202))
+            return JSONResponse(status_code=202, content=fail(state, "已扫描，待确认" if state == 1 else "请扫描", 202))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(0, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(0, str(exc), exc.code))
 
     @router.get("/qrcode/scanned")
     async def qrcode_scanned(code: str = "") -> JSONResponse:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.mark_qr_scanned(code)))
         except AuthError as exc:
-            return JSONResponse(status_code=200, content=fail(0, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content=fail(0, str(exc), exc.code))
 
     @router.post("/qrcode/confirm")
     @router.get("/qrcode/confirm")
@@ -207,7 +209,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 content=ok(await auth_service.confirm_qr_login(str(params.get("code") or ""), _bearer_token(request))),
             )
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     @router.get("/.well-known/openid-configuration")
     async def openid_configuration() -> dict[str, Any]:
@@ -224,7 +227,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             _require_login(request, auth_service)
             return JSONResponse(status_code=200, content=ok(await auth_service.online_users(params)))
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     @router.delete("/online/kickout/{token_id:path}")
     async def online_kickout(token_id: str, request: Request) -> JSONResponse:
@@ -256,7 +260,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 raise AuthError("tokenId不能为空", 400)
             return JSONResponse(status_code=200, content=ok("设置成功"))
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     @router.post("/online/expireImmediately")
     async def online_expire_immediately(request: Request) -> JSONResponse:
@@ -269,7 +274,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             await auth_service.revoke_access_token(token_id)
             return JSONResponse(status_code=200, content=ok("设置成功"))
         except (AuthError, JwtError) as exc:
-            return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     return router
 
@@ -355,11 +361,11 @@ def _authorize_login_html(params: Mapping[str, Any]) -> str:
 async def _userinfo(request: Request, auth_service: AuthService) -> JSONResponse:
     token = _bearer_token(request) or str(request.query_params.get("access_token") or "")
     if not token:
-        return JSONResponse(status_code=200, content=fail(None, "未提供access_token", 401))
+        return JSONResponse(status_code=401, content=fail(None, "未提供access_token", 401))
     try:
         return JSONResponse(status_code=200, content=ok(await auth_service.userinfo(token)))
     except (AuthError, JwtError) as exc:
-        return JSONResponse(status_code=200, content=fail(None, "无效的access_token: %s" % exc, 401))
+        return JSONResponse(status_code=401, content=fail(None, "无效的access_token", 401))
 
 
 async def _request_params(request: Request) -> dict[str, Any]:
@@ -418,7 +424,8 @@ async def _online_revoke(
         await auth_service.revoke_access_token(token_id)
         return JSONResponse(status_code=200, content=ok(None))
     except (AuthError, JwtError) as exc:
-        return JSONResponse(status_code=200, content=fail(None, str(exc), getattr(exc, "code", 401)))
+        code = getattr(exc, "code", 401)
+        return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
 
 def _password_encrypted(request: Request) -> bool:

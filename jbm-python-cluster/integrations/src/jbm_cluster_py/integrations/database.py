@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Mapping, Optional
+from collections.abc import Iterable, Mapping
+from typing import Any, Optional
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlparse
 
 logger = logging.getLogger(__name__)
@@ -50,3 +51,16 @@ def jdbc_to_async_url(values: Mapping[str, Any]) -> Optional[str]:
 
 def configured_database_url(config: Mapping[str, Any]) -> Optional[str]:
     return jdbc_to_async_url(config)
+
+
+async def require_tables(engine: Any, table_names: Iterable[str]) -> None:
+    from sqlalchemy import inspect
+
+    async with engine.connect() as connection:
+        missing = await connection.run_sync(
+            lambda sync: [name for name in table_names if not inspect(sync).has_table(name)]
+        )
+    if missing:
+        raise RuntimeError(
+            "Database migration required; missing tables: " + ", ".join(missing)
+        )

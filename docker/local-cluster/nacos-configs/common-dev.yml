@@ -3,13 +3,17 @@ integrations:
     url: mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4
   redis:
     enabled: true
-    url: redis://redis:6379/0
+    url: redis://:jbm-local-redis@redis:6379/0
   rabbitmq:
     enabled: true
     url: amqp://jbm:jbm-local@rabbitmq:5672/
   kafka:
     enabled: true
     bootstrap-servers: kafka:9092
+    security-protocol: SASL_PLAINTEXT
+    sasl-mechanism: PLAIN
+    username: jbm
+    password: jbm-local-kafka
     access-logs-topic: jbm.logs.access.v1
     business-logs-topic: jbm.logs.business.v1
     consumer-group: jbm-cluster-platform-logs

@@ -5,3 +5,5 @@ jbm:
       enabled: true
       url: http://loki:3100/loki/api/v1/push
       tenant-id: platform
+      username: jbm
+      password: jbm-local-loki

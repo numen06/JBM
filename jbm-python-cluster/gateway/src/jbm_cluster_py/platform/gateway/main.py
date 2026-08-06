@@ -51,7 +51,6 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         gateway_config.get("access-log") or {},
         discovery,
         http_client,
-        app_config.database,
         KafkaClient(app_config.kafka),
     )
     proxy = GatewayProxy(
@@ -102,8 +101,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
-    install_exception_handlers(app)
     install_security_middleware(app, app_config)
+    install_exception_handlers(app)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_gateway_router(proxy, routes, ip_limits, circuit_breakers, traffic, access_logger, discovery))
     return app

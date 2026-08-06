@@ -6,6 +6,10 @@ spring:
     name: jbm-cluster-platform-push
 
 jbm:
+  push:
+    security:
+      enabled: true
+      userinfo-url: http://jbm-cluster-platform-auth:5555/oauth2/userinfo
   python:
     app: push
     module: jbm-cluster-platform-push

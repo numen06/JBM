@@ -53,6 +53,7 @@ class CrudStore:
         page: int = 1,
         size: int = 10,
         root_only: bool = False,
+        include_secrets: bool = False,
     ) -> tuple[list[dict[str, Any]], int]:
         table, pk = self._resource(resource)
         columns, _, _ = await self._meta(resource)
@@ -83,16 +84,18 @@ class CrudStore:
                     {**params, "limit": size, "offset": (page - 1) * size},
                 )
             ).mappings().all()
-        return [_row(row) for row in rows], total
+        return [_row(row, include_secrets) for row in rows], total
 
-    async def get(self, resource: str, value: Any) -> dict[str, Any] | None:
+    async def get(
+        self, resource: str, value: Any, include_secrets: bool = False
+    ) -> dict[str, Any] | None:
         table, pk = self._resource(resource)
         columns, _, _ = await self._meta(resource)
         if not columns:
             return None
         async with self.engine.connect() as conn:
             row = (await conn.execute(text(f"SELECT * FROM {table} WHERE {pk} = :id LIMIT 1"), {"id": value})).mappings().first()
-        return _row(row) if row else None
+        return _row(row, include_secrets) if row else None
 
     async def save(
         self, resource: str, payload: Mapping[str, Any], identity: Any | None = None
@@ -299,9 +302,16 @@ def _camel(value: str) -> str:
     return head + "".join(part[:1].upper() + part[1:] for part in tail)
 
 
-def _row(row: Mapping[str, Any]) -> dict[str, Any]:
+def _row(row: Mapping[str, Any], include_secrets: bool = False) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in row.items():
+        if not include_secrets and key.lower() in {
+            "password",
+            "secret_key",
+            "private_key",
+            "access_key_secret",
+        }:
+            continue
         if isinstance(value, datetime):
             value = value.isoformat()
         elif isinstance(value, int) and abs(value) > 9_007_199_254_740_991:

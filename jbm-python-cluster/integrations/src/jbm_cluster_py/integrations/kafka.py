@@ -19,6 +19,7 @@ class KafkaClient:
             self.config.get("bootstrap-servers") or "localhost:9092"
         )
         self.retry_seconds = float(self.config.get("retry-seconds") or 2)
+        self.client_options = self._client_options()
         self.producer: Any = None
         self._consumers: list[Any] = []
         self._tasks: list[asyncio.Task[None]] = []
@@ -33,6 +34,7 @@ class KafkaClient:
         self.producer = AIOKafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
             acks="all",
+            **self.client_options,
         )
         await self.producer.start()
 
@@ -65,6 +67,7 @@ class KafkaClient:
             group_id=group_id,
             enable_auto_commit=False,
             auto_offset_reset="earliest",
+            **self.client_options,
         )
         await consumer.start()
         self._consumers.append(consumer)
@@ -107,3 +110,18 @@ class KafkaClient:
         if self.producer is not None:
             await self.producer.stop()
             self.producer = None
+
+    def _client_options(self) -> dict[str, str]:
+        security_protocol = str(self.config.get("security-protocol") or "PLAINTEXT")
+        if not security_protocol.startswith("SASL_"):
+            return {"security_protocol": security_protocol}
+        username = str(self.config.get("username") or "")
+        password = str(self.config.get("password") or "")
+        if not (username and password):
+            raise ValueError("Kafka username and password are required for SASL")
+        return {
+            "security_protocol": security_protocol,
+            "sasl_mechanism": str(self.config.get("sasl-mechanism") or "PLAIN"),
+            "sasl_plain_username": username,
+            "sasl_plain_password": password,
+        }

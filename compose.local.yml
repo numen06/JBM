@@ -1,7 +1,7 @@
 name: jbm73-python
 
 x-python-config: &python-config >-
-  {"spring":{"cloud":{"nacos":{"config":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm-py","group":"DEFAULT_GROUP","shared-dataids":"common-{profile}.yml,{app}-{profile}.yml"},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm-py","group":"DEFAULT_GROUP"}}}}}
+  {"spring":{"cloud":{"nacos":{"config":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm-py","group":"DEFAULT_GROUP","username":"${RNACOS_USERNAME:-jbm}","password":"${RNACOS_PASSWORD:-jbm-local-rnacos}","shared-dataids":"common-{profile}.yml,{app}-{profile}.yml"},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm-py","group":"DEFAULT_GROUP","username":"${RNACOS_USERNAME:-jbm}","password":"${RNACOS_PASSWORD:-jbm-local-rnacos}"}}}}}
 
 x-python-environment: &python-environment
   JBM_PROFILE: dev
@@ -39,11 +39,12 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "jbm-local-redis"]
     ports: ["127.0.0.1:16379:6379"]
     volumes: ["redis-data:/data"]
     networks: [jbm73-python]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "jbm-local-redis", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -72,12 +73,21 @@ services:
     environment:
       KAFKA_NODE_ID: "1"
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: SASL_PLAINTEXT://:9092,CONTROLLER://:9093,SASL_PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka:9092,SASL_PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_PLAINTEXT_HOST:SASL_PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_PLAIN_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="jbm" password="jbm-local-kafka" user_jbm="jbm-local-kafka";
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_HOST_PLAIN_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="jbm" password="jbm-local-kafka" user_jbm="jbm-local-kafka";
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
@@ -86,28 +96,64 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_HEAP_OPTS: -Xms256m -Xmx256m
     ports: ["127.0.0.1:29092:29092"]
-    volumes: ["kafka-data:/var/lib/kafka/data"]
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - ./docker/local-cluster/kafka/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+      - ./docker/local-cluster/kafka/kafka_client.properties:/etc/kafka/kafka_client.properties:ro
     networks: [jbm73-python]
     healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --command-config /etc/kafka/kafka_client.properties --list >/dev/null 2>&1"]
       interval: 10s
       timeout: 8s
       retries: 30
       start_period: 30s
 
-  loki:
+  loki-backend:
     image: m.daocloud.io/docker.io/grafana/loki:3.7.3
     restart: unless-stopped
     command: ["-config.file=/etc/loki/local-config.yaml"]
-    ports: ["127.0.0.1:13100:3100"]
     volumes: ["loki-data:/tmp/loki"]
-    networks: [jbm73-python]
+    networks: [loki-internal]
     healthcheck:
       test: ["CMD", "/usr/bin/loki", "--config.file=/etc/loki/local-config.yaml", "--verify-config=true"]
       interval: 10s
       timeout: 5s
       retries: 20
       start_period: 15s
+
+  loki:
+    image: jbm73-python-jbm-admin
+    restart: unless-stopped
+    environment:
+      RNACOS_USERNAME: ${RNACOS_USERNAME:-jbm}
+      RNACOS_PASSWORD: ${RNACOS_PASSWORD:-jbm-local-rnacos}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        login="$$(curl -fsS -X POST http://rnacos:8848/nacos/v1/auth/login --data-urlencode "username=$$RNACOS_USERNAME" --data-urlencode "password=$$RNACOS_PASSWORD")"
+        token="$$(printf '%s' "$$login" | sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p')"
+        config="$$(curl -fsS -G http://rnacos:8848/nacos/v1/cs/configs --data-urlencode "tenant=jbm-py" --data-urlencode "group=DEFAULT_GROUP" --data-urlencode "dataId=logs-dev.yml" --data-urlencode "accessToken=$$token")"
+        loki_username="$$(printf '%s\n' "$$config" | sed -n 's/^[[:space:]]*username:[[:space:]]*//p' | head -1)"
+        loki_password="$$(printf '%s\n' "$$config" | sed -n 's/^[[:space:]]*password:[[:space:]]*//p' | head -1)"
+        test -n "$$loki_username" && test -n "$$loki_password"
+        printf '%s:%s\n' "$$loki_username" "$$(openssl passwd -apr1 "$$loki_password")" > /etc/nginx/.htpasswd
+        printf '%s' "$$loki_username" > /tmp/loki-username
+        printf '%s' "$$loki_password" > /tmp/loki-password
+        exec nginx -g 'daemon off;'
+    ports: ["127.0.0.1:13100:3100"]
+    volumes:
+      - ./docker/local-cluster/loki/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [jbm73-python, loki-internal]
+    depends_on:
+      loki-backend: {condition: service_healthy}
+      rnacos-init: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -u \"$$(cat /tmp/loki-username):$$(cat /tmp/loki-password)\" http://127.0.0.1:3100/ready >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
@@ -133,6 +179,9 @@ services:
     environment:
       RUST_LOG: info
       TZ: Asia/Shanghai
+      RNACOS_ENABLE_OPEN_API_AUTH: "true"
+      RNACOS_INIT_ADMIN_USERNAME: ${RNACOS_USERNAME:-jbm}
+      RNACOS_INIT_ADMIN_PASSWORD: ${RNACOS_PASSWORD:-jbm-local-rnacos}
     ports:
       - "127.0.0.1:8848:8848"
       - "127.0.0.1:9848:9848"
@@ -143,6 +192,9 @@ services:
   rnacos-init:
     image: curlimages/curl:8.11.1
     restart: "no"
+    environment:
+      RNACOS_USERNAME: ${RNACOS_USERNAME:-jbm}
+      RNACOS_PASSWORD: ${RNACOS_PASSWORD:-jbm-local-rnacos}
     entrypoint: ["/bin/sh", "/init/rnacos-init.sh"]
     volumes:
       - ./docker/local-cluster/rnacos-init.sh:/init/rnacos-init.sh:ro
@@ -275,6 +327,8 @@ services:
 networks:
   jbm73-python:
     name: jbm73-python
+  loki-internal:
+    internal: true
 
 volumes:
   mysql-data:

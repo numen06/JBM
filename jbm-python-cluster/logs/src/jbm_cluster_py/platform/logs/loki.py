@@ -22,11 +22,18 @@ class LokiSink:
         )
         self.timeout = float(self.config.get("timeout-seconds") or 5)
         self.default_tenant = str(self.config.get("tenant-id") or "platform")
+        username = str(self.config.get("username") or "")
+        password = str(self.config.get("password") or "")
+        if self.enabled and not (username and password):
+            raise ValueError("Loki username and password are required when enabled")
+        self.auth = httpx.BasicAuth(username, password) if username and password else None
         self.client: httpx.AsyncClient | None = None
 
     async def start(self) -> None:
         if self.enabled and self.client is None:
-            self.client = httpx.AsyncClient(timeout=self.timeout, trust_env=False)
+            self.client = httpx.AsyncClient(
+                timeout=self.timeout, trust_env=False, auth=self.auth
+            )
 
     async def stop(self) -> None:
         if self.client is not None:

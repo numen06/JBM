@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from jbm_cluster_py.common.masterdata import PageForm, java_page, now_iso
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
 
 DOC_TABLE = "base_doc"
@@ -24,13 +24,20 @@ def _clean(data: Mapping[str, Any]) -> Dict[str, Any]:
 class DocRepository:
     def __init__(self, database_config: Mapping[str, Any]) -> None:
         database_url = configured_database_url(database_config) or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
-        if database_url.startswith("sqlite+aiosqlite:///"):
+        self._sqlite = database_url.startswith("sqlite+aiosqlite:///")
+        if self._sqlite:
             db_path = database_url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.engine: AsyncEngine = create_async_engine(database_url, pool_pre_ping=True)
 
     async def start(self) -> None:
+        if not self._sqlite:
+            await require_tables(
+                self.engine,
+                (DOC_TABLE, GROUP_TABLE, TOKEN_TABLE, VERSION_TABLE),
+            )
+            return
         async with self.engine.begin() as conn:
             await conn.execute(
                 text(

@@ -10,11 +10,88 @@ from fastapi import APIRouter, Body, Query, Request
 from fastapi.responses import PlainTextResponse, StreamingResponse
 from jbm_cluster_py.common.result import ok
 from jbm_cluster_py.platform.logs.repository import LogsRepository
-from jbm_cluster_py.platform.logs.service import BusinessLogService
+from jbm_cluster_py.platform.logs.service import BusinessLogService, GatewayLogIngestService
 
 
-def build_logs_router(repository: LogsRepository, service: BusinessLogService) -> APIRouter:
+def build_logs_router(
+    repository: LogsRepository,
+    service: BusinessLogService,
+    gateway_ingest: GatewayLogIngestService,
+) -> APIRouter:
     router = APIRouter()
+
+    @router.post("/GatewayLogs/ingest", tags=["网关日志"])
+    async def ingest_gateway_log(body: dict[str, Any]) -> dict[str, Any]:
+        await gateway_ingest.handle(body)
+        return ok(True, "采集网关日志成功")
+
+    @router.post("/GatewayLogs/findLogs", tags=["网关日志"])
+    async def find_gateway_logs(
+        body: dict[str, Any] | None = Body(default=None),
+    ) -> dict[str, Any]:
+        return ok(await repository.page_gateway_logs(body or {}), "查询分页列表成功")
+
+    @router.post("/GatewayLogs/findOperationLogs", tags=["网关日志"])
+    async def find_operation_logs(
+        body: dict[str, Any] | None = Body(default=None),
+    ) -> dict[str, Any]:
+        return ok(
+            await repository.page_gateway_logs(body or {}, True),
+            "查询分页列表成功",
+        )
+
+    @router.post("/GatewayLogs/getByAccessId", tags=["网关日志"])
+    async def get_gateway_log(body: dict[str, Any]) -> dict[str, Any]:
+        return ok(
+            await repository.gateway_log(str(body.get("accessId") or "")),
+            "查询日志成功",
+        )
+
+    @router.get("/GatewayLogs/filterRules", tags=["网关日志"])
+    async def list_filter_rules() -> dict[str, Any]:
+        return ok(await repository.list_rules(), "查询过滤规则成功")
+
+    @router.post("/GatewayLogs/filterRules", tags=["网关日志"])
+    async def create_filter_rule(body: dict[str, Any]) -> dict[str, Any]:
+        return ok(await repository.save_rule(body), "保存过滤规则成功")
+
+    @router.put("/GatewayLogs/filterRules/{rule_id}", tags=["网关日志"])
+    async def update_filter_rule(rule_id: str, body: dict[str, Any]) -> dict[str, Any]:
+        return ok(await repository.save_rule(body, rule_id), "保存过滤规则成功")
+
+    @router.delete("/GatewayLogs/filterRules/{rule_id}", tags=["网关日志"])
+    async def delete_filter_rule(rule_id: str) -> dict[str, Any]:
+        return ok(await repository.delete_rule(rule_id), "删除过滤规则成功")
+
+    @router.post("/GatewayLogs/filterRules/{rule_id}/toggle", tags=["网关日志"])
+    async def toggle_filter_rule(
+        rule_id: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        current = await repository.rule(rule_id)
+        if not current:
+            raise ValueError("过滤规则不存在")
+        return ok(
+            await repository.save_rule(
+                {**current, "enabled": bool(body.get("enabled"))}, rule_id
+            ),
+            "切换过滤规则成功",
+        )
+
+    @router.post("/GatewayLogs/filterRules/test", tags=["网关日志"])
+    async def test_filter_rule(body: dict[str, Any]) -> dict[str, Any]:
+        rules = await repository.matching_rules(
+            {
+                "path": body.get("path"),
+                "method": body.get("method"),
+                "serviceId": body.get("serviceId"),
+                "httpStatus": body.get("statusCode"),
+            }
+        )
+        return ok({"matched": bool(rules), "rules": rules}, "测试过滤规则成功")
+
+    @router.post("/clusterAccess/getClusterAccessInfo", tags=["网关日志"])
+    async def cluster_access() -> dict[str, Any]:
+        return ok(await repository.cluster_access(), "查询访问统计成功")
 
     @router.post("/businessLog/create", tags=["业务日志"])
     async def create(body: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:

@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import Any, Mapping, Optional
 
+import httpx
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
+from jbm_cluster_py.common.auth import UserInfoAuthClient, install_bearer_openapi
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
@@ -47,6 +50,21 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     repository = BusinessEventRepository(app_config.database)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     http_client = WebhookHttpClient(discovery)
+    auth_http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(5.0, connect=3.0), trust_env=False
+    )
+    auth = UserInfoAuthClient(
+        dict(app_config.get("jbm.push.security", {}) or {}),
+        auth_http_client,
+        default_public_paths=(
+            "/actuator/health",
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/pin/send",
+        ),
+    )
     business_event_service = BusinessEventService(
         repository,
         RedisClient(app_config.redis),
@@ -94,6 +112,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             if rabbitmq.enabled:
                 await rabbitmq.stop()
             await nacos.stop()
+            await auth_http_client.aclose()
 
     openapi = app_config.openapi
     app = FastAPI(
@@ -105,9 +124,42 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
+    @app.middleware("http")
+    async def authenticate(request: Request, call_next: Any):
+        if auth.is_public(request.url.path):
+            request.state.identity = {}
+            return await call_next(request)
+        try:
+            request.state.identity = await auth.authenticate(
+                request.headers.get("authorization")
+            )
+        except PermissionError as exc:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "success": False,
+                    "code": 401,
+                    "message": str(exc),
+                    "result": None,
+                },
+            )
+        except ConnectionError:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "success": False,
+                    "code": 503,
+                    "message": "认证服务不可用",
+                    "result": None,
+                },
+            )
+        return await call_next(request)
+
     install_exception_handlers(app)
+
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
-    app.include_router(build_push_router(push_service, business_event_service))
+    app.include_router(build_push_router(push_service, business_event_service, auth))
+    install_bearer_openapi(app, auth.public_paths)
     return app
 
 

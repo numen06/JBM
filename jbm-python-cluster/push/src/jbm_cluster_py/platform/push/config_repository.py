@@ -10,7 +10,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from jbm_cluster_py.common.masterdata import java_page, page_form_from_body
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
 PUSH_CONFIG_TABLE = "push_config_info"
 EMAIL_CONFIG_TABLE = "email_push_config"
@@ -29,6 +29,7 @@ class PushConfigRepository:
 
     async def start(self) -> None:
         if not self._sqlite:
+            await require_tables(self.engine, (PUSH_CONFIG_TABLE, EMAIL_CONFIG_TABLE))
             return
         async with self.engine.begin() as conn:
             if not await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table(PUSH_CONFIG_TABLE)):

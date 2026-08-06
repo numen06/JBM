@@ -33,7 +33,10 @@ async def test_center_core_compatibility(tmp_path) -> None:
     app = create_app(config)
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
-            assert (await client.get("/actuator/health")).json()["status"] == "UP"
+            health = await client.get("/actuator/health")
+            assert health.json()["status"] == "UP"
+            assert health.headers["X-Request-ID"]
+            assert health.headers["Server-Timing"].startswith("app;dur=")
 
             current = (await client.get("/current/user")).json()["result"]
             assert current["userName"] == "admin"
@@ -58,7 +61,15 @@ async def test_center_core_compatibility(tmp_path) -> None:
             ).json()["result"]
             assert dictionaries["contents"][0]["code"] == "sys_status"
 
-            assert (await client.get("/app", params={"pageForm.currPage": 1})).json()["result"]["total"] == 1
+            apps = (await client.get("/app", params={"pageForm.currPage": 1})).json()["result"]
+            assert apps["total"] == 1
+            assert "secretKey" not in apps["contents"][0]
+            assert "privateKey" not in apps["contents"][0]
+            secret_response = await client.get("/app/1000/secret")
+            assert secret_response.status_code == 400
+            reset_secret = await client.put("/app/1000/secret")
+            assert reset_secret.status_code == 200
+            assert isinstance(reset_secret.json()["result"], str)
             assert (await client.get("/role/all")).json()["result"][0]["roleCode"] == "super_admin"
             assert (await client.get("/user/1/roles")).json()["result"][0]["roleCode"] == "super_admin"
             assert (await client.get("/user/1/orgs")).json()["result"][0]["orgId"] == 1
@@ -99,7 +110,7 @@ def _seed(path) -> None:
         CREATE TABLE base_menu (menu_id INTEGER PRIMARY KEY, app_id INTEGER, parent_id INTEGER, menu_code TEXT, menu_name TEXT, icon TEXT, path TEXT, priority INTEGER, status INTEGER, is_persist INTEGER, hidden INTEGER);
         CREATE TABLE base_org (id INTEGER PRIMARY KEY, parent_id INTEGER, org_name TEXT, org_code TEXT, status INTEGER, level INTEGER);
         CREATE TABLE base_dic (id INTEGER PRIMARY KEY, parent_id INTEGER, name TEXT, code TEXT, remark TEXT);
-        CREATE TABLE base_app (app_id INTEGER PRIMARY KEY, code TEXT, api_key TEXT, app_name TEXT, app_type TEXT, status INTEGER, org_id INTEGER);
+        CREATE TABLE base_app (app_id INTEGER PRIMARY KEY, code TEXT, api_key TEXT, app_name TEXT, app_type TEXT, status INTEGER, org_id INTEGER, secret_key TEXT, private_key TEXT);
         CREATE TABLE gateway_route (route_id INTEGER PRIMARY KEY, route_name TEXT, path TEXT, service_id TEXT, url TEXT, strip_prefix INTEGER, status INTEGER);
         CREATE TABLE base_api (api_id INTEGER PRIMARY KEY);
         CREATE TABLE base_api_key (key_id INTEGER PRIMARY KEY);
@@ -114,7 +125,7 @@ def _seed(path) -> None:
         INSERT INTO base_org VALUES (1, NULL, '默认组织', 'default', 1, 0);
         INSERT INTO base_dic VALUES (1, NULL, '启用状态', 'sys_status', NULL);
         INSERT INTO base_dic VALUES (2, 1, '启用', '1', NULL);
-        INSERT INTO base_app VALUES (1000, NULL, 'jbmSeedDevAppKey00000001', 'JBM基础应用', 'pc', 1, 1);
+        INSERT INTO base_app VALUES (1000, NULL, 'jbmSeedDevAppKey00000001', 'JBM基础应用', 'pc', 1, 1, 'client-secret', 'private-key');
         INSERT INTO gateway_route VALUES (1000, 'center-default', '/**', 'jbm-cluster-platform-center-jbm7', NULL, 0, 1);
         """
     )

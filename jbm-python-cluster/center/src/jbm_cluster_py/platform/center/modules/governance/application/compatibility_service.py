@@ -10,6 +10,7 @@ import bcrypt
 from jbm_cluster_py.common.result import ok, page_result
 from jbm_cluster_py.platform.center.modules.governance.application.access import (
     is_platform,
+    require_internal,
     require_platform,
     require_tenant_record,
     tenant_id,
@@ -168,15 +169,29 @@ class CompatibilityService:
         body: Mapping[str, Any],
         identity: Mapping[str, Any],
     ) -> dict[str, Any] | None:
+        if path.startswith("/internal/"):
+            require_internal(identity)
         if not is_platform(identity):
             platform_prefixes = (
+                "/api/",
+                "/api-docs",
                 "/authority/",
+                "/baseAccountLogs/",
+                "/baseAppConfig/",
+                "/customForms/",
+                "/dataSourceManagement/",
                 "/gateway/",
                 "/apikey/",
                 "/developer/",
                 "/extend-field/",
             )
             if path.startswith(platform_prefixes):
+                require_platform(identity)
+            if path in {
+                "/user/registrations",
+                "/user/third-party-accounts",
+                "/user/third-party-account-bindings",
+            }:
                 require_platform(identity)
         if path == "/current/user" and method == "PUT":
             user_id = _user_id(identity)
@@ -249,8 +264,10 @@ class CompatibilityService:
             return ok(True)
         if path == "/user/sessions":
             username = str(query.get("username") or body.get("username") or body.get("account") or "")
-            password = str(query.get("password") or body.get("password") or "")
-            rows, _ = await self.store.list("account", {"account": username}, 1, 100)
+            password = str(body.get("password") or "")
+            rows, _ = await self.store.list(
+                "account", {"account": username}, 1, 100, include_secrets=True
+            )
             exact = next((row for row in rows if row.get("account") == username), None)
             if not exact:
                 raise ValueError("账号不存在")
@@ -308,16 +325,21 @@ class CompatibilityService:
         if path == "/app/{appId}/secret" and method == "GET":
             app = await self.store.get("app", params["appId"])
             require_tenant_record(identity, app, "orgId")
-            return ok({"secretKey": app.get("secretKey") if app else None})
+            raise ValueError("Client Secret 只在创建或重置时显示")
         if path in {"/app/{appId}/secret", "/app/{appId}/client"} and method == "PUT":
             require_tenant_record(identity, await self.store.get("app", params["appId"]), "orgId")
             values = dict(body)
             if path.endswith("/secret"):
-                values["secretKey"] = new_secret()
+                secret = new_secret()
+                values["secretKey"] = secret
+                await self.store.save("app", values, params["appId"])
+                return ok(secret)
             return ok(await self.store.save("app", values, params["appId"]))
 
         if path == "/apikey/{keyId}/secret":
-            return ok(await self.store.save("apikey", {"secretKey": new_secret()}, params["keyId"]))
+            secret = new_secret()
+            await self.store.save("apikey", {"secretKey": secret}, params["keyId"])
+            return ok(secret)
         if path == "/apikey/{keyId}/status":
             return ok(await self.store.save("apikey", {"status": body.get("status")}, params["keyId"]))
         if path == "/apikey/{keyId}/authority":
@@ -327,7 +349,13 @@ class CompatibilityService:
             requested = query.get("authorityId") or query.get("authority")
             return ok(requested in granted or str(requested) in {str(item) for item in granted})
         if path == "/internal/gateway/apikey":
-            rows, _ = await self.store.list("apikey", {"apiKey": query.get("apiKey")}, 1, 10)
+            rows, _ = await self.store.list(
+                "apikey",
+                {"apiKey": query.get("apiKey")},
+                1,
+                10,
+                include_secrets=True,
+            )
             return ok(next((row for row in rows if row.get("apiKey") == query.get("apiKey")), None))
         if path == "/internal/gateway/apikey/{keyId}/check":
             return await self._special(
@@ -615,7 +643,9 @@ class CompatibilityService:
     async def _set_password(self, user_id: int, password: str, origin: str | None = None) -> None:
         if len(password) < 8:
             raise ValueError("密码长度不能少于 8 位")
-        rows, _ = await self.store.list("account", {"userId": user_id}, 1, 100)
+        rows, _ = await self.store.list(
+            "account", {"userId": user_id}, 1, 100, include_secrets=True
+        )
         if not rows:
             raise ValueError("用户没有可用的登录账号")
         if origin is not None and not _verify(origin, str(rows[0].get("password") or "")):

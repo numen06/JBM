@@ -9,7 +9,7 @@ from typing import Any, Mapping, Optional
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ class AuthRepository:
 
     async def start(self) -> None:
         if not self._sqlite:
+            await require_tables(self.engine, ("base_app", "base_account", "base_user"))
             return
         async with self.engine.begin() as conn:
             for ddl in SQLITE_DDL:

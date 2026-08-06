@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from jbm_cluster_py.common.masterdata import PageForm, java_page, now_iso
-from jbm_cluster_py.integrations.database import configured_database_url
+from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
@@ -18,13 +18,17 @@ class BigscreenRepository:
             configured_database_url(database_config)
             or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         )
-        if url.startswith("sqlite+aiosqlite:///"):
+        self._sqlite = url.startswith("sqlite+aiosqlite:///")
+        if self._sqlite:
             db_path = url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.engine: AsyncEngine = create_async_engine(url, pool_pre_ping=True)
 
     async def start(self) -> None:
+        if not self._sqlite:
+            await require_tables(self.engine, ("bigscreen_view",))
+            return
         async with self.engine.begin() as conn:
             await conn.execute(
                 text("""CREATE TABLE IF NOT EXISTS bigscreen_view (

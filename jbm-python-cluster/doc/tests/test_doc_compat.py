@@ -144,7 +144,7 @@ def test_doc_text_get_missing_storage_returns_business_error(tmp_path: Path) -> 
         assert saved.status_code == 200
 
         loaded = client.post("/baseDoc/text/get", json={"baseDoc": {"docPath": "missing/ghost.txt"}})
-        assert loaded.status_code == 200
+        assert loaded.status_code == 400
         body = loaded.json()
         assert body["success"] is False
         assert body["code"] == 400
