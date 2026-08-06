@@ -100,6 +100,8 @@ def _env_overrides() -> Dict[str, Any]:
         "JBM_DATABASE_URL": "integrations.database.url",
         "JBM_REDIS_URL": "integrations.redis.url",
         "JBM_RABBITMQ_URL": "integrations.rabbitmq.url",
+        "JBM_KAFKA_BOOTSTRAP_SERVERS": "integrations.kafka.bootstrap-servers",
+        "JBM_LOKI_URL": "jbm.logs.loki.url",
         "JBM_NACOS_SERVER_ADDR": "spring.cloud.nacos.discovery.server-addr",
         "JBM_AUTH_JWT_PRIVATE_KEY": "jbm.auth.jwt.private-key",
         "JBM_AUTH_JWT_ISSUER": "jbm.auth.jwt.issuer",
@@ -359,6 +361,10 @@ class AppConfig:
                 )
             config["enabled"] = config.get("enabled", True)
         return config
+
+    @property
+    def kafka(self) -> Dict[str, Any]:
+        return dict(self.get("integrations.kafka", {}) or {})
 
     @property
     def redis(self) -> Dict[str, Any]:

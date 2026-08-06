@@ -4,6 +4,7 @@ import json
 import uuid
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any
 
@@ -341,6 +342,28 @@ class LogsRepository:
                     ),
                     {"id": rule_id, "now": now_iso()},
                 )
+
+    async def matching_rules(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+        matched = []
+        for rule in await self.list_rules():
+            if not rule.get("enabled"):
+                continue
+            path_pattern = str(rule.get("pathPattern") or "")
+            if path_pattern and not fnmatchcase(
+                str(payload.get("path") or ""), path_pattern.replace("**", "*")
+            ):
+                continue
+            method = str(rule.get("method") or "").upper()
+            if method and method != str(payload.get("method") or "").upper():
+                continue
+            service_id = str(rule.get("serviceId") or "")
+            if service_id and service_id != str(payload.get("serviceId") or ""):
+                continue
+            status = str(rule.get("statusCode") or "")
+            if status and status != str(payload.get("httpStatus") or ""):
+                continue
+            matched.append(rule)
+        return matched
 
     async def create_business_log(self, body: Mapping[str, Any]) -> dict[str, Any]:
         log_id = str(body.get("logId") or uuid.uuid4().hex)

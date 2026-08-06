@@ -7,7 +7,22 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
+from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
+
+
+class GatewayLogIngestService:
+    def __init__(self, repository: LogsRepository, loki: LokiSink) -> None:
+        self.repository = repository
+        self.loki = loki
+
+    async def handle(self, payload: Mapping[str, Any]) -> None:
+        matched = await self.repository.matching_rules(payload)
+        if matched:
+            await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])
+            return
+        saved = await self.repository.save_gateway_log(payload)
+        await self.loki.send_gateway(saved)
 
 
 class BusinessLogService:

@@ -7,19 +7,23 @@ import time
 import uuid
 from collections import deque
 from datetime import datetime, timezone
-from fnmatch import fnmatchcase
 from typing import Any, Mapping, Optional
 
 import httpx
 from fastapi import Request, WebSocket
 from fastapi.responses import JSONResponse, Response, StreamingResponse
-
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.result import fail
+from jbm_cluster_py.integrations.kafka import KafkaClient
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry
 from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository
-from jbm_cluster_py.platform.gateway.routes import GatewayRoute, RouteRepository, join_target_url, strip_prefix
+from jbm_cluster_py.platform.gateway.routes import (
+    GatewayRoute,
+    RouteRepository,
+    join_target_url,
+    strip_prefix,
+)
 from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 from jbm_cluster_py.platform.logs.repository import LogsRepository
@@ -138,6 +142,7 @@ class AccessLogger:
         discovery: NacosDiscoveryClient,
         http_client: httpx.AsyncClient,
         database_config: Optional[Mapping[str, Any]] = None,
+        kafka: KafkaClient | None = None,
     ) -> None:
         self.config = dict(config)
         self.enabled = bool(self.config.get("enabled", True))
@@ -146,12 +151,22 @@ class AccessLogger:
         self.http_client = http_client
         self.recent: deque[dict[str, Any]] = deque(maxlen=int(self.config.get("recent-size") or 200))
         self.repository = LogsRepository(database_config) if database_config else None
+        self.kafka = kafka
+        self.kafka_topic = str(
+            self.config.get("topic")
+            or ((kafka.config.get("access-logs-topic") if kafka else None))
+            or "jbm.logs.access.v1"
+        )
 
     async def start(self) -> None:
         if self.repository is not None:
             await self.repository.start()
+        if self.kafka is not None and self.kafka.enabled:
+            await self.kafka.start()
 
     async def stop(self) -> None:
+        if self.kafka is not None:
+            await self.kafka.stop()
         if self.repository is not None:
             await self.repository.stop()
 
@@ -166,6 +181,17 @@ class AccessLogger:
             if matched:
                 await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])
                 return
+        if self.kafka is not None and self.kafka.enabled:
+            try:
+                await self.kafka.publish_json(
+                    self.kafka_topic,
+                    payload,
+                    key=str(payload.get("accessId") or "") or None,
+                )
+                return
+            except Exception:
+                logger.exception("Kafka access-log publish failed; falling back to direct storage")
+        if self.repository is not None:
             await self.repository.save_gateway_log(payload)
             return
         if self.ingest_enabled:
@@ -174,24 +200,7 @@ class AccessLogger:
     async def matching_rules(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
         if self.repository is None:
             return []
-        matched = []
-        for rule in await self.repository.list_rules():
-            if not rule.get("enabled"):
-                continue
-            path_pattern = str(rule.get("pathPattern") or "")
-            if path_pattern and not fnmatchcase(str(payload.get("path") or ""), path_pattern.replace("**", "*")):
-                continue
-            method = str(rule.get("method") or "").upper()
-            if method and method != str(payload.get("method") or "").upper():
-                continue
-            service_id = str(rule.get("serviceId") or "")
-            if service_id and service_id != str(payload.get("serviceId") or ""):
-                continue
-            status = str(rule.get("statusCode") or "")
-            if status and status != str(payload.get("httpStatus") or ""):
-                continue
-            matched.append(rule)
-        return matched
+        return await self.repository.matching_rules(payload)
 
     async def _ingest(self, payload: Mapping[str, Any]) -> None:
         service = str(self.config.get("service") or "jbm-cluster-platform-logs")

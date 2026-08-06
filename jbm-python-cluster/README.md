@@ -67,10 +67,11 @@ PYTHONPATH=common/src:integrations/src:auth/src:center/src:gateway/src:doc/src:p
   `/oauth2/userinfo`, `/oauth2/logout`, `/.well-known/openid-configuration`,
   and `/jwks.json`.
 - `gateway`: unified HTTP/WebSocket entry, dynamic routes and traffic policies,
-  port `6060`; gateway access-log persistence, statistics, and filter rules are
-  integrated here to keep request capture at the source.
+  port `6060`; captures gateway access logs and publishes them to Kafka.
 - `logs`: business-log persistence, stage progress, SSE, signed downloads, and
-  RabbitMQ event consumption, port `3312`. Login audit remains owned by Center.
+  Kafka event consumption, port `3312`. Gateway access logs are forwarded to
+  Loki and retained in MySQL for compatibility with existing query/statistics
+  APIs. Login audit remains owned by Center.
 - `bigscreen`: big-screen metadata and secure static ZIP deployment, port `3314`.
 - `doc`: compatible replacement for `jbm-cluster-platform-doc`, port `9999`,
   paths `/put`, `/upload`, `/get/**`, `/download/**`, `/baseDoc/**`,
@@ -98,7 +99,22 @@ Configuration keeps a Spring Boot YAML profile shape and is loaded in order:
 
 `JBM_APP=auth|center|gateway|doc|push|job|logs|bigscreen` selects the application. `JBM_PROFILE=jaja7` selects the
 profile. Compose disables remote configuration loading and uses r-nacos only for service discovery;
-database, Redis, RabbitMQ, and MinIO settings are supplied through environment variables.
+database, Redis, RabbitMQ, Kafka, Loki, and MinIO settings are supplied through
+environment variables.
+
+## Log pipeline
+
+The local stack exposes Kafka at `127.0.0.1:29092` and Loki at
+`http://127.0.0.1:13100`. Producers use these versioned topics:
+
+- `jbm.logs.access.v1`: gateway access-log JSON objects
+- `jbm.logs.business.v1`: business-log events (`CREATE`, `APPEND`, `DELETE`,
+  `UPDATE_EXPIRE`, `STAGE_INIT`, or `STAGE_UPDATE`)
+
+The logs service commits Kafka offsets only after an event is handled. Loki
+pushes use `/loki/api/v1/push` and send `X-Scope-OrgID`; local Loki disables
+authentication, while production must enable multi-tenancy and derive the
+tenant ID from trusted server-side identity.
 
 ## Docker
 

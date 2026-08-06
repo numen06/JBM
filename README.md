@@ -12,7 +12,7 @@ JBM 7.3 的纯 Python 基础技术平台分支，不包含 Java 服务或 Maven 
   - Doc `9999`
   - Push `3313`
   - Job `4444`
-- MySQL、Redis、RabbitMQ、MinIO
+- MySQL、Redis、RabbitMQ、Kafka、Loki、MinIO
 - r-nacos `0.6.6`
 
 ## 本地启动
@@ -28,6 +28,18 @@ JBM 7.3 的纯 Python 基础技术平台分支，不包含 Java 服务或 Maven 
 - 示例租户管理员：`tenant_admin / Tenant@123`，固定绑定租户 `2000`
 
 生产环境必须通过 `JBM_CONFIG_JSON` 或配置中心覆盖所有初始密码，并在首次交付后停用种子密码。
+
+本地 Kafka 对外地址为 `127.0.0.1:29092`，Loki API 为
+`http://127.0.0.1:13100`（避免与本机已有的 `3100` 端口冲突）。访问日志链路为：
+
+```text
+Gateway -> Kafka(jbm.logs.access.v1) -> Logs -> Loki
+                                            -> MySQL（现有查询接口兼容）
+```
+
+业务系统通过 `jbm.logs.business.v1` 投递业务日志。Kafka 消费成功后才提交 offset；
+Loki 暂时不可用时消息会留在 Kafka 并自动重试。本地 Compose 是单节点开发配置，
+生产环境应使用 Kafka 多副本集群、Loki 对象存储，并开启 Loki 多租户鉴权。
 
 ## 多租户边界
 

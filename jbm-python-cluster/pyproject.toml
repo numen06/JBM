@@ -8,6 +8,7 @@ dependencies = [
     "aioboto3>=13.1.1",
     "alembic>=1.13.2",
     "aio-pika>=9.4.3",
+    "aiokafka>=0.13.0,<0.14",
     "aiosqlite>=0.20.0",
     "fastapi>=0.115.0",
     "bcrypt>=4.1.0",

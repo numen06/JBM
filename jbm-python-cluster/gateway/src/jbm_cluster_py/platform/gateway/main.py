@@ -6,12 +6,12 @@ from typing import Any, Optional
 import httpx
 import uvicorn
 from fastapi import FastAPI
-
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
 from jbm_cluster_py.common.logging import configure_logging
+from jbm_cluster_py.integrations.kafka import KafkaClient
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient, NacosRegistrar
 from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry
@@ -52,6 +52,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         discovery,
         http_client,
         app_config.database,
+        KafkaClient(app_config.kafka),
     )
     proxy = GatewayProxy(
         app_config,

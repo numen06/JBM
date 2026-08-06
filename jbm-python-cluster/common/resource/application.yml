@@ -40,6 +40,12 @@ integrations:
     access-logs-queue: accessLogs-in-0.jbm-cluster-platform-logs
     business-log-queue: businessLog-in-0.jbm-cluster-platform-logs
     prefetch-count: 50
+  kafka:
+    enabled: false
+    bootstrap-servers: localhost:9092
+    access-logs-topic: jbm.logs.access.v1
+    business-logs-topic: jbm.logs.business.v1
+    consumer-group: jbm-cluster-platform-logs
   redis:
     enabled: false
     url: redis://redis:6379/0

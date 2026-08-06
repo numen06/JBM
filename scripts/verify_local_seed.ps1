@@ -8,6 +8,7 @@ param(
     [string]$CenterHealthUrl = 'http://127.0.0.1:7777/actuator/health',
     [string]$DocUrl = 'http://127.0.0.1:9999',
     [string]$BigscreenUrl = 'http://127.0.0.1:3314',
+    [string]$LokiUrl = 'http://127.0.0.1:13100',
     [int]$TimeoutSeconds = 90
 )
 
@@ -145,6 +146,16 @@ $gatewayLogPage = Assert-JbmSuccess (
         -ContentType 'application/json' -Body '{"pageForm":{"currPage":1,"pageSize":10}}'
 ) 'Gateway access-log query'
 
+$lokiDeadline = (Get-Date).AddSeconds(20)
+$lokiQuery = [uri]::EscapeDataString('{job="jbm-gateway"}')
+do {
+    $lokiResult = Invoke-RestMethod -Method Get `
+        -Uri "$($LokiUrl.TrimEnd('/'))/loki/api/v1/query_range?query=$lokiQuery&since=5m&limit=1"
+    if ($lokiResult.status -eq 'success' -and @($lokiResult.data.result).Count -gt 0) { break }
+    Start-Sleep -Seconds 1
+} while ((Get-Date) -lt $lokiDeadline)
+if (@($lokiResult.data.result).Count -lt 1) { throw 'Loki did not receive gateway access logs' }
+
 $smokeRoot = Join-Path $repoRoot ('temp\bigscreen-smoke-' + [guid]::NewGuid().ToString('N'))
 $smokeZip = "$smokeRoot.zip"
 $bigscreenPreview = $null
@@ -251,6 +262,7 @@ catch {
     GatewayRoutes = $routeCount
     GatewayLogRules = @($filterRules).Count
     GatewayAccessLogs = $gatewayLogPage.total
+    Loki = 'PASS'
     BusinessLog = $demoLog.logId
     Bigscreen = "PASS ($($bigscreenPreview.StatusCode))"
     PlatformOperator = "PASS ($($operatorUsers.total) users)"

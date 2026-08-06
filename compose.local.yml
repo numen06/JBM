@@ -1,7 +1,7 @@
 name: jbm73-python
 
 x-python-config: &python-config >-
-  {"integrations":{"database":{"url":"mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4"},"redis":{"enabled":true,"url":"redis://redis:6379/0"},"rabbitmq":{"enabled":true,"url":"amqp://jbm:jbm-local@rabbitmq:5672/"},"storage":{"backend":"minio","local-dir":"./data/files"},"minio":{"enabled":true,"endpoint-url":"http://minio:9000","bucket":"jbm-docs","access-key":"jbm-local","secret-key":"jbm-local-minio","region":"us-east-1","secure":false}},"spring":{"cloud":{"nacos":{"config":{"enabled":false},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm7","group":"DEFAULT_GROUP"}}}},"jbm":{"auth":{"jwt":{"issuer":"http://jbm-cluster-platform-auth:5555","audience":"jbm-api"}},"gateway":{"access-log":{"enabled":true,"ingest-enabled":false}},"logs":{"signing-secret":"jbm-local-business-log-signing-key","rabbitmq":{"queue":"jbm.business.logs"}},"bigscreen":{"views-dir":"/app/data/views","doc-base-url":"http://jbm-cluster-platform-doc:9999"},"center":{"security":{"enabled":true,"userinfo-url":"http://jbm-cluster-platform-auth:5555/oauth2/userinfo"},"seed":{"enabled":true,"admin-password":"Admin@123","platform-operator-password":"Operator@123","tenant-admin-password":"Tenant@123","force-reset-password":true}}}}
+  {"integrations":{"database":{"url":"mysql+asyncmy://root:jbm-local@mysql:3306/jbm-7.3?charset=utf8mb4"},"redis":{"enabled":true,"url":"redis://redis:6379/0"},"rabbitmq":{"enabled":true,"url":"amqp://jbm:jbm-local@rabbitmq:5672/"},"kafka":{"enabled":true,"bootstrap-servers":"kafka:9092","access-logs-topic":"jbm.logs.access.v1","business-logs-topic":"jbm.logs.business.v1","consumer-group":"jbm-cluster-platform-logs"},"storage":{"backend":"minio","local-dir":"./data/files"},"minio":{"enabled":true,"endpoint-url":"http://minio:9000","bucket":"jbm-docs","access-key":"jbm-local","secret-key":"jbm-local-minio","region":"us-east-1","secure":false}},"spring":{"cloud":{"nacos":{"config":{"enabled":false},"discovery":{"enabled":true,"server-addr":"rnacos:8848","namespace":"jbm7","group":"DEFAULT_GROUP"}}}},"jbm":{"auth":{"jwt":{"issuer":"http://jbm-cluster-platform-auth:5555","audience":"jbm-api"}},"gateway":{"access-log":{"enabled":true,"ingest-enabled":false,"topic":"jbm.logs.access.v1"}},"logs":{"signing-secret":"jbm-local-business-log-signing-key","loki":{"enabled":true,"url":"http://loki:3100/loki/api/v1/push","tenant-id":"platform"}},"bigscreen":{"views-dir":"/app/data/views","doc-base-url":"http://jbm-cluster-platform-doc:9999"},"center":{"security":{"enabled":true,"userinfo-url":"http://jbm-cluster-platform-auth:5555/oauth2/userinfo"},"seed":{"enabled":true,"admin-password":"Admin@123","platform-operator-password":"Operator@123","tenant-admin-password":"Tenant@123","force-reset-password":true}}}}
 
 x-python-environment: &python-environment
   JBM_PROFILE: jaja7
@@ -65,6 +65,49 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+
+  kafka:
+    image: m.daocloud.io/docker.io/apache/kafka:4.3.1
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_NUM_PARTITIONS: "3"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx256m
+    ports: ["127.0.0.1:29092:29092"]
+    volumes: ["kafka-data:/var/lib/kafka/data"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 8s
+      retries: 30
+      start_period: 30s
+
+  loki:
+    image: m.daocloud.io/docker.io/grafana/loki:3.7.3
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports: ["127.0.0.1:13100:3100"]
+    volumes: ["loki-data:/tmp/loki"]
+    networks: [jbm73-python]
+    healthcheck:
+      test: ["CMD", "/usr/bin/loki", "--config.file=/etc/loki/local-config.yaml", "--verify-config=true"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
@@ -180,7 +223,8 @@ services:
     ports: ["127.0.0.1:3312:3312"]
     depends_on:
       jbm-cluster-platform-center: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
+      kafka: {condition: service_healthy}
+      loki: {condition: service_healthy}
 
   jbm-cluster-platform-bigscreen:
     <<: *python-service
@@ -211,6 +255,7 @@ services:
       jbm-cluster-platform-job: {condition: service_healthy}
       jbm-cluster-platform-logs: {condition: service_healthy}
       jbm-cluster-platform-bigscreen: {condition: service_healthy}
+      kafka: {condition: service_healthy}
 
   jbm-admin:
     build:
@@ -234,6 +279,8 @@ volumes:
   mysql-data:
   redis-data:
   rabbitmq-data:
+  kafka-data:
+  loki-data:
   rnacos-data:
   minio-data:
   bigscreen-data:

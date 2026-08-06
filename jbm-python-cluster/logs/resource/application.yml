@@ -8,6 +8,10 @@ spring:
 jbm:
   logs:
     signing-secret: jbm-local-business-log
+    loki:
+      enabled: false
+      url: http://loki:3100/loki/api/v1/push
+      tenant-id: platform
   python:
     app: logs
     openapi:
