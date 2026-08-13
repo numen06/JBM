@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.jbm.cluster.api.entitys.message.SmsNotification;
 import com.jbm.cluster.common.basic.module.JbmClusterNotification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,16 @@ public class PCoderService {
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private JbmClusterNotification jbmClusterNotification;
+    /**
+     * 短信验证码模板编码，可通过 aliyun.sms.templateCode 覆盖
+     */
+    @Value("${aliyun.sms.templateCode:SMS_236340338}")
+    private String templateCode;
+    /**
+     * 短信签名，可通过 aliyun.sms.signName 覆盖
+     */
+    @Value("${aliyun.sms.signName:甲佳智能}")
+    private String signName;
 
     public String getCacheKey(String phone) {
         return "/vcode/" + phone;
@@ -44,8 +55,8 @@ public class PCoderService {
         SmsNotification smsNotification = new SmsNotification();
         smsNotification.setPhoneNumber(phone);
         smsNotification.setParams(MapUtil.of("code", code));
-        smsNotification.setSignName("甲佳智能");
-        smsNotification.setTemplateCode("SMS_236340338");
+        smsNotification.setSignName(signName);
+        smsNotification.setTemplateCode(templateCode);
         jbmClusterNotification.sendSmsNotification(smsNotification);
         return code;
     }

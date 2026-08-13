@@ -45,6 +45,7 @@ public class SmsNotificationExchanger extends BaseNotificationExchanger<SmsNotif
         SmsNotification smsNotification = (SmsNotification) notification;
         AliyunSms aliyunSms = new AliyunSms();
         aliyunSms.setTemplateCode(smsNotification.getTemplateCode());
+        aliyunSms.setSignName(smsNotification.getSignName());
         aliyunSms.getPhoneNumbers().add(((SmsNotification) notification).getPhoneNumber());
         aliyunSms.setTemplateParam(smsNotification.getParams());
         SmsSendResult smsSendResult = null;

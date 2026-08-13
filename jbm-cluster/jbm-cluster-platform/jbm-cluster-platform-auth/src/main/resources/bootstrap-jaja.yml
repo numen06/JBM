@@ -16,6 +16,9 @@ spring:
           data_id: rabbitmq.properties
         shared-configs[4]:
           data_id: third-party.yml
+        shared-configs[5]:
+          data_id: sms.properties
+          refresh: true
       discovery:
         namespace: jbm
         #        group: ${config.group}
