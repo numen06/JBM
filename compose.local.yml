@@ -137,7 +137,7 @@ services:
         loki_username="$$(printf '%s\n' "$$config" | sed -n 's/^[[:space:]]*username:[[:space:]]*//p' | head -1)"
         loki_password="$$(printf '%s\n' "$$config" | sed -n 's/^[[:space:]]*password:[[:space:]]*//p' | head -1)"
         test -n "$$loki_username" && test -n "$$loki_password"
-        printf '%s:%s\n' "$$loki_username" "$$(openssl passwd -apr1 "$$loki_password")" > /etc/nginx/.htpasswd
+        printf '%s:%s\n' "$$loki_username" "$$(mkpasswd -m md5 "$$loki_password")" > /etc/nginx/.htpasswd
         printf '%s' "$$loki_username" > /tmp/loki-username
         printf '%s' "$$loki_password" > /tmp/loki-password
         exec nginx -g 'daemon off;'
