@@ -1,5 +1,13 @@
 import { get, post, put, del, unwrap } from './request'
-import type { GatewayRoute, GatewayRateLimit, GatewayIpLimit, DataPaging, DiscoveryService, DiscoveryInstance } from './types'
+import type {
+  GatewayRoute,
+  GatewayRateLimit,
+  GatewayIpLimit,
+  GatewayGrayRule,
+  DataPaging,
+  DiscoveryService,
+  DiscoveryInstance,
+} from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
@@ -110,4 +118,19 @@ export async function listDiscoveryServices() {
 export async function listDiscoveryInstances(serviceId: string) {
   const res = await get<DiscoveryInstance[]>(`/gateway/discovery/services/${encodeURIComponent(serviceId)}/instances`)
   return unwrap(res) ?? []
+}
+
+export async function listGrayRules() {
+  const res = await get<GatewayGrayRule[]>('/gateway/gray-routes')
+  return unwrap(res) ?? []
+}
+
+export async function createGrayRule(data: Partial<GatewayGrayRule>) {
+  const res = await post<GatewayGrayRule>('/gateway/gray-routes', data)
+  return unwrap(res)
+}
+
+export async function deleteGrayRule(ruleId: string) {
+  const res = await del<boolean>(`/gateway/gray-routes/${encodeURIComponent(ruleId)}`)
+  return unwrap(res)
 }

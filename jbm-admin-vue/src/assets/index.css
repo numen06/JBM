@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* npm library builds run from packages/admin, so declare the shared UI sources explicitly. */
+@source "../**/*.{vue,ts}";
+@source "../../packages/admin/src/**/*.ts";
+
 @theme {
   --color-background: hsl(0 0% 100%);
   --color-foreground: hsl(222.2 84% 4.9%);

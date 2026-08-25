@@ -1,0 +1,15 @@
+aliyun:
+  sms:
+    # SMS providers belong to Push. Local development never sends externally.
+    verificationProvider: dev
+    debugCode: "99999"
+    countryCode: "86"
+    codeLength: 6
+    validTime: 300
+    interval: 60
+
+jbm:
+  push:
+    # Local verification must exercise the complete SMS flow without calling
+    # the production provider or requiring real Aliyun credentials.
+    jaja7-dry-run: true

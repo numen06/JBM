@@ -1,10 +1,13 @@
+import asyncio
 import json
+import sys
 from types import SimpleNamespace
 
 import pytest
 
 from jbm_cluster_py.common import nacos as nacos_auth
 from jbm_cluster_py.integrations.kafka import KafkaClient
+from jbm_cluster_py.integrations import nacos as nacos_integration
 
 
 def test_nacos_token_is_added_and_reused(monkeypatch) -> None:
@@ -66,3 +69,45 @@ def test_kafka_sasl_options_require_and_include_nacos_credentials() -> None:
         "sasl_plain_username": "jbm",
         "sasl_plain_password": "secret",
     }
+
+
+@pytest.mark.asyncio
+async def test_nacos_registrar_retries_until_registration_succeeds(monkeypatch) -> None:
+    class FakeClient:
+        def __init__(self) -> None:
+            self.register_calls = 0
+            self.remove_calls = 0
+
+        def add_naming_instance(self, **_kwargs) -> None:
+            self.register_calls += 1
+            if self.register_calls == 1:
+                raise RuntimeError("nacos is still initializing")
+
+        def remove_naming_instance(self, **_kwargs) -> None:
+            self.remove_calls += 1
+
+    client = FakeClient()
+    monkeypatch.setitem(sys.modules, "nacos", SimpleNamespace())
+    monkeypatch.setattr(nacos_integration, "create_nacos_client", lambda *_args: client)
+    monkeypatch.setattr(nacos_integration, "local_ip", lambda: "127.0.0.1")
+
+    registrar = nacos_integration.NacosRegistrar(
+        "test-service",
+        8080,
+        {
+            "server-addr": "rnacos:8848",
+            "registration-retry-interval": 0.01,
+            "heart-beat-interval": 3600,
+        },
+    )
+    await registrar.start()
+    for _ in range(20):
+        if registrar._registered:
+            break
+        await asyncio.sleep(0.01)
+
+    assert registrar._registered is True
+    assert client.register_calls == 2
+
+    await registrar.stop()
+    assert client.remove_calls == 1

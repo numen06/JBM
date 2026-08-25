@@ -1,0 +1,57 @@
+.downstream-demo {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 64rem;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1rem 3rem rgb(15 23 42 / 8%);
+}
+
+.downstream-demo h1 {
+  margin: 0.5rem 0 1rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.downstream-demo__tag {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.downstream-demo dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.downstream-demo dl div {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.downstream-demo dt {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.downstream-demo dd {
+  margin: 0.25rem 0 0;
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .downstream-demo {
+    padding: 1rem;
+  }
+
+  .downstream-demo dl {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import * as authApi from '@/api/auth'
 import type { OAuth2TokenResult } from '@/api/types'
 import { getCurrentUser } from '@/api/current'
+import { fetchCaptchaBase64, fetchSmsCodeConfig, sendSmsCode } from '@/api/captcha'
 import type { CurrentUser } from '@/api/types'
 import { useMenuStore } from '@/stores/menu'
 import { JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
@@ -12,8 +13,8 @@ const REFRESH_KEY = 'jbm_refresh_token'
 const CLIENT_ID_KEY = 'jbm_client_id'
 
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref(localStorage.getItem(TOKEN_KEY) || '')
-  const refreshToken = ref(localStorage.getItem(REFRESH_KEY) || '')
+  const accessToken = ref(localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || '')
+  const refreshToken = ref(localStorage.getItem(REFRESH_KEY) || sessionStorage.getItem(REFRESH_KEY) || '')
   const clientId = ref(localStorage.getItem(CLIENT_ID_KEY) || JBM_DEFAULT_CLIENT_ID)
   const tenantId = ref('0')
   const user = ref<CurrentUser | null>(null)
@@ -28,7 +29,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (refreshToken.value) localStorage.setItem(REFRESH_KEY, refreshToken.value)
     else localStorage.removeItem(REFRESH_KEY)
     localStorage.setItem(CLIENT_ID_KEY, clientId.value)
+    sessionStorage.removeItem(TOKEN_KEY)
+    sessionStorage.removeItem(REFRESH_KEY)
   }
+
+  persistTokens()
 
   function applyToken(token: OAuth2TokenResult) {
     accessToken.value = token.access_token
@@ -62,20 +67,47 @@ export const useAuthStore = defineStore('auth', () => {
     return mustChangePassword.value
   }
 
+  async function registerTenant(params: Omit<authApi.RegisterParams, 'clientId'>) {
+    return authApi.register({ ...params, clientId: clientId.value })
+  }
+
+  function registrationCaptcha(width = 120, height = 40) {
+    return fetchCaptchaBase64(width, height)
+  }
+
+  function registrationSmsConfig() {
+    return fetchSmsCodeConfig()
+  }
+
+  function sendRegistrationSms(phone: string, imageVcode: string) {
+    return sendSmsCode(phone, imageVcode)
+  }
+
   async function refreshAccessToken() {
-    if (!refreshToken.value) throw new Error('无 refresh token')
-    const token = await authApi.refreshToken(
-      refreshToken.value,
-      clientId.value,
-    )
-    accessToken.value = token.access_token
-    if (token.refresh_token) refreshToken.value = token.refresh_token
-    persistTokens()
+    const expiredAccessToken = accessToken.value
+    const refresh = async () => {
+      syncSessionFromStorage()
+      if (accessToken.value && accessToken.value !== expiredAccessToken) return
+      if (!refreshToken.value) throw new Error('无 refresh token')
+      const token = await authApi.refreshToken(
+        refreshToken.value,
+        clientId.value,
+      )
+      accessToken.value = token.access_token
+      if (token.refresh_token) refreshToken.value = token.refresh_token
+      persistTokens()
+    }
+    if (typeof navigator !== 'undefined' && navigator.locks) {
+      await navigator.locks.request('jbm-auth-token-refresh', refresh)
+      return
+    }
+    await refresh()
   }
 
   async function fetchUser(): Promise<CurrentUser | null> {
     try {
       user.value = await getCurrentUser()
+      tenantId.value = String(user.value?.companyId || '0')
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(isSuperAdminUser(user.value))
       menuStore.setAuthorityCodes(
@@ -84,6 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
       return user.value
     } catch {
       user.value = null
+      tenantId.value = '0'
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(false)
       menuStore.setAuthorityCodes([])
@@ -100,18 +133,24 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await authApi.logout()
-    clearSession()
+    try {
+      await authApi.logout(refreshToken.value)
+    } finally {
+      clearSession()
+    }
   }
 
   function clearSession() {
     accessToken.value = ''
     refreshToken.value = ''
     user.value = null
+    tenantId.value = '0'
     mustChangePassword.value = false
     useMenuStore().clear()
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_KEY)
+    sessionStorage.removeItem(TOKEN_KEY)
+    sessionStorage.removeItem(REFRESH_KEY)
   }
 
   function syncSessionFromStorage(event?: StorageEvent) {
@@ -128,6 +167,8 @@ export const useAuthStore = defineStore('auth', () => {
       useMenuStore().clear()
       if (nextAccessToken) {
         init()
+      } else if (event) {
+        window.location.replace('/login')
       }
     }
   }
@@ -162,6 +203,10 @@ export const useAuthStore = defineStore('auth', () => {
     mustChangePassword,
     isLoggedIn,
     login,
+    registerTenant,
+    registrationCaptcha,
+    registrationSmsConfig,
+    sendRegistrationSms,
     loginWithToken,
     applyToken,
     clearMustChangePassword,

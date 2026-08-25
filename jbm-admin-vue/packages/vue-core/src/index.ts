@@ -1,9 +1,15 @@
 import {
+  computed,
+  defineComponent,
+  h,
   inject,
+  ref,
+  watch,
   type App,
   type Component,
   type InjectionKey,
   type Plugin,
+  type PropType,
 } from 'vue'
 import type {
   NavigationGuard,
@@ -36,6 +42,103 @@ export interface JbmNavigationGroup {
   label: string
   items: JbmNavigationItem[]
 }
+
+export interface JbmShellWorkspace {
+  key: string
+  label: string
+  shortLabel?: string
+  path: string
+  icon?: Component
+}
+
+export interface JbmShellNavigationItem {
+  path: string
+  label: string
+  icon?: Component
+  active?: boolean
+}
+
+export interface JbmShellNavigationGroup {
+  label: string
+  hint?: string
+  items: JbmShellNavigationItem[]
+}
+
+const navigateEmits = { navigate: (_path: string) => true }
+
+export const JbmWorkspaceNavigation = defineComponent({
+  name: 'JbmWorkspaceNavigation',
+  props: {
+    workspaces: { type: Array as PropType<JbmShellWorkspace[]>, required: true },
+    currentKey: { type: String, required: true },
+  },
+  emits: navigateEmits,
+  setup(props, { emit }) {
+    return () => h('div', { class: 'jbm-workspaces' }, [
+      h('div', { class: 'jbm-workspaces__label' }, '应用工作区'),
+      h('div', { class: 'jbm-workspaces__grid' }, props.workspaces.map(item => h('a', {
+        href: item.path,
+        title: item.label,
+        class: ['jbm-workspaces__item', item.key === props.currentKey && 'is-active'],
+        onClick: (event: MouseEvent) => { event.preventDefault(); emit('navigate', item.path) },
+      }, [
+        item.icon ? h(item.icon, { class: 'jbm-workspaces__icon', 'aria-hidden': 'true' }) : null,
+        h('span', item.shortLabel || item.label),
+      ]))),
+    ])
+  },
+})
+
+export const JbmSidebarNavigation = defineComponent({
+  name: 'JbmSidebarNavigation',
+  props: {
+    groups: { type: Array as PropType<JbmShellNavigationGroup[]>, required: true },
+  },
+  emits: navigateEmits,
+  setup(props, { emit }) {
+    const openLabels = ref<string[]>([])
+    const activePath = computed(() => props.groups
+      .flatMap(group => group.items)
+      .filter(item => item.active)
+      .reduce((selected, item) => item.path.length > selected.length ? item.path : selected, ''))
+    const isActive = (item: JbmShellNavigationItem) => item.active && item.path === activePath.value
+    const activeLabels = computed(() => props.groups.filter(group => group.items.some(isActive)).map(group => group.label))
+    watch([() => props.groups, activeLabels], ([groups, active]) => {
+      const valid = new Set(groups.map(group => group.label))
+      openLabels.value = [...new Set([
+        ...openLabels.value.filter(label => valid.has(label)),
+        ...active,
+        ...(openLabels.value.length || !groups[0] ? [] : [groups[0].label]),
+      ])]
+    }, { immediate: true })
+    const isOpen = (label: string) => openLabels.value.includes(label)
+    const toggle = (label: string) => {
+      openLabels.value = isOpen(label) ? openLabels.value.filter(item => item !== label) : [...openLabels.value, label]
+    }
+    return () => h('nav', { class: 'jbm-sidebar-nav', 'aria-label': '主菜单' }, props.groups.map(group => h('section', {
+      class: 'jbm-sidebar-nav__group',
+    }, [
+      h('button', {
+        type: 'button',
+        class: ['jbm-sidebar-nav__group-button', group.items.some(isActive) && 'is-active'],
+        'aria-expanded': isOpen(group.label),
+        onClick: () => toggle(group.label),
+      }, [
+        h('span', [h('strong', group.label), group.hint ? h('small', group.hint) : null]),
+        h('span', { class: ['jbm-sidebar-nav__chevron', isOpen(group.label) && 'is-open'], 'aria-hidden': 'true' }, '›'),
+      ]),
+      isOpen(group.label) ? h('div', { class: 'jbm-sidebar-nav__items' }, group.items.map(item => h('a', {
+        href: item.path,
+        class: ['jbm-sidebar-nav__item', isActive(item) && 'is-active'],
+        'aria-current': isActive(item) ? 'page' : undefined,
+        onClick: (event: MouseEvent) => { event.preventDefault(); emit('navigate', item.path) },
+      }, [
+        h('span', { class: 'jbm-sidebar-nav__icon' }, item.icon ? [h(item.icon, { 'aria-hidden': 'true' })] : []),
+        h('span', { class: 'jbm-sidebar-nav__text' }, item.label),
+      ]))) : null,
+    ])))
+  },
+})
 
 export interface JbmFrontendModule {
   id: string

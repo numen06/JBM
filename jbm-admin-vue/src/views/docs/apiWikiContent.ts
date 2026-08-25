@@ -48,8 +48,6 @@ export const authEndpoints: ApiEndpoint[] = [
       { name: 'client_id', type: 'string', required: true, desc: 'OAuth2 客户端 ID' },
       { name: 'client_secret', type: 'string', required: true, desc: 'OAuth2 客户端密钥' },
       { name: 'nickName', type: 'string', desc: '昵称，可选' },
-      { name: 'email', type: 'string', desc: '邮箱，可选' },
-      { name: 'mobile', type: 'string', desc: '手机号，可选' },
     ],
     request: `POST ${gatewayBase}/oauth2/register
 Content-Type: application/x-www-form-urlencoded

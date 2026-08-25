@@ -36,7 +36,12 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     store = CrudStore(repository.engine)
     client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=5.0), trust_env=False)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
-    compatibility = CompatibilityService(store, service, OpenApiCatalog(store, discovery, client))
+    compatibility = CompatibilityService(
+        store,
+        service,
+        OpenApiCatalog(store, discovery, client),
+        app_config.get("jbm.security.password-policy", {}) or {},
+    )
     auth = CenterAuthClient(dict(app_config.get("jbm.center.security", {}) or {}), client)
     registrar = NacosRegistrar(app_config.service_name, app_config.port, app_config.nacos_discovery)
 

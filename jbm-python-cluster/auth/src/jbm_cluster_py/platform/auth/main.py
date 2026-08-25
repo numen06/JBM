@@ -27,6 +27,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     init_telemetry(app_config.telemetry)
     repository = AuthRepository(app_config.database)
     auth_config = dict(app_config.get("jbm.auth", {}) or {})
+    _validate_production_auth_config(app_config.profile, auth_config)
     cache = TokenCache(RedisClient(app_config.redis), str(auth_config.get("cache-prefix") or "jbm:auth"))
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
@@ -68,6 +69,36 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_auth_router(auth_service))
     return app
+
+
+def _validate_production_auth_config(profile: str, config: dict[str, Any]) -> None:
+    if str(profile).lower() != "prod":
+        return
+    jwt = dict(config.get("jwt") or {})
+    errors: list[str] = []
+    if not config.get("require-pkce", True):
+        errors.append("require-pkce必须启用")
+    if not config.get("require-https-redirects", True):
+        errors.append("require-https-redirects必须启用")
+    if config.get("legacy-password-grant-enabled"):
+        errors.append("legacy-password-grant-enabled必须关闭")
+    if config.get("dev-bypass-enabled"):
+        errors.append("dev-bypass-enabled必须关闭")
+    if config.get("allow-plaintext-secrets"):
+        errors.append("allow-plaintext-secrets必须关闭")
+    if not str(jwt.get("private-key") or "").strip():
+        errors.append("jwt.private-key必须由Nacos或环境密钥注入")
+    if not str(jwt.get("issuer") or "").lower().startswith("https://"):
+        errors.append("jwt.issuer必须使用HTTPS")
+    for name, raw in dict(config.get("login-providers") or {}).items():
+        provider = dict(raw or {})
+        if provider.get("dev-mock-enabled"):
+            errors.append(f"login-providers.{name}.dev-mock-enabled必须关闭")
+        verify_url = str(provider.get("verify-url") or "")
+        if provider.get("enabled") and verify_url and not verify_url.lower().startswith("https://"):
+            errors.append(f"login-providers.{name}.verify-url必须使用HTTPS")
+    if errors:
+        raise RuntimeError("生产认证配置不安全: " + "；".join(errors))
 
 
 app = create_app()

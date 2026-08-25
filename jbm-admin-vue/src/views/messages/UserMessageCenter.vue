@@ -147,26 +147,28 @@ async function deleteSelected() {
 
 <template>
   <div>
-    <PageHeader title="消息中心" description="查看我的站内消息和未读通知。">
-      <template #actions>
+    <PageHeader title="消息中心" description="查看我的站内消息和未读通知。" />
+
+    <section class="mb-4 rounded-lg border bg-card p-3 shadow-sm" aria-label="消息筛选与批量操作">
+      <div class="grid grid-cols-2 gap-2 lg:grid-cols-[minmax(16rem,1fr)_8rem_8rem_auto_auto_auto]">
         <Input
           v-model="keyword"
           placeholder="搜索标题/内容/消息ID"
-          class="w-52"
+          class="col-span-2 w-full lg:col-span-1"
           @keyup.enter="search"
         />
-        <Select v-model="sourceFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="sourceFilter" class="w-full" @update:model-value="filterChanged">
           <option value="all">全部来源</option>
           <option value="system">系统通知</option>
           <option value="user">用户消息</option>
         </Select>
-        <Select v-model="typeFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="typeFilter" class="w-full" @update:model-value="filterChanged">
           <option value="all">全部类型</option>
           <option value="notification">通知</option>
           <option value="alarm">警报</option>
           <option value="alert">弹窗</option>
         </Select>
-        <Button variant="outline" size="sm" :disabled="loading" @click="search">
+        <Button variant="outline" size="sm" class="col-span-2 sm:col-span-1" :disabled="loading" @click="search">
           <Search class="h-4 w-4" />
           搜索
         </Button>
@@ -190,50 +192,53 @@ async function deleteSelected() {
           <RefreshCw class="h-4 w-4" />
           刷新
         </Button>
-      </template>
-    </PageHeader>
+      </div>
 
-    <div class="mb-3 flex flex-wrap items-center gap-2">
-      <Button variant="outline" size="sm" :disabled="!selectedList.length" @click="markSelectedRead">
-        <CheckCheck class="h-4 w-4" />
-        标为已读
-      </Button>
-      <Button variant="outline" size="sm" :disabled="messageStore.unreadCount === 0" @click="markAllRead">
-        <CheckCheck class="h-4 w-4" />
-        全部已读
-      </Button>
-      <Button variant="outline" size="sm" :disabled="!selectedList.length" @click="markSelectedUnread">
-        <Mail class="h-4 w-4" />
-        标为未读
-      </Button>
-      <Button variant="outline" size="sm" :disabled="!selectedList.length" @click="deleteSelected">
-        <Trash2 class="h-4 w-4" />
-        删除
-      </Button>
-      <span class="text-sm text-muted-foreground">已选择 {{ selectedList.length }} 条</span>
-    </div>
+      <div
+        v-if="selectedList.length || messageStore.unreadCount > 0"
+        class="mt-3 grid grid-cols-2 items-center gap-2 border-t pt-3 sm:flex sm:flex-wrap"
+      >
+        <Button v-if="selectedList.length" variant="outline" size="sm" @click="markSelectedRead">
+          <CheckCheck class="h-4 w-4" />
+          标为已读
+        </Button>
+        <Button v-if="messageStore.unreadCount > 0" variant="outline" size="sm" @click="markAllRead">
+          <CheckCheck class="h-4 w-4" />
+          全部已读
+        </Button>
+        <Button v-if="selectedList.length" variant="outline" size="sm" @click="markSelectedUnread">
+          <Mail class="h-4 w-4" />
+          标为未读
+        </Button>
+        <Button v-if="selectedList.length" variant="outline" size="sm" @click="deleteSelected">
+          <Trash2 class="h-4 w-4" />
+          删除
+        </Button>
+        <span v-if="selectedList.length" class="col-span-2 text-right text-sm text-muted-foreground sm:ml-auto">已选择 {{ selectedList.length }} 条</span>
+      </div>
+    </section>
 
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">
-      <Table>
+      <Table mobile-title="标题" :mobile-columns="['内容', '来源', '类型', '时间']" class="table-fixed md:min-w-[900px]">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 w-12 px-4 text-left">
               <input type="checkbox" :checked="allChecked" @change="toggleAll" />
             </th>
-            <th class="h-10 px-4 text-left font-medium">状态</th>
-            <th class="h-10 px-4 text-left font-medium">标题</th>
+            <th class="h-10 w-24 px-4 text-left font-medium">状态</th>
+            <th class="h-10 w-56 px-4 text-left font-medium">标题</th>
             <th class="h-10 px-4 text-left font-medium">内容</th>
-            <th class="h-10 px-4 text-left font-medium">来源</th>
-            <th class="h-10 px-4 text-left font-medium">类型</th>
-            <th class="h-10 px-4 text-left font-medium">时间</th>
+            <th class="h-10 w-28 px-4 text-left font-medium">来源</th>
+            <th class="h-10 w-20 px-4 text-left font-medium">类型</th>
+            <th class="h-10 w-44 px-4 text-left font-medium">时间</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="message in items"
             :key="message.msgId"
-            class="border-b align-top"
-            :class="!message.readFlag && 'bg-primary/5'"
+            class="border-b align-top transition-colors hover:bg-muted/30"
+            :class="!message.readFlag && 'bg-primary/10'"
           >
             <td class="p-4">
               <input
@@ -249,8 +254,8 @@ async function deleteSelected() {
                 {{ message.readFlag ? '已读' : '未读' }}
               </Badge>
             </td>
-            <td class="max-w-[240px] p-4 font-medium">{{ message.title || '-' }}</td>
-            <td class="max-w-[360px] p-4">
+            <td class="p-4 font-semibold leading-5 text-foreground">{{ message.title || '-' }}</td>
+            <td class="p-4">
               <MessageContentCell :message="message" />
             </td>
             <td class="p-4">

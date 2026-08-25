@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronDown, ChevronRight, AlertCircle, Info, Activity } from '@lucide/vue'
+import { ChevronDown, ChevronRight, AlertCircle, Info } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -22,7 +22,6 @@ import {
 } from '@/views/dashboard/dashboardSections'
 import {
   loadDashboardOverview,
-  API_MONITOR_PLACEHOLDER,
   type DashboardMetric as ApiMetric,
   type DashboardNotice,
   type AggregatedDashboardIdentity,
@@ -116,8 +115,6 @@ const visibleSections = computed(() => {
   })
 })
 
-const showApiMonitorMetric = computed(() => menuStore.isRouteAllowed('/api/monitor'))
-
 /** API 返回 key 与配置 key 的别名 */
 const METRIC_KEY_ALIASES: Record<string, string[]> = {
   onlineUsers: ['onlineUser'],
@@ -140,10 +137,6 @@ function displayMetricValue(defKey: string, loaderKey?: string): {
   badge?: string
   badgeVariant?: 'default' | 'secondary' | 'outline' | 'destructive'
 } {
-  if (defKey === 'apiMonitor' || loaderKey === 'apiMonitor') {
-    return { text: API_MONITOR_PLACEHOLDER.value as string, badge: '待接入', badgeVariant: 'outline' }
-  }
-
   const loaded = resolveLoadedMetric(defKey, loaderKey)
   if (!loaded) {
     if (metricsLoading.value) return { text: '' }
@@ -241,27 +234,10 @@ watch(selfServiceMode, () => {
 })
 
 const metricCards = computed(() => {
-  const cards = visibleMetricDefs.value.map((def) => ({
+  return visibleMetricDefs.value.map((def) => ({
     def,
     display: displayMetricValue(def.key, def.loaderKey),
-  }))
-  if (showApiMonitorMetric.value) {
-    cards.push({
-      def: {
-        key: 'apiMonitor',
-        title: API_MONITOR_PLACEHOLDER.label,
-        icon: Activity,
-        path: '/api/monitor',
-        description: API_MONITOR_PLACEHOLDER.description,
-      },
-      display: {
-        text: String(API_MONITOR_PLACEHOLDER.value),
-        badge: '待接入',
-        badgeVariant: 'outline' as const,
-      },
-    })
-  }
-  return cards.slice(0, 8)
+  })).slice(0, 9)
 })
 </script>
 

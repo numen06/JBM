@@ -1,7 +1,7 @@
 import { defineJbmModule, type JbmFrontendModule, type JbmNavigationGroup } from '@jbm7/vue-core'
 import { STATIC_NAV_GROUPS } from '@/constants/adminNav'
 
-const VERSION = '7.3.0-beta.1'
+const VERSION = '7.3.0-beta.5'
 
 function navigation(...labels: string[]): JbmNavigationGroup[] {
   return STATIC_NAV_GROUPS.filter((group) => labels.includes(group.label))
@@ -37,7 +37,7 @@ export const coreModule = defineJbmModule({
   navigation: navigation('概览'),
   routes: [
     { path: 'dashboard', name: 'dashboard', component: () => import('@/views/dashboard/DashboardPage.vue'), meta: { title: '仪表盘', menuCode: 'dashboard' } },
-    { path: 'profile', name: 'profile', component: () => import('@/views/profile/ProfilePage.vue'), meta: { title: '个人中心' } },
+    { path: 'profile', name: 'profile', component: () => import('@/views/profile/ProfilePage.vue'), meta: { title: '用户中心' } },
   ],
 })
 
@@ -56,6 +56,9 @@ export const systemModule = defineJbmModule({
     { path: 'system/dicts/:groupId', name: 'dict-items', component: () => import('@/views/system/DictList.vue'), meta: { title: '字典项', menuCode: 'dicts' } },
     { path: 'system/extend-fields', name: 'extend-fields', component: () => import('@/views/system/ExtendFieldList.vue'), meta: { title: '扩展字段管理', menuCode: 'extend_fields' } },
     { path: 'system/extend-fields/:formCode', name: 'extend-field-detail', component: () => import('@/views/system/ExtendFieldList.vue'), meta: { title: '扩展字段详情', menuCode: 'extend_fields' } },
+    { path: 'system/tenant-delegations', name: 'tenant-delegations', component: () => import('@/views/system/TenantDelegationList.vue'), meta: { title: '委托运营', menuCode: 'iot_delegations' } },
+    { path: 'system/operator-applications', name: 'operator-applications', component: () => import('@/views/system/OperatorApplicationList.vue'), meta: { title: '运营申请审核', menuCode: 'operator_applications' } },
+    { path: 'system/tenant-features', name: 'tenant-features', component: () => import('@/views/system/TenantFeaturePage.vue'), meta: { title: '功能权益' } },
   ],
 })
 

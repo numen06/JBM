@@ -1,6 +1,6 @@
 {
   "name": "@jbm7/sdk",
-  "version": "7.3.0-beta.1",
+  "version": "7.3.0-beta.5",
   "description": "Framework-neutral browser SDK for the JBM 7.3 technical platform",
   "type": "module",
   "files": ["dist/*.js", "dist/*.d.ts", "README.md", "LICENSE"],

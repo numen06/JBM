@@ -62,13 +62,13 @@ function selectLoginTab(tab: LoginTabId) {
 const username = ref(JBM_DEFAULT_USERNAME)
 const password = ref(JBM_DEFAULT_PASSWORD)
 const vcode = ref(useDevLoginDefaults ? DEV_CAPTCHA_CODE : '')
-const phone = ref('')
-const smsCode = ref('')
-const wechatOpenId = ref('')
-const wechatCode = ref('')
-const miniappPhone = ref('')
-const miniappCode = ref('')
-const facePhone = ref('')
+const phone = ref(useDevLoginDefaults ? '13800000000' : '')
+const smsCode = ref(useDevLoginDefaults ? DEV_SMS_CODE : '')
+const wechatOpenId = ref(useDevLoginDefaults ? 'jbm-dev-wechat-openid' : '')
+const wechatCode = ref(useDevLoginDefaults ? 'jbm-dev-wechat-code' : '')
+const miniappPhone = ref(useDevLoginDefaults ? '13800000000' : '')
+const miniappCode = ref(useDevLoginDefaults ? 'jbm-dev-miniapp-code' : '')
+const facePhone = ref(useDevLoginDefaults ? '13800000000' : '')
 const faceImage = ref('')
 
 const clientId = ref(JBM_DEFAULT_CLIENT_ID)
@@ -84,6 +84,7 @@ const quickLoginPending = ref('')
 
 const qrImage = ref('')
 const qrCode = ref('')
+const qrState = ref('')
 const qrCodeVerifier = ref('')
 const qrPolling = ref(false)
 let qrTimer: ReturnType<typeof setInterval> | undefined
@@ -91,9 +92,9 @@ let smsTimer: ReturnType<typeof setInterval> | undefined
 
 const thirdPartyProviders = (
   import.meta.env.VITE_OAUTH_PROVIDERS?.split(',').map((s: string) => s.trim()).filter(Boolean) as string[]
-) || ['local']
-const tpProvider = ref(thirdPartyProviders[0] ?? 'local')
-const tpCode = ref('')
+) || ['mock']
+const tpProvider = ref(thirdPartyProviders[0] ?? 'mock')
+const tpCode = ref(useDevLoginDefaults ? 'jbm-dev-thirdparty-code' : '')
 
 const oauthRedirectUri = ref('')
 const oauthScope = ref(JBM_DEFAULT_OAUTH_SCOPE)
@@ -153,7 +154,7 @@ async function loadQrSession() {
   error.value = ''
   notice.value = ''
   qrImage.value = ''
-  const redirectUri = `${window.location.origin}/login/callback`
+  const redirectUri = '/login/callback'
   try {
     const pkce = await createJbmPkcePair()
     const session = await fetchLoginQr({
@@ -167,6 +168,7 @@ async function loadQrSession() {
       ? session.image
       : `data:image/png;base64,${session.image}`
     qrCode.value = session.code
+    qrState.value = session.state
     qrCodeVerifier.value = pkce.verifier
     startQrPoll()
   } catch (e) {
@@ -181,10 +183,11 @@ function startQrPoll() {
     try {
       const r = await pollQrLogin(qrCode.value)
       if (r.done && r.code) {
+        if (!r.state || r.state !== qrState.value) throw new Error('扫码登录 state 校验失败')
         stopQrPoll()
         const token = await exchangeAuthorizationCode({
           code: r.code,
-          redirectUri: r.redirectUri || `${window.location.origin}/login/callback`,
+          redirectUri: r.redirectUri || '/login/callback',
           clientId: clientId.value,
           codeVerifier: qrCodeVerifier.value,
         })
@@ -375,7 +378,7 @@ function buildCallbackUrl(provider?: string) {
     name: 'login-callback',
     query: provider ? { provider } : {},
   })
-  return `${window.location.origin}${resolved.href}`
+  return resolved.href
 }
 
 function resolveAppClientId(app: BaseApp) {
@@ -472,7 +475,7 @@ async function onThirdPartyManual() {
       provider: tpProvider.value,
       code: tpCode.value.trim(),
       clientId: clientId.value,
-      redirectUri: buildCallbackUrl(tpProvider.value),
+      redirectUri: buildCallbackUrl(),
       state: undefined,
     })
     return auth.loginWithToken(token)
@@ -874,7 +877,7 @@ onUnmounted(() => {
             </div>
             <div class="col-span-2 space-y-2">
               <Label>redirect_uri（须与应用中登记一致）</Label>
-              <Input v-model="oauthRedirectUri" placeholder="http://localhost:5173/login/callback" />
+              <Input v-model="oauthRedirectUri" placeholder="/login/callback" />
             </div>
             <div class="space-y-2">
               <Label>scope</Label>

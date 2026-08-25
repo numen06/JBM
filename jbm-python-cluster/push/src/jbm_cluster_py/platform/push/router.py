@@ -189,6 +189,27 @@ def build_push_router(
             raise HTTPException(status_code=502, detail="短信发送失败") from exc
         return ok(result, "短信验证码发送成功")
 
+    @router.get("/pin/check")
+    @router.post("/pin/check")
+    async def pin_check(
+        phoneNumber: str = "",
+        phone: str = "",
+        code: str = "",
+    ) -> Dict[str, Any]:
+        phone_number = (phoneNumber or phone or "").strip()
+        if not phone_number.startswith("1") or len(phone_number) != 11 or not phone_number.isdigit():
+            raise HTTPException(status_code=400, detail="手机号码错误")
+        if not code.strip():
+            raise HTTPException(status_code=400, detail="短信验证码不能为空")
+        try:
+            result = await service.check_pin_code(phone_number, code.strip())
+        except NotImplementedError as exc:
+            raise HTTPException(status_code=501, detail=str(exc)) from exc
+        except Exception as exc:
+            logger.warning("Pin SMS verification failed: %s", exc)
+            raise HTTPException(status_code=502, detail="短信验证码校验失败") from exc
+        return ok(result, "短信验证码校验完成")
+
     @router.post("/pushConfigInfo/pageList")
     async def push_config_page(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
         return ok(await service.list_push_configs(body), "查询分页列表成功")

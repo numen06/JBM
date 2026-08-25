@@ -302,6 +302,85 @@ def test_pin_send_calls_sms_provider_when_dry_run_disabled(monkeypatch: pytest.M
 
 
 @pytest.mark.asyncio
+async def test_pnvs_send_and_check_are_owned_by_push() -> None:
+    from alibabacloud_dypnsapi20170525 import models
+
+    requests: list[object] = []
+
+    class FakePnvsClient:
+        async def send_sms_verify_code_with_options_async(self, request: object, _runtime: object):
+            requests.append(request)
+            return models.SendSmsVerifyCodeResponse(
+                status_code=200,
+                body=models.SendSmsVerifyCodeResponseBody(code="OK", success=True, request_id="send-1"),
+            )
+
+        async def check_sms_verify_code_with_options_async(self, request: object, _runtime: object):
+            requests.append(request)
+            return models.CheckSmsVerifyCodeResponse(
+                status_code=200,
+                body=models.CheckSmsVerifyCodeResponseBody(
+                    code="OK",
+                    success=True,
+                    model=models.CheckSmsVerifyCodeResponseBodyModel(verify_result="PASS"),
+                ),
+            )
+
+    service = PushService(
+        sms_config={
+            "verificationProvider": "aliyun-pnvs",
+            "accessKeyId": "test-ak",
+            "accessKeySecret": "test-sk",
+            "verificationSignName": "系统签名",
+            "verificationTemplateCode": "100001",
+            "schemeName": "iot-register",
+            "validTime": 300,
+        },
+        push_config={"jaja7-dry-run": False},
+    )
+    service._pnvs_sms_client = FakePnvsClient()
+
+    sent = await service.send_pin_code("13585658904")
+    checked = await service.check_pin_code("13585658904", "123456")
+
+    assert sent["Code"] == "OK"
+    assert "pin" not in sent
+    assert checked["VerifyResult"] == "PASS"
+    send_request, check_request = requests
+    assert send_request.phone_number == "13585658904"
+    assert send_request.template_param == '{"code":"##code##","min":"5"}'
+    assert send_request.return_verify_code is False
+    assert check_request.phone_number == "13585658904"
+    assert check_request.verify_code == "123456"
+    assert check_request.scheme_name == "iot-register"
+
+
+@pytest.mark.asyncio
+async def test_pnvs_invalid_code_is_returned_as_business_failure() -> None:
+    class ValidateFail(Exception):
+        code = "isv.ValidateFail"
+
+    class FakePnvsClient:
+        async def check_sms_verify_code_with_options_async(self, _request: object, _runtime: object):
+            raise ValidateFail("验证码错误")
+
+    service = PushService(
+        sms_config={
+            "verificationProvider": "aliyun-pnvs",
+            "accessKeyId": "test-ak",
+            "accessKeySecret": "test-sk",
+        },
+        push_config={"jaja7-dry-run": False},
+    )
+    service._pnvs_sms_client = FakePnvsClient()
+
+    checked = await service.check_pin_code("13585658904", "000000")
+
+    assert checked["Code"] == "OK"
+    assert checked["VerifyResult"] == "FAIL"
+
+
+@pytest.mark.asyncio
 async def test_nacos_style_system_channel_config_is_seeded_to_database(tmp_path: Path) -> None:
     repo = PushConfigRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'push-configs.db'}"})
     await repo.start()
@@ -335,7 +414,9 @@ async def test_nacos_style_system_channel_config_is_seeded_to_database(tmp_path:
     by_type = {row["type"]: row for row in push_rows}
     assert {2, 3, 6}.issubset(by_type)
     sms_content = json.loads(by_type[3]["releaseContent"])
-    assert sms_content["accessKeyId"] == "ak"
+    assert "accessKeyId" not in sms_content
+    assert "accessKeySecret" not in sms_content
+    assert sms_content["signName"] == "甲佳智能"
     assert sms_content["jaja7-dry-run"] is True
     assert email_rows[0]["host"] == "smtp.126.com"
 

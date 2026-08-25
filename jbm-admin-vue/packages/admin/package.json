@@ -1,6 +1,6 @@
 {
   "name": "@jbm7/admin",
-  "version": "7.3.0-beta.1",
+  "version": "7.3.0-beta.5",
   "description": "Technical administration modules and standard shell for JBM 7.3",
   "type": "module",
   "files": ["dist", "public.d.ts", "README.md", "LICENSE"],
@@ -16,24 +16,26 @@
     "./documents": { "types": "./public.d.ts", "import": "./dist/documents.js" },
     "./openapi": { "types": "./public.d.ts", "import": "./dist/openapi.js" },
     "./shell": { "types": "./public.d.ts", "import": "./dist/shell.js" },
+    "./host": { "types": "./public.d.ts", "import": "./dist/host.js" },
     "./style.css": "./dist/style.css"
   },
   "types": "./public.d.ts",
   "sideEffects": ["**/*.css"],
   "scripts": {
     "build": "vite build",
+    "test": "node --test --experimental-strip-types test/*.test.mjs",
     "pack:check": "npm pack --dry-run"
   },
   "peerDependencies": {
-    "@jbm7/sdk": "~7.3.0-beta.1",
-    "@jbm7/vue-core": "~7.3.0-beta.1",
+    "@jbm7/sdk": "~7.3.0-beta.5",
+    "@jbm7/vue-core": "~7.3.0-beta.5",
     "pinia": "^3.0.0",
     "vue": "^3.5.0",
     "vue-router": "^4.6.0"
   },
   "devDependencies": {
-    "@jbm7/sdk": "7.3.0-beta.1",
-    "@jbm7/vue-core": "7.3.0-beta.1",
+    "@jbm7/sdk": "7.3.0-beta.5",
+    "@jbm7/vue-core": "7.3.0-beta.5",
     "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",

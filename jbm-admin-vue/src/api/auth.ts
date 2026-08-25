@@ -65,7 +65,7 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
   const callbackUrl = unwrap(loginResult)
   const parsed = new URL(callbackUrl, window.location.origin)
   const returnedState = parsed.searchParams.get('state')
-  if (returnedState && returnedState !== body.get('state')) {
+  if (!returnedState || returnedState !== body.get('state')) {
     throw new Error('state 校验失败，请重新登录')
   }
   const code = parsed.searchParams.get('code')
@@ -81,8 +81,7 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
 }
 
 function defaultLoginRedirectUri(): string {
-  if (typeof window === 'undefined') return '/login/callback'
-  return `${window.location.origin}/login/callback`
+  return '/login/callback'
 }
 
 function authCenterUrl(pathWithQuery: string) {
@@ -111,6 +110,19 @@ async function postAuthCenterForm<T>(
   return (await res.json()) as ResultBody<T>
 }
 
+async function postOAuthToken(body: URLSearchParams): Promise<OAuth2TokenResult> {
+  const res = await fetch(authCenterUrl('/oauth2/token'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  })
+  const raw = (await res.json()) as Record<string, unknown>
+  if (!res.ok || typeof raw.access_token !== 'string') {
+    throw new Error(String(raw.error_description || raw.error || 'OAuth2 Token 请求失败'))
+  }
+  return normalizeTokenPayload(raw)
+}
+
 export async function thirdPartyCallback(params: {
   provider: string
   code: string
@@ -118,15 +130,24 @@ export async function thirdPartyCallback(params: {
   redirectUri?: string
   state?: string
 }): Promise<OAuth2TokenResult> {
+  const clientId = params.clientId ?? DEFAULT_CLIENT_ID
+  const redirectUri = params.redirectUri ?? defaultLoginRedirectUri()
+  const state = params.state ?? (crypto.randomUUID?.() ?? `state_${Date.now()}`)
+  const pkce = await createJbmPkcePair()
   const query: Record<string, string | undefined> = {
     code: params.code,
-    client_id: params.clientId ?? DEFAULT_CLIENT_ID,
-    redirect_uri: params.redirectUri,
-    state: params.state,
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    state,
+    code_challenge: pkce.challenge,
+    code_challenge_method: pkce.method,
   }
-  const res = await get<Record<string, unknown>>(`/oauth2/thirdparty/${params.provider}/callback`, { params: query })
-  const raw = unwrap(res)
-  return normalizeTokenPayload(raw)
+  const res = await get<string>(`/oauth2/thirdparty/${params.provider}/callback`, { params: query })
+  const callbackUrl = new URL(unwrap(res), window.location.origin)
+  if (callbackUrl.searchParams.get('state') !== state) throw new Error('state 校验失败，请重新登录')
+  const code = callbackUrl.searchParams.get('code')
+  if (!code) throw new Error('授权码缺失，请重新登录')
+  return exchangeAuthorizationCode({ code, redirectUri, clientId, codeVerifier: pkce.verifier })
 }
 
 /** GET /oauth2/callback?code=（服务端直接换 Token，简化回调） */
@@ -150,12 +171,7 @@ export async function exchangeAuthorizationCode(params: {
     redirect_uri: params.redirectUri,
   })
   if (params.codeVerifier?.trim()) body.set('code_verifier', params.codeVerifier.trim())
-  const res = await postForm<OAuth2TokenResult | Record<string, unknown>>('/oauth2/token', body)
-  const raw = unwrap(res)
-  if (raw && typeof raw === 'object' && 'access_token' in (raw as object)) {
-    return normalizeTokenPayload(raw as Record<string, unknown>)
-  }
-  return raw as OAuth2TokenResult
+  return postOAuthToken(body)
 }
 
 export function normalizeTokenPayload(raw: Record<string, unknown>): OAuth2TokenResult {
@@ -184,13 +200,14 @@ export async function refreshToken(
     client_id: clientId,
     refresh_token: refreshToken,
   })
-  const res = await postForm<OAuth2TokenResult>('/oauth2/refresh', body)
-  return unwrap(res)
+  return postOAuthToken(body)
 }
 
-export async function logout(): Promise<void> {
+export async function logout(refreshToken?: string): Promise<void> {
   try {
-    await import('./request').then((m) => m.del('/oauth2/logout'))
+    const body = new URLSearchParams()
+    if (refreshToken) body.set('refresh_token', refreshToken)
+    await postAuthCenterForm('/oauth2/logout', body, {})
   } catch {
     // ignore logout errors
   }
@@ -203,17 +220,26 @@ export async function resetJaja7Seed(): Promise<Record<string, unknown>> {
 }
 
 export interface RegisterParams {
+  tenantName?: string
+  organizationType?: 'personal' | 'organization'
   userName: string
   password: string
   confirmPassword?: string
   nickName?: string
-  email?: string
-  mobile?: string
   vcode: string
   clientId?: string
 }
 
-export async function register(params: RegisterParams): Promise<void> {
+export interface TenantRegistrationResult {
+  tenantId: string | number
+  tenantName: string
+  userId: string | number
+  userName: string
+  appId: string | number
+  roleCode: string
+}
+
+export async function register(params: RegisterParams): Promise<TenantRegistrationResult> {
   const clientId = params.clientId ?? DEFAULT_CLIENT_ID
   const password = await encryptPasswordForClient(params.password, clientId)
   const body = new URLSearchParams({
@@ -221,13 +247,13 @@ export async function register(params: RegisterParams): Promise<void> {
     password,
     vcode: params.vcode.trim(),
     client_id: clientId,
+    organizationType: params.organizationType ?? 'personal',
   })
+  if (params.tenantName?.trim()) body.set('tenantName', params.tenantName.trim())
   if (params.nickName?.trim()) body.set('nickName', params.nickName.trim())
-  if (params.email?.trim()) body.set('email', params.email.trim())
-  if (params.mobile?.trim()) body.set('mobile', params.mobile.trim())
   const headers: Record<string, string> = {
     [PASSWORD_ENCRYPTED_HEADER]: 'true',
   }
-  const res = await postForm<void>('/oauth2/register', body, { headers })
-  unwrap(res)
+  const res = await postForm<TenantRegistrationResult>('/oauth2/register', body, { headers })
+  return unwrap(res)
 }

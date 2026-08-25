@@ -13,7 +13,6 @@ import Badge from '@/components/ui/Badge.vue'
 import { usePagedList } from '@/composables/usePagedList'
 import { usePermission } from '@/composables/usePermission'
 import { useFeedback } from '@/composables/useFeedback'
-import { useAuthStore } from '@/stores/auth'
 import { listApps } from '@/api/app'
 import {
   expireToken,
@@ -27,7 +26,6 @@ import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId
 
 const { hasAction, isSuperAdmin } = usePermission()
 const feedback = useFeedback()
-const auth = useAuthStore()
 
 const userName = ref('')
 const ipaddr = ref('')
@@ -36,8 +34,6 @@ const companyIdFilter = ref<number | string | null>('')
 const apps = ref<BaseApp[]>([])
 const actionError = ref('')
 const actionLoading = ref(false)
-
-const currentToken = computed(() => auth.accessToken.replace(/^Bearer\s+/i, ''))
 
 const appNameMap = computed(() => {
   const map = new Map<string, string>()
@@ -135,10 +131,8 @@ function formatTime(t?: string) {
 }
 
 function effectiveExpiredAt(row: SysUserOnline) {
-  const times = [parseTime(row.activityTime), parseTime(row.expiredTime)]
-    .filter((time): time is number => typeof time === 'number')
-  if (!times.length) return undefined
-  return Math.min(...times)
+  const time = parseTime(row.expiredTime)
+  return typeof time === 'number' ? time : undefined
 }
 
 function formatEffectiveExpiredTime(row: SysUserOnline) {
@@ -153,7 +147,7 @@ function isExpired(row: SysUserOnline) {
 }
 
 function isCurrentSession(row: SysUserOnline) {
-  return !!row.tokenId && row.tokenId === currentToken.value
+  return row.currentSession === true
 }
 
 function shortToken(tokenId?: string) {
@@ -319,9 +313,8 @@ async function handleExpireImmediately(row: SysUserOnline) {
               </td>
               <td class="p-4 text-sm text-muted-foreground">{{ formatTime(row.loginTime) }}</td>
               <td class="p-4 text-sm text-muted-foreground">
-                <div class="text-foreground">{{ formatEffectiveExpiredTime(row) }}</div>
-                <div v-if="row.activityTime" class="mt-1 text-xs">空闲：{{ formatTime(row.activityTime) }}</div>
-                <div v-if="row.expiredTime" class="text-xs">硬过期：{{ formatTime(row.expiredTime) }}</div>
+                <div class="text-foreground">有效至：{{ formatEffectiveExpiredTime(row) }}</div>
+                <div v-if="row.activityTime" class="mt-1 text-xs">最后活动：{{ formatTime(row.activityTime) }}</div>
               </td>
               <td class="p-4 font-mono text-xs text-muted-foreground" :title="row.tokenId">
                 {{ shortToken(row.tokenId) }}

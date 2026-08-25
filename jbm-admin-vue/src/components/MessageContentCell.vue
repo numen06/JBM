@@ -28,10 +28,10 @@ function contentText(value: unknown) {
 
 <template>
   <div class="flex min-w-0 items-center gap-2">
-    <p class="min-w-0 flex-1 truncate text-sm text-muted-foreground" :title="content">
+    <p class="min-w-0 flex-1 line-clamp-2 text-sm leading-5 text-foreground/80" :title="content">
       {{ preview }}
     </p>
-    <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" @click="open = true">
+    <Button variant="ghost" size="icon" class="h-8 w-8 shrink-0" title="查看完整内容" aria-label="查看完整内容" @click="open = true">
       <Search class="h-4 w-4" />
     </Button>
   </div>

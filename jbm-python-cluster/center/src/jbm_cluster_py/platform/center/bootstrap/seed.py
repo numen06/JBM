@@ -39,7 +39,10 @@ async def seed_local_baseline(config: AppConfig) -> None:
         async with engine.begin() as connection:
             for statement in sql.split(";"):
                 if statement.strip():
-                    await connection.execute(text(statement))
+                    # Seed files are trusted, bundled SQL. Execute them at the
+                    # driver level so JSON values such as `{"enabled":true}`
+                    # are not mistaken for SQLAlchemy ``:name`` parameters.
+                    await connection.exec_driver_sql(statement)
             if settings.get("force-reset-password", False):
                 await connection.execute(
                     text(

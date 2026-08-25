@@ -1,6 +1,7 @@
 import { get, unwrap, isOk } from './request'
 import { getUserStatistics } from './user'
 import { listDiscoveryServices, listRoutes, listRateLimits, listIpLimits } from './gateway'
+import { getClusterAccessInfo } from './logs'
 import type { DiscoveryService } from './types'
 
 /**
@@ -114,6 +115,7 @@ const ROUTE_PERMISSION_MAP = {
   routes: '/gateway/routes',
   rateLimits: '/gateway/rate-limit',
   ipLimits: '/gateway/ip-limit',
+  apiMonitor: '/api/monitor',
 } as const
 
 /** 聚合指标 key 与前端展示 key / 路由映射 */
@@ -232,7 +234,7 @@ function mergeMetricsByKey(primary: DashboardMetric[], extra: DashboardMetric[])
 function buildSectionsFromMetrics(metrics: DashboardMetric[]): DashboardSection[] {
   const systemKeys = new Set(['usersTotal', 'onlineUser', 'appCount', 'orgCount'])
   const authorityKeys = new Set(['roleCount', 'authorityResourceCount'])
-  const apiKeys = new Set(['apiCount', 'apiKeyCount'])
+  const apiKeys = new Set(['apiCount', 'apiKeyCount', 'apiMonitor'])
   const gatewayKeys = new Set([
     'serviceCount',
     'healthyInstanceCount',
@@ -274,7 +276,8 @@ async function loadGatewayMetrics(isRouteAllowed: RoutePermissionChecker): Promi
     isRouteAllowed(ROUTE_PERMISSION_MAP.discoveryServices) ||
     isRouteAllowed(ROUTE_PERMISSION_MAP.routes) ||
     isRouteAllowed(ROUTE_PERMISSION_MAP.rateLimits) ||
-    isRouteAllowed(ROUTE_PERMISSION_MAP.ipLimits)
+    isRouteAllowed(ROUTE_PERMISSION_MAP.ipLimits) ||
+    isRouteAllowed(ROUTE_PERMISSION_MAP.apiMonitor)
 
   if (!gatewayAllowed) {
     return { metrics, notices }
@@ -397,6 +400,29 @@ async function loadGatewayMetrics(isRouteAllowed: RoutePermissionChecker): Promi
         status: 'error',
         icon: 'lock',
         path: '/gateway/ip-limit',
+      })
+    }
+  }
+
+  if (isRouteAllowed(ROUTE_PERMISSION_MAP.apiMonitor)) {
+    try {
+      const access = await getClusterAccessInfo()
+      metrics.push({
+        key: 'apiMonitor',
+        label: '今日 API 调用',
+        value: access.today ?? 0,
+        unit: '次',
+        icon: 'chart-line',
+        path: '/api/monitor',
+      })
+    } catch {
+      metrics.push({
+        key: 'apiMonitor',
+        label: '今日 API 调用',
+        value: '—',
+        status: 'error',
+        icon: 'chart-line',
+        path: '/api/monitor',
       })
     }
   }
@@ -543,16 +569,4 @@ function calculateHealthyInstances(services: DiscoveryService[]): number {
     }
   }
   return total
-}
-
-/**
- * API 监控指标占位
- */
-export const API_MONITOR_PLACEHOLDER: DashboardMetric = {
-  key: 'apiMonitor',
-  label: 'API 监控',
-  value: '待接入',
-  status: 'unavailable',
-  icon: 'chart-line',
-  description: 'API 监控指标正在规划中',
 }

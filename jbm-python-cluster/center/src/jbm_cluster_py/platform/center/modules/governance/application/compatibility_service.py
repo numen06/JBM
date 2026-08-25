@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+import base64
 import json
+import re
 import secrets
 from datetime import datetime
 from typing import Any, Mapping
 
 import bcrypt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from jbm_cluster_py.common.result import ok, page_result
+from jbm_cluster_py.common.security import validate_password
 from jbm_cluster_py.platform.center.modules.governance.application.access import (
     is_platform,
     require_internal,
     require_platform,
+    require_tenant_admin,
     require_tenant_record,
     tenant_id,
 )
@@ -37,6 +43,7 @@ class CompatibilityService:
         "/gateway/routes": "route",
         "/menu": "menu",
         "/role": "role",
+        "/tenant-delegation": "tenantDelegation",
         "/user": "user",
     }
     IDS = {
@@ -50,6 +57,7 @@ class CompatibilityService:
         "route": "routeId",
         "menu": "menuId",
         "role": "roleId",
+        "tenantDelegation": "id",
         "user": "userId",
     }
     PLATFORM_ONLY_RESOURCES = {
@@ -64,10 +72,17 @@ class CompatibilityService:
         "role",
     }
 
-    def __init__(self, store: CrudStore, governance: GovernanceService, openapi: OpenApiCatalog) -> None:
+    def __init__(
+        self,
+        store: CrudStore,
+        governance: GovernanceService,
+        openapi: OpenApiCatalog,
+        password_policy: Mapping[str, Any] | None = None,
+    ) -> None:
         self.store = store
         self.governance = governance
         self.openapi = openapi
+        self.password_policy = dict(password_policy or {})
 
     async def handle(
         self,
@@ -102,8 +117,30 @@ class CompatibilityService:
     ) -> dict[str, Any]:
         if resource in self.PLATFORM_ONLY_RESOURCES:
             require_platform(identity)
+        if resource == "user" and method == "POST" and not is_platform(identity):
+            require_tenant_admin(identity)
         scoped_query = dict(query)
         scoped_payload = dict(payload)
+        if resource == "tenantDelegation":
+            if method == "POST" and payload.get("operatorAccount") and not scoped_payload.get("resourceTypes"):
+                scoped_payload["resourceTypes"] = ["*"]
+            scoped_payload = _delegation_payload(scoped_payload)
+            if not is_platform(identity):
+                scoped_query["ownerTenantId"] = tenant_id(identity)
+                scoped_payload["ownerTenantId"] = tenant_id(identity)
+                scoped_payload["appId"] = _app_id(identity)
+            if method == "POST":
+                operator_account = str(payload.get("operatorAccount") or "").strip()
+                if operator_account:
+                    operator_user = await self.store.find_user_by_username(operator_account)
+                    if operator_user is None:
+                        raise ValueError("运营方账号不存在")
+                    scoped_payload["operatorTenantId"] = operator_user.get("companyId")
+                    scoped_payload["operatorUserId"] = operator_user.get("userId")
+                scoped_payload.setdefault("status", 1)
+                scoped_payload.setdefault("version", 1)
+                scoped_payload["createdBy"] = _user_id(identity)
+                scoped_payload["approvedBy"] = _user_id(identity)
         if not is_platform(identity):
             if resource == "user":
                 scoped_query["companyId"] = tenant_id(identity)
@@ -114,11 +151,55 @@ class CompatibilityService:
         if method == "GET":
             page, size = _page(scoped_query)
             rows, total = await self.store.list(resource, scoped_query, page, size)
+            if resource == "tenantDelegation":
+                for row in rows:
+                    operator = await self.store.get("user", row.get("operatorUserId")) if row.get("operatorUserId") else None
+                    row["operatorAccount"] = (operator or {}).get("userName")
             return ok(page_result(rows, total, page, size))
         if method == "POST":
             if resource == "user":
-                return ok(await self._create_user(scoped_payload))
-            return ok(await self.store.save(resource, scoped_payload))
+                return ok(await self._create_user(scoped_payload, identity))
+            if resource == "app":
+                scoped_payload = _oauth_app_payload(scoped_payload)
+                client_id = str(scoped_payload.get("apiKey") or "").strip()
+                if not client_id:
+                    code = str(scoped_payload.get("code") or "app").strip().replace(" ", "-")
+                    client_id = f"{code}-{secrets.token_hex(8)}"
+                client_secret = new_secret()
+                public_key, private_key = _rsa_key_pair()
+                saved = await self.store.save(
+                    resource,
+                    {
+                        **scoped_payload,
+                        "apiKey": client_id,
+                        "secretKey": client_secret,
+                        "publicKey": public_key,
+                        "privateKey": private_key,
+                    },
+                )
+                owner_tenant = saved.get("orgId")
+                if owner_tenant not in (None, ""):
+                    await self.store.save(
+                        "tenantApp",
+                        {
+                            "tenantId": owner_tenant,
+                            "appId": saved.get("appId"),
+                            "status": 1,
+                        },
+                    )
+                return ok(
+                    {
+                        "appId": saved.get("appId"),
+                        "clientId": client_id,
+                        "clientSecret": client_secret,
+                    }
+                )
+            saved = await self.store.save(resource, scoped_payload)
+            if resource == "menu":
+                await self._sync_menu_authority(saved)
+            elif resource == "action":
+                await self._sync_action_authority(saved)
+            return ok(saved)
         if method == "PATCH" and resource == "api":
             ids = _ids(query, payload)
             values = {key: value for key, value in payload.items() if key not in {"ids", "apiIds"}}
@@ -141,21 +222,56 @@ class CompatibilityService:
     ) -> dict[str, Any]:
         if resource in self.PLATFORM_ONLY_RESOURCES:
             require_platform(identity)
+        if resource == "user" and method in {"PUT", "PATCH", "DELETE"} and not is_platform(identity):
+            require_tenant_admin(identity)
         existing = await self.store.get(resource, record_id)
         if resource == "user":
-            require_tenant_record(identity, existing, "companyId")
+            await self._require_user(identity, record_id)
         elif resource == "app":
             require_tenant_record(identity, existing, "orgId")
+        elif resource == "tenantDelegation":
+            require_tenant_record(identity, existing, "ownerTenantId")
         scoped_payload = dict(payload)
+        if resource == "user":
+            for key, label in (("mobile", "手机号"), ("email", "邮箱")):
+                if key not in scoped_payload:
+                    continue
+                if str(scoped_payload.get(key) or "").strip() != str((existing or {}).get(key) or "").strip():
+                    raise ValueError("%s只能由用户本人通过验证码绑定" % label)
+                scoped_payload.pop(key, None)
         if not is_platform(identity):
             if resource == "user":
-                scoped_payload["companyId"] = tenant_id(identity)
+                scoped_payload.pop("companyId", None)
             elif resource == "app":
                 scoped_payload["orgId"] = tenant_id(identity)
+            elif resource == "tenantDelegation":
+                scoped_payload = _delegation_payload(scoped_payload)
+                scoped_payload["ownerTenantId"] = tenant_id(identity)
+                scoped_payload["appId"] = _app_id(identity)
+                scoped_payload["version"] = int((existing or {}).get("version") or 0) + 1
         if method == "GET":
             return ok(existing)
         if method in {"PUT", "PATCH"}:
-            return ok(await self.store.save(resource, scoped_payload, record_id))
+            if resource == "app":
+                scoped_payload = _oauth_app_payload(scoped_payload, existing)
+            saved = await self.store.save(resource, scoped_payload, record_id)
+            if resource == "user" and saved.get("companyId") not in (None, ""):
+                await self.store.ensure_link(
+                    "base_user_org",
+                    "user_id",
+                    saved["userId"],
+                    "org_id",
+                    saved["companyId"],
+                )
+                if "roleIds" in scoped_payload:
+                    await self._replace_user_roles(
+                        identity, saved, scoped_payload, tenant_id(identity)
+                    )
+            if resource == "menu":
+                await self._sync_menu_authority(saved)
+            elif resource == "action":
+                await self._sync_action_authority(saved)
+            return ok(saved)
         if method == "DELETE":
             return ok(await self.store.delete(resource, record_id))
         raise ValueError("不支持的资源操作")
@@ -169,6 +285,14 @@ class CompatibilityService:
         body: Mapping[str, Any],
         identity: Mapping[str, Any],
     ) -> dict[str, Any] | None:
+        if path == "/captcha/pkey":
+            app_key = str(query.get("appKey") or "").strip()
+            rows, _ = await self.store.list("app", {"apiKey": app_key}, 1, 1)
+            public_key = rows[0].get("publicKey") if rows else None
+            if not public_key:
+                raise ValueError("客户端不存在或未配置公钥")
+            return ok(public_key)
+
         if path.startswith("/internal/"):
             require_internal(identity)
         if not is_platform(identity):
@@ -185,7 +309,7 @@ class CompatibilityService:
                 "/developer/",
                 "/extend-field/",
             )
-            if path.startswith(platform_prefixes):
+            if path.startswith(platform_prefixes) and path != "/baseAppConfig/getAppConfigByKey":
                 require_platform(identity)
             if path in {
                 "/user/registrations",
@@ -193,6 +317,52 @@ class CompatibilityService:
                 "/user/third-party-account-bindings",
             }:
                 require_platform(identity)
+
+        if path == "/current/user/account":
+            return ok(await self.governance.current_user(identity))
+        if path == "/current/user/menu":
+            requested_app_id = query.get("appId")
+            return ok(
+                await self.governance.current_menus(
+                    identity,
+                    int(requested_app_id) if requested_app_id not in (None, "") else None,
+                    tree=False,
+                )
+            )
+        if path == "/app/model":
+            return ok(await self.store.get("app", body.get("appId") or body.get("id")))
+        if path == "/app/list":
+            filters = dict(body.get("baseApp") or body.get("app") or {})
+            if not is_platform(identity):
+                filters["orgId"] = tenant_id(identity)
+            rows, _ = await self.store.list("app", filters, 1, 100)
+            for row in rows:
+                row.pop("secretKey", None)
+                row.pop("privateKey", None)
+            return ok(rows)
+        if path == "/user/model":
+            user_id = int(body.get("userId") or body.get("id") or _user_id(identity))
+            return ok(await self.governance.user(user_id, identity))
+        if path in {"/user/list", "/user/pageList"}:
+            filters = dict(body.get("baseUser") or body.get("user") or {})
+            if not is_platform(identity):
+                filters["companyId"] = tenant_id(identity)
+            page, size = _page(body.get("pageForm") or body)
+            rows, total = await self.store.list("user", filters, page, size)
+            return ok(page_result(rows, total, page, size) if path.endswith("pageList") else rows)
+        if path == "/user/getUserInfoStatistics":
+            filters = {} if is_platform(identity) else {"companyId": tenant_id(identity)}
+            _, total = await self.store.list("user", filters, 1, 1)
+            return ok({"usersTotal": total, "onlineUser": 0})
+        if path == "/user/userRoles":
+            user_id = int(body.get("userId") or body.get("id") or _user_id(identity))
+            return ok(
+                await self.governance.repository.user_roles(
+                    user_id, _app_id(identity), tenant_id(identity)
+                )
+            )
+        if path == "/baseUserConfig/model":
+            return ok(None)
         if path == "/current/user" and method == "PUT":
             user_id = _user_id(identity)
             allowed = {
@@ -218,14 +388,47 @@ class CompatibilityService:
         if path == "/user/{userId}/roles" and method == "PUT":
             await self._require_user(identity, params["userId"])
             role_ids = _values(body, "roleIds")
-            if not is_platform(identity) and {str(value) for value in role_ids} - {"4"}:
-                require_platform(identity)
-            await self.store.replace_links("base_role_user", "user_id", params["userId"], "role_id", role_ids)
+            app_id = _app_id(identity)
+            roles = [row for value in role_ids if (row := await self.store.get("role", value))]
+            if len(roles) != len(set(map(str, role_ids))):
+                raise ValueError("包含不存在的角色")
+            app_role_ids = [
+                row["roleId"] for row in roles if str(row.get("appId") or "") == str(app_id)
+            ]
+            if not is_platform(identity):
+                forbidden = [
+                    row for row in roles
+                    if row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
+                    or row.get("appId") not in (None, app_id)
+                ]
+                if forbidden:
+                    require_platform(identity)
+            await self.store.replace_scoped_links(
+                "base_role_user",
+                "user_id",
+                params["userId"],
+                "role_id",
+                app_role_ids,
+                "app_id",
+                app_id,
+                "tenant_id",
+                (
+                    int((await self.store.get("user", params["userId"]))["companyId"])
+                    if is_platform(identity)
+                    else tenant_id(identity)
+                ),
+            )
             return ok()
         if path == "/user/{userId}/roles" and method == "GET":
             await self._require_user(identity, params["userId"])
-            ids = await self.store.linked_ids("base_role_user", "user_id", params["userId"], "role_id")
-            return ok([row for value in ids if (row := await self.store.get("role", value))])
+            user = await self.store.get("user", params["userId"])
+            return ok(
+                await self.governance.repository.user_roles(
+                    params["userId"],
+                    _app_id(identity),
+                    int(user["companyId"]) if is_platform(identity) else tenant_id(identity),
+                )
+            )
         if path == "/user/{userId}/orgs" and method == "PUT":
             await self._require_user(identity, params["userId"])
             if not is_platform(identity) and {str(value) for value in _values(body, "orgIds")} - {
@@ -289,18 +492,99 @@ class CompatibilityService:
         if path == "/authenticate/{loginType}/login":
             return await self._special("POST", "/user/sessions", params, query, body, identity)
 
+        if path == "/tenant-delegation/received":
+            page, size = _page(query)
+            rows, total = await self.store.list_active_delegations(
+                tenant_id(identity),
+                _user_id(identity),
+                _app_id(identity),
+                page,
+                size,
+            )
+            return ok(page_result(rows, total, page, size))
+
+        if path == "/operator-application/current":
+            filters = {"tenantId": tenant_id(identity), "appId": _app_id(identity)}
+            rows, _ = await self.store.list("operatorApplication", filters, 1, 1)
+            existing = rows[0] if rows else None
+            if method == "GET":
+                return ok(existing)
+            if method == "POST":
+                reason = str(body.get("reason") or "").strip()
+                if existing and int(existing.get("status") or 0) in {0, 1}:
+                    return ok(existing)
+                values = {
+                    **filters,
+                    "applicantUserId": _user_id(identity),
+                    "status": 0,
+                    "reason": reason,
+                    "reviewRemark": None,
+                    "reviewedBy": None,
+                    "reviewedAt": None,
+                }
+                return ok(
+                    await self.store.save(
+                        "operatorApplication", values, existing.get("id") if existing else None
+                    )
+                )
+
+        if path == "/operator-application":
+            require_platform(identity)
+            page, size = _page(query)
+            rows, total = await self.store.list(
+                "operatorApplication",
+                {"appId": query.get("appId"), "status": query.get("status")},
+                page,
+                size,
+            )
+            return ok(page_result(rows, total, page, size))
+
+        if path == "/operator-application/{id}/review" and method == "PUT":
+            require_platform(identity)
+            status = int(body.get("status") if body.get("status") is not None else -1)
+            if status not in {1, 2}:
+                raise ValueError("审批状态必须为通过或驳回")
+            return ok(
+                await self.store.review_operator_application(
+                    int(params["id"]),
+                    status,
+                    _user_id(identity),
+                    str(body.get("reviewRemark") or "").strip(),
+                )
+            )
+
         if path == "/role/all":
-            filters = {} if is_platform(identity) else {"roleCode": "tenant_admin"}
-            rows, _ = await self.store.list("role", filters, 1, 100)
-            return ok(rows)
+            rows, _ = await self.store.list("role", {}, 1, 100)
+            requested_app_id = query.get("appId") if is_platform(identity) else None
+            app_id = (
+                int(requested_app_id)
+                if requested_app_id not in (None, "")
+                else _optional_app_id(identity)
+            )
+            visible = [
+                row for row in rows
+                if row.get("appId") in (None, app_id)
+                and (is_platform(identity) or row.get("roleCode") == "tenant_admin" or row.get("appId") == app_id)
+            ]
+            return ok(visible)
         if path == "/role/{roleId}/users" and method == "GET":
             require_platform(identity)
             ids = await self.store.linked_ids("base_role_user", "role_id", params["roleId"], "user_id")
             return ok([row for identity in ids if (row := await self.store.get("user", identity))])
         if path == "/role/{roleId}/users" and method == "PUT":
             require_platform(identity)
-            await self.store.replace_links(
-                "base_role_user", "role_id", params["roleId"], "user_id", _values(body, "userIds")
+            role = await self.store.get("role", params["roleId"])
+            if role is None or role.get("appId") in (None, ""):
+                raise ValueError("应用角色不能为空")
+            users = [
+                row
+                for user_id in _values(body, "userIds")
+                if (row := await self.store.get("user", user_id)) is not None
+            ]
+            await self.store.replace_role_users(
+                params["roleId"],
+                role["appId"],
+                [(row["userId"], row["companyId"]) for row in users],
             )
             return ok()
 
@@ -391,7 +675,12 @@ class CompatibilityService:
             rows, _ = await self.store.list("authority", query, 1, 100)
             return ok(rows)
         if path in {"/authority/menus", "/authority/menus/tree"}:
-            return ok(await self.governance.current_menus(identity))
+            requested = query.get("appId")
+            return ok(
+                await self.governance.current_menus(
+                    identity, int(requested) if requested not in (None, "") else None
+                )
+            )
 
         if path == "/api/services":
             rows, _ = await self.store.list("api", {}, 1, 100)
@@ -555,8 +844,52 @@ class CompatibilityService:
             return await self._openapi(method, path, params, query, body)
         return None
 
+    async def _sync_menu_authority(self, menu: Mapping[str, Any]) -> None:
+        menu_id = menu.get("menuId")
+        menu_code = str(menu.get("menuCode") or "").strip()
+        if not menu_id or not menu_code:
+            return
+        rows, _ = await self.store.list("authority", {"menuId": menu_id}, 1, 10)
+        payload = {
+            "authority": f"MENU_{menu_code}",
+            "resourceType": "menu",
+            "menuId": menu_id,
+            "appId": menu.get("appId"),
+            "status": menu.get("status", 1),
+        }
+        if rows:
+            await self.store.save("authority", payload, rows[0]["authorityId"])
+        else:
+            await self.store.save("authority", payload)
+
+    async def _sync_action_authority(self, action: Mapping[str, Any]) -> None:
+        action_id = action.get("actionId")
+        action_code = str(action.get("actionCode") or "").strip()
+        menu_id = action.get("menuId")
+        if not action_id or not action_code or not menu_id:
+            return
+        menu = await self.store.get("menu", menu_id)
+        app_id = (menu or {}).get("appId")
+        if app_id not in (None, "") and str(action.get("appId") or "") != str(app_id):
+            await self.store.save("action", {"appId": app_id}, action_id)
+        rows, _ = await self.store.list("authority", {"actionId": action_id}, 1, 10)
+        payload = {
+            "authority": f"ACTION_{action_code}",
+            "resourceType": "action",
+            "menuId": menu_id,
+            "actionId": action_id,
+            "appId": app_id,
+            "status": action.get("status", 1),
+        }
+        if rows:
+            await self.store.save("authority", payload, rows[0]["authorityId"])
+        else:
+            await self.store.save("authority", payload)
+
     async def _require_user(self, identity: Mapping[str, Any], user_id: Any) -> None:
-        require_tenant_record(identity, await self.store.get("user", user_id), "companyId")
+        if is_platform(identity) or await self.store.is_user_member(user_id, tenant_id(identity)):
+            return
+        require_tenant_record(identity, None, "companyId")
 
     async def _master_data(
         self, method: str, path: str, resource: str, alias: str, body: Mapping[str, Any]
@@ -610,14 +943,45 @@ class CompatibilityService:
         await self.store.replace_links(table, owner_column, owner_id, "authority_id", _values(body, "authorityIds"))
         return ok()
 
-    async def _create_user(self, payload: Mapping[str, Any]) -> dict[str, Any]:
+    async def _create_user(
+        self,
+        payload: Mapping[str, Any],
+        identity: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
         username = str(payload.get("userName") or payload.get("username") or payload.get("account") or "").strip()
         if not username:
             raise ValueError("用户名不能为空")
+        if str(payload.get("mobile") or "").strip() or str(payload.get("email") or "").strip():
+            raise ValueError("手机号和邮箱需由用户本人登录后通过验证码绑定")
+        target_tenant_id = (
+            tenant_id(identity)
+            if identity is not None and not is_platform(identity)
+            else int(payload.get("companyId") or 0)
+        )
+        existing = await self.store.find_user_by_username(username)
+        if existing is not None:
+            if identity is None:
+                raise ValueError("用户名已存在")
+            if target_tenant_id <= 0:
+                raise ValueError("请选择要加入的租户")
+            await self.store.ensure_link(
+                "base_user_org", "user_id", existing["userId"], "org_id", target_tenant_id
+            )
+            if "roleIds" in payload:
+                await self._replace_user_roles(identity, existing, payload, target_tenant_id)
+            return {**existing, "joinedExisting": True, "membershipTenantId": str(target_tenant_id)}
+        if payload.get("existingOnly"):
+            raise ValueError("账号不存在，请切换为创建新账号")
+        password = str(payload.get("password") or "")
+        if not password:
+            raise ValueError("创建新账号必须设置初始密码")
+        user_payload = dict(payload)
+        user_payload.pop("mobile", None)
+        user_payload.pop("email", None)
         user = await self.store.save(
             "user",
             {
-                **payload,
+                **user_payload,
                 "userName": username,
                 "nickName": payload.get("nickName") or username,
                 "realName": payload.get("realName") or payload.get("nickName") or username,
@@ -625,24 +989,64 @@ class CompatibilityService:
                 "userType": payload.get("userType") or "normal",
             },
         )
-        password = str(payload.get("password") or "")
-        if password:
-            await self.store.save(
-                "account",
-                {
-                    "userId": user["userId"],
-                    "account": username,
-                    "password": _hash(password),
-                    "accountType": payload.get("accountType") or "username",
-                    "status": 1,
-                    "domain": payload.get("domain") or "@admin.com",
-                },
+        if user.get("companyId") not in (None, ""):
+            await self.store.ensure_link(
+                "base_user_org",
+                "user_id",
+                user["userId"],
+                "org_id",
+                user["companyId"],
             )
+        validate_password(password, self.password_policy)
+        await self.store.save(
+            "account",
+            {
+                "userId": user["userId"],
+                "account": username,
+                "password": _hash(password),
+                "accountType": payload.get("accountType") or "username",
+                "status": 1,
+                "domain": payload.get("domain") or "@admin.com",
+            },
+        )
+        if identity is not None and "roleIds" in payload:
+            await self._replace_user_roles(identity, user, payload, target_tenant_id)
         return user
 
+    async def _replace_user_roles(
+        self,
+        identity: Mapping[str, Any],
+        user: Mapping[str, Any],
+        payload: Mapping[str, Any],
+        target_tenant_id: int | None = None,
+    ) -> None:
+        role_ids = _values(payload, "roleIds")
+        app_id = _app_id(identity)
+        roles = [row for value in role_ids if (row := await self.store.get("role", value))]
+        if len(roles) != len(set(map(str, role_ids))):
+            raise ValueError("包含不存在的角色")
+        if not is_platform(identity):
+            forbidden = [
+                row for row in roles
+                if row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
+                or row.get("appId") not in (None, app_id)
+            ]
+            if forbidden:
+                require_platform(identity)
+        await self.store.replace_scoped_links(
+            "base_role_user",
+            "user_id",
+            user["userId"],
+            "role_id",
+            [row["roleId"] for row in roles if str(row.get("appId") or "") == str(app_id)],
+            "app_id",
+            app_id,
+            "tenant_id",
+            int(target_tenant_id or user["companyId"]),
+        )
+
     async def _set_password(self, user_id: int, password: str, origin: str | None = None) -> None:
-        if len(password) < 8:
-            raise ValueError("密码长度不能少于 8 位")
+        validate_password(password, self.password_policy)
         rows, _ = await self.store.list(
             "account", {"userId": user_id}, 1, 100, include_secrets=True
         )
@@ -651,7 +1055,13 @@ class CompatibilityService:
         if origin is not None and not _verify(origin, str(rows[0].get("password") or "")):
             raise ValueError("原密码错误")
         await self.store.update_where(
-            "account", {"userId": user_id}, {"password": _hash(password), "mustChangePassword": 0}
+            "account",
+            {"userId": user_id},
+            {
+                "password": _hash(password),
+                "mustChangePassword": 0,
+                "updateTime": datetime.now(),
+            },
         )
 
     async def _openapi(
@@ -743,6 +1153,34 @@ def _user_id(identity: Mapping[str, Any]) -> int:
     return int(str(value).split("::", 1)[0])
 
 
+def _app_id(identity: Mapping[str, Any]) -> int:
+    value = _optional_app_id(identity)
+    if value is None:
+        raise ValueError("登录信息缺少 appId")
+    return value
+
+
+def _optional_app_id(identity: Mapping[str, Any]) -> int | None:
+    value = identity.get("appId", identity.get("app_id"))
+    if value is None:
+        return None
+    return int(str(value).split("::", 1)[0])
+
+
+def _rsa_key_pair() -> tuple[str, str]:
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public_der = private_key.public_key().public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    private_der = private_key.private_bytes(
+        serialization.Encoding.DER,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+    return base64.b64encode(public_der).decode(), base64.b64encode(private_der).decode()
+
+
 def _hash(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
@@ -775,3 +1213,46 @@ def _json_field(row: Mapping[str, Any], key: str, default: Any) -> Any:
         return json.loads(value)
     except json.JSONDecodeError:
         return default
+
+
+def _oauth_app_payload(
+    payload: Mapping[str, Any], existing: Mapping[str, Any] | None = None
+) -> dict[str, Any]:
+    values = dict(payload)
+    redirect_value = values.pop("redirectUris", None)
+    public_value = values.pop("publicClient", None)
+    registration_enabled = values.pop("registrationEnabled", None)
+    registration_role = values.pop("registrationDefaultRoleCode", None)
+    current = (existing or {}).get("extendData")
+    if not isinstance(current, Mapping):
+        try:
+            current = json.loads(str(current)) if current else {}
+        except (TypeError, ValueError):
+            current = {}
+    extend_data = dict(current)
+    oauth = dict(extend_data.get("oauth") or {})
+    if redirect_value is not None:
+        raw = str(redirect_value).replace("\n", ",")
+        oauth["redirectUris"] = [item.strip() for item in raw.split(",") if item.strip()]
+    if public_value is not None:
+        oauth["publicClient"] = bool(public_value)
+    extend_data["oauth"] = oauth
+    if registration_enabled is not None or registration_role is not None:
+        registration = dict(extend_data.get("registration") or {})
+        if registration_enabled is not None:
+            registration["enabled"] = bool(registration_enabled)
+        if registration_role is not None:
+            registration["defaultRoleCode"] = str(registration_role).strip()
+        registration["mode"] = "tenant"
+        extend_data["registration"] = registration
+    values["extendData"] = json.dumps(extend_data, ensure_ascii=False)
+    return values
+
+
+def _delegation_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    values = dict(payload)
+    for key in ("permissionCodes", "resourceTypes", "dataScope", "fieldPolicy"):
+        value = values.get(key)
+        if value is not None and not isinstance(value, str):
+            values[key] = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    return values

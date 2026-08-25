@@ -1,0 +1,18 @@
+ARG JBM_BASE_IMAGE=registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:jbm73-base-20260825
+FROM ${JBM_BASE_IMAGE}
+
+USER root
+RUN rm -rf /app/common /app/integrations /app/auth /app/doc /app/push /app/job /app/gateway /app/center /app/logs /app/bigscreen
+
+COPY --chown=appuser:appuser common /app/common
+COPY --chown=appuser:appuser integrations /app/integrations
+COPY --chown=appuser:appuser auth /app/auth
+COPY --chown=appuser:appuser doc /app/doc
+COPY --chown=appuser:appuser push /app/push
+COPY --chown=appuser:appuser job /app/job
+COPY --chown=appuser:appuser gateway /app/gateway
+COPY --chown=appuser:appuser center /app/center
+COPY --chown=appuser:appuser logs /app/logs
+COPY --chown=appuser:appuser bigscreen /app/bigscreen
+
+USER appuser

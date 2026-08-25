@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { Camera, RotateCcw, Save } from '@lucide/vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { Camera, Mail, RotateCcw, Save, Smartphone } from '@lucide/vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import FormField from '@/components/FormField.vue'
@@ -10,7 +10,14 @@ import CardContent from '@/components/ui/CardContent.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import Input from '@/components/ui/Input.vue'
-import { updateCurrentUser } from '@/api/current'
+import {
+  bindEmail,
+  bindMobile,
+  sendEmailBindCode,
+  sendMobileBindCode,
+  updateCurrentUser,
+} from '@/api/current'
+import { fetchSmsCodeConfig } from '@/api/captcha'
 import { uploadDoc } from '@/api/doc'
 import { useDocImageSrc } from '@/composables/useDocImageSrc'
 import { useFeedback } from '@/composables/useFeedback'
@@ -25,6 +32,17 @@ const cropDialogOpen = ref(false)
 const cropSourceFile = ref<File | null>(null)
 const saving = ref(false)
 const formError = ref('')
+const debugBypass = ref(false)
+const mobileTarget = ref('')
+const mobileCode = ref('')
+const mobileCodeSent = ref(false)
+const mobileSending = ref(false)
+const mobileBinding = ref(false)
+const emailTarget = ref('')
+const emailCode = ref('')
+const emailCodeSent = ref(false)
+const emailSending = ref(false)
+const emailBinding = ref(false)
 
 const form = reactive({
   nickName: '',
@@ -47,8 +65,88 @@ function fillFormFromUser() {
   form.nickName = auth.user?.nickName ?? ''
   form.realName = auth.user?.realName ?? ''
   form.avatar = auth.user?.avatar ?? ''
+  mobileTarget.value = auth.user?.mobile ?? ''
+  emailTarget.value = auth.user?.email ?? ''
   resetPendingAvatar()
   formError.value = ''
+}
+
+async function sendMobileCode() {
+  formError.value = ''
+  if (!/^1\d{10}$/.test(mobileTarget.value.trim())) {
+    formError.value = '请输入正确的手机号'
+    return
+  }
+  mobileSending.value = true
+  try {
+    await sendMobileBindCode(mobileTarget.value.trim())
+    mobileCodeSent.value = true
+    if (debugBypass.value) mobileCode.value = '99999'
+    feedback.toast.success('手机验证码已发送')
+  } catch (e) {
+    formError.value = e instanceof Error ? e.message : '手机验证码发送失败'
+  } finally {
+    mobileSending.value = false
+  }
+}
+
+async function confirmMobileBind() {
+  if (!mobileCode.value.trim()) {
+    formError.value = '请输入手机验证码'
+    return
+  }
+  mobileBinding.value = true
+  formError.value = ''
+  try {
+    await bindMobile(mobileTarget.value.trim(), mobileCode.value.trim())
+    await auth.fetchUser()
+    mobileCode.value = ''
+    mobileCodeSent.value = false
+    feedback.toast.success('手机号绑定成功')
+  } catch (e) {
+    formError.value = e instanceof Error ? e.message : '手机号绑定失败'
+  } finally {
+    mobileBinding.value = false
+  }
+}
+
+async function sendEmailCode() {
+  formError.value = ''
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailTarget.value.trim())) {
+    formError.value = '请输入正确的邮箱'
+    return
+  }
+  emailSending.value = true
+  try {
+    await sendEmailBindCode(emailTarget.value.trim())
+    emailCodeSent.value = true
+    if (debugBypass.value) emailCode.value = '99999'
+    feedback.toast.success('邮箱验证码已发送')
+  } catch (e) {
+    formError.value = e instanceof Error ? e.message : '邮箱验证码发送失败'
+  } finally {
+    emailSending.value = false
+  }
+}
+
+async function confirmEmailBind() {
+  if (!emailCode.value.trim()) {
+    formError.value = '请输入邮箱验证码'
+    return
+  }
+  emailBinding.value = true
+  formError.value = ''
+  try {
+    await bindEmail(emailTarget.value.trim(), emailCode.value.trim())
+    await auth.fetchUser()
+    emailCode.value = ''
+    emailCodeSent.value = false
+    feedback.toast.success('邮箱绑定成功')
+  } catch (e) {
+    formError.value = e instanceof Error ? e.message : '邮箱绑定失败'
+  } finally {
+    emailBinding.value = false
+  }
 }
 
 function chooseAvatar() {
@@ -120,13 +218,20 @@ function resetPendingAvatar() {
 }
 
 watch(() => auth.user, fillFormFromUser, { immediate: true })
+onMounted(async () => {
+  try {
+    debugBypass.value = (await fetchSmsCodeConfig()).debugBypass
+  } catch {
+    debugBypass.value = false
+  }
+})
 
 onBeforeUnmount(resetPendingAvatar)
 </script>
 
 <template>
   <div>
-    <PageHeader title="个人中心" description="编辑当前登录用户的基础资料和头像">
+    <PageHeader title="用户中心" description="编辑当前登录用户的基础资料和头像">
       <template #actions>
         <Button variant="outline" :disabled="saving" @click="fillFormFromUser">
           <RotateCcw class="h-4 w-4" />
@@ -138,6 +243,10 @@ onBeforeUnmount(resetPendingAvatar)
         </Button>
       </template>
     </PageHeader>
+
+    <p v-if="formError" class="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+      {{ formError }}
+    </p>
 
     <div class="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
       <Card>
@@ -193,9 +302,6 @@ onBeforeUnmount(resetPendingAvatar)
           <CardTitle>基础信息</CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
-          <p v-if="formError" class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {{ formError }}
-          </p>
           <FormField label="昵称">
             <Input v-model="form.nickName" placeholder="用于后台显示" />
           </FormField>
@@ -216,6 +322,60 @@ onBeforeUnmount(resetPendingAvatar)
         </CardContent>
       </Card>
     </div>
+
+    <Card class="mt-4">
+      <CardHeader>
+        <CardTitle>账号绑定</CardTitle>
+      </CardHeader>
+      <CardContent class="space-y-6">
+        <p class="text-sm text-muted-foreground">
+          手机和邮箱不参与用户名注册。首次绑定或更换时，必须输入发送到目标凭证的验证码。
+          <span v-if="debugBypass">当前为调试模式，验证码为 99999。</span>
+        </p>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+          <section class="space-y-3 rounded-lg border p-4">
+            <div class="flex items-center gap-2 font-medium">
+              <Smartphone class="h-4 w-4" />
+              手机号
+            </div>
+            <p class="text-xs text-muted-foreground">当前绑定：{{ auth.user?.mobile || '未绑定' }}</p>
+            <div class="flex gap-2">
+              <Input v-model="mobileTarget" type="tel" maxlength="11" placeholder="请输入目标手机号" autocomplete="tel" />
+              <Button variant="outline" class="shrink-0" :disabled="mobileSending" @click="sendMobileCode">
+                {{ mobileSending ? '发送中…' : '发送验证码' }}
+              </Button>
+            </div>
+            <div v-if="mobileCodeSent" class="flex gap-2">
+              <Input v-model="mobileCode" maxlength="8" placeholder="手机验证码" autocomplete="one-time-code" />
+              <Button class="shrink-0" :disabled="mobileBinding" @click="confirmMobileBind">
+                {{ mobileBinding ? '确认中…' : '确认绑定' }}
+              </Button>
+            </div>
+          </section>
+
+          <section class="space-y-3 rounded-lg border p-4">
+            <div class="flex items-center gap-2 font-medium">
+              <Mail class="h-4 w-4" />
+              邮箱
+            </div>
+            <p class="text-xs text-muted-foreground">当前绑定：{{ auth.user?.email || '未绑定' }}</p>
+            <div class="flex gap-2">
+              <Input v-model="emailTarget" type="email" placeholder="请输入目标邮箱" autocomplete="email" />
+              <Button variant="outline" class="shrink-0" :disabled="emailSending" @click="sendEmailCode">
+                {{ emailSending ? '发送中…' : '发送验证码' }}
+              </Button>
+            </div>
+            <div v-if="emailCodeSent" class="flex gap-2">
+              <Input v-model="emailCode" maxlength="8" placeholder="邮箱验证码" autocomplete="one-time-code" />
+              <Button class="shrink-0" :disabled="emailBinding" @click="confirmEmailBind">
+                {{ emailBinding ? '确认中…' : '确认绑定' }}
+              </Button>
+            </div>
+          </section>
+        </div>
+      </CardContent>
+    </Card>
 
     <AvatarCropDialog
       :open="cropDialogOpen"

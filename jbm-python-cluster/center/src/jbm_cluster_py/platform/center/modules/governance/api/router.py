@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 
 from fastapi import APIRouter, Query, Request
 
@@ -87,8 +87,19 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
 
     @router.get("/user/{user_id}/roles")
     async def user_roles(user_id: int, request: Request) -> dict[str, Any]:
-        await service.user(user_id, request.state.identity)
-        return ok(await service.repository.user_roles(user_id))
+        user = await service.user(user_id, request.state.identity) or {}
+        target_tenant_id = (
+            int(user.get("companyId") or tenant_id(request.state.identity))
+            if is_platform(request.state.identity)
+            else tenant_id(request.state.identity)
+        )
+        return ok(
+            await service.repository.user_roles(
+                user_id,
+                _identity_app_id(request.state.identity),
+                target_tenant_id,
+            )
+        )
 
     @router.get("/user/{user_id}/orgs")
     async def user_orgs(user_id: int, request: Request) -> dict[str, Any]:
@@ -177,16 +188,31 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
         size: int = Query(10, alias="pageForm.pageSize"),
         role_name: str | None = Query(None, alias="roleName"),
         role_code: str | None = Query(None, alias="roleCode"),
+        app_id: int | None = Query(None, alias="appId"),
         status: int | None = None,
     ) -> dict[str, Any]:
-        filters = {"roleName": role_name, "roleCode": role_code, "status": status}
+        filters = {
+            "roleName": role_name,
+            "roleCode": role_code,
+            "status": status,
+            "appId": app_id,
+        }
         return ok(await service.roles(page, size, filters, request.state.identity))
 
     @router.get("/role/all")
     async def all_roles(request: Request) -> dict[str, Any]:
         if not is_platform(request.state.identity):
-            rows, _ = await service.repository.list_roles(1, 100, {"roleCode": "tenant_admin"})
-            return ok(rows)
+            rows, _ = await service.repository.list_roles(
+                1, 100, {"appId": _identity_app_id(request.state.identity)}
+            )
+            return ok(
+                [
+                    row
+                    for row in rows
+                    if row.get("roleCode")
+                    not in {"super_admin", "platform_operator", "iot_operator"}
+                ]
+            )
         page = await service.roles(1, 100, {}, request.state.identity)
         return ok(page["contents"])
 
@@ -203,7 +229,79 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
         filters = {"routeName": route_name, "path": path, "serviceId": service_id, "status": status}
         return ok(await service.routes(page, size, filters, request.state.identity))
 
+    @router.get("/delegations/check")
+    async def check_delegation(
+        request: Request,
+        owner_tenant_id: int = Query(..., alias="ownerTenantId"),
+        permission: str = Query(...),
+        resource_type: str | None = Query(None, alias="resourceType"),
+    ) -> dict[str, Any]:
+        return ok(
+            await service.check_delegation(
+                request.state.identity,
+                owner_tenant_id,
+                permission,
+                resource_type,
+            )
+        )
+
+    @router.get("/tenant-features/context")
+    async def tenant_feature_context(request: Request) -> dict[str, Any]:
+        return ok(await service.feature_context(request.state.identity))
+
+    @router.post("/tenant-features/catalog")
+    async def create_tenant_feature_catalog(
+        request: Request, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        return ok(
+            await service.create_app_feature(
+                request.state.identity,
+                str(body.get("featureCode") or ""),
+                str(body.get("featureName") or ""),
+                str(body.get("featureDesc") or "").strip() or None,
+            )
+        )
+
+    @router.delete("/tenant-features/catalog/{feature_code:path}")
+    async def disable_tenant_feature_catalog(
+        feature_code: str, request: Request
+    ) -> dict[str, Any]:
+        await service.disable_app_feature(request.state.identity, feature_code)
+        return ok()
+
+    @router.put("/tenant-features/tenants/{target_tenant_id}")
+    async def grant_tenant_features(
+        target_tenant_id: int, request: Request, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        return ok(
+            await service.replace_tenant_features(
+                request.state.identity,
+                target_tenant_id,
+                [str(value) for value in body.get("featureCodes") or []],
+            )
+        )
+
+    @router.put("/tenant-features/members/{target_user_id}")
+    async def grant_member_features(
+        target_user_id: int, request: Request, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        return ok(
+            await service.replace_member_features(
+                request.state.identity,
+                target_user_id,
+                [str(value) for value in body.get("featureCodes") or []],
+            )
+        )
+
     return router
+
+
+def _identity_app_id(identity: Mapping[str, Any]) -> int | None:
+    value = identity.get("appId", identity.get("app_id"))
+    try:
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 async def _dict_page(service: GovernanceService, body: dict[str, Any] | None, parent_id: int | None) -> dict[str, Any]:

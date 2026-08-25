@@ -289,6 +289,16 @@ export const DASHBOARD_METRICS: DashboardMetric[] = [
     loaderKey: 'apiKeyCount',
     description: '已颁发的 API Key 总数',
   },
+  {
+    key: 'apiMonitor',
+    title: '今日 API 调用',
+    icon: BarChart3,
+    unit: '次',
+    path: '/api/monitor',
+    menuCodes: ['api_monitor'],
+    loaderKey: 'apiMonitor',
+    description: '今日网关 API 调用总数',
+  },
   // —— 网关治理 ——
   {
     key: 'serviceCount',

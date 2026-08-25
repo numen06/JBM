@@ -60,6 +60,8 @@ jbm:
       management:
         enabled: true
         path-prefix: /__gateway
+        path-prefixes:
+          - /gateway/gray-routes
         allow-local: true
         allowed-ips:
           - 127.0.0.1/32

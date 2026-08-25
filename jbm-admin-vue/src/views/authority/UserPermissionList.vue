@@ -48,7 +48,7 @@ const {
   clearAllActionsForMenu,
   ensureMenuPermissionsBeforeSave,
   resetSelected,
-} = useMenuActionPermissions(authorityCatalog, menuActions)
+} = useMenuActionPermissions(authorityCatalog, menuActions, allMenus)
 
 function syncMenuCheckbox(el: unknown, menuId?: number) {
   if (el instanceof HTMLInputElement && menuId) {

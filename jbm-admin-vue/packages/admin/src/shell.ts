@@ -1,11 +1,13 @@
 import type { JbmClient } from '@jbm7/sdk'
-import { createJbmVuePlugin, type JbmFrontendModule } from '@jbm7/vue-core'
+import { createJbmVuePlugin, type JbmAccessProvider, type JbmFrontendModule } from '@jbm7/vue-core'
 import type { JbmAdminRuntimeConfig } from '@/runtimeConfig'
 import { adminChildModules } from './modules'
+import '@/assets/index.css'
 
 export interface JbmAdminRuntimeOptions {
   client: JbmClient
   runtimeConfig?: JbmAdminRuntimeConfig
+  access?: JbmAccessProvider
 }
 
 export interface CreateJbmAdminAppOptions {
@@ -22,7 +24,7 @@ export async function configureJbmAdminRuntime(options: JbmAdminRuntimeOptions) 
   ])
   configureRuntimeConfig(options.runtimeConfig)
   setPlatformClient(options.client)
-  return createJbmVuePlugin({ client: options.client })
+  return createJbmVuePlugin({ client: options.client, access: options.access })
 }
 
 export async function createJbmAdminApp(options: CreateJbmAdminAppOptions = {}) {
@@ -61,12 +63,12 @@ export async function createJbmAdminApp(options: CreateJbmAdminAppOptions = {}) 
       ) ?? false,
     },
   }))
-  app.use(router)
   if (options.modules?.length) {
     const { registerJbmModules } = await import('@jbm7/vue-core')
     registerJbmModules({ router, modules: options.modules, parentRouteName: 'jbm-admin-shell' })
     menuStore.registerModules(options.modules)
   }
+  app.use(router)
   await router.isReady()
   app.mount(options.mount ?? '#app')
   return { app, router, pinia, client, builtInModules: adminChildModules }

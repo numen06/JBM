@@ -1,4 +1,5 @@
 aioboto3>=13.1.1
+alibabacloud_dypnsapi20170525>=2.0.0,<3.0.0
 alembic>=1.13.2
 aio-pika>=9.4.3
 aiokafka>=0.13.0,<0.14
@@ -6,7 +7,7 @@ aiosqlite>=0.20.0
 fastapi>=0.115.0
 bcrypt>=4.1.0
 captcha>=0.7.1,<0.8
-cryptography>=42.0.0
+cryptography>=42.0.0,<49.0.0
 httpx>=0.27.0,<0.28
 nacos-sdk-python==0.1.14
 opentelemetry-exporter-otlp-proto-http>=1.25.0

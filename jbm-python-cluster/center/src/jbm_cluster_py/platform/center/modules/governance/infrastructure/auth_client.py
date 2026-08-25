@@ -19,6 +19,8 @@ class CenterAuthClient(UserInfoAuthClient):
                 "/docs",
                 "/redoc",
                 "/openapi.json",
+                "/captcha/pkey",
+                "/baseAppConfig/getAppConfigByKey",
             ),
         )
 

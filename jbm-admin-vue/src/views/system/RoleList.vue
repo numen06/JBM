@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Plus, Pencil, KeyRound } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -17,6 +17,7 @@ import { useFeedback } from '@/composables/useFeedback'
 import { useMenuActionPermissions } from '@/composables/useMenuActionPermissions'
 import { toSnowflakeIdString } from '@/lib/snowflakeId'
 import { listRoles, deleteRole, createRole, updateRole } from '@/api/role'
+import { listApps } from '@/api/app'
 import {
   listAuthorityMenus,
   listAuthorityCatalog,
@@ -26,17 +27,33 @@ import {
   type OpenAuthority,
 } from '@/api/authority'
 import { listActions } from '@/api/action'
-import type { BaseAction, BaseRole } from '@/api/types'
+import type { BaseAction, BaseApp, BaseRole } from '@/api/types'
 
 const keyword = ref('')
 const feedback = useFeedback()
 const statusFilter = ref('')
+const appFilter = ref('')
+const apps = ref<BaseApp[]>([])
+
+onMounted(async () => {
+  try {
+    apps.value = (await listApps(1, 100)).contents ?? []
+  } catch {
+    apps.value = []
+  }
+})
+
+function appName(appId?: number | string) {
+  if (appId == null || String(appId) === '') return '平台公共'
+  return apps.value.find(app => String(app.appId) === String(appId))?.appName || String(appId)
+}
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseRole>(
   (p, s) =>
     listRoles(p, s, {
       keyword: keyword.value || undefined,
       status: statusFilter.value !== '' ? statusFilter.value : undefined,
+      appId: appFilter.value || undefined,
     }),
 )
 
@@ -56,6 +73,7 @@ const {
 } = useCrudForm<BaseRole>(() => ({
   roleCode: '',
   roleName: '',
+  appId: undefined,
   remark: '',
   status: 1,
 }))
@@ -79,7 +97,7 @@ const {
   clearAllActionsForMenu,
   ensureMenuPermissionsBeforeSave,
   resetSelected,
-} = useMenuActionPermissions(authorityCatalog, menuActions)
+} = useMenuActionPermissions(authorityCatalog, menuActions, allMenus)
 
 function syncMenuCheckbox(el: unknown, menuId?: number) {
   if (el instanceof HTMLInputElement && menuId) {
@@ -94,7 +112,7 @@ async function openPermissions(row: BaseRole) {
   permDialogOpen.value = true
   try {
     const [menus, catalog, granted, allActions] = await Promise.all([
-      listAuthorityMenus(),
+      listAuthorityMenus(row.appId),
       listAuthorityCatalog('1'),
       getRoleAuthorities(row.roleId),
       listActions(undefined, 1, 500),
@@ -178,6 +196,12 @@ async function handleDelete(row: BaseRole) {
           <option value="1">启用</option>
           <option value="0">停用</option>
         </Select>
+        <Select v-model="appFilter" class="w-40">
+          <option value="">全部应用</option>
+          <option v-for="app in apps" :key="String(app.appId)" :value="String(app.appId)">
+            {{ app.appName }}
+          </option>
+        </Select>
         <Button variant="outline" @click="search">查询</Button>
         <Button @click="openCreate">
           <Plus class="mr-1 h-4 w-4" />
@@ -186,12 +210,13 @@ async function handleDelete(row: BaseRole) {
       </template>
     </PageHeader>
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">
-      <Table>
+      <Table mobile-title="名称" :mobile-columns="['编码', '应用', '状态']">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">ID</th>
             <th class="h-10 px-4 text-left font-medium">编码</th>
             <th class="h-10 px-4 text-left font-medium">名称</th>
+            <th class="h-10 px-4 text-left font-medium">应用</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-left font-medium">备注</th>
             <th class="h-10 px-4 text-right font-medium">操作</th>
@@ -202,6 +227,7 @@ async function handleDelete(row: BaseRole) {
             <td class="p-4">{{ row.roleId }}</td>
             <td class="p-4 font-mono text-sm">{{ row.roleCode }}</td>
             <td class="p-4">{{ row.roleName }}</td>
+            <td class="p-4 text-muted-foreground">{{ appName(row.appId) }}</td>
             <td class="p-4">
               <Badge :variant="row.status === 1 ? 'default' : 'secondary'">
                 {{ row.status === 1 ? '启用' : '停用' }}
@@ -235,6 +261,14 @@ async function handleDelete(row: BaseRole) {
       </FormField>
       <FormField label="角色名称" required>
         <Input v-model="form.roleName" />
+      </FormField>
+      <FormField label="所属应用">
+        <Select v-model="form.appId">
+          <option :value="undefined">平台公共角色</option>
+          <option v-for="app in apps" :key="String(app.appId)" :value="app.appId">
+            {{ app.appName }}
+          </option>
+        </Select>
       </FormField>
       <FormField label="备注">
         <Input v-model="form.remark" />

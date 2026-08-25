@@ -62,6 +62,7 @@ class PushService:
         self._next_body_id = 1
         self._next_config_id = 1
         self._subscribers: Dict[Any, Dict[str, Any]] = {}
+        self._pnvs_sms_client: Any = None
 
     def add_subscriber(self, websocket: Any, subscription_id: str = "messages", user_id: Optional[int] = None) -> None:
         self._subscribers[websocket] = {"subscription_id": subscription_id, "user_id": user_id}
@@ -338,7 +339,15 @@ class PushService:
         template_code: Optional[str] = None,
         sign_name: Optional[str] = None,
     ) -> Dict[str, Any]:
-        pin = str(code or "").strip() or ("%04d" % (uuid.uuid4().int % 10000))
+        sms_config = await self._effective_sms_config()
+        if not sms_config:
+            raise ValueError("短信通知通道未启用")
+        provider = self._verification_provider(sms_config)
+        debug_code = self._sms_config_value(sms_config, "debugCode", "debug-code") or "99999"
+        code_length = max(4, min(int(self._sms_config_value(sms_config, "codeLength", "code-length") or 6), 8))
+        pin = str(code or "").strip() or (
+            debug_code if self._sms_dry_run(sms_config) else str(uuid.uuid4().int % (10**code_length)).zfill(code_length)
+        )
         payload = {
             "pushWay": "sms",
             "recUserId": 0,
@@ -352,9 +361,6 @@ class PushService:
             "signName": sign_name,
             "showInMessageCenter": False,
         }
-        sms_config = await self._effective_sms_config()
-        if not sms_config:
-            raise ValueError("短信通知通道未启用")
         if self._sms_dry_run(sms_config):
             await self._record_external_delivery(
                 payload,
@@ -363,7 +369,27 @@ class PushService:
                 delivery_status="dry-run",
                 detail={"message": "jaja7 dry-run: SMS not sent"},
             )
-            return {"Code": "OK", "Message": "jaja7 dry-run: SMS not sent", "pin": pin}
+            return {
+                "Code": "OK",
+                "Message": "jaja7 dry-run: SMS not sent",
+                "provider": "dev",
+                "pin": pin,
+            }
+        if provider in {"aliyun-pnvs", "aliyun-dypns"}:
+            result = await self._send_aliyun_verify_code(
+                phone_number,
+                sms_config,
+                sign_name=sign_name,
+                template_code=template_code,
+            )
+            await self._record_external_delivery(
+                payload,
+                "sms",
+                status="issued",
+                delivery_status="sent",
+                detail={"provider": "aliyun-pnvs", "requestId": result.get("RequestId")},
+            )
+            return result
         result = await self._send_aliyun_sms(payload, sms_config)
         await self._record_external_delivery(
             payload,
@@ -373,6 +399,157 @@ class PushService:
             detail={"provider": "aliyun", "requestId": result.get("RequestId")},
         )
         return {**result, "pin": pin}
+
+    async def check_pin_code(self, phone_number: str, code: str) -> Dict[str, Any]:
+        sms_config = await self._effective_sms_config()
+        if not sms_config:
+            raise ValueError("短信通知通道未启用")
+        if self._sms_dry_run(sms_config):
+            expected = self._sms_config_value(sms_config, "debugCode", "debug-code") or "99999"
+            return {
+                "Code": "OK",
+                "VerifyResult": "PASS" if hmac.compare_digest(str(code), expected) else "FAIL",
+                "provider": "dev",
+            }
+        provider = self._verification_provider(sms_config)
+        if provider not in {"aliyun-pnvs", "aliyun-dypns"}:
+            raise NotImplementedError("短信验证码校验通道未启用")
+        return await self._check_aliyun_verify_code(phone_number, code, sms_config)
+
+    def _verification_provider(self, config: Mapping[str, Any]) -> str:
+        return str(
+            self._sms_config_value(
+                config,
+                "verificationProvider",
+                "verification-provider",
+                "provider",
+            )
+            or "legacy"
+        ).strip().lower()
+
+    def _pnvs_client(self, config: Mapping[str, Any]) -> Any:
+        if self._pnvs_sms_client is not None:
+            return self._pnvs_sms_client
+        access_key_id = self._sms_config_value(config, "accessKeyId", "access-key-id", "access_key_id")
+        access_key_secret = self._sms_config_value(
+            config, "accessKeySecret", "access-key-secret", "access_key_secret"
+        )
+        if not access_key_id or not access_key_secret:
+            raise ValueError("短信通道缺少 aliyun.sms.accessKeyId/accessKeySecret 配置")
+        from alibabacloud_dypnsapi20170525.client import Client
+        from alibabacloud_tea_openapi import models as open_api_models
+
+        self._pnvs_sms_client = Client(
+            open_api_models.Config(
+                access_key_id=access_key_id,
+                access_key_secret=access_key_secret,
+                security_token=self._sms_config_value(
+                    config, "securityToken", "security-token", "security_token"
+                ),
+                endpoint="dypnsapi.aliyuncs.com",
+                connect_timeout=3000,
+                read_timeout=10000,
+            )
+        )
+        return self._pnvs_sms_client
+
+    async def _send_aliyun_verify_code(
+        self,
+        phone_number: str,
+        config: Mapping[str, Any],
+        *,
+        sign_name: Optional[str] = None,
+        template_code: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        from alibabacloud_dypnsapi20170525 import models
+        from alibabacloud_tea_util import models as util_models
+
+        sign = sign_name or self._sms_config_value(config, "verificationSignName", "signName", "sign-name")
+        template = template_code or self._sms_config_value(
+            config, "verificationTemplateCode", "pinTemplateCode", "templateCode", "template-code"
+        )
+        if not sign or not template:
+            raise ValueError("短信认证通道缺少 signName/templateCode 配置")
+        valid_time = max(int(self._sms_config_value(config, "validTime", "valid-time") or 300), 60)
+        request = models.SendSmsVerifyCodeRequest(
+            phone_number=phone_number,
+            country_code=self._sms_config_value(config, "countryCode", "country-code") or "86",
+            sign_name=sign,
+            template_code=template,
+            template_param=json.dumps(
+                {"code": "##code##", "min": str(max(valid_time // 60, 1))},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            scheme_name=self._sms_config_value(config, "schemeName", "scheme-name"),
+            code_length=max(4, min(int(self._sms_config_value(config, "codeLength", "code-length") or 6), 8)),
+            valid_time=valid_time,
+            interval=max(int(self._sms_config_value(config, "interval") or 60), 1),
+            duplicate_policy=1,
+            code_type=1,
+            return_verify_code=False,
+            auto_retry=1,
+        )
+        response = await self._pnvs_client(config).send_sms_verify_code_with_options_async(
+            request, util_models.RuntimeOptions()
+        )
+        body = response.body
+        result = {
+            "Code": str(getattr(body, "code", "") or ""),
+            "Message": str(getattr(body, "message", "") or ""),
+            "RequestId": str(getattr(body, "request_id", "") or ""),
+            "provider": "aliyun-pnvs",
+        }
+        if result["Code"].upper() != "OK" or getattr(body, "success", True) is False:
+            raise ValueError(result["Message"] or result["Code"] or "短信验证码发送失败")
+        return result
+
+    async def _check_aliyun_verify_code(
+        self,
+        phone_number: str,
+        code: str,
+        config: Mapping[str, Any],
+    ) -> Dict[str, Any]:
+        from alibabacloud_dypnsapi20170525 import models
+        from alibabacloud_tea_util import models as util_models
+
+        try:
+            response = await self._pnvs_client(config).check_sms_verify_code_with_options_async(
+                models.CheckSmsVerifyCodeRequest(
+                    phone_number=phone_number,
+                    verify_code=code,
+                    country_code=self._sms_config_value(config, "countryCode", "country-code") or "86",
+                    scheme_name=self._sms_config_value(config, "schemeName", "scheme-name"),
+                    case_auth_policy=1,
+                ),
+                util_models.RuntimeOptions(),
+            )
+        except Exception as exc:
+            error_code = str(getattr(exc, "code", "") or "")
+            error_data = getattr(exc, "data", None)
+            if not error_code and isinstance(error_data, Mapping):
+                error_code = str(error_data.get("Code") or error_data.get("code") or "")
+            if error_code.lower() == "isv.validatefail":
+                return {
+                    "Code": "OK",
+                    "Message": "短信验证码错误",
+                    "RequestId": "",
+                    "VerifyResult": "FAIL",
+                    "provider": "aliyun-pnvs",
+                }
+            raise
+        body = response.body
+        verify_result = str(getattr(getattr(body, "model", None), "verify_result", "") or "").upper()
+        result = {
+            "Code": str(getattr(body, "code", "") or ""),
+            "Message": str(getattr(body, "message", "") or ""),
+            "RequestId": str(getattr(body, "request_id", "") or ""),
+            "VerifyResult": verify_result,
+            "provider": "aliyun-pnvs",
+        }
+        if result["Code"].upper() != "OK" or getattr(body, "success", True) is False:
+            raise ValueError(result["Message"] or result["Code"] or "短信验证码校验失败")
+        return result
 
     async def _send_aliyun_sms(self, payload: Mapping[str, Any], config: Mapping[str, Any]) -> Dict[str, Any]:
         access_key_id = self._sms_config_value(config, "accessKeyId", "access-key-id", "access_key_id")
@@ -454,7 +631,8 @@ class PushService:
                     parsed = dict(loaded)
             except json.JSONDecodeError:
                 logger.warning("SMS channel releaseContent is not valid JSON")
-        merged = {**fallback, **parsed}
+        # Nacos is the deployment source of truth; the database row is only a UI-managed fallback.
+        merged = {**parsed, **fallback}
         for key in ("jaja7-dry-run", "jaja7DryRun"):
             if key in fallback:
                 merged[key] = fallback[key]

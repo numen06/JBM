@@ -5,7 +5,9 @@ from typing import Any, Mapping
 from jbm_cluster_py.common.masterdata import PageForm, java_page
 from jbm_cluster_py.platform.center.modules.governance.application.access import (
     is_platform,
+    is_tenant_admin,
     require_platform,
+    require_tenant_admin,
     require_tenant_record,
     tenant_id,
 )
@@ -24,15 +26,21 @@ class GovernanceService:
         filters: Mapping[str, Any],
         identity: Mapping[str, Any],
     ) -> dict[str, Any]:
+        if not is_platform(identity):
+            require_tenant_admin(identity)
         scoped = dict(filters)
         if not is_platform(identity):
-            scoped["companyId"] = tenant_id(identity)
+            scoped.pop("companyId", None)
+            scoped["tenantId"] = tenant_id(identity)
         rows, total = await self.repository.list_users(page, size, keyword, scoped)
         return java_page(rows, total, PageForm(currPage=page, pageSize=size))
 
     async def user(self, user_id: int, identity: Mapping[str, Any]) -> dict[str, Any] | None:
         row = await self.repository.get_user(user_id)
-        require_tenant_record(identity, row, "companyId")
+        if not is_platform(identity) and not await self.repository.is_user_member(
+            user_id, tenant_id(identity)
+        ):
+            require_tenant_record(identity, None, "companyId")
         return row
 
     async def current_user(self, identity: Mapping[str, Any]) -> dict[str, Any]:
@@ -43,18 +51,33 @@ class GovernanceService:
         if user is None:
             raise ValueError("用户不存在")
         is_admin = _is_admin(user, identity)
-        user["roles"] = await self.repository.user_roles(user_id)
-        user["authorities"] = await self.repository.user_authorities(user_id, is_admin)
+        app_id = _identity_int(identity, "appId", "app_id")
+        active_tenant = tenant_id(identity)
+        user["roles"] = await self.repository.user_roles(user_id, app_id, active_tenant)
+        user["authorities"] = await self.repository.user_authorities(
+            user_id, is_admin, app_id, active_tenant
+        )
         return user
 
-    async def current_menus(self, identity: Mapping[str, Any]) -> list[dict[str, Any]]:
+    async def current_menus(
+        self,
+        identity: Mapping[str, Any],
+        requested_app_id: int | None = None,
+        *,
+        tree: bool = True,
+    ) -> list[dict[str, Any]]:
         user_id = _identity_int(identity, "userId", "user_id", "sub")
         if user_id is None:
             raise ValueError("登录信息缺少 userId")
         app_id = _identity_int(identity, "appId", "app_id")
+        if requested_app_id is not None:
+            require_platform(identity)
+            app_id = requested_app_id
         user = await self.repository.get_user(user_id) or {}
-        rows = await self.repository.user_menus(user_id, app_id, _is_admin(user, identity))
-        return _tree(rows, "menuId")
+        rows = await self.repository.user_menus(
+            user_id, app_id, _is_admin(user, identity), tenant_id(identity)
+        )
+        return _tree(rows, "menuId") if tree else rows
 
     async def org_roots(self, identity: Mapping[str, Any]) -> list[dict[str, Any]]:
         rows = await self._orgs(identity)
@@ -122,6 +145,115 @@ class GovernanceService:
         require_platform(identity)
         rows, total = await self.repository.list_routes(page, size, filters)
         return java_page(rows, total, PageForm(currPage=page, pageSize=size))
+
+    async def check_delegation(
+        self,
+        identity: Mapping[str, Any],
+        owner_tenant_id: int,
+        permission: str,
+        resource_type: str | None = None,
+    ) -> dict[str, Any]:
+        operator_tenant_id = tenant_id(identity)
+        operator_user_id = _identity_int(identity, "userId", "user_id", "sub")
+        app_id = _identity_int(identity, "appId", "app_id")
+        if app_id is None or operator_user_id is None or not permission:
+            return {"allowed": False}
+        grant = await self.repository.find_tenant_delegation(
+            owner_tenant_id,
+            operator_tenant_id,
+            operator_user_id,
+            app_id,
+            permission,
+            resource_type,
+        )
+        if grant is None:
+            return {"allowed": False}
+        return {
+            "allowed": True,
+            "delegationId": grant.get("id"),
+            "actorTenantId": operator_tenant_id,
+            "resourceTenantId": owner_tenant_id,
+            "appId": app_id,
+            "dataScope": grant.get("dataScope"),
+            "fieldPolicy": grant.get("fieldPolicy"),
+            "validTo": grant.get("validTo"),
+        }
+
+    async def feature_context(self, identity: Mapping[str, Any]) -> dict[str, Any]:
+        app_id = _identity_int(identity, "appId", "app_id")
+        user_id = _identity_int(identity, "userId", "user_id", "sub")
+        if app_id is None or user_id is None:
+            raise ValueError("登录信息缺少应用或用户标识")
+        active_tenant = tenant_id(identity)
+        platform = is_platform(identity)
+        tenant_admin = is_tenant_admin(identity)
+        context: dict[str, Any] = {
+            "appId": str(app_id),
+            "tenantId": str(active_tenant),
+            "userId": str(user_id),
+            "platform": platform,
+            "tenantAdmin": tenant_admin,
+            "catalog": await self.repository.list_app_features(app_id),
+            "tenantFeatures": await self.repository.list_tenant_features(active_tenant, app_id),
+            "effectiveFeatureCodes": await self.repository.effective_user_features(
+                user_id, active_tenant, app_id, tenant_admin
+            ),
+        }
+        if platform:
+            context["tenants"] = await self.repository.list_feature_tenants(app_id)
+        if tenant_admin and not platform:
+            context["members"] = await self.repository.list_tenant_members(active_tenant, app_id)
+        return context
+
+    async def create_app_feature(
+        self, identity: Mapping[str, Any], feature_code: str, feature_name: str, feature_desc: str | None
+    ) -> dict[str, Any]:
+        require_platform(identity)
+        app_id = _identity_int(identity, "appId", "app_id")
+        code = feature_code.strip().lower()
+        name = feature_name.strip()
+        if app_id is None:
+            raise ValueError("登录信息缺少应用标识")
+        if not code or not name:
+            raise ValueError("功能编码和名称不能为空")
+        if not code.replace(".", "").replace("_", "").replace("-", "").isalnum():
+            raise ValueError("功能编码只能包含字母、数字、点、下划线和短横线")
+        return await self.repository.create_app_feature(app_id, code, name, feature_desc)
+
+    async def disable_app_feature(
+        self, identity: Mapping[str, Any], feature_code: str
+    ) -> None:
+        require_platform(identity)
+        app_id = _identity_int(identity, "appId", "app_id")
+        if app_id is None:
+            raise ValueError("登录信息缺少应用标识")
+        await self.repository.disable_app_feature(app_id, feature_code.strip().lower())
+
+    async def replace_tenant_features(
+        self, identity: Mapping[str, Any], target_tenant_id: int, feature_codes: list[str]
+    ) -> list[str]:
+        require_platform(identity)
+        app_id = _identity_int(identity, "appId", "app_id")
+        user_id = _identity_int(identity, "userId", "user_id", "sub")
+        if app_id is None or user_id is None:
+            raise ValueError("登录信息缺少应用或用户标识")
+        return await self.repository.replace_tenant_features(
+            target_tenant_id, app_id, feature_codes, user_id
+        )
+
+    async def replace_member_features(
+        self, identity: Mapping[str, Any], target_user_id: int, feature_codes: list[str]
+    ) -> list[str]:
+        require_tenant_admin(identity)
+        if is_platform(identity):
+            raise ValueError("平台管理员应先切换到明确租户后再分配子账号权限")
+        app_id = _identity_int(identity, "appId", "app_id")
+        user_id = _identity_int(identity, "userId", "user_id", "sub")
+        if app_id is None or user_id is None:
+            raise ValueError("登录信息缺少应用或用户标识")
+        return await self.repository.replace_member_features(
+            tenant_id(identity), app_id, target_user_id, feature_codes, user_id
+        )
 
     async def _orgs(self, identity: Mapping[str, Any], keyword: str | None = None) -> list[dict[str, Any]]:
         rows = await self.repository.list_orgs(keyword)

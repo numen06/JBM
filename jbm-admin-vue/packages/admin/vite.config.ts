@@ -5,7 +5,7 @@ import path from 'node:path'
 
 const entries = [
   'index', 'auth', 'system', 'authority', 'gateway', 'logs',
-  'messages', 'jobs', 'documents', 'openapi', 'shell',
+  'messages', 'jobs', 'documents', 'openapi', 'shell', 'host',
 ]
 
 export default defineConfig({
@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   build: {
+    cssCodeSplit: false,
     lib: {
       entry: Object.fromEntries(entries.map((name) => [name, path.resolve(__dirname, `src/${name}.ts`)])),
       formats: ['es'],

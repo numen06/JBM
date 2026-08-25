@@ -5,3 +5,4 @@ dist-ssr
 .DS_Store
 .env
 .env.local
+.codex-packs/

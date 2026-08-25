@@ -140,7 +140,7 @@ onMounted(load)
     </Card>
 
     <DataTableShell :loading="loading" :error="error" :empty="!filteredServices.length">
-      <Table>
+      <Table mobile-title="服务名" :mobile-columns="['实例数', '健康实例', '版本']">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 w-10 px-2 text-center font-medium"></th>
@@ -189,7 +189,7 @@ onMounted(load)
               <td colspan="6" class="bg-muted/10 px-8 py-4">
                 <p v-if="instanceLoading" class="text-sm text-muted-foreground">加载实例中…</p>
                 <p v-else-if="instanceError" class="text-sm text-destructive">{{ instanceError }}</p>
-                <Table v-else-if="instances.length" class="w-full text-sm">
+                <Table v-else-if="instances.length" mobile-title="URI" :mobile-columns="['Host', 'Port', '状态']" class="w-full text-sm">
                   <thead>
                     <tr class="border-b">
                       <th class="px-3 py-2 text-left font-medium">Host</th>

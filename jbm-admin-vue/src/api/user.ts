@@ -52,7 +52,7 @@ export async function getUser(userId: SnowflakeId) {
 }
 
 /** POST /user — Body 为 BaseUserForm，须含 password */
-export async function createUser(data: Partial<BaseUser> & { orgIds?: string[] }) {
+export async function createUser(data: Partial<BaseUser> & { orgIds?: string[]; roleIds?: string[]; existingOnly?: boolean }) {
   const res = await post<void>('/user', {
     ...data,
     userType: data.userType ?? 'normal',

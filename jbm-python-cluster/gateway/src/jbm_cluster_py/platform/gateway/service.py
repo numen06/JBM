@@ -42,6 +42,27 @@ HOP_BY_HOP_HEADERS = {
     "content-length",
 }
 
+WEBSOCKET_HANDSHAKE_HEADERS = {
+    "sec-websocket-accept",
+    "sec-websocket-extensions",
+    "sec-websocket-key",
+    "sec-websocket-protocol",
+    "sec-websocket-version",
+}
+
+
+def websocket_forward_headers(headers: Mapping[str, str]) -> dict[str, str]:
+    excluded = HOP_BY_HOP_HEADERS | WEBSOCKET_HANDSHAKE_HEADERS
+    return {key: value for key, value in headers.items() if key.lower() not in excluded}
+
+
+def websocket_subprotocols(headers: Mapping[str, str]) -> list[str]:
+    header = next(
+        (value for key, value in headers.items() if key.lower() == "sec-websocket-protocol"),
+        "",
+    )
+    return [item.strip() for item in header.split(",") if item.strip()]
+
 
 def utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -371,7 +392,7 @@ class GatewayProxy:
             "path": path,
             "method": request.method,
             "httpStatus": status,
-            "useTime": int(elapsed),
+            "useTime": int(round(elapsed * 1000)),
             "ip": client_ip(request),
             "serviceId": route.service_id if route else self.config.service_name,
             "requestTime": now,
@@ -400,7 +421,6 @@ class GatewayProxy:
         if route is None:
             await websocket.close(code=1008)
             return
-        await websocket.accept()
         target = await self._target_url(
             route,
             request_path,
@@ -409,11 +429,8 @@ class GatewayProxy:
             remote_ip=websocket.client.host if websocket.client else "",
         )
         target = target.replace("http://", "ws://", 1).replace("https://", "wss://", 1)
-        headers = {
-            key: value
-            for key, value in websocket.headers.items()
-            if key.lower() not in HOP_BY_HOP_HEADERS
-        }
+        headers = websocket_forward_headers(websocket.headers)
+        subprotocols = websocket_subprotocols(websocket.headers)
         token = await self.service_tokens.get_token()
         if token:
             headers["X-Internal-Authorization"] = "Bearer " + token
@@ -424,7 +441,12 @@ class GatewayProxy:
         status = 101
         error = None
         try:
-            async with websockets.connect(target, additional_headers=headers) as backend:
+            async with websockets.connect(
+                target,
+                additional_headers=headers,
+                subprotocols=subprotocols or None,
+            ) as backend:
+                await websocket.accept(subprotocol=backend.subprotocol)
                 await asyncio.gather(
                     self._client_to_backend(websocket, backend),
                     self._backend_to_client(websocket, backend),

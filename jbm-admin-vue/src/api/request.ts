@@ -9,7 +9,7 @@ const AUTH_PATH_PREFIXES = [
 
 const JBM_SERVICE_PATH_PREFIXES = [
   '/auth', '/center', '/doc', '/push', '/logs', '/bigscreen', '/job', '/weixin',
-  '/gateway/discovery',
+  '/gateway/discovery', '/gateway/gray-routes',
 ]
 
 const JBM_SERVICE_ALIAS_MAP: Array<[string, string]> = [

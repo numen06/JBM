@@ -28,3 +28,15 @@ integrations:
     secret-key: jbm-local-minio
     region: us-east-1
     secure: false
+spring:
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          version: 7.3.0
+jbm:
+  security:
+    password-policy:
+      min-length: 8
+      max-length: 128
+      required-character-classes: 3

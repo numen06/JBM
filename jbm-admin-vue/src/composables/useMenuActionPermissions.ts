@@ -1,13 +1,26 @@
 import { ref, type Ref } from 'vue'
 import type { OpenAuthority } from '@/api/types'
 import type { BaseAction } from '@/api/types'
+import type { AuthorityMenu } from '@/api/authority'
 import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
 
 export function useMenuActionPermissions(
   authorityCatalog: Ref<OpenAuthority[]>,
   menuActions: Ref<Record<string, BaseAction[]>>,
+  menus: Ref<AuthorityMenu[]>,
 ) {
   const selectedAuthorityIds = ref<Set<string>>(new Set())
+
+  function authorityIdForMenu(menuId: SnowflakeId) {
+    const menuKey = toSnowflakeIdString(menuId)
+    const menu = menus.value.find((m) =>
+      m.menuId != null && toSnowflakeIdString(m.menuId) === menuKey,
+    )
+    const hit = menu?.menuCode
+      ? authorityCatalog.value.find((c) => c.authority === `MENU_${menu.menuCode}`)
+      : null
+    return hit?.authorityId ? String(hit.authorityId) : null
+  }
 
   function authorityIdForActionCode(actionCode: string) {
     const key = `ACTION_${actionCode}`
@@ -23,7 +36,8 @@ export function useMenuActionPermissions(
 
   function isMenuFullyChecked(menuId?: SnowflakeId) {
     if (!menuId) return false
-    return selectedAuthorityIds.value.has(String(menuId))
+    const authorityId = authorityIdForMenu(menuId)
+    return authorityId != null && selectedAuthorityIds.value.has(authorityId)
   }
 
   function isMenuIndeterminate(menuId?: SnowflakeId) {
@@ -37,7 +51,8 @@ export function useMenuActionPermissions(
 
   function toggleMenu(menuId?: SnowflakeId) {
     if (!menuId) return
-    const menuKey = String(menuId)
+    const menuKey = authorityIdForMenu(menuId)
+    if (!menuKey) return
     const next = new Set(selectedAuthorityIds.value)
     if (next.has(menuKey)) {
       next.delete(menuKey)
@@ -59,7 +74,10 @@ export function useMenuActionPermissions(
       next.delete(actionId)
     } else {
       next.add(actionId)
-      if (menuId != null) next.add(String(menuId))
+      if (menuId != null) {
+        const menuAuthorityId = authorityIdForMenu(menuId)
+        if (menuAuthorityId) next.add(menuAuthorityId)
+      }
     }
     selectedAuthorityIds.value = next
   }
@@ -67,7 +85,8 @@ export function useMenuActionPermissions(
   function selectAllActionsForMenu(menuId?: SnowflakeId) {
     if (!menuId) return
     const next = new Set(selectedAuthorityIds.value)
-    next.add(String(menuId))
+    const menuAuthorityId = authorityIdForMenu(menuId)
+    if (menuAuthorityId) next.add(menuAuthorityId)
     for (const actionId of menuActionAuthorityIds(menuId)) {
       next.add(actionId)
     }
@@ -77,7 +96,8 @@ export function useMenuActionPermissions(
   function clearAllActionsForMenu(menuId?: SnowflakeId) {
     if (!menuId) return
     const next = new Set(selectedAuthorityIds.value)
-    next.delete(String(menuId))
+    const menuAuthorityId = authorityIdForMenu(menuId)
+    if (menuAuthorityId) next.delete(menuAuthorityId)
     for (const actionId of menuActionAuthorityIds(menuId)) {
       next.delete(actionId)
     }
@@ -91,7 +111,10 @@ export function useMenuActionPermissions(
         const id = a.actionCode ? authorityIdForActionCode(a.actionCode) : null
         return id != null && next.has(id)
       })
-      if (hasSelectedAction) next.add(menuIdStr)
+      if (hasSelectedAction) {
+        const menuAuthorityId = authorityIdForMenu(menuIdStr)
+        if (menuAuthorityId) next.add(menuAuthorityId)
+      }
     }
     selectedAuthorityIds.value = next
     return Array.from(next)

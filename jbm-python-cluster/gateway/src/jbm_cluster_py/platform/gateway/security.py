@@ -140,6 +140,10 @@ class GatewaySecurityPolicy:
         self.management_config = dict(self.config.get("management") or {})
         self.management_enabled = _bool(self.management_config.get("enabled"), True)
         self.management_prefix = str(self.management_config.get("path-prefix") or "/__gateway")
+        self.management_prefixes = [
+            self.management_prefix,
+            *_list(self.management_config.get("path-prefixes")),
+        ]
         self.management_token_header = str(
             self.management_config.get("token-header") or "X-Gateway-Admin-Token"
         )
@@ -245,7 +249,9 @@ class GatewaySecurityPolicy:
         headers: Mapping[str, str],
         remote_ip: str,
     ) -> SecurityDecision:
-        if not self.management_enabled or not path.startswith(self.management_prefix):
+        if not self.management_enabled or not any(
+            path.startswith(prefix) for prefix in self.management_prefixes
+        ):
             return SecurityDecision(True)
         if self.management_token and headers.get(self.management_token_header) == self.management_token:
             return SecurityDecision(True)

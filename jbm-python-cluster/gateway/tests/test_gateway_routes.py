@@ -1,13 +1,19 @@
 import asyncio
 
+import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.gateway.ip_limits import IpLimitRepository, IpLimitRule, full_gateway_path, ip_matches
+from jbm_cluster_py.platform.gateway.router import _persist_gray_routes
 from jbm_cluster_py.platform.gateway.routes import GatewayRoute, RouteRepository, join_target_url, strip_prefix
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry, HALF_OPEN, OPEN
 from jbm_cluster_py.platform.gateway.security import GatewaySecurityPolicy, install_security_middleware
+from jbm_cluster_py.platform.gateway.service import (
+    websocket_forward_headers,
+    websocket_subprotocols,
+)
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
 
 
@@ -19,6 +25,23 @@ def test_strip_prefix_keeps_root_when_all_segments_removed() -> None:
 
 def test_join_target_url_preserves_base_path_and_query() -> None:
     assert join_target_url("http://127.0.0.1:8080/api", "/users", "a=1") == "http://127.0.0.1:8080/api/users?a=1"
+
+
+def test_websocket_headers_are_regenerated_without_losing_subprotocols() -> None:
+    headers = {
+        "Host": "debug.example.com",
+        "Connection": "Upgrade",
+        "Sec-WebSocket-Key": "duplicate-key",
+        "Sec-WebSocket-Protocol": "v12.stomp, v11.stomp",
+        "Origin": "https://debug.example.com",
+        "X-Trace-Id": "trace-1",
+    }
+
+    assert websocket_forward_headers(headers) == {
+        "Origin": "https://debug.example.com",
+        "X-Trace-Id": "trace-1",
+    }
+    assert websocket_subprotocols(headers) == ["v12.stomp", "v11.stomp"]
 
 
 def test_route_repository_uses_fallback_when_database_disabled() -> None:
@@ -176,6 +199,30 @@ def test_gray_route_can_target_nacos_metadata() -> None:
     assert chosen["ip"] == "10.0.0.2"
 
 
+def test_gray_routes_are_persisted_without_losing_gateway_config() -> None:
+    class FakeDiscovery:
+        config = {"config-data-id": "gateway-dev.yml"}
+        published = ""
+
+        async def get_config(self, _data_id: str) -> str:
+            return "jbm:\n  gateway:\n    access-log:\n      enabled: true\n"
+
+        async def publish_config(self, _data_id: str, content: str) -> None:
+            self.published = content
+
+    discovery = FakeDiscovery()
+    traffic = TrafficPolicyManager(
+        [],
+        [{"id": "gray", "path": "/center/**", "percent": 10, "metadata": {"version": "canary"}}],
+    )
+
+    asyncio.run(_persist_gray_routes(discovery, traffic))
+
+    persisted = yaml.safe_load(discovery.published)
+    assert persisted["jbm"]["gateway"]["access-log"]["enabled"] is True
+    assert persisted["jbm"]["gateway"]["gray-routes"][0]["id"] == "gray"
+
+
 def test_security_policy_blocks_xss_query_and_body() -> None:
     policy = GatewaySecurityPolicy({"enabled": True, "max-body-bytes": 1024})
 
@@ -231,6 +278,7 @@ def test_security_middleware_protects_management_endpoint_and_adds_headers() -> 
                         "management": {
                             "allowed-ips": ["10.0.0.0/8"],
                             "allow-local": False,
+                            "path-prefixes": ["/gateway/gray-routes"],
                         },
                     }
                 }
@@ -251,11 +299,17 @@ def test_security_middleware_protects_management_endpoint_and_adds_headers() -> 
     async def health_route() -> dict[str, bool]:
         return {"ok": True}
 
+    @app.get("/gateway/gray-routes")
+    async def gray_routes() -> dict[str, bool]:
+        return {"ok": True}
+
     with TestClient(app) as client:
         denied = client.get("/__gateway/routes")
+        gray_denied = client.get("/gateway/gray-routes")
         allowed = client.get("/center/health")
 
     assert denied.status_code == 403
     assert denied.json()["message"] == "网关管理接口禁止访问"
+    assert gray_denied.status_code == 403
     assert allowed.status_code == 200
     assert allowed.headers["x-content-type-options"] == "nosniff"

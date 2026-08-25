@@ -1,11 +1,12 @@
 [project]
-name = "jbm-python-cluster"
-version = "0.1.0"
-description = "Pure Python cluster services for the JBM 7.3 technical platform."
+name = "jbm-platform-runtime"
+version = "7.3.0b5"
+description = "Reusable Python runtime and cluster services for the JBM 7.3 technical platform."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "aioboto3>=13.1.1",
+    "alibabacloud_dypnsapi20170525>=2.0.0,<3.0.0",
     "alembic>=1.13.2",
     "aio-pika>=9.4.3",
     "aiokafka>=0.13.0,<0.14",
@@ -13,7 +14,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "bcrypt>=4.1.0",
     "captcha>=0.7.1",
-    "cryptography>=42.0.0",
+    "cryptography>=42.0.0,<49.0.0",
     "httpx>=0.27.0,<0.28",
     "nacos-sdk-python==0.1.14",
     "opentelemetry-exporter-otlp-proto-http>=1.25.0",
@@ -40,16 +41,6 @@ telemetry = [
     "openobserve-telemetry-sdk>=0.1.0",
 ]
 
-[project.scripts]
-jbm-python-auth = "jbm_cluster_py.platform.auth.main:run"
-jbm-python-doc = "jbm_cluster_py.platform.doc.main:run"
-jbm-python-push = "jbm_cluster_py.platform.push.main:run"
-jbm-python-job = "jbm_cluster_py.platform.job.main:run"
-jbm-python-gateway = "jbm_cluster_py.platform.gateway.main:run"
-jbm-python-center = "jbm_cluster_py.platform.center.main:run"
-jbm-python-logs = "jbm_cluster_py.platform.logs.main:run"
-jbm-python-bigscreen = "jbm_cluster_py.platform.bigscreen.main:run"
-
 [build-system]
 requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
@@ -57,16 +48,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = [
     "common/src/jbm_cluster_py",
-    "integrations/src/jbm_cluster_py",
-    "auth/src/jbm_cluster_py",
-    "doc/src/jbm_cluster_py",
-    "push/src/jbm_cluster_py",
-    "job/src/jbm_cluster_py",
-    "gateway/src/jbm_cluster_py",
-    "center/src/jbm_cluster_py",
-    "logs/src/jbm_cluster_py",
-    "bigscreen/src/jbm_cluster_py",
 ]
+
+[tool.hatch.build.targets.wheel.force-include]
+"integrations/src/jbm_cluster_py/integrations" = "jbm_cluster_py/integrations"
 
 [tool.uv]
 package = true

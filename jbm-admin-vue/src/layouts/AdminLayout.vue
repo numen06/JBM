@@ -14,6 +14,7 @@ import Label from '@/components/ui/Label.vue'
 import JbmLogo from '@/components/JbmLogo.vue'
 import { useDocImageSrc } from '@/composables/useDocImageSrc'
 import { extractApiError } from '@/lib/errors'
+import { passwordPolicyError } from '@/lib/passwordPolicy'
 import { cn } from '@/lib/utils'
 import type { SnowflakeId } from '@/api/types'
 
@@ -75,7 +76,7 @@ async function handleLogout() {
   messageStore.disconnectRealtime()
   await auth.logout()
   messageStore.clear()
-  router.push({ name: 'login' })
+  window.location.replace('/login')
 }
 
 function dismissPasswordReminder() {
@@ -89,8 +90,9 @@ async function submitPasswordChange() {
     passwordError.value = '请填写当前密码、新密码和确认密码'
     return
   }
-  if (passwordForm.value.currentPassword.length < 6) {
-    passwordError.value = '新密码至少 6 位'
+  const policyError = passwordPolicyError(passwordForm.value.currentPassword)
+  if (policyError) {
+    passwordError.value = policyError
     return
   }
   passwordSaving.value = true

@@ -3,10 +3,12 @@ import type { BaseRole, DataPaging } from './types'
 import { pageParams } from './user'
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 import { toSnowflakeIdString, type SnowflakeId } from '@/lib/snowflakeId'
+import { optionalSnowflakeIdParam } from '@/lib/snowflakeId'
 
 export type RoleListQuery = {
   keyword?: string
   status?: number | string
+  appId?: number | string
 }
 
 export async function listRoles(page = 1, size = DEFAULT_PAGE_SIZE, query?: RoleListQuery) {
@@ -16,12 +18,16 @@ export async function listRoles(page = 1, size = DEFAULT_PAGE_SIZE, query?: Role
   if (query?.status !== undefined && query.status !== '') {
     params.status = Number(query.status)
   }
+  const appId = optionalSnowflakeIdParam(query?.appId)
+  if (appId != null) params.appId = appId
   const res = await get<DataPaging<BaseRole>>('/role', { params })
   return unwrap(res)
 }
 
-export async function listAllRoles() {
-  const res = await get<BaseRole[]>('/role/all')
+export async function listAllRoles(appId?: SnowflakeId) {
+  const res = await get<BaseRole[]>('/role/all', {
+    params: appId != null ? { appId: optionalSnowflakeIdParam(appId) } : {},
+  })
   return unwrap(res)
 }
 

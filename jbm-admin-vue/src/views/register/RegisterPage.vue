@@ -4,22 +4,23 @@ import { RouterLink, useRouter } from 'vue-router'
 import { ArrowLeft, RefreshCw } from '@lucide/vue'
 import { register } from '@/api/auth'
 import { fetchCaptchaBase64 } from '@/api/captcha'
-import { DEV_CAPTCHA_CODE, JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
+import { DEV_CAPTCHA_CODE } from '@/constants/loginModes'
 import { extractApiError } from '@/lib/errors'
+import { passwordPolicyError } from '@/lib/passwordPolicy'
 import AuthBrandPanel from '@/components/landing/AuthBrandPanel.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
 const isDev = import.meta.env.DEV
 
 const userName = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const nickName = ref('')
-const email = ref('')
-const mobile = ref('')
 const vcode = ref(isDev ? DEV_CAPTCHA_CODE : '')
 
 const loading = ref(false)
@@ -27,7 +28,6 @@ const error = ref('')
 const success = ref('')
 const captchaSrc = ref('')
 const captchaLoading = ref(false)
-
 async function loadCaptcha() {
   captchaLoading.value = true
   if (!isDev) vcode.value = ''
@@ -57,8 +57,9 @@ async function onSubmit() {
     error.value = '请输入密码'
     return
   }
-  if (password.value.length < 6) {
-    error.value = '密码至少 6 位'
+  const policyError = passwordPolicyError(password.value)
+  if (policyError) {
+    error.value = policyError
     return
   }
   if (password.value !== confirmPassword.value) {
@@ -72,15 +73,14 @@ async function onSubmit() {
   loading.value = true
   try {
     await register({
+      organizationType: 'personal',
       userName: userName.value.trim(),
       password: password.value,
       nickName: nickName.value.trim() || undefined,
-      email: email.value.trim() || undefined,
-      mobile: mobile.value.trim() || undefined,
       vcode: vcode.value.trim(),
-      clientId: JBM_DEFAULT_CLIENT_ID,
+      clientId: auth.clientId,
     })
-    success.value = '注册成功，即将跳转到登录页…'
+    success.value = `用户注册成功，即将跳转到登录页…`
     setTimeout(() => {
       router.push({ name: 'login', query: { username: userName.value.trim() } })
     }, 1500)
@@ -92,13 +92,13 @@ async function onSubmit() {
   }
 }
 
-onMounted(loadCaptcha)
+onMounted(() => void loadCaptcha())
 </script>
 
 <template>
   <div class="flex min-h-screen flex-col lg:flex-row">
     <div class="hidden min-h-screen lg:block lg:w-[42%] xl:w-[45%]">
-      <AuthBrandPanel title="加入 JBM 社区" subtitle="注册开发者账号，开始接入 OAuth2" />
+      <AuthBrandPanel title="用户注册" subtitle="注册后自动进入普通租户工作台" />
     </div>
 
     <div class="flex flex-1 flex-col justify-center bg-background px-4 py-10 sm:px-8 lg:px-12">
@@ -109,13 +109,13 @@ onMounted(loadCaptcha)
         </RouterLink>
 
         <div class="mb-8 lg:hidden">
-          <h1 class="text-2xl font-bold">注册 JBM 账号</h1>
-          <p class="mt-1 text-sm text-muted-foreground">创建账号后即可登录控制台、创建 OAuth2 应用</p>
+          <h1 class="text-2xl font-bold">用户注册</h1>
+          <p class="mt-1 text-sm text-muted-foreground">注册后自动进入普通租户工作台</p>
         </div>
 
         <div class="hidden lg:block">
-          <h2 class="text-2xl font-bold tracking-tight">创建账号</h2>
-          <p class="mt-2 text-sm text-muted-foreground">填写以下信息完成注册</p>
+          <h2 class="text-2xl font-bold tracking-tight">注册用户</h2>
+          <p class="mt-2 text-sm text-muted-foreground">手机和邮箱请注册后在用户中心验证绑定</p>
         </div>
 
         <form class="mt-8 space-y-4" @submit.prevent="onSubmit">
@@ -138,17 +138,6 @@ onMounted(loadCaptcha)
           <div class="space-y-2">
             <Label>昵称</Label>
             <Input v-model="nickName" placeholder="可选，默认同用户名" />
-          </div>
-
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="space-y-2">
-              <Label>邮箱</Label>
-              <Input v-model="email" type="email" placeholder="可选" autocomplete="email" />
-            </div>
-            <div class="space-y-2">
-              <Label>手机号</Label>
-              <Input v-model="mobile" type="tel" placeholder="可选" autocomplete="tel" />
-            </div>
           </div>
 
           <div class="space-y-2">

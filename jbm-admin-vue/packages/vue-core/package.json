@@ -1,6 +1,6 @@
 {
   "name": "@jbm7/vue-core",
-  "version": "7.3.0-beta.1",
+  "version": "7.3.0-beta.5",
   "description": "Vue 3 integration and module runtime for the JBM 7.3 technical platform",
   "type": "module",
   "files": ["dist/*.js", "dist/*.d.ts", "style.css", "README.md", "LICENSE"],
@@ -19,13 +19,13 @@
     "pack:check": "npm pack --dry-run"
   },
   "peerDependencies": {
-    "@jbm7/sdk": "~7.3.0-beta.1",
+    "@jbm7/sdk": "~7.3.0-beta.5",
     "pinia": "^3.0.0",
     "vue": "^3.5.0",
     "vue-router": "^4.6.0"
   },
   "devDependencies": {
-    "@jbm7/sdk": "7.3.0-beta.1",
+    "@jbm7/sdk": "7.3.0-beta.5",
     "pinia": "^3.0.4",
     "vue": "^3.5.34",
     "vue-router": "^4.6.4"

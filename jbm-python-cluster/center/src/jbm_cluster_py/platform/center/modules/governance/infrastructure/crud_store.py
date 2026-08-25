@@ -17,6 +17,9 @@ class CrudStore:
         "api": ("base_api", "api_id"),
         "apikey": ("base_api_key", "key_id"),
         "app": ("base_app", "app_id"),
+        "tenantApp": ("base_tenant_app", "id"),
+        "tenantDelegation": ("base_tenant_delegation", "id"),
+        "operatorApplication": ("base_operator_application", "id"),
         "developer": ("base_developer", "user_id"),
         "menu": ("base_menu", "menu_id"),
         "role": ("base_role", "role_id"),
@@ -86,6 +89,119 @@ class CrudStore:
             ).mappings().all()
         return [_row(row, include_secrets) for row in rows], total
 
+    async def list_active_delegations(
+        self,
+        operator_tenant_id: int,
+        operator_user_id: int,
+        app_id: int,
+        page: int = 1,
+        size: int = 10,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """List currently effective grants received by one operator tenant."""
+        page = max(int(page), 1)
+        size = min(max(int(size), 1), 100)
+        where = """
+            WHERE operator_tenant_id = :operator_tenant_id
+              AND (operator_user_id IS NULL OR operator_user_id = :operator_user_id)
+              AND app_id = :app_id
+              AND status = 1
+              AND (valid_from IS NULL OR valid_from <= CURRENT_TIMESTAMP)
+              AND (valid_to IS NULL OR valid_to > CURRENT_TIMESTAMP)
+        """
+        params = {
+            "operator_tenant_id": operator_tenant_id,
+            "operator_user_id": operator_user_id,
+            "app_id": app_id,
+        }
+        async with self.engine.connect() as conn:
+            total = int(
+                (
+                    await conn.execute(
+                        text(f"SELECT COUNT(*) FROM base_tenant_delegation {where}"),
+                        params,
+                    )
+                ).scalar()
+                or 0
+            )
+            rows = (
+                await conn.execute(
+                    text(
+                        f"SELECT * FROM base_tenant_delegation {where} "
+                        "ORDER BY id LIMIT :limit OFFSET :offset"
+                    ),
+                    {**params, "limit": size, "offset": (page - 1) * size},
+                )
+            ).mappings().all()
+        return [_row(row, False) for row in rows], total
+
+    async def review_operator_application(
+        self,
+        application_id: int,
+        status: int,
+        reviewed_by: int,
+        review_remark: str = "",
+    ) -> dict[str, Any]:
+        """Review an application and switch the applicant's app role atomically."""
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        async with self.engine.begin() as conn:
+            application = (
+                await conn.execute(
+                    text("SELECT * FROM base_operator_application WHERE id = :id FOR UPDATE"),
+                    {"id": application_id},
+                )
+            ).mappings().first()
+            if application is None:
+                raise ValueError("运营申请不存在")
+            if int(application.get("status") or 0) != 0:
+                raise ValueError("运营申请已处理")
+            if status == 1:
+                role_id = (
+                    await conn.execute(
+                        text(
+                            "SELECT role_id FROM base_role "
+                            "WHERE app_id = :app_id AND role_code = 'iot_operator' AND status = 1 LIMIT 1"
+                        ),
+                        {"app_id": application["app_id"]},
+                    )
+                ).scalar()
+                if role_id is None:
+                    raise ValueError("当前应用未配置 iot_operator 角色")
+                scope = {
+                    "user_id": application["applicant_user_id"],
+                    "tenant_id": application["tenant_id"],
+                    "app_id": application["app_id"],
+                }
+                await conn.execute(
+                    text(
+                        "DELETE FROM base_role_user "
+                        "WHERE user_id = :user_id AND tenant_id = :tenant_id AND app_id = :app_id"
+                    ),
+                    scope,
+                )
+                await conn.execute(
+                    text(
+                        "INSERT INTO base_role_user "
+                        "(id, user_id, role_id, tenant_id, app_id, create_time, update_time) "
+                        "VALUES (:id, :user_id, :role_id, :tenant_id, :app_id, :now, :now)"
+                    ),
+                    {**scope, "id": _new_id(), "role_id": role_id, "now": now},
+                )
+            await conn.execute(
+                text(
+                    "UPDATE base_operator_application SET status = :status, "
+                    "review_remark = :review_remark, reviewed_by = :reviewed_by, "
+                    "reviewed_at = :reviewed_at, update_time = :reviewed_at WHERE id = :id"
+                ),
+                {
+                    "id": application_id,
+                    "status": status,
+                    "review_remark": review_remark or None,
+                    "reviewed_by": reviewed_by,
+                    "reviewed_at": now,
+                },
+            )
+        return await self.get("operatorApplication", application_id) or {}
+
     async def get(
         self, resource: str, value: Any, include_secrets: bool = False
     ) -> dict[str, Any] | None:
@@ -96,6 +212,29 @@ class CrudStore:
         async with self.engine.connect() as conn:
             row = (await conn.execute(text(f"SELECT * FROM {table} WHERE {pk} = :id LIMIT 1"), {"id": value})).mappings().first()
         return _row(row, include_secrets) if row else None
+
+    async def find_user_by_username(self, username: str) -> dict[str, Any] | None:
+        async with self.engine.connect() as conn:
+            row = (
+                await conn.execute(
+                    text("SELECT * FROM base_user WHERE user_name=:username LIMIT 1"),
+                    {"username": username},
+                )
+            ).mappings().first()
+        return _row(row, False) if row else None
+
+    async def is_user_member(self, user_id: Any, tenant_id: Any) -> bool:
+        async with self.engine.connect() as conn:
+            row = (
+                await conn.execute(
+                    text(
+                        "SELECT 1 FROM base_user_org WHERE user_id=:user_id AND org_id=:tenant_id "
+                        "AND (expire_time IS NULL OR expire_time > CURRENT_TIMESTAMP) LIMIT 1"
+                    ),
+                    {"user_id": user_id, "tenant_id": tenant_id},
+                )
+            ).first()
+        return bool(row)
 
     async def save(
         self, resource: str, payload: Mapping[str, Any], identity: Any | None = None
@@ -199,6 +338,139 @@ class CrudStore:
                     text(
                         f"INSERT INTO {table} ({', '.join(values)}) "
                         f"VALUES ({', '.join(':' + key for key in values)})"
+                    ),
+                    values,
+                )
+
+    async def replace_scoped_links(
+        self,
+        table: str,
+        owner_column: str,
+        owner_id: Any,
+        target_column: str,
+        target_ids: list[Any],
+        scope_column: str,
+        scope_value: Any,
+        tenant_column: str | None = None,
+        tenant_value: Any | None = None,
+    ) -> None:
+        if table not in {"base_role_user"} or scope_column != "app_id":
+            raise ValueError("不允许的作用域关联表")
+        if tenant_column not in {None, "tenant_id"}:
+            raise ValueError("不允许的租户作用域")
+        async with self.engine.begin() as conn:
+            columns = {
+                column["name"]
+                for column in await conn.run_sync(lambda sync: inspect(sync).get_columns(table))
+            }
+            delete_clause = (
+                f"DELETE FROM {table} WHERE {owner_column} = :owner "
+                f"AND {scope_column} = :scope"
+            )
+            delete_params: dict[str, Any] = {"owner": owner_id, "scope": scope_value}
+            if tenant_column and tenant_column in columns:
+                delete_clause += f" AND {tenant_column} = :tenant"
+                delete_params["tenant"] = tenant_value
+            await conn.execute(text(delete_clause), delete_params)
+            for target_id in dict.fromkeys(target_ids):
+                values: dict[str, Any] = {
+                    owner_column: owner_id,
+                    target_column: target_id,
+                    scope_column: scope_value,
+                }
+                if tenant_column and tenant_column in columns:
+                    values[tenant_column] = tenant_value
+                if "id" in columns:
+                    values["id"] = _new_id()
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if "create_time" in columns:
+                    values["create_time"] = now
+                if "update_time" in columns:
+                    values["update_time"] = now
+                await conn.execute(
+                    text(
+                        f"INSERT INTO {table} ({', '.join(values)}) "
+                        f"VALUES ({', '.join(':' + key for key in values)})"
+                    ),
+                    values,
+                )
+
+    async def ensure_link(
+        self,
+        table: str,
+        owner_column: str,
+        owner_id: Any,
+        target_column: str,
+        target_id: Any,
+    ) -> None:
+        if table != "base_user_org":
+            raise ValueError("不允许的成员关联表")
+        async with self.engine.begin() as conn:
+            exists = (
+                await conn.execute(
+                    text(
+                        f"SELECT 1 FROM {table} WHERE {owner_column} = :owner "
+                        f"AND {target_column} = :target LIMIT 1"
+                    ),
+                    {"owner": owner_id, "target": target_id},
+                )
+            ).first()
+            if exists:
+                return
+            columns = {
+                column["name"]
+                for column in await conn.run_sync(lambda sync: inspect(sync).get_columns(table))
+            }
+            values: dict[str, Any] = {owner_column: owner_id, target_column: target_id}
+            if "id" in columns:
+                values["id"] = _new_id()
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if "create_time" in columns:
+                values["create_time"] = now
+            if "update_time" in columns:
+                values["update_time"] = now
+            await conn.execute(
+                text(
+                    f"INSERT INTO {table} ({', '.join(values)}) "
+                    f"VALUES ({', '.join(':' + key for key in values)})"
+                ),
+                values,
+            )
+
+    async def replace_role_users(
+        self, role_id: Any, app_id: Any, users: list[tuple[Any, Any]]
+    ) -> None:
+        async with self.engine.begin() as conn:
+            columns = {
+                column["name"]
+                for column in await conn.run_sync(
+                    lambda sync: inspect(sync).get_columns("base_role_user")
+                )
+            }
+            await conn.execute(
+                text("DELETE FROM base_role_user WHERE role_id = :role_id AND app_id = :app_id"),
+                {"role_id": role_id, "app_id": app_id},
+            )
+            for user_id, tenant_id in dict.fromkeys(users):
+                values: dict[str, Any] = {
+                    "role_id": role_id,
+                    "app_id": app_id,
+                    "user_id": user_id,
+                }
+                if "tenant_id" in columns:
+                    values["tenant_id"] = tenant_id
+                if "id" in columns:
+                    values["id"] = _new_id()
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if "create_time" in columns:
+                    values["create_time"] = now
+                if "update_time" in columns:
+                    values["update_time"] = now
+                await conn.execute(
+                    text(
+                        "INSERT INTO base_role_user "
+                        f"({', '.join(values)}) VALUES "
+                        f"({', '.join(':' + key for key in values)})"
                     ),
                     values,
                 )

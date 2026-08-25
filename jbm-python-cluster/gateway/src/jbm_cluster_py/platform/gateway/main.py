@@ -32,7 +32,12 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     gateway_config = dict(app_config.get("jbm.gateway", {}) or {})
     timeout = float(gateway_config.get("request-timeout-seconds") or 60)
     http_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=10.0), trust_env=False)
-    discovery = NacosDiscoveryClient(app_config.nacos_discovery)
+    discovery_config = {
+        **app_config.nacos_discovery,
+        "config-data-id": f"gateway-{app_config.profile}.yml",
+        "config-group": str(app_config.nacos_config.get("group") or "DEFAULT_GROUP"),
+    }
+    discovery = NacosDiscoveryClient(discovery_config)
     registrar = NacosRegistrar(app_config.service_name, app_config.port, app_config.nacos_discovery)
     routes = RouteRepository(app_config.database, list(gateway_config.get("fallback-routes") or []))
     ip_limits = IpLimitRepository(app_config.database)

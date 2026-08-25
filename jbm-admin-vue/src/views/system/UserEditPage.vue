@@ -37,6 +37,7 @@ const userId = computed(() =>
 const loading = ref(false)
 const saving = ref(false)
 const formError = ref('')
+const createMode = ref<'existing' | 'new'>('existing')
 const form = ref<BaseUser>({
   userName: '',
   nickName: '',
@@ -64,7 +65,7 @@ const extraOrgOptions = computed(() =>
   }),
 )
 
-const pageTitle = computed(() => (isCreate.value ? '新建用户' : '编辑用户'))
+const pageTitle = computed(() => (isCreate.value ? '添加租户成员' : '编辑用户'))
 
 const accountTypeLabel: Record<string, string> = {
   username: '用户名',
@@ -134,7 +135,7 @@ async function handleSave() {
     formError.value = '用户名不能为空'
     return
   }
-  if (isCreate.value && !form.value.password?.trim()) {
+  if (isCreate.value && createMode.value === 'new' && !form.value.password?.trim()) {
     formError.value = '新建用户须填写密码'
     return
   }
@@ -145,13 +146,19 @@ async function handleSave() {
   const orgIds = selectedExtraOrgIds.value
   try {
     if (isCreate.value) {
-      await createUser({ ...form.value, companyId, departmentId, orgIds })
-      feedback.toast.success('用户已创建')
+      await createUser({
+        ...form.value,
+        companyId,
+        departmentId,
+        orgIds,
+        roleIds: selectedRoleIds.value,
+        existingOnly: createMode.value === 'existing',
+        ...(createMode.value === 'existing' ? { password: undefined, nickName: undefined } : {}),
+      })
+      feedback.toast.success(createMode.value === 'existing' ? '已有账号已加入当前租户' : '子账号已创建')
     } else if (userId.value) {
       await updateUser(userId.value, {
         nickName: form.value.nickName,
-        mobile: form.value.mobile,
-        email: form.value.email,
         status: form.value.status,
         companyId,
         departmentId,
@@ -172,7 +179,7 @@ async function handleSave() {
 
 <template>
   <div>
-    <PageHeader :title="pageTitle" description="Center /user — 配置用户基本信息、组织、角色与登录凭证。">
+    <PageHeader :title="pageTitle" description="已有全局账号直接加入当前租户；没有账号时再创建，禁止重复建号。">
       <template #actions>
         <Button variant="outline" @click="goBack">
           <ArrowLeft class="mr-1 h-4 w-4" />
@@ -192,26 +199,33 @@ async function handleSave() {
 
         <section class="space-y-4">
           <h2 class="text-sm font-semibold text-muted-foreground">基本信息</h2>
+          <div v-if="isCreate" class="flex w-fit rounded-md border p-1">
+            <Button size="sm" :variant="createMode === 'existing' ? 'default' : 'ghost'" @click="createMode = 'existing'">添加已有账号</Button>
+            <Button size="sm" :variant="createMode === 'new' ? 'default' : 'ghost'" @click="createMode = 'new'">创建新账号</Button>
+          </div>
+          <p v-if="isCreate && createMode === 'existing'" class="text-sm text-muted-foreground">
+            输入对方已注册的用户名，只建立当前租户成员关系，不修改其密码、手机、邮箱和主租户。
+          </p>
           <div class="grid gap-4 md:grid-cols-2">
             <FormField label="用户名" required>
               <Input v-model="form.userName" :disabled="!isCreate" placeholder="登录名" />
             </FormField>
-            <FormField label="昵称">
+            <FormField v-if="!isCreate || createMode === 'new'" label="昵称">
               <Input v-model="form.nickName" placeholder="显示名称" />
             </FormField>
-            <FormField label="手机">
-              <Input v-model="form.mobile" />
+            <FormField v-if="!isCreate" label="手机">
+              <Input :model-value="form.mobile || ''" disabled placeholder="由用户本人验证绑定" />
             </FormField>
-            <FormField label="邮箱">
-              <Input v-model="form.email" type="email" />
+            <FormField v-if="!isCreate" label="邮箱">
+              <Input :model-value="form.email || ''" disabled placeholder="由用户本人验证绑定" />
             </FormField>
-            <FormField label="状态">
+            <FormField v-if="!isCreate || createMode === 'new'" label="状态">
               <Select v-model="form.status">
                 <option :value="1">正常</option>
                 <option :value="0">禁用</option>
               </Select>
             </FormField>
-            <FormField :label="isCreate ? '密码' : '新密码（留空不改）'" :required="isCreate">
+            <FormField v-if="!isCreate || createMode === 'new'" :label="isCreate ? '初始密码' : '新密码（留空不改）'" :required="isCreate && createMode === 'new'">
               <Input v-model="form.password" type="password" autocomplete="new-password" />
             </FormField>
           </div>
@@ -257,7 +271,7 @@ async function handleSave() {
             </li>
           </ul>
           <p class="text-xs text-muted-foreground">
-            保存手机/邮箱后会自动注册对应凭证；可用任一凭证 + 同一密码登录。
+            手机和邮箱只能由用户本人在用户中心通过验证码绑定或更换。
           </p>
         </section>
 

@@ -31,6 +31,8 @@ class NacosRegistrar:
         self.enabled = bool(self.config.get("enabled", True))
         self.ip = local_ip()
         self.client: Optional[Any] = None
+        self._registered = False
+        self._registration_task: Optional[asyncio.Task[None]] = None
         self._heartbeat_task: Optional[asyncio.Task[None]] = None
 
     async def start(self) -> None:
@@ -54,26 +56,47 @@ class NacosRegistrar:
                 str(self.config.get("namespace") or "public"),
                 self.config,
             )
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, self._register)
-            self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
         except Exception as exc:
-            self.client = None
-            logger.warning("Nacos registration failed; service will continue locally: %s", exc)
+            logger.warning("Nacos client creation failed; service will continue locally: %s", exc)
+            return
+        self._registration_task = asyncio.create_task(self._registration_loop())
 
     async def stop(self) -> None:
-        if self.client is None:
-            return
+        if self._registration_task is not None:
+            self._registration_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._registration_task
+            self._registration_task = None
         if self._heartbeat_task is not None:
             self._heartbeat_task.cancel()
             with suppress(asyncio.CancelledError):
                 await self._heartbeat_task
             self._heartbeat_task = None
+        if self.client is None or not self._registered:
+            self.client = None
+            return
         loop = asyncio.get_running_loop()
         try:
             await loop.run_in_executor(None, self._deregister)
         except Exception as exc:
             logger.warning("Nacos deregistration failed: %s", exc)
+        finally:
+            self._registered = False
+            self.client = None
+
+    async def _registration_loop(self) -> None:
+        interval = float(self.config.get("registration-retry-interval") or 2)
+        loop = asyncio.get_running_loop()
+        while not self._registered:
+            try:
+                await loop.run_in_executor(None, self._register)
+                self._registered = True
+                self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                logger.warning("Nacos registration failed; retrying in %ss: %s", interval, exc)
+                await asyncio.sleep(interval)
 
     async def _heartbeat_loop(self) -> None:
         interval = float(self.config.get("heart-beat-interval") or 5)
@@ -131,7 +154,13 @@ class NacosRegistrar:
         return str(self.config.get("cluster-name") or "DEFAULT")
 
     def _metadata(self) -> dict[str, str]:
-        return {"app": self.service_name, "runtime": "python"}
+        configured = self.config.get("metadata") or {}
+        metadata = {
+            str(key): str(value)
+            for key, value in dict(configured).items()
+            if value is not None
+        }
+        return {"app": self.service_name, "runtime": "python", **metadata}
 
 
 class NacosDiscoveryClient:
@@ -210,6 +239,32 @@ class NacosDiscoveryClient:
         except Exception as exc:
             logger.warning("Nacos instance lookup failed for %s: %s", service_name, exc)
             return []
+
+    async def get_config(self, data_id: str, group: Optional[str] = None) -> str:
+        if self.client is None:
+            raise RuntimeError("Nacos client is not available")
+        target_group = group or str(self.config.get("config-group") or self._group_name())
+        value = await asyncio.to_thread(self.client.get_config, data_id, target_group)
+        return str(value or "")
+
+    async def publish_config(
+        self,
+        data_id: str,
+        content: str,
+        group: Optional[str] = None,
+    ) -> None:
+        if self.client is None:
+            raise RuntimeError("Nacos client is not available")
+        target_group = group or str(self.config.get("config-group") or self._group_name())
+        published = await asyncio.to_thread(
+            self.client.publish_config,
+            data_id,
+            target_group,
+            content,
+            config_type="yaml",
+        )
+        if not published:
+            raise RuntimeError(f"Nacos rejected config publication: {data_id}")
 
     def _list_instances_sync(self, service_name: str) -> list[dict[str, Any]]:
         assert self.client is not None

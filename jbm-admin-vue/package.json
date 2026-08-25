@@ -13,12 +13,14 @@
     "build:packages": "npm run build -w @jbm7/sdk && npm run build -w @jbm7/vue-core && npm run build -w @jbm7/admin",
     "test": "npm run test -w @jbm7/sdk && npm run test -w @jbm7/vue-core",
     "pack:check": "npm run pack:check --workspaces --if-present",
+    "demo:build": "npm run build --prefix examples/downstream-demo",
+    "demo:dev": "npm run dev --prefix examples/downstream-demo",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jbm7/admin": "7.3.0-beta.1",
-    "@jbm7/sdk": "7.3.0-beta.1",
-    "@jbm7/vue-core": "7.3.0-beta.1",
+    "@jbm7/admin": "7.3.0-beta.5",
+    "@jbm7/sdk": "7.3.0-beta.5",
+    "@jbm7/vue-core": "7.3.0-beta.5",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-java": "^6.0.2",
     "@codemirror/lang-javascript": "^6.2.5",

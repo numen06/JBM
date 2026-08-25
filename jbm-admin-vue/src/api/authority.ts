@@ -42,8 +42,10 @@ export async function listApis(serviceId?: string) {
   return unwrap(res)
 }
 
-export async function listAuthorityMenus() {
-  const res = await get<AuthorityMenu[]>('/authority/menus')
+export async function listAuthorityMenus(appId?: number | string) {
+  const res = await get<AuthorityMenu[]>('/authority/menus', {
+    params: appId != null && String(appId) !== '' ? { appId } : {},
+  })
   return unwrap(res)
 }
 

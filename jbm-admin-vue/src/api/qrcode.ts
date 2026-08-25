@@ -10,7 +10,7 @@ export interface QrLoginSession {
   scanUrl?: string
 }
 
-/** GET /qrcode/login */
+/** POST /qrcode/login */
 export async function fetchLoginQr(params: {
   clientId: string
   redirectUri: string
@@ -18,7 +18,7 @@ export async function fetchLoginQr(params: {
   width?: number
   height?: number
 }): Promise<QrLoginSession> {
-  const res = await get<QrLoginSession>('/qrcode/login', {
+  const res = await post<QrLoginSession>('/qrcode/login', null, {
     params: {
       client_id: params.clientId,
       redirect_uri: params.redirectUri,
@@ -38,6 +38,7 @@ export async function pollQrLogin(code: string): Promise<{
   token?: OAuth2TokenResult
   code?: string
   redirectUri?: string
+  state?: string
   message?: string
 }> {
   const body = await get<unknown>('/qrcode/check', { params: { code } })
@@ -50,6 +51,7 @@ export async function pollQrLogin(code: string): Promise<{
           done: true,
           code: raw.code,
           redirectUri: typeof raw.redirectUri === 'string' ? raw.redirectUri : undefined,
+          state: typeof raw.state === 'string' ? raw.state : undefined,
         }
       }
       return { done: true, token: normalizeTokenPayload(data as Record<string, unknown>) }
@@ -61,7 +63,7 @@ export async function pollQrLogin(code: string): Promise<{
 }
 
 export async function markQrScanned(code: string): Promise<number> {
-  const res = await get<number>('/qrcode/scanned', { params: { code } })
+  const res = await post<number>('/qrcode/scanned', null, { params: { code } })
   return unwrap(res)
 }
 

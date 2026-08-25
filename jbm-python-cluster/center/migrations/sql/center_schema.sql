@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS `base_account` (
   `update_time` timestamp NULL DEFAULT NULL,
   `extend_data` longtext COLLATE utf8mb4_unicode_ci,
   `must_change_password` int DEFAULT '0',
-  PRIMARY KEY (`account_id`)
+  PRIMARY KEY (`account_id`),
+  UNIQUE KEY `uk_base_account_identity` (`account`,`account_type`,`domain`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `base_action` (
   `action_id` bigint NOT NULL,
@@ -265,7 +266,9 @@ CREATE TABLE IF NOT EXISTS `base_developer` (
   `create_time` timestamp NULL DEFAULT NULL,
   `update_time` timestamp NULL DEFAULT NULL,
   `extend_data` longtext COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`user_id`)
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uk_base_user_mobile` (`mobile`),
+  UNIQUE KEY `uk_base_user_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `base_dic` (
   `id` bigint NOT NULL,
@@ -360,10 +363,12 @@ CREATE TABLE IF NOT EXISTS `base_role_user` (
   `leaf_path` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `user_id` bigint NOT NULL,
   `role_id` bigint NOT NULL,
+  `tenant_id` bigint DEFAULT NULL,
   `create_time` timestamp NULL DEFAULT NULL,
   `update_time` timestamp NULL DEFAULT NULL,
   `extend_data` longtext COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_role_user_tenant_app` (`tenant_id`,`app_id`,`user_id`,`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `base_user` (
   `user_id` bigint NOT NULL,
@@ -405,7 +410,106 @@ CREATE TABLE IF NOT EXISTS `base_user_org` (
   `leaf_path` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `extend_data` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
-  KEY `idx_base_user_org_user_org` (`user_id`,`org_id`)
+  UNIQUE KEY `uk_base_user_org_user_org` (`user_id`,`org_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_tenant_app` (
+  `id` bigint NOT NULL,
+  `tenant_id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `config_content` text COLLATE utf8mb4_unicode_ci,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  `extend_data` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tenant_app` (`tenant_id`,`app_id`),
+  KEY `idx_tenant_app_app` (`app_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_app_feature` (
+  `id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `feature_code` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `feature_name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `feature_desc` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_app_feature_code` (`app_id`,`feature_code`),
+  KEY `idx_app_feature_status` (`app_id`,`status`,`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_tenant_feature` (
+  `id` bigint NOT NULL,
+  `tenant_id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `feature_code` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `valid_from` timestamp NULL DEFAULT NULL,
+  `valid_to` timestamp NULL DEFAULT NULL,
+  `granted_by` bigint DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tenant_app_feature` (`tenant_id`,`app_id`,`feature_code`),
+  KEY `idx_tenant_feature_active` (`tenant_id`,`app_id`,`status`,`valid_to`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_user_feature_grant` (
+  `id` bigint NOT NULL,
+  `tenant_id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `feature_code` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `data_scope` text COLLATE utf8mb4_unicode_ci,
+  `status` int NOT NULL DEFAULT '1',
+  `granted_by` bigint DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_app_feature` (`tenant_id`,`app_id`,`user_id`,`feature_code`),
+  KEY `idx_user_feature_active` (`user_id`,`tenant_id`,`app_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_tenant_delegation` (
+  `id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `owner_tenant_id` bigint NOT NULL,
+  `operator_tenant_id` bigint NOT NULL,
+  `operator_user_id` bigint DEFAULT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `permission_codes` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `resource_types` text COLLATE utf8mb4_unicode_ci,
+  `data_scope` text COLLATE utf8mb4_unicode_ci,
+  `field_policy` text COLLATE utf8mb4_unicode_ci,
+  `valid_from` timestamp NULL DEFAULT NULL,
+  `valid_to` timestamp NULL DEFAULT NULL,
+  `purpose` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `version` bigint NOT NULL DEFAULT '1',
+  `created_by` bigint DEFAULT NULL,
+  `approved_by` bigint DEFAULT NULL,
+  `revoked_by` bigint DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  `extend_data` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `idx_delegation_operator` (`operator_tenant_id`,`app_id`,`status`,`valid_to`),
+  KEY `idx_delegation_operator_user` (`operator_user_id`,`app_id`,`status`,`valid_to`),
+  KEY `idx_delegation_owner` (`owner_tenant_id`,`app_id`,`status`,`valid_to`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `base_operator_application` (
+  `id` bigint NOT NULL,
+  `app_id` bigint NOT NULL,
+  `tenant_id` bigint NOT NULL,
+  `applicant_user_id` bigint NOT NULL,
+  `status` int NOT NULL DEFAULT '0',
+  `reason` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `review_remark` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reviewed_by` bigint DEFAULT NULL,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_operator_application_tenant_app` (`tenant_id`,`app_id`),
+  KEY `idx_operator_application_review` (`app_id`,`status`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `custom_forms` (
   `id` bigint NOT NULL AUTO_INCREMENT,

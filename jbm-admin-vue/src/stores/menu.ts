@@ -26,7 +26,7 @@ export const useMenuStore = defineStore('menu', () => {
 
   const allowedPaths = computed(() => {
     const set = new Set<string>()
-    for (const m of rawMenus.value) {
+    for (const m of flattenMenus(rawMenus.value)) {
       const path = normalizeMenuPath(m.path)
       if (path) set.add(path)
     }
@@ -35,7 +35,7 @@ export const useMenuStore = defineStore('menu', () => {
 
   const allowedMenuCodes = computed(() => {
     const set = new Set<string>()
-    for (const m of rawMenus.value) {
+    for (const m of flattenMenus(rawMenus.value)) {
       if (m.menuCode) addMenuCode(set, m.menuCode)
     }
     for (const code of authorityMenuCodes.value) {
@@ -136,6 +136,10 @@ export const useMenuStore = defineStore('menu', () => {
     clear,
   }
 })
+
+function flattenMenus(menus: BaseMenu[]): BaseMenu[] {
+  return menus.flatMap((menu) => [menu, ...flattenMenus(menu.children ?? [])])
+}
 
 function mergeNavGroups(groups: NavGroupDef[]) {
   const merged = new Map<string, NavGroupDef>()

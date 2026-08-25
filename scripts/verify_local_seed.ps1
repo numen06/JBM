@@ -5,6 +5,7 @@ param(
     [string]$OperatorPassword = $env:JBM_LOCAL_OPERATOR_PASSWORD,
     [string]$TenantPassword = $env:JBM_LOCAL_TENANT_PASSWORD,
     [string]$ClientId = 'jbmSeedDevAppKey00000001',
+    [string]$TenantClientId = 'tenantDemoAppKey0000000001',
     [string]$CenterHealthUrl = 'http://127.0.0.1:7777/actuator/health',
     [string]$DocUrl = 'http://127.0.0.1:9999',
     [string]$BigscreenUrl = 'http://127.0.0.1:3314',
@@ -42,13 +43,17 @@ function New-PkcePair {
     return @{ Verifier = $verifier; Challenge = $challenge }
 }
 
-function New-AccessToken([string]$LoginUser = $Username, [string]$LoginPassword = $Password) {
+function New-AccessToken(
+    [string]$LoginUser = $Username,
+    [string]$LoginPassword = $Password,
+    [string]$LoginClientId = $ClientId
+) {
     $pkce = New-PkcePair
-    $redirect = 'http://127.0.0.1:5173/login/callback'
+    $redirect = '/login/callback'
     $login = Invoke-RestMethod -Method Post -Uri "$BaseUrl/auth/oauth2/doLogin" `
         -ContentType 'application/x-www-form-urlencoded' -Body @{
             response_type = 'code'
-            client_id = $ClientId
+            client_id = $LoginClientId
             redirect_uri = $redirect
             state = 'local-seed-verification'
             username = $LoginUser
@@ -59,7 +64,12 @@ function New-AccessToken([string]$LoginUser = $Username, [string]$LoginPassword 
             code_challenge = $pkce.Challenge
             code_challenge_method = 'S256'
         }
-    $callback = [uri](Assert-JbmSuccess $login 'OAuth login')
+    $callbackValue = [string](Assert-JbmSuccess $login 'OAuth login')
+    $callback = if ([Uri]::IsWellFormedUriString($callbackValue, [UriKind]::Absolute)) {
+        [uri]$callbackValue
+    } else {
+        [uri]("http://localhost$callbackValue")
+    }
     $query = [System.Web.HttpUtility]::ParseQueryString($callback.Query)
     $authorizationCode = $query['code']
     if ([string]::IsNullOrWhiteSpace($authorizationCode)) { throw 'OAuth login returned no authorization code' }
@@ -70,7 +80,7 @@ function New-AccessToken([string]$LoginUser = $Username, [string]$LoginPassword 
                 -ContentType 'application/x-www-form-urlencoded' -Body @{
                     grant_type = 'authorization_code'
                     code = $authorizationCode
-                    client_id = $ClientId
+                    client_id = $LoginClientId
                     redirect_uri = $redirect
                     code_verifier = $pkce.Verifier
                 }
@@ -81,7 +91,11 @@ function New-AccessToken([string]$LoginUser = $Username, [string]$LoginPassword 
             Start-Sleep -Seconds 2
         }
     } while ($true)
-    $token = Assert-JbmSuccess $tokenResponse 'OAuth token exchange'
+    $token = if ($tokenResponse.access_token) {
+        $tokenResponse
+    } else {
+        Assert-JbmSuccess $tokenResponse 'OAuth token exchange'
+    }
     $accessToken = if ($token.access_token) { $token.access_token } else { $token.accessToken }
     if ([string]::IsNullOrWhiteSpace($accessToken)) { throw 'OAuth token exchange returned no access token' }
     return $accessToken
@@ -226,7 +240,7 @@ if ([string]::IsNullOrWhiteSpace($demoLog.logId) -or @($demoLines).Count -lt 1) 
 if ($null -eq $bigscreenPage.contents) { throw 'Bigscreen page contract is invalid' }
 
 $operatorToken = New-AccessToken 'platform_operator' $OperatorPassword
-$tenantToken = New-AccessToken 'tenant_admin' $TenantPassword
+$tenantToken = New-AccessToken 'tenant_admin' $TenantPassword $TenantClientId
 $operatorHeaders = @{ Authorization = "Bearer $operatorToken" }
 $tenantHeaders = @{ Authorization = "Bearer $tenantToken" }
 $operatorUsers = Assert-JbmSuccess (

@@ -345,7 +345,7 @@ onUnmounted(stopAutoRefresh)
       :error="loginList.error.value"
       :empty="!loginList.items.value.length"
     >
-      <Table>
+      <Table mobile-title="账号" :mobile-columns="['登录时间', '状态', '来源 IP']">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">登录时间</th>
@@ -398,7 +398,7 @@ onUnmounted(stopAutoRefresh)
       :error="gatewayList.error.value"
       :empty="!gatewayList.items.value.length"
     >
-      <Table>
+      <Table mobile-title="业务路径" :mobile-columns="['时间', '方法', '状态', '耗时']">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">时间</th>

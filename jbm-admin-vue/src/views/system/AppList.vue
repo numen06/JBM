@@ -77,6 +77,10 @@ const {
   code: '',
   appType: 'pc',
   orgId: undefined,
+  redirectUris: '',
+  publicClient: true,
+  registrationEnabled: false,
+  registrationDefaultRoleCode: '',
   status: 1,
 }))
 
@@ -93,6 +97,8 @@ function isPersistApp(row: BaseApp) {
 }
 
 function openEditApp(row: BaseApp) {
+  const oauth = row.extendData?.oauth
+  const registration = row.extendData?.registration
   openEdit({
     appId: row.appId,
     appName: row.appName,
@@ -102,6 +108,10 @@ function openEditApp(row: BaseApp) {
     orgId: row.orgId,
     status: row.status ?? 1,
     isPersist: row.isPersist,
+    redirectUris: oauth?.redirectUris?.join(', ') || '',
+    publicClient: oauth?.publicClient ?? true,
+    registrationEnabled: registration?.enabled ?? false,
+    registrationDefaultRoleCode: registration?.defaultRoleCode || '',
   })
 }
 
@@ -112,6 +122,10 @@ function buildSavePayload() {
     appType: form.value.appType || 'pc',
     orgId: optionalSnowflakeIdParam(form.value.orgId!),
     status: Number(form.value.status ?? 1),
+    redirectUris: form.value.redirectUris?.trim(),
+    publicClient: form.value.publicClient !== false,
+    registrationEnabled: form.value.registrationEnabled === true,
+    registrationDefaultRoleCode: form.value.registrationDefaultRoleCode?.trim(),
   }
 }
 
@@ -122,6 +136,10 @@ async function handleSave() {
   }
   if (!form.value.orgId) {
     formError.value = '请选择所属组织'
+    return
+  }
+  if (form.value.registrationEnabled && !form.value.registrationDefaultRoleCode?.trim()) {
+    formError.value = '开放用户注册时必须配置普通租户默认角色编码'
     return
   }
   saving.value = true
@@ -406,6 +424,29 @@ async function copyText(text: string) {
       <p v-else class="text-xs text-muted-foreground">
         Client ID 与 Client Secret 将在创建成功后自动生成并展示。
       </p>
+      <FormField label="OAuth 回调地址" required>
+        <Input
+          v-model="form.redirectUris"
+          placeholder="https://iot.example.com/login/callback，多个用逗号分隔"
+        />
+      </FormField>
+      <label class="flex items-center gap-2 text-sm">
+        <input v-model="form.publicClient" type="checkbox" />
+        浏览器公开客户端（PKCE）
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input v-model="form.registrationEnabled" type="checkbox" />
+        开放用户自助注册
+      </label>
+      <FormField v-if="form.registrationEnabled" label="普通租户默认角色编码" required>
+        <Input
+          v-model="form.registrationDefaultRoleCode"
+          placeholder="例如 iot_admin"
+        />
+        <p class="mt-1 text-xs text-muted-foreground">
+          注册人不能自行选择角色；系统只授予此应用已配置的默认角色。
+        </p>
+      </FormField>
       <FormField label="状态">
         <Select v-model="form.status">
           <option :value="1">启用</option>

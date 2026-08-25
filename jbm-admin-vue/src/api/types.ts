@@ -54,6 +54,7 @@ export interface BaseUser {
 
 export interface BaseRole {
   roleId?: SnowflakeId
+  appId?: SnowflakeId
   roleCode?: string
   roleName?: string
   status?: number
@@ -132,6 +133,14 @@ export interface BaseApp {
   status?: number
   isPersist?: number
   appType?: string
+  redirectUris?: string
+  publicClient?: boolean
+  registrationEnabled?: boolean
+  registrationDefaultRoleCode?: string
+  extendData?: {
+    oauth?: { redirectUris?: string[]; publicClient?: boolean }
+    registration?: { enabled?: boolean; mode?: 'tenant'; defaultRoleCode?: string }
+  }
 }
 
 export interface BaseDic {
@@ -219,6 +228,25 @@ export interface GatewayRoute {
   serviceId?: string
   url?: string
   status?: number
+}
+
+export interface GatewayGrayTargetInstance {
+  ip: string
+  port: number
+  weight: number
+}
+
+export interface GatewayGrayRule {
+  id: string
+  path: string
+  serviceId?: string
+  enabled: boolean
+  percent: number
+  headerName?: string
+  headerValue?: string
+  metadata: Record<string, string>
+  targetInstances: GatewayGrayTargetInstance[]
+  stickyHeader: string
 }
 
 export type JobStatus = 'NORMAL' | 'PAUSE' | 0 | 1
@@ -420,6 +448,7 @@ export interface UserInfoStatistics {
 /** 在线会话（对齐后端 SysUserOnline） */
 export interface SysUserOnline {
   tokenId?: string
+  currentSession?: boolean
   userId?: SnowflakeId
   deptId?: SnowflakeId
   deptName?: string

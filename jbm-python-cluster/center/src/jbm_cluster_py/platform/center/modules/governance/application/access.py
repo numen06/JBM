@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 
 PLATFORM_ROLES = {"super_admin", "platform_operator"}
+TENANT_ADMIN_ROLES = {"tenant_admin", "iot_admin"}
 
 
 def is_platform(identity: Mapping[str, Any]) -> bool:
@@ -27,6 +28,16 @@ def tenant_id(identity: Mapping[str, Any]) -> int:
 def require_platform(identity: Mapping[str, Any]) -> None:
     if not is_platform(identity):
         raise HTTPException(status_code=403, detail="仅平台运营账号可执行此操作")
+
+
+def is_tenant_admin(identity: Mapping[str, Any]) -> bool:
+    roles = {str(role) for role in identity.get("roles") or []}
+    return is_platform(identity) or bool(roles & TENANT_ADMIN_ROLES)
+
+
+def require_tenant_admin(identity: Mapping[str, Any]) -> None:
+    if not is_tenant_admin(identity):
+        raise HTTPException(status_code=403, detail="仅租户管理员可执行此操作")
 
 
 def require_internal(identity: Mapping[str, Any]) -> None:

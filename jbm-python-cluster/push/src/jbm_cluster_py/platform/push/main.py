@@ -29,8 +29,29 @@ from jbm_cluster_py.platform.push.service import PushService
 from jbm_cluster_py.platform.push.worker import PushWorker
 
 
+def _validate_production_push_config(
+    profile: str,
+    sms_config: Mapping[str, Any],
+    push_config: Mapping[str, Any],
+) -> None:
+    if str(profile).lower() != "prod":
+        return
+    provider = str(
+        sms_config.get("verificationProvider")
+        or sms_config.get("verification-provider")
+        or sms_config.get("provider")
+        or ""
+    ).lower()
+    dry_run = push_config.get("jaja7-dry-run", push_config.get("jaja7DryRun", False))
+    if provider == "dev" or str(dry_run).lower() in {"1", "true", "yes", "y"}:
+        raise RuntimeError("生产 Push 短信配置不能使用 dev/dry-run")
+
+
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app_config = config or AppConfig.load(app="push")
+    sms_config = dict(app_config.get("aliyun.sms", {}) or {})
+    push_config = dict(app_config.get("jbm.push", {}) or {})
+    _validate_production_push_config(app_config.profile, sms_config, push_config)
     configure_logging()
     print_jbm_banner()
     init_telemetry(app_config.telemetry)
@@ -43,9 +64,9 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app_config.rabbitmq,
         message_repository,
         config_repository,
-        sms_config=app_config.get("aliyun.sms", {}) or {},
+        sms_config=sms_config,
         email_config=app_config.get("spring.mail", {}) or {},
-        push_config=app_config.get("jbm.push", {}) or {},
+        push_config=push_config,
     )
     repository = BusinessEventRepository(app_config.database)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
@@ -63,6 +84,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             "/redoc",
             "/openapi.json",
             "/pin/send",
+            "/pin/check",
         ),
     )
     business_event_service = BusinessEventService(
@@ -183,7 +205,7 @@ async def _ensure_system_channel_configs(config_repository: PushConfigRepository
             sms_config["jaja7-dry-run"] = push_config["jaja7-dry-run"]
         elif "jaja7DryRun" in push_config:
             sms_config["jaja7DryRun"] = push_config["jaja7DryRun"]
-        await config_repository.ensure_default_push_config(3, sms_config, True)
+        await config_repository.ensure_default_push_config(3, _public_sms_config(sms_config), True)
 
     mail_config = _compact_mapping(app_config.get("spring.mail", {}) or {})
     if mail_config:
@@ -204,3 +226,18 @@ async def _ensure_system_channel_configs(config_repository: PushConfigRepository
 
 def _compact_mapping(value: Mapping[str, Any]) -> dict[str, Any]:
     return {key: item for key, item in dict(value).items() if item not in (None, "")}
+
+
+def _public_sms_config(value: Mapping[str, Any]) -> dict[str, Any]:
+    secret_keys = {
+        "accesskeyid",
+        "access-key-id",
+        "access_key_id",
+        "accesskeysecret",
+        "access-key-secret",
+        "access_key_secret",
+        "securitytoken",
+        "security-token",
+        "security_token",
+    }
+    return {key: item for key, item in dict(value).items() if key.lower() not in secret_keys}

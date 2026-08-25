@@ -1,5 +1,49 @@
 jbm:
   auth:
+    require-pkce: true
+    require-https-redirects: false
+    legacy-password-grant-enabled: false
+    dev-bypass-enabled: true
+    allow-plaintext-secrets: false
+    login-error-number: 5
+    login-error-limit-minutes: 10
+    max-sessions-per-user: 5
+    sms:
+      registration-required: true
+      push-service: jbm-cluster-platform-push
+      valid-time: 300
+      interval: 60
+    password-policy:
+      min-length: 8
+      max-length: 128
+      required-character-classes: 3
+    login-providers:
+      face:
+        enabled: true
+        dev-mock-enabled: true
+        dev-subject: "13800000000"
+        account-type: face
+      wechat:
+        enabled: true
+        dev-mock-enabled: true
+        dev-code: jbm-dev-wechat-code
+        dev-subject: jbm-dev-wechat-openid
+        account-type: wechat
+      miniapp:
+        enabled: true
+        dev-mock-enabled: true
+        dev-code: jbm-dev-miniapp-code
+        dev-subject: "13800000000"
+        account-type: miniapp
+      thirdparty-mock:
+        enabled: true
+        dev-mock-enabled: true
+        dev-code: jbm-dev-thirdparty-code
+        dev-subject: jbm-dev-thirdparty-subject
+        account-type: thirdparty_mock
+        require-subject-match: false
     jwt:
-      issuer: http://jbm-cluster-platform-auth:5555
+      issuer: http://debug5173.feige.51jbm.cn/v3/api/auth
       audience: jbm-api
+      access-token-seconds: 1800
+      refresh-token-seconds: 604800

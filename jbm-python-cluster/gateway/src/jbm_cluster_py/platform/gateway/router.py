@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from fastapi import APIRouter, Request, WebSocket
+import yaml
 
 from jbm_cluster_py.common.result import ok
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
@@ -126,18 +127,41 @@ def build_gateway_router(
     async def delete_path_blacklist(rule_id: str) -> Dict[str, Any]:
         return ok(traffic.remove_path_blacklist(rule_id), "删除访问路径黑名单成功")
 
-    @router.get("/__gateway/gray-routes")
+    @router.get("/__gateway/gray-routes", include_in_schema=False)
+    @router.get("/gateway/gray-routes", tags=["灰度发布"])
     async def list_gray_routes() -> Dict[str, Any]:
         return ok(traffic.snapshot()["grayRoutes"], "查询灰度引流规则成功")
 
-    @router.post("/__gateway/gray-routes")
+    @router.post("/__gateway/gray-routes", include_in_schema=False)
+    @router.post("/gateway/gray-routes", tags=["灰度发布"])
     async def add_gray_route(body: Dict[str, Any]) -> Dict[str, Any]:
+        rule_id = str(body.get("id") or body.get("ruleId") or "").strip()
+        if not rule_id:
+            raise ValueError("灰度规则 ID 不能为空")
+        if any(item.rule_id == rule_id for item in traffic.gray_routes):
+            raise ValueError("灰度规则 ID 已存在")
         rule = traffic.add_gray_route(body)
+        try:
+            await _persist_gray_routes(discovery, traffic)
+        except Exception:
+            traffic.remove_gray_route(rule.rule_id)
+            raise
         return ok(serialize_gray_rule(rule), "保存灰度引流规则成功")
 
-    @router.delete("/__gateway/gray-routes/{rule_id}")
+    @router.delete("/__gateway/gray-routes/{rule_id}", include_in_schema=False)
+    @router.delete("/gateway/gray-routes/{rule_id}", tags=["灰度发布"])
     async def delete_gray_route(rule_id: str) -> Dict[str, Any]:
-        return ok(traffic.remove_gray_route(rule_id), "删除灰度引流规则成功")
+        existing = next((item for item in traffic.gray_routes if item.rule_id == rule_id), None)
+        if existing is None:
+            raise ValueError("灰度规则不存在")
+        serialized = serialize_gray_rule(existing)
+        traffic.remove_gray_route(rule_id)
+        try:
+            await _persist_gray_routes(discovery, traffic)
+        except Exception:
+            traffic.add_gray_route(serialized)
+            raise
+        return ok(True, "删除灰度引流规则成功")
 
     @router.websocket("/{path:path}")
     async def websocket_proxy(websocket: WebSocket, path: str) -> None:
@@ -148,3 +172,29 @@ def build_gateway_router(
         return await proxy.proxy_http(request, path)
 
     return router
+
+
+async def _persist_gray_routes(
+    discovery: NacosDiscoveryClient,
+    traffic: TrafficPolicyManager,
+) -> None:
+    data_id = str(discovery.config.get("config-data-id") or "").strip()
+    if not data_id:
+        return
+    current = await discovery.get_config(data_id)
+    document = yaml.safe_load(current) if current.strip() else {}
+    if document is None:
+        document = {}
+    if not isinstance(document, dict):
+        raise ValueError(f"Nacos config {data_id} must contain a YAML object")
+    jbm = document.setdefault("jbm", {})
+    if not isinstance(jbm, dict):
+        raise ValueError(f"Nacos config {data_id} has invalid jbm section")
+    gateway = jbm.setdefault("gateway", {})
+    if not isinstance(gateway, dict):
+        raise ValueError(f"Nacos config {data_id} has invalid jbm.gateway section")
+    gateway["gray-routes"] = traffic.snapshot()["grayRoutes"]
+    await discovery.publish_config(
+        data_id,
+        yaml.safe_dump(document, allow_unicode=True, sort_keys=False),
+    )
