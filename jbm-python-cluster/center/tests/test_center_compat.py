@@ -118,7 +118,7 @@ async def test_center_core_compatibility(tmp_path) -> None:
                 for method in getattr(route, "methods", set())
             }
             assert route_set() <= implemented
-            assert len(route_set()) == 211
+            assert len(route_set()) == 213
 
 
 def _seed(path) -> None:

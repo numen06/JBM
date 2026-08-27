@@ -47,6 +47,7 @@ GET /authority/resources
 GET /authority/roles/{roleId}
 GET /authority/users/{userId}
 GET /baseAppConfig/getAppConfigByKey
+GET /baseAppConfig/{appId}
 GET /baseArea/getChinaAreaList
 GET /baseDic/getDicMap
 GET /baseUserCertification/currentUserCert
@@ -191,6 +192,7 @@ PUT /apikey/{keyId}/status
 PUT /app/{appId}
 PUT /app/{appId}/client
 PUT /app/{appId}/secret
+PUT /baseAppConfig/{appId}
 PUT /authority/actions/{actionId}
 PUT /authority/apps/{appId}
 PUT /authority/roles/{roleId}

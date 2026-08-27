@@ -17,6 +17,18 @@ export interface AppCredentials {
   clientSecret?: string
 }
 
+export interface AppBrandingConfig {
+  id?: SnowflakeId
+  appId?: SnowflakeId
+  appKey?: string
+  configContent?: {
+    title?: string
+    sysBg?: string
+    sysLogo?: string
+    [key: string]: unknown
+  }
+}
+
 export async function listApps(page = 1, size = DEFAULT_PAGE_SIZE, query?: AppListQuery) {
   const params: Record<string, unknown> = { ...pageParams(page, size) }
   const kw = query?.keyword?.trim()
@@ -40,6 +52,16 @@ export async function createApp(data: Partial<BaseApp>) {
 
 export async function updateApp(appId: SnowflakeId, data: Partial<BaseApp>) {
   const res = await put<void>(`/app/${toSnowflakeIdString(appId)}`, data)
+  return unwrap(res)
+}
+
+export async function getAppBranding(appId: SnowflakeId) {
+  const res = await get<AppBrandingConfig>(`/baseAppConfig/${toSnowflakeIdString(appId)}`)
+  return unwrap(res)
+}
+
+export async function updateAppBranding(appId: SnowflakeId, title: string, sysBg: string, sysLogo: string) {
+  const res = await put<AppBrandingConfig>(`/baseAppConfig/${toSnowflakeIdString(appId)}`, { title, sysBg, sysLogo })
   return unwrap(res)
 }
 

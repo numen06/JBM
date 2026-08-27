@@ -12,6 +12,7 @@ from jbm_cluster_py.platform.center.modules.governance.application.compatibility
 TENANT = {"userId": 2002, "tenantId": 2000, "roles": ["tenant_admin"]}
 OPERATOR = {"userId": 2001, "tenantId": 1, "roles": ["platform_operator"]}
 IOT_OPERATOR = {**OPERATOR, "appId": 3000}
+SUPER_ADMIN = {"userId": 1, "tenantId": 1, "roles": ["super_admin"]}
 
 
 @pytest.mark.asyncio
@@ -62,6 +63,59 @@ async def test_tenant_cannot_use_platform_or_internal_compatibility_paths(
         await service.handle(method, path, {}, {}, {}, TENANT)
 
     assert error.value.status_code == 403
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("identity", [TENANT, OPERATOR])
+async def test_only_super_admin_can_manage_app_login_branding(identity: dict) -> None:
+    service = CompatibilityService(AsyncMock(), AsyncMock(), AsyncMock())
+
+    with pytest.raises(HTTPException) as error:
+        await service.handle("GET", "/baseAppConfig/{appId}", {"appId": 3000}, {}, {}, identity)
+
+    assert error.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_super_admin_updates_app_login_branding_without_losing_other_config() -> None:
+    store = AsyncMock()
+    store.list.return_value = (
+        [
+            {
+                "id": 7000,
+                "appId": 3000,
+                "appKey": "smart-building-client",
+                "orgId": None,
+                "configContent": '{"desc":"保留说明","sysLogo":"old.png"}',
+            }
+        ],
+        1,
+    )
+    store.get.return_value = {"appId": 3000, "code": "smart-building"}
+    store.save.side_effect = [
+        {"id": 7000, "appId": 3000, "appKey": "smart-building-client"},
+        {"appId": 3000, "appName": "中共江西省委党校智慧建筑平台"},
+    ]
+    service = CompatibilityService(store, AsyncMock(), AsyncMock())
+
+    result = await service.handle(
+        "PUT",
+        "/baseAppConfig/{appId}",
+        {"appId": 3000},
+        {},
+        {
+            "title": "中共江西省委党校智慧建筑平台",
+            "sysBg": "party-school.png",
+            "sysLogo": "",
+        },
+        SUPER_ADMIN,
+    )
+
+    saved_config = store.save.await_args_list[0].args[1]["configContent"]
+    assert '"desc": "保留说明"' in saved_config
+    assert '"sysBg": "party-school.png"' in saved_config
+    assert result["result"]["configContent"]["sysLogo"] == ""
+    assert call("app", {"appName": "中共江西省委党校智慧建筑平台"}, 3000) in store.save.await_args_list
 
 
 @pytest.mark.asyncio

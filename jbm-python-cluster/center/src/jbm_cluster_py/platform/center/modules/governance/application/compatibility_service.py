@@ -17,6 +17,7 @@ from jbm_cluster_py.platform.center.modules.governance.application.access import
     is_platform,
     require_internal,
     require_platform,
+    require_super_admin,
     require_tenant_admin,
     require_tenant_record,
     tenant_id,
@@ -769,6 +770,39 @@ class CompatibilityService:
             }
             rows, _ = await self.store.list("appConfig", filters, 1, 1)
             return ok(rows[0] if rows else None)
+        if path == "/baseAppConfig/{appId}":
+            require_super_admin(identity)
+            app_id = int(params["appId"])
+            rows, _ = await self.store.list("appConfig", {"appId": app_id}, 1, 100)
+            existing = next((row for row in rows if row.get("orgId") in (None, "")), None)
+            current = _app_config_content(existing)
+            if method == "GET":
+                return ok({**(existing or {}), "configContent": current})
+            title = str(body.get("title") or "").strip()
+            if not title:
+                raise ValueError("登录标题不能为空")
+            app = await self.store.get("app", app_id)
+            if not app:
+                raise ValueError("应用不存在")
+            config = {
+                **current,
+                "title": title,
+                "sysBg": str(body.get("sysBg") or "").strip(),
+                "sysLogo": str(body.get("sysLogo") or "").strip(),
+            }
+            app_key = (existing or {}).get("appKey") or f"{app.get('code') or 'app'}-{app_id}"
+            saved = await self.store.save(
+                "appConfig",
+                {
+                    "appId": app_id,
+                    "appKey": app_key,
+                    "orgId": None,
+                    "configContent": json.dumps(config, ensure_ascii=False),
+                },
+                (existing or {}).get("id"),
+            )
+            await self.store.save("app", {"appName": title}, app_id)
+            return ok({**saved, "configContent": config})
         if path == "/baseReleaseInfo/findLastVersionInfo":
             filters = {"appId": body.get("appId"), "versionNumber": body.get("versionNumber")}
             rows, _ = await self.store.list("releaseInfo", filters, 1, 100)
@@ -1118,6 +1152,19 @@ class CompatibilityService:
                 return ok(_json_field(rows[0], "publishedSpec", {}) if rows else None)
             return ok(page_result(rows, total, 1, 100))
         raise ValueError("未知 OpenAPI 操作")
+
+
+def _app_config_content(row: Mapping[str, Any] | None) -> dict[str, Any]:
+    value = (row or {}).get("configContent")
+    if isinstance(value, Mapping):
+        return dict(value)
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            return dict(parsed) if isinstance(parsed, Mapping) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
 
 
 def _page(values: Mapping[str, Any]) -> tuple[int, int]:

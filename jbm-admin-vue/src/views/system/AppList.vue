@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, Eye, KeyRound, ListTree, Plus, Pencil, RefreshCw } from 'lucide-vue-next'
+import { Copy, Eye, Image as ImageIcon, KeyRound, ListTree, Plus, Pencil, RefreshCw, Upload } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -17,17 +17,30 @@ import { usePagedList } from '@/composables/usePagedList'
 import { useCrudForm } from '@/composables/useCrudForm'
 import { useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
-import { listApps, deleteApp, createApp, updateApp, resetAppSecret, getAppSecret, type AppCredentials } from '@/api/app'
+import {
+  listApps,
+  deleteApp,
+  createApp,
+  updateApp,
+  resetAppSecret,
+  getAppSecret,
+  getAppBranding,
+  updateAppBranding,
+  type AppCredentials,
+} from '@/api/app'
+import { docInlineUrl, uploadDoc } from '@/api/doc'
 import { JBM_TEMPLATE_APP_ID, syncMenusFromJbm } from '@/api/menu'
 import type { BaseApp } from '@/api/types'
 import { APP_TYPE_OPTIONS, appTypeLabel } from '@/constants/appTypes'
 import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { SnowflakeId } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
+import { usePermission } from '@/composables/usePermission'
 
 const { orgLabel, loadOrgs } = useOrgTree()
 const feedback = useFeedback()
 const auth = useAuthStore()
+const { isSuperAdmin } = usePermission()
 const canSyncPlatformMenus = computed(() =>
   (auth.user?.roles ?? []).some((role) =>
     ['super_admin', 'platform_operator'].includes(String(role.roleCode || '')),
@@ -48,6 +61,24 @@ const secretAppName = ref('')
 const secretClientId = ref('')
 const secretValue = ref('')
 const syncingAppId = ref<string>('')
+const brandingDialogOpen = ref(false)
+const brandingLoading = ref(false)
+const brandingSaving = ref(false)
+const brandingUploading = ref(false)
+const brandingLogoUploading = ref(false)
+const brandingApp = ref<BaseApp | null>(null)
+const brandingTitle = ref('')
+const brandingBackground = ref('')
+const brandingLogo = ref('')
+const brandingError = ref('')
+const brandingPreview = computed(() => {
+  const value = brandingBackground.value.trim()
+  return !value || /^(?:https?:|data:|\/)/i.test(value) ? value : docInlineUrl(value)
+})
+const brandingLogoPreview = computed(() => {
+  const value = brandingLogo.value.trim()
+  return !value || /^(?:https?:|data:|\/)/i.test(value) ? value : docInlineUrl(value)
+})
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<BaseApp>(
   (p, s) =>
@@ -282,6 +313,99 @@ async function handleSyncMenus(row: BaseApp) {
   }
 }
 
+async function openBranding(row: BaseApp) {
+  if (!isSuperAdmin.value || !row.appId) return
+  brandingApp.value = row
+  brandingTitle.value = row.appName || ''
+  brandingBackground.value = ''
+  brandingLogo.value = ''
+  brandingError.value = ''
+  brandingDialogOpen.value = true
+  brandingLoading.value = true
+  try {
+    const config = await getAppBranding(row.appId)
+    brandingTitle.value = config.configContent?.title || row.appName || ''
+    brandingBackground.value = config.configContent?.sysBg || ''
+    brandingLogo.value = config.configContent?.sysLogo || ''
+  } catch (e) {
+    brandingError.value = e instanceof Error ? e.message : '读取品牌配置失败'
+  } finally {
+    brandingLoading.value = false
+  }
+}
+
+async function handleBrandingLogoUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    brandingError.value = 'Logo 只能上传图片'
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    brandingError.value = 'Logo 不能超过 2MB'
+    return
+  }
+  brandingLogoUploading.value = true
+  brandingError.value = ''
+  try {
+    brandingLogo.value = await uploadDoc(file, 'app-branding')
+  } catch (e) {
+    brandingError.value = e instanceof Error ? e.message : '上传 Logo 失败'
+  } finally {
+    brandingLogoUploading.value = false
+  }
+}
+
+async function handleBrandingUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    brandingError.value = '登录背景只能上传图片'
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    brandingError.value = '登录背景不能超过 10MB'
+    return
+  }
+  brandingUploading.value = true
+  brandingError.value = ''
+  try {
+    brandingBackground.value = await uploadDoc(file, 'app-branding')
+  } catch (e) {
+    brandingError.value = e instanceof Error ? e.message : '上传背景失败'
+  } finally {
+    brandingUploading.value = false
+  }
+}
+
+async function saveBranding() {
+  if (!brandingApp.value?.appId || !brandingTitle.value.trim()) {
+    brandingError.value = '登录标题不能为空'
+    return
+  }
+  brandingSaving.value = true
+  brandingError.value = ''
+  try {
+    await updateAppBranding(
+      brandingApp.value.appId,
+      brandingTitle.value.trim(),
+      brandingBackground.value.trim(),
+      brandingLogo.value.trim(),
+    )
+    brandingDialogOpen.value = false
+    feedback.toast.success('登录品牌已更新')
+    load(page.value)
+  } catch (e) {
+    brandingError.value = e instanceof Error ? e.message : '保存品牌配置失败'
+  } finally {
+    brandingSaving.value = false
+  }
+}
+
 async function copyText(text: string) {
   await navigator.clipboard.writeText(text)
   feedback.toast.success('已复制')
@@ -380,6 +504,15 @@ async function copyText(text: string) {
                 <ListTree class="h-3.5 w-3.5" />
               </Button>
               <Button
+                v-if="isSuperAdmin"
+                variant="outline"
+                size="sm"
+                title="登录品牌"
+                @click="openBranding(row)"
+              >
+                <ImageIcon class="h-3.5 w-3.5" />
+              </Button>
+              <Button
                 variant="destructive"
                 size="sm"
                 title="删除"
@@ -453,6 +586,74 @@ async function copyText(text: string) {
           <option :value="0">停用</option>
         </Select>
       </FormField>
+    </CrudDialog>
+
+    <CrudDialog
+      v-model:open="brandingDialogOpen"
+      :title="`登录品牌 · ${brandingApp?.appName || ''}`"
+      :saving="brandingSaving"
+      wide
+      @save="saveBranding"
+    >
+      <p v-if="brandingError" class="text-sm text-destructive">{{ brandingError }}</p>
+      <p v-if="brandingLoading" class="text-sm text-muted-foreground">正在读取品牌配置…</p>
+      <template v-else>
+        <FormField label="登录标题" required>
+          <Input v-model="brandingTitle" placeholder="请输入登录页和浏览器抬头" />
+        </FormField>
+        <FormField label="Logo">
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm hover:bg-muted">
+              <Upload class="mr-2 h-4 w-4" />
+              {{ brandingLogoUploading ? '上传中…' : '上传 Logo' }}
+              <input
+                class="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                :disabled="brandingLogoUploading"
+                @change="handleBrandingLogoUpload"
+              />
+            </label>
+            <Button v-if="brandingLogo" type="button" variant="outline" size="sm" @click="brandingLogo = ''">
+              使用默认图标
+            </Button>
+          </div>
+          <Input v-model="brandingLogo" class="mt-2 font-mono text-xs" placeholder="不上传则使用当前默认图标" />
+          <img v-if="brandingLogoPreview" :src="brandingLogoPreview" alt="Logo 预览" class="mt-3 h-16 w-16 rounded-md border object-contain p-1" />
+        </FormField>
+        <FormField label="登录背景">
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm hover:bg-muted">
+              <Upload class="mr-2 h-4 w-4" />
+              {{ brandingUploading ? '上传中…' : '上传图片' }}
+              <input
+                class="sr-only"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                :disabled="brandingUploading"
+                @change="handleBrandingUpload"
+              />
+            </label>
+            <Button
+              v-if="brandingBackground"
+              type="button"
+              variant="outline"
+              size="sm"
+              @click="brandingBackground = ''"
+            >
+              清除背景
+            </Button>
+          </div>
+          <Input v-model="brandingBackground" class="mt-2 font-mono text-xs" placeholder="上传后自动填写，也可输入图片地址" />
+          <img
+            v-if="brandingPreview"
+            :src="brandingPreview"
+            alt="登录背景预览"
+            class="mt-3 max-h-64 w-full rounded-md border object-cover"
+          />
+        </FormField>
+        <p class="text-xs text-muted-foreground">仅超级管理员可修改；保存后应用登录页立即读取新配置。</p>
+      </template>
     </CrudDialog>
 
     <Dialog

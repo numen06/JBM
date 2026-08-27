@@ -9,6 +9,11 @@ PLATFORM_ROLES = {"super_admin", "platform_operator"}
 TENANT_ADMIN_ROLES = {"tenant_admin", "iot_admin"}
 
 
+def is_super_admin(identity: Mapping[str, Any]) -> bool:
+    roles = {str(role) for role in identity.get("roles") or []}
+    return bool(identity.get("admin")) or "super_admin" in roles or str(identity.get("username") or "") == "admin"
+
+
 def is_platform(identity: Mapping[str, Any]) -> bool:
     roles = {str(role) for role in identity.get("roles") or []}
     return bool(identity.get("admin")) or bool(roles & PLATFORM_ROLES) or str(identity.get("username") or "") == "admin"
@@ -28,6 +33,11 @@ def tenant_id(identity: Mapping[str, Any]) -> int:
 def require_platform(identity: Mapping[str, Any]) -> None:
     if not is_platform(identity):
         raise HTTPException(status_code=403, detail="仅平台运营账号可执行此操作")
+
+
+def require_super_admin(identity: Mapping[str, Any]) -> None:
+    if not is_super_admin(identity):
+        raise HTTPException(status_code=403, detail="仅超级管理员可执行此操作")
 
 
 def is_tenant_admin(identity: Mapping[str, Any]) -> bool:
