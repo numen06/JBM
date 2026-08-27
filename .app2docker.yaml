@@ -4,12 +4,15 @@ build:
   project_type: python
   use_project_dockerfile: true
   dockerfile_name: Dockerfile.app2docker
+  platforms:
+    - linux/amd64
+    - linux/arm64
 
 image:
   name: jbm-python-cluster
   prefix: registry.cn-shanghai.aliyuncs.com/okc
   tag: py-7.3.0
-  push: false
+  push: true
 
 push_mode: multi
 
