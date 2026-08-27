@@ -243,6 +243,18 @@ def test_security_policy_blocks_xss_query_and_body() -> None:
     assert body_decision.reason == "请求体包含疑似XSS内容"
 
 
+def test_security_policy_does_not_scan_multipart_file_bytes_as_text() -> None:
+    policy = GatewaySecurityPolicy({"enabled": True, "max-body-bytes": 1024})
+
+    decision = policy.inspect_body(
+        b'--boundary\r\nContent-Disposition: form-data; name="file"; filename="image.png"\r\n'
+        b'Content-Type: image/png\r\n\r\nPNG onerror=payload\r\n--boundary--\r\n',
+        "multipart/form-data; boundary=boundary",
+    )
+
+    assert decision.allowed is True
+
+
 def test_security_policy_limits_body_size_and_host() -> None:
     policy = GatewaySecurityPolicy(
         {

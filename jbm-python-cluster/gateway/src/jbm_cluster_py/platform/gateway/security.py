@@ -28,7 +28,6 @@ TEXT_CONTENT_TYPES = (
     "application/x-www-form-urlencoded",
     "application/xml",
     "application/xhtml+xml",
-    "multipart/form-data",
     "text/",
 )
 
