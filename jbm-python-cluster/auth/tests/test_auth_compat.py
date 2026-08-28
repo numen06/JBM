@@ -213,6 +213,26 @@ def test_login_captcha_can_be_required_for_password_and_sms() -> None:
     asyncio.run(run("SMS"))
 
 
+@pytest.mark.asyncio
+async def test_permission_lookup_accepts_legacy_root_user_id_zero() -> None:
+    class Repository:
+        async def user_authorities(
+            self, user_id: int, root: bool, app_id: int, tenant_id: int
+        ) -> list[str]:
+            assert (user_id, root, app_id, tenant_id) == (0, True, 1000, 2000)
+            return ["ACTION_SAVE"]
+
+    service = AuthService(
+        Repository(),  # type: ignore[arg-type]
+        TokenCache(RedisClient({"enabled": False})),
+        {},
+    )
+    permissions = await service._permissions_for_claims(
+        {"user_id": 0, "root": True, "app_id": 1000, "tenant_id": 2000}
+    )
+    assert permissions == ["ACTION_SAVE"]
+
+
 def test_registration_creates_tenant_subscription_and_owner_role(tmp_path: Path) -> None:
     database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "tenant-registration.db")
     import asyncio

@@ -876,9 +876,10 @@ class AuthService:
         embedded = claims.get("permissions")
         if isinstance(embedded, list):
             return [str(item) for item in embedded if item]
-        user_id = int(claims.get("user_id") or 0)
-        if not user_id:
+        raw_user_id = claims.get("user_id")
+        if raw_user_id is None:
             return []
+        user_id = int(raw_user_id)
         rows = await self.repository.user_authorities(
             user_id,
             bool(claims.get("root")) or str(claims.get("username") or "").lower() == "admin",
