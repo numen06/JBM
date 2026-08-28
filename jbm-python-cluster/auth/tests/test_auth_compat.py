@@ -194,6 +194,25 @@ def test_image_captcha_verify_is_case_insensitive_like_java() -> None:
     asyncio.run(run())
 
 
+def test_login_captcha_can_be_required_for_password_and_sms() -> None:
+    async def run(login_type: str) -> None:
+        service = AuthService(
+            None,
+            TokenCache(RedisClient({"enabled": False})),
+            {"login-captcha-required": True},
+        )  # type: ignore[arg-type]
+        with pytest.raises(AuthError, match="验证码不能为空"):
+            await service._authenticate_user_for_client(
+                {},
+                {"loginType": login_type, "username": "tester", "password": "secret"},
+            )
+
+    import asyncio
+
+    asyncio.run(run("PASSWORD"))
+    asyncio.run(run("SMS"))
+
+
 def test_registration_creates_tenant_subscription_and_owner_role(tmp_path: Path) -> None:
     database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "tenant-registration.db")
     import asyncio
@@ -519,12 +538,17 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
         assert "ops" in token["roles"]
         assert "ACTION_SAVE" in token["permissions"]
         assert "ACTION_monitor:online:forceLogout" in token["permissions"]
+        payload_part = token["access_token"].split(".")[1]
+        claims = json.loads(base64.urlsafe_b64decode(payload_part + "=" * (-len(payload_part) % 4)))
+        assert "permissions" not in claims
+        assert len(token["access_token"]) < 4096
 
         userinfo = client.get("/oauth2/userinfo", headers={"Authorization": "Bearer " + token["access_token"]})
         assert userinfo.json()["result"]["userId"] == 2057849052900044802
         assert userinfo.json()["result"]["clientId"] == "JBM"
         assert "tenantId" in userinfo.json()["result"]
         assert userinfo.json()["result"]["userType"] == "normal"
+        assert "ACTION_SAVE" in userinfo.json()["result"]["permissions"]
 
         online = client.post(
             "/online/pageList",
@@ -1072,6 +1096,28 @@ async def test_sms_login_binds_existing_profile_instead_of_creating_user() -> No
 
 
 @pytest.mark.asyncio
+async def test_sms_login_uses_the_same_failure_backoff_as_password_login() -> None:
+    service = AuthService(
+        object(),  # type: ignore[arg-type]
+        TokenCache(RedisClient({"enabled": False})),
+        {"login-error-number": 2, "login-error-limit-minutes": 10},
+    )
+
+    async def reject_code(_phone: str, _code: str) -> bool:
+        raise AuthError("验证码错误", 400)
+
+    service.verify_phone_code = reject_code  # type: ignore[method-assign]
+    form = {"loginType": "SMS", "username": "13900000009", "password": "123456"}
+    for _ in range(2):
+        with pytest.raises(AuthError, match="验证码错误"):
+            await service._authenticate_user_for_client({}, form)
+
+    with pytest.raises(AuthError, match="登录失败次数过多") as locked:
+        await service._authenticate_user_for_client({}, form)
+    assert locked.value.code == 423
+
+
+@pytest.mark.asyncio
 async def test_sms_login_creates_unknown_mobile_only_once() -> None:
     class UnknownMobileRepository:
         account: dict[str, object] | None = None
@@ -1240,7 +1286,7 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
             },
         ).json()
         assert locked["error"] == "invalid_grant"
-        assert locked["error_description"] == "密码错误次数过多，帐户锁定10分钟"
+        assert locked["error_description"] == "登录失败次数过多，帐户锁定10分钟"
 
     async def audit_failures() -> int:
         engine = create_async_engine(database_url)

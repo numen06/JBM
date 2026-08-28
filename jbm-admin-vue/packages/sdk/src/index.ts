@@ -98,7 +98,10 @@ export function createJbmClient(options: JbmClientOptions): JbmClient {
         : `Bearer ${accessToken}`
     }
     const tenantId = options.tenantProvider?.getTenantId()
-    if (tenantId) config.headers.tenantId = tenantId
+    if (tenantId) {
+      config.headers['X-Tenant-Id'] = tenantId
+      config.headers.tenantId = tenantId
+    }
     return config
   })
 

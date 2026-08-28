@@ -161,6 +161,15 @@ export const documentsModule = defineJbmModule({
   ],
 })
 
+export const bigscreenModule = defineJbmModule({
+  id: 'jbm.bigscreen',
+  version: VERSION,
+  navigation: navigation('可视化管理'),
+  routes: [
+    { path: 'bigscreen/views', name: 'bigscreen-views', component: () => import('@/views/bigscreen/BigscreenManagement.vue'), meta: { title: '大屏管理', menuCode: 'bigscreen_views' } },
+  ],
+})
+
 export const adminChildModules: JbmFrontendModule[] = [
   coreModule,
   systemModule,
@@ -169,6 +178,7 @@ export const adminChildModules: JbmFrontendModule[] = [
   gatewayModule,
   messagesModule,
   jobsModule,
+  bigscreenModule,
   documentsModule,
   logsModule,
 ]

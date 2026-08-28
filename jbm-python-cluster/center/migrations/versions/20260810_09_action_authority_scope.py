@@ -7,6 +7,7 @@ Revises: 20260810_08
 from collections.abc import Sequence
 
 from alembic import op
+from sqlalchemy import BigInteger, Column, String, inspect
 
 revision: str = "20260810_09"
 down_revision: str | None = "20260810_08"
@@ -15,6 +16,19 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    action_columns = {column["name"] for column in inspect(bind).get_columns("base_action")}
+    if "app_id" not in action_columns:
+        op.add_column("base_action", Column("app_id", BigInteger(), nullable=True))
+
+    authority_columns = {
+        column["name"] for column in inspect(bind).get_columns("base_authority")
+    }
+    if "app_id" not in authority_columns:
+        op.add_column("base_authority", Column("app_id", BigInteger(), nullable=True))
+    if "resource_type" not in authority_columns:
+        op.add_column("base_authority", Column("resource_type", String(20), nullable=True))
+
     op.execute(
         """UPDATE base_action action
            JOIN base_menu menu ON menu.menu_id = action.menu_id

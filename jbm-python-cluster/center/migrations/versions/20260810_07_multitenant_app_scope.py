@@ -18,7 +18,19 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     bind = op.get_bind()
     inspector = inspect(bind)
+    role_columns = {column["name"] for column in inspector.get_columns("base_role")}
+    if "app_id" not in role_columns:
+        op.add_column("base_role", Column("app_id", BigInteger(), nullable=True))
+    if "parent_id" not in role_columns:
+        op.add_column("base_role", Column("parent_id", BigInteger(), nullable=True))
+
+    app_columns = {column["name"] for column in inspector.get_columns("base_app")}
+    if "org_id" not in app_columns:
+        op.add_column("base_app", Column("org_id", BigInteger(), nullable=True))
+
     role_user_columns = {column["name"] for column in inspector.get_columns("base_role_user")}
+    if "app_id" not in role_user_columns:
+        op.add_column("base_role_user", Column("app_id", BigInteger(), nullable=True))
     if "tenant_id" not in role_user_columns:
         op.add_column("base_role_user", Column("tenant_id", BigInteger(), nullable=True))
 

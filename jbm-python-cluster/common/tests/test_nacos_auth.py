@@ -89,7 +89,7 @@ async def test_nacos_registrar_retries_until_registration_succeeds(monkeypatch) 
     client = FakeClient()
     monkeypatch.setitem(sys.modules, "nacos", SimpleNamespace())
     monkeypatch.setattr(nacos_integration, "create_nacos_client", lambda *_args: client)
-    monkeypatch.setattr(nacos_integration, "local_ip", lambda: "127.0.0.1")
+    monkeypatch.setattr(nacos_integration, "local_ip", lambda _server_addr: "127.0.0.1")
 
     registrar = nacos_integration.NacosRegistrar(
         "test-service",

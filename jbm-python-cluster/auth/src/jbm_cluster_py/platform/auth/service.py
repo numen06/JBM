@@ -199,6 +199,7 @@ class AuthService:
         self.account_domain = str(self.config.get("account-domain") or "@admin.com")
         self.max_errors = int(self.config.get("login-error-number") or 5)
         self.lock_minutes = int(self.config.get("login-error-limit-minutes") or 10)
+        self.login_captcha_required = _truthy(self.config.get("login-captcha-required", False))
         self.max_sessions_per_user = max(int(self.config.get("max-sessions-per-user") or 5), 1)
         self.require_pkce = _truthy(self.config.get("require-pkce", True))
         self.require_https_redirects = _truthy(self.config.get("require-https-redirects", True))
@@ -418,7 +419,9 @@ class AuthService:
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
         login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
-        if login_type == "PASSWORD" and form.get("vcode"):
+        if login_type in {"PASSWORD", "SMS"} and (
+            self.login_captcha_required or form.get("vcode")
+        ):
             await self.verify_captcha(str(form.get("vcode") or ""))
         if login_type == "PASSWORD" and (
             _truthy(form.get("password_encrypted")) or _looks_like_ciphertext(password)
@@ -426,8 +429,16 @@ class AuthService:
             password = _decrypt_password(password, str(client.get("privateKey") or ""))
         if not username or not password:
             raise AuthError("用户名或密码不能为空", 400)
+        if login_type in {"PASSWORD", "SMS"}:
+            count = await self.cache.login_error_count(username)
+            if count >= self.max_errors:
+                raise AuthError("登录失败次数过多，帐户锁定%s分钟" % self.lock_minutes, 423)
         if login_type == "SMS":
-            await self.verify_phone_code(username, password)
+            try:
+                await self.verify_phone_code(username, password)
+            except AuthError:
+                await self.cache.add_login_error(username, self.lock_minutes)
+                raise
             account = await self.repository.find_account(username, "mobile", self.account_domain)
             if not account:
                 users = await self.repository.find_users_by_mobile(username)
@@ -448,14 +459,12 @@ class AuthService:
             user = await self.repository.find_user(int(account["user_id"]))
             if not user or not user_is_active(user):
                 raise AuthError("用户已被禁用", 403)
+            await self.cache.clear_login_error(username)
             return dict(account), dict(user), str(form.get("scope") or "all")
         if login_type in {"FACE", "WECHAT", "MINIAPP"}:
             return await self._authenticate_external_login(login_type, username, password, form)
         if login_type != "PASSWORD":
             raise AuthError("不支持的登录模式: %s" % login_type, 400)
-        count = await self.cache.login_error_count(username)
-        if count >= self.max_errors:
-            raise AuthError("密码错误次数过多，帐户锁定%s分钟" % self.lock_minutes, 423)
         account_type = str(form.get("account_type") or infer_account_type(username))
         account = await self.repository.find_account(username, account_type, self.account_domain)
         if not account or not _secret_matches(
@@ -732,6 +741,7 @@ class AuthService:
     async def userinfo(self, token: str) -> dict[str, Any]:
         claims = self.signer.verify(token)
         await self._require_active_access(token, claims)
+        permissions = await self._permissions_for_claims(claims)
         return {
             "sub": claims.get("sub"),
             "userId": claims.get("user_id"),
@@ -747,7 +757,7 @@ class AuthService:
             "departmentId": claims.get("department_id"),
             "userType": claims.get("user_type"),
             "roles": claims.get("roles") or [],
-            "permissions": claims.get("permissions") or [],
+            "permissions": permissions,
             "scope": claims.get("scope"),
             "mustChangePassword": bool(claims.get("must_change_password")),
         }
@@ -849,7 +859,7 @@ class AuthService:
             raise AuthError("未登录", 401)
         claims = self.signer.verify(token)
         await self._require_active_access(token, claims)
-        token_permissions = {str(item) for item in claims.get("permissions") or [] if item}
+        token_permissions = set(await self._permissions_for_claims(claims))
         if not permissions:
             return
         expanded = set(token_permissions)
@@ -861,6 +871,21 @@ class AuthService:
         if "admin" == str(claims.get("username") or "").lower() or expanded.intersection(permissions):
             return
         raise AuthError("无权限访问", 403)
+
+    async def _permissions_for_claims(self, claims: Mapping[str, Any]) -> list[str]:
+        embedded = claims.get("permissions")
+        if isinstance(embedded, list):
+            return [str(item) for item in embedded if item]
+        user_id = int(claims.get("user_id") or 0)
+        if not user_id:
+            return []
+        rows = await self.repository.user_authorities(
+            user_id,
+            bool(claims.get("root")) or str(claims.get("username") or "").lower() == "admin",
+            int(claims.get("app_id") or 0),
+            int(claims.get("tenant_id") or 0),
+        )
+        return [str(item) for item in rows if item]
 
     async def _require_active_access(self, token: str, claims: Mapping[str, Any]) -> None:
         jti = str(claims.get("jti") or "")
@@ -1459,7 +1484,7 @@ class AuthService:
             "app_id": app_id,
             "user_type": user.get("user_type"),
             "roles": role_codes,
-            "permissions": permissions,
+            "root": root,
             "scope": scope,
             "must_change_password": bool(account.get("must_change_password")),
             "iat": now,

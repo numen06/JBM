@@ -29,6 +29,7 @@ import {
   LogIn,
   Files,
   Webhook,
+  MonitorUp,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -236,6 +237,18 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         icon: ClipboardList,
         to: '/jobs/logs',
         menuCodes: ['job_logs', 'task_job_logs', 'monitor_job_log'],
+      },
+    ],
+  },
+  {
+    label: '可视化管理',
+    items: [
+      {
+        name: 'bigscreen-views',
+        title: '大屏管理',
+        icon: MonitorUp,
+        to: '/bigscreen/views',
+        menuCodes: ['bigscreen_views'],
       },
     ],
   },

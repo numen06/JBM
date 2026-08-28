@@ -1,0 +1,1 @@
+export { bigscreenModule } from './modules'

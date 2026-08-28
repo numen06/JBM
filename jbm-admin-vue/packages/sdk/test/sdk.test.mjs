@@ -1,13 +1,43 @@
 import assert from 'node:assert/strict'
 import { createHash, webcrypto } from 'node:crypto'
+import { createServer } from 'node:http'
 import test from 'node:test'
 import {
   buildJbmAuthorizationUrl,
+  createJbmClient,
   createJbmOAuthState,
   createJbmPkcePair,
   createJbmServiceClient,
   unwrapJbmResult,
 } from '../dist/index.js'
+
+test('client sends the standard and legacy tenant headers with the same active tenant', async () => {
+  let headers
+  const server = createServer((request, response) => {
+    headers = request.headers
+    response.setHeader('content-type', 'application/json')
+    response.end('{}')
+  })
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+  try {
+    const address = server.address()
+    const client = createJbmClient({
+      baseUrl: `http://127.0.0.1:${address.port}`,
+      tokenProvider: {
+        getAccessToken: () => undefined,
+        getRefreshToken: () => undefined,
+        updateTokens: () => {},
+        clearTokens: () => {},
+      },
+      tenantProvider: { getTenantId: () => 'tenant-active' },
+    })
+    await client.get('/headers')
+    assert.equal(headers['x-tenant-id'], 'tenant-active')
+    assert.equal(headers.tenantid, 'tenant-active')
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+  }
+})
 
 test('service client always prefixes an explicit service path', async () => {
   let calledPath = ''

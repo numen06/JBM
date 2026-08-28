@@ -6,6 +6,7 @@ import path from 'node:path'
 const entries = [
   'index', 'auth', 'system', 'authority', 'gateway', 'logs',
   'messages', 'jobs', 'documents', 'openapi', 'shell', 'host',
+  'bigscreen',
 ]
 
 export default defineConfig({

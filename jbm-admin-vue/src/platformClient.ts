@@ -24,7 +24,7 @@ export function createAdminPlatformClient(router: Router) {
       clearTokens: () => useAuthStore().clearSession(),
     },
     tenantProvider: {
-      getTenantId: () => useAuthStore().tenantId || undefined,
+      getTenantId: () => useAuthStore().activeTenantId || useAuthStore().tenantId || undefined,
     },
     refreshTokens: async (refreshToken) => {
       const auth = useAuthStore()

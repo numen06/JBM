@@ -150,6 +150,34 @@ class RouteRepository:
         return None
 
     def _ensure_compat_routes(self) -> None:
+        service_prefixes = (
+            ("auth", "jbm-cluster-platform-auth"),
+            ("center", "jbm-cluster-platform-center"),
+        )
+        for prefix, service_id in service_prefixes:
+            path = f"/{prefix}/**"
+            expected = GatewayRoute(
+                route_name=f"{prefix}-service",
+                path=path,
+                service_id=service_id,
+                strip_prefix=1,
+            )
+            existing_index = next(
+                (index for index, route in enumerate(self.routes) if route.path == path),
+                None,
+            )
+            if existing_index is None:
+                self.routes.append(expected)
+            else:
+                existing = self.routes[existing_index]
+                if existing.service_id == service_id and existing.strip_prefix != 1:
+                    self.routes[existing_index] = GatewayRoute(
+                        route_name=existing.route_name,
+                        path=existing.path,
+                        service_id=existing.service_id,
+                        url=existing.url,
+                        strip_prefix=1,
+                    )
         if not any(route.path == "/online/**" for route in self.routes):
             self.routes.append(
                 GatewayRoute(

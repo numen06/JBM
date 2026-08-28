@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock, call
 
 import pytest
@@ -72,7 +73,17 @@ async def test_only_super_admin_can_manage_app_login_branding(identity: dict) ->
 
     with pytest.raises(HTTPException) as error:
         await service.handle("GET", "/baseAppConfig/{appId}", {"appId": 3000}, {}, {}, identity)
+    assert error.value.status_code == 403
 
+    with pytest.raises(HTTPException) as error:
+        await service.handle(
+            "PUT",
+            "/baseAppConfig/{appId}",
+            {"appId": 3000},
+            {},
+            {"title": "智慧建筑平台", "sysBg": "put/login.jpg"},
+            identity,
+        )
     assert error.value.status_code == 403
 
 
@@ -112,9 +123,14 @@ async def test_super_admin_updates_app_login_branding_without_losing_other_confi
     )
 
     saved_config = store.save.await_args_list[0].args[1]["configContent"]
-    assert '"desc": "保留说明"' in saved_config
-    assert '"sysBg": "party-school.png"' in saved_config
-    assert result["result"]["configContent"]["sysLogo"] == ""
+    config = json.loads(saved_config)
+    assert config == {
+        "desc": "保留说明",
+        "title": "中共江西省委党校智慧建筑平台",
+        "sysBg": "party-school.png",
+        "sysLogo": "",
+    }
+    assert result["result"]["configContent"] == config
     assert call("app", {"appName": "中共江西省委党校智慧建筑平台"}, 3000) in store.save.await_args_list
 
 

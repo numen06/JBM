@@ -1,5 +1,5 @@
 ARG PYTHON_RUNTIME=m.daocloud.io/docker.io/python:3.12
-ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/node:22-alpine
+ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine
 ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine
 
 FROM ${PYTHON_RUNTIME} AS jbm-runtime
@@ -47,6 +47,8 @@ FROM jbm-runtime AS jbm-cluster-platform-job
 FROM jbm-runtime AS jbm-cluster-platform-logs
 FROM jbm-runtime AS jbm-cluster-platform-bigscreen
 
+# The frontend output is architecture-independent. Build it once on the native
+# BuildKit node and copy it into each target-architecture nginx image.
 FROM --platform=$BUILDPLATFORM ${NODE_BUILD_IMAGE} AS jbm-admin-builder
 WORKDIR /jbm
 COPY jbm-admin-vue/package*.json ./

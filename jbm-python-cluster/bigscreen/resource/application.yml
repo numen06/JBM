@@ -9,6 +9,12 @@ jbm:
   bigscreen:
     views-dir: ./data/views
     doc-base-url: http://jbm-cluster-platform-doc:9999
+    max-package-bytes: 104857600
+    max-unpacked-bytes: 524288000
+    max-package-files: 5000
+    security:
+      enabled: true
+      userinfo-url: http://jbm-cluster-platform-auth:5555/oauth2/userinfo
   python:
     app: bigscreen
     openapi:

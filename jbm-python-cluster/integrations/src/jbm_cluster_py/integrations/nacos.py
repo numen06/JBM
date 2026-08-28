@@ -4,7 +4,7 @@ import logging
 import socket
 from contextlib import suppress
 from typing import Any, Mapping, Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import ProxyHandler, build_opener
 
 from jbm_cluster_py.common.nacos import create_nacos_client
@@ -12,10 +12,16 @@ from jbm_cluster_py.common.nacos import create_nacos_client
 logger = logging.getLogger(__name__)
 
 
-def local_ip() -> str:
+def local_ip(server_addr: str = "") -> str:
+    host, port = "8.8.8.8", 80
+    first_server = server_addr.split(",", 1)[0].strip()
+    if first_server:
+        parsed = urlsplit(first_server if "://" in first_server else f"//{first_server}")
+        host = parsed.hostname or host
+        port = parsed.port or 8848
     probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        probe.connect(("8.8.8.8", 80))
+        probe.connect((host, port))
         return probe.getsockname()[0]
     except OSError:
         return "127.0.0.1"
@@ -29,7 +35,7 @@ class NacosRegistrar:
         self.port = port
         self.config = dict(config)
         self.enabled = bool(self.config.get("enabled", True))
-        self.ip = local_ip()
+        self.ip = local_ip(str(self.config.get("server-addr") or ""))
         self.client: Optional[Any] = None
         self._registered = False
         self._registration_task: Optional[asyncio.Task[None]] = None

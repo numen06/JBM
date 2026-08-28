@@ -17,6 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
   const refreshToken = ref(localStorage.getItem(REFRESH_KEY) || sessionStorage.getItem(REFRESH_KEY) || '')
   const clientId = ref(localStorage.getItem(CLIENT_ID_KEY) || JBM_DEFAULT_CLIENT_ID)
   const tenantId = ref('0')
+  const activeTenantId = ref('0')
   const user = ref<CurrentUser | null>(null)
   const mustChangePassword = ref(false)
   let storageSyncBound = false
@@ -108,6 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       user.value = await getCurrentUser()
       tenantId.value = String(user.value?.companyId || '0')
+      activeTenantId.value = tenantId.value
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(isSuperAdminUser(user.value))
       menuStore.setAuthorityCodes(
@@ -117,6 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       user.value = null
       tenantId.value = '0'
+      activeTenantId.value = '0'
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(false)
       menuStore.setAuthorityCodes([])
@@ -145,6 +148,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = ''
     user.value = null
     tenantId.value = '0'
+    activeTenantId.value = '0'
     mustChangePassword.value = false
     useMenuStore().clear()
     localStorage.removeItem(TOKEN_KEY)
@@ -183,6 +187,10 @@ export const useAuthStore = defineStore('auth', () => {
     mustChangePassword.value = false
   }
 
+  function setActiveTenant(value: string) {
+    activeTenantId.value = String(value || tenantId.value || '0')
+  }
+
   async function init() {
     if (accessToken.value) {
       const currentUser = await fetchUser()
@@ -199,6 +207,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     clientId,
     tenantId,
+    activeTenantId,
     user,
     mustChangePassword,
     isLoggedIn,
@@ -210,6 +219,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithToken,
     applyToken,
     clearMustChangePassword,
+    setActiveTenant,
     logout,
     refreshAccessToken,
     fetchUser,

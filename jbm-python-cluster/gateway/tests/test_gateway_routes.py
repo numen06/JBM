@@ -49,6 +49,12 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
         {},
         [
             {
+                "routeName": "legacy-auth",
+                "path": "/auth/**",
+                "serviceId": "jbm-cluster-platform-auth",
+                "stripPrefix": 0,
+            },
+            {
                 "routeName": "push",
                 "path": "/push/**",
                 "serviceId": "jbm-cluster-platform-push",
@@ -67,6 +73,20 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
         "jbm-cluster-platform-auth",
         None,
         0,
+    )
+    assert repo.match("/auth/oauth2/publicKey") == GatewayRoute(
+        "legacy-auth",
+        "/auth/**",
+        "jbm-cluster-platform-auth",
+        None,
+        1,
+    )
+    assert repo.match("/center/current/user") == GatewayRoute(
+        "center-service",
+        "/center/**",
+        "jbm-cluster-platform-center",
+        None,
+        1,
     )
     assert repo.loaded_from == "fallback"
 

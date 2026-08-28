@@ -42,7 +42,9 @@ export interface JbmAdminHostHandle {
     readonly accessToken: string
     readonly refreshToken: string
     readonly tenantId: string
+    readonly activeTenantId: string
     readonly user: unknown
+    setActiveTenant(tenantId: string): void
     login(username: string, password: string, options?: { vcode?: string; loginType?: string }): Promise<boolean>
     registerTenant(params: {
       tenantName?: string
@@ -111,6 +113,7 @@ export const logsModule: JbmFrontendModule
 export const messagesModule: JbmFrontendModule
 export const jobsModule: JbmFrontendModule
 export const documentsModule: JbmFrontendModule
+export const bigscreenModule: JbmFrontendModule
 export const adminChildModules: JbmFrontendModule[]
 export const adminModules: JbmFrontendModule[]
 export const adminHostRoutes: RouteRecordRaw[]

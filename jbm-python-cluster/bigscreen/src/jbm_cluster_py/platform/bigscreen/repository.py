@@ -32,8 +32,11 @@ class BigscreenRepository:
         async with self.engine.begin() as conn:
             await conn.execute(
                 text("""CREATE TABLE IF NOT EXISTS bigscreen_view (
-                id VARCHAR(64) PRIMARY KEY, code VARCHAR(128), app_id VARCHAR(64), parent_id VARCHAR(64),
-                view_name VARCHAR(255), view_url VARCHAR(255), static_params TEXT, resource_path VARCHAR(1024),
+                id VARCHAR(64) PRIMARY KEY, code VARCHAR(128), app_id VARCHAR(64),
+                parent_id VARCHAR(64),
+                tenant_id VARCHAR(64), project_id VARCHAR(64), created_by VARCHAR(64),
+                view_name VARCHAR(255), view_url VARCHAR(255), static_params TEXT,
+                resource_path VARCHAR(1024),
                 preview_picture VARCHAR(1024), version VARCHAR(64), config_data TEXT,
                 create_time VARCHAR(64), update_time VARCHAR(64), extend_data TEXT
             )""")
@@ -42,12 +45,14 @@ class BigscreenRepository:
     async def stop(self) -> None:
         await self.engine.dispose()
 
-    async def get(self, view_id: str) -> dict[str, Any] | None:
+    async def get(self, view_id: str, tenant_id: str | None = None) -> dict[str, Any] | None:
+        clause = " AND tenant_id=:tenant_id" if tenant_id is not None else ""
+        params = {"id": view_id, "tenant_id": tenant_id}
         async with self.engine.connect() as conn:
             row = (
                 (
                     await conn.execute(
-                        text("SELECT * FROM bigscreen_view WHERE id=:id"), {"id": view_id}
+                        text(f"SELECT * FROM bigscreen_view WHERE id=:id{clause}"), params
                     )
                 )
                 .mappings()
@@ -55,12 +60,18 @@ class BigscreenRepository:
             )
         return self._from_db(dict(row)) if row else None
 
-    async def save(self, body: Mapping[str, Any]) -> dict[str, Any]:
-        current = await self.get(str(body.get("id") or "")) if body.get("id") else None
+    async def save(
+        self, body: Mapping[str, Any], tenant_id: str | None = None
+    ) -> dict[str, Any]:
+        current = (
+            await self.get(str(body.get("id") or ""), tenant_id) if body.get("id") else None
+        )
         data = {
             **(current or {}),
             **{key: value for key, value in body.items() if value is not None},
         }
+        if tenant_id is not None:
+            data["tenantId"] = tenant_id
         data.setdefault("id", uuid.uuid4().hex)
         data.setdefault("createTime", now_iso())
         data["updateTime"] = now_iso()
@@ -69,13 +80,20 @@ class BigscreenRepository:
             await conn.execute(text("DELETE FROM bigscreen_view WHERE id=:id"), row)
             await conn.execute(
                 text(
-                    f"INSERT INTO bigscreen_view ({', '.join(row)}) VALUES ({', '.join(':' + c for c in row)})"
+                    f"INSERT INTO bigscreen_view ({', '.join(row)}) "
+                    f"VALUES ({', '.join(':' + c for c in row)})"
                 ),
                 row,
             )
         return self._from_db(row)
 
-    async def page(self, body: Mapping[str, Any], all_rows: bool = False) -> dict[str, Any]:
+    async def page(
+        self,
+        body: Mapping[str, Any],
+        all_rows: bool = False,
+        tenant_id: str | None = None,
+        project_id: str | None = None,
+    ) -> dict[str, Any]:
         query = (
             body.get("bigscreenView") if isinstance(body.get("bigscreenView"), Mapping) else body
         )
@@ -92,6 +110,7 @@ class BigscreenRepository:
             "viewName": "view_name",
             "viewUrl": "view_url",
             "version": "version",
+            "projectId": "project_id",
         }
         where, params = [], {}
         for key, column in mapping.items():
@@ -100,6 +119,12 @@ class BigscreenRepository:
                 continue
             params[key] = f"%{value}%"
             where.append(f"{column} LIKE :{key}")
+        if tenant_id is not None:
+            params["scope_tenant_id"] = tenant_id
+            where.append("tenant_id = :scope_tenant_id")
+        if project_id:
+            params["scope_project_id"] = project_id
+            where.append("project_id = :scope_project_id")
         clause = " WHERE " + " AND ".join(where) if where else ""
         curr, size = max(page.curr_page, 1), max(page.page_size, 1)
         async with self.engine.connect() as conn:
@@ -110,7 +135,8 @@ class BigscreenRepository:
                 (
                     await conn.execute(
                         text(
-                            f"SELECT * FROM bigscreen_view{clause} ORDER BY update_time DESC LIMIT :limit OFFSET :offset"
+                            f"SELECT * FROM bigscreen_view{clause} "
+                            "ORDER BY update_time DESC LIMIT :limit OFFSET :offset"
                         ),
                         {**params, "limit": size, "offset": (curr - 1) * size},
                     )
@@ -120,19 +146,26 @@ class BigscreenRepository:
             )
         return java_page([self._from_db(dict(row)) for row in rows], int(total or 0), page)
 
-    async def children(self, parent_id: str) -> int:
+    async def children(self, parent_id: str, tenant_id: str | None = None) -> int:
+        clause = " AND tenant_id=:tenant_id" if tenant_id is not None else ""
         async with self.engine.connect() as conn:
             value = (
                 await conn.execute(
-                    text("SELECT COUNT(*) FROM bigscreen_view WHERE parent_id=:id"),
-                    {"id": parent_id},
+                    text(f"SELECT COUNT(*) FROM bigscreen_view WHERE parent_id=:id{clause}"),
+                    {"id": parent_id, "tenant_id": tenant_id},
                 )
             ).scalar()
         return int(value or 0)
 
-    async def delete(self, view_id: str) -> bool:
+    async def delete(self, view_id: str, tenant_id: str | None = None) -> bool:
+        clause = " AND tenant_id=:tenant_id" if tenant_id is not None else ""
         async with self.engine.begin() as conn:
-            await conn.execute(text("DELETE FROM bigscreen_view WHERE id=:id"), {"id": view_id})
+            result = await conn.execute(
+                text(f"DELETE FROM bigscreen_view WHERE id=:id{clause}"),
+                {"id": view_id, "tenant_id": tenant_id},
+            )
+        if result.rowcount == 0:
+            raise ValueError("大屏不存在或无权访问")
         return True
 
     @staticmethod
@@ -142,6 +175,9 @@ class BigscreenRepository:
             "code": row.get("code"),
             "app_id": row.get("appId"),
             "parent_id": row.get("parentId"),
+            "tenant_id": row.get("tenantId"),
+            "project_id": row.get("projectId"),
+            "created_by": row.get("createdBy"),
             "view_name": row.get("viewName"),
             "view_url": row.get("viewUrl"),
             "static_params": row.get("staticParams"),
@@ -167,6 +203,9 @@ class BigscreenRepository:
         mapping = {
             "app_id": "appId",
             "parent_id": "parentId",
+            "tenant_id": "tenantId",
+            "project_id": "projectId",
+            "created_by": "createdBy",
             "view_name": "viewName",
             "view_url": "viewUrl",
             "static_params": "staticParams",

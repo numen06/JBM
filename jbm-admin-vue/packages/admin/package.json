@@ -14,6 +14,7 @@
     "./messages": { "types": "./public.d.ts", "import": "./dist/messages.js" },
     "./jobs": { "types": "./public.d.ts", "import": "./dist/jobs.js" },
     "./documents": { "types": "./public.d.ts", "import": "./dist/documents.js" },
+    "./bigscreen": { "types": "./public.d.ts", "import": "./dist/bigscreen.js" },
     "./openapi": { "types": "./public.d.ts", "import": "./dist/openapi.js" },
     "./shell": { "types": "./public.d.ts", "import": "./dist/shell.js" },
     "./host": { "types": "./public.d.ts", "import": "./dist/host.js" },

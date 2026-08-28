@@ -91,6 +91,16 @@ async def test_center_core_compatibility(tmp_path) -> None:
             assert apps["total"] == 1
             assert "secretKey" not in apps["contents"][0]
             assert "privateKey" not in apps["contents"][0]
+            branding = (await client.get("/baseAppConfig/1000")).json()["result"]
+            assert branding["configContent"]["title"] == "JBM基础应用"
+            updated_branding = (
+                await client.put(
+                    "/baseAppConfig/1000",
+                    json={"title": "统一登录平台", "sysBg": "put/login.jpg", "sysLogo": "put/logo.png"},
+                )
+            ).json()["result"]
+            assert updated_branding["configContent"]["sysBg"] == "put/login.jpg"
+            assert updated_branding["configContent"]["sysLogo"] == "put/logo.png"
             secret_response = await client.get("/app/1000/secret")
             assert secret_response.status_code == 400
             reset_secret = await client.put("/app/1000/secret")
@@ -137,6 +147,7 @@ def _seed(path) -> None:
         CREATE TABLE base_org (id INTEGER PRIMARY KEY, parent_id INTEGER, org_name TEXT, org_code TEXT, status INTEGER, level INTEGER);
         CREATE TABLE base_dic (id INTEGER PRIMARY KEY, parent_id INTEGER, name TEXT, code TEXT, remark TEXT);
         CREATE TABLE base_app (app_id INTEGER PRIMARY KEY, code TEXT, api_key TEXT, app_name TEXT, app_type TEXT, status INTEGER, org_id INTEGER, secret_key TEXT, private_key TEXT, public_key TEXT);
+        CREATE TABLE base_app_config (id INTEGER PRIMARY KEY, app_id INTEGER, app_key TEXT, config_content TEXT, org_id INTEGER, create_time TEXT, update_time TEXT);
         CREATE TABLE gateway_route (route_id INTEGER PRIMARY KEY, route_name TEXT, path TEXT, service_id TEXT, url TEXT, strip_prefix INTEGER, status INTEGER);
         CREATE TABLE base_api (api_id INTEGER PRIMARY KEY);
         CREATE TABLE base_api_key (key_id INTEGER PRIMARY KEY);
@@ -153,6 +164,7 @@ def _seed(path) -> None:
         INSERT INTO base_dic VALUES (1, NULL, '启用状态', 'sys_status', NULL);
         INSERT INTO base_dic VALUES (2, 1, '启用', '1', NULL);
         INSERT INTO base_app VALUES (1000, NULL, 'jbmSeedDevAppKey00000001', 'JBM基础应用', 'pc', 1, 1, 'client-secret', 'private-key', 'public-key');
+        INSERT INTO base_app_config VALUES (1, 1000, 'jbm-1000', '{"title":"JBM基础应用","desc":"保留说明"}', NULL, NULL, NULL);
         INSERT INTO gateway_route VALUES (1000, 'center-default', '/**', 'jbm-cluster-platform-center-jbm7', NULL, 0, 1);
         """
     )
