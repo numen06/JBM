@@ -1194,7 +1194,11 @@ def _ids(query: Mapping[str, Any], body: Mapping[str, Any]) -> list[Any]:
 
 
 def _user_id(identity: Mapping[str, Any]) -> int:
-    value = identity.get("userId") or identity.get("user_id") or identity.get("sub")
+    value = identity.get("userId")
+    if value is None:
+        value = identity.get("user_id")
+    if value is None:
+        value = identity.get("sub")
     if value is None:
         raise ValueError("登录信息缺少 userId")
     return int(str(value).split("::", 1)[0])

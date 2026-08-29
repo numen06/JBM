@@ -17,6 +17,23 @@ SUPER_ADMIN = {"userId": 1, "tenantId": 1, "roles": ["super_admin"]}
 
 
 @pytest.mark.asyncio
+async def test_current_user_update_preserves_zero_user_id() -> None:
+    store = AsyncMock()
+    service = CompatibilityService(store, AsyncMock(), AsyncMock())
+
+    await service.handle(
+        "PUT",
+        "/current/user",
+        {},
+        {},
+        {"avatar": "avatars/example.png"},
+        {"userId": 0, "sub": "normal:1805188141576134658:0"},
+    )
+
+    store.save.assert_awaited_once_with("user", {"avatar": "avatars/example.png"}, 0)
+
+
+@pytest.mark.asyncio
 async def test_tenant_filters_override_client_values() -> None:
     repository = AsyncMock()
     repository.list_users.return_value = ([{"userId": 2002, "companyId": 2000}], 1)
