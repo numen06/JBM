@@ -59,6 +59,12 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
                 "path": "/push/**",
                 "serviceId": "jbm-cluster-platform-push",
                 "stripPrefix": 1,
+            },
+            {
+                "routeName": "legacy-doc",
+                "path": "/doc/**",
+                "serviceId": "jbm-cluster-platform-doc",
+                "stripPrefix": 0,
             }
         ],
     )
@@ -85,6 +91,13 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
         "center-service",
         "/center/**",
         "jbm-cluster-platform-center",
+        None,
+        1,
+    )
+    assert repo.match("/doc/upload") == GatewayRoute(
+        "legacy-doc",
+        "/doc/**",
+        "jbm-cluster-platform-doc",
         None,
         1,
     )
