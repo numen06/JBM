@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { defineJbmModule, JbmSidebarNavigation, JbmWorkspaceNavigation, registerJbmModules } from '../dist/index.js'
+import { defineJbmModule, JbmProductHeader, JbmSidebarNavigation, JbmWorkspaceNavigation, registerJbmModules } from '../dist/index.js'
 
 test('module id must be namespaced', () => {
   assert.throws(() => defineJbmModule({ id: 'gateway', version: '1.0.0', routes: [] }), /namespaced id/)
@@ -53,6 +53,21 @@ test('shared shell navigation renders workspaces, icons and active menu state', 
   assert.match(html, /data-test-icon/)
   assert.match(html, /jbm-sidebar-nav__item is-active/)
   assert.match(html, /aria-current="page"/)
+})
+
+test('shared product header keeps application context and actions in one shell', async () => {
+  const app = createSSRApp({
+    render: () => h(JbmProductHeader, { eyebrow: 'IoT 数据工作区', title: '设备总览' }, {
+      navigation: () => h('button', { 'aria-label': '打开菜单' }, 'menu'),
+      context: () => h('select', { 'aria-label': '数据租户' }, [h('option', '会昌县人民政府')]),
+      actions: () => h('button', { 'aria-label': '用户菜单' }, 'admin'),
+    }),
+  })
+  const html = await renderToString(app)
+  assert.match(html, /jbm-product-header/)
+  assert.match(html, /IoT 数据工作区/)
+  assert.match(html, /aria-label="数据租户"/)
+  assert.match(html, /aria-label="用户菜单"/)
 })
 
 test('shared shell navigation keeps only the most specific active menu item', async () => {

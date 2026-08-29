@@ -66,6 +66,27 @@ export interface JbmShellNavigationGroup {
 
 const navigateEmits = { navigate: (_path: string) => true }
 
+export const JbmProductHeader = defineComponent({
+  name: 'JbmProductHeader',
+  props: {
+    eyebrow: { type: String, default: '' },
+    title: { type: String, required: true },
+  },
+  setup(props, { slots }) {
+    return () => h('header', { class: 'jbm-product-header' }, [
+      h('div', { class: 'jbm-product-header__leading' }, [
+        slots.navigation?.(),
+        h('div', { class: 'jbm-product-header__heading' }, [
+          props.eyebrow ? h('div', { class: 'jbm-product-header__eyebrow' }, props.eyebrow) : null,
+          h('h1', { class: 'jbm-product-header__title' }, props.title),
+        ]),
+      ]),
+      slots.context ? h('div', { class: 'jbm-product-header__context' }, slots.context()) : null,
+      slots.actions ? h('div', { class: 'jbm-product-header__actions' }, slots.actions()) : null,
+    ])
+  },
+})
+
 export const JbmWorkspaceNavigation = defineComponent({
   name: 'JbmWorkspaceNavigation',
   props: {

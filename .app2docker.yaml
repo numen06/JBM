@@ -11,7 +11,7 @@ build:
 image:
   name: jbm-python-cluster
   prefix: registry.cn-shanghai.aliyuncs.com/okc
-  tag: py-7.3.13
+  tag: py-7.3.14
   push: true
 
 push_mode: multi
