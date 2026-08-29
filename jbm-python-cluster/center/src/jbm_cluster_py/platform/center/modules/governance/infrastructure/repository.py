@@ -122,7 +122,8 @@ class SqlGovernanceRepository:
             params["app_id"] = app_id
         if is_admin:
             return await self._all(
-                "SELECT authority_id, authority FROM base_authority WHERE status = 1"
+                "SELECT authority_id, authority FROM base_authority "
+                "WHERE status = 1 AND authority NOT LIKE 'API#_%' ESCAPE '#'"
                 + app_clause
                 + " ORDER BY authority_id",
                 params,
@@ -132,6 +133,7 @@ class SqlGovernanceRepository:
             SELECT DISTINCT a.authority_id, a.authority
             FROM base_authority a
             WHERE a.status = 1
+              AND a.authority NOT LIKE 'API#_%' ESCAPE '#'
               AND (:app_id IS NULL OR (a.app_id IS NULL OR a.app_id = :app_id))
               AND (
               EXISTS (

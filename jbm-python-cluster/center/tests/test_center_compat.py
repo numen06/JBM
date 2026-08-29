@@ -41,7 +41,7 @@ async def test_center_core_compatibility(tmp_path) -> None:
             current = (await client.get("/current/user")).json()["result"]
             assert current["userName"] == "admin"
             assert current["roles"][0]["roleCode"] == "super_admin"
-            assert current["authorities"][0]["authority"] == "MENU_dashboard"
+            assert [item["authority"] for item in current["authorities"]] == ["MENU_dashboard"]
 
             menus = (await client.get("/current/user/menus")).json()["result"]
             assert menus[0]["menuCode"] == "dashboard"
@@ -158,6 +158,7 @@ def _seed(path) -> None:
         INSERT INTO base_user_org VALUES (1, 1, 1, NULL);
         INSERT INTO base_account VALUES (1, 1, 'admin', 'secret', 'username', 1, '@admin.com');
         INSERT INTO base_authority (authority_id, authority, menu_id, status) VALUES (1, 'MENU_dashboard', 1, 1);
+        INSERT INTO base_authority (authority_id, authority, menu_id, status) VALUES (2, 'API_dashboard_query', NULL, 1);
         INSERT INTO base_menu VALUES (1, 1000, NULL, 'dashboard', '仪表盘', NULL, '/dashboard', 1, 1, 1, 0);
         INSERT INTO base_menu VALUES (2, 1000, 1, 'settings', '设置', NULL, '/settings', 2, 1, 1, 0);
         INSERT INTO base_org VALUES (1, NULL, '默认组织', 'default', 1, 0);
