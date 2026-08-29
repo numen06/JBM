@@ -14,6 +14,17 @@ interface FeatureTenant {
   tenantCode?: string
 }
 
+interface TenantFeatureContext {
+  platform?: boolean
+  tenants?: FeatureTenant[]
+}
+
+interface RootOrg {
+  id?: string | number
+  orgName?: string
+  orgCode?: string
+}
+
 interface ReceivedDelegation {
   ownerTenantId?: string | number
   ownerTenantName?: string
@@ -69,15 +80,22 @@ export function createJbmTenantDirectory(
   return {
     async listAvailable(): Promise<JbmTenantOption[]> {
       const current = identity()
-      const [contextResult, delegationResult] = await Promise.allSettled([
-        client.get<{ result?: { tenants?: FeatureTenant[] } }>('/center/tenant-features/context'),
+      const [contextResult, delegationResult, rootResult] = await Promise.allSettled([
+        client.get<{ result?: TenantFeatureContext }>('/center/tenant-features/context'),
         client.get<{ result?: { contents?: ReceivedDelegation[] } }>('/center/tenant-delegation/received', {
           params: { 'pageForm.currPage': 1, 'pageForm.pageSize': 100 },
         }),
+        client.post<{ result?: RootOrg[] }>('/center/baseOrg/root', {}),
       ])
-      const platformTenants = contextResult.status === 'fulfilled'
-        ? contextResult.value.result?.tenants ?? []
-        : []
+      const context = contextResult.status === 'fulfilled' ? contextResult.value.result : undefined
+      const platformTenants = [...(context?.tenants ?? [])]
+      if (context?.platform && rootResult.status === 'fulfilled') {
+        platformTenants.push(...(rootResult.value.result ?? []).map(item => ({
+          tenantId: item.id,
+          tenantName: item.orgName,
+          tenantCode: item.orgCode,
+        })))
+      }
       const delegations = delegationResult.status === 'fulfilled'
         ? delegationResult.value.result?.contents ?? []
         : []
