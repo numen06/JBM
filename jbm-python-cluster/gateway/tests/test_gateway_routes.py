@@ -55,10 +55,10 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
                 "stripPrefix": 0,
             },
             {
-                "routeName": "push",
-                "path": "/push/**",
-                "serviceId": "jbm-cluster-platform-push",
-                "stripPrefix": 1,
+                "routeName": "legacy-logs",
+                "path": "/logs/**",
+                "serviceId": "jbm-cluster-platform-logs",
+                "stripPrefix": 0,
             },
             {
                 "routeName": "legacy-doc",
@@ -71,8 +71,15 @@ def test_route_repository_uses_fallback_when_database_disabled() -> None:
 
     asyncio.run(repo.start())
 
-    route = repo.match("/push/ws")
-    assert route == GatewayRoute("push", "/push/**", "jbm-cluster-platform-push", None, 1)
+    assert repo.match("/push/ws") == GatewayRoute(
+        "push-service", "/push/**", "jbm-cluster-platform-push", None, 1
+    )
+    assert repo.match("/logs/GatewayLogs/findLogs") == GatewayRoute(
+        "legacy-logs", "/logs/**", "jbm-cluster-platform-logs", None, 1
+    )
+    assert repo.match("/bigscreen/screen/page") == GatewayRoute(
+        "bigscreen-service", "/bigscreen/**", "jbm-cluster-platform-bigscreen", None, 1
+    )
     assert repo.match("/online/pageList") == GatewayRoute(
         "auth-online",
         "/online/**",

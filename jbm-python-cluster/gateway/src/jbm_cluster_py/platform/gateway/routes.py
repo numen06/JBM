@@ -154,6 +154,10 @@ class RouteRepository:
             ("auth", "jbm-cluster-platform-auth"),
             ("center", "jbm-cluster-platform-center"),
             ("doc", "jbm-cluster-platform-doc"),
+            ("push", "jbm-cluster-platform-push"),
+            ("logs", "jbm-cluster-platform-logs"),
+            ("job", "jbm-cluster-platform-job"),
+            ("bigscreen", "jbm-cluster-platform-bigscreen"),
         )
         for prefix, service_id in service_prefixes:
             path = f"/{prefix}/**"
