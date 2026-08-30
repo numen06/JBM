@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import json
@@ -14,12 +15,19 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import NullPool
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.platform.auth.main import _validate_production_auth_config, create_app
 from jbm_cluster_py.platform.auth.repository import AuthRepository, SQLITE_DDL, _client_oauth_settings
 from jbm_cluster_py.platform.auth.service import AuthError, AuthService, TokenCache, _secret_matches, _timestamp
+
+
+def test_auth_repository_does_not_reuse_stale_connections(tmp_path: Path) -> None:
+    repository = AuthRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'auth-pool.db'}"})
+    assert isinstance(repository.engine.pool, NullPool)
+    asyncio.run(repository.stop())
 
 
 def test_client_oauth_settings_accepts_mysql_json_mapping() -> None:

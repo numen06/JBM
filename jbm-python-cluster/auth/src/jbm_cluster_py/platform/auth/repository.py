@@ -11,6 +11,7 @@ from typing import Any, Mapping, Optional
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
@@ -43,7 +44,9 @@ class AuthRepository:
             db_path = database_url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.engine: AsyncEngine = create_async_engine(database_url, pool_pre_ping=True)
+        self.engine: AsyncEngine = create_async_engine(
+            database_url, pool_pre_ping=True, poolclass=NullPool
+        )
 
     async def start(self) -> None:
         if not self._sqlite:
