@@ -78,24 +78,24 @@ class AuthRepository:
             return
         now = datetime.now()
         async with self.engine.begin() as conn:
-            await conn.execute(
-                text(
-                    """
-                    INSERT INTO base_account_logs
-                      (user_id, account, login_type, login_time, ip, user_agent, status, message, create_time, update_time)
-                    VALUES
-                      (:user_id, :account, :login_type, :login_time, :ip, :user_agent, :status, :message, :login_time, :login_time)
-                    """
-                ),
+            await _insert_available(
+                conn,
+                "base_account_logs",
                 {
                     "user_id": user_id,
                     "account": account,
                     "login_type": login_type,
+                    "account_type": login_type,
                     "login_time": now,
                     "ip": ip[:64],
+                    "login_ip": ip[:64],
                     "user_agent": user_agent[:512],
+                    "login_agent": user_agent[:512],
                     "status": int(status),
+                    "login_status": int(status),
                     "message": str(message or "")[:512],
+                    "create_time": now,
+                    "update_time": now,
                 },
             )
 

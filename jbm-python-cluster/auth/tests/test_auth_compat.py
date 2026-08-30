@@ -30,6 +30,40 @@ def test_auth_repository_does_not_reuse_stale_connections(tmp_path: Path) -> Non
     asyncio.run(repository.stop())
 
 
+def test_login_audit_supports_legacy_columns(tmp_path: Path) -> None:
+    async def exercise() -> None:
+        repository = AuthRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'audit.db'}"})
+        async with repository.engine.begin() as conn:
+            await conn.execute(
+                text(
+                    "CREATE TABLE base_account_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "user_id INTEGER, account TEXT, account_type TEXT, login_time TEXT, "
+                    "login_ip TEXT, login_agent TEXT, login_status INTEGER, message TEXT, "
+                    "create_time TEXT, update_time TEXT)"
+                )
+            )
+        await repository.record_login(
+            user_id=1,
+            account="admin",
+            login_type="PASSWORD",
+            ip="127.0.0.1",
+            user_agent="pytest",
+        )
+        async with repository.engine.connect() as conn:
+            row = (
+                await conn.execute(
+                    text(
+                        "SELECT account_type,login_ip,login_agent,login_status "
+                        "FROM base_account_logs"
+                    )
+                )
+            ).one()
+        assert tuple(row) == ("PASSWORD", "127.0.0.1", "pytest", 1)
+        await repository.stop()
+
+    asyncio.run(exercise())
+
+
 def test_client_oauth_settings_accepts_mysql_json_mapping() -> None:
     settings = _client_oauth_settings(
         {
