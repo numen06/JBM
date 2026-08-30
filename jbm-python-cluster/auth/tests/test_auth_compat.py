@@ -422,6 +422,22 @@ def test_production_defaults_disable_bypass_and_password_grant() -> None:
         )
 
 
+def test_fixed_captcha_does_not_enable_other_dev_bypasses() -> None:
+    async def run() -> None:
+        service = AuthService(
+            None,
+            TokenCache(RedisClient({"enabled": False})),
+            {"fixed-captcha-code": "9999"},
+        )  # type: ignore[arg-type]
+        assert await service.verify_captcha("9999") is True
+        with pytest.raises(AuthError, match="验证码错误"):
+            await service.verify_phone_code("13800000000", "99999")
+
+    import asyncio
+
+    asyncio.run(run())
+
+
 def test_java_app_secret_codec_encrypted_secret_is_supported() -> None:
     plain = b"plain-client-secret"
     aes_key = __import__("hashlib").md5(b"jbm-app-client-secret").hexdigest().encode("utf-8")

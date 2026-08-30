@@ -207,6 +207,7 @@ class AuthService:
             self.config.get("legacy-password-grant-enabled", False)
         )
         self.dev_bypass_enabled = _truthy(self.config.get("dev-bypass-enabled", False))
+        self.fixed_captcha_code = str(self.config.get("fixed-captcha-code") or "").strip()
         self.allow_plaintext_secrets = _truthy(self.config.get("allow-plaintext-secrets", False))
         self.login_providers = dict(self.config.get("login-providers") or {})
         self.password_policy = dict(self.config.get("password-policy") or {})
@@ -943,7 +944,9 @@ class AuthService:
 
     async def verify_captcha(self, code: str, scope: str = "system") -> bool:
         value = str(code or "").strip()
-        if self.dev_bypass_enabled and value == "9999":
+        if value and (
+            value == self.fixed_captcha_code or self.dev_bypass_enabled and value == "9999"
+        ):
             return True
         if not value:
             raise AuthError("验证码不能为空", 400)
