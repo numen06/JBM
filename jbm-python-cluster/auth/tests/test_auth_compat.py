@@ -94,6 +94,42 @@ def test_roles_are_scoped_by_tenant_and_app(tmp_path: Path) -> None:
     asyncio.run(exercise())
 
 
+def test_user_authorities_supports_legacy_relation_tables_without_app_id(tmp_path: Path) -> None:
+    import asyncio
+
+    async def exercise() -> None:
+        database_url = "sqlite+aiosqlite:///%s" % (tmp_path / "legacy-authorities.db")
+        repository = AuthRepository({"url": database_url})
+        await repository.start()
+        async with repository.engine.begin() as conn:
+            await conn.execute(
+                text(
+                    "INSERT INTO base_role (role_id, app_id, role_code, role_name, status) "
+                    "VALUES (20, 3000, 'tenant_admin', 'Tenant Admin', 1)"
+                )
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO base_role_user (user_id, role_id, app_id, tenant_id) "
+                    "VALUES (8, 20, 3000, 100)"
+                )
+            )
+            await conn.execute(
+                text(
+                    "INSERT INTO base_authority (authority_id, app_id, authority, resource_type, status) "
+                    "VALUES (21, 3000, 'ACTION_TENANT_READ', 'action', 1)"
+                )
+            )
+            await conn.execute(
+                text("INSERT INTO base_authority_role (authority_id, role_id) VALUES (21, 20)")
+            )
+
+        assert await repository.user_authorities(8, False, 3000, 100) == ["ACTION_TENANT_READ"]
+        await repository.stop()
+
+    asyncio.run(exercise())
+
+
 def auth_config(database_url: str) -> AppConfig:
     return AppConfig(
         {

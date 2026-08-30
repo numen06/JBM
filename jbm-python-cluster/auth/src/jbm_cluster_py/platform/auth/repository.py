@@ -38,6 +38,7 @@ class AuthRepository:
         database_url = configured_database_url(database_config) or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         self.database_url = database_url
         self._sqlite = database_url.startswith("sqlite+aiosqlite:///")
+        self._authority_relation_app_columns: tuple[bool, bool] | None = None
         if self._sqlite:
             db_path = database_url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
@@ -539,6 +540,34 @@ class AuthRepository:
         role_ids = await self.expanded_role_ids([int(row["role_id"]) for row in roles])
         authorities: set[str] = set()
         async with self.engine.connect() as conn:
+            if self._authority_relation_app_columns is None:
+                role_relation_columns = {
+                    column["name"]
+                    for column in await conn.run_sync(
+                        lambda sync_conn: inspect(sync_conn).get_columns("base_authority_role")
+                    )
+                }
+                user_relation_columns = {
+                    column["name"]
+                    for column in await conn.run_sync(
+                        lambda sync_conn: inspect(sync_conn).get_columns("base_authority_user")
+                    )
+                }
+                self._authority_relation_app_columns = (
+                    "app_id" in role_relation_columns,
+                    "app_id" in user_relation_columns,
+                )
+            role_has_app_id, user_has_app_id = self._authority_relation_app_columns
+            role_app_clause = (
+                " AND (:app_id IS NULL OR (rp.app_id IS NULL OR rp.app_id = :app_id))"
+                if role_has_app_id
+                else ""
+            )
+            user_app_clause = (
+                " AND (:app_id IS NULL OR (up.app_id IS NULL OR up.app_id = :app_id))"
+                if user_has_app_id
+                else ""
+            )
             for role_id in role_ids:
                 rows = (
                     await conn.execute(
@@ -549,8 +578,8 @@ class AuthRepository:
                             INNER JOIN base_authority a ON rp.authority_id = a.authority_id
                             WHERE rp.role_id = :role_id AND a.status = 1
                               AND (:app_id IS NULL OR (a.app_id IS NULL OR a.app_id = :app_id))
-                              AND (:app_id IS NULL OR (rp.app_id IS NULL OR rp.app_id = :app_id))
                             """
+                            + role_app_clause
                         ),
                         {"role_id": role_id, "app_id": app_id},
                     )
@@ -565,8 +594,8 @@ class AuthRepository:
                         INNER JOIN base_authority a ON up.authority_id = a.authority_id
                         WHERE up.user_id = :user_id AND a.status = 1
                           AND (:app_id IS NULL OR (a.app_id IS NULL OR a.app_id = :app_id))
-                          AND (:app_id IS NULL OR (up.app_id IS NULL OR up.app_id = :app_id))
                         """
+                        + user_app_clause
                     ),
                     {"user_id": user_id, "app_id": app_id},
                 )
