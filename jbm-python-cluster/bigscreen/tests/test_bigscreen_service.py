@@ -6,6 +6,7 @@ import zipfile
 import pytest
 from jbm_cluster_py.platform.bigscreen.repository import BigscreenRepository
 from jbm_cluster_py.platform.bigscreen.service import BigscreenService
+from sqlalchemy.pool import NullPool
 
 
 class Upload:
@@ -24,6 +25,7 @@ def database_config(tmp_path) -> dict[str, str]:
 @pytest.mark.asyncio
 async def test_bigscreen_metadata_inheritance_and_delete_guard(tmp_path) -> None:
     repository = BigscreenRepository(database_config(tmp_path))
+    assert isinstance(repository.engine.pool, NullPool)
     service = BigscreenService(repository, str(tmp_path / "views"), "http://doc.invalid")
     await service.start()
     try:
