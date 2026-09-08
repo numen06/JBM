@@ -12,6 +12,37 @@ export interface BigscreenView {
   updateTime?: string
   deployed?: boolean
   packageAvailable?: boolean
+  retentionWarning?: string
+}
+
+export interface BigscreenStorage {
+  id: string
+  currentVersion: string
+  keepVersions: number
+  maxKeepVersions: number
+  currentBytes: number
+  historyBytes: number
+  legacyBytes: number
+  totalBytes: number
+  releasedBytes?: number
+  history: { id: string; version: string; createdAt: string; sizeBytes: number }[]
+  legacyBackups: { name: string; sizeBytes: number }[]
+}
+
+export async function bigscreenStorage(id: string) {
+  return unwrap(await post<BigscreenStorage>('/bigscreen/bigscreenView/storage', { id }))
+}
+
+export async function saveBigscreenRetention(id: string, keepVersions: number) {
+  return unwrap(await post<BigscreenStorage>('/bigscreen/bigscreenView/retention', { id, keepVersions }))
+}
+
+export async function pruneBigscreen(id: string) {
+  return unwrap(await post<BigscreenStorage>('/bigscreen/bigscreenView/prune', { id, includeLegacy: true }))
+}
+
+export async function rollbackBigscreen(id: string, revisionId: string) {
+  return unwrap(await post<BigscreenView>('/bigscreen/bigscreenView/rollback', { id, revisionId }))
 }
 
 export async function listBigscreens(page = 1, size = 100, projectId = '') {

@@ -124,12 +124,21 @@ export function createJbmClient(options: JbmClientOptions): JbmClient {
 
   async function refreshAndRetry(instance: AxiosInstance, config: RetryConfig) {
     config._jbmRetried = true
-    const refreshToken = options.tokenProvider.getRefreshToken()
-    if (refreshToken && options.refreshTokens) {
+    const authorization = String(config.headers?.Authorization || '')
+    const expiredAccessToken = authorization.replace(/^Bearer\s+/i, '')
+      || options.tokenProvider.getAccessToken()
+    if (options.refreshTokens) {
       try {
-        refreshPromise ??= options.refreshTokens(refreshToken)
-          .then((tokens) => options.tokenProvider.updateTokens(tokens))
-          .then(() => undefined)
+        const refresh = async () => {
+          const currentAccessToken = options.tokenProvider.getAccessToken()
+          if (currentAccessToken && currentAccessToken !== expiredAccessToken) return
+          const refreshToken = options.tokenProvider.getRefreshToken()
+          if (!refreshToken) throw new Error('refresh token is missing')
+          await options.tokenProvider.updateTokens(await options.refreshTokens!(refreshToken))
+        }
+        refreshPromise ??= (typeof navigator !== 'undefined' && navigator.locks
+          ? navigator.locks.request('jbm-auth-token-refresh', refresh)
+          : refresh())
           .finally(() => {
             refreshPromise = undefined
           })

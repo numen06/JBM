@@ -7,7 +7,7 @@ jbm:
     allow-plaintext-secrets: false
     login-error-number: 5
     login-error-limit-minutes: 10
-    max-sessions-per-user: 5
+    max-sessions-per-user: 20
     sms:
       registration-required: true
       push-service: jbm-cluster-platform-push
@@ -45,5 +45,5 @@ jbm:
     jwt:
       issuer: http://debug5173.feige.51jbm.cn/v3/api/auth
       audience: jbm-api
-      access-token-seconds: 1800
-      refresh-token-seconds: 604800
+      access-token-seconds: 7200
+      refresh-token-seconds: 2592000

@@ -18,8 +18,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jbm7/admin": "7.3.0-beta.5",
-    "@jbm7/sdk": "7.3.0-beta.5",
+    "@jbm7/admin": "7.3.0-beta.7",
+    "@jbm7/sdk": "7.3.0-beta.6",
     "@jbm7/vue-core": "7.3.0-beta.5",
     "@codemirror/commands": "^6.10.3",
     "@codemirror/lang-java": "^6.0.2",

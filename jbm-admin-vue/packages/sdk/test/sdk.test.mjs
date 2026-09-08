@@ -39,6 +39,69 @@ test('client sends the standard and legacy tenant headers with the same active t
   }
 })
 
+test('browser clients refresh a rotated token only once across tabs', async () => {
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
+  let lockTail = Promise.resolve()
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: {
+      locks: {
+        request: async (_name, callback) => {
+          const previous = lockTail
+          let release
+          lockTail = new Promise(resolve => { release = resolve })
+          await previous
+          try { return await callback() } finally { release() }
+        },
+      },
+    },
+  })
+
+  let expiredRequests = 0
+  let releaseExpiredRequests
+  const bothExpiredRequestsStarted = new Promise(resolve => { releaseExpiredRequests = resolve })
+  const server = createServer(async (request, response) => {
+    response.setHeader('content-type', 'application/json')
+    if (request.headers.authorization === 'Bearer fresh-access') {
+      response.end('{"ok":true}')
+      return
+    }
+    expiredRequests += 1
+    if (expiredRequests === 2) releaseExpiredRequests()
+    await bothExpiredRequestsStarted
+    response.statusCode = 401
+    response.end('{}')
+  })
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+
+  const tokens = { accessToken: 'expired-access', refreshToken: 'refresh-1' }
+  let refreshCalls = 0
+  const createClient = () => createJbmClient({
+    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    tokenProvider: {
+      getAccessToken: () => tokens.accessToken,
+      getRefreshToken: () => tokens.refreshToken,
+      updateTokens: next => Object.assign(tokens, next),
+      clearTokens: () => Object.assign(tokens, { accessToken: '', refreshToken: '' }),
+    },
+    refreshTokens: async (refreshToken) => {
+      refreshCalls += 1
+      assert.equal(refreshToken, 'refresh-1')
+      return { accessToken: 'fresh-access', refreshToken: 'refresh-2' }
+    },
+  })
+
+  try {
+    await Promise.all([createClient().get('/protected'), createClient().get('/protected')])
+    assert.equal(refreshCalls, 1)
+    assert.equal(tokens.refreshToken, 'refresh-2')
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
+    if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor)
+    else delete globalThis.navigator
+  }
+})
+
 test('service client always prefixes an explicit service path', async () => {
   let calledPath = ''
   const base = {

@@ -125,6 +125,26 @@ def build_bigscreen_router(repository: BigscreenRepository, service: BigscreenSe
         _require_manager(request)
         return ok(await service.clean(body, _tenant_scope(request)), "清理视图成功")
 
+    @router.post("/bigscreenView/storage", tags=["大屏版本与空间"])
+    async def storage(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        _require_manager(request)
+        return ok(await service.storage_status(body, _tenant_scope(request)), "版本与空间查询成功")
+
+    @router.post("/bigscreenView/retention", tags=["大屏版本与空间"])
+    async def retention(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        _require_manager(request)
+        return ok(await service.set_retention(body, _tenant_scope(request)), "保留策略已生效")
+
+    @router.post("/bigscreenView/prune", tags=["大屏版本与空间"])
+    async def prune(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        _require_manager(request)
+        return ok(await service.prune_resources(body, _tenant_scope(request)), "旧资源清理完成")
+
+    @router.post("/bigscreenView/rollback", tags=["大屏版本与空间"])
+    async def rollback(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        _require_manager(request)
+        return ok(await service.rollback(body, _tenant_scope(request)), "历史资源已重新发布")
+
     return router
 
 

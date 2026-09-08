@@ -1,7 +1,7 @@
 import { defineJbmModule, type JbmFrontendModule, type JbmNavigationGroup } from '@jbm7/vue-core'
 import { STATIC_NAV_GROUPS } from '@/constants/adminNav'
 
-const VERSION = '7.3.0-beta.5'
+const VERSION = '7.3.0-beta.6'
 
 function navigation(...labels: string[]): JbmNavigationGroup[] {
   return STATIC_NAV_GROUPS.filter((group) => labels.includes(group.label))
