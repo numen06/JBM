@@ -42,7 +42,7 @@ const configDialogOpen = ref(false)
 const emailDialogOpen = ref(false)
 const saving = ref(false)
 const testingId = ref<number>()
-const ntfyForm = reactive({ serverUrl: '', topic: '', token: '', priority: '3' })
+const ntfyForm = reactive({ serverUrl: '', topicPrefix: 'jbm', token: '', priority: '3' })
 
 const configForm = reactive<PushConfigInfo>({
   enable: true,
@@ -140,7 +140,7 @@ function openConfigDialog(config?: PushConfigInfo) {
   } else {
     resetConfigForm()
   }
-  Object.assign(ntfyForm, { serverUrl: '', topic: '', token: '', priority: '3' })
+  Object.assign(ntfyForm, { serverUrl: '', topicPrefix: 'jbm', token: '', priority: '3' })
   if (configForm.type === 8 && configForm.releaseContent) {
     try {
       const value = JSON.parse(configForm.releaseContent)
@@ -174,7 +174,7 @@ async function handleSaveConfig() {
   try {
     if (configForm.type === 8) {
       configForm.releaseContent = JSON.stringify({
-        serverUrl: ntfyForm.serverUrl.trim(), topic: ntfyForm.topic.trim(),
+        serverUrl: ntfyForm.serverUrl.trim(), topicPrefix: ntfyForm.topicPrefix.trim(),
         token: ntfyForm.token.trim(), priority: Number(ntfyForm.priority),
       })
     }
@@ -379,8 +379,8 @@ async function refreshAll() {
         <FormField label="服务地址" required>
           <Input v-model="ntfyForm.serverUrl" placeholder="https://notify.hz-aitech.com" />
         </FormField>
-        <FormField label="默认主题" required>
-          <Input v-model="ntfyForm.topic" placeholder="dangxiao-alerts" />
+        <FormField label="主题前缀" required>
+          <Input v-model="ntfyForm.topicPrefix" placeholder="jbm" />
         </FormField>
         <FormField label="访问 Token">
           <Input v-model="ntfyForm.token" type="password" autocomplete="new-password" placeholder="tk_…（公开服务可留空）" />
@@ -391,7 +391,7 @@ async function refreshAll() {
             <option value="1">最低</option><option value="2">低</option><option value="3">默认</option><option value="4">高</option><option value="5">紧急</option>
           </Select>
         </FormField>
-        <p class="text-xs text-muted-foreground md:col-span-2">手机或浏览器需在相同服务器订阅主题。保存后可点击“测试发送”验证。</p>
+        <p class="text-xs text-muted-foreground md:col-span-2">按 JBM 收件人生成主题：个人为「前缀-user-用户ID」，广播为「前缀-broadcast」。测试发送给当前登录用户；订阅账号需要对应主题的读取权限。</p>
       </div>
       <FormField v-else label="配置内容">
         <textarea

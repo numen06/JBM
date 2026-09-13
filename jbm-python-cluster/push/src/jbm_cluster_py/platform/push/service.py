@@ -180,7 +180,7 @@ class PushService:
         result: Dict[str, Any] = {"sent": sent}
         if deliveries:
             result["deliveries"] = deliveries
-            result["deliveryStatus"] = deliveries[0].get("deliveryStatus")
+            result["deliveryStatus"] = "failed" if any(d.get("deliveryStatus") == "failed" for d in deliveries) else deliveries[0].get("deliveryStatus")
         return result
 
     async def _publish_or_deliver(self, event: Dict[str, Any], sync_delivery: bool = False) -> Optional[Dict[str, Any]]:
@@ -197,6 +197,10 @@ class PushService:
         elif push_way == "sms":
             return await self._deliver_sms(payload)
         elif push_way == "ntfy":
+            if payload.get("recUserId") is None and (payload.get("recUserIds") or payload.get("rec_user_ids")):
+                users = self._resolve_users(dict(payload), -1)
+                deliveries = [await self._deliver_ntfy({**payload, "recUserId": user_id}) for user_id in users]
+                return {"deliveryStatus": "failed" if any(d["deliveryStatus"] == "failed" for d in deliveries) else "sent", "deliveries": deliveries}
             return await self._deliver_ntfy(payload)
         elif push_way == "email":
             await self._deliver_email(payload)
@@ -320,7 +324,9 @@ class PushService:
         error_message: Optional[str] = None,
         detail: Optional[Mapping[str, Any]] = None,
     ) -> None:
-        rec_user_id = self._event_rec_user_id(payload) or self._int_or_none(payload.get("sendUserId")) or 0
+        rec_user_id = self._event_rec_user_id(payload)
+        if rec_user_id is None:
+            rec_user_id = self._int_or_none(payload.get("sendUserId")) or 0
         send_user_id = self._int_or_none(payload.get("sendUserId")) or rec_user_id
         task_id = str(payload.get("testRunId") or payload.get("taskId") or uuid.uuid4().hex)
         show_in_center = self._show_in_message_center(dict(payload), True)
@@ -1063,7 +1069,11 @@ class PushService:
         return self.delete_configs(self.email_configs, ids)
 
     def _resolve_users(self, request: Dict[str, Any], current_user_id: int) -> List[int]:
-        raw = request.get("recUserIds") or request.get("recUserId") or []
+        raw = request.get("recUserIds") or request.get("rec_user_ids")
+        if not raw:
+            raw = request.get("recUserId")
+        if raw is None:
+            raw = []
         if isinstance(raw, str) and "," in raw:
             raw = [item.strip() for item in raw.split(",")]
         elif not isinstance(raw, list):
@@ -1074,7 +1084,7 @@ class PushService:
                 users.append(int(value))
             except (TypeError, ValueError):
                 continue
-        return users or [current_user_id]
+        return list(dict.fromkeys(users)) or [current_user_id]
 
     def _int_or_none(self, value: Any) -> Optional[int]:
         try:

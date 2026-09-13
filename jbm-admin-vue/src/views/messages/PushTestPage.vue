@@ -35,6 +35,7 @@ const userPoolTotal = ref(0)
 const userPoolPage = ref(1)
 const tags = ref('')
 const title = ref('发送测试消息')
+const pushWay = ref('internal')
 const content = ref('这是一条站内信 WebSocket 闭环测试消息')
 const messageCount = ref(100)
 const batchSize = ref(20)
@@ -142,6 +143,7 @@ function clearSelectedUsers() {
 
 function buildRequest(perf = false): PushTestRequest {
   const request: PushTestRequest = {
+    pushWay: perf ? 'internal' : pushWay.value as 'internal' | 'ntfy',
     title: title.value.trim(),
     content: content.value.trim(),
     pushMsgType: 'notification',
@@ -238,7 +240,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <PageHeader title="发送测试" description="向指定用户发送测试消息，验证站内信落库、WebSocket 到达和 ACK 指标。">
+    <PageHeader title="发送测试" description="通过标准推送链路向指定用户发送消息；站内信支持 WebSocket ACK，ntfy 投递结果在消息中心查看。">
       <template #actions>
         <Badge :variant="messages.wsConnected ? 'default' : 'destructive'">
           {{ messages.wsConnected ? 'WS 已连接' : messages.wsConnecting ? 'WS 连接中' : 'WS 未连接' }}
@@ -354,6 +356,13 @@ onUnmounted(() => {
           <label v-if="targetMode === 'tags'" class="block text-sm">
             <span class="mb-1 block text-muted-foreground">tags</span>
             <Input v-model="tags" placeholder="user:1,2 或 1,2" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-muted-foreground">推送渠道</span>
+            <Select v-model="pushWay">
+              <option value="internal">站内信</option>
+              <option value="ntfy">ntfy（按接收用户发送）</option>
+            </Select>
           </label>
           <label class="block text-sm">
             <span class="mb-1 block text-muted-foreground">标题</span>

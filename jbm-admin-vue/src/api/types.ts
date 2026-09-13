@@ -588,6 +588,7 @@ export interface ChannelNotificationRequest {
 }
 
 export interface PushTestRequest {
+  pushWay?: ChannelPushWay
   recUserIds?: SnowflakeId[]
   tags?: string
   title?: string
