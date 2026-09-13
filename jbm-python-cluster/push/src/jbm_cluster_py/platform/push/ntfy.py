@@ -38,14 +38,14 @@ def validate_config(value: Any) -> dict[str, Any]:
 
 
 def recipient_topic(config: Mapping[str, Any], user_id: Any) -> str:
-    """Use JBM's resolved recipient; zero is the standard broadcast recipient."""
+    """Use JBM's resolved recipient, including the real super-admin user ID zero."""
     if isinstance(user_id, bool) or not re.fullmatch(r"[0-9]{1,19}", str(user_id)):
         raise ValueError("ntfy 需要有效的 JBM 接收用户 recUserId")
     recipient = int(user_id)
     if recipient > 9223372036854775807:
         raise ValueError("ntfy 接收用户 ID 超出范围")
     prefix = validate_config(config)["topicPrefix"]
-    return f"{prefix}-user-{recipient}" if recipient else f"{prefix}-broadcast"
+    return f"{prefix}-user-{recipient}"
 
 
 def public_config(row: dict[str, Any]) -> dict[str, Any]:

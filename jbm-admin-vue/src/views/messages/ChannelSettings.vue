@@ -391,7 +391,7 @@ async function refreshAll() {
             <option value="1">最低</option><option value="2">低</option><option value="3">默认</option><option value="4">高</option><option value="5">紧急</option>
           </Select>
         </FormField>
-        <p class="text-xs text-muted-foreground md:col-span-2">按 JBM 收件人生成主题：个人为「前缀-user-用户ID」，广播为「前缀-broadcast」。测试发送给当前登录用户；订阅账号需要对应主题的读取权限。</p>
+        <p class="text-xs text-muted-foreground md:col-span-2">按 JBM 收件人生成主题：个人为「前缀-user-用户ID」，超级管理员 ID 0 对应「前缀-user-0」。测试发送给当前登录用户；订阅账号需要对应主题的读取权限。</p>
       </div>
       <FormField v-else label="配置内容">
         <textarea

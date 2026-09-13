@@ -82,7 +82,7 @@ def test_invalid_configuration_rejected(change):
         ntfy.validate_config({**config(), **change})
 
 
-async def test_standard_recipients_queue_delivery_and_broadcast(monkeypatch):
+async def test_standard_recipients_queue_delivery_and_super_admin_zero(monkeypatch):
     sent = []
 
     def handler(request):
@@ -96,7 +96,7 @@ async def test_standard_recipients_queue_delivery_and_broadcast(monkeypatch):
     # Direct queue events must also fan out their standard recipient list.
     await service.handle_push_event({"pushWay": "ntfy", "recUserIds": [303, 404], "content": "queued"})
     await service.publish_message({"pushWay": "ntfy", "recUserId": 0, "content": "broadcast", "syncDelivery": True}, 999)
-    assert [r["topic"] for r in sent] == ["jbm-user-101", "jbm-user-202", "jbm-user-303", "jbm-user-404", "jbm-broadcast"]
+    assert [r["topic"] for r in sent] == ["jbm-user-101", "jbm-user-202", "jbm-user-303", "jbm-user-404", "jbm-user-0"]
     assert [r["recUserId"] for r in service.messages] == [0, 404, 303, 202, 101]
     failed = await service.publish_message({"pushWay": "ntfy", "recUserId": 101, "topic": "jbm-user-202", "content": "override", "syncDelivery": True}, 999)
     assert failed["deliveryStatus"] == "failed"
