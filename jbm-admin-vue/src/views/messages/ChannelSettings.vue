@@ -20,6 +20,7 @@ import {
   listPushConfigs,
   saveEmailConfig,
   savePushConfig,
+  testNtfyConfig,
 } from '@/api/pushChannels'
 import type { EmailPushConfig, PushConfigInfo } from '@/api/types'
 
@@ -33,12 +34,15 @@ const CHANNEL_TYPES = [
   { value: 5, code: 'miniapp', label: '微信小程序' },
   { value: 6, code: 'mqtt', label: 'MQTT' },
   { value: 7, code: 'app', label: 'App 推送' },
+  { value: 8, code: 'ntfy', label: 'ntfy 推送' },
 ]
 
 const selectedChannel = ref('all')
 const configDialogOpen = ref(false)
 const emailDialogOpen = ref(false)
 const saving = ref(false)
+const testingId = ref<number>()
+const ntfyForm = reactive({ serverUrl: '', topic: '', token: '', priority: '3' })
 
 const configForm = reactive<PushConfigInfo>({
   enable: true,
@@ -136,6 +140,15 @@ function openConfigDialog(config?: PushConfigInfo) {
   } else {
     resetConfigForm()
   }
+  Object.assign(ntfyForm, { serverUrl: '', topic: '', token: '', priority: '3' })
+  if (configForm.type === 8 && configForm.releaseContent) {
+    try {
+      const value = JSON.parse(configForm.releaseContent)
+      Object.assign(ntfyForm, value, { priority: String(value.priority ?? 3) })
+    } catch {
+      feedback.toast.warning('ntfy 配置格式有误，请重新填写')
+    }
+  }
   configDialogOpen.value = true
 }
 
@@ -159,12 +172,31 @@ async function handleSaveConfig() {
   }
   saving.value = true
   try {
+    if (configForm.type === 8) {
+      configForm.releaseContent = JSON.stringify({
+        serverUrl: ntfyForm.serverUrl.trim(), topic: ntfyForm.topic.trim(),
+        token: ntfyForm.token.trim(), priority: Number(ntfyForm.priority),
+      })
+    }
     await savePushConfig({ ...configForm, type: Number(configForm.type) })
     feedback.toast.success('渠道配置已保存')
     configDialogOpen.value = false
     await loadConfigs(configPage.value)
   } finally {
     saving.value = false
+  }
+}
+
+async function handleTestNtfy(config: PushConfigInfo) {
+  if (!config.id) return
+  testingId.value = config.id
+  try {
+    await testNtfyConfig(config.id)
+    feedback.toast.success('测试消息已提交到 ntfy，请在订阅端查收')
+  } catch (error) {
+    feedback.toast.error(error instanceof Error ? error.message : 'ntfy 发送失败')
+  } finally {
+    testingId.value = undefined
   }
 }
 
@@ -270,6 +302,7 @@ async function refreshAll() {
               <td class="p-4 text-sm text-muted-foreground">{{ formatTime(config.updateTime || config.createTime) }}</td>
               <td class="p-4">
                 <div class="flex justify-end gap-2">
+                  <Button v-if="config.type === 8" variant="outline" size="sm" :disabled="config.enable === false || testingId != null" @click="handleTestNtfy(config)">测试发送</Button>
                   <Button variant="outline" size="sm" @click="openConfigDialog(config)">
                     <Pencil class="h-4 w-4" />
                   </Button>
@@ -342,7 +375,25 @@ async function refreshAll() {
           </Select>
         </FormField>
       </div>
-      <FormField label="配置内容">
+      <div v-if="configForm.type === 8" class="grid gap-4 md:grid-cols-2">
+        <FormField label="服务地址" required>
+          <Input v-model="ntfyForm.serverUrl" placeholder="https://notify.hz-aitech.com" />
+        </FormField>
+        <FormField label="默认主题" required>
+          <Input v-model="ntfyForm.topic" placeholder="dangxiao-alerts" />
+        </FormField>
+        <FormField label="访问 Token">
+          <Input v-model="ntfyForm.token" type="password" autocomplete="new-password" placeholder="tk_…（公开服务可留空）" />
+          <p class="mt-1 text-xs text-muted-foreground">已保存的 Token 显示为 ********；不修改即保留，清空则移除认证。</p>
+        </FormField>
+        <FormField label="默认优先级">
+          <Select v-model="ntfyForm.priority">
+            <option value="1">最低</option><option value="2">低</option><option value="3">默认</option><option value="4">高</option><option value="5">紧急</option>
+          </Select>
+        </FormField>
+        <p class="text-xs text-muted-foreground md:col-span-2">手机或浏览器需在相同服务器订阅主题。保存后可点击“测试发送”验证。</p>
+      </div>
+      <FormField v-else label="配置内容">
         <textarea
           v-model="configForm.releaseContent"
           class="min-h-40 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

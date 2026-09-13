@@ -21,6 +21,16 @@ export async function savePushConfig(entity: PushConfigInfo) {
   return unwrap(res)
 }
 
+export async function testNtfyConfig(id: number) {
+  const res = await post<{ deliveryStatus?: string; deliveries?: { errorMessage?: string }[] }>(
+    '/push/notification/send/ntfy',
+    { ntfyConfigId: id, syncDelivery: true, title: 'JBM Push 测试通知', content: 'ntfy 渠道测试消息', showInMessageCenter: true },
+  )
+  const result = unwrap(res)
+  if (result?.deliveryStatus !== 'sent') throw new Error(result?.deliveries?.[0]?.errorMessage || 'ntfy 发送失败')
+  return result
+}
+
 export async function deletePushConfigs(ids: number[]) {
   if (!ids.length) return false
   const res = await post<boolean>(`${CONFIG_BASE}/deleteByIds`, { ids })

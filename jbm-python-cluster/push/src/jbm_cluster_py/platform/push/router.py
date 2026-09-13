@@ -220,7 +220,10 @@ def build_push_router(
 
     @router.post("/pushConfigInfo/save")
     async def push_config_save(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
-        return ok(await service.save_push_config(body or {}), "保存对象成功")
+        try:
+            return ok(await service.save_push_config(body or {}), "保存对象成功")
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @router.post("/pushConfigInfo/deleteByIds")
     async def push_config_delete(body: Optional[Dict[str, Any]] = Body(default=None)) -> Dict[str, Any]:
@@ -271,6 +274,13 @@ def build_push_router(
             await service.publish_message(payload, parse_user_id(request.state.identity)),
             "通知请求已提交",
         )
+
+    @router.post("/notification/send/ntfy")
+    async def notification_send_ntfy(
+        request: Request, body: Optional[Dict[str, Any]] = Body(default=None),
+    ) -> Dict[str, Any]:
+        payload = {**dict(body or {}), "pushWay": "ntfy"}
+        return ok(await service.publish_message(payload, parse_user_id(request.state.identity)), "通知请求已提交")
 
     @router.post("/notification/send/mqtt")
     async def notification_send_mqtt(

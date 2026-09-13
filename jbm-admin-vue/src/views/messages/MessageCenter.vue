@@ -23,7 +23,7 @@ import type { BaseUser, PushMessage } from '@/api/types'
 const statusFilter = ref<'all' | 'unread'>('all')
 const typeFilter = ref<'all' | 'notification' | 'alarm' | 'alert'>('all')
 const sourceFilter = ref<'all' | 'system' | 'user'>('all')
-const wayFilter = ref<'all' | 'internal' | 'email' | 'sms' | 'wechat' | 'mqtt' | 'app'>('all')
+const wayFilter = ref<'all' | 'internal' | 'email' | 'sms' | 'wechat' | 'mqtt' | 'app' | 'ntfy'>('all')
 const deliveryFilter = ref<'all' | 'unsent' | 'wait' | 'issued' | 'fail'>('all')
 const recUserId = ref<SnowflakeId | null>(null)
 const keyword = ref('')
@@ -201,6 +201,7 @@ watch(
           <option value="sms">短信</option>
           <option value="wechat">微信</option>
           <option value="mqtt">MQTT</option>
+          <option value="ntfy">ntfy</option>
           <option value="app">App</option>
         </Select>
         <Select v-model="deliveryFilter" class="w-32" @update:model-value="filterChanged">

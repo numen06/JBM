@@ -563,7 +563,7 @@ export interface SmsNotificationRequest {
   showInMessageCenter?: boolean
 }
 
-export type ChannelPushWay = 'internal' | 'email' | 'sms' | 'mqtt' | 'wechat' | 'miniapp' | 'app'
+export type ChannelPushWay = 'internal' | 'email' | 'sms' | 'mqtt' | 'wechat' | 'miniapp' | 'app' | 'ntfy'
 
 export interface ChannelNotificationRequest {
   pushWay: ChannelPushWay
@@ -582,6 +582,9 @@ export interface ChannelNotificationRequest {
   topic?: string
   body?: unknown
   qos?: number
+  ntfyConfigId?: number
+  priority?: number
+  syncDelivery?: boolean
 }
 
 export interface PushTestRequest {

@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 from urllib.parse import quote
 
 import httpx
+from jbm_cluster_py.platform.push import ntfy
 from jbm_cluster_py.common.masterdata import model_dump_compat
 from jbm_cluster_py.common.result import page_result
 from jbm_cluster_py.platform.push.push_events import PushMessageEvent
@@ -195,6 +196,8 @@ class PushService:
             return {"deliveryStatus": "sent", "deliveryChannel": "internal"}
         elif push_way == "sms":
             return await self._deliver_sms(payload)
+        elif push_way == "ntfy":
+            return await self._deliver_ntfy(payload)
         elif push_way == "email":
             await self._deliver_email(payload)
             return {"deliveryStatus": "sent", "deliveryChannel": "email"}
@@ -264,6 +267,29 @@ class PushService:
             logger.warning("SMS delivery failed: %s", exc)
             await self._record_external_delivery(payload, "sms", error_message=str(exc))
             return {"deliveryStatus": "failed", "deliveryChannel": "sms", "errorMessage": str(exc)}
+
+    async def _raw_ntfy_configs(self) -> list[Dict[str, Any]]:
+        if self.config_repository is not None:
+            return await self.config_repository.list_push_configs({"type": ntfy.CHANNEL_TYPE})
+        return [row for row in self.push_configs if row.get("type") == ntfy.CHANNEL_TYPE]
+
+    async def _deliver_ntfy(self, payload: Mapping[str, Any]) -> Dict[str, Any]:
+        try:
+            rows = await self._raw_ntfy_configs()
+            config_id = payload.get("ntfyConfigId") or (payload.get("extend") or {}).get("ntfyConfigId")
+            if config_id is not None:
+                rows = [row for row in rows if str(row.get("id")) == str(config_id)]
+            row = next((row for row in rows if row.get("enable") is not False), None)
+            if row is None:
+                raise ValueError("ntfy 通知渠道未配置或已停用")
+            config = ntfy.validate_config(row.get("releaseContent"))
+            result = await ntfy.send(config, payload)
+        except Exception as exc:
+            error = str(exc) if isinstance(exc, ValueError) and str(exc).startswith("ntfy ") else "ntfy 发送失败，请检查服务连接与配置"
+            await self._record_external_delivery(payload, "ntfy", error_message=error)
+            return {"deliveryStatus": "failed", "deliveryChannel": "ntfy", "errorMessage": error}
+        await self._record_external_delivery(payload, "ntfy", status="issued", delivery_status="sent", detail=result)
+        return {"deliveryStatus": "sent", "deliveryChannel": "ntfy", **result}
 
     async def _deliver_email(self, payload: Mapping[str, Any]) -> None:
         try:
@@ -780,6 +806,8 @@ class PushService:
         return None
 
     async def _channel_configured(self, channel: str) -> bool:
+        if channel == "ntfy":
+            return any(row.get("enable") is not False for row in await self._raw_ntfy_configs())
         if channel == "sms":
             sms_config = await self._effective_sms_config()
             return bool(
@@ -842,6 +870,8 @@ class PushService:
             "topic",
             "body",
             "qos",
+            "ntfyConfigId",
+            "priority",
         ):
             if key in request:
                 event_data[key] = request[key]
@@ -979,18 +1009,33 @@ class PushService:
 
     async def list_push_configs(self, body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         if self.config_repository is not None:
-            return await self.config_repository.page_push_configs(body)
-        return self.list_configs(self.push_configs, body)
+            page = await self.config_repository.page_push_configs(body)
+        else:
+            page = self.list_configs(self.push_configs, body)
+        return {**page, "contents": [ntfy.public_config(row) for row in page["contents"]]}
 
     async def list_push_config_rows(self, body: Optional[Dict[str, Any]]) -> list[Dict[str, Any]]:
         if self.config_repository is not None:
-            return await self.config_repository.list_push_configs(body)
-        return self.list_configs(self.push_configs, body)["contents"]
+            rows = await self.config_repository.list_push_configs(body)
+        else:
+            rows = self.list_configs(self.push_configs, body)["contents"]
+        return [ntfy.public_config(row) for row in rows]
 
     async def save_push_config(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        body = dict(body)
+        if body.get("type") == ntfy.CHANNEL_TYPE:
+            config = ntfy.validate_config(body.get("releaseContent"))
+            if config["token"] == ntfy.MASKED_TOKEN:
+                old = next((row for row in await self._raw_ntfy_configs() if str(row.get("id")) == str(body.get("id"))), None)
+                if old is None:
+                    raise ValueError("ntfy 新渠道需要填写真实 Token 或留空")
+                config["token"] = ntfy.validate_config(old.get("releaseContent"))["token"]
+            body["releaseContent"] = json.dumps(config, ensure_ascii=False)
         if self.config_repository is not None:
-            return await self.config_repository.save_push_config(body)
-        return self.save_config(self.push_configs, body)
+            result = await self.config_repository.save_push_config(body)
+        else:
+            result = self.save_config(self.push_configs, body)
+        return ntfy.public_config(result)
 
     async def delete_push_configs(self, ids: Iterable[Any]) -> bool:
         if self.config_repository is not None:
