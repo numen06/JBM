@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
-from sqlalchemy import text
+from sqlalchemy import event, text
+from sqlalchemy.exc import DisconnectionError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from jbm_cluster_py.common.masterdata import PageForm, java_page, now_iso
@@ -21,6 +22,24 @@ def _clean(data: Mapping[str, Any]) -> Dict[str, Any]:
     return {key: value for key, value in data.items() if value is not None}
 
 
+def _ping_doc_connection(dialect: Any, connection: Any) -> None:
+    # asyncmy + uvloop can report a closed socket as RuntimeError instead of a
+    # DBAPI error. Mark it disconnected before any SQL/transaction is started.
+    try:
+        alive = dialect.do_ping(connection)
+    except Exception as error:
+        closed_transport = (
+            isinstance(error, RuntimeError)
+            and "TCPTransport closed=True" in str(error)
+            and "handler is closed" in str(error)
+        )
+        if not closed_transport and not dialect.is_disconnect(error, connection, None):
+            raise
+        raise DisconnectionError("Document database connection closed") from error
+    if not alive:
+        raise DisconnectionError("Document database connection unavailable")
+
+
 class DocRepository:
     def __init__(self, database_config: Mapping[str, Any]) -> None:
         database_url = configured_database_url(database_config) or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
@@ -29,7 +48,15 @@ class DocRepository:
             db_path = database_url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.engine: AsyncEngine = create_async_engine(database_url, pool_pre_ping=True)
+        asyncmy = database_url.startswith("mysql+asyncmy://")
+        self.engine: AsyncEngine = create_async_engine(
+            database_url, pool_pre_ping=not asyncmy, pool_recycle=300,
+        )
+        if asyncmy:
+            event.listen(
+                self.engine.sync_engine, "checkout",
+                lambda connection, record, proxy: _ping_doc_connection(self.engine.dialect, connection),
+            )
 
     async def start(self) -> None:
         if not self._sqlite:

@@ -1,0 +1,3 @@
+# Keep the deployed runtime unchanged apart from document connection recovery.
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:a67b0ea9b964d463d37aaf2c1e9a077e8f1ad4cfe0534baac2de79f6e0164100 AS jbm-cluster-platform-doc
+COPY --chown=appuser:appuser jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/repository.py /app/doc/src/jbm_cluster_py/platform/doc/repository.py
