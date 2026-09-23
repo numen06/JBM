@@ -55,7 +55,7 @@ onBeforeUnmount(() => observer?.disconnect())
 
 <template>
   <div class="responsive-table-scroll relative w-full overflow-auto">
-    <table ref="tableRef" :class="cn('responsive-table w-full caption-bottom text-sm', $attrs.class as string)">
+    <table ref="tableRef" :class="cn('jbm-table responsive-table w-full caption-bottom text-sm', $attrs.class as string)">
       <slot />
     </table>
   </div>

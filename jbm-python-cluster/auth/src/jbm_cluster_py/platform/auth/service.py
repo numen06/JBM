@@ -11,6 +11,10 @@ import html
 import io
 import random
 import re
+import asyncio
+from contextlib import asynccontextmanager, suppress
+from contextvars import ContextVar
+from weakref import WeakValueDictionary
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlencode, urlparse
 from typing import Any, Mapping, Optional
@@ -45,28 +49,168 @@ class AuthError(ValueError):
 
 
 class TokenCache:
-    def __init__(self, redis_client: RedisClient, prefix: str = "jbm:auth") -> None:
+    def __init__(self, redis_client: RedisClient, prefix: str = "jbm:auth", *, required: bool = False) -> None:
         self.redis_client = redis_client
         self.prefix = prefix.rstrip(":")
+        self.required = required
         self._memory: dict[str, tuple[dict[str, Any], int]] = {}
+        self._locks: WeakValueDictionary[str, asyncio.Lock] = WeakValueDictionary()
+        self._indexes: dict[str, dict[str, int]] = {}
+        self._held_locks: ContextVar[tuple[tuple[str, Any], ...]] = ContextVar("auth_cache_locks", default=())
 
     async def start(self) -> None:
         try:
             await self.redis_client.start()
+            if self.required and self.redis_client.client is None:
+                raise RuntimeError("Auth requires shared Redis")
         except Exception as exc:
+            await self.redis_client.stop()
+            if self.required:
+                raise RuntimeError("Auth requires available shared Redis") from exc
             logger.warning("Auth Redis startup failed; use in-memory token cache: %s", exc)
+
+    async def readiness(self) -> bool:
+        if self.redis_client.client is None:
+            return not self.required
+        try:
+            return bool(await self.redis_client.client.ping())
+        except Exception:
+            return False
+
+    def _require_backend(self) -> None:
+        if self.required and self.redis_client.client is None:
+            raise AuthError("认证会话存储不可用", 503, "temporarily_unavailable")
+
+    @asynccontextmanager
+    async def lock(self, key: str):
+        """Serialize bounded transactions across workers; abort on lease loss.
+
+        The lease is renewed while awaiting IO. Every cache mutation is fenced
+        against its ownership atomically in Redis: a stalled former owner cannot
+        write after lease expiry, even before its renewal coroutine wakes up.
+        """
+        self._require_backend()
+        redis = self.redis_client.client
+        if redis is None:
+            lock = self._locks.setdefault(key, asyncio.Lock())
+            async with lock:
+                yield
+            return
+        lock = redis.lock(self._key("lock:" + key), timeout=30, blocking_timeout=10, thread_local=False)
+        if not await lock.acquire():
+            raise AuthError("认证会话正在处理中", 503, "temporarily_unavailable")
+        context = self._held_locks.set(self._held_locks.get() + ((lock.name, lock.local.token),))
+        owner = asyncio.current_task()
+        lease_lost = False
+
+        async def renew() -> None:
+            nonlocal lease_lost
+            try:
+                while True:
+                    await asyncio.sleep(5)
+                    await lock.extend(30, replace_ttl=True)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                lease_lost = True
+                owner.cancel()
+
+        renewal = asyncio.create_task(renew())
+        try:
+            async with asyncio.timeout(120):
+                yield
+            if lease_lost or not await lock.owned():
+                raise AuthError("认证会话锁已失效", 503, "temporarily_unavailable")
+        except asyncio.CancelledError:
+            if lease_lost:
+                raise AuthError("认证会话锁已失效", 503, "temporarily_unavailable") from None
+            raise
+        finally:
+            self._held_locks.reset(context)
+            renewal.cancel()
+            with suppress(asyncio.CancelledError):
+                await renewal
+            with suppress(Exception):
+                await lock.release()
+
+    async def _eval(self, script: str, keys: list[str], args: list[Any]):
+        """Fence all writes made in distributed lock contexts in the same Lua call."""
+        locks = self._held_locks.get()
+        checks = "".join(
+            "if redis.call('GET',KEYS[%d]) ~= ARGV[%d] then return redis.error_reply('AUTH_LOCK_LOST') end; "
+            % (len(keys) + index + 1, len(args) + index + 1)
+            for index in range(len(locks))
+        )
+        try:
+            return await self.redis_client.client.eval(
+                checks + script, len(keys) + len(locks),
+                *keys, *(key for key, _ in locks), *args, *(token for _, token in locks),
+            )
+        except Exception as exc:
+            if "AUTH_LOCK_LOST" in str(exc):
+                raise AuthError("认证会话锁已失效", 503, "temporarily_unavailable") from None
+            raise
+
+    async def consume_refresh(self, token_hash: str, ttl: int) -> tuple[Optional[dict[str, Any]], bool]:
+        """Publish the replay marker in the same atomic step as consumption."""
+        self._require_backend()
+        key, used = "refresh:" + token_hash, "refresh_used:" + token_hash
+        if self.redis_client.client is not None:
+            result = await self._eval(
+                "local v=redis.call('GET',KEYS[1]); "
+                "if v then redis.call('SET',KEYS[2],v,'EX',ARGV[1]); "
+                "redis.call('DEL',KEYS[1]); return {v,0}; end; "
+                "return {redis.call('GET',KEYS[2]) or '',1}",
+                [self._key(key), self._key(used)], [ttl],
+            )
+            return (json.loads(result[0]) if result[0] else None, bool(result[1]))
+        async with self.lock("consume:" + token_hash):
+            state = await self.pop_json(key)
+            if state:
+                await self.set_json(used, state, ttl)
+                return state, False
+            return await self.get_json(used), True
+
+    async def index_add(self, key: str, member: str, expires_at: int) -> None:
+        self._require_backend()
+        if self.redis_client.client is not None:
+            # Score-based expiry avoids shortening a live member's lifetime when
+            # another access token has a shorter TTL.
+            await self._eval(
+                "redis.call('ZREMRANGEBYSCORE',KEYS[1],'-inf',ARGV[3]); "
+                "redis.call('ZADD',KEYS[1],ARGV[1],ARGV[2]); "
+                "local top=redis.call('ZREVRANGE',KEYS[1],0,0,'WITHSCORES'); "
+                "redis.call('EXPIREAT',KEYS[1],math.ceil(tonumber(top[2]))); return 1",
+                [self._key(key)], [expires_at, member, int(time.time())],
+            )
+            return
+        self._indexes.setdefault(key, {})[member] = expires_at
+
+    async def index_members(self, key: str) -> list[str]:
+        self._require_backend()
+        now = int(time.time())
+        if self.redis_client.client is not None:
+            result = await self._eval(
+                "redis.call('ZREMRANGEBYSCORE',KEYS[1],'-inf',ARGV[1]); "
+                "return redis.call('ZRANGE',KEYS[1],0,-1)", [self._key(key)], [now],
+            )
+            return [item.decode() if isinstance(item, bytes) else str(item) for item in result]
+        self._indexes[key] = {member: expiry for member, expiry in self._indexes.get(key, {}).items() if expiry > now}
+        return list(self._indexes[key])
 
     async def stop(self) -> None:
         await self.redis_client.stop()
 
     async def set_json(self, key: str, value: Mapping[str, Any], ttl_seconds: int) -> None:
+        self._require_backend()
         full_key = self._key(key)
         if self.redis_client.client is not None:
-            await self.redis_client.client.set(full_key, json.dumps(value, ensure_ascii=False), ex=ttl_seconds)
+            await self._eval("return redis.call('SET',KEYS[1],ARGV[1],'EX',ARGV[2])", [full_key], [json.dumps(value, ensure_ascii=False), ttl_seconds])
             return
         self._memory[full_key] = (dict(value), int(time.time()) + ttl_seconds)
 
     async def get_json(self, key: str) -> Optional[dict[str, Any]]:
+        self._require_backend()
         full_key = self._key(key)
         if self.redis_client.client is not None:
             raw = await self.redis_client.client.get(full_key)
@@ -81,9 +225,10 @@ class TokenCache:
         return dict(value)
 
     async def pop_json(self, key: str) -> Optional[dict[str, Any]]:
+        self._require_backend()
         full_key = self._key(key)
         if self.redis_client.client is not None:
-            raw = await self.redis_client.client.getdel(full_key)
+            raw = await self._eval("local v=redis.call('GET',KEYS[1]); redis.call('DEL',KEYS[1]); return v", [full_key], [])
             return json.loads(raw) if raw else None
         item = self._memory.pop(full_key, None)
         if not item:
@@ -92,17 +237,19 @@ class TokenCache:
         return dict(value) if expires_at > int(time.time()) else None
 
     async def delete(self, key: str) -> None:
+        self._require_backend()
         full_key = self._key(key)
         if self.redis_client.client is not None:
-            await self.redis_client.client.delete(full_key)
+            await self._eval("return redis.call('DEL',KEYS[1])", [full_key], [])
             return
         self._memory.pop(full_key, None)
 
     async def expire(self, key: str, ttl_seconds: int) -> bool:
+        self._require_backend()
         full_key = self._key(key)
         ttl = max(int(ttl_seconds), 1)
         if self.redis_client.client is not None:
-            return bool(await self.redis_client.client.expire(full_key, ttl))
+            return bool(await self._eval("return redis.call('EXPIRE',KEYS[1],ARGV[1])", [full_key], [ttl]))
         item = self._memory.get(full_key)
         if not item:
             return False
@@ -111,6 +258,7 @@ class TokenCache:
         return True
 
     async def list_json(self, prefix: str) -> list[dict[str, Any]]:
+        self._require_backend()
         full_prefix = self._key(prefix)
         values: list[dict[str, Any]] = []
         if self.redis_client.client is not None:
@@ -134,6 +282,7 @@ class TokenCache:
         return values
 
     async def login_error_count(self, username: str) -> int:
+        self._require_backend()
         key = LOGIN_ERROR_PREFIX + username
         if self.redis_client.client is not None:
             value = await self.redis_client.client.get(key)
@@ -148,20 +297,21 @@ class TokenCache:
         return int(value.get("count") or 0)
 
     async def add_login_error(self, username: str, ttl_minutes: int) -> int:
+        self._require_backend()
         key = LOGIN_ERROR_PREFIX + username
         ttl_seconds = ttl_minutes * 60
         if self.redis_client.client is not None:
-            count = await self.redis_client.client.incr(key)
-            await self.redis_client.client.expire(key, ttl_seconds)
+            count = await self._eval("local n=redis.call('INCR',KEYS[1]); redis.call('EXPIRE',KEYS[1],ARGV[1]); return n", [key], [ttl_seconds])
             return int(count)
         count = await self.login_error_count(username) + 1
         self._memory[key] = ({"count": count}, int(time.time()) + ttl_seconds)
         return count
 
     async def clear_login_error(self, username: str) -> None:
+        self._require_backend()
         key = LOGIN_ERROR_PREFIX + username
         if self.redis_client.client is not None:
-            await self.redis_client.client.delete(key)
+            await self._eval("return redis.call('DEL',KEYS[1])", [key], [])
             return
         self._memory.pop(key, None)
 
@@ -191,6 +341,7 @@ class AuthService:
             audience=audience,
             kid=str(jwt_config.get("key-id") or jwt_config.get("kid") or "jbm-auth-rs256"),
             private_key_pem=jwt_config.get("private-key"),
+            verification_keys=jwt_config.get("verification-keys"),
         )
         self.issuer = issuer.rstrip("/")
         self.audience = audience
@@ -274,6 +425,9 @@ class AuthService:
             {
                 "userId": int(user["user_id"]),
                 "username": account.get("account") or user.get("user_name"),
+                "account": account.get("account"),
+                "accountType": account.get("account_type"),
+                "accountVersion": _account_version(account),
                 "mustChangePassword": bool(account.get("must_change_password")),
                 "scope": scope,
                 "codeChallenge": code_challenge,
@@ -315,6 +469,9 @@ class AuthService:
             {
                 "userId": int(user["user_id"]),
                 "username": account.get("account") or user.get("user_name"),
+                "account": account.get("account"),
+                "accountType": account.get("account_type"),
+                "accountVersion": _account_version(account),
                 "mustChangePassword": bool(account.get("must_change_password")),
                 "scope": scope,
                 "codeChallenge": code_challenge,
@@ -398,7 +555,9 @@ class AuthService:
         if not user or not user_is_active(user):
             raise AuthError("用户已被禁用", 403)
         account = {
-            "account": cached.get("username") or user.get("user_name"),
+            "account": cached.get("account") or cached.get("username") or user.get("user_name"),
+            "account_type": cached.get("accountType"),
+            "credential_version": cached.get("accountVersion"),
             "user_id": user_id,
             "must_change_password": cached.get("mustChangePassword"),
         }
@@ -601,6 +760,8 @@ class AuthService:
         return dict(account), dict(user), str(form.get("scope") or "all")
 
     async def client_credentials_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
+        if not await self.cache.readiness():
+            raise AuthError("认证会话存储不可用", 503, "temporarily_unavailable")
         client = await self._require_client(form)
         scope = str(form.get("scope") or client.get("scopeModules") or "all")
         subject = "client:%s" % client["clientId"]
@@ -628,34 +789,42 @@ class AuthService:
         if not refresh_token:
             raise AuthError("refresh_token不能为空", 400, "invalid_request")
         token_hash = _hash_token(refresh_token)
-        state = await self.cache.pop_json("refresh:" + token_hash)
+        state = await self.cache.get_json("refresh:" + token_hash)
         if not state:
-            reused = await self.cache.get_json("refresh_used:" + token_hash)
-            if reused and reused.get("familyId"):
-                await self._revoke_refresh_family(str(reused["familyId"]))
+            state = await self.cache.get_json("refresh_used:" + token_hash)
+        if not state:
             raise AuthError("refresh_token无效或已过期", 400, "invalid_grant")
+        state = await self._resolve_refresh_owner(state)
         requested_client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
         if requested_client_id and requested_client_id != str(state.get("clientId") or ""):
             raise AuthError("refresh_token客户端不匹配", 400, "invalid_grant")
-        user_id = int(state["userId"])
-        user = await self.repository.find_user(user_id)
-        if not user or not user_is_active(user):
-            raise AuthError("用户已被禁用", 403)
-        client = await self.repository.find_client(str(state["clientId"]))
+        client = await self.repository.find_client(str(state.get("clientId") or ""))
         if not client:
             raise AuthError("客户端无效", 401)
         self._validate_token_client(client, form)
+        # Authentication must precede every mutation, including replay revocation.
+        state, reused = await self.cache.consume_refresh(token_hash, self.refresh_seconds)
+        if not state:
+            raise AuthError("refresh_token无效或已过期", 400, "invalid_grant")
         family_id = str(state.get("familyId") or secrets.token_urlsafe(24))
-        await self.cache.set_json(
-            "refresh_used:" + token_hash,
-            {"familyId": family_id},
-            self.refresh_seconds,
-        )
+        if reused:
+            await self._revoke_refresh_family(family_id)
+            raise AuthError("refresh_token已被使用", 400, "invalid_grant")
+        if await self.cache.get_json("refresh_family_revoked:" + family_id):
+            raise AuthError("登录会话已失效", 400, "invalid_grant")
+        user_id = int(state["userId"])
+        user = await self.repository.find_user(user_id)
+        if not user or not user_is_active(user):
+            await self._revoke_refresh_family(family_id)
+            raise AuthError("用户已被禁用", 403)
+        await self._require_account_active(state)
         await self._revoke_access_state(state)
         account = {
-            "account": state.get("username") or user.get("user_name"),
             "user_id": user_id,
             "must_change_password": state.get("mustChangePassword"),
+            "account": state.get("account") or state.get("username") or user.get("user_name"),
+            "account_type": state.get("accountType"),
+            "credential_version": state.get("accountVersion"),
         }
         return await self._issue_user_token(
             client,
@@ -667,12 +836,29 @@ class AuthService:
 
     async def logout(self, token: str | None = None, refresh_token: str | None = None) -> dict[str, bool]:
         if refresh_token:
-            state = await self.cache.pop_json("refresh:" + _hash_token(refresh_token))
+            token_hash = _hash_token(refresh_token)
+            state = (await self.cache.get_json("refresh:" + token_hash)
+                     or await self.cache.get_json("refresh_used:" + token_hash))
             if state and state.get("familyId"):
                 await self._revoke_refresh_family(str(state["familyId"]))
         if token:
+            # Keep the session-to-family reference beyond access expiry, so logout
+            # after expiry or a racing refresh still ends the refresh capability.
+            state = (await self.cache.get_json("access:" + _hash_token(token))
+                     or await self.cache.get_json("session_family:" + _hash_token(token)))
+            if state and state.get("familyId"):
+                await self._revoke_refresh_family(str(state["familyId"]))
             await self.revoke_access_token(token)
         return {"logout": True}
+
+    async def _resolve_refresh_owner(self, state: Mapping[str, Any]) -> dict[str, Any]:
+        """Recover client ownership for replay markers issued before the upgrade."""
+        if state.get("clientId"):
+            return dict(state)
+        family_id = str(state.get("familyId") or "")
+        family = await self.cache.get_json("refresh_family:" + family_id) if family_id else None
+        current = await self.cache.get_json("refresh:" + str(family.get("refreshHash") or "")) if family else None
+        return {**(current or {}), **dict(state)}
 
     async def revoke_token(self, form: Mapping[str, Any]) -> None:
         client_id = str(form.get("client_id") or form.get("clientId") or "").strip()
@@ -686,9 +872,11 @@ class AuthService:
         token_hash = _hash_token(token)
         hint = str(form.get("token_type_hint") or "").strip()
         if hint in {"", "refresh_token"}:
-            state = await self.cache.get_json("refresh:" + token_hash)
+            state = (await self.cache.get_json("refresh:" + token_hash)
+                     or await self.cache.get_json("refresh_used:" + token_hash))
+            if state:
+                state = await self._resolve_refresh_owner(state)
             if state and str(state.get("clientId") or "") == client_id:
-                await self.cache.pop_json("refresh:" + token_hash)
                 if state.get("familyId"):
                     await self._revoke_refresh_family(str(state["familyId"]))
                 return
@@ -701,7 +889,7 @@ class AuthService:
                 await self.revoke_access_token(token)
 
     async def introspect_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
-        await self._require_client(form)
+        caller = await self._require_client(form)
         token = str(form.get("token") or "").strip()
         if not token:
             raise AuthError("token不能为空", 400, "invalid_request")
@@ -712,7 +900,7 @@ class AuthService:
                 await self._require_active_access(token, claims)
             except (JwtError, AuthError):
                 claims = None
-            if claims:
+            if claims and str(claims.get("client_id") or "") == str(caller.get("clientId") or ""):
                 return {
                     "active": True,
                     "scope": claims.get("scope"),
@@ -729,7 +917,19 @@ class AuthService:
                 }
         if hint in {"", "refresh_token"}:
             state = await self.cache.get_json("refresh:" + _hash_token(token))
-            if state:
+            active = bool(state and str(state.get("clientId") or "") == str(caller.get("clientId") or ""))
+            if active:
+                family_id = str(state.get("familyId") or "")
+                user = await self.repository.find_user(int(state.get("userId") or 0))
+                active = bool(user and user_is_active(user) and not await self.cache.get_json("refresh_family_revoked:" + family_id))
+                if active:
+                    try:
+                        await self._require_account_active(state)
+                    except AuthError:
+                        active = False
+                if active and str(user.get("user_name") or "") != "admin":
+                    active = await self.repository.tenant_app_enabled(int(user.get("company_id") or 0), int(caller.get("appId") or 0))
+            if active:
                 return {
                     "active": True,
                     "client_id": state.get("clientId"),
@@ -742,7 +942,8 @@ class AuthService:
     async def userinfo(self, token: str) -> dict[str, Any]:
         claims = self.signer.verify(token)
         await self._require_active_access(token, claims)
-        permissions = await self._permissions_for_claims(claims)
+        role_context = await self._current_role_context(claims)
+        permissions = await self._permissions_for_claims(claims, role_context)
         return {
             "sub": claims.get("sub"),
             "userId": claims.get("user_id"),
@@ -757,7 +958,7 @@ class AuthService:
             "tenantId": claims.get("tenant_id"),
             "departmentId": claims.get("department_id"),
             "userType": claims.get("user_type"),
-            "roles": claims.get("roles") or [],
+            "roles": role_context[0],
             "permissions": permissions,
             "scope": claims.get("scope"),
             "mustChangePassword": bool(claims.get("must_change_password")),
@@ -783,6 +984,7 @@ class AuthService:
             row.pop("jti", None)
             row.pop("accessExpiresAt", None)
             row.pop("familyId", None)
+            row.pop("accountVersion", None)
         total = len(rows)
         start = (curr_page - 1) * page_size
         return {
@@ -808,9 +1010,12 @@ class AuthService:
         session_key = str(session_id or "").strip().lower()
         if not re.fullmatch(r"[0-9a-f]{64}", session_key):
             raise AuthError("会话ID无效", 400)
-        state = await self.cache.get_json("access:" + session_key)
+        state = (await self.cache.get_json("access:" + session_key)
+                 or await self.cache.get_json("session_family:" + session_key))
         if not state:
             return
+        if state.get("familyId"):
+            await self._revoke_refresh_family(str(state["familyId"]))
         expires_at = int(state.get("accessExpiresAt") or 0)
         ttl = expires_at - int(time.time())
         jti = str(state.get("jti") or "")
@@ -842,12 +1047,13 @@ class AuthService:
             await self.cache.delete("access:" + access_key)
 
     async def _revoke_refresh_family(self, family_id: str) -> None:
-        family = await self.cache.pop_json("refresh_family:" + family_id)
         await self.cache.set_json(
             "refresh_family_revoked:" + family_id,
             {"revoked": True},
-            self.refresh_seconds,
+            max(self.refresh_seconds, self.access_seconds) + 120,
         )
+        family = await self.cache.pop_json("refresh_family:" + family_id)
+        await self.cache.delete("family_session:" + family_id)
         if not family:
             return
         refresh_hash = str(family.get("refreshHash") or "")
@@ -873,17 +1079,31 @@ class AuthService:
             return
         raise AuthError("无权限访问", 403)
 
-    async def _permissions_for_claims(self, claims: Mapping[str, Any]) -> list[str]:
-        embedded = claims.get("permissions")
-        if isinstance(embedded, list):
-            return [str(item) for item in embedded if item]
+    async def _current_role_context(self, claims: Mapping[str, Any]) -> tuple[list[str], bool]:
+        if claims.get("user_id") is None:
+            return [], False
+        rows = await self.repository.user_roles(
+            int(claims["user_id"]), int(claims.get("app_id") or 0), int(claims.get("tenant_id") or 0),
+        )
+        codes = sorted({str(row["role_code"]) for row in rows if row.get("role_code")})
+        # Keep the legacy admin rule, but never reuse a historical role-1 grant.
+        root = str(claims.get("username") or "").lower() == "admin" or any(
+            int(row.get("role_id") or 0) == 1 for row in rows
+        )
+        return codes, root
+
+    async def _permissions_for_claims(
+        self, claims: Mapping[str, Any], role_context: tuple[list[str], bool] | None = None,
+    ) -> list[str]:
         raw_user_id = claims.get("user_id")
         if raw_user_id is None:
-            return []
+            embedded = claims.get("permissions")
+            return [str(item) for item in embedded if item] if isinstance(embedded, list) else []
         user_id = int(raw_user_id)
+        _, root = role_context if role_context is not None else await self._current_role_context(claims)
         rows = await self.repository.user_authorities(
             user_id,
-            bool(claims.get("root")) or str(claims.get("username") or "").lower() == "admin",
+            root,
             int(claims.get("app_id") or 0),
             int(claims.get("tenant_id") or 0),
         )
@@ -893,10 +1113,38 @@ class AuthService:
         jti = str(claims.get("jti") or "")
         if jti and await self.cache.get_json("revoked:" + jti):
             raise AuthError("token已失效", 401)
+        client = await self.repository.find_client(str(claims.get("client_id") or ""))
+        if not client:
+            raise AuthError("客户端已失效", 401)
         if claims.get("user_id") is not None:
             state = await self.cache.get_json("access:" + _hash_token(token))
             if not state or str(state.get("jti") or "") != jti:
                 raise AuthError("登录会话已失效", 401)
+            if state.get("familyId") and await self.cache.get_json("refresh_family_revoked:" + str(state["familyId"])):
+                raise AuthError("登录会话已失效", 401)
+            user = await self.repository.find_user(int(claims["user_id"]))
+            if not user or not user_is_active(user):
+                raise AuthError("用户已被禁用", 403)
+            await self._require_account_active(state)
+            if str(user.get("user_name") or "") != "admin":
+                tenant_id = int(user.get("company_id") or 0)
+                if tenant_id != int(claims.get("tenant_id") or 0) or not await self.repository.tenant_app_enabled(tenant_id, int(claims.get("app_id") or 0)):
+                    raise AuthError("租户应用授权已失效", 403)
+
+    async def _require_account_active(self, state: Mapping[str, Any]) -> Optional[dict[str, Any]]:
+        # Old sessions without an account reference remain compatible. New
+        # sessions keep the actual login account (mobile/email may differ from username).
+        account_name = str(state.get("account") or "")
+        if not account_name:
+            return
+        account = await self.repository.find_account(
+            account_name, str(state.get("accountType") or infer_account_type(account_name)), self.account_domain,
+        )
+        if not account or int(account.get("status") or 0) != 1 or int(account.get("user_id") or 0) != int(state.get("userId") or 0):
+            raise AuthError("帐号已被禁用", 403)
+        if state.get("accountVersion") and not hmac.compare_digest(str(state["accountVersion"]), _account_version(account)):
+            raise AuthError("帐号凭证已变更，请重新登录", 401, "invalid_grant")
+        return dict(account)
 
     def openid_configuration(self) -> dict[str, Any]:
         issuer = self.issuer
@@ -926,7 +1174,7 @@ class AuthService:
         }
 
     def jwks(self) -> dict[str, Any]:
-        return {"keys": [self.signer.jwk()]}
+        return self.signer.jwks()
 
     async def public_key(self, client_id: str) -> Optional[str]:
         client = await self.repository.find_client(client_id)
@@ -1336,12 +1584,16 @@ class AuthService:
         redirect_uri = str(cached.get("redirectUri") or "")
         if not redirect_uri:
             raise AuthError("redirect_uri不能为空", 400)
+        source_session = await self.cache.get_json("access:" + _hash_token(token)) or {}
         redirect_url = await self._authorization_redirect(
             client,
             redirect_uri,
             {
                 "userId": user_id,
                 "username": claims.get("username") or user.get("user_name"),
+                "account": source_session.get("account"),
+                "accountType": source_session.get("accountType"),
+                "accountVersion": source_session.get("accountVersion"),
                 "mustChangePassword": bool(claims.get("must_change_password")),
                 "scope": str(claims.get("scope") or "all"),
                 "codeChallenge": cached.get("codeChallenge"),
@@ -1501,6 +1753,11 @@ class AuthService:
         refresh_state = {
             "userId": user_id,
             "username": username,
+            "account": account.get("account") if account.get("account_type") else None,
+            "accountType": account.get("account_type"),
+            "accountVersion": account.get("credential_version") or (
+                _account_version(account) if "password" in account or "update_time" in account else None
+            ),
             "clientId": client.get("clientId"),
             "scope": scope,
             "mustChangePassword": bool(account.get("must_change_password")),
@@ -1509,6 +1766,9 @@ class AuthService:
             "accessJti": jti,
             "accessExpiresAt": now + self.access_seconds,
         }
+        current_account = await self._require_account_active(refresh_state)
+        if current_account:
+            refresh_state["accountVersion"] = _account_version(current_account)
         await self.cache.set_json(
             "refresh:" + refresh_hash,
             refresh_state,
@@ -1524,7 +1784,10 @@ class AuthService:
             },
             self.refresh_seconds,
         )
-        await self._record_online_session(access_token, claims, user, client, family_id)
+        await self._record_online_session(access_token, claims, user, client, family_id, refresh_state)
+        if await self.cache.get_json("refresh_family_revoked:" + family_id):
+            await self._revoke_refresh_family(family_id)
+            raise AuthError("登录会话已失效", 400, "invalid_grant")
         return self._token_response(
             access_token,
             refresh_token,
@@ -1563,18 +1826,27 @@ class AuthService:
         user: Mapping[str, Any],
         client: Mapping[str, Any],
         family_id: str,
+        refresh_state: Mapping[str, Any] | None = None,
+    ) -> None:
+        index_key = "user_sessions:%s:%s" % (claims.get("user_id"), claims.get("app_id"))
+        async with self.cache.lock(index_key):
+            await self._record_indexed_session(access_token, claims, user, client, family_id, index_key, refresh_state)
+
+    async def _record_indexed_session(
+        self, access_token: str, claims: Mapping[str, Any], user: Mapping[str, Any],
+        client: Mapping[str, Any], family_id: str, index_key: str,
+        refresh_state: Mapping[str, Any] | None = None,
     ) -> None:
         now = int(time.time())
         expires_at = int(claims.get("exp") or now)
         ttl = expires_at - now
         if ttl <= 0:
             return
-        existing = [
-            row
-            for row in await self.cache.list_json("access:")
-            if str(row.get("userId") or "") == str(claims.get("user_id") or "")
-            and str(row.get("appId") or "") == str(claims.get("app_id") or "")
-        ]
+        existing = []
+        for member in await self.cache.index_members(index_key):
+            row = await self.cache.get_json("family_session:" + member)
+            if row and member != family_id and not await self.cache.get_json("refresh_family_revoked:" + member):
+                existing.append(row)
         existing.sort(key=lambda row: str(row.get("loginTime") or ""), reverse=True)
         for stale in existing[self.max_sessions_per_user - 1 :]:
             stale_family = str(stale.get("familyId") or "")
@@ -1600,8 +1872,17 @@ class AuthService:
             "jti": claims.get("jti"),
             "accessExpiresAt": expires_at,
             "familyId": family_id,
+            "account": (refresh_state or {}).get("account"),
+            "accountType": (refresh_state or {}).get("accountType"),
+            "accountVersion": (refresh_state or {}).get("accountVersion"),
         }
-        await self.cache.set_json("access:" + _hash_token(access_token), row, ttl)
+        token_hash = _hash_token(access_token)
+        await self.cache.set_json("access:" + token_hash, row, ttl)
+        await self.cache.set_json("session_family:" + token_hash, {"familyId": family_id}, max(ttl, self.refresh_seconds))
+        session_ttl = max(ttl, self.refresh_seconds)
+        await self.cache.set_json("family_session:" + family_id, row, session_ttl)
+        await self.cache.index_add(index_key, family_id, now + session_ttl)
+        await self.cache.index_add("client_sessions:" + str(client.get("clientId") or ""), family_id, now + session_ttl)
 
     async def _is_revoked(self, row: Mapping[str, Any]) -> bool:
         jti = str(row.get("jti") or "")
@@ -1625,6 +1906,15 @@ class AuthService:
                 continue
             filtered.append(row)
         return filtered
+
+
+def _account_version(account: Mapping[str, Any]) -> str:
+    """Opaque server-side credential version; never embed hashes in JWTs or logs."""
+    encoded = json.dumps(
+        [str(account.get("password") or ""), str(account.get("update_time") or "")],
+        ensure_ascii=False, separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _secret_matches(raw: str, stored: str, allow_plaintext: bool = False) -> bool:

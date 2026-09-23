@@ -2,7 +2,15 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { defineJbmModule, JbmProductHeader, JbmSidebarNavigation, JbmWorkspaceNavigation, registerJbmModules } from '../dist/index.js'
+import { defineJbmModule, JbmProductHeader, JbmSidebarNavigation, JbmWorkspaceNavigation, JbmSegmentedControl, registerJbmModules } from '../dist/index.js'
+
+test('segmented control has a labelled group, selected state and disabled choices', async () => {
+  const html = await renderToString(createSSRApp({ render: () => h(JbmSegmentedControl, { label: '统计周期', modelValue: 2, options: [{value: 1, label: '日'}, {value: 2, label: '月'}, {value: 3, label: '年', disabled: true}] }) }))
+  assert.match(html, /role="group" aria-label="统计周期"/)
+  assert.match(html, /--segment-index:1/)
+  assert.match(html, /aria-pressed="true"[^>]*>月/)
+  assert.match(html, /disabled[^>]*>年/)
+})
 
 test('module id must be namespaced', () => {
   assert.throws(() => defineJbmModule({ id: 'gateway', version: '1.0.0', routes: [] }), /namespaced id/)

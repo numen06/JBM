@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter, RouterView, RouterLink } from 'vue-router'
-import { Bell, ChevronRight, LogOut, Mail, MailOpen, Moon, PanelLeft, Sun, X } from '@lucide/vue'
+import { useRoute, useRouter, RouterView } from 'vue-router'
+import { JbmWorkspaceShell, JbmSidebarNavigation } from '@jbm7/vue-core'
+import { Bell, LogOut, Mail, MailOpen } from '@lucide/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useMenuStore } from '@/stores/menu'
@@ -15,7 +16,6 @@ import JbmLogo from '@/components/JbmLogo.vue'
 import { useDocImageSrc } from '@/composables/useDocImageSrc'
 import { extractApiError } from '@/lib/errors'
 import { passwordPolicyError } from '@/lib/passwordPolicy'
-import { cn } from '@/lib/utils'
 import type { SnowflakeId } from '@/api/types'
 
 const route = useRoute()
@@ -34,10 +34,6 @@ const passwordForm = ref({
 })
 const passwordSaving = ref(false)
 const passwordError = ref('')
-const NAV_GROUP_STATE_KEY = 'jbm_admin_expanded_nav_groups'
-const THEME_STORAGE_KEY = 'jbm_admin_theme'
-type ThemeMode = 'light' | 'dark'
-
 const navGroups = computed(() => menuStore.navGroups)
 const activeNavPath = computed(() => {
   const items = navGroups.value.flatMap((group) => group.items)
@@ -45,21 +41,15 @@ const activeNavPath = computed(() => {
     .filter((item) => route.path === item.to || route.path.startsWith(`${item.to}/`))
     .sort((a, b) => b.to.length - a.to.length)[0]?.to
 })
-const activeGroupLabel = computed(() =>
-  navGroups.value.find((group) => group.items.some((item) => item.to === activeNavPath.value))?.label,
-)
-const expandedGroupLabels = ref<string[]>([])
+const shellNavGroups = computed(() => navGroups.value.map(group => ({ label: group.label, items: group.items.map(item => ({ path: item.to, label: item.title, icon: item.icon, active: activeNavPath.value === item.to })) })))
 const unreadLabel = computed(() =>
   messageStore.unreadCount > 99 ? '99+' : String(messageStore.unreadCount),
 )
 const showPasswordReminder = computed(
   () => auth.mustChangePassword && !passwordReminderDismissed.value,
 )
-const compactSidebar = computed(() => app.sidebarCollapsed && !mobileSidebarOpen.value)
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
-const themeMode = ref<ThemeMode>(readInitialTheme())
-const isDarkTheme = computed(() => themeMode.value === 'dark')
 const avatarSrc = useDocImageSrc(computed(() => auth.user?.avatar))
 const userInitial = computed(() => {
   const name = auth.user?.nickName || auth.user?.userName || '管'
@@ -112,25 +102,6 @@ async function submitPasswordChange() {
   }
 }
 
-function readInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'light'
-  const stored = localStorage.getItem(THEME_STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark') return stored
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
-function applyTheme(mode: ThemeMode) {
-  if (typeof document === 'undefined') return
-  document.documentElement.classList.toggle('dark', mode === 'dark')
-  document.documentElement.dataset.theme = mode
-}
-
-function toggleTheme() {
-  themeMode.value = isDarkTheme.value ? 'light' : 'dark'
-  localStorage.setItem(THEME_STORAGE_KEY, themeMode.value)
-  applyTheme(themeMode.value)
-}
-
 function openProfile() {
   router.push({ name: 'profile' })
 }
@@ -171,80 +142,12 @@ async function markRecentRead(msgId?: string) {
   await messageStore.read([msgId])
 }
 
-function persistExpandedGroups(labels = expandedGroupLabels.value) {
-  localStorage.setItem(NAV_GROUP_STATE_KEY, JSON.stringify(labels))
-}
-
-function setExpandedGroups(labels: string[]) {
-  const validLabels = new Set(navGroups.value.map((group) => group.label))
-  expandedGroupLabels.value = [...new Set(labels)].filter((label) => validLabels.has(label))
-  persistExpandedGroups()
-}
-
-function isGroupExpanded(label: string) {
-  return expandedGroupLabels.value.includes(label)
-}
-
-function toggleGroup(label: string) {
-  if (compactSidebar.value) return
-  if (isGroupExpanded(label)) {
-    setExpandedGroups(expandedGroupLabels.value.filter((item) => item !== label))
-  } else {
-    setExpandedGroups([...expandedGroupLabels.value, label])
-  }
-}
-
-function toggleNavigation() {
-  if (window.matchMedia('(min-width: 1024px)').matches) {
-    app.toggleSidebar()
-    return
-  }
-  mobileSidebarOpen.value = !mobileSidebarOpen.value
-}
-
-function expandCurrentGroup() {
-  const active = activeGroupLabel.value
-  if (!active || expandedGroupLabels.value.includes(active)) return
-  setExpandedGroups([...expandedGroupLabels.value, active])
-}
-
-function loadExpandedGroups() {
-  const stored = localStorage.getItem(NAV_GROUP_STATE_KEY)
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed)) {
-        setExpandedGroups(parsed.filter((label): label is string => typeof label === 'string'))
-        expandCurrentGroup()
-        return
-      }
-    } catch {
-      localStorage.removeItem(NAV_GROUP_STATE_KEY)
-    }
-  }
-  setExpandedGroups(activeGroupLabel.value ? [activeGroupLabel.value] : navGroups.value.slice(0, 1).map((group) => group.label))
-}
-
 onMounted(() => {
-  applyTheme(themeMode.value)
-  loadExpandedGroups()
   messageStore.refreshSummary()
   messageStore.connectRealtime()
 })
 
-watch(activeGroupLabel, expandCurrentGroup)
 watch(() => route.fullPath, () => { mobileSidebarOpen.value = false })
-
-watch(
-  () => navGroups.value.map((group) => group.label).join('|'),
-  () => {
-    setExpandedGroups(expandedGroupLabels.value)
-    expandCurrentGroup()
-    if (!expandedGroupLabels.value.length && navGroups.value.length) {
-      setExpandedGroups([navGroups.value[0].label])
-    }
-  },
-)
 
 watch(
   () => auth.accessToken,
@@ -265,99 +168,13 @@ watch(
 </script>
 
 <template>
-  <div class="flex min-h-screen overflow-x-hidden bg-muted/30">
-    <button
-      v-if="mobileSidebarOpen"
-      type="button"
-      class="fixed inset-0 z-40 bg-black/45 lg:hidden"
-      aria-label="关闭导航"
-      @click="mobileSidebarOpen = false"
-    />
-    <aside
-      :class="
-        cn(
-          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r bg-card shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:max-w-none lg:shrink-0 lg:shadow-none',
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          compactSidebar ? 'lg:w-16' : 'lg:w-56',
-        )
-      "
-    >
-      <div class="flex h-14 items-center gap-2 border-b px-4">
-        <JbmLogo class="size-8 rounded-md" alt="JBM" />
-        <span v-if="!compactSidebar" class="font-semibold">JBM 管理后台</span>
-        <Button class="ml-auto lg:hidden" variant="ghost" size="icon" aria-label="关闭导航" @click="mobileSidebarOpen = false">
-          <X class="h-4 w-4" />
-        </Button>
-      </div>
-      <nav class="flex-1 overflow-y-auto p-2">
-        <p
-          v-if="menuStore.loadError && !compactSidebar"
-          class="mb-2 px-2 text-xs text-destructive"
-        >
-          {{ menuStore.loadError }}
-        </p>
-        <div v-for="group in navGroups" :key="group.label" class="mb-1">
-          <button
-            v-if="!compactSidebar"
-            type="button"
-            class="mb-1 flex h-8 w-full items-center justify-between rounded-md px-2 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            :aria-expanded="isGroupExpanded(group.label)"
-            @click="toggleGroup(group.label)"
-          >
-            <span class="truncate">{{ group.label }}</span>
-            <span class="ml-2 flex items-center gap-1">
-              <span class="text-[10px] font-normal text-muted-foreground/80">{{ group.items.length }}</span>
-              <ChevronRight
-                :class="
-                  cn(
-                    'h-3.5 w-3.5 shrink-0 transition-transform',
-                    isGroupExpanded(group.label) && 'rotate-90',
-                  )
-                "
-              />
-            </span>
-          </button>
-          <div v-else class="mx-2 my-2 h-px bg-border" :title="group.label" />
-          <div v-show="compactSidebar || isGroupExpanded(group.label)" class="space-y-0.5">
-            <RouterLink
-              v-for="item in group.items"
-              :key="item.name"
-              :to="item.to"
-              :class="
-                cn(
-                  'flex min-h-11 items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent lg:min-h-0 lg:px-2',
-                  compactSidebar && 'justify-center',
-                  activeNavPath === item.to && 'bg-accent font-medium text-accent-foreground',
-                )
-              "
-              :title="item.title"
-            >
-              <component :is="item.icon" class="h-4 w-4 shrink-0" />
-              <span v-if="!compactSidebar" class="truncate">{{ item.title }}</span>
-            </RouterLink>
-          </div>
-        </div>
-      </nav>
-    </aside>
-
-    <div class="flex min-w-0 flex-1 flex-col">
-      <header class="flex h-14 items-center justify-between gap-2 border-b bg-card px-2 sm:px-4">
-        <div class="flex min-w-0 items-center gap-1 sm:gap-2">
-          <Button variant="ghost" size="icon" aria-label="切换导航" @click="toggleNavigation">
-            <PanelLeft class="h-4 w-4" />
-          </Button>
-          <span class="truncate text-sm font-medium">{{ pageTitle }}</span>
-        </div>
-        <div class="flex shrink-0 items-center gap-1 sm:gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            :title="isDarkTheme ? '切换白色皮肤' : '切换黑色皮肤'"
-            @click="toggleTheme"
-          >
-            <Sun v-if="isDarkTheme" class="h-4 w-4" />
-            <Moon v-else class="h-4 w-4" />
-          </Button>
+  <JbmWorkspaceShell :collapsed="app.sidebarCollapsed" @update:collapsed="app.toggleSidebar()" v-model:mobile-open="mobileSidebarOpen" brand="JBM 管理后台" workspace="JBM 管理工作台" :title="pageTitle">
+    <template #logo><JbmLogo alt="JBM" /></template>
+    <template #sidebar>
+      <p v-if="menuStore.loadError" class="m-3 text-xs text-destructive">{{ menuStore.loadError }}</p>
+      <JbmSidebarNavigation :groups="shellNavGroups" @navigate="router.push($event)" />
+    </template>
+    <template #actions>
           <div class="relative">
             <Button
               variant="ghost"
@@ -458,13 +275,9 @@ watch(
             <LogOut class="h-4 w-4" />
             <span class="hidden sm:inline">退出</span>
           </Button>
-        </div>
-      </header>
-      <main class="min-w-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
-        <RouterView />
-      </main>
-    </div>
-
+    </template>
+    <template #default><RouterView /></template>
+    <template #overlays>
     <Dialog
       :open="showPasswordReminder"
       title="建议修改初始密码"
@@ -504,5 +317,6 @@ watch(
         </div>
       </form>
     </Dialog>
-  </div>
+    </template>
+  </JbmWorkspaceShell>
 </template>

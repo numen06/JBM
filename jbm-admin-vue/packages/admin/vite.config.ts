@@ -15,6 +15,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, '../../src'),
       '@jbm7/sdk': path.resolve(__dirname, '../sdk/src/index.ts'),
+      '@jbm7/vue-core/design.css': path.resolve(__dirname, '../vue-core/design.css'),
+      '@jbm7/vue-core/design': path.resolve(__dirname, '../vue-core/src/design.ts'),
       '@jbm7/vue-core': path.resolve(__dirname, '../vue-core/src/index.ts'),
     },
   },

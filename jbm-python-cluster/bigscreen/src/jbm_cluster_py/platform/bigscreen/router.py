@@ -6,6 +6,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Body, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from jbm_cluster_py.common.result import ok
+from jbm_cluster_py.platform.bigscreen.presentation import visible
 from jbm_cluster_py.platform.bigscreen.repository import BigscreenRepository
 from jbm_cluster_py.platform.bigscreen.service import BigscreenService
 
@@ -26,6 +27,8 @@ def build_bigscreen_router(repository: BigscreenRepository, service: BigscreenSe
         )
         for row in page["contents"]:
             row.update(service.deployment_status(row))
+        if not _can_manage(request):
+            page["contents"] = [row for row in page["contents"] if visible(row)]
         return ok(page, "查询分页列表成功")
 
     @router.post("/bigscreenView/list", tags=["大屏管理"])
@@ -35,7 +38,12 @@ def build_bigscreen_router(repository: BigscreenRepository, service: BigscreenSe
         page = await repository.page(
             body or {}, True, tenant_id=_tenant_scope(request), project_id=_project_scope(request)
         )
-        return ok(page["contents"], "查询列表成功")
+        rows = page["contents"]
+        if not _can_manage(request):
+            rows = [row for row in rows if visible(row)]
+        for row in rows:
+            row.update(service.deployment_status(row))
+        return ok(rows, "查询列表成功")
 
     @router.post("/bigscreenView/model", tags=["大屏管理"])
     async def model(request: Request, body: dict[str, Any]) -> dict[str, Any]:
@@ -44,8 +52,17 @@ def build_bigscreen_router(repository: BigscreenRepository, service: BigscreenSe
         if not row and _is_platform(_identity(request)):
             row = await repository.get(view_id)
         if row:
+            if not visible(row) and not _can_manage(request):
+                raise HTTPException(status_code=404, detail="场景不存在或尚未发布")
             row.update(service.deployment_status(row))
         return ok(row, "查询对象成功")
+
+    @router.post("/bigscreenView/presentation", tags=["大屏管理"])
+    async def presentation(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        _require_manager(request)
+        return ok(
+            await service.configure_presentation(body, _tenant_scope(request)), "场景配置已保存"
+        )
 
     @router.post("/bigscreenView/save", tags=["大屏管理"])
     async def save(request: Request, body: dict[str, Any]) -> dict[str, Any]:
@@ -198,11 +215,17 @@ def _user_id(request: Request) -> str:
 
 
 def _require_manager(request: Request) -> None:
+    if _can_manage(request):
+        return
+    raise HTTPException(status_code=403, detail="仅平台或租户管理员可管理大屏")
+
+
+def _can_manage(request: Request) -> bool:
     identity = _identity(request)
     if _is_platform(identity) or _role_codes(identity) & {
         "tenant_admin",
         "iot_admin",
         "building_admin",
     }:
-        return
-    raise HTTPException(status_code=403, detail="仅平台或租户管理员可管理大屏")
+        return True
+    return False

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { JbmMetricCard } from '@jbm7/vue-core'
 import { ChevronDown, ChevronRight, AlertCircle, Info } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import CardContent from '@/components/ui/CardContent.vue'
-import Skeleton from '@/components/ui/Skeleton.vue'
 import Badge from '@/components/ui/Badge.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
@@ -242,11 +242,11 @@ const metricCards = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <PageHeader title="仪表盘" :description="pageDescription" />
 
     <!-- 身份与状态条 -->
-    <Card>
+    <Card class="jbm-summary">
       <CardContent class="flex flex-col gap-3 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div class="space-y-1 text-sm">
           <p>
@@ -302,30 +302,12 @@ const metricCards = computed(() => {
       <h2 class="mb-3 text-sm font-medium text-muted-foreground">
         {{ dashboardIdentity?.scope === 'tenant' ? '租户状态' : '平台状态' }}
       </h2>
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card v-for="{ def, display } in metricCards" :key="def.key">
-          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium text-muted-foreground">
-              {{ def.title }}
-            </CardTitle>
-            <component :is="def.icon" class="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton v-if="metricsLoading" class="h-8 w-20" />
-            <div v-else class="flex flex-wrap items-baseline gap-2">
-              <span class="text-3xl font-bold tabular-nums">{{ display.text }}</span>
-              <span v-if="def.unit && display.text !== '—'" class="text-sm text-muted-foreground">
-                {{ def.unit }}
-              </span>
-              <Badge v-if="display.badge" :variant="display.badgeVariant ?? 'secondary'">
-                {{ display.badge }}
-              </Badge>
-            </div>
-            <p v-if="def.description" class="mt-1 text-xs text-muted-foreground">
-              {{ def.description }}
-            </p>
-          </CardContent>
-        </Card>
+      <div class="jbm-metric-grid">
+        <JbmMetricCard v-for="{ def, display } in metricCards" :key="def.key"
+          :label="def.title" :value="display.text" :unit="def.unit" :hint="def.description"
+          :icon="def.icon" :loading="metricsLoading">
+          <template #status><Badge v-if="display.badge" :variant="display.badgeVariant ?? 'secondary'">{{ display.badge }}</Badge></template>
+        </JbmMetricCard>
       </div>
     </section>
 

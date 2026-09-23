@@ -43,6 +43,9 @@ const props = withDefaults(
 
 <template>
   <button
+    class="jbm-control"
+    :data-variant="props.variant"
+    :data-size="props.size"
     :type="props.type"
     :disabled="props.disabled"
     :class="cn(buttonVariants({ variant: props.variant, size: props.size }), $attrs.class as string)"

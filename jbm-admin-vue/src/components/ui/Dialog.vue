@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
+import { ref } from 'vue'
+import { useJbmDialog } from '@jbm7/vue-core'
 
 defineOptions({ inheritAttrs: false })
-defineProps<{ open?: boolean; title?: string }>()
-defineEmits<{ 'update:open': [value: boolean] }>()
+const props = defineProps<{ open?: boolean; title?: string }>()
+const emit = defineEmits<{ 'update:open': [value: boolean] }>()
+const panel = ref<HTMLElement | null>(null)
+useJbmDialog(() => props.open, panel, () => emit('update:open', false))
 </script>
 
 <template>
   <Teleport to="body">
+    <Transition name="jbm-dialog">
     <div
       v-if="open"
-      class="jbm-dialog-portal fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 p-0 sm:items-center sm:p-4"
+      class="jbm-dialog-portal jbm-dialog-overlay fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/50 p-0 sm:items-center sm:p-4"
       @click.self="$emit('update:open', false)"
     >
       <div
+        ref="panel" role="dialog" aria-modal="true" :aria-label="title || '对话框'" tabindex="-1"
         :class="
           cn(
-            'relative z-50 flex max-h-[94dvh] w-full max-w-lg flex-col rounded-t-lg border bg-card shadow-lg sm:max-h-[calc(100dvh-2rem)] sm:rounded-lg',
+            'jbm-dialog-panel relative z-50 flex max-h-[94dvh] w-full max-w-lg flex-col rounded-t-lg border bg-card shadow-lg sm:max-h-[calc(100dvh-2rem)] sm:rounded-lg',
             $attrs.class as string,
           )
         "
@@ -38,5 +44,6 @@ defineEmits<{ 'update:open': [value: boolean] }>()
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>

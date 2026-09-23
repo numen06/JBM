@@ -8,6 +8,7 @@ import { createAdminPlatformClient } from '@/platformClient'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
 import './assets/index.css'
+import '@jbm7/vue-core/design.css'
 
 const app = createApp(App)
 const pinia = createPinia()

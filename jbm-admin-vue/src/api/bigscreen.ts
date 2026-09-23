@@ -13,6 +13,14 @@ export interface BigscreenView {
   deployed?: boolean
   packageAvailable?: boolean
   retentionWarning?: string
+  configData?: unknown
+}
+
+export function sceneSettings(row: BigscreenView): { kind?: string; status?: string; isDefault?: boolean; modelIds?: string[] } {
+  try { const value = typeof row.configData === 'string' ? JSON.parse(row.configData) : row.configData; return value && typeof value === 'object' ? value : {} } catch { return {} }
+}
+export async function savePresentation(id: string, settings: { status: string; isDefault: boolean }) {
+  return unwrap(await post<BigscreenView>('/bigscreen/bigscreenView/presentation', { id, ...settings }))
 }
 
 export interface BigscreenStorage {

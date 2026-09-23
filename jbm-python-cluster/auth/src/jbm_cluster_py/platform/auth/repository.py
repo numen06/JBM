@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional
+from urllib.parse import urlsplit
 
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
@@ -62,6 +63,75 @@ class AuthRepository:
     async def has_table(self, table_name: str) -> bool:
         async with self.engine.begin() as conn:
             return await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table(table_name))
+
+    async def require_oidc_schema(self) -> None:
+        """Production schema is owned by Center, never created by Auth at runtime."""
+        await require_tables(self.engine, ("base_auth_subject",))
+
+    async def oidc_subject(self, user_id: int) -> str:
+        """Allocate a permanent, opaque subject with database-enforced uniqueness.
+
+        Rows are retained when users are removed; user IDs must never be recycled.
+        Competing processes converge on the winning row after their insert rolls back.
+        """
+        await self.require_oidc_schema()
+        params = {"user_id": int(user_id)}
+        query = text("SELECT subject FROM base_auth_subject WHERE user_id=:user_id")
+        async with self.engine.connect() as conn:
+            subject = (await conn.execute(query, params)).scalar_one_or_none()
+            if subject is not None:
+                return str(subject)
+            if not (await conn.execute(
+                text("SELECT 1 FROM base_user WHERE user_id=:user_id"), params
+            )).first():
+                raise ValueError("Cannot allocate an OIDC subject for an unknown user")
+        for _ in range(3):
+            subject = secrets.token_urlsafe(32)
+            try:
+                async with self.engine.begin() as conn:
+                    await conn.execute(
+                        text("INSERT INTO base_auth_subject (user_id, subject, create_time) "
+                             "VALUES (:user_id, :subject, :create_time)"),
+                        {**params, "subject": subject, "create_time": datetime.now()},
+                    )
+                return subject
+            except IntegrityError:
+                async with self.engine.connect() as conn:
+                    existing = (await conn.execute(query, params)).scalar_one_or_none()
+                if existing is not None:
+                    return str(existing)
+                # A subject collision must generate a fresh value, never reuse it.
+        raise RuntimeError("Unable to allocate a unique OIDC subject")
+
+    async def oidc_user_context(
+        self, user_id: int, client: Mapping[str, Any]
+    ) -> dict[str, Any] | None:
+        """Check explicit current membership and app grants without legacy root shortcuts."""
+        current_client = await self.find_client(str(client.get("clientId") or ""))
+        if not current_client or not current_client.get("oidc", {}).get("enabled"):
+            return None
+        user = await self.find_user(user_id)
+        if not user or not user_is_active(user):
+            return None
+        tenant_id = _int_or_none(user.get("company_id"))
+        app_id = _int_or_none(current_client.get("appId"))
+        if tenant_id is None or app_id is None:
+            return None
+        async with self.engine.connect() as conn:
+            rows = (await conn.execute(text("""
+                SELECT DISTINCT r.role_code FROM base_role_user ru
+                JOIN base_role r ON r.role_id=ru.role_id AND r.status=1
+                JOIN base_user_org uo ON uo.user_id=ru.user_id AND uo.org_id=ru.tenant_id
+                JOIN base_org org ON org.id=uo.org_id AND org.status=1
+                JOIN base_tenant_app ta ON ta.tenant_id=ru.tenant_id
+                    AND ta.app_id=ru.app_id AND ta.status=1
+                WHERE ru.user_id=:user_id AND ru.tenant_id=:tenant_id AND ru.app_id=:app_id
+                    AND (r.app_id=:app_id OR r.app_id IS NULL)
+            """), {"user_id": user_id, "tenant_id": tenant_id, "app_id": app_id})).all()
+        if not rows:
+            return None
+        return {"user": user, "tenantId": tenant_id, "appId": app_id,
+                "roles": sorted({str(row[0]) for row in rows if row[0]})}
 
     async def record_login(
         self,
@@ -139,6 +209,7 @@ class AuthRepository:
                         "publicClient": bool(oauth.get("publicClient")),
                         "redirectUris": list(oauth.get("redirectUris") or []),
                         "registration": registration,
+                        "oidc": _client_oidc_settings(data),
                         "source": "base_app",
                     }
             if await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table("base_api_key")):
@@ -157,7 +228,8 @@ class AuthRepository:
                     )
                 ).first()
                 data = _row_dict(row)
-                if data and _active_status(data.get("status")) and not data.get("revoke_time"):
+                if (data and _active_status(data.get("status")) and not data.get("revoke_time")
+                        and _client_expiry_valid(data.get("expire_time"))):
                     return {
                         "clientId": data.get("api_key"),
                         "clientSecret": data.get("secret_key"),
@@ -166,6 +238,7 @@ class AuthRepository:
                         "privateKey": data.get("private_key"),
                         "scopeModules": data.get("scope_modules"),
                         "source": "base_api_key",
+                        "oidc": {"enabled": False},
                     }
         return None
 
@@ -911,6 +984,79 @@ def _client_oauth_settings(data: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _client_expiry_valid(value: Any) -> bool:
+    if value is None or value == "":
+        return True
+    try:
+        expiry = value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+        return expiry > datetime.now(expiry.tzinfo)
+    except (TypeError, ValueError):
+        # Malformed expiry data must not turn a time-limited API key into a permanent key.
+        return False
+
+
+def _client_oidc_settings(data: Mapping[str, Any]) -> dict[str, Any]:
+    """Opt-in OIDC registration, intentionally separate from permissive legacy settings."""
+    raw = _extend_data(data).get("oidc")
+    if not isinstance(raw, Mapping) or raw.get("enabled") is not True:
+        return {"enabled": False}
+
+    def strings(name: str, default: list[str] | None = None) -> list[str]:
+        value = raw.get(name, default)
+        if not isinstance(value, list) or any(
+            not isinstance(item, str) or not item or item != item.strip()
+            or any(ord(char) < 33 or ord(char) == 127 for char in item)
+            for item in value
+        ):
+            raise ValueError(f"Invalid OIDC {name}")
+        return list(dict.fromkeys(value))
+
+    def redirects(name: str, default: list[str] | None = None) -> list[str]:
+        values = strings(name, default)
+        for value in values:
+            parsed = urlsplit(value)
+            if (not parsed.hostname or parsed.username or parsed.password or parsed.fragment
+                    or "*" in value or "\\" in value or parsed.scheme not in {"http", "https"}
+                    or (parsed.scheme == "http"
+                        and parsed.hostname not in {"127.0.0.1", "::1", "localhost"})):
+                raise ValueError(f"Invalid OIDC {name}")
+            # Force validation of malformed/out-of-range ports even for HTTPS URLs.
+            _ = parsed.port
+        return values
+
+    try:
+        callback_uris = redirects("redirectUris")
+        logout_uris = redirects("postLogoutRedirectUris", [])
+        scopes = strings("scopes", ["openid"])
+        audiences = strings("audiences")
+        grants = strings("grantTypes", ["authorization_code", "refresh_token"])
+        method = raw.get("tokenEndpointAuthMethod")
+        trusted = raw.get("trusted", False)
+        if (not callback_uris or "openid" not in scopes or not audiences
+                or any(scope not in {"openid", "profile", "email", "offline_access"}
+                       for scope in scopes)
+                or "authorization_code" not in grants
+                or set(grants) - {"authorization_code", "refresh_token"}
+                or method not in {"none", "client_secret_basic", "client_secret_post"}
+                or not isinstance(trusted, bool)
+                or (method != "none" and not data.get("secret_key"))
+                or ("offline_access" in scopes and "refresh_token" not in grants)):
+            raise ValueError("Invalid OIDC client policy")
+    except (ValueError, TypeError):
+        # Never echo credentials or untrusted configuration into public error messages.
+        return {"enabled": False, "configurationError": "Invalid OIDC client configuration"}
+    return {
+        "enabled": True,
+        "redirectUris": callback_uris,
+        "postLogoutRedirectUris": logout_uris,
+        "scopes": scopes,
+        "audiences": audiences,
+        "grantTypes": grants,
+        "tokenEndpointAuthMethod": method,
+        "trusted": trusted,
+    }
+
+
 def _client_registration_settings(data: Mapping[str, Any]) -> dict[str, Any]:
     raw = _extend_data(data).get("registration")
     registration = dict(raw) if isinstance(raw, Mapping) else {}
@@ -978,6 +1124,13 @@ def user_is_active(user: Mapping[str, Any]) -> bool:
 
 
 SQLITE_DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS base_auth_subject (
+      user_id BIGINT PRIMARY KEY,
+      subject VARCHAR(64) NOT NULL UNIQUE,
+      create_time DATETIME NOT NULL
+    )
+    """,
     """
     CREATE TABLE IF NOT EXISTS base_account_logs (
       account_log_id INTEGER PRIMARY KEY AUTOINCREMENT,

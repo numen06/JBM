@@ -22,6 +22,15 @@ jbm:
     login-error-number: 5
     login-error-limit-minutes: 10
     cache-prefix: jbm:auth
+    # Standard OIDC is opt-in. Apply Center migration 20260922_23 and register
+    # base_app.extend_data.oidc before enabling. See docs/auth-standardization.md.
+    oidc:
+      enabled: false
+      issuer: ""
+      cookie-secure: true
+      access-token-seconds: 600
+      refresh-token-seconds: 604800
+      sso-session-seconds: 28800
     jwt:
       issuer: http://localhost:5555
       audience: jbm-api
@@ -29,3 +38,5 @@ jbm:
       access-token-seconds: 7200
       refresh-token-seconds: 604800
       private-key: ""
+      # kid -> PEM public key; retained during planned key rotation.
+      verification-keys: {}

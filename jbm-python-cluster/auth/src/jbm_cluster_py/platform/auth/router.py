@@ -53,7 +53,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 else "invalid_request"
             )
             return JSONResponse(
-                status_code=401 if error == "invalid_client" else 400,
+                status_code=503 if exc.code >= 500 else 401 if error == "invalid_client" else 400,
                 content={"error": error, "error_description": message},
                 headers={
                     "Cache-Control": "no-store",
@@ -550,7 +550,11 @@ async def _userinfo(request: Request, auth_service: AuthService) -> JSONResponse
         return JSONResponse(status_code=401, content=fail(None, "未提供access_token", 401))
     try:
         return JSONResponse(status_code=200, content=ok(await auth_service.userinfo(token)))
-    except (AuthError, JwtError) as exc:
+    except AuthError as exc:
+        if exc.code >= 500:
+            return JSONResponse(status_code=503, content=fail(None, "认证服务不可用", 503))
+        return JSONResponse(status_code=401, content=fail(None, "无效的access_token", 401))
+    except JwtError:
         return JSONResponse(status_code=401, content=fail(None, "无效的access_token", 401))
 
 

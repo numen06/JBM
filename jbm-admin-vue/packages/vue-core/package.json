@@ -1,15 +1,17 @@
 {
   "name": "@jbm7/vue-core",
-  "version": "7.3.0-beta.5",
+  "version": "7.3.0-beta.13",
   "description": "Vue 3 integration and module runtime for the JBM 7.3 technical platform",
   "type": "module",
-  "files": ["dist/*.js", "dist/*.d.ts", "style.css", "README.md", "LICENSE"],
+  "files": ["dist/*.js", "dist/*.d.ts", "style.css", "design.css", "README.md", "DESIGN.md", "LICENSE"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./style.css": "./style.css"
+    "./style.css": "./style.css",
+    "./design.css": "./design.css",
+    "./design": { "types": "./dist/design.d.ts", "import": "./dist/design.js" }
   },
   "types": "./dist/index.d.ts",
   "sideEffects": ["**/*.css"],

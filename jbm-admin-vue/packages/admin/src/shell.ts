@@ -3,6 +3,7 @@ import { createJbmVuePlugin, type JbmAccessProvider, type JbmFrontendModule } fr
 import type { JbmAdminRuntimeConfig } from '@/runtimeConfig'
 import { adminChildModules } from './modules'
 import '@/assets/index.css'
+import '@jbm7/vue-core/design.css'
 
 export interface JbmAdminRuntimeOptions {
   client: JbmClient

@@ -2,6 +2,8 @@ ARG JBM_BASE_IMAGE=registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:jbm7
 FROM ${JBM_BASE_IMAGE}
 
 USER root
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --no-cache-dir -r /app/requirements.txt
 RUN rm -rf /app/common /app/integrations /app/auth /app/doc /app/push /app/job /app/gateway /app/center /app/logs /app/bigscreen
 
 COPY --chown=appuser:appuser common /app/common

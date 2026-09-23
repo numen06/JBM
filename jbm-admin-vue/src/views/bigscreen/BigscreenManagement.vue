@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ExternalLink, FileArchive, History, MonitorUp, Plus, PowerOff, RefreshCw, RotateCw, Trash2, Upload } from '@lucide/vue'
-import { onMounted, ref } from 'vue'
+import { inject, onMounted, ref } from 'vue'
 import {
   bigscreenContentUrl,
   bigscreenStorage,
@@ -12,6 +12,8 @@ import {
   rollbackBigscreen,
   saveBigscreenRetention,
   uploadBigscreenPackage,
+  sceneSettings,
+  savePresentation,
   type BigscreenView,
   type BigscreenStorage,
 } from '@/api/bigscreen'
@@ -24,7 +26,30 @@ import Input from '@/components/ui/Input.vue'
 import { useFeedback } from '@/composables/useFeedback'
 
 const feedback = useFeedback()
+const sceneHost = inject<{ preview: (row: BigscreenView) => Promise<void>; projects: () => Promise<{ id: string; name: string }[]> } | null>('jbm-bigscreen-host', null)
+const projectOptions = ref<{ id: string; name: string }[]>([])
+const presentationRow = ref<BigscreenView>()
+const presentationOpen = ref(false)
+const presentation = ref({ status: 'draft', isDefault: false })
+function configure(row: BigscreenView) {
+  const settings = sceneSettings(row)
+  presentationRow.value = row
+  presentation.value = { status: settings.status || 'draft', isDefault: settings.isDefault === true }
+  presentationOpen.value = true
+}
+async function saveConfiguration() {
+  if (!presentationRow.value || saving.value) return
+  saving.value = true
+  try {
+    await savePresentation(presentationRow.value.id, presentation.value)
+    presentationOpen.value = false
+    feedback.toast.success('场景配置已保存')
+    await load()
+  } catch (error) { feedback.toast.error(error instanceof Error ? error.message : '保存失败') }
+  finally { saving.value = false }
+}
 const rows = ref<BigscreenView[]>([])
+const failedPreviews = ref<string[]>([])
 const loading = ref(false)
 const filterProjectId = ref('')
 const dialogOpen = ref(false)
@@ -100,6 +125,7 @@ async function load() {
   loading.value = true
   try {
     rows.value = (await listBigscreens(1, 100, filterProjectId.value)).contents ?? []
+    window.dispatchEvent(new Event('jbm-bigscreen-changed'))
   } catch (error) {
     feedback.toast.error(error instanceof Error ? error.message : '读取大屏列表失败')
   } finally {
@@ -135,7 +161,7 @@ async function submit() {
       file: packageFile.value,
     })
     dialogOpen.value = false
-    feedback.toast.success(editing.value ? '大屏包已更新' : '大屏包已发布')
+    feedback.toast.success(sceneSettings(result).kind === 'campus3d' ? '三维资源已上传，请配置预览后发布' : editing.value ? '大屏包已更新' : '大屏包已发布')
     if (result.retentionWarning) feedback.toast.warning(result.retentionWarning)
     await load()
   } catch (error) {
@@ -160,7 +186,11 @@ async function remove(row: BigscreenView) {
   }
 }
 
-function preview(row: BigscreenView) {
+async function preview(row: BigscreenView) {
+  if (sceneSettings(row).kind === 'campus3d' && sceneHost) {
+    try { await sceneHost.preview(row) } catch (error) { feedback.toast.error(error instanceof Error ? error.message : '预览失败') }
+    return
+  }
   window.open(bigscreenContentUrl(row.viewUrl, row.version), '_blank', 'noopener,noreferrer')
 }
 
@@ -202,6 +232,7 @@ function formatTime(value?: string) {
 }
 
 onMounted(load)
+onMounted(async () => { if (sceneHost) { try { projectOptions.value = await sceneHost.projects() } catch { feedback.toast.error('读取项目列表失败，请刷新后重试') } } })
 </script>
 
 <template>
@@ -219,6 +250,7 @@ onMounted(load)
     <section v-if="rows.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       <article v-for="row in rows" :key="row.id" class="overflow-hidden rounded-lg border bg-card">
         <div class="relative flex aspect-video items-center justify-center overflow-hidden border-b bg-slate-950">
+          <img v-if="row.deployed && !failedPreviews.includes(row.id)" :src="bigscreenContentUrl(row.viewUrl, row.version).replace('/index.html', '/preview.png')" :alt="`${row.viewName}封面`" class="absolute inset-0 h-full w-full object-cover" @error="failedPreviews.push(row.id)" />
           <span class="absolute inset-4 rounded-lg border border-cyan-400/15" />
           <span class="grid h-16 w-16 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 text-cyan-200">
             <MonitorUp class="h-8 w-8" />
@@ -228,6 +260,8 @@ onMounted(load)
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0"><h2 class="truncate font-semibold" :title="row.viewName">{{ row.viewName }}</h2><p class="mt-1 truncate text-xs text-muted-foreground">{{ row.id }}</p></div>
             <div class="flex shrink-0 flex-col items-end gap-1">
+              <Badge variant="outline">{{ sceneSettings(row).kind === 'campus3d' ? '三维园区' : '数据大屏' }}</Badge>
+              <Badge v-if="sceneSettings(row).kind === 'campus3d'" variant="secondary">{{ ({ draft: '草稿', published: '已发布', disabled: '已停用' } as Record<string, string>)[sceneSettings(row).status || 'draft'] }}{{ sceneSettings(row).isDefault ? ' · 默认' : '' }}</Badge>
               <Badge variant="outline">{{ row.version || '1.0.0' }}</Badge>
               <Badge :variant="row.deployed ? 'default' : 'secondary'">{{ row.deployed ? '已加载' : '未加载' }}</Badge>
             </div>
@@ -238,7 +272,8 @@ onMounted(load)
             <div class="col-span-2"><dt class="text-muted-foreground">更新时间</dt><dd class="mt-1">{{ formatTime(row.updateTime) }}</dd></div>
           </dl>
           <div class="mt-4 grid grid-cols-2 gap-2 border-t pt-3">
-            <Button variant="outline" :disabled="!row.deployed" @click="preview(row)"><ExternalLink class="h-4 w-4" />预览</Button>
+            <Button variant="outline" :disabled="!row.deployed" @click="preview(row)"><ExternalLink class="h-4 w-4" />{{ sceneSettings(row).kind === 'campus3d' ? '配置预览' : '预览' }}</Button>
+            <Button v-if="sceneSettings(row).kind === 'campus3d'" variant="outline" @click="configure(row)">发布设置</Button>
             <Button variant="outline" :disabled="actionId === row.id || !row.packageAvailable" @click="reload(row)"><RotateCw class="h-4 w-4" :class="actionId === row.id ? 'animate-spin' : ''" />重新加载</Button>
             <Button variant="outline" @click="openDialog(row)"><Upload class="h-4 w-4" />更新包</Button>
             <Button variant="outline" :disabled="storageBusy" @click="openStorage(row)"><History class="h-4 w-4" />版本与空间</Button>
@@ -292,15 +327,25 @@ onMounted(load)
     <Dialog v-model:open="dialogOpen" :title="editing ? '更新大屏包' : '发布大屏包'">
       <form class="space-y-4" @submit.prevent="submit">
         <FormField label="大屏名称" required><Input v-model="form.viewName" maxlength="100" placeholder="例如：园区能源运营大屏" /></FormField>
-        <FormField label="项目 ID" required><Input v-model="form.projectId" placeholder="业务项目 ID" /></FormField>
+        <FormField label="所属项目" required><select v-if="sceneHost" v-model="form.projectId" class="w-full rounded-md border bg-background p-2" :disabled="Boolean(editing)"><option value="">请选择项目</option><option v-for="project in projectOptions" :key="project.id" :value="project.id">{{ project.name }}</option></select><Input v-else v-model="form.projectId" :disabled="Boolean(editing)" placeholder="业务项目 ID" /></FormField>
         <FormField label="应用 ID"><Input v-model="form.appId" placeholder="留空使用当前登录应用" /></FormField>
         <FormField label="ZIP 资源包" required>
+          <p class="text-xs text-muted-foreground">支持数据大屏和三维园区。三维资源包自动识别，上传后为草稿；完成配置预览后再发布。</p>
           <label class="flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-4 text-center hover:bg-muted/40">
             <FileArchive class="h-7 w-7 text-primary" /><span class="mt-2 text-xs">{{ packageFile?.name || '点击选择 ZIP 文件' }}</span>
             <input class="sr-only" type="file" accept=".zip,application/zip" @change="selectPackage" />
           </label>
         </FormField>
-        <div class="flex justify-end gap-2 border-t pt-4"><Button variant="outline" :disabled="saving" @click="dialogOpen = false">取消</Button><Button type="submit" :disabled="saving"><Upload class="h-4 w-4" />{{ saving ? '正在部署…' : '发布并部署' }}</Button></div>
+        <div class="flex justify-end gap-2 border-t pt-4"><Button variant="outline" :disabled="saving" @click="dialogOpen = false">取消</Button><Button type="submit" :disabled="saving"><Upload class="h-4 w-4" />{{ saving ? '正在上传…' : '上传资源包' }}</Button></div>
+      </form>
+    </Dialog>
+    <Dialog v-model:open="presentationOpen" title="三维园区发布设置">
+      <form class="space-y-4" @submit.prevent="saveConfiguration">
+        <p class="text-sm text-muted-foreground">{{ presentationRow?.viewName }} · 建筑绑定和默认视角请在“配置预览”中设置。</p>
+        <FormField label="场景状态"><select v-model="presentation.status" class="w-full rounded-md border bg-background p-2"><option value="draft">草稿（仅管理员预览）</option><option value="published">发布并启用</option><option value="disabled">停用</option></select></FormField>
+        <label class="flex items-center gap-2 text-sm"><input v-model="presentation.isDefault" type="checkbox" />设为该项目默认三维场景</label>
+        <p class="text-xs text-muted-foreground">只有已发布且已加载的场景才会出现在项目菜单中。设置默认场景会替换该项目原来的默认选择。</p>
+        <Button type="submit" :disabled="saving">{{ saving ? '正在保存…' : '保存设置' }}</Button>
       </form>
     </Dialog>
   </div>

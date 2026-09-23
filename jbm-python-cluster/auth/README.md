@@ -2,6 +2,11 @@
 
 Python replacement for `jbm-cluster-platform-auth`.
 
+The optional standard issuer now provides authorization-code OIDC and browser
+SSO at `/oidc/*`. Existing `/oauth2/*` routes keep their JBM response contract.
+See [standardization and rollout](../docs/auth-standardization.md) for registration,
+schema migration, key rotation, test commands, and the supported protocol subset.
+
 ## Scope
 
 - OAuth2 authorization code + PKCE (S256): `GET|POST /oauth2/authorize`, `POST /oauth2/token`
@@ -29,7 +34,10 @@ Stored user passwords and client secrets support BCrypt and the existing encrypt
 
 The Python service issues RS256 JWT access tokens. Cluster services validate each request through `/oauth2/userinfo`, so refresh rotation, logout, manual kick-out and revocation take effect across services immediately.
 
-For production, configure `jbm.auth.jwt.private-key` with a stable RSA private key. If it is empty, auth generates an in-memory key on startup, which is useful for tests but not for a running cluster.
+Outside explicit `dev`, `test`, `local`, and `default` profiles, startup requires
+a stable `jbm.auth.jwt.private-key`, HTTPS issuer, and available shared Redis.
+Temporary keys and per-process state are restricted to those development profiles.
+`GET /actuator/health/readiness` checks the live database and session store.
 
 ## Alibaba Cloud SMS verification
 

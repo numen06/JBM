@@ -3,5 +3,5 @@ import { cn } from '@/lib/utils'
 </script>
 
 <template>
-  <div :class="cn('animate-pulse rounded-md bg-muted', $attrs.class as string)" />
+  <div aria-hidden="true" :class="cn('jbm-skeleton rounded-md bg-muted', $attrs.class as string)" />
 </template>

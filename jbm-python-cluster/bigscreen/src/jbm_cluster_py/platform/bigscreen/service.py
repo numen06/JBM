@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 import shutil
@@ -17,7 +18,18 @@ from urllib.parse import quote, urlparse
 
 import httpx
 from jbm_cluster_py.platform.bigscreen.history import (
-    PackageHistory, byte_size, checksum, extension, keep_versions, storage_key,
+    PackageHistory,
+    byte_size,
+    checksum,
+    extension,
+    keep_versions,
+    storage_key,
+)
+from jbm_cluster_py.platform.bigscreen.presentation import (
+    config,
+    is_campus,
+    normalize_manifest,
+    normalize_settings,
 )
 from jbm_cluster_py.platform.bigscreen.repository import BigscreenRepository
 
@@ -71,6 +83,12 @@ class BigscreenService:
         if view_id and tenant_id is not None and current is None:
             raise ValueError("大屏不存在或无权访问")
         data = {**(current or {}), **dict(body)}
+        if (
+            current
+            and is_campus(current)
+            and str(data.get("projectId")) != str(current.get("projectId"))
+        ):
+            raise ValueError("三维场景不能直接更换所属项目，请新建场景")
         if tenant_id is not None:
             data["tenantId"] = tenant_id
         if user_id and not data.get("createdBy"):
@@ -100,9 +118,7 @@ class BigscreenService:
                 temporary.unlink(missing_ok=True)
         return await self.repository.save(data, tenant_id)
 
-    async def upload(
-        self, body: Mapping[str, Any], tenant_id: str | None = None
-    ) -> dict[str, Any]:
+    async def upload(self, body: Mapping[str, Any], tenant_id: str | None = None) -> dict[str, Any]:
         async with self._mutation_lock:
             return await self._upload(body, tenant_id)
 
@@ -157,6 +173,13 @@ class BigscreenService:
         existing = await self.repository.get(view_id, tenant_id) if body.get("id") else None
         if body.get("id") and not existing:
             raise ValueError("大屏不存在或无权访问")
+        if (
+            existing
+            and is_campus(existing)
+            and body.get("projectId")
+            and str(body["projectId"]) != str(existing.get("projectId"))
+        ):
+            raise ValueError("三维场景不能直接更换所属项目，请新建场景")
         data = {
             **(existing or {}),
             **{key: value for key, value in body.items() if value not in (None, "")},
@@ -178,9 +201,7 @@ class BigscreenService:
         finally:
             temporary.unlink(missing_ok=True)
 
-    async def is_uploaded(
-        self, body: Mapping[str, Any], tenant_id: str | None = None
-    ) -> bool:
+    async def is_uploaded(self, body: Mapping[str, Any], tenant_id: str | None = None) -> bool:
         view = await self._resolve(body, tenant_id)
         return self.deployment_status(view)["deployed"]
 
@@ -194,9 +215,7 @@ class BigscreenService:
             ),
         }
 
-    async def reload(
-        self, body: Mapping[str, Any], tenant_id: str | None = None
-    ) -> dict[str, Any]:
+    async def reload(self, body: Mapping[str, Any], tenant_id: str | None = None) -> dict[str, Any]:
         view = await self._resolve(body, tenant_id)
         return await self.upload(view, tenant_id)
 
@@ -341,6 +360,29 @@ class BigscreenService:
 
     async def _publish(self, temporary, data, existing, tenant_id):
         await self._assert_exclusive(data)
+        with zipfile.ZipFile(temporary) as package:
+            if "scene.json" in package.namelist():
+                if package.getinfo("scene.json").file_size > 256_000:
+                    raise ValueError("三维场景清单过大")
+                manifest = normalize_manifest(json.loads(package.read("scene.json")))
+                previous = config(data)
+                unchanged = (
+                    existing
+                    and self._archive_path(existing).is_file()
+                    and checksum(self._archive_path(existing)) == checksum(temporary)
+                )
+                data["configData"] = {
+                    **previous,
+                    **manifest,
+                    "status": previous.get("status", "draft") if unchanged else "draft",
+                    "bindings": {
+                        k: v
+                        for k, v in previous.get("bindings", {}).items()
+                        if k in manifest["modelIds"]
+                    },
+                }
+            elif is_campus(data):
+                raise ValueError("三维资源包根目录缺少 scene.json")
         remembered = None
         digest = checksum(temporary)
         try:
@@ -362,6 +404,15 @@ class BigscreenService:
             logging.getLogger(__name__).exception("大屏已发布，旧资源清理暂缓")
             saved["retentionWarning"] = "大屏已发布，旧资源清理暂缓，请在版本与空间中重试"
         return saved
+
+    async def configure_presentation(self, body, tenant_id):
+        async with self._mutation_lock:
+            view = await self._resolve(body, tenant_id)
+            settings = normalize_settings(view, body)
+            if settings["status"] == "published" and not self.deployment_status(view)["deployed"]:
+                raise ValueError("请先加载场景资源")
+            # Keep one explicit default per tenant/project, in the same DB transaction.
+            return await self.repository.save_presentation(view, settings, tenant_id)
 
     @contextmanager
     def _deploy_archive(self, archive: Path, view: Mapping[str, Any]):
@@ -418,15 +469,27 @@ class BigscreenService:
                     logging.getLogger(__name__).exception("大屏工作目录清理暂缓")
 
     def _legacy_backups(self, view, protected: set[Path]) -> list[Path]:
-        archive_pattern = re.compile(re.escape(storage_key(view["id"]))
-            + r"\.zip\.bak-(?:\d{12,14}|\d+\.\d+\.\d+(?:-[A-Za-z0-9-]+)?)$")
-        directory_pattern = re.compile(re.escape(self._view_key(str(view.get("viewUrl") or view["id"])))
-            + r"\.bak-\d{12,14}$")
-        return sorted((path for path in self.views_dir.iterdir()
-                       if not path.is_symlink() and path.resolve() not in protected
-                       and ((path.is_file() and archive_pattern.fullmatch(path.name))
-                            or (path.is_dir() and directory_pattern.fullmatch(path.name)))),
-                      key=lambda path: path.stat().st_mtime, reverse=True)
+        archive_pattern = re.compile(
+            re.escape(storage_key(view["id"]))
+            + r"\.zip\.bak-(?:\d{12,14}|\d+\.\d+\.\d+(?:-[A-Za-z0-9-]+)?)$"
+        )
+        directory_pattern = re.compile(
+            re.escape(self._view_key(str(view.get("viewUrl") or view["id"]))) + r"\.bak-\d{12,14}$"
+        )
+        return sorted(
+            (
+                path
+                for path in self.views_dir.iterdir()
+                if not path.is_symlink()
+                and path.resolve() not in protected
+                and (
+                    (path.is_file() and archive_pattern.fullmatch(path.name))
+                    or (path.is_dir() and directory_pattern.fullmatch(path.name))
+                )
+            ),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
 
     async def storage_status(self, body, tenant_id):
         async with self._mutation_lock:
@@ -439,13 +502,21 @@ class BigscreenService:
         current_bytes = byte_size(self._archive_path(view)) + byte_size(self._view_dir(view))
         history_bytes = byte_size(self.history.folder(view))
         legacy_bytes = sum(byte_size(path) for path in legacy)
-        return {"id": view["id"], "currentVersion": view.get("version"),
-                "keepVersions": keep_versions(view), "maxKeepVersions": 5,
-                "currentBytes": current_bytes, "historyBytes": history_bytes,
-                "legacyBytes": legacy_bytes, "totalBytes": current_bytes + history_bytes + legacy_bytes,
-                "history": [{key: row.get(key) for key in ("id", "version", "createdAt", "sizeBytes")}
-                            for row in history],
-                "legacyBackups": [{"name": path.name, "sizeBytes": byte_size(path)} for path in legacy]}
+        return {
+            "id": view["id"],
+            "currentVersion": view.get("version"),
+            "keepVersions": keep_versions(view),
+            "maxKeepVersions": 5,
+            "currentBytes": current_bytes,
+            "historyBytes": history_bytes,
+            "legacyBytes": legacy_bytes,
+            "totalBytes": current_bytes + history_bytes + legacy_bytes,
+            "history": [
+                {key: row.get(key) for key in ("id", "version", "createdAt", "sizeBytes")}
+                for row in history
+            ],
+            "legacyBackups": [{"name": path.name, "sizeBytes": byte_size(path)} for path in legacy],
+        }
 
     async def set_retention(self, body, tenant_id):
         count = body.get("keepVersions")
@@ -481,9 +552,14 @@ class BigscreenService:
                         self._validate_backup(path)
                         version = path.name.split(".zip.bak-", 1)[1]
                         match = re.match(r"\d+\.\d+\.\d+", version)
-                        self.history.remember(view, path,
-                            created_at=datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat(),
-                            version=match[0] if match else f"历史备份-{version}")
+                        self.history.remember(
+                            view,
+                            path,
+                            created_at=datetime.fromtimestamp(
+                                path.stat().st_mtime, UTC
+                            ).isoformat(),
+                            version=match[0] if match else f"历史备份-{version}",
+                        )
                 # All archives copied successfully before deleting any originals.
                 for path in legacy:
                     if path.is_dir():
@@ -493,7 +569,10 @@ class BigscreenService:
             self.history.prune(view, digest)
             temporary_bytes = self._cleanup_temporary()
             status = await self._storage_status(view)
-            return {**status, "releasedBytes": max(0, before_bytes - status["totalBytes"]) + temporary_bytes}
+            return {
+                **status,
+                "releasedBytes": max(0, before_bytes - status["totalBytes"]) + temporary_bytes,
+            }
 
     def _validate_backup(self, archive: Path) -> None:
         try:
@@ -506,22 +585,31 @@ class BigscreenService:
             raise ValueError("备份包体积超过限制，未清理旧资源")
         with zipfile.ZipFile(archive) as package:
             files = package.infolist()
-            if (len(files) > self.max_package_files
-                    or sum(item.file_size for item in files) > self.max_unpacked_bytes
-                    or "index.html" not in package.namelist()
-                    or any(item.flag_bits & 1 or stat.S_ISLNK(item.external_attr >> 16) for item in files)
-                    or package.testzip() is not None):
+            if (
+                len(files) > self.max_package_files
+                or sum(item.file_size for item in files) > self.max_unpacked_bytes
+                or "index.html" not in package.namelist()
+                or any(
+                    item.flag_bits & 1 or stat.S_ISLNK(item.external_attr >> 16) for item in files
+                )
+                or package.testzip() is not None
+            ):
                 raise ValueError("备份包校验失败，未清理旧资源")
             base = self.history.work.resolve()
-            if any(base != (base / item.filename).resolve()
-                   and base not in (base / item.filename).resolve().parents for item in files):
+            if any(
+                base != (base / item.filename).resolve()
+                and base not in (base / item.filename).resolve().parents
+                for item in files
+            ):
                 raise ValueError("备份包包含非法路径，未清理旧资源")
 
     async def rollback(self, body, tenant_id):
         async with self._mutation_lock:
             view = await self._resolve(body, tenant_id)
             revision = str(body.get("revisionId") or "")
-            entry = next((item for item in self.history.entries(view) if item["id"] == revision), None)
+            entry = next(
+                (item for item in self.history.entries(view) if item["id"] == revision), None
+            )
             if not entry:
                 raise ValueError("历史版本不存在或已淘汰")
             source = self.history.archive(view, revision)
@@ -529,8 +617,11 @@ class BigscreenService:
                 raise ValueError("历史资源校验失败，当前版本未改变")
             temporary = self.history.work / f"{uuid.uuid4().hex}.upload"
             # Keep current scope, name and retention settings; roll back package content.
-            data = {**view, "version": self._next_version(str(view.get("version") or "")),
-                    "resourcePath": f"local:{view['id']}.zip"}
+            data = {
+                **view,
+                "version": self._next_version(str(view.get("version") or "")),
+                "resourcePath": f"local:{view['id']}.zip",
+            }
             try:
                 shutil.copyfile(source, temporary)
                 return await self._publish(temporary, data, view, tenant_id)
@@ -542,9 +633,14 @@ class BigscreenService:
         cutoff = time.time() - 24 * 3600
         for folder in (self.views_dir, self.history.work):
             for path in folder.iterdir():
-                recognized = (re.fullmatch(r"[a-f0-9]{32}\.upload", path.name)
-                    if folder == self.history.work else
-                    re.fullmatch(r"(?:\.[A-Za-z0-9._-]+-[a-f0-9]{32}\.upload|\.deploy-[a-f0-9]{32})", path.name))
+                recognized = (
+                    re.fullmatch(r"[a-f0-9]{32}\.upload", path.name)
+                    if folder == self.history.work
+                    else re.fullmatch(
+                        r"(?:\.[A-Za-z0-9._-]+-[a-f0-9]{32}\.upload|\.deploy-[a-f0-9]{32})",
+                        path.name,
+                    )
+                )
                 if recognized and not path.is_symlink() and path.stat().st_mtime < cutoff:
                     released += byte_size(path)
                     if path.is_dir():

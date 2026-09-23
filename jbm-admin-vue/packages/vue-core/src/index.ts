@@ -3,6 +3,9 @@ import {
   defineComponent,
   h,
   inject,
+  nextTick,
+  onMounted,
+  onUnmounted,
   ref,
   watch,
   type App,
@@ -18,6 +21,7 @@ import type {
   Router,
 } from 'vue-router'
 import type { JbmClient } from '@jbm7/sdk'
+export { JbmValue, JbmMetricCard, JbmPageHeading, useJbmDialog } from './presentation.js'
 
 export interface JbmRouteMeta {
   title?: string
@@ -65,6 +69,90 @@ export interface JbmShellNavigationGroup {
 }
 
 const navigateEmits = { navigate: (_path: string) => true }
+
+/** One responsive frame for every workspace; hosts provide business content only. */
+export const JbmWorkspaceShell = defineComponent({
+  name: 'JbmWorkspaceShell',
+  props: {
+    title: { type: String, required: true },
+    brand: { type: String, required: true },
+    logo: { type: String, default: '' },
+    workspace: { type: String, required: true },
+    collapsed: Boolean,
+    mobileOpen: Boolean,
+  },
+  emits: { 'update:collapsed': (_value: boolean) => true, 'update:mobileOpen': (_value: boolean) => true },
+  setup(props, { emit, slots }) {
+    const root = ref<HTMLElement | null>(null)
+    const mobile = ref(false)
+    const close = () => {
+      emit('update:mobileOpen', false)
+      void nextTick(() => root.value?.querySelector<HTMLButtonElement>('.jbm-shell-main .jbm-shell-mobile-toggle')?.focus())
+    }
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape' && props.mobileOpen) close() }
+    let media: MediaQueryList | undefined
+    const resize = () => { mobile.value = media?.matches ?? false }
+    onMounted(() => { document.addEventListener('keydown', onKey); media = window.matchMedia('(max-width: 1023px)'); resize(); media.addEventListener('change', resize) })
+    watch(() => props.mobileOpen, value => {
+      document.body.classList.toggle('jbm-mobile-menu-open', value)
+      if (value) void nextTick(() => root.value?.querySelector<HTMLButtonElement>('.jbm-shell-sidebar .jbm-shell-mobile-toggle')?.focus())
+    })
+    onUnmounted(() => { document.removeEventListener('keydown', onKey); media?.removeEventListener('change', resize); document.body.classList.remove('jbm-mobile-menu-open') })
+    const icon = (path: string) => h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.8, 'aria-hidden': 'true' }, [h('path', { d: path })])
+    const button = (label: string, className: string, expanded: boolean, click: () => void, path: string) => h('button', {
+      type: 'button', class: ['jbm-shell-toggle', className], 'aria-label': label, title: label,
+      'aria-controls': 'jbm-workspace-sidebar', 'aria-expanded': expanded, onClick: click,
+    }, [icon(path)])
+    return () => h('div', { ref: root, class: ['jbm-workspace-shell', props.collapsed && 'is-collapsed', props.mobileOpen && 'is-mobile-open'] }, [
+      props.mobileOpen ? h('button', { class: 'jbm-shell-backdrop', type: 'button', 'aria-label': '关闭菜单', onClick: close, tabindex: -1 }) : null,
+      h('aside', { id: 'jbm-workspace-sidebar', class: 'jbm-shell-sidebar', inert: mobile.value && !props.mobileOpen }, [
+        h('div', { class: 'workspace-brand' }, [
+          h('div', { class: 'workspace-brand__icon' }, [props.logo ? h('img', { src: props.logo, alt: props.brand }) : slots.logo?.()]),
+          h('div', { class: 'workspace-brand__copy' }, [h('div', { class: 'workspace-brand__title', title: props.brand }, props.brand), h('div', { class: 'workspace-brand__subtitle' }, props.workspace)]),
+          button('关闭菜单', 'jbm-shell-mobile-toggle', props.mobileOpen, close, 'm6 6 12 12M6 18 18 6'),
+        ]),
+        slots.sidebar?.(),
+      ]),
+      h('main', { class: 'jbm-shell-main', inert: mobile.value && props.mobileOpen }, [
+        h(JbmProductHeader, { eyebrow: props.workspace, title: props.title }, {
+          navigation: () => [
+            button(props.collapsed ? '展开侧栏' : '收起侧栏', 'jbm-shell-desktop-toggle', !props.collapsed, () => emit('update:collapsed', !props.collapsed), 'M3 3h18v18H3zM9 3v18'),
+            button('打开菜单', 'jbm-shell-mobile-toggle', props.mobileOpen, () => emit('update:mobileOpen', true), 'M4 6h16M4 12h16M4 18h16'),
+          ],
+          ...(slots.context ? { context: slots.context } : {}),
+          ...(slots.actions ? { actions: slots.actions } : {}),
+        }),
+        slots.mobileContext ? h('div', { class: 'jbm-shell-mobile-context' }, slots.mobileContext()) : null,
+        h('div', { class: 'workspace-page' }, slots.default?.()),
+      ]),
+      slots.overlays?.(),
+    ])
+  },
+})
+
+/** Controlled button group; selection is never committed by the animation. */
+export const JbmSegmentedControl = defineComponent({
+  name: 'JbmSegmentedControl',
+  props: {
+    modelValue: { type: [String, Number], required: true },
+    options: { type: Array as PropType<Array<{ value: string | number; label: string; disabled?: boolean }>>, required: true },
+    label: { type: String, required: true },
+  },
+  emits: { 'update:modelValue': (_value: string | number) => true },
+  setup(props, { emit }) {
+    return () => {
+      const index = props.options.findIndex(item => item.value === props.modelValue)
+      return h('div', { class: 'jbm-segments', role: 'group', 'aria-label': props.label,
+        style: { '--segment-count': Math.max(1, props.options.length), '--segment-index': Math.max(0, index) } }, [
+        index >= 0 ? h('span', { class: 'jbm-segments__indicator', 'aria-hidden': 'true' }) : null,
+        ...props.options.map(item => h('button', { key: item.value, type: 'button', disabled: item.disabled,
+          'aria-pressed': item.value === props.modelValue,
+          onClick: () => { if (!item.disabled) emit('update:modelValue', item.value) },
+        }, item.label)),
+      ])
+    }
+  },
+})
 
 export const JbmProductHeader = defineComponent({
   name: 'JbmProductHeader',

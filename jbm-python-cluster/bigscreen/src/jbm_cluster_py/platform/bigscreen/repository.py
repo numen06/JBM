@@ -8,6 +8,7 @@ from typing import Any
 
 from jbm_cluster_py.common.masterdata import PageForm, java_page, now_iso
 from jbm_cluster_py.integrations.database import configured_database_url, require_tables
+from jbm_cluster_py.platform.bigscreen.presentation import config, is_campus
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
@@ -24,9 +25,7 @@ class BigscreenRepository:
             db_path = url.replace("sqlite+aiosqlite:///", "", 1)
             if db_path and not db_path.startswith(":"):
                 Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.engine: AsyncEngine = create_async_engine(
-            url, pool_pre_ping=True, poolclass=NullPool
-        )
+        self.engine: AsyncEngine = create_async_engine(url, pool_pre_ping=True, poolclass=NullPool)
 
     async def start(self) -> None:
         if not self._sqlite:
@@ -63,12 +62,8 @@ class BigscreenRepository:
             )
         return self._from_db(dict(row)) if row else None
 
-    async def save(
-        self, body: Mapping[str, Any], tenant_id: str | None = None
-    ) -> dict[str, Any]:
-        current = (
-            await self.get(str(body.get("id") or ""), tenant_id) if body.get("id") else None
-        )
+    async def save(self, body: Mapping[str, Any], tenant_id: str | None = None) -> dict[str, Any]:
+        current = await self.get(str(body.get("id") or ""), tenant_id) if body.get("id") else None
         data = {
             **(current or {}),
             **{key: value for key, value in body.items() if value is not None},
@@ -159,6 +154,56 @@ class BigscreenRepository:
                 )
             ).scalar()
         return int(value or 0)
+
+    async def save_presentation(self, view, settings, tenant_id):
+        async with self.engine.begin() as conn:
+            if settings.get("isDefault"):
+                rows = (
+                    (
+                        await conn.execute(
+                            text(
+                                "SELECT * FROM bigscreen_view "
+                                "WHERE tenant_id=:tenant AND project_id=:project"
+                            ),
+                            {"tenant": tenant_id, "project": view["projectId"]},
+                        )
+                    )
+                    .mappings()
+                    .all()
+                )
+                for row in rows:
+                    other = self._from_db(row)
+                    if (
+                        other["id"] != view["id"]
+                        and is_campus(other)
+                        and config(other).get("isDefault")
+                    ):
+                        await conn.execute(
+                            text(
+                                "UPDATE bigscreen_view SET config_data=:config "
+                                "WHERE id=:id AND tenant_id=:tenant"
+                            ),
+                            {
+                                "config": json.dumps(
+                                    {**config(other), "isDefault": False}, ensure_ascii=False
+                                ),
+                                "id": other["id"],
+                                "tenant": tenant_id,
+                            },
+                        )
+            await conn.execute(
+                text(
+                    "UPDATE bigscreen_view SET config_data=:config, update_time=:time "
+                    "WHERE id=:id AND tenant_id=:tenant"
+                ),
+                {
+                    "config": json.dumps(settings, ensure_ascii=False),
+                    "time": now_iso(),
+                    "id": view["id"],
+                    "tenant": tenant_id,
+                },
+            )
+        return await self.get(view["id"], tenant_id)
 
     async def delete(self, view_id: str, tenant_id: str | None = None) -> bool:
         clause = " AND tenant_id=:tenant_id" if tenant_id is not None else ""

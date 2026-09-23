@@ -294,6 +294,10 @@ def test_login_captcha_can_be_required_for_password_and_sms() -> None:
 @pytest.mark.asyncio
 async def test_permission_lookup_accepts_legacy_root_user_id_zero() -> None:
     class Repository:
+        async def user_roles(self, user_id: int, app_id: int, tenant_id: int) -> list[dict]:
+            assert (user_id, app_id, tenant_id) == (0, 1000, 2000)
+            return [{"role_id": 1, "role_code": "root"}]
+
         async def user_authorities(
             self, user_id: int, root: bool, app_id: int, tenant_id: int
         ) -> list[str]:
