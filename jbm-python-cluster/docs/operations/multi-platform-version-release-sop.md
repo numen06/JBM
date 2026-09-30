@@ -29,14 +29,16 @@
 2. 核对本地 `git status`，将本次要发布的代码、迁移、资源和测试提交并推送；排除凭据、`.env`、数据库、缓存、测试输出及本地密钥。发布标签必须指向包含全部本次改动的提交。仍有其他本地改动时，用干净的 Git checkout/工作树按该提交构建。
 3. 按平台跑相关自动测试、前端类型检查和生产构建；对有迁移的版本，在生产库副本上演练迁移。保存结果。
 4. 备份本次会触及的数据存储及服务规格，验证备份可读取且校验值匹配。仅新增表/索引也要备份对应数据库；未更改 TDengine 时不要为了应用发布重置其数据。
-5. 优先使用 App2Docker 的 Git 源构建，显式指定 profile 和新标签。例如 IoT 云端：
+5. 优先使用 App2Docker 的 Git 源构建。先推送代码与同名 Git 标签，并验证构建工作树 `HEAD`、远端发布分支和标签都指向同一个提交；工作区若有其他未提交内容，使用干净的发布工作树及已设置 upstream 的发布分支。显式指定 Git 标签、profile 和镜像新标签。例如 IoT 云端：
 
    ```powershell
-   app2docker build --source git --profile cloud --tag cloud-YYYYMMDD.N --push --detach --json
+   git rev-parse HEAD
+   git rev-list -n 1 cloud-YYYYMMDD.N
+   app2docker build --source git --tag-name cloud-YYYYMMDD.N --profile cloud --tag cloud-YYYYMMDD.N --push --detach --json
    app2docker task status <task-id>
    ```
 
-   立即检查任务解析出的 `tag`、`config_source`、`source_mode`、`source_commit` 和全部服务标签。Git 源构建必须指向刚推送的提交；CLI 所在目录要有本次配置。发现旧标签、错误 profile、错误提交或错误服务范围，推送前停止任务并核查仓库摘要；停止响应后仍须复查任务最终状态。仅在 Git 源构建不可用时，才从该提交的干净 checkout 使用 App2Docker `--source local`，并保存文件 SHA-256 清单。
+   立即检查任务解析出的 `tag`、`config_source`、`source_mode`、Git ref 和全部服务标签。Git 源构建必须指向刚推送的提交；CLI 所在目录要有本次配置。发现旧标签、错误 profile、错误提交或错误服务范围，推送前停止任务并核查仓库摘要；停止响应后仍须复查任务最终状态。仅在 Git 源构建不可用时，才从该提交的干净 checkout 使用 App2Docker `--source local`，并保存文件 SHA-256 清单。
 6. 构建完成后逐个执行 `docker buildx imagetools inspect <镜像>:<新标签>`，确认 AMD64/ARM64 清单，保存 OCI 索引摘要。不得用浮动标签直接更新 Swarm。
 
 ## 4. 环境发布顺序
