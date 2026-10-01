@@ -172,7 +172,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (nextAccessToken) {
         init()
       } else if (event) {
-        window.location.replace('/login')
+        window.location.replace(`${import.meta.env.BASE_URL}login`)
       }
     }
   }

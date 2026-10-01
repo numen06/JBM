@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import KeyLoginMethods from '@/components/KeyLoginMethods.vue'
+import { authCenterUrl as keyAuthUrl } from '@/api/auth'
+async function loginWithKey(proof: string, kind: string) {
+  auth.clientId = clientId.value
+  await auth.login('', proof, { loginType: kind })
+  await router.push((route.query.redirect as string) || '/dashboard')
+}
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, RefreshCw, UserRound } from '@lucide/vue'
@@ -606,7 +613,7 @@ onUnmounted(() => {
         </div>
 
         <div class="hidden lg:block">
-          <h2 class="text-2xl font-bold tracking-tight">登录账号</h2>
+          <h2 class="text-2xl font-bold tracking-tight">选择登录方式</h2>
           <p class="mt-2 text-sm text-muted-foreground">{{ activeMeta.description }}</p>
         </div>
 
@@ -632,6 +639,8 @@ onUnmounted(() => {
             {{ tab.label }}
           </button>
         </div>
+
+        <KeyLoginMethods v-if="activeTab === 'PASSKEY' || activeTab === 'SSH_KEY'" :auth-base="keyAuthUrl('')" :client-id="clientId" :method="activeTab" :disabled="loading" :login="loginWithKey" />
 
         <div v-if="localDevLoginEnabled" class="mt-4 rounded-md border bg-muted/20 p-3">
           <div class="mb-3 flex items-center justify-between gap-3">
@@ -687,7 +696,7 @@ onUnmounted(() => {
         </div>
 
         <form
-          v-if="activeTab !== 'SCAN' && activeTab !== 'THIRD_PARTY' && activeTab !== 'AUTH_CODE'"
+          v-if="activeTab !== 'SCAN' && activeTab !== 'THIRD_PARTY' && activeTab !== 'AUTH_CODE' && activeTab !== 'PASSKEY' && activeTab !== 'SSH_KEY'"
           class="mt-4 space-y-4"
           @submit.prevent="onSubmit($event)"
         >

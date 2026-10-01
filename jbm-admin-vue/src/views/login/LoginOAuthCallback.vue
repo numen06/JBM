@@ -37,7 +37,7 @@ onMounted(async () => {
   try {
     const redirectUri =
       sessionStorage.getItem(OAUTH2_REDIRECT_STORAGE_KEY) ||
-      `${window.location.origin}${route.path}`
+      `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}${route.path}`
 
     if (!provider) {
       const returnedState = (route.query.state as string)?.trim()

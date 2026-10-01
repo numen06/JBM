@@ -1,0 +1,23 @@
+version: "1.0"
+
+build:
+  project_type: python
+  use_project_dockerfile: true
+  dockerfile_name: Dockerfile.auth-admin-cloud
+  platforms:
+    - linux/amd64
+    - linux/arm64
+
+image:
+  name: jbm-python-cluster
+  prefix: registry.cn-shanghai.aliyuncs.com/okc
+  tag: py-7.3.27
+  push: true
+
+push_mode: multi
+
+services:
+  - name: jbm-python-cluster
+    image_name: jbm-python-cluster
+  - name: jbm-admin
+    image_name: jbm-admin

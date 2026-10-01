@@ -3,7 +3,7 @@ import { isRuntimeFlagDisabled, runtimeConfig } from '@/runtimeConfig'
 /** 与后端 com.jbm.cluster.api.constants.LoginType 对齐 */
 export type OAuthLoginType = 'PASSWORD' | 'SMS' | 'FACE' | 'WECHAT' | 'MINIAPP'
 
-export type LoginTabId = OAuthLoginType | 'SCAN' | 'AUTH_CODE' | 'THIRD_PARTY'
+export type LoginTabId = OAuthLoginType | 'SCAN' | 'AUTH_CODE' | 'THIRD_PARTY' | 'PASSKEY' | 'SSH_KEY'
 
 /** sessionStorage：授权码模式跳转前写入，回调页校验 CSRF */
 export const OAUTH2_STATE_STORAGE_KEY = 'jbm_oauth2_state'
@@ -17,7 +17,9 @@ export interface LoginTabMeta {
 }
 
 export const LOGIN_TABS: LoginTabMeta[] = [
-  { id: 'PASSWORD', label: '密码', description: '用户名 + 密码 + 图形验证码（授权码换 Token）' },
+  { id: 'PASSWORD', label: '账号密码', description: '用户名 + 密码 + 图形验证码（授权码换 Token）' },
+  { id: 'PASSKEY', label: 'Passkey', description: '使用通行密钥、指纹、面容或设备 PIN 登录' },
+  { id: 'SSH_KEY', label: 'SSH 签名', description: '使用已绑定 SSH 公钥对应的私钥签名登录' },
   {
     id: 'AUTH_CODE',
     label: '授权码',

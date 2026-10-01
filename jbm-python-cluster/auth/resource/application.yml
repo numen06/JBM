@@ -22,6 +22,12 @@ jbm:
     login-error-number: 5
     login-error-limit-minutes: 10
     cache-prefix: jbm:auth
+    # Apply Center migration 20260928_24 first. Never infer RP/origin from Host.
+    key-login:
+      enabled: false
+      rp-id: ""
+      rp-name: "JBM 平台"
+      origins: []
     # Standard OIDC is opt-in. Apply Center migration 20260922_23 and register
     # base_app.extend_data.oidc before enabling. See docs/auth-standardization.md.
     oidc:

@@ -66,7 +66,7 @@ async function handleLogout() {
   messageStore.disconnectRealtime()
   await auth.logout()
   messageStore.clear()
-  window.location.replace('/login')
+  window.location.replace(`${import.meta.env.BASE_URL}login`)
 }
 
 function dismissPasswordReminder() {

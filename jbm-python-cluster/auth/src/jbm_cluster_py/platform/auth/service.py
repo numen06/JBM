@@ -368,6 +368,8 @@ class AuthService:
         self.sms_push_base_url = str(sms_config.get("push-base-url") or "").rstrip("/")
         self.sms_valid_time = max(int(sms_config.get("valid-time") or 300), 60)
         self.sms_interval = max(int(sms_config.get("interval") or 60), 1)
+        from .key_login import KeyLoginService
+        self.key_login = KeyLoginService(self)
 
     async def password_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
         if not self.legacy_password_grant_enabled:
@@ -579,6 +581,8 @@ class AuthService:
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
         login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
+        if login_type in {"PASSKEY", "SSH_KEY"}:
+            return await self.key_login.authenticate(client, form)
         if login_type in {"PASSWORD", "SMS"} and (
             self.login_captcha_required or form.get("vcode")
         ):

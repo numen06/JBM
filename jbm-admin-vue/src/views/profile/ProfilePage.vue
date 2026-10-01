@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import KeyCredentialsPanel from '@/components/KeyCredentialsPanel.vue'
+import { authCenterUrl } from '@/api/auth'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { Camera, Mail, RotateCcw, Save, Smartphone } from '@lucide/vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
@@ -231,7 +233,7 @@ onBeforeUnmount(resetPendingAvatar)
 
 <template>
   <div>
-    <PageHeader title="用户中心" description="编辑当前登录用户的基础资料和头像">
+    <PageHeader title="用户中心" description="管理基础资料、Passkey 与 SSH 登录密钥">
       <template #actions>
         <Button variant="outline" :disabled="saving" @click="fillFormFromUser">
           <RotateCcw class="h-4 w-4" />
@@ -243,6 +245,10 @@ onBeforeUnmount(resetPendingAvatar)
         </Button>
       </template>
     </PageHeader>
+    <div class="mb-4 grid gap-4 lg:grid-cols-2">
+      <KeyCredentialsPanel kind="PASSKEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+      <KeyCredentialsPanel kind="SSH_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+    </div>
 
     <p v-if="formError" class="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ formError }}

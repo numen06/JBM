@@ -81,10 +81,10 @@ export async function login(params: LoginParams): Promise<OAuth2TokenResult> {
 }
 
 function defaultLoginRedirectUri(): string {
-  return '/login/callback'
+  return `${import.meta.env.BASE_URL.replace(/\/$/, '')}/login/callback`
 }
 
-function authCenterUrl(pathWithQuery: string) {
+export function authCenterUrl(pathWithQuery: string) {
   const configuredAuthorizeBase = runtimeConfig.oauthAuthorizeBaseUrl?.trim()
   if (configuredAuthorizeBase) {
     return `${configuredAuthorizeBase.replace(/\/+$/, '')}${pathWithQuery}`
