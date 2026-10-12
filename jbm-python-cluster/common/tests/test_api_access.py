@@ -44,6 +44,9 @@ def test_edit_does_not_authorize_delete_or_get_remove_alias():
         authorize_api("center", "DELETE", "/user/123", user)
     with pytest.raises(HTTPException):
         authorize_api("doc", "GET", "/remove/file.txt", person("MENU_doc_files"))
+    with pytest.raises(HTTPException):
+        authorize_api("doc", "GET", "/remove/file.txt", person("MENU_doc_files", "ACTION_doc_files_add"))
+    authorize_api("doc", "GET", "/remove/file.txt", person("MENU_doc_files", "ACTION_doc_files_delete"))
 
 
 def test_service_terminal_keeps_explicit_bearer_operation_grants():

@@ -1,5 +1,5 @@
 {
-  "version": "py-7.3.34",
+  "version": "py-7.3.35",
   "profile": "party-security",
   "updated_services": [
     "Center"
@@ -12,13 +12,14 @@
     "original_debug_statistics_http": 3,
     "latest_auth_tests_passed": 185,
     "latest_auth_tests_skipped": 4,
-    "statistics_and_scope_boundary_tests": 27
+    "statistics_and_scope_boundary_tests": 27,
+    "delete_alias_and_scope_tests": 28
   },
   "source_files": {
     "Dockerfile.party-security": "984a2f75122a5a1fe269db51c963864ccf7b9821b7751e1cc36bfdd0e5dfcda2",
-    ".app2docker-party-security.yaml": "bd4f19f80a556180da12b3954cc866b023e9bd67c0666d64aac633afb799baa3",
+    ".app2docker-party-security.yaml": "151c07d4d4f59a4bbc43343c7a0bc164560d9f62cf7ab23fe4503a4ad51a8998",
     "jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py": "dff1927c1a97f0779c96c7b7b293fd3368e721d8458854e5a3688bef04d8a4f8",
-    "jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py": "7b03e6a4648182ae046aef9440a1f3cb29d23bfa130580e166372eaf0d6e3319",
+    "jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py": "1e5ecc505b74b40733bddec1b502214e92c2cc55fc396a4501204cf586255b67",
     "jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/request_access.py": "ea33f88fb762456f9252204e4896325d194c39b0a8be8b9374de1f5b85c200df",
     "jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/router.py": "11560ef5f5f64120b532c9f483339467f16fe1f2ec104d8cae2911511c8e1929",
     "jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/repository.py": "c595de869c58ab6451a9a139346f00bed7c62a8ad608512b4dfac725c8c3b64c",
@@ -27,7 +28,7 @@
     "jbm-python-cluster/doc/tests/test_doc_token_scope.py": "13979257ca1a7d8ccc6a249a481bab2356db146c5a2a4ac9f9a4592b8c1e22c8",
     "jbm-python-cluster/doc/tests/test_doc_user_scope.py": "80eb1a1caad17f9c5bac0b9cfc0a7ffd60c771060495b9de22fe26996c34c077",
     "jbm-python-cluster/center/tests/test_request_access.py": "c577334ae71d77db4b26e11a468f0754835ed20597306655dc5b6345844f1ae2",
-    "jbm-python-cluster/common/tests/test_api_access.py": "4850b25dc66d5cad70d3a79c8b07155b4743b6a524cb6ee2ffa307c8fa2443cf"
+    "jbm-python-cluster/common/tests/test_api_access.py": "2431bf6c393459833272dc419ad5f920add0696fd8301a7cd35c05a52a47258b"
   },
   "changes": [
     "Current online session permissions",
@@ -36,6 +37,7 @@
     "Exact group capabilities and full-batch validation",
     "Restore platform-only cluster access statistics",
     "A tenant session menu/action cannot grant global session management",
-    "Tenant-owned project decision endpoint supports native IoT Bearer tokens without a Building menu"
+    "Tenant-owned project decision endpoint supports native IoT Bearer tokens without a Building menu",
+    "A GET remove/delete alias requires delete permission, never add permission"
   ]
 }

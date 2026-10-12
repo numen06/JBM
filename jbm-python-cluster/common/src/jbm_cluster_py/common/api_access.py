@@ -425,7 +425,7 @@ def authorize_api(
             action = path.rsplit("/", 1)[-1].lower()
             operation = (
                 "delete"
-                if method.upper() == "DELETE" or action.startswith(("delete", "remove"))
+                if method.upper() == "DELETE" or any(part.lower().startswith(("delete", "remove")) for part in path.split('/')[1:])
                 else "edit"
                 if method.upper() in {"PUT", "PATCH"}
                 or action in {"edit", "update", "save", "status", "password", "close", "reset"}
