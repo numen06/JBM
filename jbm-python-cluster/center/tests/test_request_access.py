@@ -123,6 +123,22 @@ async def test_valid_signature_has_exact_api_grant_and_replay_is_atomic(signed_s
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('service,path', [('center', '/app'), ('job', '/sysJob/run'), ('logs', '/GatewayLogs/findLogs'), ('gateway', '/gateway/discovery/services'), ('center', '/internal/gateway/api')])
+async def test_privileged_boundary_precedes_registered_bearer_and_signed_grants(signed_service, service, path):
+    svc, private = signed_service
+    async with svc.repository.engine.begin() as conn:
+        await conn.execute(text('INSERT INTO base_api VALUES(3,:service,:path,\'GET\',1,1)'), {'service': service, 'path': path})
+        await conn.execute(text("INSERT INTO base_authority VALUES('privileged',3,1,'API_read',10,NULL)"))
+        await conn.execute(text("INSERT INTO base_authority_apikey VALUES(30,'privileged',1,NULL)"))
+    with pytest.raises(HTTPException) as exc:
+        await svc.check({'service': service, 'method': 'GET', 'path': path}, 'Bearer user')
+    assert exc.value.status_code == 403
+    with pytest.raises(HTTPException) as exc:
+        await svc.check(proof(private, service=service, path=path), '')
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_document_boundary_precedes_registered_api_grants(signed_service):
     svc, private = signed_service
     async with svc.repository.engine.begin() as conn:

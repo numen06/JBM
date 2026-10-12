@@ -20,6 +20,7 @@ from jbm_cluster_py.common.api_access import (
     metadata_path,
     normalized_path,
     permission_codes,
+    require_api_boundary,
     signature_payload,
 )
 
@@ -79,6 +80,7 @@ class RequestAccessService:
         if body.get("key"):
             return await self.signed(body, api)
         identity = await self.auth.authenticate(authorization)
+        require_api_boundary(service, path, identity)
         if api is not None:
             if api.get("status") != 1:
                 raise HTTPException(403, "接口已停用")
@@ -196,15 +198,17 @@ class RequestAccessService:
         replay = hashlib.sha256((key + ":" + nonce).encode()).hexdigest()
         if not await self.redis.client.set("jbm:request-nonce:" + replay, "1", nx=True, ex=610):
             raise HTTPException(401, "重复的签名请求")
+        identity = {
+            "userId": row["owner_user"],
+            "appId": row.get("biz_app_id") or row.get("app_id"),
+            "tenantId": row["owner_tenant"],
+            "clientId": key,
+            "credentialType": "api_key",
+            "permissions": [],
+            "roles": [],
+        }
+        require_api_boundary(str(body.get("service") or ""), str(body.get("path") or ""), identity)
         return {
             "allowed": True,
-            "identity": {
-                "userId": row["owner_user"],
-                "appId": row.get("biz_app_id") or row.get("app_id"),
-                "tenantId": row["owner_tenant"],
-                "clientId": key,
-                "credentialType": "api_key",
-                "permissions": [],
-                "roles": [],
-            },
+            "identity": identity,
         }

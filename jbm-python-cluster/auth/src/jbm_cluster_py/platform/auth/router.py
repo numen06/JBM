@@ -422,7 +422,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     async def online_users(request: Request) -> JSONResponse:
         params = await _request_params(request)
         try:
-            current_token = await _require_login(request, auth_service)
+            current_token = _bearer_token(request)
+            await auth_service.verify_permissions(current_token, "MENU_onlineUsers", "monitor:online:list")
             return JSONResponse(
                 status_code=200,
                 content=ok(await auth_service.online_users(params, current_token)),
@@ -456,7 +457,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         params = await _request_params(request)
         token_id = str(params.get("tokenId") or params.get("token_id") or "")
         try:
-            await _require_login(request, auth_service)
+            await auth_service.verify_permissions(_bearer_token(request), "monitor:online:forceLogout", "monitor:online:logout")
             if not token_id:
                 raise AuthError("tokenId不能为空", 400)
             minutes = max(int(params.get("minutes") or 30), 1)
@@ -471,7 +472,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         params = await _request_params(request)
         token_id = str(params.get("tokenId") or params.get("token_id") or "")
         try:
-            await _require_login(request, auth_service)
+            await auth_service.verify_permissions(_bearer_token(request), "monitor:online:forceLogout", "monitor:online:logout")
             if not token_id:
                 raise AuthError("tokenId不能为空", 400)
             await auth_service.revoke_access_session(token_id)

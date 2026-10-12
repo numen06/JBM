@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Body, File, Header, Query, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Header, HTTPException, Query, Request, UploadFile
 from fastapi.responses import StreamingResponse
 
 from jbm_cluster_py.common.result import fail, ok
+from jbm_cluster_py.common.api_access import is_platform
 from jbm_cluster_py.platform.doc.schemas import DocPathForm, FileReqBody
-from jbm_cluster_py.platform.doc.service import DocService
+from jbm_cluster_py.platform.doc.service import DocService, normalize_path
 
 
 def _content_disposition(disposition: str, filename: str) -> str:
@@ -17,16 +18,48 @@ def _content_disposition(disposition: str, filename: str) -> str:
 
 
 def build_doc_router(service: DocService) -> APIRouter:
-    router = APIRouter()
+    def file_owner(request: Request) -> str | None:
+        identity = getattr(request.state, "identity", {})
+        tenant, user = identity.get("tenantId"), identity.get("userId")
+        if tenant is None or user is None:
+            return None
+        return "jbm:%s:%s" % (int(tenant), int(user))
+
+    async def protect_documents(request: Request) -> None:
+        if request.url.path in {"/baseDocGroup/findGroupItemByToken", "/baseDocGroup/removeGroupItemByToken", "/baseDocGroup/uploadByToken"}:
+            return  # DocService verifies the capability and its exact group scope.
+        identity = getattr(request.state, "identity", None)
+        if identity is None and service.config.get("jbm.api-access.enabled", True) is False and service.config.profile in {"dev", "test", "local", "default"}:
+            return  # Isolated domain tests; production cannot disable API protection.
+        if not identity:
+            raise HTTPException(403, "文档访问未获授权")
+        if is_platform(identity):
+            return
+        owner = file_owner(request)
+        if not owner:
+            raise HTTPException(403, "文档访问缺少用户归属")
+        path = request.url.path
+        if path in {"/put", "/upload"}:
+            return
+        for prefix in ("/get/", "/download/", "/remove/"):
+            if path.startswith(prefix):
+                doc = await service.repository.get_doc_by_path(normalize_path(path[len(prefix):]))
+                if doc and doc.get("creator") == owner:
+                    return
+                raise HTTPException(403, "无权访问该文档")
+        # Global metadata/group/token administration has no tenant ownership model.
+        raise HTTPException(403, "文档全局管理仅限平台管理员")
+
+    router = APIRouter(dependencies=[Depends(protect_documents)])
 
     @router.post("/put", tags=["文档资源管理"])
-    async def put(file: UploadFile = File(...)) -> Dict[str, Any]:
-        doc = await service.upload_doc(file, request_path="put")
+    async def put(request: Request, file: UploadFile = File(...)) -> Dict[str, Any]:
+        doc = await service.upload_doc(file, request_path="put", creator=file_owner(request))
         return ok(doc["docPath"], "上传文档成功")
 
     @router.post("/upload", tags=["文档资源管理"])
-    async def upload(file: UploadFile = File(...), group: Optional[str] = Query(default=None)) -> Dict[str, Any]:
-        doc = await service.upload_doc(file, group=group, request_path="upload")
+    async def upload(request: Request, file: UploadFile = File(...), group: Optional[str] = Query(default=None)) -> Dict[str, Any]:
+        doc = await service.upload_doc(file, group=group, request_path="upload", creator=file_owner(request))
         return ok(doc["docPath"], "上传文档成功")
 
     @router.get("/remove/{file_path:path}", tags=["文档资源管理"])

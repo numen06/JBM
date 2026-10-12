@@ -371,6 +371,19 @@ def service_key(service: str) -> str:
     return "building" if value.startswith("smart-building") else value
 
 
+def require_api_boundary(service: str, path: str, identity: Mapping[str, Any]) -> None:
+    """API/action grants cannot turn platform or internal management into tenant APIs."""
+    path = normalized_path(path)
+    matches = [rule for rule in SERVICE_RULES.get(service_key(service), ()) if rule.matches(path)]
+    if not matches:
+        return
+    rule = max(matches, key=lambda item: len(item.prefix))
+    if rule.internal_only and not (is_service(identity) or is_platform(identity)):
+        raise HTTPException(403, "仅内部服务或平台管理员可访问")
+    if rule.platform_only and not is_platform(identity):
+        raise HTTPException(403, "仅平台管理员可访问")
+
+
 def authorize_api(
     service: str,
     method: str,
@@ -380,6 +393,7 @@ def authorize_api(
     extra_rules: tuple[ApiRule, ...] = (),
 ) -> None:
     path = normalized_path(path)
+    require_api_boundary(service, path, identity)
     matches = [
         r for r in (*SERVICE_RULES.get(service_key(service), ()), *extra_rules) if r.matches(path)
     ]
