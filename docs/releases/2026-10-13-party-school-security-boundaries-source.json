@@ -1,28 +1,28 @@
 {
-  "version": "py-7.3.32",
+  "version": "py-7.3.33",
   "profile": "party-security",
   "updated_services": [
-    "Auth",
-    "Center",
-    "Doc"
+    "Auth"
   ],
   "checks": {
     "framework_tests_passed": 369,
     "framework_tests_skipped": 4,
     "original_debug_http": 17,
     "statistics_boundary_tests": 26,
-    "original_debug_statistics_http": 3
+    "original_debug_statistics_http": 3,
+    "latest_auth_tests_passed": 185,
+    "latest_auth_tests_skipped": 4
   },
   "source_files": {
     "Dockerfile.party-security": "984a2f75122a5a1fe269db51c963864ccf7b9821b7751e1cc36bfdd0e5dfcda2",
-    ".app2docker-party-security.yaml": "c6e39149d2f7f5a37196baee9e3a6c64efc2becce13c697091bb5e35aa3a66ee",
-    "jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py": "4d22164d287bf6c0f7e257b4d30a1a07dd649fd52b5c6163f30be676b9039266",
+    ".app2docker-party-security.yaml": "af738e4405712904cdf76f83efd5f93192cd1bc4bb21255cbc303e80597386b4",
+    "jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py": "dff1927c1a97f0779c96c7b7b293fd3368e721d8458854e5a3688bef04d8a4f8",
     "jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py": "99a9b4a378b9c80f278c0c73280a914afa092e1363d7bfdd799b257ce476b7b6",
     "jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/request_access.py": "ea33f88fb762456f9252204e4896325d194c39b0a8be8b9374de1f5b85c200df",
     "jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/router.py": "11560ef5f5f64120b532c9f483339467f16fe1f2ec104d8cae2911511c8e1929",
     "jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/repository.py": "c595de869c58ab6451a9a139346f00bed7c62a8ad608512b4dfac725c8c3b64c",
     "jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/service.py": "f97c8f19364a6cf89ebf7ed64c1e418eebdc54ed678f4f05fc0312481eea4174",
-    "jbm-python-cluster/auth/tests/test_online_access.py": "0d6e88b26a4678e62479feb5be18898ae4439a75f136b40d95ad14fbedaf9cff",
+    "jbm-python-cluster/auth/tests/test_online_access.py": "8d41da2f37015dfd494a6dc24ad3683f41fbf9f1fe34423995fbfc1a8deeecd7",
     "jbm-python-cluster/doc/tests/test_doc_token_scope.py": "13979257ca1a7d8ccc6a249a481bab2356db146c5a2a4ac9f9a4592b8c1e22c8",
     "jbm-python-cluster/doc/tests/test_doc_user_scope.py": "80eb1a1caad17f9c5bac0b9cfc0a7ffd60c771060495b9de22fe26996c34c077",
     "jbm-python-cluster/center/tests/test_request_access.py": "c577334ae71d77db4b26e11a468f0754835ed20597306655dc5b6345844f1ae2",
@@ -33,6 +33,7 @@
     "Mandatory privileged API boundaries before registry grants",
     "Doc tenant/user ownership",
     "Exact group capabilities and full-batch validation",
-    "Restore platform-only cluster access statistics"
+    "Restore platform-only cluster access statistics",
+    "A tenant session menu/action cannot grant global session management"
   ]
 }

@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from jbm_cluster_py.common.result import fail, ok
 from jbm_cluster_py.platform.auth.jwt import JwtError
 from jbm_cluster_py.platform.auth.service import AuthError, AuthService
+from jbm_cluster_py.common.api_access import is_platform
 
 logger = logging.getLogger(__name__)
 
@@ -422,8 +423,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     async def online_users(request: Request) -> JSONResponse:
         params = await _request_params(request)
         try:
-            current_token = _bearer_token(request)
-            await auth_service.verify_permissions(current_token, "MENU_onlineUsers", "monitor:online:list")
+            current_token = await _require_session_management(request, auth_service, "MENU_onlineUsers", "monitor:online:list")
             return JSONResponse(
                 status_code=200,
                 content=ok(await auth_service.online_users(params, current_token)),
@@ -457,7 +457,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         params = await _request_params(request)
         token_id = str(params.get("tokenId") or params.get("token_id") or "")
         try:
-            await auth_service.verify_permissions(_bearer_token(request), "monitor:online:forceLogout", "monitor:online:logout")
+            await _require_session_management(request, auth_service, "monitor:online:forceLogout", "monitor:online:logout")
             if not token_id:
                 raise AuthError("tokenId不能为空", 400)
             minutes = max(int(params.get("minutes") or 30), 1)
@@ -472,7 +472,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         params = await _request_params(request)
         token_id = str(params.get("tokenId") or params.get("token_id") or "")
         try:
-            await auth_service.verify_permissions(_bearer_token(request), "monitor:online:forceLogout", "monitor:online:logout")
+            await _require_session_management(request, auth_service, "monitor:online:forceLogout", "monitor:online:logout")
             if not token_id:
                 raise AuthError("tokenId不能为空", 400)
             await auth_service.revoke_access_session(token_id)
@@ -609,6 +609,15 @@ async def _require_login(request: Request, auth_service: AuthService) -> str:
     return token
 
 
+async def _require_session_management(request: Request, auth_service: AuthService, *permissions: str) -> str:
+    token = _bearer_token(request)
+    identity = await auth_service.userinfo(token)
+    if not is_platform(identity):
+        raise AuthError("会话管理仅限平台管理账号", 403)
+    await auth_service.verify_permissions(token, *permissions)
+    return token
+
+
 async def _online_revoke(
     token_id: str,
     request: Request,
@@ -616,7 +625,7 @@ async def _online_revoke(
     *permissions: str,
 ) -> JSONResponse:
     try:
-        await auth_service.verify_permissions(_bearer_token(request), *permissions)
+        await _require_session_management(request, auth_service, *permissions)
         if not token_id:
             raise AuthError("tokenId不能为空", 400)
         await auth_service.revoke_access_session(token_id)

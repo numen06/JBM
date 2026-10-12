@@ -35,6 +35,9 @@ def test_permission_revocation_denies_existing_token_and_menu_does_not_grant_mut
     class MutablePermissions(Repository):
         grants = ['MENU_onlineUsers']
 
+        async def user_roles(self, *args):
+            return [{'role_id': 2, 'role_code': 'platform_operator'}]
+
         async def user_authorities(self, *args):
             return self.grants
 
@@ -53,4 +56,23 @@ def test_permission_revocation_denies_existing_token_and_menu_does_not_grant_mut
         repo.grants = []
         assert client.post('/online/expireImmediately', json={'tokenId': session_id}).status_code == 403
         assert client.post('/online/pageList', json={}).status_code == 403
+        assert client.get('/oauth2/userinfo').status_code == 200
+
+
+def test_session_menu_and_actions_do_not_elevate_tenant_to_platform_monitor():
+    class TenantWithActions(Repository):
+        async def user_authorities(self, *args):
+            return ['MENU_onlineUsers', 'ACTION_monitor:online:forceLogout', 'ACTION_monitor:online:logout']
+
+    auth = service(TokenCache(RedisClient({'enabled': False})), TenantWithActions())
+    token = asyncio.run(issue(auth))
+    app = FastAPI()
+    app.include_router(build_auth_router(auth))
+    with TestClient(app) as client:
+        client.headers['Authorization'] = 'Bearer ' + token['access_token']
+        session_id = _hash_token(token['access_token'])
+        for path in ['/online/pageList', '/online/expire', '/online/expireImmediately']:
+            assert client.post(path, json={'tokenId': session_id}).status_code == 403
+        for path in ['/online/kickout/', '/online/logout/']:
+            assert client.delete(path + session_id).status_code == 403
         assert client.get('/oauth2/userinfo').status_code == 200
