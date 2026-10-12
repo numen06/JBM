@@ -32,9 +32,7 @@ interface ReceivedDelegation {
 }
 
 function tenantLabel(option: Omit<JbmTenantOption, 'label'>, purpose = '') {
-  const identity = option.name
-    ? `${option.name}${option.code ? `（${option.code}）` : ''}`
-    : option.code || option.value
+  const identity = option.name || (option.source === 'current' ? '当前租户' : '可访问租户')
   if (option.source === 'current') return `本方租户 · ${identity}`
   if (option.source === 'delegated') return `受托租户 · ${identity}${purpose ? ` · ${purpose}` : ''}`
   return `租户 · ${identity}`

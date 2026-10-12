@@ -7,6 +7,7 @@ import { fetchCaptchaBase64, fetchSmsCodeConfig, sendSmsCode } from '@/api/captc
 import type { CurrentUser } from '@/api/types'
 import { useMenuStore } from '@/stores/menu'
 import { JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
+import { isPlatformAdministrator, isSuperAdministrator } from '@/lib/adminAccess'
 
 const TOKEN_KEY = 'jbm_access_token'
 const REFRESH_KEY = 'jbm_refresh_token'
@@ -112,6 +113,7 @@ export const useAuthStore = defineStore('auth', () => {
       activeTenantId.value = tenantId.value
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(isSuperAdminUser(user.value))
+      menuStore.setPlatformAccount(isPlatformAdministrator(user.value))
       menuStore.setAuthorityCodes(
         user.value.authorities?.map((item) => item.authority || item.authorityId || '') ?? [],
       )
@@ -122,17 +124,14 @@ export const useAuthStore = defineStore('auth', () => {
       activeTenantId.value = '0'
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(false)
+      menuStore.setPlatformAccount(false)
       menuStore.setAuthorityCodes([])
       return null
     }
   }
 
   function isSuperAdminUser(currentUser: CurrentUser | null) {
-    if (!currentUser) return false
-    if (currentUser.userName === 'admin') return true
-    return (currentUser.roles ?? []).some(
-      (role) => role.roleCode === 'super_admin' || role.roleId === 1,
-    )
+    return isSuperAdministrator(currentUser)
   }
 
   async function logout() {

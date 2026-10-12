@@ -207,6 +207,7 @@ class AuthRepository:
                         "publicKey": data.get("public_key"),
                         "privateKey": data.get("private_key"),
                         "publicClient": bool(oauth.get("publicClient")),
+                        "allowedScopes": oauth.get("allowedScopes") or ["all"],
                         "redirectUris": list(oauth.get("redirectUris") or []),
                         "registration": registration,
                         "oidc": _client_oidc_settings(data),
@@ -653,6 +654,7 @@ class AuthRepository:
                             FROM base_authority_role rp
                             INNER JOIN base_authority a ON rp.authority_id = a.authority_id
                             WHERE rp.role_id = :role_id AND a.status = 1
+                              AND (rp.expire_time IS NULL OR rp.expire_time > CURRENT_TIMESTAMP)
                               AND (:app_id IS NULL OR (a.app_id IS NULL OR a.app_id = :app_id))
                             """
                             + role_app_clause
@@ -669,6 +671,7 @@ class AuthRepository:
                         FROM base_authority_user up
                         INNER JOIN base_authority a ON up.authority_id = a.authority_id
                         WHERE up.user_id = :user_id AND a.status = 1
+                          AND (up.expire_time IS NULL OR up.expire_time > CURRENT_TIMESTAMP)
                           AND (:app_id IS NULL OR (a.app_id IS NULL OR a.app_id = :app_id))
                         """
                         + user_app_clause
@@ -980,6 +983,7 @@ def _client_oauth_settings(data: Mapping[str, Any]) -> dict[str, Any]:
         redirect_uris = [website]
     return {
         "publicClient": bool(oauth.get("publicClient") or oauth.get("public_client")),
+        "allowedScopes": oauth.get("allowedScopes") or ["all"],
         "redirectUris": [str(item) for item in redirect_uris if str(item).strip()],
     }
 

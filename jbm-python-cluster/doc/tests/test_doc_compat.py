@@ -11,6 +11,8 @@ from jbm_cluster_py.platform.doc.main import create_app
 def doc_config(tmp_path: Path) -> AppConfig:
     return AppConfig(
         {
+            # Domain/storage tests; API authentication is exercised separately by framework tests.
+            "jbm": {"api-access": {"enabled": False}},
             "server": {"host": "127.0.0.1", "port": 9999},
             "spring": {
                 "application": {"name": "jbm-cluster-platform-doc"},

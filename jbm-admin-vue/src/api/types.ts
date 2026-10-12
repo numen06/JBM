@@ -475,6 +475,7 @@ export interface OnlineUserSearchForm {
 }
 
 export interface CurrentUser {
+  admin?: boolean
   userId?: SnowflakeId
   userName?: string
   nickName?: string

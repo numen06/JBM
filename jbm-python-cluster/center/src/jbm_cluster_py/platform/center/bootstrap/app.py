@@ -4,10 +4,10 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-from jbm_cluster_py.common.auth import install_bearer_openapi
+from jbm_cluster_py.common.auth import install_bearer_openapi, request_authorization
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.logging import configure_logging
@@ -15,6 +15,8 @@ from jbm_cluster_py.common.result import fail
 from jbm_cluster_py.integrations.nacos import NacosRegistrar
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.integrations.telemetry import init_telemetry
+from jbm_cluster_py.integrations.redis import RedisClient
+from jbm_cluster_py.platform.center.modules.governance.application.request_access import RequestAccessService
 from jbm_cluster_py.platform.center.modules.governance.api.router import build_governance_router
 from jbm_cluster_py.platform.center.modules.governance.api.compatibility_router import build_compatibility_router
 from jbm_cluster_py.platform.center.modules.governance.application.compatibility_service import CompatibilityService
@@ -43,6 +45,9 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         app_config.get("jbm.security.password-policy", {}) or {},
     )
     auth = CenterAuthClient(dict(app_config.get("jbm.center.security", {}) or {}), client)
+    nonce_redis = RedisClient(app_config.redis)
+    access = RequestAccessService(repository, nonce_redis, auth)
+    auth.access_checker = access.check
     registrar = NacosRegistrar(app_config.service_name, app_config.port, app_config.nacos_discovery)
 
     @asynccontextmanager
@@ -51,6 +56,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         app.state.repository = repository
         app.state.service = service
         await repository.start()
+        await nonce_redis.start()
         await discovery.start()
         await registrar.start()
         try:
@@ -59,6 +65,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             await registrar.stop()
             await discovery.stop()
             await repository.stop()
+            await nonce_redis.stop()
             await client.aclose()
 
     openapi = app_config.openapi
@@ -71,13 +78,16 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
+    auth.bind_app(app, profile=app_config.profile)
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Any):
         if auth.is_public(request.url.path):
             request.state.identity = {}
             return await call_next(request)
         try:
-            request.state.identity = await auth.authenticate(request)
+            request.state.identity = await auth.authenticate_request(request, app_config.service_name)
+        except HTTPException as exc:
+            return JSONResponse(status_code=exc.status_code, content=fail(None, exc.detail, exc.status_code))
         except PermissionError as exc:
             return JSONResponse(status_code=401, content=fail(None, str(exc), 401))
         except ConnectionError:
@@ -85,9 +95,25 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                 status_code=503,
                 content=fail(None, "认证服务不可用", 503),
             )
-        return await call_next(request)
+        marker = request_authorization.set(request.headers.get("Authorization", ""))
+        try:
+            return await call_next(request)
+        finally:
+            request_authorization.reset(marker)
 
     install_exception_handlers(app)
+
+    @app.post("/security/authorize", include_in_schema=False)
+    async def authorize_request(request: Request):
+        body = await request.json()
+        if not isinstance(body, dict):
+            raise HTTPException(400, "非法请求")
+        try:
+            return {"success": True, "code": 200, "result": await access.check(body, request.headers.get("Authorization", ""))}
+        except PermissionError as exc:
+            raise HTTPException(401, str(exc)) from None
+        except ConnectionError:
+            raise HTTPException(503, "认证服务不可用") from None
 
     @app.get("/actuator/health")
     async def health() -> dict[str, Any]:

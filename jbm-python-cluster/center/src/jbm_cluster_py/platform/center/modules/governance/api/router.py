@@ -35,17 +35,16 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
         return ok(
             {
                 "identity": {
-                    "userId": user.get("userId"),
                     "userName": user.get("userName"),
                     "nickName": user.get("nickName"),
                     "roles": [row.get("roleCode") for row in user.get("roles") or []],
-                    "appId": request.state.identity.get("appId"),
                     "visibleMenuCount": sum(1 for _ in _walk(menus)),
                     "scope": "platform" if platform_scope else "tenant",
-                    "tenantId": request.state.identity.get("tenantId"),
+                    **({"userId": user.get("userId"), "appId": request.state.identity.get("appId"),
+                        "tenantId": request.state.identity.get("tenantId")} if platform_scope else {}),
                 },
                 "sections": {
-                    key: platform_scope or key in {"system", "api"}
+                    key: platform_scope or key == "system"
                     for key in ("system", "authority", "api", "gateway", "developer", "audit")
                 },
                 "metrics": {
@@ -103,8 +102,7 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
 
     @router.get("/user/{user_id}/orgs")
     async def user_orgs(user_id: int, request: Request) -> dict[str, Any]:
-        await service.user(user_id, request.state.identity)
-        return ok(await service.repository.user_orgs(user_id))
+        return ok(await service.user_orgs(user_id, request.state.identity))
 
     @router.get("/user/{user_id}/accounts")
     async def user_accounts(user_id: int, request: Request) -> dict[str, Any]:

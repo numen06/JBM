@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 import uvicorn
 from fastapi import FastAPI
+from jbm_cluster_py.common.auth import install_api_protection
 
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
@@ -45,6 +46,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    install_api_protection(app, app_config)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_job_router(job_service))
     return app

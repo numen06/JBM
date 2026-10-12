@@ -16,13 +16,8 @@ class CenterAuthClient(UserInfoAuthClient):
             default_public_paths=(
                 "/actuator/health",
                 "/health",
-                "/docs",
-                "/redoc",
-                "/openapi.json",
                 "/captcha/pkey",
                 "/baseAppConfig/getAppConfigByKey",
+                "/security/authorize",
             ),
         )
-
-    async def authenticate(self, request: Request) -> dict[str, Any]:
-        return await super().authenticate(request.headers.get("authorization"))

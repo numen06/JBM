@@ -6,6 +6,7 @@ from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
+from jbm_cluster_py.common.auth import install_api_protection
 
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
@@ -61,6 +62,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    # Scoped Doc-Token-Key operations retain their own capability verification in DocService.
+    install_api_protection(app, app_config, public_paths=("/health", "/actuator/health", "/baseDocGroup/findGroupItemByToken", "/baseDocGroup/removeGroupItemByToken", "/baseDocGroup/uploadByToken"))
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_doc_router(doc_service))
     return app

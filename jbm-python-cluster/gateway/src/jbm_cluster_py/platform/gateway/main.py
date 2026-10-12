@@ -6,6 +6,7 @@ from typing import Any, Optional
 import httpx
 import uvicorn
 from fastapi import FastAPI
+from jbm_cluster_py.common.auth import install_api_protection
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
@@ -107,6 +108,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_security_middleware(app, app_config)
+    install_api_protection(app, app_config, protected_prefixes=("/gateway", "/__gateway"))
     install_exception_handlers(app)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_gateway_router(proxy, routes, ip_limits, circuit_breakers, traffic, access_logger, discovery))

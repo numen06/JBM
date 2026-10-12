@@ -1,0 +1,14 @@
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:d83f2933ab7fbff0b8767b32639f9c94d8014248fb2b5799adec10e7202c9dfe AS jbm-python-cluster
+USER root
+RUN pip install 'webauthn>=2.7,<3' 'cryptography>=46,<49' 'PyJWT>=2.10,<3'
+USER appuser
+COPY --chown=appuser:appuser jbm-python-cluster/common/src/jbm_cluster_py/common/auth.py jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py /app/common/src/jbm_cluster_py/common/
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/ /app/auth/src/jbm_cluster_py/platform/auth/
+COPY --chown=appuser:appuser jbm-python-cluster/center/src/jbm_cluster_py/platform/center/bootstrap/app.py /app/center/src/jbm_cluster_py/platform/center/bootstrap/app.py
+COPY --chown=appuser:appuser jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/ /app/center/src/jbm_cluster_py/platform/center/modules/governance/
+COPY --chown=appuser:appuser jbm-python-cluster/gateway/src/jbm_cluster_py/platform/gateway/main.py jbm-python-cluster/gateway/src/jbm_cluster_py/platform/gateway/service.py /app/gateway/src/jbm_cluster_py/platform/gateway/
+COPY --chown=appuser:appuser jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/main.py /app/doc/src/jbm_cluster_py/platform/doc/main.py
+COPY --chown=appuser:appuser jbm-python-cluster/job/src/jbm_cluster_py/platform/job/main.py /app/job/src/jbm_cluster_py/platform/job/main.py
+COPY --chown=appuser:appuser jbm-security-logs-entry.py /app/logs/src/jbm_cluster_py/platform/logs/main.py
+COPY --chown=appuser:appuser jbm-python-cluster/push/src/jbm_cluster_py/platform/push/main.py /app/push/src/jbm_cluster_py/platform/push/main.py
+COPY --chown=appuser:appuser jbm-python-cluster/bigscreen/src/jbm_cluster_py/platform/bigscreen/main.py /app/bigscreen/src/jbm_cluster_py/platform/bigscreen/main.py

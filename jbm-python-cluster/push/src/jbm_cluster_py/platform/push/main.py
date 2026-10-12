@@ -3,7 +3,7 @@ from typing import Any, Mapping, Optional
 
 import httpx
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
 from jbm_cluster_py.common.auth import UserInfoAuthClient, install_bearer_openapi
@@ -80,9 +80,6 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         default_public_paths=(
             "/actuator/health",
             "/health",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
             "/pin/send",
             "/pin/check",
         ),
@@ -146,15 +143,16 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
+    auth.bind_app(app, profile=app_config.profile)
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Any):
         if auth.is_public(request.url.path):
             request.state.identity = {}
             return await call_next(request)
         try:
-            request.state.identity = await auth.authenticate(
-                request.headers.get("authorization")
-            )
+            request.state.identity = await auth.authenticate_request(request, app_config.service_name)
+        except HTTPException as exc:
+            return JSONResponse(status_code=exc.status_code, content={"success": False, "code": exc.status_code, "message": exc.detail, "result": None})
         except PermissionError as exc:
             return JSONResponse(
                 status_code=401,

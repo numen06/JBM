@@ -17,7 +17,7 @@ import { usePermission } from '@/composables/usePermission'
 import { toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { BaseUser } from '@/api/types'
 
-const { hasAction } = usePermission()
+const { hasAction, isPlatformAdmin } = usePermission()
 const feedback = useFeedback()
 const router = useRouter()
 const { orgLabel, loadOrgs } = useOrgTree()
@@ -61,7 +61,7 @@ async function handleClose(row: BaseUser) {
   <div>
     <PageHeader
       title="用户管理"
-      description="Center /user — 按钮权限 ACTION_users_*；同一用户可用用户名/手机/邮箱登录"
+      description="管理授权范围内的成员资料与账号状态"
     >
       <template #actions>
         <Input v-model="keyword" placeholder="关键字" class="w-40" @keyup.enter="search" />
@@ -76,7 +76,7 @@ async function handleClose(row: BaseUser) {
       <Table>
         <thead>
           <tr class="border-b bg-muted/50">
-            <th class="h-10 px-4 text-left font-medium">ID</th>
+            <th v-if="isPlatformAdmin" class="h-10 px-4 text-left font-medium">ID</th>
             <th class="h-10 px-4 text-left font-medium">用户名</th>
             <th class="h-10 px-4 text-left font-medium">昵称</th>
             <th class="h-10 px-4 text-left font-medium">手机</th>
@@ -88,7 +88,7 @@ async function handleClose(row: BaseUser) {
         </thead>
         <tbody>
           <tr v-for="row in items" :key="row.userId" class="border-b">
-            <td class="p-4">{{ row.userId }}</td>
+            <td v-if="isPlatformAdmin" class="p-4">{{ row.userId }}</td>
             <td class="p-4">{{ row.userName }}</td>
             <td class="p-4">{{ row.nickName }}</td>
             <td class="p-4">{{ row.mobile }}</td>

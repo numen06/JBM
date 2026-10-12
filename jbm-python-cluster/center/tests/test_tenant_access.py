@@ -41,11 +41,13 @@ async def test_tenant_filters_override_client_values() -> None:
     service = GovernanceService(repository)
 
     await service.users(1, 10, None, {"companyId": 1}, TENANT)
-    await service.apps(1, 10, {"orgId": 1}, TENANT)
+    with pytest.raises(HTTPException) as error:
+        await service.apps(1, 10, {"orgId": 1}, TENANT)
+    assert error.value.status_code == 403
 
     assert repository.list_users.await_args.args[3]["tenantId"] == 2000
     assert "companyId" not in repository.list_users.await_args.args[3]
-    assert repository.list_apps.await_args.args[2]["orgId"] == 2000
+    repository.list_apps.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -193,6 +195,7 @@ async def test_new_user_roles_are_scoped_to_target_tenant_and_app() -> None:
 @pytest.mark.asyncio
 async def test_existing_user_joins_current_tenant_without_duplicate_account() -> None:
     store = AsyncMock()
+    store.is_user_member.return_value = True
     store.find_user_by_username.return_value = {
         "userId": 4100,
         "userName": "shared_user",

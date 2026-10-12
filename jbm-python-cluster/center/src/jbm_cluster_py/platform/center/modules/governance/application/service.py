@@ -5,6 +5,9 @@ from typing import Any, Mapping
 from jbm_cluster_py.common.masterdata import PageForm, java_page
 from jbm_cluster_py.platform.center.modules.governance.application.access import (
     is_platform,
+    is_platform_authority,
+    is_platform_menu,
+    is_super_admin,
     is_tenant_admin,
     require_platform,
     require_tenant_admin,
@@ -36,6 +39,8 @@ class GovernanceService:
         return java_page(rows, total, PageForm(currPage=page, pageSize=size))
 
     async def user(self, user_id: int, identity: Mapping[str, Any]) -> dict[str, Any] | None:
+        if not is_platform(identity) and user_id != _identity_int(identity, "userId", "user_id", "sub"):
+            require_tenant_admin(identity)
         row = await self.repository.get_user(user_id)
         if not is_platform(identity) and not await self.repository.is_user_member(
             user_id, tenant_id(identity)
@@ -57,7 +62,18 @@ class GovernanceService:
         user["authorities"] = await self.repository.user_authorities(
             user_id, is_admin, app_id, active_tenant
         )
+        user["admin"] = is_super_admin(identity)
+        if not is_platform(identity):
+            user["authorities"] = [row for row in user["authorities"] if not is_platform_authority(row)]
         return user
+
+    async def user_orgs(self, user_id: int, identity: Mapping[str, Any]) -> list[dict[str, Any]]:
+        await self.user(user_id, identity)
+        rows = await self.repository.user_orgs(user_id)
+        if is_platform(identity) or user_id == _identity_int(identity, "userId", "user_id", "sub"):
+            return rows
+        allowed = {str(row.get("id")) for row in await self._orgs(identity)}
+        return [row for row in rows if str(row.get("id", row.get("orgId"))) in allowed]
 
     async def current_menus(
         self,
@@ -77,6 +93,8 @@ class GovernanceService:
         rows = await self.repository.user_menus(
             user_id, app_id, _is_admin(user, identity), tenant_id(identity)
         )
+        if not is_platform(identity):
+            rows = [row for row in rows if not is_platform_menu(row)]
         return _tree(rows, "menuId") if tree else rows
 
     async def org_roots(self, identity: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -126,6 +144,7 @@ class GovernanceService:
     async def apps(
         self, page: int, size: int, filters: Mapping[str, Any], identity: Mapping[str, Any]
     ) -> dict[str, Any]:
+        require_platform(identity)
         scoped = dict(filters)
         if not is_platform(identity):
             scoped["orgId"] = tenant_id(identity)

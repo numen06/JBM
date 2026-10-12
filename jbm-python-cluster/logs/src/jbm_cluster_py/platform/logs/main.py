@@ -5,6 +5,7 @@ from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
+from jbm_cluster_py.common.auth import install_api_protection
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
@@ -69,6 +70,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    # Temporary downloads/access already require the log-bound expiring signature.
+    install_api_protection(app, app_config, public_paths=("/health", "/actuator/health", "/businessLog/download/", "/businessLog/access/"))
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_logs_router(repository, service, access_ingest))
     return app
