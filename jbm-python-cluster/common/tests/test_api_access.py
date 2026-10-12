@@ -61,6 +61,13 @@ def test_human_internal_scope_cannot_impersonate_service():
     )
 
 
+def test_platform_statistics_are_available_to_platform_only():
+    authorize_api('logs', 'POST', '/clusterAccess/getClusterAccessInfo', {**person(), 'admin': True})
+    with pytest.raises(HTTPException) as exc:
+        authorize_api('logs', 'POST', '/clusterAccess/getClusterAccessInfo', person('MENU_onlineUsers'))
+    assert exc.value.status_code == 403
+
+
 def test_signing_binds_target_body_and_data_scope():
     args = [
         "iot-platform",

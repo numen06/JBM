@@ -279,6 +279,7 @@ SERVICE_RULES = {
     "logs": (
         ApiRule("/GatewayLogs/ingest", internal_only=True),
         ApiRule("/GatewayLogs", platform_only=True),
+        ApiRule("/clusterAccess", platform_only=True),
         ApiRule("/BusinessLog", platform_only=True),
         ApiRule("/businessLog", platform_only=True),
     ),
