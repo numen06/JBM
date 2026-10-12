@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.doc.main import create_app
@@ -59,6 +61,35 @@ def test_doc_upload_download_page_and_delete(tmp_path: Path) -> None:
 
         deleted = client.post("/baseDoc/deleteByPaths", json={"paths": [doc_path]})
         assert deleted.json()["success"] is True
+
+
+def test_only_configured_raster_login_images_are_public(tmp_path: Path) -> None:
+    config = doc_config(tmp_path)
+    config.raw["jbm"]["api-access"]["enabled"] = True
+    files = tmp_path / "files" / "app-branding" / "upload"
+    files.mkdir(parents=True)
+    png = b"\x89PNG\r\n\x1a\npublic-login-image"
+    (files / "background.png").write_bytes(png)
+    (files / "private.png").write_bytes(png)
+    (files / "logo.svg").write_bytes(b'<svg xmlns="http://www.w3.org/2000/svg"/>')
+    with TestClient(create_app(config)) as client:
+        async def seed():
+            async with client.app.state.doc_service.repository.engine.begin() as conn:
+                await conn.execute(text("CREATE TABLE base_app_config (config_content TEXT)"))
+                await conn.execute(text("INSERT INTO base_app_config VALUES (:value)"), {
+                    "value": json.dumps({"sysBg": "app-branding/upload/background.png",
+                                         "sysLogo": "app-branding/upload/logo.svg"})
+                })
+        client.portal.call(seed)
+        image = client.get("/get/app-branding/upload/background.png")
+        assert image.status_code == 200 and image.content == png
+        assert image.headers["content-type"] == "image/png"
+        assert image.headers["x-content-type-options"] == "nosniff"
+        for path in ("/get/app-branding/upload/private.png", "/get/app-branding/upload/logo.svg",
+                     "/download/app-branding/upload/background.png", "/get/private/report.pdf",
+                     "/get/app-branding/%2e%2e/private/report.png", "/docs", "/openapi.json"):
+            assert client.get(path).status_code == 401, path
+        assert client.post("/get/app-branding/upload/background.png").status_code == 401
 
 
 def test_doc_group_token_upload_and_query(tmp_path: Path) -> None:
