@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import html
+import logging
 from typing import Any, Mapping
 
 from fastapi import APIRouter, Request
@@ -10,6 +11,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from jbm_cluster_py.common.result import fail, ok
 from jbm_cluster_py.platform.auth.jwt import JwtError
 from jbm_cluster_py.platform.auth.service import AuthError, AuthService
+
+logger = logging.getLogger(__name__)
 
 
 def build_auth_router(auth_service: AuthService) -> APIRouter:
@@ -551,10 +554,14 @@ async def _userinfo(request: Request, auth_service: AuthService) -> JSONResponse
     try:
         return JSONResponse(status_code=200, content=ok(await auth_service.userinfo(token)))
     except AuthError as exc:
+        logger.warning("Userinfo authentication rejected: code=%s reason=%s", exc.code, str(exc))
         if exc.code >= 500:
             return JSONResponse(status_code=503, content=fail(None, "认证服务不可用", 503))
+        if exc.code == 403:
+            return JSONResponse(status_code=403, content=fail(None, "访问未获授权", 403))
         return JSONResponse(status_code=401, content=fail(None, "无效的access_token", 401))
-    except JwtError:
+    except JwtError as exc:
+        logger.warning("Userinfo authentication rejected: reason=%s", str(exc))
         return JSONResponse(status_code=401, content=fail(None, "无效的access_token", 401))
 
 

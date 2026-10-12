@@ -1,5 +1,5 @@
 {
-  "version": "py-7.3.29",
+  "version": "py-7.3.30",
   "scope": "Unified API security and bounded public login branding images; other files remain authenticated.",
   "source_files": {
     "jbm-python-cluster/README.md": "43deda251d43d16b3159beb56f2bd502b31afac167b642c96ba1cfbf8b966367",
@@ -63,7 +63,9 @@
     "jbm-admin-vue/src/stores/menu.ts": "d7c12e83cbb3d46aa168fba2a1bb8a4bb8b4e47e65e612a0485f86e357582f4d",
     "jbm-admin-vue/src/views/system/UserList.vue": "543ce42f91792fbfd4f7a870375eff47f8bb5d701d43b3b9574ffc290f15db92",
     "jbm-admin-vue/src/views/dashboard/DashboardPage.vue": "86bc380241235d62a7c613ab9a31539351da0a42ebc73f81070aa82f592899a9",
-    "jbm-admin-vue/src/api/types.ts": "6941b0b045c2325b3ff636f6e3b0b86b62c493123a44a4fa247930e1b94add0c"
+    "jbm-admin-vue/src/api/types.ts": "6941b0b045c2325b3ff636f6e3b0b86b62c493123a44a4fa247930e1b94add0c",
+    "jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py": "3e742c3067cff6a6433886ccd79bd38f49626f03635fd55f3a0ae1b484fd6265",
+    "jbm-python-cluster/auth/tests/test_userinfo_rejection.py": "dd439d726e9b1b4e5a0c24edace6d3de0a377430bd655394f896e56dc1a8153d"
   },
   "profile": "party-security",
   "test_evidence": {
@@ -82,5 +84,14 @@
     "local_original_debug_image": 200,
     "unconfigured_image": 401,
     "anonymous_schema": 401
+  },
+  "userinfo_validation": {
+    "targeted_tests": 4,
+    "denial_codes": [
+      401,
+      403,
+      503
+    ],
+    "credentials_in_diagnostics": false
   }
 }
