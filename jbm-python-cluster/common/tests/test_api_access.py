@@ -68,6 +68,15 @@ def test_platform_statistics_are_available_to_platform_only():
     assert exc.value.status_code == 403
 
 
+def test_owned_project_scope_check_preserves_native_iot_bearer_permissions():
+    terminal = {'clientId': 'iot-reader', 'tenantId': 7, 'permissions': ['iot.platform.read']}
+    authorize_api('building', 'GET', '/api/v1/building/project-scope', terminal)
+    authorize_api('building', 'GET', '/api/v1/building/project-scope', person('all'))
+    for method, path in [('POST', '/api/v1/building/project-scope'), ('GET', '/api/v1/building/master-data/projects')]:
+        with pytest.raises(HTTPException):
+            authorize_api('building', method, path, terminal)
+
+
 def test_signing_binds_target_body_and_data_scope():
     args = [
         "iot-platform",

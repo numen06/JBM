@@ -354,7 +354,10 @@ SERVICE_RULES["building"] = tuple(
         (menu_codes(*codes), frozenset({"building.platform.operate"})),
     )
     for p, codes in BUILDING_FAMILIES.items()
-)
+) + (ApiRule(
+    "/api/v1/building/project-scope",
+    (frozenset({"all", "iot.platform.read", "iot.platform.operate", "building.platform.read", "building.platform.operate"}),),
+),)
 SERVICE_RULES["building"] += (
     ApiRule("/api/v1/building/master-data/icons", authenticated=True),
     ApiRule(
