@@ -80,6 +80,23 @@ def test_owned_project_scope_check_preserves_native_iot_bearer_permissions():
             authorize_api('building', method, path, terminal)
 
 
+@pytest.mark.parametrize("menu", ["building_structures", "building_energy_monitor", "building_substation_scene", "building_history", "building_household_history"])
+@pytest.mark.parametrize("resource", ["projects", "structure-types", "structures", "energy-types", "energy-items", "device-bindings"])
+def test_business_menu_reads_dependencies_without_granting_configuration_writes(menu, resource):
+    user = person("MENU_" + menu, "building.platform.operate")
+    path = "/api/v1/building/master-data/" + resource
+    authorize_api("building", "GET", path, user)
+    for method in ["POST", "PUT", "DELETE"]:
+        if resource == "structures" and menu == "building_structures":
+            # This is the user's own authorized management resource.
+            authorize_api("building", method, path, user)
+        else:
+            with pytest.raises(HTTPException):
+                authorize_api("building", method, path, user)
+    with pytest.raises(HTTPException):
+        authorize_api("building", "GET", path, person("MENU_users"))
+
+
 def test_signing_binds_target_body_and_data_scope():
     args = [
         "iot-platform",

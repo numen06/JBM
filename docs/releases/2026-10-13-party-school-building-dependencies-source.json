@@ -1,0 +1,20 @@
+{
+  "version": "py-7.3.36",
+  "updated_services": [
+    "Center"
+  ],
+  "checks": {
+    "permission_and_document_tests": 62,
+    "original_debug_dependency_http": 16,
+    "original_debug_business_scope": 16
+  },
+  "changes": [
+    "Business menus can read their shared query resources without configuration mutation grants",
+    "Tenant and project filters and privileged management boundaries retained"
+  ],
+  "source_hashes": {
+    "jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py": "9ea6329fc7f92de1f11457af6de93185e0161f92e3cbebd5fcdb367f50824a39",
+    "jbm-python-cluster/common/tests/test_api_access.py": "10120f251fc9d37dfc448c972f4e58b693a415237b32c5d3094a69b8f88bf4c5",
+    ".app2docker-party-security.yaml": "f4902a2b1dc9ac445699aec4e2af215eac6860cabe696534c0f2b3c09286b3a3"
+  }
+}

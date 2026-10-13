@@ -347,10 +347,37 @@ BUILDING_FAMILIES = {
         for x in ("shifts", "employees", "clock-devices", "schedules", "leave-records")
     },
 }
+# Business pages read these shared resources as query options and node details.
+# Reading a dependency does not grant the corresponding configuration mutations.
+BUILDING_STRUCTURE_READERS = (
+    *BUILDING_FAMILIES["structures"], "building_dashboard", "building_energy_map",
+    "building_campus_3d", "building_bigscreen", "building_energy_monitor",
+    "building_history", "building_substation_scene", "building_substation_monitor",
+    "building_substation_topology", "building_transformer_monitor", "building_substation_history",
+    "building_household_energy", "building_household_history", "building_water_topology",
+    "building_reports", "building_report_comparison", "building_report_benchmark",
+)
+BUILDING_READ_DEPENDENCIES = {
+    "master-data/projects": tuple(sorted({code for codes in BUILDING_FAMILIES.values() for code in codes}))
+        + BUILDING_STRUCTURE_READERS,
+    "master-data/structure-types": BUILDING_STRUCTURE_READERS + ("building_structure_configs",),
+    "master-data/structures": BUILDING_STRUCTURE_READERS + ("building_structure_configs",),
+    "master-data/energy-types": BUILDING_STRUCTURE_READERS + (
+        "building_device_bindings", "building_energy_items", "building_energy_prices",
+        "building_energy_price_details", "building_structure_types",
+    ),
+    "master-data/energy-items": BUILDING_STRUCTURE_READERS + ("building_device_bindings",),
+    "master-data/device-bindings": BUILDING_STRUCTURE_READERS,
+    "master-data/drawings": ("building_energy_map", "building_substation_scene"),
+    "master-data/structure-configs": ("building_substation_scene",),
+    "structure-types": BUILDING_STRUCTURE_READERS,
+    "energy": BUILDING_STRUCTURE_READERS,
+    "operations": ("building_campus_3d", "building_bigscreen"),
+}
 SERVICE_RULES["building"] = tuple(
     ApiRule(
         "/api/v1/building/" + p,
-        (menu_codes(*codes),),
+        (menu_codes(*codes, *BUILDING_READ_DEPENDENCIES.get(p, ())),),
         (menu_codes(*codes), frozenset({"building.platform.operate"})),
     )
     for p, codes in BUILDING_FAMILIES.items()
