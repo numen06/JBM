@@ -291,7 +291,7 @@ watch(
     </div>
 
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">
-      <Table>
+      <Table mobile-title="消息" :mobile-columns="['接收用户', '来源', '类型', '投递', '时间']">
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">阅读状态</th>

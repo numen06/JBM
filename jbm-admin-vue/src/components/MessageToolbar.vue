@@ -29,5 +29,5 @@ defineEmits<{ search: [] }>()
 .message-status{display:inline-flex;gap:4px;padding:3px;border-radius:6px;background:var(--color-muted)}
 .message-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:auto}
 .message-batch{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid var(--color-border);padding-top:12px;margin-top:12px}
-@container(max-width:540px){.message-search,.message-filter-fields{flex-basis:100%}.message-filter-fields :deep(select){flex:1;min-width:0;width:0}.message-filter-fields :deep(.message-recipient){width:100%}.message-filter-fields{gap:8px}}
+@container(max-width:540px){.message-search,.message-filter-fields{flex-basis:100%}.message-filter-fields :deep(select){flex:1 1 calc(50% - 4px);min-width:0;width:calc(50% - 4px)}.message-filter-fields :deep(.message-recipient){width:100%}.message-filter-fields{gap:8px}}
 </style>
