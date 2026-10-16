@@ -168,7 +168,7 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="message-admin-page">
     <PageHeader title="消息管理" description="查询站内消息记录，用于投递追溯和问题排查。" />
     <MessageToolbar @search="search">
       <template #search>
@@ -183,18 +183,18 @@ watch(
           class="message-recipient"
           @update:model-value="filterChanged"
         />
-        <Select v-model="sourceFilter" aria-label="消息来源"  @update:model-value="filterChanged">
+        <Select v-model="sourceFilter" aria-label="消息来源" @update:model-value="filterChanged">
           <option value="all">全部来源</option>
           <option value="system">系统通知</option>
           <option value="user">用户消息</option>
         </Select>
-        <Select v-model="typeFilter" aria-label="消息类型"  @update:model-value="filterChanged">
+        <Select v-model="typeFilter" aria-label="消息类型" @update:model-value="filterChanged">
           <option value="all">全部类型</option>
           <option value="notification">通知</option>
           <option value="alarm">警报</option>
           <option value="alert">弹窗</option>
         </Select>
-        <Select v-model="wayFilter" aria-label="投递渠道"  @update:model-value="filterChanged">
+        <Select v-model="wayFilter" aria-label="投递渠道" @update:model-value="filterChanged">
           <option value="all">全部渠道</option>
           <option value="internal">站内</option>
           <option value="email">邮箱</option>
@@ -204,7 +204,7 @@ watch(
           <option value="ntfy">ntfy</option>
           <option value="app">App</option>
         </Select>
-        <Select v-model="deliveryFilter" aria-label="投递状态"  @update:model-value="filterChanged">
+        <Select v-model="deliveryFilter" aria-label="投递状态" @update:model-value="filterChanged">
           <option value="all">全部投递</option>
           <option value="unsent">未投递</option>
           <option value="wait">等待中</option>
@@ -233,7 +233,7 @@ watch(
       </template>
     </MessageToolbar>
 
-    <div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+    <div class="message-statistics">
       <Card>
         <CardContent class="flex items-center justify-between p-4">
           <div>
@@ -295,8 +295,7 @@ watch(
         <thead>
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">阅读状态</th>
-            <th class="h-10 px-4 text-left font-medium">标题</th>
-            <th class="h-10 px-4 text-left font-medium">内容</th>
+            <th class="h-10 px-4 text-left font-medium">消息</th>
             <th class="h-10 px-4 text-left font-medium">接收用户</th>
             <th class="h-10 px-4 text-left font-medium">来源</th>
             <th class="h-10 px-4 text-left font-medium">类型</th>
@@ -318,8 +317,8 @@ watch(
                 {{ message.readFlag ? '已读' : '未读' }}
               </Badge>
             </td>
-            <td class="max-w-[240px] p-4 font-medium">{{ message.title || '-' }}</td>
-            <td class="max-w-[360px] p-4">
+            <td class="p-4">
+              <div class="mb-1 truncate font-medium">{{ message.title || '-' }}</div>
               <MessageContentCell :message="message" />
             </td>
             <td class="p-4 text-sm">
@@ -350,3 +349,18 @@ watch(
     <UserViewDialog v-model:open="userViewOpen" :user-id="userViewId" />
   </div>
 </template>
+
+<style scoped>
+.message-admin-page{min-width:0}
+.message-statistics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;margin-bottom:16px}
+@media(min-width:768px){
+  .message-admin-page :deep(table){table-layout:fixed;min-width:1040px}
+  .message-admin-page :deep(th:nth-child(1)){width:100px}
+  .message-admin-page :deep(th:nth-child(3)){width:148px}
+  .message-admin-page :deep(th:nth-child(4)){width:108px}
+  .message-admin-page :deep(th:nth-child(5)){width:80px}
+  .message-admin-page :deep(th:nth-child(6)){width:96px}
+  .message-admin-page :deep(th:nth-child(7)){width:176px}
+  .message-admin-page :deep(td:not(:nth-child(2))){white-space:nowrap}
+}
+</style>
