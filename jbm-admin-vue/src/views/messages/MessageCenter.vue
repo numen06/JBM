@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { AlertTriangle, BarChart3, CheckCircle2, Mail, MailOpen, RefreshCw, Search, Users } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
+import MessageToolbar from '@/components/MessageToolbar.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import Button from '@/components/ui/Button.vue'
@@ -168,33 +169,32 @@ watch(
 
 <template>
   <div>
-    <PageHeader title="消息管理" description="查询站内消息记录，用于投递追溯和问题排查。">
-      <template #actions>
-        <Input
-          v-model="keyword"
-          placeholder="搜索标题/内容/用户/消息ID"
-          class="w-56"
-          @keyup.enter="search"
-        />
+    <PageHeader title="消息管理" description="查询站内消息记录，用于投递追溯和问题排查。" />
+    <MessageToolbar @search="search">
+      <template #search>
+        <Input v-model="keyword" aria-label="搜索消息" placeholder="搜索标题、内容、用户或消息 ID" />
+        <Button type="submit" :disabled="loading"><Search class="h-4 w-4" />搜索</Button>
+      </template>
+      <template #filters>
         <UserSearchSelect
           v-model="recUserId"
           include-broadcast
           placeholder="搜索接收用户"
-          class="w-64"
+          class="message-recipient"
           @update:model-value="filterChanged"
         />
-        <Select v-model="sourceFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="sourceFilter" aria-label="消息来源"  @update:model-value="filterChanged">
           <option value="all">全部来源</option>
           <option value="system">系统通知</option>
           <option value="user">用户消息</option>
         </Select>
-        <Select v-model="typeFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="typeFilter" aria-label="消息类型"  @update:model-value="filterChanged">
           <option value="all">全部类型</option>
           <option value="notification">通知</option>
           <option value="alarm">警报</option>
           <option value="alert">弹窗</option>
         </Select>
-        <Select v-model="wayFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="wayFilter" aria-label="投递渠道"  @update:model-value="filterChanged">
           <option value="all">全部渠道</option>
           <option value="internal">站内</option>
           <option value="email">邮箱</option>
@@ -204,39 +204,34 @@ watch(
           <option value="ntfy">ntfy</option>
           <option value="app">App</option>
         </Select>
-        <Select v-model="deliveryFilter" class="w-32" @update:model-value="filterChanged">
+        <Select v-model="deliveryFilter" aria-label="投递状态"  @update:model-value="filterChanged">
           <option value="all">全部投递</option>
           <option value="unsent">未投递</option>
           <option value="wait">等待中</option>
           <option value="issued">已发送</option>
           <option value="fail">失败</option>
         </Select>
-        <Button variant="outline" size="sm" :disabled="loading" @click="search">
-          <Search class="h-4 w-4" />
-          搜索
-        </Button>
-        <div class="inline-flex rounded-md border bg-background p-1">
+      </template>
+      <template #status>
           <Button
             :variant="statusFilter === 'all' ? 'secondary' : 'ghost'"
             size="sm"
-            @click="toggleFilter('all')"
+            :aria-pressed="statusFilter === 'all'" @click="toggleFilter('all')"
           >
             全部
           </Button>
           <Button
             :variant="statusFilter === 'unread' ? 'secondary' : 'ghost'"
             size="sm"
-            @click="toggleFilter('unread')"
+            :aria-pressed="statusFilter === 'unread'" @click="toggleFilter('unread')"
           >
             未读
           </Button>
-        </div>
-        <Button variant="outline" size="sm" :disabled="loading" @click="refresh">
-          <RefreshCw class="h-4 w-4" />
-          刷新
-        </Button>
       </template>
-    </PageHeader>
+      <template #actions>
+        <Button variant="outline" :disabled="loading" @click="refresh"><RefreshCw class="h-4 w-4" />刷新</Button>
+      </template>
+    </MessageToolbar>
 
     <div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
       <Card>
