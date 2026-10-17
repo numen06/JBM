@@ -198,7 +198,8 @@ button, input, select, textarea { font-family: inherit; }
 .jbm-control > svg, .workspace-page .btn > svg { flex-shrink: 0; width: 16px; height: 16px; }
 .jbm-control[data-size="icon"] > svg, .workspace-page .btn-icon > svg { width: 18px; height: 18px; }
 .workspace-page .btn-primary { filter: none; }
-input.jbm-input, input.field, select.field { height: 38px; padding: 0 11px; font-size: 14px; line-height: 20px; }
+/* Inputs own their padding so icon and clear-button spacing can take effect. */
+input.jbm-input, input.field, select.field { height: 38px; font-size: 14px; line-height: 20px; }
 .jbm-control[data-size="icon"] { height: 36px; width: 36px; }
 .jbm-control[data-variant="default"], .workspace-page .btn-primary { background: var(--jbm-accent-solid); color: hsl(var(--primary-foreground)); }
 .jbm-control[data-variant="default"]:hover:not(:disabled), .workspace-page .btn-primary:hover:not(:disabled) { background: var(--jbm-accent-solid-hover); }
