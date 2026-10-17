@@ -32,6 +32,9 @@ const avatarFile = ref<File | null>(null)
 const avatarPreviewUrl = ref('')
 const cropDialogOpen = ref(false)
 const cropSourceFile = ref<File | null>(null)
+const activeTab = ref<'information' | 'authentication'>('information')
+const informationTab = ref<HTMLButtonElement | null>(null)
+const authenticationTab = ref<HTMLButtonElement | null>(null)
 const saving = ref(false)
 const formError = ref('')
 const debugBypass = ref(false)
@@ -232,9 +235,9 @@ onBeforeUnmount(resetPendingAvatar)
 </script>
 
 <template>
-  <div>
-    <PageHeader title="用户中心" description="管理基础资料、Passkey 与 SSH 登录密钥">
-      <template #actions>
+  <div class="profile-page">
+    <PageHeader title="用户中心" description="管理个人信息与账号认证">
+      <template v-if="activeTab === 'information'" #actions>
         <Button variant="outline" :disabled="saving" @click="fillFormFromUser">
           <RotateCcw class="h-4 w-4" />
           重置
@@ -245,16 +248,16 @@ onBeforeUnmount(resetPendingAvatar)
         </Button>
       </template>
     </PageHeader>
-    <div class="mb-4 grid gap-4 lg:grid-cols-2">
-      <KeyCredentialsPanel kind="PASSKEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
-      <KeyCredentialsPanel kind="SSH_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+    <div class="profile-tabs" role="tablist" aria-label="用户中心功能">
+      <button id="profile-information-tab" ref="informationTab" type="button" role="tab" :aria-selected="activeTab === 'information'" aria-controls="profile-information-panel" :tabindex="activeTab === 'information' ? 0 : -1" @click="activeTab = 'information'" @keydown.right.prevent="activeTab = 'authentication'; authenticationTab?.focus()" @keydown.left.prevent="activeTab = 'authentication'; authenticationTab?.focus()" @keydown.end.prevent="activeTab = 'authentication'; authenticationTab?.focus()">个人信息</button>
+      <button id="profile-authentication-tab" ref="authenticationTab" type="button" role="tab" :aria-selected="activeTab === 'authentication'" aria-controls="profile-authentication-panel" :tabindex="activeTab === 'authentication' ? 0 : -1" @click="activeTab = 'authentication'" @keydown.right.prevent="activeTab = 'information'; informationTab?.focus()" @keydown.left.prevent="activeTab = 'information'; informationTab?.focus()" @keydown.home.prevent="activeTab = 'information'; informationTab?.focus()">认证管理</button>
     </div>
-
     <p v-if="formError" class="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ formError }}
     </p>
 
-    <div class="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+    <section v-show="activeTab === 'information'" id="profile-information-panel" role="tabpanel" aria-labelledby="profile-information-tab" tabindex="0">
+    <div class="profile-information-grid">
       <Card>
         <CardHeader>
           <CardTitle>账号</CardTitle>
@@ -329,7 +332,9 @@ onBeforeUnmount(resetPendingAvatar)
       </Card>
     </div>
 
-    <Card class="mt-4">
+    </section>
+    <section v-show="activeTab === 'authentication'" id="profile-authentication-panel" role="tabpanel" aria-labelledby="profile-authentication-tab" tabindex="0">
+    <Card>
       <CardHeader>
         <CardTitle>账号绑定</CardTitle>
       </CardHeader>
@@ -339,7 +344,7 @@ onBeforeUnmount(resetPendingAvatar)
           <span v-if="debugBypass">当前为调试模式，验证码为 99999。</span>
         </p>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="profile-bindings-grid">
           <section class="space-y-3 rounded-lg border p-4">
             <div class="flex items-center gap-2 font-medium">
               <Smartphone class="h-4 w-4" />
@@ -383,6 +388,13 @@ onBeforeUnmount(resetPendingAvatar)
       </CardContent>
     </Card>
 
+    <div class="profile-credentials-grid">
+      <KeyCredentialsPanel kind="PASSKEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+      <KeyCredentialsPanel kind="SSH_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+    </div>
+
+    </section>
+
     <AvatarCropDialog
       :open="cropDialogOpen"
       :file="cropSourceFile"
@@ -391,3 +403,15 @@ onBeforeUnmount(resetPendingAvatar)
     />
   </div>
 </template>
+
+<style scoped>
+.profile-page{min-width:0;container-type:inline-size}
+.profile-tabs{display:flex;gap:24px;border-bottom:1px solid var(--color-border);margin-bottom:20px}
+.profile-tabs button{padding:12px 2px;border-bottom:2px solid transparent;color:var(--color-muted-foreground);font-size:14px;font-weight:500;white-space:nowrap}
+.profile-tabs button[aria-selected=true]{border-bottom-color:var(--color-primary);color:var(--color-primary)}
+.profile-tabs button:focus-visible{outline:2px solid var(--color-ring);outline-offset:3px;border-radius:4px}
+.profile-information-grid,.profile-credentials-grid,.profile-bindings-grid{display:grid;gap:16px;min-width:0}
+.profile-information-grid>*{min-width:0}.profile-credentials-grid{margin-top:16px}.profile-credentials-grid :deep(section){margin:0;min-width:0}
+.profile-bindings-grid :deep(input){min-width:0}
+@container(min-width:760px){.profile-information-grid{grid-template-columns:280px minmax(0,1fr)}.profile-credentials-grid,.profile-bindings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
