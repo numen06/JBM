@@ -3,11 +3,13 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from fastapi import HTTPException
+from jbm_cluster_py.common.api_access import is_platform, is_super_admin
 
 
 PLATFORM_ROLES = {"super_admin", "platform_operator"}
 TENANT_ADMIN_ROLES = {"tenant_admin", "iot_admin"}
 PLATFORM_MENU_CODES = {
+    "iot_diagnostics", "iot_app_diagnostics",
     "apps", "app", "roles", "role", "authority", "authority_catalog", "user_perm", "user_permissions",
     "client_perm", "client_permissions", "api_perm", "api_permissions", "menus", "menu", "actions", "action",
     "api_registry", "api_mgmt", "api_docs", "api_monitor", "gw_services", "gw_routes", "gw_gray", "gw_rate", "gw_ip",
@@ -28,16 +30,6 @@ def is_platform_authority(authority: Mapping[str, Any]) -> bool:
     if code.startswith("ACTION_"):
         return any(code[7:] == key or code[7:].startswith(key + "_") for key in PLATFORM_MENU_CODES)
     return False
-
-
-def is_super_admin(identity: Mapping[str, Any]) -> bool:
-    roles = {str(role) for role in identity.get("roles") or []}
-    return bool(identity.get("admin")) or "super_admin" in roles or str(identity.get("username") or "") == "admin"
-
-
-def is_platform(identity: Mapping[str, Any]) -> bool:
-    roles = {str(role) for role in identity.get("roles") or []}
-    return bool(identity.get("admin")) or bool(roles & PLATFORM_ROLES) or str(identity.get("username") or "") == "admin"
 
 
 def tenant_id(identity: Mapping[str, Any]) -> int:

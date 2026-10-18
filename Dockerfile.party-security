@@ -1,0 +1,5 @@
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:096ab7fe4eadcd7e33f3b95a15b85fea655d1e2b84abd3ef62a5ce7ba100367f AS jbm-python-cluster
+COPY --chown=appuser:appuser jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py /app/common/src/jbm_cluster_py/common/api_access.py
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py /app/auth/src/jbm_cluster_py/platform/auth/router.py
+COPY --chown=appuser:appuser jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/request_access.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/application/request_access.py
+COPY --chown=appuser:appuser jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/router.py jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/service.py jbm-python-cluster/doc/src/jbm_cluster_py/platform/doc/repository.py /app/doc/src/jbm_cluster_py/platform/doc/

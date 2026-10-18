@@ -1,0 +1,6 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+COPY jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py /app/common/src/jbm_cluster_py/common/api_access.py
+RUN python -m py_compile /app/common/src/jbm_cluster_py/common/api_access.py
+USER appuser

@@ -119,6 +119,8 @@ class CompatibilityService:
     ) -> dict[str, Any]:
         if resource in self.PLATFORM_ONLY_RESOURCES:
             require_platform(identity)
+        if resource == "role" and method != "GET" and self._privileged_role(payload):
+            require_super_admin(identity)
         if resource == "user" and method == "POST" and not is_platform(identity):
             require_tenant_admin(identity)
         scoped_query = dict(query)
@@ -232,6 +234,10 @@ class CompatibilityService:
         if resource == "user" and method in {"PUT", "PATCH", "DELETE"} and not is_platform(identity):
             require_tenant_admin(identity)
         existing = await self.store.get(resource, record_id)
+        if resource == "role" and method != "GET" and (
+            self._privileged_role(existing or {}) or self._privileged_role(payload)
+        ):
+            require_super_admin(identity)
         if resource == "user":
             await self._require_user(identity, record_id)
             if method in {"PUT", "PATCH", "DELETE"}:
@@ -402,7 +408,7 @@ class CompatibilityService:
             return ok({"usersTotal": total, "onlineUser": 0})
         if path == "/user/{userId}/roles" and method == "PUT":
             require_tenant_admin(identity)
-            await self._require_user(identity, params["userId"])
+            await self._require_editable_user(identity, params["userId"])
             role_ids = _values(body, "roleIds")
             app_id = _app_id(identity)
             roles = [row for value in role_ids if (row := await self.store.get("role", value))]
@@ -411,7 +417,7 @@ class CompatibilityService:
             if len(roles) != len(set(map(str, role_ids))):
                 raise ValueError("包含不存在的角色")
             app_role_ids = [
-                row["roleId"] for row in roles if str(row.get("appId") or "") == str(app_id)
+                row["roleId"] for row in roles if row.get("appId") is None or str(row.get("appId")) == str(app_id)
             ]
             if not is_platform(identity):
                 forbidden = [
@@ -572,6 +578,7 @@ class CompatibilityService:
             )
 
         if path == "/role/all":
+            require_tenant_admin(identity)
             rows, _ = await self.store.list("role", {}, 1, 100)
             requested_app_id = query.get("appId") if is_platform(identity) else None
             app_id = (
@@ -582,7 +589,11 @@ class CompatibilityService:
             visible = [
                 row for row in rows
                 if row.get("appId") in (None, app_id)
-                and (is_platform(identity) or row.get("roleCode") == "tenant_admin" or row.get("appId") == app_id)
+                and (is_platform(identity) or (
+                    str(row.get("roleId")) != "1"
+                    and row.get("roleCode") not in {"super_admin", "platform_operator", "iot_operator"}
+                    and row.get("status", 1) == 1
+                ))
             ]
             return ok(visible)
         if path == "/role/{roleId}/users" and method == "GET":
@@ -592,6 +603,8 @@ class CompatibilityService:
         if path == "/role/{roleId}/users" and method == "PUT":
             require_platform(identity)
             role = await self.store.get("role", params["roleId"])
+            if self._privileged_role(role or {}):
+                require_super_admin(identity)
             if role is None or role.get("appId") in (None, ""):
                 raise ValueError("应用角色不能为空")
             users = [
@@ -683,6 +696,10 @@ class CompatibilityService:
         }
         if path in authority_links:
             table, owner_column, param_name = authority_links[path]
+            if table == "base_authority_role" and method != "GET" and self._privileged_role(
+                await self.store.get("role", params[param_name]) or {}
+            ):
+                require_super_admin(identity)
             return await self._grant(method, table, owner_column, params[param_name], body)
         if path in {
             "/authority/resources",
@@ -952,12 +969,27 @@ class CompatibilityService:
         user = await self.store.get("user", user_id)
         if self._privileged_user(user or {}):
             require_super_admin(identity)
+        current_roles = await self.governance.repository.user_roles(
+            int(user_id), None, None,
+        )
+        for role in current_roles:
+            code = role.get("roleCode", role.get("role_code"))
+            if str(role.get("roleId", role.get("role_id"))) == "1" or code == "super_admin":
+                require_super_admin(identity)
+            elif code in {"platform_operator", "iot_operator"}:
+                require_platform(identity)
         if not is_platform(identity):
             require_tenant_admin(identity)
             # Membership permits tenant-scoped access, not changing another owner's global account.
             require_tenant_record(identity, user, "companyId")
             if self._privileged_user(user or {}):
                 require_platform(identity)
+
+    @staticmethod
+    def _privileged_role(role: Mapping[str, Any]) -> bool:
+        return str(role.get("roleId")) == "1" or role.get("roleCode") in {
+            "admin", "super_admin", "platform_operator", "iot_operator",
+        }
 
     @staticmethod
     def _privileged_user(user: Mapping[str, Any]) -> bool:
@@ -1147,7 +1179,7 @@ class CompatibilityService:
             "user_id",
             user["userId"],
             "role_id",
-            [row["roleId"] for row in roles if str(row.get("appId") or "") == str(app_id)],
+            [row["roleId"] for row in roles if row.get("appId") is None or str(row.get("appId")) == str(app_id)],
             "app_id",
             app_id,
             "tenant_id",

@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "build": {
+    "project_type": "python",
+    "use_project_dockerfile": true,
+    "dockerfile_name": "Dockerfile.streetlight-access",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "build_args": {
+      "BASE_IMAGE": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:9a51efd61f9274137ad0e59007b7c3a3e075984701e9bea15667895ab241d2a3"
+    }
+  },
+  "image": {
+    "name": "jbm-python-cluster",
+    "prefix": "registry.cn-shanghai.aliyuncs.com/okc",
+    "tag": "boundary-20261018.streetlight.1",
+    "push": true
+  },
+  "push_mode": "multi",
+  "services": [
+    {
+      "name": "jbm-python-cluster",
+      "image_name": "jbm-python-cluster"
+    }
+  ]
+}
