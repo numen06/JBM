@@ -1,0 +1,52 @@
+{
+  "sourceCommit": "e058789bb72bd5f7ba8f3ce566573f664148b458",
+  "cause": "Inbox list and unread queries treated recipient 0 as a global broadcast. The cloud admin user ID is actually 0, exposing administrator messages to unrelated accounts.",
+  "fix": [
+    "Exact authenticated recipient in SQL and in-memory inbox list/count",
+    "Reject unauthenticated message subscriptions and realtime messages without a recipient",
+    "Keep existing exact-recipient read/unread/delete protections"
+  ],
+  "validation": {
+    "pushAndNtfyTests": 38,
+    "debug": "Actual Push container updated; original debug URL demo login and message center verified with 0 messages",
+    "cloud": {
+      "zqnf_demo": {
+        "total": 0,
+        "unread": 0
+      },
+      "zqnf_admin": {
+        "total": 0,
+        "unread": 0
+      },
+      "admin": {
+        "total": 38488,
+        "unread": 7347
+      },
+      "forgedRecipientFilter": "No cross-recipient rows",
+      "health": "ok"
+    },
+    "party": {
+      "exactRecipient": "passed",
+      "anonymousSubscription": "denied",
+      "health": "ok"
+    },
+    "deviceIntegrity": "7 targets, 7 located, 7 online; no errors; field requests 0; writes 0",
+    "deviceLocationAndConfigurationRegression": 31
+  },
+  "deployment": {
+    "services": [
+      "JBM Push only"
+    ],
+    "cloudImage": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:6251b958a0b3e7cd537ebfd88480bfaa407ed985e43c1c53f0871c0deb94e177",
+    "partyImage": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:8307e946bd27163f52621cfbfc38b9a1cb3550b32fc4fccf45663003b0b6abca",
+    "configurationPreserved": true,
+    "databaseMessagesModified": false,
+    "rolesChanged": false,
+    "fieldCommands": false,
+    "backupDirectory": "/home/opt/backups/message-isolation-20261019",
+    "buildTasks": [
+      "fdfd7fea-8b03-4203-bd1b-c09b9e60dd71",
+      "df6acad9-93b8-40b5-be59-e727cd6b512a"
+    ]
+  }
+}
