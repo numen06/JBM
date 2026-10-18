@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-19",
+  "sourceCommits": {
+    "iot": "ed3d8e294229d162b5b854238e432b4864921386",
+    "jbm": "371c7d66eb73e7bff71b3aca46aae315eb3194da"
+  },
+  "routing": "Device owner tenant and application -> JBM active tenant_admin/iot_admin roles -> distinct active users with unexpired membership in that tenant. No implicit superadmin recipient.",
+  "ownership": "IoT outbox uses persisted owner tenant; rejects mismatched event metadata. JBM resolves users against its own directory; no IoT database privileges expanded.",
+  "channels": [
+    "internal",
+    "ntfy"
+  ],
+  "retry": "Unresolved tenant administrator or directory lookup failure is deferred to a durable 5 minute RabbitMQ TTL queue. Partial delivery exceptions retain completed recipient IDs; retry skips completed users and checks current roles again.",
+  "history": "Pending legacy IoT outbox events use tenant audiences; queued/sent history is not replayed, moved or deleted.",
+  "checks": {
+    "iot": "46 regression checks passed plus the new legacy-pending check; final presence suite 8 passed",
+    "jbm": "38 compatibility/ntfy checks and 4 tenant-routing checks passed",
+    "debug": "Actual IoT API and JBM Push containers updated; original debug API health ok; installed producer and actual JBM directory reads verified",
+    "cloudRecipients": {
+      "zqnf": "zqnf_admin",
+      "partySchoolTenant": "ncdx_manager",
+      "superadminIncluded": false,
+      "demoOperatorIncluded": false
+    },
+    "afterReleaseIntegrity": {
+      "passed": true,
+      "targets": 7,
+      "located": 7,
+      "online": 7,
+      "writes": 0,
+      "fieldRequests": 0
+    }
+  },
+  "deployment": {
+    "services": [
+      "IoT API",
+      "JBM Push"
+    ],
+    "webChanged": false,
+    "configurationPreserved": true,
+    "accountsOrGrantsChanged": false,
+    "businessHistoryChanged": false,
+    "artificialProductionMessagesSent": 0,
+    "fieldControlsSent": 0,
+    "cloudNotificationSwitch": "enabled, preserved",
+    "partyNotificationSwitch": "disabled, preserved",
+    "cloudIot": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:06dd75bf243f273ae1e54b2b85dc8676ca7bc09d2e427d15773e5a9aa7801c7d",
+    "cloudPush": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:df29948ea6a89161d9ba9303c2b9533a92319e2cb9d3bb1d74c6eb6d5ced8874",
+    "partyIot": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:4af01d5d8af4ea3bf441e0f052b27d5cc55ee8d596b77bcd1f94e8a5f562ae61",
+    "partyPush": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:8813b709976700ebbb608bb5fb1cd7e4ef2f394a2292ba24b556c43df171a970",
+    "order": "JBM Push updated and verified before IoT API in each environment",
+    "backupRoot": "/home/opt/backups/tenant-device-notifications-20261019"
+  },
+  "buildTasks": [
+    "92c4e014-a920-49dd-bd32-07df6ece64f8",
+    "b65db64d-0809-499f-9f3d-d7ec1457655f",
+    "fa55ee00-93ff-4b8b-8800-cc1665e213e4",
+    "c52872b9-0316-4d6a-a0a9-96a21fe42e9f"
+  ]
+}
