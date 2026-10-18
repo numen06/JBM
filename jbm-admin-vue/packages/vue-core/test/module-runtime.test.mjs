@@ -12,6 +12,22 @@ test('segmented control has a labelled group, selected state and disabled choice
   assert.match(html, /disabled[^>]*>年/)
 })
 
+test('segmented control renders optional decorative icons without losing labels or disabled state', async () => {
+  const Icon = { render: () => h('svg', { 'data-segment-icon': '' }) }
+  const html = await renderToString(createSSRApp({ render: () => h(JbmSegmentedControl, {
+    label: '运行模式', modelValue: 'cool', options: [
+      { value: 'cool', label: '制冷', icon: Icon },
+      { value: 'heat', label: '制热', icon: Icon, disabled: true },
+      { value: 'auto', label: '自动' },
+    ],
+  }) }))
+  assert.equal((html.match(/data-segment-icon/g) ?? []).length, 2)
+  assert.match(html, /data-segment-icon[^>]*aria-hidden="true"/)
+  assert.match(html, /aria-pressed="true"[^>]*><span[^>]*>.*<span>制冷<\/span>/)
+  assert.match(html, /disabled[^>]*>.*<span>制热<\/span>/)
+  assert.match(html, />自动<\/button>/)
+})
+
 test('module id must be namespaced', () => {
   assert.throws(() => defineJbmModule({ id: 'gateway', version: '1.0.0', routes: [] }), /namespaced id/)
 })

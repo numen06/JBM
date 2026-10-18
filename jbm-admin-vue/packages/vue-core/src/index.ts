@@ -135,7 +135,7 @@ export const JbmSegmentedControl = defineComponent({
   name: 'JbmSegmentedControl',
   props: {
     modelValue: { type: [String, Number], required: true },
-    options: { type: Array as PropType<Array<{ value: string | number; label: string; disabled?: boolean }>>, required: true },
+    options: { type: Array as PropType<Array<{ value: string | number; label: string; icon?: Component; disabled?: boolean }>>, required: true },
     label: { type: String, required: true },
   },
   emits: { 'update:modelValue': (_value: string | number) => true },
@@ -148,7 +148,9 @@ export const JbmSegmentedControl = defineComponent({
         ...props.options.map(item => h('button', { key: item.value, type: 'button', disabled: item.disabled,
           'aria-pressed': item.value === props.modelValue,
           onClick: () => { if (!item.disabled) emit('update:modelValue', item.value) },
-        }, item.label)),
+        }, item.icon ? h('span', { class: 'jbm-segments__label', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' } }, [
+          h(item.icon, { width: 18, height: 18, 'aria-hidden': 'true' }), h('span', item.label),
+        ]) : item.label)),
       ])
     }
   },
