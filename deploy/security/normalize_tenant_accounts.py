@@ -69,11 +69,11 @@ async def main(args):
                         authid = authority[0]['authority_id'] if authority else new_id()
                         if args.apply:
                             if not menu:
-                                await db.execute(text("INSERT INTO base_menu(menu_id,menu_code,menu_name,path,app_id,status,priority) VALUES(:id,'users','成员管理','/system/users',:a,1,80)"), {'id': mid, 'a': aid})
+                                await db.execute(text("INSERT INTO base_menu(menu_id,menu_code,menu_name,path,scheme,service_id,app_id,status,priority,create_time) VALUES(:id,'users','成员管理','/system/users','/','jbm-cluster-platform-center',:a,1,80,NOW())"), {'id': mid, 'a': aid})
                             if not authority:
                                 await db.execute(text("INSERT INTO base_authority(authority_id,authority,resource_type,menu_id,app_id,status) VALUES(:id,'MENU_users','MENU',:m,:a,1)"), {'id': authid, 'm': mid, 'a': aid})
-                            if not await rows('SELECT id FROM base_authority_role WHERE role_id=:r AND authority_id=:id', r=role_id, id=authid):
-                                await db.execute(text('INSERT INTO base_authority_role(id,role_id,authority_id,app_id) VALUES(:id,:r,:g,:a)'), {'id': new_id(), 'r': role_id, 'g': authid, 'a': aid})
+                            if not await rows('SELECT authority_id FROM base_authority_role WHERE role_id=:r AND authority_id=:id', r=role_id, id=authid):
+                                await db.execute(text('INSERT INTO base_authority_role(role_id,authority_id,app_id,create_time) VALUES(:r,:g,:a,NOW())'), {'r': role_id, 'g': authid, 'a': aid})
                     changes.append({'account': name, 'tenant': tenant, 'tenantAdminApps': [a['app_id'] for a in apps]})
             print(json.dumps({'applied': args.apply, 'changes': changes}, ensure_ascii=False))
     finally:
