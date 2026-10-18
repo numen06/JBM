@@ -66,6 +66,8 @@ class PushService:
         self._pnvs_sms_client: Any = None
 
     def add_subscriber(self, websocket: Any, subscription_id: str = "messages", user_id: Optional[int] = None) -> None:
+        if user_id is None:
+            raise PermissionError("消息订阅需要先认证")
         self._subscribers[websocket] = {"subscription_id": subscription_id, "user_id": user_id}
 
     def remove_subscriber(self, websocket: Any) -> None:
@@ -75,10 +77,12 @@ class PushService:
         if not self._subscribers:
             return
         rec_user_id = self._int_or_none(message.get("recUserId"))
+        if rec_user_id is None:
+            return
         stale = []
         for websocket, subscriber in list(self._subscribers.items()):
             subscriber_user_id = self._int_or_none(subscriber.get("user_id"))
-            if rec_user_id is not None and subscriber_user_id is not None and rec_user_id != subscriber_user_id:
+            if subscriber_user_id is None or rec_user_id != subscriber_user_id:
                 continue
             try:
                 subscription_id = str(subscriber.get("subscription_id") or "messages")
@@ -99,7 +103,7 @@ class PushService:
             rows = [
                 row
                 for row in rows
-                if int(row.get("recUserId") or 0) in {current_user_id, 0}
+                if self._int_or_none(row.get("recUserId")) == current_user_id
             ]
         for key in ("recUserId", "readFlag", "type", "pushWay", "pushStatus"):
             if key in payload and payload.get(key) is not None and payload.get(key) != "":
@@ -124,7 +128,7 @@ class PushService:
         return sum(
             1
             for row in self.messages
-            if int(row.get("recUserId") or 0) in {user_id, 0} and not row.get("readFlag")
+            if self._int_or_none(row.get("recUserId")) == user_id and not row.get("readFlag")
         )
 
     async def mark_read(self, ids: Iterable[str], user_id: int, read_flag: bool = True) -> None:

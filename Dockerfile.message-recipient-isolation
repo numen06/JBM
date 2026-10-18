@@ -1,0 +1,7 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+COPY jbm-python-cluster/push/src/jbm_cluster_py/platform/push/service.py /tmp/message-recipient-isolation/service.py
+COPY deploy/message-recipient-isolation/install.py /tmp/message-recipient-isolation/install.py
+RUN python /tmp/message-recipient-isolation/install.py
+USER appuser

@@ -208,7 +208,7 @@ class PushMessageRepository:
             where_parts.append(f"i.msg_body_id NOT IN ({EXCLUDE_TEST_MESSAGE_BODY_SQL})")
 
         if current_user_id is not None:
-            where_parts.append("(i.rec_user_id = :current_user_id OR i.rec_user_id = 0)")
+            where_parts.append("i.rec_user_id = :current_user_id")
             params["current_user_id"] = current_user_id
         elif payload.get("recUserId") is not None and payload.get("recUserId") != "":
             where_parts.append("i.rec_user_id = :rec_user_id")
@@ -301,7 +301,7 @@ class PushMessageRepository:
         sql = f"""
             SELECT COUNT(1) AS total
             FROM {ITEM_TABLE} i
-            WHERE (i.rec_user_id = :user_id OR i.rec_user_id = 0)
+            WHERE i.rec_user_id = :user_id
               AND (i.read_flag IS NULL OR i.read_flag = 0)
               AND i.msg_body_id NOT IN ({EXCLUDE_TEST_MESSAGE_BODY_SQL})
         """

@@ -586,6 +586,89 @@ def test_broadcast_only_targets_matching_subscriber_user() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('persisted', [False, True])
+async def test_admin_zero_id_is_a_private_recipient(tmp_path: Path, persisted: bool) -> None:
+    repo = PushMessageRepository({'url': f"sqlite+aiosqlite:///{tmp_path / 'inbox.db'}"}) if persisted else None
+    if repo:
+        await repo.start()
+    service = PushService(message_repository=repo)
+    messages = [
+        {'msgId': 'admin', 'recUserId': 0, 'title': 'platform operations', 'readFlag': False},
+        {'msgId': 'mine', 'recUserId': 7, 'title': 'tenant notice', 'readFlag': False},
+        {'msgId': 'other', 'recUserId': 8, 'title': 'another user', 'readFlag': False},
+        {'msgId': 'no-recipient', 'title': 'unassigned', 'readFlag': False},
+    ]
+    try:
+        if repo:
+            for message in messages:
+                await repo.save_message(message)
+        else:
+            service.messages = messages
+        for user, expected in [(7, 'mine'), (8, 'other'), (0, 'admin')]:
+            page = await service.page_messages({}, user)
+            assert page['total'] == 1
+            assert [row['msgId'] for row in page['contents']] == [expected]
+            assert await service.unread_count(user) == 1
+        for receiver in [0, 8]:
+            page = await service.page_messages({'recUserId': receiver}, 7)
+            assert all(row['recUserId'] == 7 for row in page['contents'])
+        await service.mark_read(['mine', 'admin', 'other'], 7)
+        assert await service.unread_count(7) == 0
+        assert await service.unread_count(0) == await service.unread_count(8) == 1
+        await service.delete_messages(['mine', 'admin', 'other'], 7)
+        assert (await service.page_messages({}, 7))['total'] == 0
+        assert (await service.page_messages({}, 0))['total'] == 1
+        assert (await service.page_messages({}, 8))['total'] == 1
+    finally:
+        if repo:
+            await repo.stop()
+
+
+def test_realtime_requires_authentication_and_an_exact_recipient() -> None:
+    class Socket:
+        def __init__(self):
+            self.frames = []
+
+        async def send_text(self, frame):
+            self.frames.append(frame)
+
+    service = PushService()
+    admin, tenant = Socket(), Socket()
+    with pytest.raises(PermissionError):
+        service.add_subscriber(Socket())
+    service.add_subscriber(admin, user_id=0)
+    service.add_subscriber(tenant, user_id=7)
+    asyncio.run(service.broadcast({'recUserId': 0, 'title': 'admin'}))
+    asyncio.run(service.broadcast({'title': 'unassigned'}))
+    assert len(admin.frames) == 1
+    assert tenant.frames == []
+    asyncio.run(service.broadcast({'recUserId': 7, 'title': 'tenant'}))
+    assert len(tenant.frames) == 1
+
+
+def test_inbox_http_cannot_select_another_recipient() -> None:
+    from starlette.websockets import WebSocketDisconnect
+
+    with TestClient(create_app(push_config(dev_user_id=7))) as client:
+        client.app.state.push_service.messages = [
+            {'msgId': 'admin', 'recUserId': 0, 'readFlag': False},
+            {'msgId': 'mine', 'recUserId': 7, 'readFlag': False},
+            {'msgId': 'other', 'recUserId': 8, 'readFlag': False},
+        ]
+        for endpoint in ['pageList', 'findCurrMessagePage']:
+            page = client.post('/pushMessage/' + endpoint, json={}).json()['result']
+            assert page['total'] == 1
+            assert page['contents'][0]['msgId'] == 'mine'
+            forged = client.post('/pushMessage/' + endpoint, json={'recUserId': 0}).json()['result']
+            assert not any(row['msgId'] == 'admin' for row in forged['contents'])
+        assert client.post('/pushMessage/unreadCount').json()['result'] == 1
+        with client.websocket_connect('/ws') as socket:
+            socket.send_text('SUBSCRIBE\nid:anonymous\ndestination:/user/queue/messages\n\n\x00')
+            with pytest.raises(WebSocketDisconnect):
+                socket.receive_text()
+
+
+@pytest.mark.asyncio
 async def test_message_persistence_survives_service_restart(tmp_path: Path) -> None:
     db_path = tmp_path / "push-messages.db"
     database_url = f"sqlite+aiosqlite:///{db_path}"
